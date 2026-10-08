@@ -21,14 +21,14 @@ declare type FlowJsErrorMessage = {
 };
 
 declare type FlowJsErrorMessageInformation = {
-  message: $ReadOnlyArray<FlowJsErrorMessage>,
-  children: $ReadOnlyArray<FlowJsErrorMessageInformation>,
+  message: ReadonlyArray<FlowJsErrorMessage>,
+  children: ReadonlyArray<FlowJsErrorMessageInformation>,
 };
 
 declare type FlowJsError = {
   level: string,
-  message: $ReadOnlyArray<FlowJsErrorMessage>,
-  extra: $ReadOnlyArray<FlowJsErrorMessageInformation>,
+  message: ReadonlyArray<FlowJsErrorMessage>,
+  extra: ReadonlyArray<FlowJsErrorMessageInformation>,
   error_codes?: ReadonlyArray<string>,
 };
 
@@ -66,47 +66,47 @@ declare type FlowJsConfigSchema = Array<
 
 declare type FlowJs = {
   flowVersion: string,
-  ready?: Promise<mixed>,
+  ready?: Promise<unknown>,
   configSchema?: string,
-  registerFile(filename: string, body: string): mixed,
-  initBuiltins(filenames: $ReadOnlyArray<string>): mixed,
+  registerFile(filename: string, body: string): unknown,
+  initBuiltins(filenames: ReadonlyArray<string>): unknown,
   checkContent(
     filename: string,
     body: string,
-    options: {[string]: mixed},
-  ): $ReadOnlyArray<FlowJsError>,
+    options: {[string]: unknown},
+  ): ReadonlyArray<FlowJsError>,
   autocomplete(
     filename: string,
     body: string,
     line: number,
     col: number,
-    options: {[string]: mixed},
+    options: {[string]: unknown},
   ): any,
   getDef(
     filename: string,
     body: string,
     line: number,
     col: number,
-    options: {[string]: mixed},
-  ): $ReadOnlyArray<FlowLoc>,
+    options: {[string]: unknown},
+  ): ReadonlyArray<FlowLoc>,
   typeAtPos(
     filename: string,
     body: string,
     line: number,
     col: number,
-    options: {[string]: mixed},
+    options: {[string]: unknown},
   ): null | string | Array<{type: 'flow' | 'markdown', value: string}>,
   semanticDecorations(
     filename: string,
     body: string,
-    options: {[string]: mixed},
-  ): {decorations: $ReadOnlyArray<{kind: 'refined-value', range: any}>},
+    options: {[string]: unknown},
+  ): {decorations: ReadonlyArray<{kind: 'refined-value', range: any}>},
   signatureHelp(
     filename: string,
     body: string,
     line: number,
     col: number,
-    options: {[string]: mixed},
+    options: {[string]: unknown},
   ): any,
   parse(body: string, options: FlowJsParseOptions): interface {},
 };

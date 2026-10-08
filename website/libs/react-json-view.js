@@ -14,7 +14,7 @@ declare module 'react-json-view' {
      *
      * Required.
      */
-    src: mixed,
+    src: unknown,
     /**
      * Contains the name of your root node. Use null or false for no name.
      *
@@ -34,7 +34,7 @@ declare module 'react-json-view' {
      *
      * Default: "rjv-default"
      */
-    style?: {readonly [string]: mixed},
+    style?: {readonly [string]: unknown},
     /**
      * Style of expand/collapse icons. Accepted values are "circle", triangle" or "square".
      *
@@ -155,7 +155,7 @@ declare module 'react-json-view' {
     /**
      * The JSON tree source object
      */
-    src: mixed;
+    src: unknown;
     /**
      * List of keys.
      */
@@ -174,7 +174,7 @@ declare module 'react-json-view' {
     /**
      * The corresponding JSON subtree.
      */
-    src: mixed;
+    src: unknown;
     /**
      * The type of src. Can only be "array" or "object".
      */
@@ -189,11 +189,11 @@ declare module 'react-json-view' {
     /**
      * The updated subtree of the JSON tree.
      */
-    updated_src: mixed;
+    updated_src: unknown;
     /**
      * The existing subtree of the JSON tree.
      */
-    existing_src: mixed;
+    existing_src: unknown;
     /**
      * The key of the entry that is interacted with.
      */
@@ -205,11 +205,11 @@ declare module 'react-json-view' {
     /**
      * The original value of the entry that is interacted with.
      */
-    existing_value: mixed;
+    existing_value: unknown;
     /**
      * The updated value of the entry that is interacted with.
      */
-    new_value?: mixed;
+    new_value?: unknown;
   }
 
   declare export interface OnSelectProps {
@@ -220,7 +220,7 @@ declare module 'react-json-view' {
     /**
      * The value of the currently selected entry.
      */
-    value: mixed;
+    value: unknown;
     /**
      * The type of the value. For "number" type, it will be replaced with the more
      * accurate types: "float", "integer", or "nan".
@@ -233,7 +233,7 @@ declare module 'react-json-view' {
   }
 
   declare export type TypeDefaultValue =
-    string | number | boolean | {readonly [string]: mixed};
+    string | number | boolean | {readonly [string]: unknown};
 
   declare export interface ThemeObject {
     base00: string;

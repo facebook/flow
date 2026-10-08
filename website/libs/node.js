@@ -13,7 +13,7 @@ declare class Buffer {
 }
 
 declare module 'child_process' {
-  declare function execSync(command: string, options?: mixed): Buffer;
+  declare function execSync(command: string, options?: unknown): Buffer;
 
   declare function spawn(
     command: string,
@@ -27,7 +27,7 @@ declare module 'child_process' {
   declare function spawnSync(
     command: string,
     args: Array<string>,
-    options?: mixed,
+    options?: unknown,
   ): {status: number | null, ...};
 }
 
