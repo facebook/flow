@@ -326,7 +326,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test9.js:5:2
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_call` [2] cannot be spread
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `I_call` [2] cannot be spread
 because interfaces do not track the own-ness of their properties. Try using an object type instead.
 [cannot-spread-interface]
 
@@ -342,7 +342,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:11:2
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_index` [2] cannot be spread
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `I_index` [2] cannot be spread
 because interfaces do not track the own-ness of their properties. Try using an object type instead.
 [cannot-spread-interface]
 
@@ -358,7 +358,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:12:2
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I_index` [2] cannot be spread
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `I_index` [2] cannot be spread
 because interfaces do not track the own-ness of their properties. Try using an object type instead.
 [cannot-spread-interface]
 

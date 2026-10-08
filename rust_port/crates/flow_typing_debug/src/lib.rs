@@ -3564,13 +3564,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::ECannotSpreadInterface(box ECannotSpreadInterfaceData {
-            spread_reason,
+            spread_loc,
             interface,
             use_op,
         }) => {
             format!(
                 "ECannotSpreadInterface ({}) ({}) ({})",
-                dump_reason(cx, spread_reason),
+                string_of_aloc(None, spread_loc),
                 dump_error_type_reference(cx, interface),
                 string_of_use_op(use_op)
             )

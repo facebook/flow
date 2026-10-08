@@ -311,8 +311,8 @@ References:
 
 Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:48:33
 
-Cannot spread object literal because Flow cannot determine a type for `TsNarrowInterface` [1]. `FlowInterface` [2]
-cannot be spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `FlowInterface` [2] cannot be
+spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
 [cannot-spread-interface]
 
    object_slice_ts_interface.js:48:33
@@ -330,7 +330,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:51:36
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `FlowInterface` [2] cannot be
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `FlowInterface` [2] cannot be
 spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
 [cannot-spread-interface]
 
@@ -365,8 +365,8 @@ References:
 
 Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:59:32
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `FlowDerivedInterface` [2]
-cannot be spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `FlowDerivedInterface` [2] cannot
+be spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
 [cannot-spread-interface]
 
    object_slice_ts_interface.js:59:32

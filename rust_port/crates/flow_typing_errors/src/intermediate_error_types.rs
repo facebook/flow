@@ -2165,7 +2165,7 @@ pub enum Message<L: Dupe> {
     ),
 
     MessageCannotSpreadInterface {
-        spread_reason: VirtualReason<L>,
+        spread_loc: L,
         interface: MessageTypeReferenceData<L>,
     },
 

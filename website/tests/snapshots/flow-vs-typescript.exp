@@ -187,7 +187,7 @@ No errors!
 === block 10 ===
 Error ------------------------------------------------------------------------- -:8:11
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `Counter` [2] cannot be spread
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `Counter` [2] cannot be spread
 because interfaces do not track the own-ness of their properties. Try using an object type instead.
 [cannot-spread-interface]
 

@@ -2481,7 +2481,7 @@ pub struct ENotAReactComponentData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     serde::Deserialize
 )]
 pub struct ECannotSpreadInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub spread_reason: VirtualReason<L>,
+    pub spread_loc: L,
     pub interface: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
@@ -5940,11 +5940,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ECannotSpreadInterface(box ECannotSpreadInterfaceData {
-                spread_reason,
+                spread_loc,
                 interface,
                 use_op,
             }) => ECannotSpreadInterface(Box::new(ECannotSpreadInterfaceData {
-                spread_reason: map_reason(spread_reason),
+                spread_loc: f(spread_loc),
                 interface: map_error_type_ref_with_reason(interface),
                 use_op: map_use_op(use_op),
             })),
@@ -6894,11 +6894,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EUnsupportedImplements(type_) => EUnsupportedImplements(map_error_type_ref(type_)),
 
             ECannotSpreadInterface(box ECannotSpreadInterfaceData {
-                spread_reason,
+                spread_loc,
                 interface,
                 use_op,
             }) => ECannotSpreadInterface(Box::new(ECannotSpreadInterfaceData {
-                spread_reason,
+                spread_loc,
                 interface: map_error_type_ref_with_reason(interface),
                 use_op: map_use_op(&f, use_op),
             })),
@@ -11440,15 +11440,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::ECannotSpreadInterface(box ECannotSpreadInterfaceData {
-                spread_reason,
+                spread_loc,
                 interface,
                 use_op,
             }) => {
-                let loc = spread_reason.loc.dupe();
+                let loc = spread_loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageCannotSpreadInterface {
-                        spread_reason,
+                        spread_loc,
                         interface: MessageTypeReferenceData {
                             loc: interface.reference_loc,
                             desc: expect_type_desc(interface.type_desc),

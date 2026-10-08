@@ -6393,11 +6393,11 @@ where
                 text(" exact"),
             ]),
             MessageCannotSpreadInterface {
-                spread_reason,
+                spread_loc,
                 interface,
             } => friendly::Message(vec![
-                text("Flow cannot determine a type for "),
-                ref_(spread_reason),
+                text("Flow cannot determine a type for the "),
+                hardcoded_string_desc_ref("spread", spread_loc),
                 text(". "),
                 ref_of_ty_or_desc(&interface.loc, &interface.desc),
                 text(" cannot be spread because interfaces do not "),

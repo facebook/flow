@@ -2300,7 +2300,7 @@ fn resolve_with_env<'cx, A>(
                             env,
                             ErrorMessage::ECannotSpreadInterface(Box::new(
                                 ECannotSpreadInterfaceData {
-                                    spread_reason: reason.dupe(),
+                                    spread_loc: reason.loc().dupe(),
                                     interface: flow_js_utils::type_reference_with_reason_for_error(
                                         &t,
                                         r.dupe(),

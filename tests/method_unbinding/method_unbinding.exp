@@ -47,9 +47,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:83:10
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I` [2] cannot be spread
-because interfaces do not track the own-ness of their properties. Try using an object type instead.
-[cannot-spread-interface]
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `I` [2] cannot be spread because
+interfaces do not track the own-ness of their properties. Try using an object type instead. [cannot-spread-interface]
 
    test.js:83:10
    83| let x3 = {...i}; // cannot spread interface
@@ -63,9 +62,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:84:10
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `J` [2] cannot be spread
-because interfaces do not track the own-ness of their properties. Try using an object type instead.
-[cannot-spread-interface]
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `J` [2] cannot be spread because
+interfaces do not track the own-ness of their properties. Try using an object type instead. [cannot-spread-interface]
 
    test.js:84:10
    84| let x4 = {...j}; // cannot spread interface
