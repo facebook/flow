@@ -1394,5 +1394,22 @@ types. [unsupported-syntax]
                ^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- undefined.js:9:1
 
-Found 155 errors
+Cannot cast `libReturnsUndefined()` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   undefined.js:9:1
+   9| libReturnsUndefined() as string; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   libs/undefined.js:1:50
+   1| declare function libReturnsUndefined(): string | undefined;
+                                                       ^^^^^^^^^ [1]
+   undefined.js:9:26
+   9| libReturnsUndefined() as string; // ERROR
+                               ^^^^^^ [2]
+
+
+
+Found 156 errors
