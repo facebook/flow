@@ -285,7 +285,10 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ResolveUnionT(box ResolveUnionTData { upper, .. }) => {
             default_resolve_touts(flow, resolve_callee, env, loc.dupe(), upper)
         }
-        UseTInner::GetEnumT(box GetEnumTData { tout, .. }) => resolve(tout.dupe()),
+        UseTInner::GetEnumT(box GetEnumTData { collector, .. }) => {
+            collector.add(any.dupe());
+            Ok(())
+        }
         UseTInner::HooklikeT(tvar) | UseTInner::DeepReadOnlyT(tvar, _) => resolve_tvar(tvar),
         UseTInner::FilterOptionalT(_, t) | UseTInner::FilterMaybeT(_, t) => resolve(t.dupe()),
         UseTInner::SealGenericT(box SealGenericTData { cont, .. }) => resolve_cont(cont),

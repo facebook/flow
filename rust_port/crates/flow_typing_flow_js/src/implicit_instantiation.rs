@@ -118,6 +118,7 @@ use flow_typing_type::type_::open_tvar;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::react;
 use flow_typing_type::type_::string_of_use_ctor;
+use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_::unsoundness;
@@ -463,24 +464,36 @@ fn t_of_use_t<'cx>(
                 box Destructor::EnumType => {
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
                     bind_use_t_result(result, &|tout_val: Type| {
-                        let result_t = flow_typing_tvar::mk_no_wrap_where(
+                        let collector = TypeCollector::create();
+                        let u_inner = UseTInner::GetEnumT(Box::new(GetEnumTData {
+                            use_op: unknown_use(),
+                            loc: r.loc().dupe(),
+                            orig_t: None,
+                            kind: GetEnumKind::GetEnumValue,
+                            collector: collector.dupe(),
+                        }));
+                        FlowJs::flow_with_env(cx, env, &tout_val, &UseT::new(u_inner))?;
+                        let mut collected = Vec::new();
+                        collect_pinning_lowers(
                             cx,
+                            env,
+                            &mut BTreeSet::new(),
+                            &mut collected,
+                            collector.collect_to_vec(),
+                        );
+                        let filtered = union_flatten_list(collected)
+                            .into_iter()
+                            .filter(|t| !flow_js_utils::tvar_visitors::has_placeholders(cx, t))
+                            .collect();
+                        let result = type_util::union_of_ts_opt(
                             r.dupe(),
-                            |cx, _reason, t_prime_id| {
-                                let t_prime_tvar = Tvar::new(r.dupe(), t_prime_id as u32);
-                                let open_t_prime = Type::new(TypeInner::OpenT(t_prime_tvar));
-                                let u_inner = UseTInner::GetEnumT(Box::new(GetEnumTData {
-                                    use_op: unknown_use(),
-                                    loc: r.loc().dupe(),
-                                    orig_t: None,
-                                    kind: GetEnumKind::GetEnumValue,
-                                    tout: open_t_prime,
-                                }));
-                                FlowJs::flow_with_env(cx, env, &tout_val, &UseT::new(u_inner))?;
-                                Ok::<(), FlowJsException>(())
-                            },
-                        )?;
-                        use_t_result_of_t_option(merge_lower_bounds(cx, env, &result_t))
+                            filtered,
+                            Some(union_rep::UnionKind::ImplicitInstantiationKind),
+                        );
+                        Ok(match result {
+                            Some(t) => UseTResult::UpperT(t),
+                            None => UseTResult::UpperEmpty,
+                        })
                     })
                 }
                 box Destructor::ReactElementConfigType => {

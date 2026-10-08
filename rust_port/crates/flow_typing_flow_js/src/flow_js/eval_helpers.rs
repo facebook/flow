@@ -28,6 +28,7 @@ use flow_typing_type::type_::ResolveSpreadTData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
+use flow_typing_type::type_::type_collector::TypeCollector;
 
 // Disambiguate helpers vs mod re-exports
 use super::constraint_helpers::frozen_implicit_instantiation_tvar;
@@ -1354,14 +1355,20 @@ pub(super) fn eval_destructor<'cx>(
                     rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::EnumType => {
+                    let collector = TypeCollector::create();
                     let u = UseT::new(UseTInner::GetEnumT(Box::new(GetEnumTData {
                         use_op: use_op.dupe(),
                         loc: reason.loc().dupe(),
                         orig_t: Some(t.dupe()),
                         kind: GetEnumKind::GetEnumObject,
-                        tout: Type::new(TypeInner::OpenT(tout.dupe())),
+                        collector: collector.dupe(),
                     })));
-                    rec_flow(cx, env, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))?;
+                    let tout = Type::new(TypeInner::OpenT(tout.dupe()));
+                    for t in collector.collect_to_vec() {
+                        rec_flow_t(cx, env, trace, use_op.dupe(), (&t, &tout))?;
+                    }
+                    Ok(())
                 }
             }
         }

@@ -1950,7 +1950,7 @@ pub struct GetEnumTData {
     pub loc: ALoc,
     pub orig_t: Option<Type>,
     pub kind: GetEnumKind,
-    pub tout: Type,
+    pub collector: type_collector::TypeCollector,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

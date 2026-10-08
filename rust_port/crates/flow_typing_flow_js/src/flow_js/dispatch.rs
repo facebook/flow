@@ -9544,10 +9544,9 @@ fn __flow_impl<'cx>(
         (
             TypeInner::DefT(enum_reason, def_t),
             UseTInner::GetEnumT(box GetEnumTData {
-                use_op,
                 orig_t,
                 kind: GetEnumKind::GetEnumObject,
-                tout,
+                collector,
                 ..
             }),
         ) if let DefTInner::EnumValueT(enum_info) = def_t.deref() => {
@@ -9562,50 +9561,27 @@ fn __flow_impl<'cx>(
                     enum_info: enum_info.dupe(),
                 }),
             ));
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    &enum_obj,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), tout.dupe())),
-                ),
-            )?;
+            collector.add(enum_obj);
         }
         (
             _,
             UseTInner::GetEnumT(box GetEnumTData {
-                use_op,
                 kind: GetEnumKind::GetEnumObject,
-                tout,
+                collector,
                 ..
             }),
         ) => {
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (l, &UseT::new(UseTInner::UseT(use_op.dupe(), tout.dupe()))),
-            )?;
+            collector.add(l.dupe());
         }
         (
             TypeInner::DefT(_, def_t),
             UseTInner::GetEnumT(box GetEnumTData {
-                use_op,
                 kind: GetEnumKind::GetEnumValue,
-                tout,
+                collector,
                 ..
             }),
         ) if let DefTInner::EnumObjectT { enum_value_t, .. } = def_t.deref() => {
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    enum_value_t,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), tout.dupe())),
-                ),
-            )?;
+            collector.add(enum_value_t.dupe());
         }
         // **********************************
         // * Flow Enums exhaustive checking *
@@ -9613,18 +9589,12 @@ fn __flow_impl<'cx>(
         (
             _,
             UseTInner::GetEnumT(box GetEnumTData {
-                use_op,
                 kind: GetEnumKind::GetEnumValue,
-                tout,
+                collector,
                 ..
             }),
         ) => {
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (l, &UseT::new(UseTInner::UseT(use_op.dupe(), tout.dupe()))),
-            )?;
+            collector.add(l.dupe());
         }
         // ***************
         // * unsupported *
