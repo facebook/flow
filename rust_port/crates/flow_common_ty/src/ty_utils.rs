@@ -58,6 +58,7 @@ pub fn patch_up_react_symbol(symbol: &Symbol<ALoc>) -> Option<Symbol<ALoc>> {
     if !matches!(
         name,
         "ChildrenArray"
+            | "ComponentProps"
             | "ComponentType"
             | "Context"
             | "MixedElement"

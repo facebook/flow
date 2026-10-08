@@ -9,9 +9,9 @@ class MyComponent extends React.Component<{foo: number, ...}> {
   }
 }
 
-type ReactA = React.ElementConfig<typeof MyComponent>;
+type ReactA = React.ComponentProps<typeof MyComponent>;
 //   ^
-type ReactAP<X> = React.ElementConfig<X>;
+type ReactAP<X extends React.ElementType> = React.ComponentProps<X>;
 //   ^
 
 // The following tests caching of EvalT result. If re-evaluated the $NonMaybeType

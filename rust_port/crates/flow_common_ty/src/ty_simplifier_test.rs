@@ -78,6 +78,13 @@ mod tests {
         let patched = patch_up_react_symbol(&symbol).unwrap();
         assert_eq!(patched.sym_name, "React.Portal");
 
+        let component_props_symbol = Symbol {
+            sym_name: FlowSmolStr::new_inline("ComponentProps"),
+            ..symbol
+        };
+        let patched = patch_up_react_symbol(&component_props_symbol).unwrap();
+        assert_eq!(patched.sym_name, "React.ComponentProps");
+
         let internal_symbol = Symbol {
             sym_provenance: Provenance::Local,
             sym_def_loc: ALoc::none(),

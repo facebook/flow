@@ -26,7 +26,7 @@ f = () => {
   type $RelayProps<T> = MapProps<
     Omit<T, empty>,
   >;
-  declare const Comp: React.ComponentType<$RelayProps<React.ElementConfig<typeof BaseComp>>>;
+  declare const Comp: React.ComponentType<$RelayProps<React.ComponentProps<typeof BaseComp>>>;
   <Comp foo={''} bar={3} />;
 //       ^
 }
