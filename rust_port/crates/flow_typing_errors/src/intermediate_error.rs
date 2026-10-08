@@ -6330,9 +6330,9 @@ where
                 text(" first or remove the indexer"),
             ]),
             MessageCannotSpreadGeneral(box MessageCannotSpreadGeneralData {
-                spread_reason,
-                object1_reason,
-                object2_reason,
+                spread_loc,
+                object1,
+                object2,
                 propname,
                 error_kind,
             }) => {
@@ -6340,13 +6340,17 @@ where
                 let (error_reason, fix_suggestion) = match error_kind {
                     ExactnessErrorKind::UnexpectedInexact => (
                         "is inexact",
-                        vec![text(" Try making "), ref_(object2_reason), text(" exact")],
+                        vec![
+                            text(" Try making "),
+                            ref_of_ty_or_desc(&object2.loc, &object2.desc),
+                            text(" exact"),
+                        ],
                     ),
                     ExactnessErrorKind::UnexpectedIndexer => (
                         "has an indexer",
                         vec![
                             text(" Try removing the indexer in "),
-                            ref_(object2_reason),
+                            ref_of_ty_or_desc(&object2.loc, &object2.desc),
                             text(" or make "),
                             code(&propname.display_smol_str()),
                             text(" a required property"),
@@ -6354,10 +6358,10 @@ where
                     ),
                 };
                 let mut features = vec![
-                    text("Flow cannot determine a type for "),
-                    ref_(spread_reason),
+                    text("Flow cannot determine a type for the "),
+                    hardcoded_string_desc_ref("spread", spread_loc),
                     text(". "),
-                    ref_(object2_reason),
+                    ref_of_ty_or_desc(&object2.loc, &object2.desc),
                     text(" "),
                     text(error_reason),
                     text(", so it may contain "),
@@ -6365,7 +6369,7 @@ where
                     text(" with a type that conflicts with "),
                     code(&propname.display_smol_str()),
                     text("'s definition in "),
-                    ref_(object1_reason),
+                    ref_of_ty_or_desc(&object1.loc, &object1.desc),
                     text("."),
                 ];
                 features.extend(fix_suggestion);

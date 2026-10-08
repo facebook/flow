@@ -348,9 +348,9 @@ References:
 
 Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:55:31
 
-Cannot spread object literal because Flow cannot determine a type for `TsNarrowInterface` [1]. `FlowInexact` [2] is
-inexact, so it may contain `sentinel` with a type that conflicts with `sentinel`'s definition in object literal [3]. Try
-making `FlowInexact` [2] exact. [cannot-spread-inexact]
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `FlowInexact` [2] is inexact, so
+it may contain `sentinel` with a type that conflicts with `sentinel`'s definition in object literal [3]. Try making
+`FlowInexact` [2] exact. [cannot-spread-inexact]
 
    object_slice_ts_interface.js:55:31
    55| const tsOrFlowInexactSpread = {sentinel: true, ...tsOrFlowInexact}; // ERROR

@@ -1447,9 +1447,9 @@ pub struct MessageCannotImportGlobalLibdefData {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotSpreadGeneralData<L: Dupe> {
-    pub spread_reason: VirtualReason<L>,
-    pub object1_reason: VirtualReason<L>,
-    pub object2_reason: VirtualReason<L>,
+    pub spread_loc: L,
+    pub object1: MessageTypeReferenceData<L>,
+    pub object2: MessageTypeReferenceData<L>,
     pub propname: Name,
     pub error_kind: ExactnessErrorKind,
 }

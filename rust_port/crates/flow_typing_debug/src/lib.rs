@@ -3595,18 +3595,18 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EUnableToSpread(box EUnableToSpreadData {
-            spread_reason,
-            object1_reason,
-            object2_reason,
+            spread_loc,
+            object1,
+            object2,
             propname,
             error_kind: _,
             use_op,
         }) => {
             format!(
                 "EUnableToSpread ({}) ({}) ({}) ({}) ({})",
-                dump_reason(cx, spread_reason),
-                dump_reason(cx, object1_reason),
-                dump_reason(cx, object2_reason),
+                string_of_aloc(None, spread_loc),
+                dump_error_type_reference(cx, object1),
+                dump_error_type_reference(cx, object2),
                 propname,
                 string_of_use_op(use_op)
             )

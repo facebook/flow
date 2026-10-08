@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_cases.js:87:11
 
-Flow cannot determine a type for object type [1]. `A7` [2] has an indexer, so it may contain `p` with a type that
+Flow cannot determine a type for the spread [1]. `A7` [2] has an indexer, so it may contain `p` with a type that
 conflicts with `p`'s definition in `B7` [3]. Try removing the indexer in `A7` [2] or make `p` a required property.
 [cannot-spread-indexer]
 
@@ -53,7 +53,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_cases.js:177:12
 
-Flow cannot determine a type for object type [1]. `A15` [2] has an indexer, so it may contain `p` with a type that
+Flow cannot determine a type for the spread [1]. `A15` [2] has an indexer, so it may contain `p` with a type that
 conflicts with `p`'s definition in `B15` [3]. Try removing the indexer in `A15` [2] or make `p` a required property.
 [cannot-spread-indexer]
 
@@ -151,7 +151,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_cases.js:267:12
 
-Flow cannot determine a type for object type [1]. `A23` [2] has an indexer, so it may contain `p` with a type that
+Flow cannot determine a type for the spread [1]. `A23` [2] has an indexer, so it may contain `p` with a type that
 conflicts with `p`'s definition in `B23` [3]. Try removing the indexer in `A23` [2] or make `p` a required property.
 [cannot-spread-indexer]
 
@@ -170,7 +170,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- all_cases.js:359:12
 
-Flow cannot determine a type for object type [1]. `A31` [2] has an indexer, so it may contain `p` with a type that
+Flow cannot determine a type for the spread [1]. `A31` [2] has an indexer, so it may contain `p` with a type that
 conflicts with `p`'s definition in `B31` [3]. Try removing the indexer in `A31` [2] or make `p` a required property.
 [cannot-spread-indexer]
 

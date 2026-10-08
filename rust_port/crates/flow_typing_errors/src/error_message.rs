@@ -2547,9 +2547,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ECannotSpreadIndexerOn
     serde::Deserialize
 )]
 pub struct EUnableToSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub spread_reason: VirtualReason<L>,
-    pub object1_reason: VirtualReason<L>,
-    pub object2_reason: VirtualReason<L>,
+    pub spread_loc: L,
+    pub object1: ErrorTypeReferenceWithLocData<L>,
+    pub object2: ErrorTypeReferenceWithLocData<L>,
     pub propname: Name,
     pub error_kind: ExactnessErrorKind,
     pub use_op: VirtualUseOp<L>,
@@ -5964,16 +5964,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EUnableToSpread(box EUnableToSpreadData {
-                spread_reason,
-                object1_reason,
-                object2_reason,
+                spread_loc,
+                object1,
+                object2,
                 propname,
                 error_kind,
                 use_op,
             }) => EUnableToSpread(Box::new(EUnableToSpreadData {
-                spread_reason: map_reason(spread_reason),
-                object1_reason: map_reason(object1_reason),
-                object2_reason: map_reason(object2_reason),
+                spread_loc: f(spread_loc),
+                object1: map_error_type_ref_with_reason(object1),
+                object2: map_error_type_ref_with_reason(object2),
                 propname,
                 error_kind,
                 use_op: map_use_op(use_op),
@@ -7569,6 +7569,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => ENegativeTypeGuardConsistency(Box::new(ENegativeTypeGuardConsistencyData {
                 return_reason,
                 type_: map_error_type_ref(type_),
+            })),
+
+            EUnableToSpread(box EUnableToSpreadData {
+                spread_loc,
+                object1,
+                object2,
+                propname,
+                error_kind,
+                use_op,
+            }) => EUnableToSpread(Box::new(EUnableToSpreadData {
+                spread_loc,
+                object1: map_error_type_ref_with_reason(object1),
+                object2: map_error_type_ref_with_reason(object2),
+                propname,
+                error_kind,
+                use_op: map_use_op(&f, use_op),
             })),
 
             EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
@@ -11486,21 +11502,27 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::EUnableToSpread(box EUnableToSpreadData {
-                spread_reason,
-                object1_reason,
-                object2_reason,
+                spread_loc,
+                object1,
+                object2,
                 propname,
                 error_kind,
                 use_op,
             }) => {
-                let loc = spread_reason.loc.dupe();
+                let loc = spread_loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageCannotSpreadGeneral(Box::new(
                         MessageCannotSpreadGeneralData {
-                            spread_reason,
-                            object1_reason,
-                            object2_reason,
+                            spread_loc,
+                            object1: MessageTypeReferenceData {
+                                loc: object1.reference_loc,
+                                desc: expect_type_desc(object1.type_desc),
+                            },
+                            object2: MessageTypeReferenceData {
+                                loc: object2.reference_loc,
+                                desc: expect_type_desc(object2.type_desc),
+                            },
                             propname,
                             error_kind,
                         },

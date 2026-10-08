@@ -534,8 +534,8 @@ fn spread2<'cx>(
     allow_inexact: bool,
     (
         _inline1,
-        inexact_reason1,
-        object::Slice {
+        inexact_slice1,
+        slice1 @ object::Slice {
             reason: r1,
             strictness_kind: strictness_kind1,
             props: props1,
@@ -545,10 +545,10 @@ fn spread2<'cx>(
             interface: _,
             reachable_targs: targs1,
         },
-    ): &(bool, Option<Reason>, object::Slice),
+    ): &(bool, Option<object::Slice>, object::Slice),
     (
         inline2,
-        _inexact_reason2,
+        _inexact_slice2,
         slice2 @ object::Slice {
             reason: r2,
             strictness_kind: strictness_kind2,
@@ -559,8 +559,8 @@ fn spread2<'cx>(
             interface: _,
             reachable_targs: targs2,
         },
-    ): &(bool, Option<Reason>, object::Slice),
-) -> Result<(bool, Option<Reason>, object::Slice), FlowJsException> {
+    ): &(bool, Option<object::Slice>, object::Slice),
+) -> Result<(bool, Option<object::Slice>, object::Slice), FlowJsException> {
     let exact1 = obj_type::is_exact(&flags1.obj_kind);
     let exact2 = obj_type::is_exact(&flags2.obj_kind);
     let allow_inexact1 = allow_inexact || strictness_kind1.is_typescript_loose();
@@ -658,9 +658,15 @@ fn spread2<'cx>(
                     } else {
                         return Err(FlowJsException::Speculative(SpeculativeError(Box::new(
                             ErrorMessage::EUnableToSpread(Box::new(EUnableToSpreadData {
-                                spread_reason: reason.dupe(),
-                                object1_reason: r1.dupe(),
-                                object2_reason: r2.dupe(),
+                                spread_loc: reason.loc().dupe(),
+                                object1: flow_js_utils::type_reference_with_reason_for_error(
+                                    &object_type_of_slice(cx, slice1),
+                                    r1.dupe(),
+                                ),
+                                object2: flow_js_utils::type_reference_with_reason_for_error(
+                                    &object_type_of_slice(cx, slice2),
+                                    r2.dupe(),
+                                ),
                                 propname: x.dupe(),
                                 error_kind:
                                     intermediate_error_types::ExactnessErrorKind::UnexpectedInexact,
@@ -693,15 +699,18 @@ fn spread2<'cx>(
                             } else {
                                 intermediate_error_types::ExactnessErrorKind::UnexpectedInexact
                             };
-                            let inexact_reason = match inexact_reason1 {
-                                None => r1.dupe(),
-                                Some(r) => r.dupe(),
-                            };
+                            let inexact_slice = inexact_slice1.as_ref().unwrap_or(slice1);
                             return Err(FlowJsException::Speculative(SpeculativeError(Box::new(
                                 ErrorMessage::EUnableToSpread(Box::new(EUnableToSpreadData {
-                                    spread_reason: reason.dupe(),
-                                    object1_reason: r2.dupe(),
-                                    object2_reason: inexact_reason,
+                                    spread_loc: reason.loc().dupe(),
+                                    object1: flow_js_utils::type_reference_with_reason_for_error(
+                                        &object_type_of_slice(cx, slice2),
+                                        r2.dupe(),
+                                    ),
+                                    object2: flow_js_utils::type_reference_with_reason_for_error(
+                                        &object_type_of_slice(cx, inexact_slice),
+                                        inexact_slice.reason.dupe(),
+                                    ),
                                     propname: x.dupe(),
                                     error_kind,
                                     use_op: use_op.dupe(),
@@ -736,24 +745,24 @@ fn spread2<'cx>(
     let generics = flow_typing_generics::spread_append(generics1, generics2);
     let mut reachable_targs = targs1.to_vec();
     reachable_targs.extend_from_slice(targs2);
-    let inexact_reason = match (exact1, exact2) {
-        // If the inexact reason is None, that means we still haven't hit an inexact object yet, so we can
-        // take that reason to propagate as the reason for the accumulator's inexactness.
+    let inexact_slice = match (exact1, exact2) {
+        // If the inexact slice is None, that means we still haven't hit an inexact object yet, so we can
+        // take that slice to propagate as the source of the accumulator's inexactness.
         //
-        // If it's already Some r, then the reason the object on the left is inexact
+        // If it's already Some s, then the reason the object on the left is inexact
         // is because of an earlier inexact object. We would have already encountered that inexact
         // object on the right in a previous iteration of spread2, so the next case in the
-        // match would have already updated the inexact reason to the most recent inexact object.
+        // match would have already updated the inexact slice to the most recent inexact object.
         // The only exception to this rule is if the first object is inexact, in which case
-        // inexact_reason1 is already None anyway.
-        (false, true) if inexact_reason1.is_none() => Some(r1.dupe()),
-        (_, false) => Some(r2.dupe()),
-        _ => inexact_reason1.dupe(),
+        // inexact_slice1 is already None anyway.
+        (false, true) if inexact_slice1.is_none() => Some(slice1.clone()),
+        (_, false) => Some(slice2.clone()),
+        _ => inexact_slice1.clone(),
     };
     match props {
         Ok(props) => Ok((
             false,
-            inexact_reason,
+            inexact_slice,
             object::Slice {
                 reason: reason.dupe(),
                 strictness_kind: strictness_kind1.join(*strictness_kind2),
@@ -780,9 +789,9 @@ pub fn spread<'cx>(
         object::spread::AccElement,
         flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement>,
     ),
-) -> Result<Vec1<(bool, Option<Reason>, object::Slice)>, FlowJsException> {
+) -> Result<Vec1<(bool, Option<object::Slice>, object::Slice)>, FlowJsException> {
     let resolved_of_acc_element =
-        |elem: object::spread::AccElement| -> Vec1<(bool, Option<Reason>, object::Slice)> {
+        |elem: object::spread::AccElement| -> Vec1<(bool, Option<object::Slice>, object::Slice)> {
             match elem {
                 object::spread::AccElement::ResolvedSlice(resolved) => {
                     let items: Vec<_> = resolved.0.into_iter().map(|x| (false, None, x)).collect();

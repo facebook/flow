@@ -56,9 +56,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- exact.js:13:36
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
-it may contain `bar` with a type that conflicts with `bar`'s definition in object literal [3]. Try making object
-type [2] exact. [cannot-spread-inexact]
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{baz: number, ...}` [2] is
+inexact, so it may contain `bar` with a type that conflicts with `bar`'s definition in object literal [3]. Try making
+`{baz: number, ...}` [2] exact. [cannot-spread-inexact]
 
    exact.js:13:36
    13| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
@@ -73,11 +73,49 @@ References:
                      ^^^^^^^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------- inexact_tracker.js:4:2
+
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{x: number, ...}` [2] is inexact,
+so it may contain `p` with a type that conflicts with `p`'s definition in `{p?: number}` [3]. Try making
+`{x: number, ...}` [2] exact. [cannot-spread-inexact]
+
+   inexact_tracker.js:4:2
+   4| ({...inexact, ...exact, ...opt}); // error: the inexact operand is not the adjacent one
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inexact_tracker.js:1:24
+   1| declare const inexact: {x: number, ...};
+                             ^^^^^^^^^^^^^^^^ [2]
+   inexact_tracker.js:3:20
+   3| declare const opt: {p?: number};
+                         ^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- inexact_tracker.js:5:2
+
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{x: number, ...}` [2] is inexact,
+so it may contain `p` with a type that conflicts with `p`'s definition in `{p?: number}` [3]. Try making
+`{x: number, ...}` [2] exact. [cannot-spread-inexact]
+
+   inexact_tracker.js:5:2
+   5| ({...inexact, ...opt}); // error
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inexact_tracker.js:1:24
+   1| declare const inexact: {x: number, ...};
+                             ^^^^^^^^^^^^^^^^ [2]
+   inexact_tracker.js:3:20
+   3| declare const opt: {p?: number};
+                         ^^^^^^^^^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------------- nested_unions.js:7:2
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
-it may contain `a` with a type that conflicts with `a`'s definition in object type [3]. Try making object type [2]
-exact. [cannot-spread-inexact]
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{...}` [2] is inexact, so it may
+contain `a` with a type that conflicts with `a`'s definition in `{a: string, ...}` [3]. Try making `{...}` [2] exact.
+[cannot-spread-inexact]
 
    nested_unions.js:7:2
    7| ({...OBJ, ...works1}); // error: cannot-spread-inexact
@@ -94,9 +132,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- nested_unions.js:8:2
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
-it may contain `a` with a type that conflicts with `a`'s definition in object type [3]. Try making object type [2]
-exact. [cannot-spread-inexact]
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{...}` [2] is inexact, so it may
+contain `a` with a type that conflicts with `a`'s definition in `{a: string, ...}` [3]. Try making `{...}` [2] exact.
+[cannot-spread-inexact]
 
    nested_unions.js:8:2
    8| ({...OBJ, ...works2}); // error: cannot-spread-inexact
@@ -113,9 +151,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- nested_unions.js:9:2
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] is inexact, so
-it may contain `a` with a type that conflicts with `a`'s definition in object type [3]. Try making object type [2]
-exact. [cannot-spread-inexact]
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{...}` [2] is inexact, so it may
+contain `a` with a type that conflicts with `a`'s definition in `{a: string, ...}` [3]. Try making `{...}` [2] exact.
+[cannot-spread-inexact]
 
    nested_unions.js:9:2
    9| ({...OBJ, ...works3}); // error: cannot-spread-inexact
@@ -373,4 +411,4 @@ References:
 
 
 
-Found 21 errors
+Found 23 errors
