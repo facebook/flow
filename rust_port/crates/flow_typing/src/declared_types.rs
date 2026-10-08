@@ -296,8 +296,14 @@ fn imported_assertion_info(
     let Ok(module) = module(cx, cx) else {
         return None;
     };
-    if matches!(import.remote, ImportedName::CommonJS)
-        && let Some((_, export)) = &module.module_export_types.cjs_export
+    // Mirror checking's ESM default-import typing
+    // (`import_default_t_kit::on_module_t_with_env`): a default import
+    // from a CJS module is the whole `cjs_export`, not the tmap's
+    // `default` entry.
+    if matches!(
+        import.remote,
+        ImportedName::CommonJS | ImportedName::Default
+    ) && let Some((_, export)) = &module.module_export_types.cjs_export
     {
         let callee_type = callee_type_for_classification(
             cx,
