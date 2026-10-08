@@ -338,7 +338,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:90:20
 
-Cannot use `MyClass` [1] without 1 type argument. [missing-type-arg]
+Cannot use class `MyClass` [1] without 1 type argument. [missing-type-arg]
 
    regression_tests.js:90:20
    90|   declare const c: MyClass;

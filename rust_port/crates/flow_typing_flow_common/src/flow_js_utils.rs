@@ -4033,6 +4033,7 @@ pub mod value_to_type_reference_transform {
     use super::fix_this_instance;
     use super::lookup_builtin_type_with_env;
     use super::type_reference_at_loc_for_error;
+    use super::type_reference_with_reason_for_error;
     use super::value_as_type_reference_for_error;
     use crate::type_subst::Purpose;
     use crate::type_subst::subst;
@@ -4188,7 +4189,7 @@ pub mod value_to_type_reference_transform {
                         env,
                         ErrorMessage::EMissingTypeArgs(Box::new(EMissingTypeArgsData {
                             loc: reason_op.loc().dupe(),
-                            reason_tapp_desc: reason.desc.clone(),
+                            type_: type_reference_with_reason_for_error(&t, reason.dupe()),
                             arity_loc: tparams_loc,
                             min_arity,
                             max_arity: ids.len() as i32,

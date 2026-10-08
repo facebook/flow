@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:21:8
 
-Cannot use `MyClass` [1] without 1 type argument. [missing-type-arg]
+Cannot use class `MyClass` [1] without 1 type argument. [missing-type-arg]
 
    test.js:21:8
    21| var c: MyClass = new MyClass(0); // error, missing argument list (1)
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:9
 
-Cannot use `MyClass2` [1] without 1-2 type arguments. [missing-type-arg]
+Cannot use class `MyClass2` [1] without 1-2 type arguments. [missing-type-arg]
 
    test.js:34:9
    34| var c2: MyClass2 = new MyClass2(0, ""); // error, missing argument list (1-2)
@@ -56,7 +56,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:34
 
-Cannot use `MyInterface` [1] without 1 type argument. [missing-type-arg]
+Cannot use interface `MyInterface` [1] without 1 type argument. [missing-type-arg]
 
    test.js:54:34
    54| interface MySubinterface extends MyInterface { // error, missing argument list

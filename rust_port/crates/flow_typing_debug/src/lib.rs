@@ -2122,15 +2122,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData {
             loc,
-            reason_tapp_desc,
+            type_,
             arity_loc,
             min_arity,
             max_arity,
         }) => {
             format!(
-                "EMissingTypeArgs(Box::new(EMissingTypeArgsData {{ reason_op={}; reason_tapp={}; reason_arity={}; min_arity={}; max_arity={} }}))",
+                "EMissingTypeArgs(Box::new(EMissingTypeArgsData {{ loc={}; type_={}; arity_loc={}; min_arity={}; max_arity={} }}))",
                 string_of_aloc(None, loc),
-                format_args!("{:?}", reason_tapp_desc),
+                dump_error_type_reference(cx, type_),
                 string_of_aloc(None, arity_loc),
                 min_arity,
                 max_arity

@@ -2218,7 +2218,7 @@ pub enum Message<L: Dupe> {
     MessageCannotUseTypeInValuePosition(Box<MessageCannotUseTypeInValuePositionData<L>>),
 
     MessageCannotUseTypeWithoutAnyTypeArgs {
-        reason_arity: VirtualReason<L>,
+        type_: MessageTypeReferenceData<L>,
         min_arity: i32,
         max_arity: i32,
     },

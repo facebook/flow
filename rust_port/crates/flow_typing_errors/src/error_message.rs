@@ -1194,7 +1194,7 @@ pub struct EIncompatiblePropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EMissingTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub reason_tapp_desc: VirtualReasonDesc<L>,
+    pub type_: ErrorTypeReferenceWithLocData<L>,
     pub arity_loc: L,
     pub min_arity: i32,
     pub max_arity: i32,
@@ -5118,13 +5118,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EMissingTypeArgs(box EMissingTypeArgsData {
                 loc,
-                reason_tapp_desc,
+                type_,
                 arity_loc,
                 min_arity,
                 max_arity,
             }) => EMissingTypeArgs(Box::new(EMissingTypeArgsData {
                 loc: f(loc),
-                reason_tapp_desc: map_desc(reason_tapp_desc),
+                type_: map_error_type_ref_with_reason(type_),
                 arity_loc: f(arity_loc),
                 min_arity,
                 max_arity,
@@ -7843,6 +7843,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 suggestion,
             })),
 
+            EMissingTypeArgs(box EMissingTypeArgsData {
+                loc,
+                type_,
+                arity_loc,
+                min_arity,
+                max_arity,
+            }) => EMissingTypeArgs(Box::new(EMissingTypeArgsData {
+                loc,
+                type_: map_error_type_ref_with_reason(type_),
+                arity_loc,
+                min_arity,
+                max_arity,
+            })),
+
             EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 use_op,
                 lower_loc,
@@ -10537,13 +10551,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ),
 
             ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData {
-                reason_tapp_desc,
+                type_,
                 arity_loc,
                 min_arity,
                 max_arity,
                 ..
             }) => Normal(Message::MessageCannotUseTypeWithoutAnyTypeArgs {
-                reason_arity: VirtualReason::new(reason_tapp_desc, arity_loc),
+                type_: MessageTypeReferenceData {
+                    loc: arity_loc,
+                    desc: expect_type_desc(type_.type_desc),
+                },
                 min_arity,
                 max_arity,
             }),

@@ -6674,7 +6674,7 @@ where
                 }
             }
             MessageCannotUseTypeWithoutAnyTypeArgs {
-                reason_arity,
+                type_,
                 min_arity,
                 max_arity,
             } => {
@@ -6692,7 +6692,7 @@ where
                 };
                 friendly::Message(vec![
                     text("Cannot use "),
-                    ref_(reason_arity),
+                    ref_of_ty_or_desc(&type_.loc, &type_.desc),
                     text(&format!(" without {} type {}.", arity, args)),
                 ])
             }

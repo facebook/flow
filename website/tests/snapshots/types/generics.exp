@@ -212,7 +212,7 @@ No errors!
 === block 25 ===
 Error ---------------------------------------------------------------------------- -:10:12
 
-Cannot use `Item` [1] without 1 type argument. [missing-type-arg]
+Cannot use class `Item` [1] without 1 type argument. [missing-type-arg]
 
    -:10:12
    10| let item2: Item = new Item(42); // Error!
@@ -246,7 +246,7 @@ Found 1 error
 === block 27 ===
 Error ---------------------------------------------------------------------------- -:11:19
 
-Cannot use `HasProp` [1] without 1 type argument. [missing-type-arg]
+Cannot use interface `HasProp` [1] without 1 type argument. [missing-type-arg]
 
    -:11:19
    11| Item.prototype as HasProp; // Error!

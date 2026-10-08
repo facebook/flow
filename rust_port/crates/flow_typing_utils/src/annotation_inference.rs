@@ -1301,13 +1301,15 @@ fn elab_t_concrete<'cx>(
                     tparams,
                     ..
                 }) => {
-                    let reason_tapp = def_reason.dupe();
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         flow_typing_errors::error_message::ErrorMessage::EMissingTypeArgs(
                             Box::new(EMissingTypeArgsData {
                                 loc: reason.loc().dupe(),
-                                reason_tapp_desc: reason_tapp.desc(false).clone(),
+                                type_: flow_js_utils::type_reference_with_reason_for_error(
+                                    &t,
+                                    def_reason.dupe(),
+                                ),
                                 arity_loc: tparams_loc.dupe(),
                                 min_arity: tparams.iter().filter(|tp| tp.default.is_none()).count()
                                     as i32,

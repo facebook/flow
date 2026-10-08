@@ -43,7 +43,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.ts:39:10
 
-Cannot use `MyClass2` [1] without 1 type argument. [missing-type-arg]
+Cannot use class `MyClass2` [1] without 1 type argument. [missing-type-arg]
 
    test.ts:39:10
    39| const g: MyClass2 = new MyClass2(1); // ERROR: missing type args
@@ -71,7 +71,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.ts:77:27
 
-Cannot use `IBase2` [1] without 1 type argument. [missing-type-arg]
+Cannot use interface `IBase2` [1] without 1 type argument. [missing-type-arg]
 
    test.ts:77:27
    77| interface IChild2 extends IBase2 {} // ERROR: missing type args

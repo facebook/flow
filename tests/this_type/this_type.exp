@@ -791,7 +791,7 @@ Unexpected use of `this` type. [illegal-this]
 
 Error ---------------------------------------------------------------------------------------------- interface.js:221:32
 
-Cannot use `IPolyArity` [1] without 1 type argument. [missing-type-arg]
+Cannot use interface `IPolyArity` [1] without 1 type argument. [missing-type-arg]
 
    interface.js:221:32
    221| class CMissingArity implements IPolyArity { // ERROR: [missing-type-arg]
