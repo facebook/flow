@@ -82,7 +82,6 @@ fn attempt_union_rep_optimization<'cx>(
 ) {
     if !rep.is_optimized_finally() {
         rep.optimize(
-            |t| reason_of_t(t).dupe(),
             |t1, t2| concrete_type_eq::eq(cx, t1, t2),
             |ts: &mut dyn Iterator<Item = &Type>| type_mapper::union_flatten(cx, ts.duped()),
             |t| cx.find_resolved(t),

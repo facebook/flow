@@ -6093,10 +6093,12 @@ where
             }
             MessageCannotOptimizeUnionInternally(kind) => {
                 use flow_typing_type::type_::union_rep::OptimizedError;
+
+                use super::error_message::expect_type_desc;
                 let features = match kind {
-                    OptimizedError::ContainsUnresolved(r) => vec![
+                    OptimizedError::ContainsUnresolved { loc, desc } => vec![
                         text("Flow cannot resolve "),
-                        ref_(r),
+                        ref_of_ty_or_desc(loc, &expect_type_desc(desc.clone())),
                         text(" well enough to quickly check this union. "),
                         text("Try inlining or simplifying this type."),
                     ],

@@ -23,8 +23,8 @@ more information on unions. [union-unoptimizable]
 
 Error ---------------------------------------------------------------------------------------------------- file.js:31:15
 
-Flow cannot resolve `Readonly` [1] well enough to quickly check this union. Try inlining or simplifying this type.
-[union-unoptimizable]
+Flow cannot resolve `Readonly<{f: 1}>` [1] well enough to quickly check this union. Try inlining or simplifying this
+type. [union-unoptimizable]
 
    file.js:31:15
                      v--------------------------------------------------------
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:37:15
 
-Flow cannot resolve `Foo` [1] well enough to quickly check this union. Try inlining or simplifying this type.
+Flow cannot resolve `Foo<1, 2>` [1] well enough to quickly check this union. Try inlining or simplifying this type.
 [union-unoptimizable]
 
    file.js:37:15

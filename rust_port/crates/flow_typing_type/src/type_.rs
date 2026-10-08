@@ -7694,7 +7694,10 @@ pub mod union_rep {
         serde::Deserialize
     )]
     pub enum OptimizedError<L: Dupe> {
-        ContainsUnresolved(VirtualReason<L>),
+        ContainsUnresolved {
+            loc: L,
+            desc: type_or_type_desc::TypeOrTypeDescT<L>,
+        },
         NoCandidateMembers,
         NoCommonKeys,
     }
@@ -7856,16 +7859,14 @@ pub mod union_rep {
             }
         }
 
-        pub fn optimize_<F1, F2, F3, F4, F5>(
+        pub fn optimize_<F2, F3, F4, F5>(
             &self,
-            reason_of_t: F1,
             reasonless_eq: F2,
             flatten: F3,
             find_resolved: F4,
             find_props: F5,
         ) -> Result<FinallyOptimizedRep, OptimizedError<ALoc>>
         where
-            F1: Fn(&Type) -> Reason,
             F2: Fn(&Type, &Type) -> bool,
             F3: Fn(&mut dyn Iterator<Item = &Type>) -> Vec<Type>,
             F4: Fn(&Type) -> Option<Type>,
@@ -7883,7 +7884,10 @@ pub mod union_rep {
                         _ => opt,
                     }
                 }
-                Some(t) => Err(OptimizedError::ContainsUnresolved(reason_of_t(&t))),
+                Some(t) => Err(OptimizedError::ContainsUnresolved {
+                    loc: crate::type_util::ref_loc_of_t(&t).dupe(),
+                    desc: type_or_type_desc::TypeOrTypeDescT::Type(t),
+                }),
             }
         }
 
@@ -7893,27 +7897,19 @@ pub mod union_rep {
             }
         }
 
-        pub fn optimize<F1, F2, F3, F4, F5>(
+        pub fn optimize<F2, F3, F4, F5>(
             &self,
-            reason_of_t: F1,
             reasonless_eq: F2,
             flatten: F3,
             find_resolved: F4,
             find_props: F5,
         ) where
-            F1: Fn(&Type) -> Reason,
             F2: Fn(&Type, &Type) -> bool,
             F3: Fn(&mut dyn Iterator<Item = &Type>) -> Vec<Type>,
             F4: Fn(&Type) -> Option<Type>,
             F5: Fn(properties::Id) -> PropertiesMap,
         {
-            let opt = self.optimize_(
-                reason_of_t,
-                reasonless_eq,
-                flatten,
-                find_resolved,
-                find_props,
-            );
+            let opt = self.optimize_(reasonless_eq, flatten, find_resolved, find_props);
             self.set_optimize(opt);
         }
 

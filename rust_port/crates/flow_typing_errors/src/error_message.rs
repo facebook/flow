@@ -4478,8 +4478,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
         let map_use_op =
             |use_op: VirtualUseOp<L>| -> VirtualUseOp<M> { mod_loc_of_virtual_use_op(&f, use_op) };
-        let map_reason =
-            |r: VirtualReason<L>| -> VirtualReason<M> { r.map_locs(|l: &L| f(l.dupe())) };
         let map_desc =
             |d: VirtualReasonDesc<L>| -> VirtualReasonDesc<M> { d.map_locs(&|l: &L| f(l.dupe())) };
         let map_error_ref =
@@ -6457,9 +6455,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EUnionOptimization(box EUnionOptimizationData { loc, kind }) => {
                 let kind = match kind {
-                    OptimizedError::ContainsUnresolved(r) => {
-                        OptimizedError::ContainsUnresolved(map_reason(r))
-                    }
+                    OptimizedError::ContainsUnresolved {
+                        loc: member_loc,
+                        desc,
+                    } => OptimizedError::ContainsUnresolved {
+                        loc: f(member_loc),
+                        desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), desc),
+                    },
                     OptimizedError::NoCandidateMembers => OptimizedError::NoCandidateMembers,
                     OptimizedError::NoCommonKeys => OptimizedError::NoCommonKeys,
                 };
@@ -7677,6 +7679,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 loc,
                 arg_loc,
                 arg_desc: f(arg_desc),
+            })),
+
+            EUnionOptimization(box EUnionOptimizationData {
+                loc,
+                kind:
+                    OptimizedError::ContainsUnresolved {
+                        loc: member_loc,
+                        desc,
+                    },
+            }) => EUnionOptimization(Box::new(EUnionOptimizationData {
+                loc,
+                kind: OptimizedError::ContainsUnresolved {
+                    loc: member_loc,
+                    desc: f(desc),
+                },
             })),
 
             EInvalidBinaryArith(box EInvalidBinaryArithData {

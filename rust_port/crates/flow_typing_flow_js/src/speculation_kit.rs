@@ -914,7 +914,6 @@ fn optimize_spec_try_shortcut<'cx>(
                 _ => unreachable!(),
             };
             let specialization = rep.optimize_(
-                |t| type_util::reason_of_t(t).dupe(),
                 |t1, t2| concrete_type_eq::eq_with_env(cx, env, t1, t2),
                 |ts: &mut dyn Iterator<Item = &Type>| type_mapper::union_flatten(cx, ts.duped()),
                 |t| cx.find_resolved(t),
@@ -990,7 +989,6 @@ fn optimize_spec_try_shortcut<'cx>(
         } => {
             if !rep.is_optimized_finally() {
                 rep.optimize(
-                    |t| type_util::reason_of_t(t).dupe(),
                     |t1, t2| concrete_type_eq::eq_with_env(cx, env, t1, t2),
                     |ts: &mut dyn Iterator<Item = &Type>| {
                         type_mapper::union_flatten(cx, ts.duped())
