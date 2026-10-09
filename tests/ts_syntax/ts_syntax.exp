@@ -1011,6 +1011,28 @@ and tuple types you can use `Readonly<T>`. [unsupported-syntax]
                ^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------- readonly_type.js:7:20
+
+Cannot call `libReadonlyArray().push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
+
+   readonly_type.js:7:20
+   7| libReadonlyArray().push('a'); // ERROR: read-only
+                         ^^^^
+
+References:
+   libs/readonly.js:1:38
+   1| declare function libReadonlyArray(): readonly string[];
+                                           ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- readonly_type.js:9:1
+
+Cannot assign `'a'` to `libReadonlyTuple()[0]` because tuple element at index `0` [1] is not writable. [cannot-write]
+
+   9| libReadonlyTuple()[0] = 'a'; // ERROR: read-only
+      ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- readonlymap.js:2:14
 
 Cannot assign `3` to `x` because `3` [1], a primitive, cannot be used as a subtype of `ReadonlyMap<string, number>` [2].
@@ -1412,4 +1434,4 @@ References:
 
 
 
-Found 156 errors
+Found 158 errors

@@ -1335,7 +1335,7 @@ fn convert_inner<'a>(
         }
         TypeInner::ReadOnly { loc, inner } => match inner.argument.deref() {
             TypeInner::Tuple { .. } => {
-                if !cx.ts_syntax() {
+                if !cx.ts_syntax() && !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -1383,7 +1383,7 @@ fn convert_inner<'a>(
                 loc: arr_loc,
                 inner: arr_inner,
             } => {
-                if !cx.ts_syntax() {
+                if !cx.ts_syntax() && !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
