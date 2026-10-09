@@ -333,6 +333,7 @@ pub mod distribute_union_intersection {
 }
 
 pub mod operators {
+    use flow_typing_type::type_::type_collector::TypeCollector;
 
     use super::*;
 
@@ -365,39 +366,26 @@ pub mod operators {
         t1: &Type,
         t2: &Type,
     ) -> Result<Type, JobError> {
-        let kind = kind.clone();
-        let reason = reason.dupe();
-        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
+        let collector = TypeCollector::create();
+        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute_2(
             cx,
-            reason.dupe(),
-            |cx, tout| {
-                distribute_union_intersection::distribute_2(
-                    cx,
-                    env,
-                    None,
-                    &|cx, reason, t| {
-                        FlowJs::possible_concrete_types_for_operators_checking_with_env(
-                            cx, env, reason, t,
-                        )
-                    },
-                    &|_, _| reason.loc().dupe(),
-                    &|cx, env, (t1, t2)| {
-                        // Flow.flow_t cx (Flow_js_utils.flow_arith cx reason t1 t2 kind, tout)
-                        let arith_result = flow_js_utils::flow_arith(
-                            cx,
-                            env,
-                            reason.dupe(),
-                            t1,
-                            t2,
-                            kind.clone(),
-                        )?;
-                        flow_js::flow_t_with_env(cx, env, (&arith_result, tout))?;
-                        Ok(())
-                    },
-                    (t1, t2),
-                )
+            env,
+            None,
+            &|cx, reason, t| {
+                FlowJs::possible_concrete_types_for_operators_checking_with_env(cx, env, reason, t)
             },
-        ))
+            &|_, _| reason.loc().dupe(),
+            &|cx, env, (t1, t2)| {
+                let result =
+                    flow_js_utils::flow_arith(cx, env, reason.dupe(), t1, t2, kind.clone())?;
+                collector.add(result);
+                Ok(())
+            },
+            (t1, t2),
+        ))?;
+        Ok(collector
+            .union_opt(reason.dupe())
+            .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason)))
     }
 
     pub fn check_comparator<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), JobError> {
@@ -1039,32 +1027,29 @@ pub mod operators {
         kind: &UnaryArithKind,
         t: &Type,
     ) -> Result<Type, JobError> {
-        let reason = reason.dupe();
-        let kind = *kind;
-        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
-            cx,
-            reason.dupe(),
-            |cx, tout| {
-                distribute_union_intersection::distribute_with_env(
-                    cx,
-                    env,
-                    None,
-                    &|cx, reason, t| {
-                        FlowJs::possible_concrete_types_for_operators_checking_with_env(
-                            cx, env, reason, t,
-                        )
-                    },
-                    &|r| r.loc().dupe(),
-                    &|cx, env, t| {
-                        let result =
-                            flow_js_utils::flow_unary_arith(cx, env, t, reason.dupe(), kind)?;
-                        flow_js::flow_t_with_env(cx, env, (&result, tout))?;
-                        Ok(())
-                    },
-                    t,
-                )
-            },
-        ))
+        let collector = TypeCollector::create();
+        flow_js_utils::flow_js_result_to_job_error(
+            distribute_union_intersection::distribute_with_env(
+                cx,
+                env,
+                None,
+                &|cx, reason, t| {
+                    FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                        cx, env, reason, t,
+                    )
+                },
+                &|r| r.loc().dupe(),
+                &|cx, env, t| {
+                    let result = flow_js_utils::flow_unary_arith(cx, env, t, reason.dupe(), *kind)?;
+                    collector.add(result);
+                    Ok(())
+                },
+                t,
+            ),
+        )?;
+        Ok(collector
+            .union_opt(reason.dupe())
+            .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason)))
     }
 
     fn collect_logical_union<'cx>(

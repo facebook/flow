@@ -266,7 +266,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:37:12
 
-Cannot assign update to `x` because `number` [1] is incompatible with `SuperType` [2]. [incompatible-type]
+Cannot assign number to `x` because `number` [1] is incompatible with `SuperType` [2]. [incompatible-type]
 
    importtest.js:37:12
    37|     return x++; // Error number ~> SuperType
