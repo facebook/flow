@@ -30,5 +30,68 @@ References:
                   ^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- regexp.js:13:1
 
-Found 2 errors
+Cannot cast `matches` to `RegExpStringIterator` because in type argument `T` [1]: `null` [2] is incompatible with
+`RegExpMatchArray` [3]. [incompatible-type]
+
+   regexp.js:13:1
+   13| matches as RegExpStringIterator<RegExpMatchArray | null>; // error: invariant
+       ^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2020.symbol.wellknown.js:31:32
+   31| interface RegExpStringIterator<T> extends IteratorObject<T, BuiltinIteratorReturn, unknown> {
+                                      ^ [1]
+   regexp.js:13:52
+   13| matches as RegExpStringIterator<RegExpMatchArray | null>; // error: invariant
+                                                          ^^^^ [2]
+   <BUILTINS>/lib.es2020.string.js:29:61
+   29|     matchAll(regexp: string | RegExp): RegExpStringIterator<RegExpMatchArray>;
+                                                                   ^^^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- regexp.js:14:1
+
+Cannot cast `matches` to `RegExpStringIterator` because in type argument `T` [1]: property `index` (did you mean
+`indexOf`?) is missing in `Array<string>` [2] but exists in `RegExpMatchArray` [3]. [incompatible-type]
+
+   regexp.js:14:1
+   14| matches as RegExpStringIterator<Array<string>>; // error: invariant, so `Array<string>` needs `index` and `input`
+       ^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2020.symbol.wellknown.js:31:32
+   31| interface RegExpStringIterator<T> extends IteratorObject<T, BuiltinIteratorReturn, unknown> {
+                                      ^ [1]
+   regexp.js:14:33
+   14| matches as RegExpStringIterator<Array<string>>; // error: invariant, so `Array<string>` needs `index` and `input`
+                                       ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2020.string.js:29:61
+   29|     matchAll(regexp: string | RegExp): RegExpStringIterator<RegExpMatchArray>;
+                                                                   ^^^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- regexp.js:14:1
+
+Cannot cast `matches` to `RegExpStringIterator` because in type argument `T` [1]: property `input` is missing in
+`Array<string>` [2] but exists in `RegExpMatchArray` [3]. [incompatible-type]
+
+   regexp.js:14:1
+   14| matches as RegExpStringIterator<Array<string>>; // error: invariant, so `Array<string>` needs `index` and `input`
+       ^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2020.symbol.wellknown.js:31:32
+   31| interface RegExpStringIterator<T> extends IteratorObject<T, BuiltinIteratorReturn, unknown> {
+                                      ^ [1]
+   regexp.js:14:33
+   14| matches as RegExpStringIterator<Array<string>>; // error: invariant, so `Array<string>` needs `index` and `input`
+                                       ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2020.string.js:29:61
+   29|     matchAll(regexp: string | RegExp): RegExpStringIterator<RegExpMatchArray>;
+                                                                   ^^^^^^^^^^^^^^^^ [3]
+
+
+
+Found 5 errors

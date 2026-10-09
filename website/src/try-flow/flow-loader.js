@@ -77,6 +77,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.es2018.regexp.js',
   'lib.es2019.string.js',
   'lib.es2019.symbol.js',
+  'lib.es2020.symbol.wellknown.js',
   'lib.es2021.string.js',
   'lib.es2022.string.js',
   'lib.es2024.collection.js',
