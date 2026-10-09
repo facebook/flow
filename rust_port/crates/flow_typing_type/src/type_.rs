@@ -1860,7 +1860,7 @@ pub struct SpecializeTData<CX> {
     pub reason: Reason,
     pub reason2: Reason,
     pub targs: Option<Rc<[Type]>>,
-    pub upper: Option<Box<UseT<CX>>>,
+    pub upper: Option<Box<Cont<CX>>>,
 }
 
 impl<CX> Clone for SpecializeTData<CX> {
@@ -5171,6 +5171,8 @@ pub struct NamespaceType {
 pub enum Cont<CX = ()> {
     Lower(UseOp, Type),
     Upper(Box<UseT<CX>>),
+    /// Collects the computed result without adding a subtyping constraint.
+    Collect(type_collector::TypeCollector),
 }
 
 impl<CX> Clone for Cont<CX> {
@@ -5178,6 +5180,7 @@ impl<CX> Clone for Cont<CX> {
         match self {
             Cont::Lower(a, b) => Cont::Lower(a.clone(), b.clone()),
             Cont::Upper(a) => Cont::Upper(a.clone()),
+            Cont::Collect(a) => Cont::Collect(a.dupe()),
         }
     }
 }
@@ -5187,6 +5190,7 @@ impl<CX> PartialEq for Cont<CX> {
         match (self, other) {
             (Cont::Lower(a1, b1), Cont::Lower(a2, b2)) => a1 == a2 && b1 == b2,
             (Cont::Upper(a1), Cont::Upper(a2)) => a1 == a2,
+            (Cont::Collect(a1), Cont::Collect(a2)) => a1 == a2,
             _ => false,
         }
     }
@@ -5205,6 +5209,7 @@ impl<CX> std::hash::Hash for Cont<CX> {
             Cont::Upper(a) => {
                 a.hash(state);
             }
+            Cont::Collect(a) => a.hash(state),
         }
     }
 }
@@ -5221,6 +5226,7 @@ impl<CX> Ord for Cont<CX> {
             match v {
                 Cont::Lower(..) => 0,
                 Cont::Upper(..) => 1,
+                Cont::Collect(..) => 2,
             }
         }
         let disc = variant_index(self).cmp(&variant_index(other));
@@ -5230,6 +5236,7 @@ impl<CX> Ord for Cont<CX> {
         match (self, other) {
             (Cont::Lower(a1, b1), Cont::Lower(a2, b2)) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
             (Cont::Upper(a1), Cont::Upper(a2)) => a1.cmp(a2),
+            (Cont::Collect(a1), Cont::Collect(a2)) => a1.cmp(a2),
             _ => std::cmp::Ordering::Equal,
         }
     }
@@ -5240,6 +5247,7 @@ impl<CX> std::fmt::Debug for Cont<CX> {
         match self {
             Cont::Lower(a, b) => f.debug_tuple("Lower").field(a).field(b).finish(),
             Cont::Upper(a) => f.debug_tuple("Upper").field(a).finish(),
+            Cont::Collect(a) => f.debug_tuple("Collect").field(a).finish(),
         }
     }
 }

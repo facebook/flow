@@ -18,6 +18,7 @@ use flow_typing_flow_common::flow_js_utils::value_to_type_reference_transform;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
+use flow_typing_type::type_::Cont;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::GetPropTData;
 use flow_typing_type::type_::GetTypeFromNamespaceTData;
@@ -51,19 +52,18 @@ pub fn specialize<'a>(
     let reason = reason_of_t(&c).dupe();
     let reason_inner = reason.dupe();
     let f = move |cx: &Context<'_>, c: Type| -> Result<Type, JobError> {
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner.dupe(), move |cx, tvar| {
-            let use_t = UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
-                use_op,
-                reason: reason_op,
-                reason2: reason_tapp,
-                targs: targs.map(Rc::from),
-                upper: Some(Box::new(UseT::new(UseTInner::UseT(
-                    unknown_use(),
-                    tvar.dupe(),
-                )))),
-            })));
-            flow_js::flow_non_speculating(cx, (&c, &use_t))
-        })
+        let collector = TypeCollector::create();
+        let use_t = UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
+            use_op,
+            reason: reason_op,
+            reason2: reason_tapp,
+            targs: targs.map(Rc::from),
+            upper: Some(Box::new(Cont::Collect(collector.dupe()))),
+        })));
+        flow_js::flow_non_speculating(cx, (&c, &use_t))?;
+        Ok(collector
+            .union_opt(reason_inner.dupe())
+            .unwrap_or_else(|| tvar_resolver::default_no_lowers(&reason_inner)))
     };
     map_on_resolved_type(cx, reason, c, f)
 }

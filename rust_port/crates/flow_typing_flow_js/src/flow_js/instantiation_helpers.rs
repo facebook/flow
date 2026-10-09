@@ -264,7 +264,7 @@ pub(super) fn instantiate_this_class<'cx>(
             reason: reason_op.dupe(),
             reason2: reason_tapp.dupe(),
             targs: Some(ts),
-            upper: Some(Box::new(this_use)),
+            upper: Some(Box::new(Cont::Upper(Box::new(this_use)))),
         }))),
     };
     rec_flow(cx, env, trace, (c, &use_t))

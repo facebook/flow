@@ -1617,10 +1617,10 @@ pub(super) fn mk_typeapp_instance_annot<'cx>(
                 reason: reason_op.dupe(),
                 reason2: reason_tapp.dupe(),
                 targs: Some(ts),
-                upper: Some(Box::new(UseT::new(UseTInner::UseT(
+                upper: Some(Box::new(Cont::Upper(Box::new(UseT::new(UseTInner::UseT(
                     unknown_use(),
                     t.dupe(),
-                )))),
+                )))))),
             }))),
         ),
     )?;
@@ -1655,10 +1655,10 @@ pub(super) fn mk_typeapp_instance<'cx>(
                 reason: reason_op.dupe(),
                 reason2: reason_tapp.dupe(),
                 targs: Some(ts),
-                upper: Some(Box::new(UseT::new(UseTInner::UseT(
+                upper: Some(Box::new(Cont::Upper(Box::new(UseT::new(UseTInner::UseT(
                     unknown_use(),
                     t.dupe(),
-                )))),
+                )))))),
             }))),
         ),
     )?;
@@ -2526,6 +2526,10 @@ pub(super) fn continue_<'cx>(
             (l, &UseT::new(UseTInner::UseT(use_op.dupe(), t.dupe()))),
         ),
         Cont::Upper(u) => rec_flow(cx, env, trace, (t, u)),
+        Cont::Collect(collector) => {
+            collector.add(t.dupe());
+            Ok(())
+        }
     }
 }
 
@@ -2546,6 +2550,17 @@ pub(super) fn continue_repos<'cx>(
         Cont::Upper(u) => {
             let repos_t = reposition_reason(cx, env, Some(trace), reason, use_desc, t)?;
             rec_flow(cx, env, trace, (&repos_t, u))
+        }
+        Cont::Collect(collector) => {
+            collector.add(reposition_reason(
+                cx,
+                env,
+                Some(trace),
+                reason,
+                use_desc,
+                t,
+            )?);
+            Ok(())
         }
     }
 }

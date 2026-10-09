@@ -4332,7 +4332,7 @@ fn __flow_impl<'cx>(
                 ts_val,
             )?;
             if let Some(upper) = upper {
-                rec_flow(cx, env, trace, (&t_, upper))?;
+                continue_(cx, env, trace, &t_, upper)?;
             }
         }
         // empty targs specialization of non-polymorphic classes is a no-op
@@ -4347,7 +4347,7 @@ fn __flow_impl<'cx>(
             }),
         ) if matches!(def_t.deref(), DefTInner::ClassT(_)) => {
             if let Some(upper) = upper {
-                rec_flow(cx, env, trace, (l, upper))?;
+                continue_(cx, env, trace, l, upper)?;
             }
         }
         // Explicit type arguments on a construct-signature value specialize the
@@ -4370,32 +4370,26 @@ fn __flow_impl<'cx>(
             match construct_t {
                 Some(construct_t) => {
                     if let Some(upper) = upper {
-                        let specialized_construct = flow_typing_tvar::mk_where(
+                        let collector = type_collector::TypeCollector::create();
+                        rec_flow(
                             cx,
-                            reason_tapp.dupe(),
-                            |cx, construct_tvar| {
-                                rec_flow(
-                                    cx,
-                                    env,
-                                    trace,
-                                    (
-                                        &construct_t,
-                                        &UseT::new(UseTInner::SpecializeT(Box::new(
-                                            SpecializeTData {
-                                                use_op: use_op.dupe(),
-                                                reason: reason_op.dupe(),
-                                                reason2: reason_tapp.dupe(),
-                                                targs: Some(ts.dupe()),
-                                                upper: Some(Box::new(UseT::new(UseTInner::UseT(
-                                                    unknown_use(),
-                                                    construct_tvar.dupe(),
-                                                )))),
-                                            },
-                                        ))),
-                                    ),
-                                )
-                            },
+                            env,
+                            trace,
+                            (
+                                &construct_t,
+                                &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
+                                    use_op: use_op.dupe(),
+                                    reason: reason_op.dupe(),
+                                    reason2: reason_tapp.dupe(),
+                                    targs: Some(ts.dupe()),
+                                    upper: Some(Box::new(Cont::Collect(collector.dupe()))),
+                                }))),
+                            ),
                         )?;
+                        let specialized_construct =
+                            collector.union_opt(reason_tapp.dupe()).unwrap_or_else(|| {
+                                crate::tvar_resolver::default_no_lowers(reason_tapp)
+                            });
                         let inst = InstType::new(InstTypeInner {
                             inst_construct_t: Some(cx.make_call_prop(specialized_construct)),
                             ..(*instance.inst).clone()
@@ -4411,7 +4405,7 @@ fn __flow_impl<'cx>(
                                 },
                             )))),
                         ));
-                        rec_flow(cx, env, trace, (&specialized_interface, upper))?;
+                        continue_(cx, env, trace, &specialized_interface, upper)?;
                     } else {
                         rec_flow(
                             cx,
@@ -4445,7 +4439,7 @@ fn __flow_impl<'cx>(
                     )?;
                     let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
                     if let Some(upper) = upper {
-                        rec_flow(cx, env, trace, (&any, upper))?;
+                        continue_(cx, env, trace, &any, upper)?;
                     }
                 }
             }
@@ -4486,10 +4480,10 @@ fn __flow_impl<'cx>(
                 )?;
                 let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
                 if let Some(upper) = upper {
-                    rec_flow(cx, env, trace, (&any, upper))?;
+                    continue_(cx, env, trace, &any, upper)?;
                 }
             } else if let Some(upper) = upper {
-                rec_flow(cx, env, trace, (l, upper))?;
+                continue_(cx, env, trace, l, upper)?;
             }
         }
         (
@@ -4503,7 +4497,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             if let Some(upper) = upper {
-                rec_flow(cx, env, trace, (l, upper))?;
+                continue_(cx, env, trace, l, upper)?;
             }
         }
         // this-specialize a this-abstracted class by substituting This

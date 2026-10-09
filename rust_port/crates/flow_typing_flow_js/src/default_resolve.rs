@@ -182,6 +182,10 @@ pub fn default_resolve_touts<'cx>(
         match cont {
             Cont::Upper(use_) => default_resolve_touts(flow, resolve_callee, env, loc.dupe(), use_),
             Cont::Lower(..) => Ok(()),
+            Cont::Collect(collector) => {
+                collector.add(any.dupe());
+                Ok(())
+            }
         }
     };
     match u.deref() {
@@ -244,8 +248,12 @@ pub fn default_resolve_touts<'cx>(
             default_resolve_touts(flow, resolve_callee, env, loc.dupe(), t_out)
         }
         UseTInner::SpecializeT(box SpecializeTData { upper, .. }) => match upper {
-            Some(upper) => flow(&any, upper),
-            None => Ok(()),
+            Some(box Cont::Upper(upper)) => flow(&any, upper),
+            Some(box Cont::Collect(collector)) => {
+                collector.add(any.dupe());
+                Ok(())
+            }
+            Some(box Cont::Lower(..)) | None => Ok(()),
         },
         UseTInner::ThisSpecializeT(_, _, k) => resolve_cont(k),
         UseTInner::ValueToTypeReferenceT(box ValueToTypeReferenceTData { tout: tvar, .. }) => {

@@ -1563,7 +1563,9 @@ fn dump_use_t_<CX>(
             ..
         }) => {
             let ret = match upper {
-                Some(ret) => dump_use_t_(depth - 1, tvars, cx, ret),
+                Some(box type_::Cont::Upper(ret)) => dump_use_t_(depth - 1, tvars, cx, ret),
+                Some(box type_::Cont::Lower(_, ret)) => kid(tvars, ret),
+                Some(box type_::Cont::Collect(_)) => "TypeCollector".to_owned(),
                 None => "None".to_owned(),
             };
             let extra = match args_opt {
@@ -1653,6 +1655,7 @@ fn dump_use_t_<CX>(
                 type_::Cont::Upper(u) => {
                     format!("{} ~> {}", name, use_kid(tvars, u))
                 }
+                type_::Cont::Collect(_) => format!("{} ~> TypeCollector", name),
             };
             p(cx, use_t, true, &extra)
         }
