@@ -602,20 +602,10 @@ pub mod object_expression_acc {
                         proto,
                     );
                     if obj_key_autocomplete_flag {
-                        let obj_t_clone = obj_t.dupe();
-                        let reason_clone = reason.dupe();
-                        let get_autocomplete_t = move || {
-                            flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_where::<
-                                JobError,
-                            >(cx, reason_clone, |cx, tvar| {
-                                flow_js::flow_t_non_speculating(cx, (&obj_t_clone, tvar))?;
-                                Ok(())
-                            })
-                        };
                         let LazyHintT(_has_hint, lazy_hint) =
                             flow_typing_utils::type_env::get_hint(cx, reason.loc().dupe());
                         let result = lazy_hint(cx, false, None, reason)?;
-                        flow_typing_utils::type_hint::with_hint(Ok, get_autocomplete_t, result)
+                        flow_typing_utils::type_hint::with_hint(Ok, || Ok(obj_t), result)
                     } else {
                         Ok(obj_t)
                     }

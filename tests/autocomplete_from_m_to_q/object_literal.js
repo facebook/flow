@@ -15,3 +15,19 @@ f({
          // Shoud suggest `foo` and `baz`
 // ^
 });
+
+const withoutHint = {
+  existing: {nested: 1},
+    
+// ^
+};
+
+class Prototype {
+  method(): number { return 1; }
+}
+
+const inherited = {
+  __proto__: new Prototype(),
+    
+// ^
+};

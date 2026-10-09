@@ -539,6 +539,14 @@ Flags: --pretty
   "result":[{"name":"baz","type":"boolean | void"},{"name":"foo","type":"string | void"}]
 }
 
+object_literal.js:21:4
+Flags: --pretty
+{"result":[]}
+
+object_literal.js:31:4
+Flags: --pretty
+{"result":[]}
+
 object-spread-1.js:9:3
 Flags: --pretty
 {"result":[{"name":"bar","type":"B"},{"name":"foo","type":"A"}]}
