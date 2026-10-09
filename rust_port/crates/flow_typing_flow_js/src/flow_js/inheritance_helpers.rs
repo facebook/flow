@@ -16,6 +16,7 @@ use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::DerivedReference;
+use flow_typing_type::type_::LookupDefaultResult;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::PropertyCompatibilityData;
@@ -381,7 +382,9 @@ pub(super) fn inst_structural_subtype<'cx>(
                 });
                 let propref = mk_named_prop(reason.dupe(), false, name.dupe());
                 let polarity = if lit { Polarity::Positive } else { fd.polarity };
-                let nonstrict_returning = inst_dict.as_ref().map(|d| (d.value.dupe(), t.dupe()));
+                let nonstrict_returning = inst_dict
+                    .as_ref()
+                    .map(|d| (d.value.dupe(), LookupDefaultResult::Unify(t.dupe())));
                 rec_flow(
                     cx,
                     env,

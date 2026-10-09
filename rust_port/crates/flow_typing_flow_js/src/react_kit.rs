@@ -37,6 +37,7 @@ use flow_typing_type::type_::GetPropTData;
 use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
+use flow_typing_type::type_::LookupDefaultResult;
 use flow_typing_type::type_::LookupKind;
 use flow_typing_type::type_::LookupPropsForSubtypingData;
 use flow_typing_type::type_::LookupTData;
@@ -327,7 +328,7 @@ fn lookup_defaults<'cx>(
     let lookup_kind = LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
         Some((
             Type::new(TypeInner::DefT(reason_missing, DefT::new(DefTInner::VoidT))),
-            upper.dupe(),
+            LookupDefaultResult::Unify(upper.dupe()),
         )),
         None,
     )));

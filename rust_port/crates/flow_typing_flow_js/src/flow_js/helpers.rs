@@ -30,6 +30,7 @@ use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ImplicitInstantiationTvarData;
 use flow_typing_type::type_::LookupActionMatchPropData;
+use flow_typing_type::type_::LookupDefaultResult;
 use flow_typing_type::type_::LookupPropsForSubtypingData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodTData;
@@ -1779,51 +1780,38 @@ pub(super) fn mk_instance_raw<'cx>(
 
 pub(super) fn instance_lookup_kind<'cx>(
     cx: &Context<'cx>,
-    env: &FlowJsEnv,
-    trace: DepthTrace,
     reason_op: &Reason,
     method_accessible: bool,
     instance_t: &Type,
     propref: &PropRef,
     lookup_action: LookupAction,
-) -> Result<LookupKind, FlowJsException> {
+) -> LookupKind {
     match propref {
         PropRef::Named {
             name,
             from_indexed_access,
             ..
         } if !from_indexed_access || flow_js_utils::is_munged_prop_name(cx, name) => {
-            Ok(LookupKind::Strict(instance_t.dupe()))
+            LookupKind::Strict(instance_t.dupe())
         }
         _ => {
             let propref = propref.clone();
             let reason_op = reason_op.dupe();
-            let lookup_default_second =
-                flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tvar| {
-                    rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (
-                            tvar,
-                            &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
-                                reason: reason_op.dupe(),
-                                lookup_kind: Box::new(LookupKind::Strict(instance_t.dupe())),
-                                indexer_fallback: None,
-                                try_ts_on_failure: Rc::from([]),
-                                propref: Box::new(propref.clone()),
-                                lookup_action: Box::new(lookup_action),
-                                ids: None,
-                                method_accessible,
-                                ignore_dicts: false,
-                            }))),
-                        ),
-                    )?;
-                    Ok::<(), FlowJsException>(())
-                })?;
+            let lookup_default_second = LookupDefaultResult::Lookup(Box::new(LookupTData {
+                reason: reason_op.dupe(),
+                lookup_kind: Box::new(LookupKind::Strict(instance_t.dupe())),
+                indexer_fallback: None,
+                try_ts_on_failure: Rc::from([]),
+                propref: Box::new(propref.clone()),
+                lookup_action: Box::new(lookup_action),
+                ids: None,
+                method_accessible,
+                ignore_dicts: false,
+            }));
             let lookup_default = (instance_t.dupe(), lookup_default_second);
-            Ok(LookupKind::NonstrictReturning(Box::new(
-                NonstrictReturningData(Some(lookup_default), None),
+            LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
+                Some(lookup_default),
+                None,
             )))
         }
     }

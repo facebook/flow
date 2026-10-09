@@ -47,6 +47,7 @@ use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::IndexerFallbackData;
+use flow_typing_type::type_::LookupDefaultResult;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodTData;
@@ -6298,14 +6299,12 @@ fn __flow_impl<'cx>(
             let method_accessible = true;
             let lookup_kind = instance_lookup_kind(
                 cx,
-                env,
-                trace,
                 reason_op,
                 method_accessible,
                 l,
                 propref,
                 lookup_action.clone(),
-            )?;
+            );
             rec_flow(
                 cx,
                 env,
@@ -6451,14 +6450,12 @@ fn __flow_impl<'cx>(
             }));
             let lookup_kind = instance_lookup_kind(
                 cx,
-                env,
-                trace,
                 &data.reason,
                 method_accessible,
                 l,
                 &data.propref,
                 lookup_action.clone(),
-            )?;
+            );
             flow_js_utils::get_prop_t_kit::read_instance_prop::<FlowJs>(
                 cx,
                 env,
@@ -6524,14 +6521,12 @@ fn __flow_impl<'cx>(
                     let method_accessible = true;
                     let lookup_kind = instance_lookup_kind(
                         cx,
-                        env,
-                        trace,
                         reason_lookup,
                         method_accessible,
                         l,
                         propref,
                         lookup_action.clone(),
-                    )?;
+                    );
                     flow_js_utils::get_prop_t_kit::read_instance_prop::<FlowJs>(
                         cx,
                         env,
@@ -6990,23 +6985,15 @@ fn __flow_impl<'cx>(
         (TypeInner::DefT(reason_obj, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::ObjT(o) = def_t.deref() =>
         {
-            let lookup_info = data
-                .id
-                .map(|id| -> Result<_, FlowJsException> {
-                    let lookup_default_tout =
-                        flow_typing_tvar::mk_where(cx, data.reason.dupe(), |cx, tvar| {
-                            rec_flow_t(
-                                cx,
-                                env,
-                                trace,
-                                data.use_op.dupe(),
-                                (tvar, &Type::new(TypeInner::OpenT((*data.tout).dupe()))),
-                            )?;
-                            Ok::<(), FlowJsException>(())
-                        })?;
-                    Ok((id, lookup_default_tout))
-                })
-                .transpose()?;
+            let lookup_info = data.id.map(|id| {
+                (
+                    id,
+                    LookupDefaultResult::Flow {
+                        use_op: data.use_op.dupe(),
+                        tout: Type::new(TypeInner::OpenT((*data.tout).dupe())),
+                    },
+                )
+            });
             flow_js_utils::get_prop_t_kit::read_obj_prop::<FlowJs>(
                 cx,
                 env,
@@ -9378,14 +9365,10 @@ fn __flow_impl<'cx>(
                 hint: _,
             }),
         ) => {
-            // NonstrictReturning lookups unify their result, but we don't want to
-            // unify with the tout tvar directly, so we create an indirection here to
-            // ensure we only supply lower bounds to tout.
-            let lookup_default = flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tvar| {
-                let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-                rec_flow_t(cx, env, trace, use_op.dupe(), (tvar, &open_tout))?;
-                Ok::<(), FlowJsException>(())
-            })?;
+            let lookup_default = LookupDefaultResult::Flow {
+                use_op: use_op.dupe(),
+                tout: Type::new(TypeInner::OpenT((**tout).dupe())),
+            };
             let name = name_of_propref(propref);
             let reason_prop = match &**propref {
                 PropRef::Named { reason, .. } => reason,
@@ -9989,7 +9972,7 @@ fn __flow_impl<'cx>(
                     }
                 }
                 match t_opt {
-                    Some((not_found, t)) => {
+                    Some((not_found, LookupDefaultResult::Unify(t))) => {
                         FlowJs::rec_unify_with_env(
                             cx,
                             env,
@@ -9999,6 +9982,17 @@ fn __flow_impl<'cx>(
                             Some(true),
                             t,
                             not_found,
+                        )?;
+                    }
+                    Some((not_found, LookupDefaultResult::Flow { use_op, tout })) => {
+                        rec_flow_t(cx, env, trace, use_op.dupe(), (not_found, tout))?;
+                    }
+                    Some((not_found, LookupDefaultResult::Lookup(lookup))) => {
+                        rec_flow(
+                            cx,
+                            env,
+                            trace,
+                            (not_found, &UseT::new(UseTInner::LookupT(lookup.clone()))),
                         )?;
                     }
                     None => {}

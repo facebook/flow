@@ -19,6 +19,7 @@ use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumTData;
+use flow_typing_type::type_::LookupDefaultResult;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::NonstrictReturningData;
@@ -61,30 +62,17 @@ pub(super) fn eval_selector<'cx>(
     let use_t = match selector {
         Selector::Prop(name_str, has_default) => {
             let name = Name::new(name_str.dupe());
-            let lookup_ub = || -> Result<UseT<Context<'cx>>, FlowJsException> {
+            let lookup_ub = || -> UseT<Context<'cx>> {
                 let use_op = unknown_use();
                 let action = LookupAction::ReadProp(Box::new(ReadPropData {
                     use_op: use_op.dupe(),
                     obj_t: curr_t.dupe(),
                     tout: tvar.dupe(),
                 }));
-                // LookupT unifies with the default with tvar. To get around that, we can create some
-                // indirection with a fresh tvar in between to ensure that we only add a lower bound
-                let default_tout = flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tout| {
-                    flow_opt(
-                        cx,
-                        env,
-                        trace,
-                        (
-                            tout,
-                            &UseT::new(UseTInner::UseT(
-                                use_op.dupe(),
-                                Type::new(TypeInner::OpenT(tvar.dupe())),
-                            )),
-                        ),
-                    )?;
-                    Ok::<(), FlowJsException>(())
-                })?;
+                let default_tout = LookupDefaultResult::Flow {
+                    use_op: use_op.dupe(),
+                    tout: Type::new(TypeInner::OpenT(tvar.dupe())),
+                };
                 let void_reason = tvar.reason().dupe().replace_desc(VirtualReasonDesc::RVoid);
                 let lookup_kind = LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
                     Some((
@@ -93,7 +81,7 @@ pub(super) fn eval_selector<'cx>(
                     )),
                     None,
                 )));
-                Ok(UseT::new(UseTInner::LookupT(Box::new(LookupTData {
+                UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason.dupe(),
                     lookup_kind: Box::new(lookup_kind),
                     indexer_fallback: None,
@@ -103,7 +91,7 @@ pub(super) fn eval_selector<'cx>(
                     method_accessible: false,
                     ids: Some(FlowOrdSet::new()),
                     ignore_dicts: false,
-                }))))
+                })))
             };
             let getprop_ub = || -> UseT<Context<'cx>> {
                 UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
@@ -127,7 +115,7 @@ pub(super) fn eval_selector<'cx>(
                             if matches!(obj.proto_t.deref(), TypeInner::ObjProtoT(_))
                                 && obj_type::is_exact(&obj.flags.obj_kind)
                             {
-                                lookup_ub()?
+                                lookup_ub()
                             } else {
                                 getprop_ub()
                             }

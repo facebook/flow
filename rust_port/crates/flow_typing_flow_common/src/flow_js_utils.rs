@@ -7185,6 +7185,7 @@ pub mod get_prop_t_kit {
     use flow_typing_type::type_::GenericTData;
     use flow_typing_type::type_::IndexerFallbackData;
     use flow_typing_type::type_::InstType;
+    use flow_typing_type::type_::LookupDefaultResult;
     use flow_typing_type::type_::LookupKind;
     use flow_typing_type::type_::NonstrictReturningData;
     use flow_typing_type::type_::NumberLiteral;
@@ -7856,7 +7857,7 @@ pub mod get_prop_t_kit {
         propref: &PropRef,
         reason_obj: Reason,
         reason_op: Reason,
-        lookup_info: Option<(i32, Type)>,
+        lookup_info: Option<(i32, LookupDefaultResult)>,
     ) -> Result<F::R, FlowJsException> {
         let l = Type::new(TypeInner::DefT(
             reason_obj.dupe(),
@@ -7906,7 +7907,7 @@ pub mod get_prop_t_kit {
                                 );
                                 Some((
                                     Type::new(TypeInner::DefT(r, DefT::new(DefTInner::VoidT))),
-                                    lookup_default_tout.dupe(),
+                                    lookup_default_tout.clone(),
                                 ))
                             };
                             LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(

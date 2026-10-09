@@ -5212,11 +5212,18 @@ pub enum DerivedReference {
 ///   If the property is not found, do nothing. Note that lookups of this kind
 ///   will not add any constraints to the output tvar.
 ///
-/// NonstrictReturning (Some (default, tout))
-///   If the property is not found, unify a default type with the *original*
-///   tvar from the lookup. *)
+/// NonstrictReturning (Some (default, result))
+///   If the property is not found, deliver the default type to `result`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NonstrictReturningData(pub Option<(Type, Type)>, pub Option<(i32, (Reason, Type))>);
+pub struct NonstrictReturningData(pub Option<(Type, LookupDefaultResult)>, pub Option<(i32, (Reason, Type))>);
+
+/// How a lookup uses its default type when no property is found.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum LookupDefaultResult {
+    Unify(Type),
+    Flow { use_op: UseOp, tout: Type },
+    Lookup(Box<LookupTData>),
+}
 
 /// Controls how a property lookup terminates after traversing the prototype chain.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
