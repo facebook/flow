@@ -239,9 +239,9 @@ Cannot call `arr.at` because function [1] requires another argument. [incompatib
            ^^
 
 References:
-   <BUILTINS>/lib.es2022.array.js:28:5
-   28|     at(index: number): T | void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2022.array.js:25:5
+   25|     at(index: number): T | undefined;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- at.js:7:8
@@ -254,8 +254,8 @@ Cannot call `arr.at` with `"1"` bound to `index` because `"1"` [1] is incompatib
               ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2022.array.js:28:15
-   28|     at(index: number): T | void;
+   <BUILTINS>/lib.es2022.array.js:25:15
+   25|     at(index: number): T | undefined;
                      ^^^^^^ [2]
 
 
@@ -268,9 +268,9 @@ Cannot call `roArr.at` because function [1] requires another argument. [incompat
              ^^
 
 References:
-   <BUILTINS>/lib.es2022.array.js:28:5
-   28|     at(index: number): T | void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2022.array.js:33:5
+   33|     at(index: number): T | undefined;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ at.js:15:10
@@ -283,8 +283,8 @@ Cannot call `roArr.at` with `"1"` bound to `index` because `"1"` [1] is incompat
                 ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2022.array.js:28:15
-   28|     at(index: number): T | void;
+   <BUILTINS>/lib.es2022.array.js:33:15
+   33|     at(index: number): T | undefined;
                      ^^^^^^ [2]
 
 
