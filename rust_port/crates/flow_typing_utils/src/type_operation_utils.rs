@@ -1542,29 +1542,26 @@ pub mod special_cased_functions {
 
     pub fn object_assign<'cx>(
         cx: &Context<'cx>,
-        use_op: &UseOp,
         reason: &Reason,
         target_t: &Type,
         rest_arg_ts: &[CallArg],
     ) -> Result<Type, JobError> {
-        object_assign_with_env(
+        flow_js_utils::flow_js_result_to_job_error(object_assign_with_env(
             cx,
             &FlowJsEnv::entry(),
-            use_op,
             reason,
             target_t,
             rest_arg_ts,
-        )
+        ))
     }
 
     fn object_assign_with_env<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
-        use_op: &UseOp,
         reason: &Reason,
         target_t: &Type,
         rest_arg_ts: &[CallArg],
-    ) -> Result<Type, JobError> {
+    ) -> Result<Type, FlowJsException> {
         use std::cell::RefCell;
         use std::collections::HashMap;
 
@@ -2013,111 +2010,98 @@ pub mod special_cased_functions {
         }
 
         let reason = reason.dupe();
-        let use_op = use_op.clone();
-        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
-            cx,
-            reason.dupe(),
-            |cx, tout| -> Result<(), FlowJsException> {
-                let mut result = target_t.clone();
-                for that in rest_arg_ts {
-                    let (that, kind) = match that.deref() {
-                        CallArgInner::Arg(t) => (t.dupe(), type_::default_obj_assign_kind()),
-                        CallArgInner::SpreadArg(t) => (t.dupe(), ObjAssignKind::ObjSpreadAssign),
-                    };
-                    let chain_use_op =
-                        UseOp::Op(Arc::new(RootUseOp::ObjectChain { op: reason.dupe() }));
-                    result = tvar_resolver::mk_tvar_and_fully_resolve_where(
-                        cx,
-                        reason.dupe(),
-                        |cx, inner_t| -> Result<(), FlowJsException> {
-                            let ls = FlowJs::possible_concrete_types_for_object_assign(
-                                cx, env, &reason, &result,
-                            )?;
-                            for l in &ls {
-                                match l.deref() {
-                                    TypeInner::IntersectionT(r, rep) => {
-                                        // This is insufficient to deal with nested intersections.
-                                        // However, it's unlikely to cause issues, and we should instead
-                                        // focus our energy on killing `Object.assign` support instead.
-                                        let that_clone = that.clone();
-                                        let chain_use_op_clone = chain_use_op.clone();
-                                        let reason_clone = reason.dupe();
-                                        let kind_clone = kind.clone();
-                                        let inner_t_clone = inner_t.dupe();
-                                        let outer_reason_clone = reason.dupe();
-                                        let cases: Vec<_> =
-                                            rep.members_iter()
-                                                .map(|to_obj| {
-                                                    let to_obj = to_obj.clone();
-                                                    let that = that_clone.clone();
-                                                    let chain_use_op = chain_use_op_clone.clone();
-                                                    let reason = reason_clone.dupe();
-                                                    let kind = kind_clone.clone();
-                                                    let inner_t = inner_t_clone.dupe();
-                                                    let fix_cache = fix_cache.dupe();
-                                                    let outer_reason = outer_reason_clone.dupe();
-                                                    Box::new(move |cx: &Context<'cx>,
-                                                               env: &FlowJsEnv| {
-                                                    assign_from(
-                                                        cx,
-                                                        env,
-                                                        &outer_reason,
-                                                        &fix_cache,
-                                                        &that,
-                                                        &chain_use_op,
-                                                        &reason,
-                                                        &to_obj,
-                                                        &inner_t,
-                                                        &kind,
-                                                    )
-                                                })
-                                                    as Box<
-                                                        dyn FnOnce(
-                                                                &Context<'cx>,
-                                                                &FlowJsEnv,
-                                                            )
-                                                                -> Result<(), FlowJsException>
-                                                            + '_,
-                                                    >
-                                                })
-                                                .collect();
-                                        speculation_flow::try_custom(
-                                            cx,
-                                            env,
-                                            Some(chain_use_op.clone()),
-                                            None,
-                                            None,
-                                            r.loc().dupe(),
-                                            cases,
-                                        )?;
-                                    }
-                                    _ => {
-                                        assign_from(
-                                            cx,
-                                            env,
-                                            &reason,
-                                            &fix_cache,
-                                            &that,
-                                            &chain_use_op,
-                                            &reason,
-                                            l,
-                                            inner_t,
-                                            &kind,
-                                        )?;
-                                    }
-                                }
-                            }
-                            Ok(())
-                        },
+        let mut result = target_t.dupe();
+        for that in rest_arg_ts {
+            let (that, kind) = match that.deref() {
+                CallArgInner::Arg(t) => (t.dupe(), type_::default_obj_assign_kind()),
+                CallArgInner::SpreadArg(t) => (t.dupe(), ObjAssignKind::ObjSpreadAssign),
+            };
+            let chain_use_op = UseOp::Op(Arc::new(RootUseOp::ObjectChain { op: reason.dupe() }));
+            result = tvar_resolver::mk_tvar_and_fully_resolve_where(
+                cx,
+                reason.dupe(),
+                |cx, inner_t| -> Result<(), FlowJsException> {
+                    let ls = FlowJs::possible_concrete_types_for_object_assign(
+                        cx, env, &reason, &result,
                     )?;
-                }
-                let repositioned =
-                    flow_js::reposition_with_env(cx, env, reason.loc().dupe(), result)?;
-                let use_t = UseT::new(UseTInner::UseT(use_op.clone(), tout.dupe()));
-                flow_js::flow_with_env(cx, env, (&repositioned, &use_t))?;
-                Ok(())
-            },
-        ))
+                    for l in &ls {
+                        match l.deref() {
+                            TypeInner::IntersectionT(r, rep) => {
+                                // This is insufficient to deal with nested intersections.
+                                // However, it's unlikely to cause issues, and we should instead
+                                // focus our energy on killing `Object.assign` support instead.
+                                let that_clone = that.clone();
+                                let chain_use_op_clone = chain_use_op.clone();
+                                let reason_clone = reason.dupe();
+                                let kind_clone = kind.clone();
+                                let inner_t_clone = inner_t.dupe();
+                                let outer_reason_clone = reason.dupe();
+                                let cases: Vec<_> = rep
+                                    .members_iter()
+                                    .map(|to_obj| {
+                                        let to_obj = to_obj.clone();
+                                        let that = that_clone.clone();
+                                        let chain_use_op = chain_use_op_clone.clone();
+                                        let reason = reason_clone.dupe();
+                                        let kind = kind_clone.clone();
+                                        let inner_t = inner_t_clone.dupe();
+                                        let fix_cache = fix_cache.dupe();
+                                        let outer_reason = outer_reason_clone.dupe();
+                                        Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                            assign_from(
+                                                cx,
+                                                env,
+                                                &outer_reason,
+                                                &fix_cache,
+                                                &that,
+                                                &chain_use_op,
+                                                &reason,
+                                                &to_obj,
+                                                &inner_t,
+                                                &kind,
+                                            )
+                                        })
+                                            as Box<
+                                                dyn FnOnce(
+                                                        &Context<'cx>,
+                                                        &FlowJsEnv,
+                                                    )
+                                                        -> Result<(), FlowJsException>
+                                                    + '_,
+                                            >
+                                    })
+                                    .collect();
+                                speculation_flow::try_custom(
+                                    cx,
+                                    env,
+                                    Some(chain_use_op.clone()),
+                                    None,
+                                    None,
+                                    r.loc().dupe(),
+                                    cases,
+                                )?;
+                            }
+                            _ => {
+                                assign_from(
+                                    cx,
+                                    env,
+                                    &reason,
+                                    &fix_cache,
+                                    &that,
+                                    &chain_use_op,
+                                    &reason,
+                                    l,
+                                    inner_t,
+                                    &kind,
+                                )?;
+                            }
+                        }
+                    }
+                    Ok(())
+                },
+            )?;
+        }
+        flow_js::reposition_with_env(cx, env, reason.loc().dupe(), result)
     }
 }
 

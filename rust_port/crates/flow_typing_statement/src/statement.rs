@@ -14461,7 +14461,6 @@ fn static_method_call_object<'a>(
             );
             let t = type_operation_utils::special_cased_functions::object_assign(
                 cx,
-                &use_op,
                 &reason,
                 &target_t,
                 &rest_arg_ts,
