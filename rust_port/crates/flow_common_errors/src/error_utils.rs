@@ -1741,6 +1741,11 @@ fn is_short_lib(filename: &str) -> bool {
 
 fn relative_path(strip_root: Option<&std::path::Path>, filename: &str) -> String {
     use std::path::Path;
+    if strip_root.is_some()
+        && let Some(relative) = flow_parser::file_key::relative_flowlib_path(filename)
+    {
+        return files::normalized_concat("<BUILTINS>", &relative);
+    }
     if is_short_lib(filename) || Path::new(filename).is_relative() {
         return filename.to_string();
     }

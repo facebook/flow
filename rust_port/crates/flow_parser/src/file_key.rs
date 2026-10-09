@@ -194,6 +194,14 @@ pub fn get_flowlib_root() -> String {
         .expect("File_key: flowlib_root has not been set")
 }
 
+pub fn relative_flowlib_path(path: &str) -> Option<String> {
+    let guard = FLOWLIB_ROOT.read().unwrap();
+    let root = guard.as_deref().filter(|root| !root.is_empty())?;
+    let root = normalize_dir_sep_with(std::path::MAIN_SEPARATOR, root);
+    let path = normalize_dir_sep_with(std::path::MAIN_SEPARATOR, path);
+    path.strip_prefix(&root).map(str::to_owned)
+}
+
 fn is_relative(path: &str) -> bool {
     std::path::Path::new(path).is_relative()
 }

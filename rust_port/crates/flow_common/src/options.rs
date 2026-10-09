@@ -129,6 +129,7 @@ pub struct Options {
     pub automatic_require_default: bool,
     pub babel_loose_array_spread: bool,
     pub ban_spread_key_props: bool,
+    pub builtin_ts_libdef_dynamic_discovery: bool,
     pub casting_syntax_only_support_as_excludes: Arc<[Regex]>,
     pub component_syntax: bool,
     pub async_component_syntax: bool,

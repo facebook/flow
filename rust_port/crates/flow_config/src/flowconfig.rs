@@ -150,6 +150,7 @@ pub mod opts {
         pub automatic_require_default: Option<bool>,
         pub babel_loose_array_spread: Option<bool>,
         pub ban_spread_key_props: Option<bool>,
+        pub builtin_ts_libdef_dynamic_discovery: bool,
         pub casting_syntax_only_support_as_excludes: Vec<String>,
         pub component_syntax: bool,
         pub async_component_syntax: bool,
@@ -289,6 +290,7 @@ pub mod opts {
             automatic_require_default: None,
             babel_loose_array_spread: None,
             ban_spread_key_props: None,
+            builtin_ts_libdef_dynamic_discovery: false,
             casting_syntax_only_support_as_excludes: Vec::new(),
             component_syntax: true,
             async_component_syntax: false,
@@ -2053,6 +2055,19 @@ pub mod opts {
                     parse_boolean(
                         |opts, v| {
                             opts.disable_invariant_special_casing = Some(v);
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
+            (
+                "experimental.builtin_ts_libdef_dynamic_discovery",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.builtin_ts_libdef_dynamic_discovery = v;
                             Ok(())
                         },
                         values,

@@ -1273,6 +1273,9 @@ pub fn string_of_source(strip_root: Option<&str>, source: &FileKey) -> String {
         FileKeyInner::SourceFile(_) | FileKeyInner::JsonFile(_) | FileKeyInner::ResourceFile(_) => {
             let file = source.to_absolute();
             if let Some(root) = strip_root {
+                if let Some(relative) = flow_parser::file_key::relative_flowlib_path(&file) {
+                    return format!("[LIB] {}", relative);
+                }
                 let root = std::path::Path::new(root);
                 let root_str = crate::files::normalized_root_prefix(root);
                 crate::files::relative_path(std::path::Path::new(&root_str), &file)

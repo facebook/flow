@@ -28,6 +28,7 @@ use flow_parser::file_key::DCTS_EXT;
 use flow_parser::file_key::DMTS_EXT;
 use flow_parser::file_key::DTS_EXT;
 use flow_parser::file_key::FileKey;
+use flow_parser::file_key::has_dts_ext;
 use regex::Regex;
 
 use crate::path_matcher::PathMatcher;
@@ -131,6 +132,7 @@ pub struct UntypedPattern {
 #[derive(Debug, Clone)]
 pub struct FileOptions {
     pub default_lib_dir: Option<LibDir>,
+    pub builtin_ts_libdef_dynamic_discovery: bool,
     pub ignores: Vec<IgnorePattern>,
     pub untyped: Vec<UntypedPattern>,
     pub declarations: Vec<(String, Regex)>,
@@ -152,6 +154,7 @@ impl Default for FileOptions {
     fn default() -> Self {
         Self {
             default_lib_dir: None,
+            builtin_ts_libdef_dynamic_discovery: false,
             ignores: Vec::new(),
             untyped: Vec::new(),
             declarations: Vec::new(),
@@ -689,7 +692,9 @@ pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<String> {
             .flat_map(|lib| {
                 let lib_str = lib.to_string_lossy().to_string();
                 let filter_prime = |path: &str| -> bool {
-                    (path == lib_str || filter(path)) && !is_json_file(path)
+                    (path == lib_str || filter(path))
+                        && !is_json_file(path)
+                        && !is_dynamically_discovered_builtin_ts_libdef(options, path)
                 };
 
                 let mut files: std::collections::BTreeSet<String> =
@@ -737,8 +742,12 @@ pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<String> {
     libs
 }
 
+fn is_dynamically_discovered_builtin_ts_libdef(options: &FileOptions, path: &str) -> bool {
+    options.builtin_ts_libdef_dynamic_discovery && has_dts_ext(path) && is_in_flowlib(options, path)
+}
+
 pub fn is_configured_lib_file(options: &FileOptions, path: &str) -> bool {
-    if is_json_file(path) {
+    if is_json_file(path) || is_dynamically_discovered_builtin_ts_libdef(options, path) {
         return false;
     }
     let valid_path = is_valid_path(options, path);
@@ -827,7 +836,9 @@ pub fn is_included(options: &FileOptions, f: &str) -> bool {
 pub fn wanted(options: &FileOptions, include_libdef: bool, path: &str) -> bool {
     let is_lib_file = is_configured_lib_file(options, path);
     if include_libdef {
-        !is_ignored(options, path).0 || is_lib_file
+        !is_ignored(options, path).0
+            || is_lib_file
+            || is_dynamically_discovered_builtin_ts_libdef(options, path)
     } else {
         !is_ignored(options, path).0 && !is_lib_file
     }
@@ -948,6 +959,7 @@ fn wanted_filter(options: &FileOptions, path: &Path, all: bool, include_libdef: 
 fn realpath_filter(options: &FileOptions, path: &Path, all: bool, include_libdef: bool) -> bool {
     let path_str = path.to_string_lossy();
     (is_valid_path(options, &path_str)
+        || (include_libdef && is_dynamically_discovered_builtin_ts_libdef(options, &path_str))
         || (include_libdef && is_configured_lib_file(options, &path_str)))
         && wanted_filter(options, path, all, include_libdef)
 }
@@ -961,6 +973,7 @@ fn path_is_in_crawl_scope(
     (options.implicitly_include_root && path.starts_with(root)) || {
         let path_str = path.to_string_lossy();
         is_included(options, &path_str)
+            || (include_libdef && is_dynamically_discovered_builtin_ts_libdef(options, &path_str))
             || (include_libdef && is_configured_lib_file(options, &path_str))
     }
 }
@@ -1012,6 +1025,8 @@ pub fn make_next_files(
             && ((options.implicitly_include_root && path.starts_with(root)) || {
                 let path_str = path.to_string_lossy();
                 is_included(options, &path_str)
+                    || (include_libdef
+                        && is_dynamically_discovered_builtin_ts_libdef(options, &path_str))
                     || (include_libdef && is_configured_lib_file(options, &path_str))
             })
             && realpath_filter(options, path, all, include_libdef)

@@ -1148,6 +1148,15 @@ pub fn file_options(
 
     Arc::new(FileOptions {
         default_lib_dir,
+        builtin_ts_libdef_dynamic_discovery: match std::env::var(
+            "FLOW_BUILTIN_TS_LIBDEF_DYNAMIC_DISCOVERY",
+        )
+        .as_deref()
+        {
+            Ok("1" | "true") => true,
+            Ok("0" | "false") => false,
+            Ok(_) | Err(_) => flowconfig.options.builtin_ts_libdef_dynamic_discovery,
+        },
         ignores,
         untyped,
         declarations,
@@ -2162,6 +2171,7 @@ pub fn make_options(
                 automatic_require_default,
                 babel_loose_array_spread,
                 ban_spread_key_props,
+                builtin_ts_libdef_dynamic_discovery: _,
                 casting_syntax_only_support_as_excludes,
                 component_syntax,
                 async_component_syntax,
@@ -2277,6 +2287,7 @@ pub fn make_options(
     } = flowconfig;
 
     let ts_syntax = ts_syntax.unwrap_or(false);
+    let builtin_ts_libdef_dynamic_discovery = file_options.builtin_ts_libdef_dynamic_discovery;
     let export_star_excludes_default = export_star_excludes_default.unwrap_or(false);
     let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
 
@@ -2534,6 +2545,7 @@ pub fn make_options(
         automatic_require_default,
         babel_loose_array_spread,
         ban_spread_key_props,
+        builtin_ts_libdef_dynamic_discovery,
         casting_syntax_only_support_as_excludes,
         component_syntax,
         async_component_syntax,
