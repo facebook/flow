@@ -131,5 +131,22 @@ Type guard assertions are not yet supported. [unsupported-syntax]
                                              ^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- typescript.ts:6:27
 
-Found 11 errors
+Cannot assign `value` to `invalid` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   typescript.ts:6:27
+   6|   const invalid: number = value; // ERROR
+                                ^^^^^
+
+References:
+   typescript.ts:1:72
+   1| export declare function assertString(value: unknown): asserts value is string;
+                                                                             ^^^^^^ [1]
+   typescript.ts:6:18
+   6|   const invalid: number = value; // ERROR
+                       ^^^^^^ [2]
+
+
+
+Found 12 errors

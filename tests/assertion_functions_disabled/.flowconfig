@@ -1,2 +1,5 @@
 [options]
 all=true
+experimental.assertion_functions=false
+module.file_ext=.js
+module.file_ext=.ts
