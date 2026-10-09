@@ -33,7 +33,7 @@ use flow_typing_errors::intermediate_error_types::NamedReferenceData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
-use flow_typing_flow_js::tvar_resolver;
+use flow_typing_flow_js::tvar_resolver::default_no_lowers;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
@@ -144,22 +144,11 @@ fn check_type_guard_consistency<'cx>(
                         if !one_sided && !is_return_true_statement {
                             let type_guard_with_neg_pred = match neg_pred {
                                 None => type_guard.dupe(),
-                                Some(neg_pred) => {
-                                    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                                        cx,
-                                        tg_reason.dupe(),
-                                        |cx, tvar_reason, tvar_id| {
-                                            let tvar = flow_typing_type::type_::Tvar::new(
-                                                tvar_reason.dupe(),
-                                                tvar_id as u32,
-                                            );
-                                            predicate_kit::run_predicate_for_filtering(
-                                                cx, type_guard, &neg_pred, &tvar,
-                                            )?;
-                                            Ok::<(), JobError>(())
-                                        },
-                                    )?
-                                }
+                                Some(neg_pred) => predicate_kit::collect_predicate_for_filtering(
+                                    cx, type_guard, &neg_pred,
+                                )?
+                                .union_opt(tg_reason.dupe())
+                                .unwrap_or_else(|| default_no_lowers(tg_reason)),
                             };
                             let empty_t = flow_typing_type::type_::empty_t::at(ALoc::default());
                             if !FlowJs::speculative_subtyping_succeeds(

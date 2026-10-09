@@ -3187,17 +3187,13 @@ fn run_predicate_track_changes_with_env<'cx>(
     }
 }
 
-pub(crate) fn run_predicate_for_filtering<'cx>(
+/// Collects the types that survive predicate filtering.
+pub(crate) fn collect_predicate_for_filtering<'cx>(
     cx: &Context<'cx>,
     t: &Type,
     p: &Predicate,
-    tout: &Tvar,
-) -> Result<(), JobError> {
-    let use_t = UseT::new(UseTInner::UseT(
-        unknown_use(),
-        Type::new(TypeInner::OpenT(tout.dupe())),
-    ));
-    run_predicate_for_filtering_with_env(cx, &FlowJsEnv::entry(), t, p, &use_t)
+) -> Result<TypeCollector, JobError> {
+    collect_predicate_for_filtering_with_env(cx, &FlowJsEnv::entry(), t, p)
 }
 
 pub(super) fn run_predicate_for_filtering_with_env<'cx>(
@@ -3207,6 +3203,19 @@ pub(super) fn run_predicate_for_filtering_with_env<'cx>(
     p: &Predicate,
     tout: &UseT<Context<'cx>>,
 ) -> Result<(), JobError> {
+    let collector = collect_predicate_for_filtering_with_env(cx, env, t, p)?;
+    for t in collector.collect_to_vec().iter() {
+        flow_js_utils::flow_js_result_to_job_error(FlowJs::flow_with_env(cx, env, t, tout))?;
+    }
+    Ok(())
+}
+
+fn collect_predicate_for_filtering_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    t: &Type,
+    p: &Predicate,
+) -> Result<TypeCollector, JobError> {
     let collector = TypeCollector::create();
     let changed = Rc::new(RefCell::new(false));
     let result_collector = PredicateResultCollector {
@@ -3225,9 +3234,5 @@ pub(super) fn run_predicate_for_filtering_with_env<'cx>(
         &result_collector,
         &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p_clone),
     ))?;
-    let collected = result_collector.collector.collect_to_vec();
-    for t in collected.iter() {
-        flow_js_utils::flow_js_result_to_job_error(FlowJs::flow_with_env(cx, env, t, tout))?;
-    }
-    Ok(())
+    Ok(result_collector.collector)
 }
