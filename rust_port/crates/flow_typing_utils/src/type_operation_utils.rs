@@ -2557,24 +2557,22 @@ pub mod type_assertions {
         name: &Name,
         t: &Type,
     ) -> Result<Type, JobError> {
-        let reason = reason_of_t(t).dupe();
-        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
-            cx,
-            reason.dupe(),
-            |cx, tout| -> Result<(), FlowJsException> {
-                let t = FlowJs::singleton_concretize_type_for_imports_exports_with_env(
-                    cx, env, &reason, t,
-                )?;
-                let t = flow_js_utils::assert_export_is_type_t_kit::on_concrete_type_with_env(
-                    cx,
-                    env,
-                    name.dupe(),
-                    t,
-                )?;
-                flow_js::flow_t_with_env(cx, env, (&t, tout))?;
-                Ok(())
-            },
-        ))
+        let t = flow_js_utils::flow_js_result_to_job_error(
+            FlowJs::singleton_concretize_type_for_imports_exports_with_env(
+                cx,
+                env,
+                reason_of_t(t),
+                t,
+            ),
+        )?;
+        flow_js_utils::flow_js_result_to_job_error(
+            flow_js_utils::assert_export_is_type_t_kit::on_concrete_type_with_env(
+                cx,
+                env,
+                name.dupe(),
+                t,
+            ),
+        )
     }
 
     pub fn assert_for_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
