@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const RELEASE_VERSION: &str = "0.334.0";
+const RELEASE_VERSION: &str = "0.335.0";
 
 #[cfg(fbcode_build)]
 static VERSION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {

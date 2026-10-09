@@ -1,3 +1,65 @@
+### 0.335.0
+
+Breaking Changes:
+* Removed the legacy `builtin_lib=flowlib` and `builtin_lib=flowlib-with-lib-dom-d-ts` options.
+* Removed the Flow config options `exact_by_default`, `experimental.always_generalize_jsx`, `experimental.fast_symlink_resolution`, `experimental.importable_global_libdefs`, `experimental.interface_dictionary_typing_fix`, `experimental.new_this_typing`, `experimental.opaque_type_new_bound_syntax`, `saved_state.allow_reinit`, `saved_state.direct_serialization`, and `saved_state.reinit_on_lib_change`. These options had been enabled by default and only accepted `true`.
+
+Likely to cause new Flow errors:
+* `Symbol` and `Promise` now use TypeScript-style instance and constructor interfaces. Code relying on their previous class typing may see different errors.
+* Some JSX expressions that were previously considered underconstrained now infer `unknown`.
+* Fixed type argument inference that incorrectly used a bound or `unknown`. More underconstrained errors may appear.
+* `String.prototype.replaceAll` now has separate overloads for a replacement string and a replacer function, matching TypeScript. Passing a union of these types is an error.
+* `RegExpMatchArray.groups` is now optional and cannot be `null`, and `RegExp.prototype.dotAll` is read-only, matching TypeScript.
+* `new $ReadOnlyArray` now causes an error.
+* `Symbol()` now only accepts a `string | number` description, and `Symbol.keyFor` returns `string | void`, matching TypeScript.
+* Deprecated syntax now consistently causes errors, including in library definition files.
+* Type arguments of a polymorphic value flowing to a non-polymorphic type are now solved, which can surface previously hidden errors.
+* `React.PropsOf` now uses `React.ComponentProps` to find component props. Additional errors may occur.
+
+New Features:
+* Support assertion functions exported through CommonJS, assertion calls in return position, and assertion calls in arrow expression bodies.
+* The `undefined` type can be used in library definitions, where it means `void`.
+* `flow-remove-types` supports abstract classes, abstract members, override modifiers, `satisfies`, optional class fields, and additional type-only imports and exports.
+* Template literals infer precise types in `const` declarations and annotated initializers.
+
+Notable bug fixes:
+* `as const` on template literals infers template literal types like TypeScript.
+* Implicit instantiation can infer a type argument through `React.ComponentProps` and other conditional types with `infer`.
+* Interfaces with construct signatures no longer print a spurious `this` parameter in error messages and hovers.
+* `this`-typed methods inherited from builtins such as typed arrays now return the subclass.
+* Exported `declare class` declarations extending builtins such as `Error`, `Map`, `Set`, or `Date` now inherit the builtin's statics and constructor.
+* Arguments of `new X(...)` are now contextually typed when `X` is annotated with the `typeof` of a constructor interface value.
+* `typeof x === 'function'` now refines builtin constructors such as `Map` and `Symbol`, and interfaces with call signatures, as functions.
+* User-defined assertion conditions check member access in test context.
+* Recognize ESM default imports of CommonJS assertion functions and callable objects with `asserts` call signatures.
+* `instanceof` and `declare class ... extends` now use the `prototype` of a constructor interface that has no construct signature, instead of narrowing to `empty` or reporting "not inheritable".
+* Fixed a memory leak in type signature parsing that inflated server memory on large codebases.
+* Fixed checking interfaces that extend classes, including object values and multiple generic class supers.
+
+Misc:
+* `React.ElementConfig` is deprecated in this version and will be removed in the next version. Use `React.ComponentProps` instead.
+* The `unnecessary-invariant` lint is renamed to `unnecessary-assertion`; the old name is still accepted.
+* Constructor errors and variance check errors now print types instead of descriptions such as "object type", "module", or "exports".
+* Unary arithmetic on a maybe-typed operand reports `null` and `void` separately instead of "null or undefined".
+* Record type utility errors name the utility (`Partial`, `Required`, or mapped type).
+
+Parser:
+* Store abstract property annotations in `typeAnnotation` and emit `value: null`.
+
+IDE:
+* Hover on flow.org/try now shows types framed as declarations, matching the VS Code extension.
+* Autocomplete and go-to-definition on instances of classes extending builtins such as `Map`, `Set`, `Error`, and `Date` now show the builtin's instance members.
+* JSX attribute autocomplete on a union or intersection of components offers the props of the components the element is checked against.
+* Go-to-definition on a JSX attribute of a union or intersection of components uses the props of the components the element is checked against.
+* Find-references on a JSX attribute of an intersection of components finds the attributes passed to the branch the element is checked against.
+* Qualify `React.ComponentProps` in generated type annotations.
+
+Library Definitions:
+* `React.ComponentProps<'div'>` now includes the optional ref prop.
+* Added `Promise.withResolvers`.
+* The type parameters of `Map.groupBy` are now ordered `<K, T>`, matching TypeScript.
+* `RegExp.prototype[Symbol.matchAll]` is now a method and `RegExpStringIterator` an interface, matching TypeScript.
+
 ### 0.334.0
 
 Likely to cause new Flow errors:
