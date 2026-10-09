@@ -5367,7 +5367,12 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                             .get(&id.name)
                             .and_then(|function_state| function_state.merge_candidate_loc.as_ref())
                             .is_some_and(|function_loc| function_loc < &id.loc);
-                        let should_merge = has_sibling && (is_type_only_ns || function_first);
+                        let has_namespace_value_write = crate::env_api::has_assigning_write(
+                            EnvKey::ordinary(id.loc.dupe()),
+                            &self.env_info.env_entries,
+                        );
+                        let should_merge = has_sibling
+                            && (is_type_only_ns || (function_first && !has_namespace_value_write));
                         if should_merge {
                             let (namespace_values, namespace_types) =
                                 collect_declared_namespace_members(&inner.body.1.body);
