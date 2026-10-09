@@ -1013,7 +1013,7 @@ and tuple types you can use `Readonly<T>`. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------- readonly_type.js:7:20
 
-Cannot call `libReadonlyArray().push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
+Cannot call `libReadonlyArray().push` because property `push` is missing in `ReadonlyArray<string>` [1]. [prop-missing]
 
    readonly_type.js:7:20
    7| libReadonlyArray().push('a'); // ERROR: read-only
