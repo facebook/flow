@@ -255,6 +255,103 @@ References:
                                                          ^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- finally.js:12:1
+
+Cannot cast `p.finally(...)` to `Promise` because in type argument `R` [1]: `number` [2] is incompatible with
+`string` [3]. [incompatible-type]
+
+   finally.js:12:1
+     12| p.finally(() => {}) as Promise<string>; // Error: the resolved value is unchanged
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1861:23
+   1861| interface Promise<out R = unknown> {
+                               ^ [1]
+   finally.js:1:26
+      1| declare const p: Promise<number>;
+                                  ^^^^^^ [2]
+   finally.js:12:32
+     12| p.finally(() => {}) as Promise<string>; // Error: the resolved value is unchanged
+                                        ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- finally.js:14:11
+
+Cannot call `p.finally` with `1` bound to `onfinally` because: [incompatible-type]
+ - Either `1` [1] is incompatible with `() => unknown` [2].
+ - Or `1` [1] is incompatible with `void` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   finally.js:14:11
+   14| p.finally(1); // Error: not a function
+                 ^ [1]
+
+References:
+   <BUILTINS>/lib.es2018.promise.js:34:26
+   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                                ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2018.promise.js:34:43
+   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                                                 ^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- finally.js:18:22
+
+Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+`() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
+
+   finally.js:18:22
+   18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+                            ^^^^^^^^^^^^^ [2]
+
+References:
+   finally.js:17:40
+   17| declare class NarrowFinally<R> extends Promise<R> {
+                                              ^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2018.promise.js:34:25
+   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- finally.js:18:22
+
+Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+`() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
+
+   finally.js:18:22
+   18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+                            ^^^^^^^^^^^^^ [2]
+
+References:
+   finally.js:17:40
+   17| declare class NarrowFinally<R> extends Promise<R> {
+                                              ^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2018.promise.js:34:43
+   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                                                 ^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- finally.js:18:22
+
+Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+`() => unknown` [2] is incompatible with `null` [3]. [incompatible-type]
+
+   finally.js:18:22
+   18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+                            ^^^^^^^^^^^^^ [2]
+
+References:
+   finally.js:17:40
+   17| declare class NarrowFinally<R> extends Promise<R> {
+                                              ^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2018.promise.js:34:55
+   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                                                             ^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19
 
 Cannot assign `num` to `b` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -754,4 +851,4 @@ References:
 
 
 
-Found 44 errors
+Found 49 errors
