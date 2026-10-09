@@ -1475,27 +1475,24 @@ pub mod operators {
             }
         }
 
-        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
-            cx,
-            reason.dupe(),
-            |cx, tout| {
-                distribute_union_intersection::distribute_with_env(
-                    cx,
-                    env,
-                    None,
-                    &|cx, r, t| {
-                        FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)
-                    },
-                    &|r| r.loc().dupe(),
-                    &|cx, env, t| {
-                        let result = f(t);
-                        flow_js::flow_t_with_env(cx, env, (&result, tout))?;
-                        Ok(())
-                    },
-                    t,
-                )
-            },
-        ))
+        let collector = TypeCollector::create();
+        flow_js_utils::flow_js_result_to_job_error(
+            distribute_union_intersection::distribute_with_env(
+                cx,
+                env,
+                None,
+                &|cx, r, t| FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t),
+                &|r| r.loc().dupe(),
+                &|_, _, t| {
+                    collector.add(f(t));
+                    Ok(())
+                },
+                t,
+            ),
+        )?;
+        Ok(collector
+            .union_opt(reason.dupe())
+            .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason)))
     }
 }
 
