@@ -65,20 +65,21 @@ use flow_typing_type::type_::WritePropData;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::react;
+use flow_typing_type::type_::unknown_use;
 
 pub fn default_resolve_touts<'cx>(
-    flow: &dyn Fn(Type, Type) -> Result<(), FlowJsException>,
+    flow: &dyn Fn(&Type, &UseT<Context<'cx>>) -> Result<(), FlowJsException>,
     resolve_callee: Option<&(Reason, Vec<Type>)>,
     env: &FlowJsEnv,
     loc: ALoc,
     u: &UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     let any = any_t::at(AnySource::AnyError(None), loc.dupe());
-    let resolve = |t: Type| flow(any.dupe(), t);
-    let resolve_tvar = |t: &Tvar| flow(any.dupe(), Type::new(TypeInner::OpenT(t.dupe())));
+    let resolve = |t: Type| flow(&any, &UseT::new(UseTInner::UseT(unknown_use(), t)));
+    let resolve_tvar = |t: &Tvar| resolve(Type::new(TypeInner::OpenT(t.dupe())));
     let map_opt = |t: &Option<Type>| -> Result<(), FlowJsException> {
         if let Some(t) = t {
-            flow(any.dupe(), t.dupe())?;
+            resolve(t.dupe())?;
         }
         Ok(())
     };
@@ -242,8 +243,8 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ToStringT { t_out, .. } => {
             default_resolve_touts(flow, resolve_callee, env, loc.dupe(), t_out)
         }
-        UseTInner::SpecializeT(box SpecializeTData { tvar: tout, .. }) => match tout {
-            Some(tout) => resolve(tout.dupe()),
+        UseTInner::SpecializeT(box SpecializeTData { upper, .. }) => match upper {
+            Some(upper) => flow(&any, upper),
             None => Ok(()),
         },
         UseTInner::ThisSpecializeT(_, _, k) => resolve_cont(k),

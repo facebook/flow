@@ -6391,7 +6391,7 @@ fn mk_nominal_type_inner<'a>(
                                     reason: app_reason.dupe(),
                                     reason2: app_reason.dupe(),
                                     targs: Some(app_targs.clone()),
-                                    tvar: None,
+                                    upper: None,
                                 },
                             ))),
                         );

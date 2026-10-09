@@ -1790,7 +1790,7 @@ impl<CX> std::fmt::Debug for ConstructorTData<CX> {
     }
 }
 
-// Data structs for boxed UseTInner variants (no CX parameter - can derive)
+// Data structs for boxed UseTInner variants
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BindTData {
     pub use_op: UseOp,
@@ -1855,13 +1855,75 @@ pub struct SuperTData {
     pub derived_type: DerivedType,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct SpecializeTData {
+pub struct SpecializeTData<CX> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub reason2: Reason,
     pub targs: Option<Rc<[Type]>>,
-    pub tvar: Option<Type>,
+    pub upper: Option<Box<UseT<CX>>>,
+}
+
+impl<CX> Clone for SpecializeTData<CX> {
+    fn clone(&self) -> Self {
+        Self {
+            use_op: self.use_op.dupe(),
+            reason: self.reason.dupe(),
+            reason2: self.reason2.dupe(),
+            targs: self.targs.dupe(),
+            upper: self.upper.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for SpecializeTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.reason2 == other.reason2
+            && self.targs == other.targs
+            && self.upper == other.upper
+    }
+}
+
+impl<CX> Eq for SpecializeTData<CX> {}
+
+impl<CX> Hash for SpecializeTData<CX> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.reason2.hash(state);
+        self.targs.hash(state);
+        self.upper.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for SpecializeTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for SpecializeTData<CX> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.reason2.cmp(&other.reason2))
+            .then_with(|| self.targs.cmp(&other.targs))
+            .then_with(|| self.upper.cmp(&other.upper))
+    }
+}
+
+impl<CX> std::fmt::Debug for SpecializeTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SpecializeTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("reason2", &self.reason2)
+            .field("targs", &self.targs)
+            .field("upper", &self.upper)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -2571,7 +2633,7 @@ pub enum UseTInner<CX = ()> {
     },
 
     // Operation on polymorphic types
-    SpecializeT(Box<SpecializeTData>),
+    SpecializeT(Box<SpecializeTData<CX>>),
     ThisSpecializeT(Reason, Type, Box<Cont<CX>>),
     ValueToTypeReferenceT(Box<ValueToTypeReferenceTData>),
     ConcretizeTypeAppsT(
@@ -5215,7 +5277,10 @@ pub enum DerivedReference {
 /// NonstrictReturning (Some (default, result))
 ///   If the property is not found, deliver the default type to `result`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NonstrictReturningData(pub Option<(Type, LookupDefaultResult)>, pub Option<(i32, (Reason, Type))>);
+pub struct NonstrictReturningData(
+    pub Option<(Type, LookupDefaultResult)>,
+    pub Option<(i32, (Reason, Type))>,
+);
 
 /// How a lookup uses its default type when no property is found.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

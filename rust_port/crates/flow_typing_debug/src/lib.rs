@@ -1559,11 +1559,11 @@ fn dump_use_t_<CX>(
         }
         UseTInner::SpecializeT(box SpecializeTData {
             targs: args_opt,
-            tvar: ret,
+            upper,
             ..
         }) => {
-            let ret = match ret {
-                Some(ret) => kid(tvars, ret),
+            let ret = match upper {
+                Some(ret) => dump_use_t_(depth - 1, tvars, cx, ret),
                 None => "None".to_owned(),
             };
             let extra = match args_opt {

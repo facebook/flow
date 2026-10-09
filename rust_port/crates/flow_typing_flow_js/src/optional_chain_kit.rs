@@ -117,10 +117,8 @@ fn run_on_concretized<'cx>(
                 let r_loc_clone = r_loc.dupe();
                 let upper_clone = upper_for_default.dupe();
                 Box::new(move |cx, env: &FlowJsEnv| {
-                    let flow_fn = |t1: Type, t2: Type| {
-                        FlowJs::flow_t_with_env(cx, env, &t1, &t2)?;
-                        Ok(())
-                    };
+                    let flow_fn =
+                        |t: &Type, u: &UseT<Context<'cx>>| FlowJs::flow_with_env(cx, env, t, u);
                     default_resolve::default_resolve_touts(
                         &flow_fn,
                         None,

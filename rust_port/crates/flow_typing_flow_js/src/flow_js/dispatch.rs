@@ -4304,7 +4304,7 @@ fn __flow_impl<'cx>(
                 reason: reason_op,
                 reason2: reason_tapp,
                 targs: ts,
-                tvar,
+                upper,
             }),
         ) if let DefTInner::PolyT(box PolyTData {
             tparams_loc,
@@ -4331,8 +4331,8 @@ fn __flow_impl<'cx>(
                 t,
                 ts_val,
             )?;
-            if let Some(tvar) = tvar {
-                rec_flow_t(cx, env, trace, unknown_use(), (&t_, tvar))?;
+            if let Some(upper) = upper {
+                rec_flow(cx, env, trace, (&t_, upper))?;
             }
         }
         // empty targs specialization of non-polymorphic classes is a no-op
@@ -4343,11 +4343,11 @@ fn __flow_impl<'cx>(
                 reason: _,
                 reason2: _,
                 targs: None,
-                tvar,
+                upper,
             }),
         ) if matches!(def_t.deref(), DefTInner::ClassT(_)) => {
-            if let Some(tvar) = tvar {
-                rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
+            if let Some(upper) = upper {
+                rec_flow(cx, env, trace, (l, upper))?;
             }
         }
         // Explicit type arguments on a construct-signature value specialize the
@@ -4359,7 +4359,7 @@ fn __flow_impl<'cx>(
                 reason: reason_op,
                 reason2: reason_tapp,
                 targs: Some(ts),
-                tvar,
+                upper,
             }),
         ) if let DefTInner::InstanceT(instance) = def_t.deref() => {
             let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
@@ -4369,7 +4369,7 @@ fn __flow_impl<'cx>(
             let construct_t = flow_js_utils::combine_construct_ts(construct_ts);
             match construct_t {
                 Some(construct_t) => {
-                    if let Some(tvar) = tvar {
+                    if let Some(upper) = upper {
                         let specialized_construct = flow_typing_tvar::mk_where(
                             cx,
                             reason_tapp.dupe(),
@@ -4386,7 +4386,10 @@ fn __flow_impl<'cx>(
                                                 reason: reason_op.dupe(),
                                                 reason2: reason_tapp.dupe(),
                                                 targs: Some(ts.dupe()),
-                                                tvar: Some(construct_tvar.dupe()),
+                                                upper: Some(Box::new(UseT::new(UseTInner::UseT(
+                                                    unknown_use(),
+                                                    construct_tvar.dupe(),
+                                                )))),
                                             },
                                         ))),
                                     ),
@@ -4408,13 +4411,7 @@ fn __flow_impl<'cx>(
                                 },
                             )))),
                         ));
-                        rec_flow_t(
-                            cx,
-                            env,
-                            trace,
-                            unknown_use(),
-                            (&specialized_interface, tvar),
-                        )?;
+                        rec_flow(cx, env, trace, (&specialized_interface, upper))?;
                     } else {
                         rec_flow(
                             cx,
@@ -4427,7 +4424,7 @@ fn __flow_impl<'cx>(
                                     reason: reason_op.dupe(),
                                     reason2: reason_tapp.dupe(),
                                     targs: Some(ts.dupe()),
-                                    tvar: None,
+                                    upper: None,
                                 }))),
                             ),
                         )?;
@@ -4447,8 +4444,8 @@ fn __flow_impl<'cx>(
                         ),
                     )?;
                     let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
-                    if let Some(tvar) = tvar {
-                        rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
+                    if let Some(upper) = upper {
+                        rec_flow(cx, env, trace, (&any, upper))?;
                     }
                 }
             }
@@ -4467,7 +4464,7 @@ fn __flow_impl<'cx>(
                 reason: _,
                 reason2: _,
                 targs: None,
-                tvar,
+                upper,
             }),
         ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
             let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
@@ -4488,11 +4485,11 @@ fn __flow_impl<'cx>(
                     ),
                 )?;
                 let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
-                if let Some(tvar) = tvar {
-                    rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
+                if let Some(upper) = upper {
+                    rec_flow(cx, env, trace, (&any, upper))?;
                 }
-            } else if let Some(tvar) = tvar {
-                rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
+            } else if let Some(upper) = upper {
+                rec_flow(cx, env, trace, (l, upper))?;
             }
         }
         (
@@ -4502,12 +4499,11 @@ fn __flow_impl<'cx>(
                 reason: _,
                 reason2: _,
                 targs: _,
-                tvar,
+                upper,
             }),
         ) => {
-            // rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
-            if let Some(tvar) = tvar {
-                rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
+            if let Some(upper) = upper {
+                rec_flow(cx, env, trace, (l, upper))?;
             }
         }
         // this-specialize a this-abstracted class by substituting This
@@ -10869,10 +10865,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             default_resolve::default_resolve_touts(
-                &|l_inner: Type, r_inner: Type| {
-                    rec_flow_t(cx, env, trace, unknown_use(), (&l_inner, &r_inner))?;
-                    Ok(())
-                },
+                &|l_inner, u_inner| rec_flow(cx, env, trace, (l_inner, u_inner)),
                 None,
                 env,
                 reason_of_t(l).loc().dupe(),
@@ -10954,10 +10947,7 @@ fn __flow_impl<'cx>(
                 _ => None,
             };
             default_resolve::default_resolve_touts(
-                &|l_inner: Type, r_inner: Type| {
-                    rec_flow_t(cx, env, trace, unknown_use(), (&l_inner, &r_inner))?;
-                    Ok(())
-                },
+                &|l_inner, u_inner| rec_flow(cx, env, trace, (l_inner, u_inner)),
                 resolve_callee.as_ref(),
                 env,
                 reason_of_t(l).loc().dupe(),

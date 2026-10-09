@@ -715,14 +715,14 @@ pub fn util_use_op_of_use_t<T, CX>(
             let r1 = data.reason.dupe();
             let r2 = data.reason2.dupe();
             let ts = data.targs.clone();
-            let t = data.tvar.dupe();
+            let upper = data.upper.clone();
             call_util(&data.use_op, &move |op| {
                 UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
                     use_op: op,
                     reason: r1.dupe(),
                     reason2: r2.dupe(),
                     targs: ts.clone(),
-                    tvar: t.dupe(),
+                    upper: upper.clone(),
                 })))
             })
         }

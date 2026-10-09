@@ -252,37 +252,20 @@ pub(super) fn instantiate_this_class<'cx>(
     this: &Type,
     k: &Cont<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
-    let tc = match ts {
-        None => c.dupe(),
-        Some(ts) => flow_typing_tvar::mk_where(cx, reason_tapp.dupe(), |cx, tout| {
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    c,
-                    &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
-                        use_op: unknown_use(),
-                        reason: reason_op.dupe(),
-                        reason2: reason_tapp.dupe(),
-                        targs: Some(ts),
-                        tvar: Some(tout.dupe()),
-                    }))),
-                ),
-            )
-        })?,
+    let this_use = UseT::new(UseTInner::ThisSpecializeT(
+        reason_tapp.dupe(),
+        this.dupe(),
+        Box::new(k.clone()),
+    ));
+    let use_t = match ts {
+        None => this_use,
+        Some(ts) => UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
+            use_op: unknown_use(),
+            reason: reason_op.dupe(),
+            reason2: reason_tapp.dupe(),
+            targs: Some(ts),
+            upper: Some(Box::new(this_use)),
+        }))),
     };
-    rec_flow(
-        cx,
-        env,
-        trace,
-        (
-            &tc,
-            &UseT::new(UseTInner::ThisSpecializeT(
-                reason_tapp.dupe(),
-                this.dupe(),
-                Box::new(k.clone()),
-            )),
-        ),
-    )
+    rec_flow(cx, env, trace, (c, &use_t))
 }

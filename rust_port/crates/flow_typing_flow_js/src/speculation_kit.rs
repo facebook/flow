@@ -635,10 +635,8 @@ where
             } => {
                 let intersection_reason = type_util::reason_of_t(intersection);
                 let reason_lower = mk_intersection_reason(intersection_reason, ls);
-                let flow_fn = |t1: Type, t2: Type| {
-                    FlowJs::flow_t_with_env(cx, env, &t1, &t2)?;
-                    Ok(())
-                };
+                let flow_fn =
+                    |t: &Type, u: &UseT<Context<'cx>>| FlowJs::flow_with_env(cx, env, t, u);
                 let resolve_callee_pair = (intersection_reason.dupe(), ls.clone());
                 default_resolve::default_resolve_touts(
                     &flow_fn,

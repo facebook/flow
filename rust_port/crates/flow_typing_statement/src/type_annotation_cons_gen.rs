@@ -57,7 +57,10 @@ pub fn specialize<'a>(
                 reason: reason_op,
                 reason2: reason_tapp,
                 targs: targs.map(Rc::from),
-                tvar: Some(tvar.dupe()),
+                upper: Some(Box::new(UseT::new(UseTInner::UseT(
+                    unknown_use(),
+                    tvar.dupe(),
+                )))),
             })));
             flow_js::flow_non_speculating(cx, (&c, &use_t))
         })
