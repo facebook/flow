@@ -30,23 +30,23 @@ Cannot call `BigInt` with `null` bound to `value` because: [incompatible-type]
                ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2020.bigint.js:474:18
-   474|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/lib.es2020.bigint.js:500:18
+   500|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                          ^^^^^^^ [2]
-   <BUILTINS>/lib.es2020.bigint.js:474:28
-   474|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/lib.es2020.bigint.js:500:28
+   500|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                    ^^^^^^ [3]
-   <BUILTINS>/lib.es2020.bigint.js:474:37
-   474|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/lib.es2020.bigint.js:500:37
+   500|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                             ^^^^^^ [4]
-   <BUILTINS>/lib.es2020.bigint.js:474:46
-   474|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/lib.es2020.bigint.js:500:46
+   500|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                                      ^^^^^^ [5]
-   <BUILTINS>/lib.es2020.bigint.js:474:55
-   474|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/lib.es2020.bigint.js:500:55
+   500|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                                               ^^^^^^^^^^^^ [6]
-   <BUILTINS>/lib.es2020.bigint.js:474:70
-   474|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/lib.es2020.bigint.js:500:70
+   500|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                                                              ^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
