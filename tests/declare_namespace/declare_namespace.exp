@@ -41,23 +41,6 @@ References:
             ^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ declare_global_binding.js:1:9
-
-`declare global` statement is not supported yet. [unsupported-syntax]
-
-   1| declare global {
-              ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------ declare_global_binding.js:1:9
-
-You are using an undocumented feature. It might be removed in the future, and the behavior might change at any time
-without warning. [undocumented-feature]
-
-   1| declare global {
-              ^^^^^^
-
-
 Error ------------------------------------------------------------------------------------ declare_global_binding.js:5:1
 
 Cannot resolve name `foo`. [cannot-resolve-name]
@@ -1416,4 +1399,4 @@ References:
 
 
 
-Found 97 errors
+Found 95 errors

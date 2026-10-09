@@ -1,0 +1,1 @@
+defaultGlobal as string;

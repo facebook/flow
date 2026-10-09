@@ -7,6 +7,6 @@
 
 export {};
 
-declare global { // ERROR
-  const disabledGlobal: string;
+declare global {
+  const defaultGlobal: string;
 }

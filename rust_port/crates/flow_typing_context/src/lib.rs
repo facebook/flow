@@ -237,7 +237,7 @@ impl Default for FrozenMetadata {
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Arc::from([]),
-            declare_global_support: false,
+            declare_global_support: true,
             dev_only_refinement_info_as_errors: false,
             disable_invariant_special_casing: false,
             enable_const_params: false,

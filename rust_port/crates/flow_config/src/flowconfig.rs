@@ -293,7 +293,7 @@ pub mod opts {
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Vec::new(),
-            declare_global_support: false,
+            declare_global_support: true,
             dev_only_refinement_info_as_errors: false,
             emoji: None,
             enable_const_params: None,
@@ -2113,7 +2113,8 @@ pub mod opts {
                 )
             }),
             ("experimental.declare_global_support", |values, config| {
-                parse_boolean(
+                enum_parser(
+                    &[("true", true)],
                     |opts, v| {
                         opts.declare_global_support = v;
                         Ok(())

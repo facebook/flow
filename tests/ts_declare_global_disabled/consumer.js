@@ -1,1 +1,0 @@
-disabledGlobal as string; // ERROR
