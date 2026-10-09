@@ -143,8 +143,8 @@ Functions without statics are not compatible with objects.
                                           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1861:23
-   1861| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3531:23
+   3531| interface Promise<out R = unknown> {
                                ^ [1]
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
@@ -169,8 +169,8 @@ property `default` is missing in `{name: string, ...}` [2] but exists in
                                           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1861:23
-   1861| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3531:23
+   3531| interface Promise<out R = unknown> {
                                ^ [1]
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}

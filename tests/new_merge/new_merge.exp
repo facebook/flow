@@ -310,8 +310,8 @@ Cannot cast `f15()` to empty because `Promise<void>` [1] is incompatible with `e
          ^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1861:11
-   1861| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3531:11
+   3531| interface Promise<out R = unknown> {
                    ^^^^^^^ [1]
    main.js:60:10
      60| f15() as empty;
