@@ -3210,7 +3210,8 @@ pub(super) fn run_predicate_for_filtering_with_env<'cx>(
     Ok(())
 }
 
-fn collect_predicate_for_filtering_with_env<'cx>(
+/// Collects the types that survive predicate filtering in the given environment.
+pub(super) fn collect_predicate_for_filtering_with_env<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     t: &Type,

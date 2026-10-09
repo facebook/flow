@@ -1635,23 +1635,12 @@ fn type_of_hint_decomposition<'cx>(
                                     );
                                 }
                                 let predicate = Predicate::new(pred);
-                                let t = t.dupe();
-                                tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                                    cx,
-                                    reason.dupe(),
-                                    move |cx, r, id| {
-                                        let tout = UseT::new(UseTInner::UseT(
-                                            unknown_use(),
-                                            Type::new(TypeInner::OpenT(Tvar::new(
-                                                r.dupe(),
-                                                id as u32,
-                                            ))),
-                                        ));
-                                        crate::predicate_kit::run_predicate_for_filtering_with_env(
-                                            cx, env, &t, &predicate, &tout,
-                                        )?;
-                                        Ok::<(), SandboxError>(())
-                                    },
+                                Ok(
+                                    crate::predicate_kit::collect_predicate_for_filtering_with_env(
+                                        cx, env, &t, &predicate,
+                                    )?
+                                    .union_opt(reason.dupe())
+                                    .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason)),
                                 )
                             }
                         }
