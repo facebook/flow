@@ -2499,11 +2499,11 @@ Flags: --pretty
     },
     {
       "name":"?.findLast",
-      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void)"
+      "type":"void | ((this: this, predicate: (value: T, index: number, array: Array<T>) => unknown, thisArg?: any) => T | void)"
     },
     {
       "name":"?.findLastIndex",
-      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number)"
+      "type":"void | ((this: this, predicate: (value: T, index: number, array: Array<T>) => unknown, thisArg?: any) => number)"
     },
     {
       "name":"?.flat",
@@ -2623,11 +2623,11 @@ Flags: --pretty
     },
     {
       "name":"findLast",
-      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void"
+      "type":"(this: this, predicate: (value: T, index: number, array: Array<T>) => unknown, thisArg?: any) => T | void"
     },
     {
       "name":"findLastIndex",
-      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number"
+      "type":"(this: this, predicate: (value: T, index: number, array: Array<T>) => unknown, thisArg?: any) => number"
     },
     {"name":"flat","type":"(this: this, depth: number) => Array<unknown>"},
     {
