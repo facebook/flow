@@ -13198,25 +13198,8 @@ fn jsx_title<'a>(
         loc: closing.loc.dupe(),
         name: jsx_match_closing_element(&typed_name, &closing.name),
     });
-    // No props are inferred when React's createElement does not check the element (JSX pragmas,
-    // custom JSX typing, fbt, namespaced names, inference hooks), when the component is not yet
-    // resolved here, or when no branch of an intersection component matches. These elements fall
-    // back to the component's React config.
     let props = inferred_props.unwrap_or_else(|| {
-        let component_t = match &typed_name {
-            ast::jsx::Name::Identifier(id) => &id.loc.1,
-            ast::jsx::Name::NamespacedName(ns) => &ns.name.loc.1,
-            ast::jsx::Name::MemberExpression(member) => &member.property.loc.1,
-        };
-        Type::new(TypeInner::EvalT {
-            type_: component_t.dupe(),
-            defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
-                type_::unknown_use(),
-                mk_reason(VirtualReasonDesc::RReactProps, props_loc.dupe()),
-                Rc::new(Destructor::ReactElementConfigType),
-            )),
-            id: eval::Id::generate_id(),
-        })
+        type_::any_t::error(mk_reason(VirtualReasonDesc::RReactProps, props_loc.dupe()))
     });
     let typed_opening = ast::jsx::Opening {
         loc: loc.dupe(),
