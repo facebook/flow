@@ -9207,15 +9207,6 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
-        "React$ElementConfig" => match targs {
-            Some(type_args) if type_args.arguments.len() == 1 => {
-                let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::ReactElementConfig(Box::new((
-                    loc, t,
-                )))))
-            }
-            _ => Parsed::Err(loc, Errno::CheckError),
-        },
         kind_name @ ("Uppercase" | "Lowercase" | "Capitalize" | "Uncapitalize") => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);

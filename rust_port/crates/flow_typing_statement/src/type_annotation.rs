@@ -2825,41 +2825,6 @@ fn convert_inner<'a>(
                             ))
                         })?
                     }
-                    "React$ElementConfig" => {
-                        if !cx.is_global_lib_context() {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EInternalType(
-                                    loc.dupe(),
-                                    InternalType::ReactDollarUtilityTypesWithNonDollarAliases(
-                                        FlowSmolStr::new_inline("ElementConfig"),
-                                    ),
-                                ),
-                            );
-                        }
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
-                            let (ts, targs_ast) =
-                                convert_type_params(cx, env, inner.targs.as_ref())?;
-                            let tp = ts.into_iter().next().unwrap();
-                            let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
-                                    "React$ElementConfig",
-                                )),
-                                loc.dupe(),
-                            );
-                            let result_t =
-                                FlowJs::mk_possibly_evaluated_destructor_for_annotations(
-                                    cx,
-                                    use_op(&reason),
-                                    &reason,
-                                    &tp,
-                                    &type_::Destructor::ReactElementConfigType,
-                                    mk_eval_id(cx, loc.dupe()),
-                                )
-                                .expect("mk_type_destructor should not fail");
-                            Ok(reconstruct_ast(result_t, None, targs_ast))
-                        })?
-                    }
                     "$Flow$EnforceOptimized" => {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
                             let (ts, targs_ast) =
