@@ -1605,7 +1605,7 @@ pub(super) fn mk_typeapp_instance_annot<'cx>(
     ts: Rc<[Type]>,
 ) -> Result<Type, FlowJsException> {
     let use_desc = use_desc.unwrap_or(false);
-    let t = flow_typing_tvar::mk(cx, reason_tapp.dupe());
+    let collector = type_collector::TypeCollector::create();
     flow_opt(
         cx,
         env,
@@ -1617,13 +1617,13 @@ pub(super) fn mk_typeapp_instance_annot<'cx>(
                 reason: reason_op.dupe(),
                 reason2: reason_tapp.dupe(),
                 targs: Some(ts),
-                upper: Some(Box::new(Cont::Upper(Box::new(UseT::new(UseTInner::UseT(
-                    unknown_use(),
-                    t.dupe(),
-                )))))),
+                upper: Some(Box::new(Cont::Collect(collector.dupe()))),
             }))),
         ),
     )?;
+    let t = collector
+        .union_opt(reason_tapp.dupe())
+        .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason_tapp));
     if from_value {
         Ok(t)
     } else {
@@ -1643,7 +1643,7 @@ pub(super) fn mk_typeapp_instance<'cx>(
     c: &Type,
     ts: Rc<[Type]>,
 ) -> Result<Type, FlowJsException> {
-    let t = flow_typing_tvar::mk(cx, reason_tapp.dupe());
+    let collector = type_collector::TypeCollector::create();
     flow_opt(
         cx,
         env,
@@ -1655,13 +1655,13 @@ pub(super) fn mk_typeapp_instance<'cx>(
                 reason: reason_op.dupe(),
                 reason2: reason_tapp.dupe(),
                 targs: Some(ts),
-                upper: Some(Box::new(Cont::Upper(Box::new(UseT::new(UseTInner::UseT(
-                    unknown_use(),
-                    t.dupe(),
-                )))))),
+                upper: Some(Box::new(Cont::Collect(collector.dupe()))),
             }))),
         ),
     )?;
+    let t = collector
+        .union_opt(reason_tapp.dupe())
+        .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason_tapp));
     if from_value {
         Ok(t)
     } else {
