@@ -199,60 +199,108 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- any.js:2:9
 
-Cannot call `Promise.any` because function [1] requires another argument. [incompatible-type]
+Cannot call `Promise.any` because: [incompatible-type]
+ - Either function type [1] requires another argument from call of method `any` [2].
+ - Or function type [3] requires another argument from call of method `any` [2].
 
    any.js:2:9
     2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
                ^^^
 
 References:
-   <BUILTINS>/lib.es2021.promise.js:43:5
-   43|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------------- any.js:2:1
-
-Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
-
+   <BUILTINS>/lib.es2021.promise.js:46:5
+   46|     any<T extends readonly unknown[] | []>(values: T): Promise<Awaited<T[number]>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    any.js:2:1
     2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es2021.promise.js:43:8
-   43|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2021.promise.js:53:5
+   53|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------- any.js:5:1
+Error ------------------------------------------------------------------------------------------------------- any.js:5:9
 
-Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
+Cannot call `Promise.any` because: [incompatible-type]
+ - Either `0` [1], a primitive, cannot be used as a subtype of
+   `Iterable<Array<unknown> | PromiseLike<Array<unknown>>, void, void>` [2]. You can wrap it in `new Number(...))` to
+   turn it into an object and attempt to use it as a subtype of an interface.
+ - Or `0` [1] is incompatible with `Array<unknown>` [3].
 
-   any.js:5:1
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   any.js:5:9
     5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^^^
 
 References:
-   <BUILTINS>/lib.es2021.promise.js:43:8
-   43|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------------ any.js:5:29
-
-Cannot call `Promise.any` with `0` bound to `promises` because `0` [1], a primitive, cannot be used as a subtype of
-`Iterable<any, void, void>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it
-as a subtype of an interface. [incompatible-type]
-
    any.js:5:29
     5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
                                    ^ [1]
+   <BUILTINS>/lib.es2021.promise.js:53:20
+   53|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   any.js:5:13
+    5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
+                   ^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ any.js:23:3
+
+Cannot cast `Promise.any(...)` to `Promise` because in type argument `R` [1]: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
+
+   any.js:23:3
+     23|   Promise.any([a, b]) as Promise<number>; // Error: string is incompatible with number
+           ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2021.promise.js:43:51
-   43|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-                                                         ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1861:23
+   1861| interface Promise<out R = unknown> {
+                               ^ [1]
+   <BUILTINS>/lib.es2021.promise.js:53:59
+     53|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
+                                                                   ^^^^^^^^^^ [2]
+   any.js:23:34
+     23|   Promise.any([a, b]) as Promise<number>; // Error: string is incompatible with number
+                                          ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- any.js:29:26
+
+Cannot call `AggregateError` with `1` bound to `message` because `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   any.js:29:26
+   29|   new AggregateError([], 1); // Error: the message must be a string
+                                ^ [1]
+
+References:
+   <BUILTINS>/lib.es2021.promise.js:30:43
+   30|     new (errors: Iterable<any>, message?: string): AggregateError;
+                                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- any.js:34:10
+
+Cannot return `Promise.any(...)` because in type argument `R` [1]: `unknown` [2] is incompatible with `empty` [3].
+[incompatible-type]
+
+   any.js:34:10
+     34|   return Promise.any(a); // Error
+                  ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1861:23
+   1861| interface Promise<out R = unknown> {
+                               ^ [1]
+   <BUILTINS>/lib.es2021.promise.js:53:59
+     53|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
+                                                                   ^^^^^^^^^^ [2]
+   any.js:33:41
+     33| function test6<X>(a: Array<X>): Promise<X> {
+                                                 ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- finally.js:12:1
@@ -851,4 +899,4 @@ References:
 
 
 
-Found 49 errors
+Found 50 errors
