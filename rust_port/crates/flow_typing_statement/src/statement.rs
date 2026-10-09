@@ -9444,19 +9444,17 @@ pub fn optional_chain<'a>(
     //
     // Below are several helper functions for setting up this tuple in the
     // presence of chaining.
-    let join_optional_branches = |voided: &[Type], filtered: &Type| -> Result<Type, JobError> {
-        tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
-            cx,
-            reason_of_t(filtered).dupe(),
-            |cx, t| {
-                flow_js::flow_t_non_speculating(cx, (filtered, t))?;
-                for void_t in voided {
-                    flow_js::flow_t_non_speculating(cx, (void_t, t))?;
-                }
-                Ok(())
-            },
-        )
-    };
+    fn join_optional_branches(voided: &[Type], filtered: &Type) -> Type {
+        let reason = reason_of_t(filtered);
+        let collector = TypeCollector::create();
+        collector.add(filtered.dupe());
+        for void_t in voided {
+            collector.add(void_t.dupe());
+        }
+        collector
+            .union_opt(reason.dupe())
+            .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason))
+    }
 
     fn noop() -> Option<Type> {
         None
@@ -9556,17 +9554,7 @@ pub fn optional_chain<'a>(
             }
             ts
         };
-        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
-            cx,
-            reason.dupe(),
-            |cx, t| {
-                flow_js::flow_t_non_speculating(cx, (&mem_t, t))?;
-                for out in &voided_out {
-                    flow_js::flow_t_non_speculating(cx, (out, t))?;
-                }
-                Ok(())
-            },
-        )?;
+        let lhs_t = join_optional_branches(&voided_out, &mem_t);
         tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &mem_t);
         Ok((
             mem_t,
@@ -9617,17 +9605,7 @@ pub fn optional_chain<'a>(
             },
             None => get_result(cx, &subexpression_types, reason, &chain_t)?,
         };
-        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
-            cx,
-            reason_of_t(&res_t).dupe(),
-            |cx, t| {
-                flow_js::flow_t_non_speculating(cx, (&res_t, t))?;
-                for void_t in &voided_t {
-                    flow_js::flow_t_non_speculating(cx, (void_t, t))?;
-                }
-                Ok(())
-            },
-        )?;
+        let lhs_t = join_optional_branches(&voided_t, &res_t);
         Ok((
             res_t,
             voided_t,
@@ -9707,17 +9685,7 @@ pub fn optional_chain<'a>(
                             Some(ra) => ra(cx, &subexpression_types, &filtered_t, t)?,
                             None => t,
                         };
-                        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
-                            cx,
-                            reason_of_t(&tout).dupe(),
-                            |cx, t| {
-                                flow_js::flow_t_non_speculating(cx, (&tout, t))?;
-                                for void_t in &voided_t {
-                                    flow_js::flow_t_non_speculating(cx, (void_t, t))?;
-                                }
-                                Ok(())
-                            },
-                        )?;
+                        let lhs_t = join_optional_branches(&voided_t, &tout);
                         Ok((
                             tout,
                             voided_t,
@@ -10622,19 +10590,9 @@ pub fn optional_chain<'a>(
             };
             let call_voided_ts: Vec<Type> = call_voided_out_collector.collect_to_vec();
             let call_voided_union = union_of_ts(expr_reason.dupe(), call_voided_ts, None);
-            let joined = join_optional_branches(&lookup_voided_out, &call_voided_union)?;
+            let joined = join_optional_branches(&lookup_voided_out, &call_voided_union);
             let voided_out = normalize_voided_out(joined)?;
-            let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
-                cx,
-                reason_of_t(&member_lhs_t).dupe(),
-                |cx, t| {
-                    flow_js::flow_t_non_speculating(cx, (&member_lhs_t, t))?;
-                    for out in &voided_out {
-                        flow_js::flow_t_non_speculating(cx, (out, t))?;
-                    }
-                    Ok(())
-                },
-            )?;
+            let lhs_t = join_optional_branches(&voided_out, &member_lhs_t);
             let member_for_callee = expression::Member {
                 object: object_ast,
                 property: property_ast,

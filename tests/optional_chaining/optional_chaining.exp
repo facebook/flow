@@ -2117,7 +2117,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:55:7
 
-Cannot compare `void | any` [1] to `null` [2], because [2] is null and `void | any` [1] does not contain null. Perhaps
+Cannot compare `any | void` [1] to `null` [2], because [2] is null and `void | any` [1] does not contain null. Perhaps
 you meant to use `==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    refinements.js:55:7

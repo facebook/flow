@@ -240,12 +240,12 @@ optional_chaining.js:16:11 = const foo: ?Foo
 'Foo' defined at optional_chaining.js:3:6
 
 optional_chaining.js:16:11,16:13
-optional_chaining.js:16:16 = (property) Foo.bar: void | Bar
+optional_chaining.js:16:16 = (property) Foo.bar: Bar | void
 
 'Bar' defined at optional_chaining.js:7:6
 
 optional_chaining.js:16:16,16:18
-optional_chaining.js:16:20 = (property) Bar.baz: void | Baz
+optional_chaining.js:16:20 = (property) Bar.baz: Baz | void
 
 'Baz' defined at optional_chaining.js:11:6
 

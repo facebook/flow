@@ -1498,13 +1498,13 @@ optional_calls.js:17:7-11: "abc"
 optional_calls.js:17:14-18: "abc"
 optional_calls.js:22:3: ?{m: {n: F, ...}, ...}
 optional_calls.js:22:3: ?{m: {n: F, ...}, ...}
-optional_calls.js:22:3-6: void | {n: F, ...}
+optional_calls.js:22:3-6: {n: F, ...} | void
 optional_calls.js:22:3-6: {n: F, ...}
 optional_calls.js:22:3-8: F
 optional_calls.js:22:3-8: {n: F, ...}
 optional_calls.js:22:3-15: void
 optional_calls.js:22:3-15: void
-optional_calls.js:22:6: void | {n: F, ...}
+optional_calls.js:22:6: {n: F, ...} | void
 optional_calls.js:22:8: F
 optional_calls.js:22:10-14: "abc"
 optional_calls.js:27:3: {m: ?F, ...}
