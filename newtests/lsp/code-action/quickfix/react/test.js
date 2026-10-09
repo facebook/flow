@@ -545,31 +545,32 @@ module.exports = suite(
         ),
         lspStartAndConnect(),
       ].concat(
-        [12, 17, 22, 27, 31, 35, 39, 43, 47, 51, 56, 61, 66, 81, 87].map(
-          (i: number, idx: number) =>
-            lspRequestAndWaitUntilResponse('textDocument/codeAction', {
-              textDocument: {
-                uri: '<PLACEHOLDER_PROJECT_URL>/add-missing-attributes.js',
-              },
-              range: {
-                start: {line: i, character: 13},
-                end: {line: i, character: 15},
-              },
-              context: {
-                only: ['quickfix'],
-                diagnostics: [],
-              },
-            }).verifyLSPMessageSnapshot(
-              path.join(
-                __dirname,
-                '__snapshots__',
-                'add-missing-attributes-' + (idx + 1) + '.json',
-              ),
-              [
-                'textDocument/publishDiagnostics',
-                ...lspIgnoreStatusAndCancellation,
-              ],
+        [
+          12, 17, 22, 27, 31, 35, 39, 43, 47, 51, 56, 61, 66, 81, 87, 96, 101,
+        ].map((i: number, idx: number) =>
+          lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+            textDocument: {
+              uri: '<PLACEHOLDER_PROJECT_URL>/add-missing-attributes.js',
+            },
+            range: {
+              start: {line: i, character: 13},
+              end: {line: i, character: 15},
+            },
+            context: {
+              only: ['quickfix'],
+              diagnostics: [],
+            },
+          }).verifyLSPMessageSnapshot(
+            path.join(
+              __dirname,
+              '__snapshots__',
+              'add-missing-attributes-' + (idx + 1) + '.json',
             ),
+            [
+              'textDocument/publishDiagnostics',
+              ...lspIgnoreStatusAndCancellation,
+            ],
+          ),
         ),
       ),
     ),

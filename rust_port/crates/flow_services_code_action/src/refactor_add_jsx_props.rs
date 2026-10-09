@@ -11,9 +11,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::reason;
 use flow_common::reason::Reason;
-use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::expression;
@@ -23,15 +21,10 @@ use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_typing::typed_ast_finder;
 use flow_typing_context::Context;
-use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_type::type_::DefTInner;
-use flow_typing_type::type_::Destructor;
-use flow_typing_type::type_::RootUseOp;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
-use flow_typing_type::type_::UseOp;
-use flow_typing_type::type_::eval;
 use flow_typing_type::type_::property;
 use flow_typing_type::type_util::reason_of_t;
 
@@ -111,29 +104,6 @@ fn get_obj_prop_names(
         }
         _ => None,
     }
-}
-
-fn get_required_attribute_names(cx: &Context, loc: Loc, t: &Type) -> Option<BTreeSet<FlowSmolStr>> {
-    let reason = reason::mk_reason(
-        VirtualReasonDesc::RType("React$ElementConfig".into()),
-        ALoc::of_loc(loc),
-    );
-    let use_op = UseOp::Op(Arc::new(RootUseOp::TypeApplication {
-        type_: reason.dupe(),
-    }));
-    let id = eval::Id::generate_id();
-    let conf = match flow_js::mk_type_destructor(
-        cx,
-        use_op,
-        &reason,
-        t,
-        &Destructor::ReactElementConfigType,
-        id,
-    ) {
-        Ok(conf) => conf,
-        Err(_) => return None,
-    };
-    get_obj_prop_names(false, cx, &reason, &conf)
 }
 
 fn name_of_jsx_id(id: &ast::jsx::Identifier<Loc, Loc>) -> &FlowSmolStr {
@@ -299,23 +269,23 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, Found> for Mapper<'_, '_> {
         match name {
             ast::jsx::Name::Identifier(id) if id.loc.contains(&self.target_loc) => {
                 let id_loc = &id.loc;
-                let attributes_from_conf_opt = match typed_ast_finder::find_exact_match_annotation(
+                let required_attributes = match typed_ast_finder::find_jsx_props(
                     self.tast,
-                    ALoc::of_loc(id_loc.dupe()),
+                    ALoc::of_loc(opening.loc.dupe()),
                 ) {
-                    Some(t) => get_required_attribute_names(self.cx, loc.dupe(), &t),
+                    Some(props) => get_obj_prop_names(false, self.cx, reason_of_t(&props), &props),
                     None => None,
                 };
-                match attributes_from_conf_opt {
+                match required_attributes {
                     None => Ok(()),
-                    Some(attributes_from_conf) => {
+                    Some(required_attributes) => {
                         let existing_attributes_names = get_existing_attributes_names(
                             self.cx,
                             self.tast,
                             attributes,
                             &elt.children,
                         );
-                        let diff: BTreeSet<_> = attributes_from_conf
+                        let diff: BTreeSet<_> = required_attributes
                             .difference(&existing_attributes_names)
                             .cloned()
                             .collect();
@@ -328,7 +298,10 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, Found> for Mapper<'_, '_> {
                             .collect();
                         if !new_attrs.is_empty() {
                             return Err(Found::Found(concat_and_sort_attrs(
-                                id_loc.end_loc(),
+                                opening
+                                    .targs
+                                    .as_ref()
+                                    .map_or_else(|| id_loc.end_loc(), |targs| targs.loc.end_loc()),
                                 attributes,
                                 &new_attrs,
                             )));

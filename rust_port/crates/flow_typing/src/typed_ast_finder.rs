@@ -8,6 +8,8 @@
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_parser::ast;
+use flow_parser::ast_visitor;
+use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc::Loc;
 use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils;
@@ -182,6 +184,31 @@ pub fn find_exact_match_annotation(
     aloc: ALoc,
 ) -> Option<Type> {
     exact_match_query::find(typed_ast, aloc)
+}
+
+/// Find the inferred props of the JSX opening at an exact location.
+pub fn find_jsx_props(typed_ast: &ast::Program<ALoc, (ALoc, Type)>, aloc: ALoc) -> Option<Type> {
+    struct JsxPropsFinder {
+        target_loc: ALoc,
+    }
+
+    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), (), Type> for JsxPropsFinder {
+        fn normalize_loc(_loc: &'ast ALoc) {}
+
+        fn normalize_type(_type_: &'ast (ALoc, Type)) {}
+
+        fn jsx_opening_element(
+            &mut self,
+            opening: &'ast ast::jsx::Opening<ALoc, (ALoc, Type)>,
+        ) -> Result<(), Type> {
+            if opening.loc == self.target_loc {
+                return Err(opening.props.1.dupe());
+            }
+            ast_visitor::jsx_opening_element_default(self, opening)
+        }
+    }
+
+    JsxPropsFinder { target_loc: aloc }.program(typed_ast).err()
 }
 
 /// Find identifier under location

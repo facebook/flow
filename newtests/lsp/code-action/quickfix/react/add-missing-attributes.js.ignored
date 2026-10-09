@@ -89,3 +89,15 @@ function test15(props: {a2: string}) {
         <div></div>
     </Foo>;
 }
+
+function test16() {
+    declare class Foo extends React.Component<{foo: number, bar: string}> {
+        static defaultProps: {bar: string};
+    }
+    return <Foo />;
+}
+
+function test17() {
+    declare function Foo<T>(props: {foo: T, bar: number}): React.Node;
+    return <Foo<string> />;
+}

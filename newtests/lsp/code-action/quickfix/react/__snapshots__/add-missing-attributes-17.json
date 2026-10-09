@@ -1,0 +1,51 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "add_missing_jsx_props",
+          "Add missing attributes"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/add-missing-attributes.js": [
+            {
+              "newText": " bar={bar}",
+              "range": {
+                "end": {
+                  "character": 23,
+                  "line": 101
+                },
+                "start": {
+                  "character": 23,
+                  "line": 101
+                }
+              }
+            },
+            {
+              "newText": " foo={foo}",
+              "range": {
+                "end": {
+                  "character": 23,
+                  "line": 101
+                },
+                "start": {
+                  "character": 23,
+                  "line": 101
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "quickfix",
+      "title": "Add missing attributes"
+    }
+  ]
+}

@@ -89,3 +89,15 @@ function testMapped(Foo: React.ComponentType<PropsMapped>) {;
 function testSpread(Foo: React.ComponentType<PropsSpread>) {;
     return <Foo foo={/* here */} />;
 }
+
+function testGeneric() {
+    declare function Foo<T>(props: {value: T, onChange: (T) => void}): React.Node;
+    return <Foo value={42} onChange={/* here */} />;
+}
+
+function testDefaultProps() {
+    declare class Foo extends React.Component<{foo: number, bar: string}> {
+        static defaultProps: {bar: string};
+    }
+    return <Foo foo={42} bar={/* here */} />;
+}

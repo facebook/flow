@@ -36,7 +36,6 @@ use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_type::type_::CallAction;
 use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::DefTInner;
-use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::PolyTData;
@@ -44,9 +43,6 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
-use flow_typing_type::type_::VirtualRootUseOp;
-use flow_typing_type::type_::VirtualUseOp;
-use flow_typing_type::type_::eval;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::property;
@@ -247,9 +243,8 @@ pub mod callee_finder {
             loc: ALoc,
         },
         JsxAttrData {
-            type_: Type,
+            props: Type,
             name: String,
-            loc: ALoc,
             key_loc: ALoc,
         },
     }
@@ -426,31 +421,6 @@ pub mod callee_finder {
                 .collect(),
             Err(_) => vec![],
         }
-    }
-
-    pub fn get_attribute_type(
-        cx: &Context,
-        loc: ALoc,
-        t: &Type,
-        name: &Name,
-    ) -> Result<Vec<(Type, bool)>, flow_utils_concurrency::job_error::JobError> {
-        let reason = reason::mk_reason(
-            reason::VirtualReasonDesc::RType("React$ElementConfig".into()),
-            loc,
-        );
-        let use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::TypeApplication {
-            type_: reason.dupe(),
-        }));
-        let id = eval::Id::generate_id();
-        let conf = flow_js::mk_type_destructor_non_speculating(
-            cx,
-            use_op,
-            &reason,
-            t,
-            &Destructor::ReactElementConfigType,
-            id,
-        )?;
-        Ok(get_prop_of_obj_toplevel(cx, name, &reason, &conf))
     }
 
     /// find the argument whose Loc contains `loc`, or the first one past it.
@@ -725,16 +695,14 @@ pub mod callee_finder {
                                 if self.covers_target(attr_loc) {
                                     match (elt_name, attr_name) {
                                         (
-                                            ast::jsx::Name::Identifier(jsx_id),
+                                            ast::jsx::Name::Identifier(_),
                                             ast::jsx::attribute::Name::Identifier(attr_id),
                                         ) => {
-                                            let t = &jsx_id.loc.1;
                                             let key_loc = &attr_id.loc.0;
                                             let name = attr_id.name.to_string();
                                             return Err(Found::Done(Some(T::JsxAttrData {
-                                                type_: t.dupe(),
+                                                props: elt.opening_element.props.1.dupe(),
                                                 name,
-                                                loc: loc.0.dupe(),
                                                 key_loc: key_loc.dupe(),
                                             })));
                                         }
@@ -858,9 +826,8 @@ pub fn find_signatures<'a>(
             Ok(Ok(Some((funs, active_parameter))))
         }
         Some(callee_finder::T::JsxAttrData {
-            type_: t,
+            props,
             name,
-            loc,
             key_loc,
         }) => {
             let ts = if name == "key" {
@@ -871,7 +838,12 @@ pub fn find_signatures<'a>(
                 let t = type_util::maybe(key_t);
                 vec![(t, true)]
             } else {
-                callee_finder::get_attribute_type(cx, loc, &t, &Name::new(&name))?
+                callee_finder::get_prop_of_obj_toplevel(
+                    cx,
+                    &Name::new(&name),
+                    type_util::reason_of_t(&props),
+                    &props,
+                )
             };
             let norm_options = flow_typing_ty_normalizer::env::Options::default();
             let genv = flow_typing::ty_normalizer_flow::mk_genv(
