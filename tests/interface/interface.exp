@@ -2027,5 +2027,107 @@ References:
                      ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- variance_merging.js:1:11
 
-Found 117 errors
+Cannot merge interface `VarianceConflict` [1] because type parameter lists differ. [libdef-override]
+
+   variance_merging.js:1:11
+   1| interface VarianceConflict<out T> {} // ERROR
+                ^^^^^^^^^^^^^^^^
+
+References:
+   variance_merging.js:2:11
+   2| interface VarianceConflict<in U> {} // ERROR
+                ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- variance_merging.js:2:31
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   variance_merging.js:2:31
+   2| interface VarianceConflict<in U> {} // ERROR
+                                    ^
+
+References:
+   variance_merging.js:1:32
+   1| interface VarianceConflict<out T> {} // ERROR
+                                     ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- variance_merging.js:4:11
+
+Cannot merge interface `VarianceConflictReversed` [1] because type parameter lists differ. [libdef-override]
+
+   variance_merging.js:4:11
+   4| interface VarianceConflictReversed<in T> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   variance_merging.js:5:11
+   5| interface VarianceConflictReversed<out U> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- variance_merging.js:5:40
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   variance_merging.js:5:40
+   5| interface VarianceConflictReversed<out U> {} // ERROR
+                                             ^
+
+References:
+   variance_merging.js:4:39
+   4| interface VarianceConflictReversed<in T> {} // ERROR
+                                            ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- variance_merging.js:7:11
+
+Cannot merge interface `VarianceConflictLater` [1] because type parameter lists differ. [libdef-override]
+
+   variance_merging.js:7:11
+   7| interface VarianceConflictLater<T> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   variance_merging.js:9:11
+   9| interface VarianceConflictLater<in V> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- variance_merging.js:9:36
+
+Cannot use `U` [1] in an input position because `U` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   variance_merging.js:9:36
+   9| interface VarianceConflictLater<in V> {} // ERROR
+                                         ^
+
+References:
+   variance_merging.js:8:37
+   8| interface VarianceConflictLater<out U> {}
+                                          ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- variance_merging.js:12:40
+
+Cannot use `U` [1] in an input position because `U` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   variance_merging.js:12:40
+   12| interface VarianceConflictSecond<X, in Y> {} // ERROR
+                                              ^
+
+References:
+   variance_merging.js:11:41
+   11| interface VarianceConflictSecond<T, out U> {}
+                                               ^ [1]
+
+
+
+Found 124 errors

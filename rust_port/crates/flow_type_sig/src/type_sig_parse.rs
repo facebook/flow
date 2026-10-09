@@ -3013,6 +3013,18 @@ pub(crate) mod scope {
                 (TParams::Poly(existing), TParams::Poly(current))
                     if existing.tparams.len() == current.tparams.len() =>
                 {
+                    if existing
+                        .tparams
+                        .iter()
+                        .zip(&current.tparams)
+                        .any(|(existing, current)| {
+                            existing.polarity.is_some()
+                                && current.polarity.is_some()
+                                && existing.polarity != current.polarity
+                        })
+                    {
+                        return false;
+                    }
                     let rename_map = current
                         .tparams
                         .iter()
@@ -3022,6 +3034,9 @@ pub(crate) mod scope {
                     for (existing_tparam, current_tparam) in
                         existing.tparams.iter_mut().zip(&current.tparams)
                     {
+                        if existing_tparam.polarity.is_none() {
+                            existing_tparam.polarity = current_tparam.polarity;
+                        }
                         if existing_tparam.default.is_none() {
                             existing_tparam.default = current_tparam
                                 .default
@@ -7949,7 +7964,7 @@ fn object_type<'arena, 'ast>(
         let key_tparam = TParam {
             name_loc: key_loc,
             name: key_name.clone(),
-            polarity: Polarity::Neutral,
+            polarity: None,
             bound: None,
             default: None,
             is_const: false,
@@ -9337,7 +9352,10 @@ fn tparam<'arena, 'ast>(
     TParam {
         name_loc,
         name,
-        polarity: polarity(param.variance.as_ref().map(|v| (v.loc.dupe(), v.clone()))),
+        polarity: param
+            .variance
+            .as_ref()
+            .map(|v| polarity(Some((v.loc.dupe(), v.clone())))),
         bound: bound_val,
         default: default_val,
         is_const,
@@ -9415,7 +9433,7 @@ fn conditional_type<'arena, 'ast>(
         Some(TParam {
             name_loc: ref_loc.dupe(),
             name: name.clone(),
-            polarity: Polarity::Neutral,
+            polarity: None,
             bound: Some(check_type.clone()),
             default: None,
             is_const: false,

@@ -4017,6 +4017,7 @@ fn merge_tparam_bound<'cx>(
         default: _,
         is_const,
     } = tp;
+    let polarity = polarity.unwrap_or(Polarity::Neutral);
     let reason = reason::mk_reason(RType(name.dupe()), name_loc.dupe());
     let bound = match bound {
         None => {
@@ -4041,14 +4042,14 @@ fn merge_tparam_bound<'cx>(
         reason: reason.dupe(),
         name: subst_name,
         bound,
-        polarity: *polarity,
+        polarity,
         default: None,
         is_this: false,
         is_const: *is_const,
     });
     let t = flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), &tp);
     env.tps.insert(name.dupe(), t.dupe());
-    (tp, (SubstName::name(name.dupe()), reason, t, *polarity))
+    (tp, (SubstName::name(name.dupe()), reason, t, polarity))
 }
 
 fn finish_merged_tparam<'cx>(

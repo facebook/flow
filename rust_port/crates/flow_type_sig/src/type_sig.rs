@@ -88,7 +88,8 @@ impl<Loc, T> TypeGuard<Loc, T> {
 pub struct TParam<Loc, T> {
     pub name_loc: Loc,
     pub name: FlowSmolStr,
-    pub polarity: Polarity,
+    /// `None` is unannotated; `Some(Neutral)` is explicitly invariant.
+    pub polarity: Option<Polarity>,
     pub bound: Option<T>,
     pub default: Option<T>,
     pub is_const: bool,

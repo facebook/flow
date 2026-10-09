@@ -1029,7 +1029,7 @@ Module {
                                 TParam {
                                     name_loc: 3,
                                     name: "X",
-                                    polarity: Neutral,
+                                    polarity: None,
                                     bound: None,
                                     default: None,
                                     is_const: false,
@@ -1110,7 +1110,7 @@ Module {
                             TParam {
                                 name_loc: 3,
                                 name: "X",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -1308,7 +1308,7 @@ Module {
                                 TParam {
                                     name_loc: 3,
                                     name: "X",
-                                    polarity: Neutral,
+                                    polarity: None,
                                     bound: None,
                                     default: None,
                                     is_const: false,
@@ -1379,7 +1379,7 @@ Module {
                             TParam {
                                 name_loc: 3,
                                 name: "X",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -5463,7 +5463,7 @@ Module {
                             TParam {
                                 name_loc: 2,
                                 name: "U",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -7812,7 +7812,7 @@ Module {
                             TParam {
                                 name_loc: 2,
                                 name: "X",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -7968,7 +7968,7 @@ Module {
                                             TParam {
                                                 name_loc: 5,
                                                 name: "X",
-                                                polarity: Neutral,
+                                                polarity: None,
                                                 bound: Some(
                                                     TyRef(
                                                         Unqualified(
@@ -8644,7 +8644,7 @@ Module {
                                 TParam {
                                     name_loc: 4,
                                     name: "X",
-                                    polarity: Neutral,
+                                    polarity: None,
                                     bound: Some(
                                         Annot(
                                             Typeof(
@@ -10353,7 +10353,7 @@ Module {
                                                                 TParam {
                                                                     name_loc: 4,
                                                                     name: "T",
-                                                                    polarity: Neutral,
+                                                                    polarity: None,
                                                                     bound: None,
                                                                     default: None,
                                                                     is_const: false,
@@ -12154,7 +12154,7 @@ Module {
                                 TParam {
                                     name_loc: 2,
                                     name: "T",
-                                    polarity: Neutral,
+                                    polarity: None,
                                     bound: None,
                                     default: None,
                                     is_const: false,
@@ -16380,7 +16380,7 @@ Module {
                             key_tparam: TParam {
                                 name_loc: 8,
                                 name: "key",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -16445,7 +16445,7 @@ Module {
                             key_tparam: TParam {
                                 name_loc: 15,
                                 name: "key",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -16510,7 +16510,7 @@ Module {
                             key_tparam: TParam {
                                 name_loc: 22,
                                 name: "key",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -16575,7 +16575,7 @@ Module {
                             key_tparam: TParam {
                                 name_loc: 29,
                                 name: "key",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -16640,7 +16640,7 @@ Module {
                             key_tparam: TParam {
                                 name_loc: 36,
                                 name: "key",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -16922,7 +16922,7 @@ Module {
                             key_tparam: TParam {
                                 name_loc: 8,
                                 name: "key",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -17669,7 +17669,7 @@ Module {
                                 TParam {
                                     name_loc: 3,
                                     name: "T",
-                                    polarity: Neutral,
+                                    polarity: None,
                                     bound: None,
                                     default: None,
                                     is_const: false,
@@ -18344,7 +18344,7 @@ Module {
                             TParam {
                                 name_loc: 24,
                                 name: "Props",
-                                polarity: Neutral,
+                                polarity: None,
                                 bound: None,
                                 default: None,
                                 is_const: false,
@@ -18568,7 +18568,7 @@ Module {
                                 TParam {
                                     name_loc: 3,
                                     name: "X",
-                                    polarity: Neutral,
+                                    polarity: None,
                                     bound: None,
                                     default: None,
                                     is_const: true,
@@ -21341,7 +21341,7 @@ Local defs:
                     TParam {
                         name_loc: 2,
                         name: "T",
-                        polarity: Neutral,
+                        polarity: None,
                         bound: None,
                         default: None,
                         is_const: false,
@@ -21349,7 +21349,7 @@ Local defs:
                     TParam {
                         name_loc: 3,
                         name: "U",
-                        polarity: Neutral,
+                        polarity: None,
                         bound: None,
                         default: Some(
                             Annot(
@@ -21483,7 +21483,7 @@ Local defs:
                     TParam {
                         name_loc: 2,
                         name: "T",
-                        polarity: Neutral,
+                        polarity: None,
                         bound: None,
                         default: Some(
                             Annot(
@@ -21615,7 +21615,7 @@ Local defs:
                         TParam {
                             name_loc: 2,
                             name: "T",
-                            polarity: Neutral,
+                            polarity: None,
                             bound: None,
                             default: Some(
                                 Annot(
@@ -21766,7 +21766,7 @@ Local defs:
                     TParam {
                         name_loc: 3,
                         name: "T",
-                        polarity: Neutral,
+                        polarity: None,
                         bound: None,
                         default: Some(
                             Annot(
@@ -21837,7 +21837,7 @@ Local defs:
                         TParam {
                             name_loc: 8,
                             name: "T",
-                            polarity: Neutral,
+                            polarity: None,
                             bound: None,
                             default: Some(
                                 Annot(
@@ -22006,7 +22006,7 @@ Local defs:
                     TParam {
                         name_loc: 2,
                         name: "T",
-                        polarity: Neutral,
+                        polarity: None,
                         bound: None,
                         default: None,
                         is_const: false,

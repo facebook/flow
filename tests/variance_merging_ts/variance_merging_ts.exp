@@ -1,0 +1,133 @@
+Error -------------------------------------------------------------------------------------- flow-typed/variance.js:1:11
+
+Cannot merge interface `LibInvariantConflict` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/variance.js:1:11
+   1| interface LibInvariantConflict<in out T> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/variance.js:2:11
+   2| interface LibInvariantConflict<out U> {}
+                ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- flow-typed/variance.js:4:11
+
+Cannot merge interface `LibInvariantConflictReversed` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/variance.js:4:11
+   4| interface LibInvariantConflictReversed<in T> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/variance.js:5:11
+   5| interface LibInvariantConflictReversed<in out U> {}
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- flow-typed/variance.js:7:11
+
+Cannot merge interface `LibInvariantConflictLater` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/variance.js:7:11
+   7| interface LibInvariantConflictLater<T> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/variance.js:9:11
+   9| interface LibInvariantConflictLater<out V> {}
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/variance.js:11:15
+
+Cannot merge interface `LibClassInvariantConflict` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/variance.js:11:15
+   11| declare class LibClassInvariantConflict<in out T> {} // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/variance.js:12:11
+   12| interface LibClassInvariantConflict<out U> {}
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- variance_merging_ts.js:2:41
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input/output positions.
+[incompatible-variance]
+
+   variance_merging_ts.js:2:41
+   2| interface InvariantVarianceConflict<out U> {} // ERROR
+                                              ^
+
+References:
+   variance_merging_ts.js:1:44
+   1| interface InvariantVarianceConflict<in out T> {}
+                                                 ^ [1]
+
+
+Error -------------------------------------------------------------------------------------- variance_merging_ts.js:5:52
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   variance_merging_ts.js:5:52
+   5| interface InvariantVarianceConflictReversed<in out U> {} // ERROR
+                                                         ^
+
+References:
+   variance_merging_ts.js:4:48
+   4| interface InvariantVarianceConflictReversed<in T> {}
+                                                     ^ [1]
+
+
+Error -------------------------------------------------------------------------------------- variance_merging_ts.js:9:46
+
+Cannot use `U` [1] in an output position because `U` [1] is expected to occur only in input/output positions.
+[incompatible-variance]
+
+   variance_merging_ts.js:9:46
+   9| interface InvariantVarianceConflictLater<out V> {} // ERROR
+                                                   ^
+
+References:
+   variance_merging_ts.js:8:49
+   8| interface InvariantVarianceConflictLater<in out U> {}
+                                                      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------- variance_merging_ts.js:16:38
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input/output positions.
+[incompatible-variance]
+
+   variance_merging_ts.js:16:38
+   16| interface ClassInvariantConflict<out U> {} // ERROR
+                                            ^
+
+References:
+   variance_merging_ts.js:15:45
+   15| declare class ClassInvariantConflict<in out T> {}
+                                                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------- variance_merging_ts.js:19:46
+
+Cannot use `V` [1] in an input/output position because `V` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   variance_merging_ts.js:19:46
+   19| interface ClassInvariantConflictLater<in out U> {} // ERROR
+                                                    ^
+
+References:
+   variance_merging_ts.js:20:46
+   20| declare class ClassInvariantConflictLater<in V> {}
+                                                    ^ [1]
+
+
+
+Found 9 errors

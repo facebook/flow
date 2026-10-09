@@ -25,10 +25,13 @@ use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_env_builder::env_api::EnvKey;
+use flow_env_builder::name_def_types::Def;
 use flow_parser::loc_sig::LocSig;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::EOverrideData;
+use flow_typing_errors::error_message::EPolarityMismatchData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::AbstractErrorKind;
 use flow_typing_errors::intermediate_error_types::NamedReferenceData;
@@ -47,6 +50,7 @@ use flow_typing_type::type_::*;
 use flow_typing_type::type_util;
 use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::type_env;
+use flow_typing_utils::typed_ast_utils;
 
 use crate::func_sig;
 use crate::type_annotation_cons_gen;
@@ -2466,6 +2470,80 @@ pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
     check_override_obligations(cx, def_reason, x);
 }
 
+fn merge_tparam_polarities(cx: &Context, name_loc: &ALoc, tparams: &TypeParams) -> TypeParams {
+    let Some((loc, tparams)) = tparams else {
+        return None;
+    };
+    let env = cx.environment();
+    let conflicts = env
+        .var_info
+        .interface_merge_conflicts
+        .iter()
+        .chain(env.var_info.declare_class_interface_merge_conflicts.iter())
+        .find(|(canonical_loc, other_locs)| {
+            *canonical_loc == name_loc || other_locs.contains(name_loc)
+        });
+    let mut merged = tparams.clone();
+    if let Some((canonical_loc, other_locs)) = conflicts {
+        let mut first_polarities = vec![None; merged.len()];
+        for decl_loc in std::iter::once(canonical_loc).chain(other_locs) {
+            let Some((def, _, _, _, _)) = env.name_defs.get(&EnvKey::ordinary(decl_loc.dupe()))
+            else {
+                continue;
+            };
+            let decl_tparams = match def {
+                Def::Interface(_, decl) => decl.tparams.as_ref(),
+                Def::DeclaredClass(decl) => decl.decl.tparams.as_ref(),
+                _ => None,
+            };
+            if let Some(decl_tparams) = decl_tparams
+                && decl_tparams.params.len() == merged.len()
+            {
+                for ((tparam, first_polarity), decl_tparam) in merged
+                    .iter_mut()
+                    .zip(&mut first_polarities)
+                    .zip(decl_tparams.params.iter())
+                {
+                    let polarity = typed_ast_utils::polarity(decl_tparam.variance.as_ref());
+                    if decl_tparam.variance.is_none() {
+                        continue;
+                    }
+                    match first_polarity {
+                        None => {
+                            *first_polarity = Some((
+                                decl_tparam.name.loc.dupe(),
+                                decl_tparam.name.name.dupe(),
+                                polarity,
+                            ));
+                        }
+                        Some((first_loc, first_name, first))
+                            if name_loc == canonical_loc && *first != polarity =>
+                        {
+                            flow_js_utils::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::EPolarityMismatch(Box::new(EPolarityMismatchData {
+                                    loc: decl_tparam.name.loc.dupe(),
+                                    type_param_loc: first_loc.dupe(),
+                                    name: first_name.dupe(),
+                                    expected_polarity: *first,
+                                    actual_polarity: polarity,
+                                })),
+                            );
+                        }
+                        Some(_) => {}
+                    }
+                    if tparam.polarity == Polarity::Neutral {
+                        let mut merged_tparam = (**tparam).clone();
+                        merged_tparam.polarity = polarity;
+                        *tparam = TypeParam::new(merged_tparam);
+                    }
+                }
+            }
+        }
+    }
+    Some((loc.dupe(), merged))
+}
+
 // TODO: Ideally we should check polarity for all class types, but this flag is
 // flipped off for interface/declare class currently.
 pub fn classtype<'a, C: crate::func_params_intf::Config>(
@@ -2481,7 +2559,20 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
         flow_typing_type::type_::properties::Id,
     ),
 ) {
-    let (this_reason, this_instance_t) = this_instance_type(cx, Some(inst_kind), x);
+    let merged_tparams = merge_tparam_polarities(cx, x.instance.reason.loc(), &x.tparams);
+    let (this_reason, mut this_instance_t) = this_instance_type(cx, Some(inst_kind), x);
+    if merged_tparams != x.tparams
+        && let Some((_, tparams)) = &merged_tparams
+    {
+        let mut instance = (*this_instance_t).clone();
+        let mut inst = (*this_instance_t.inst).clone();
+        let type_args = Rc::make_mut(&mut inst.type_args);
+        for ((_, _, _, polarity), tparam) in type_args.iter_mut().zip(tparams) {
+            *polarity = tparam.polarity;
+        }
+        instance.inst = InstType::new(inst);
+        this_instance_t = InstanceT::new(instance);
+    }
     let inst_prop_ids = (
         this_instance_t.inst.own_props.dupe(),
         this_instance_t.inst.proto_props.dupe(),
@@ -2554,7 +2645,7 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
     let poly = |t: Type| -> Type {
         type_util::poly_type_of_tparams(
             poly::Id::generate_id(),
-            x.tparams.clone(),
+            merged_tparams.clone(),
             t,
             cx.type_strictness_kind(),
         )

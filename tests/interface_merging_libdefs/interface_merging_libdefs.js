@@ -24,3 +24,14 @@ three_way.first as string; // ok
 three_way.second as number; // ok
 three_way.third as boolean; // ok
 three_way.first as number; // error: string ~> number
+
+// A partial declared in a later lib file without variance keeps the base's `out`.
+declare const varianceMerged: VarianceMerged<string>;
+varianceMerged as VarianceMerged<string | number>; // ok: covariant
+varianceMerged.get() as string;
+varianceMerged.get() as number; // error: string is not number
+declare const varianceDefault: VarianceMerged;
+varianceDefault.value as string | number;
+
+declare const varianceUnchecked: VarianceUnchecked<string>;
+varianceUnchecked as VarianceUnchecked<string | number>; // ok: covariant

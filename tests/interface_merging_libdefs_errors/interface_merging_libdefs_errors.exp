@@ -12,5 +12,117 @@ References:
                  ^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- flow-typed/declares.js:17:11
 
-Found 1 error
+Cannot merge interface `LibVarianceConflict` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/declares.js:17:11
+   17| interface LibVarianceConflict<out T> {} // ERROR
+                 ^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:18:11
+   18| interface LibVarianceConflict<in U> {}
+                 ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/declares.js:20:11
+
+Cannot merge interface `LibVarianceConflictReversed` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/declares.js:20:11
+   20| interface LibVarianceConflictReversed<in T> {} // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:21:11
+   21| interface LibVarianceConflictReversed<out U> {}
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/declares.js:23:11
+
+Cannot merge interface `LibVarianceConflictLater` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/declares.js:23:11
+   23| interface LibVarianceConflictLater<T> {} // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:25:11
+   25| interface LibVarianceConflictLater<in V> {}
+                 ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/declares.js:27:15
+
+Cannot merge interface `LibClassVarianceConflict` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/declares.js:27:15
+   27| declare class LibClassVarianceConflict<out T> {} // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:28:11
+   28| interface LibClassVarianceConflict<in U> {}
+                 ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/declares.js:31:15
+
+Cannot merge interface `LibClassVarianceConflictReversed` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/declares.js:31:15
+   31| declare class LibClassVarianceConflictReversed<in U> {} // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:30:11
+   30| interface LibClassVarianceConflictReversed<out T> {}
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/declares.js:33:15
+
+Cannot merge interface `LibClassVarianceConflictLater` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/declares.js:33:15
+   33| declare class LibClassVarianceConflictLater<T> {} // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:35:11
+   35| interface LibClassVarianceConflictLater<in V> {}
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/declares.js:42:15
+
+Cannot merge interface `LibClassVarianceAcrossFiles` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/declares.js:42:15
+   42| declare class LibClassVarianceAcrossFiles<in T> {} // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/variance_conflicts.js:2:11
+    2| interface LibClassVarianceAcrossFiles<out U> {}
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------- flow-typed/variance_conflicts.js:1:11
+
+Cannot merge interface `LibVarianceAcrossFiles` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/variance_conflicts.js:1:11
+    1| interface LibVarianceAcrossFiles<in U> {} // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:41:11
+   41| interface LibVarianceAcrossFiles<out T> {}
+                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 9 errors

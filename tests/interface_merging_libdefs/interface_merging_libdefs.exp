@@ -49,5 +49,129 @@ References:
                           ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------- interface_merging_libdefs.js:32:1
 
-Found 3 errors
+Cannot cast `varianceMerged.get()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   interface_merging_libdefs.js:32:1
+   32| varianceMerged.get() as number; // error: string is not number
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   interface_merging_libdefs.js:29:46
+   29| declare const varianceMerged: VarianceMerged<string>;
+                                                    ^^^^^^ [1]
+   interface_merging_libdefs.js:32:25
+   32| varianceMerged.get() as number; // error: string is not number
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- user_export.js:12:10
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   user_export.js:12:10
+   12|   set(x: U): void; // ERROR
+                ^
+
+References:
+   user_export.js:8:28
+    8| interface UserReversed<out T> {
+                                  ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- user_export.js:47:1
+
+Cannot cast `userMerged` to `UserMerged` because in type argument `T` [1]: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
+
+   user_export.js:47:1
+   47| userMerged as UserMerged<number>; // ERROR
+       ^^^^^^^^^^
+
+References:
+   user_export.js:1:22
+    1| interface UserMerged<T> {
+                            ^ [1]
+   user_export.js:36:38
+   36| declare const userMerged: UserMerged<string>;
+                                            ^^^^^^ [2]
+   user_export.js:47:26
+   47| userMerged as UserMerged<number>; // ERROR
+                                ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- user_export.js:48:1
+
+Cannot cast `userContravariant` to `UserContravariant` because in type argument `T` [1]: [incompatible-type]
+ - Either `unknown` [2] is incompatible with `string` [3].
+ - Or `unknown` [2] is incompatible with `number` [4].
+
+   user_export.js:48:1
+   48| userContravariant as UserContravariant<unknown>; // ERROR
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   user_export.js:15:29
+   15| interface UserContravariant<T> {
+                                   ^ [1]
+   user_export.js:48:40
+   48| userContravariant as UserContravariant<unknown>; // ERROR
+                                              ^^^^^^^ [2]
+   user_export.js:40:52
+   40| declare const userContravariant: UserContravariant<string | number>;
+                                                          ^^^^^^ [3]
+   user_export.js:40:61
+   40| declare const userContravariant: UserContravariant<string | number>;
+                                                                   ^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- user_import.js:20:1
+
+Cannot cast `userMerged` to `UserMerged` because in type argument `T` [1]: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
+
+   user_import.js:20:1
+   20| userMerged as UserMerged<number>; // ERROR
+       ^^^^^^^^^^
+
+References:
+   user_export.js:1:22
+    1| interface UserMerged<T> {
+                            ^ [1]
+   user_import.js:9:38
+    9| declare const userMerged: UserMerged<string>;
+                                            ^^^^^^ [2]
+   user_import.js:20:26
+   20| userMerged as UserMerged<number>; // ERROR
+                                ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- user_import.js:21:1
+
+Cannot cast `userContravariant` to `UserContravariant` because in type argument `T` [1]: [incompatible-type]
+ - Either `unknown` [2] is incompatible with `string` [3].
+ - Or `unknown` [2] is incompatible with `number` [4].
+
+   user_import.js:21:1
+   21| userContravariant as UserContravariant<unknown>; // ERROR
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   user_export.js:15:29
+   15| interface UserContravariant<T> {
+                                   ^ [1]
+   user_import.js:21:40
+   21| userContravariant as UserContravariant<unknown>; // ERROR
+                                              ^^^^^^^ [2]
+   user_import.js:13:52
+   13| declare const userContravariant: UserContravariant<string | number>;
+                                                          ^^^^^^ [3]
+   user_import.js:13:61
+   13| declare const userContravariant: UserContravariant<string | number>;
+                                                                   ^^^^^^ [4]
+
+
+
+Found 9 errors

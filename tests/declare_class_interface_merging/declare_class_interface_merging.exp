@@ -464,5 +464,92 @@ References:
                                                  ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------- variance_conflicts.js:1:15
 
-Found 27 errors
+Cannot merge interface `ClassVarianceConflict` [1] because type parameter lists differ. [libdef-override]
+
+   variance_conflicts.js:1:15
+   1| declare class ClassVarianceConflict<out T> {} // ERROR
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   variance_conflicts.js:2:11
+   2| interface ClassVarianceConflict<in U> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- variance_conflicts.js:2:36
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   variance_conflicts.js:2:36
+   2| interface ClassVarianceConflict<in U> {} // ERROR
+                                         ^
+
+References:
+   variance_conflicts.js:1:41
+   1| declare class ClassVarianceConflict<out T> {} // ERROR
+                                              ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- variance_conflicts.js:4:45
+
+Cannot use `U` [1] in an output position because `U` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   variance_conflicts.js:4:45
+   4| interface ClassVarianceConflictReversed<out T> {} // ERROR
+                                                  ^
+
+References:
+   variance_conflicts.js:5:48
+   5| declare class ClassVarianceConflictReversed<in U> {} // ERROR
+                                                     ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- variance_conflicts.js:5:15
+
+Cannot merge interface `ClassVarianceConflictReversed` [1] because type parameter lists differ. [libdef-override]
+
+   variance_conflicts.js:5:15
+   5| declare class ClassVarianceConflictReversed<in U> {} // ERROR
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   variance_conflicts.js:4:11
+   4| interface ClassVarianceConflictReversed<out T> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- variance_conflicts.js:7:15
+
+Cannot merge interface `ClassVarianceConflictLater` [1] because type parameter lists differ. [libdef-override]
+
+   variance_conflicts.js:7:15
+   7| declare class ClassVarianceConflictLater<T> {} // ERROR
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   variance_conflicts.js:9:11
+   9| interface ClassVarianceConflictLater<in V> {} // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- variance_conflicts.js:9:41
+
+Cannot use `U` [1] in an input position because `U` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   variance_conflicts.js:9:41
+   9| interface ClassVarianceConflictLater<in V> {} // ERROR
+                                              ^
+
+References:
+   variance_conflicts.js:8:42
+   8| interface ClassVarianceConflictLater<out U> {}
+                                               ^ [1]
+
+
+
+Found 33 errors
