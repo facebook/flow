@@ -2895,23 +2895,35 @@ pub mod type_assertions {
                     }
                 }
                 _ => {
-                    let iterable = if is_async {
+                    let (reason, name) = if is_async {
                         let reason = flow_common::reason::mk_reason(
                             flow_common::reason::VirtualReasonDesc::RCustom(
                                 "async iteration expected on AsyncIterable".into(),
                             ),
                             loc.dupe(),
                         );
-                        let mut args = vec![ti.dupe()];
-                        args.extend(targs_to_infer.iter().map(|t| t.dupe()));
-                        FlowJs::get_builtin_typeapp_with_env(
+                        let any = type_::any_t::why(type_::AnySource::Untyped, reason.dupe());
+                        let async_iterable = FlowJs::get_builtin_typeapp_with_env(
                             cx,
                             env,
                             &reason,
                             None,
-                            "$IterableOrAsyncIterableInternal",
-                            args,
-                        )
+                            "AsyncIterable",
+                            vec![any.dupe(), any.dupe(), any],
+                        );
+                        let name = if flow_js_utils::flow_js_result_to_job_error(
+                            FlowJs::speculative_subtyping_succeeds_with_flow_errors(
+                                cx,
+                                env,
+                                ti,
+                                &async_iterable,
+                            ),
+                        )? {
+                            "AsyncIterable"
+                        } else {
+                            "Iterable"
+                        };
+                        (reason, name)
                     } else {
                         let reason = flow_common::reason::mk_reason(
                             flow_common::reason::VirtualReasonDesc::RCustom(
@@ -2919,15 +2931,16 @@ pub mod type_assertions {
                             ),
                             loc.dupe(),
                         );
-                        FlowJs::get_builtin_typeapp_with_env(
-                            cx,
-                            env,
-                            &reason,
-                            None,
-                            "Iterable",
-                            targs_to_infer.to_vec(),
-                        )
+                        (reason, "Iterable")
                     };
+                    let iterable = FlowJs::get_builtin_typeapp_with_env(
+                        cx,
+                        env,
+                        &reason,
+                        None,
+                        name,
+                        targs_to_infer.to_vec(),
+                    );
                     let use_t = type_::UseT::new(type_::UseTInner::UseT(use_op.clone(), iterable));
                     flow_js_utils::flow_js_result_to_job_error(flow_js::flow_with_env(
                         cx,

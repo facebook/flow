@@ -554,7 +554,6 @@ mod collect_function_method_inserting_points_tests {
             "AsyncGenerator",
             "Promise",
             "promise",
-            "$IterableOrAsyncIterableInternal",
         ] {
             let r = reason.dupe();
             let t = any_t(&r);
@@ -814,7 +813,6 @@ mod find_closest_enclosing_class_tests {
             "AsyncGenerator",
             "Promise",
             "promise",
-            "$IterableOrAsyncIterableInternal",
         ] {
             let r = reason.dupe();
             let t = any_t(&r);

@@ -309,8 +309,8 @@ Cannot use `StringPrefix` [1] without 1-2 type arguments. [missing-type-arg]
                       ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:118:18
-   118| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+   <BUILTINS>/misc.js:112:18
+   112| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -323,8 +323,8 @@ Cannot use `StringPrefix` [1] with fewer than 1 type argument. [missing-type-arg
                             ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:118:18
-   118| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+   <BUILTINS>/misc.js:112:18
+   112| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -337,8 +337,8 @@ Cannot use `StringPrefix` [1] with more than 2 type arguments. [extra-type-arg]
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:118:18
-   118| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+   <BUILTINS>/misc.js:112:18
+   112| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -434,8 +434,8 @@ Cannot instantiate `StringPrefix` because in type argument `R`: `1` [1] is incom
                                                     ^ [1]
 
 References:
-   <BUILTINS>/misc.js:118:55
-   118| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+   <BUILTINS>/misc.js:112:55
+   112| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
                                                               ^^^^^^ [2]
 
 
@@ -598,8 +598,8 @@ Cannot use `StringSuffix` [1] without 1-2 type arguments. [missing-type-arg]
                       ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:127:18
-   127| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+   <BUILTINS>/misc.js:121:18
+   121| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -612,8 +612,8 @@ Cannot use `StringSuffix` [1] with fewer than 1 type argument. [missing-type-arg
                             ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:127:18
-   127| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+   <BUILTINS>/misc.js:121:18
+   121| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -626,8 +626,8 @@ Cannot use `StringSuffix` [1] with more than 2 type arguments. [extra-type-arg]
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:127:18
-   127| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+   <BUILTINS>/misc.js:121:18
+   121| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -724,8 +724,8 @@ Cannot instantiate `StringSuffix` because in type argument `R`: `1` [1] is incom
                                                     ^ [1]
 
 References:
-   <BUILTINS>/misc.js:127:55
-   127| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+   <BUILTINS>/misc.js:121:55
+   121| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
                                                               ^^^^^^ [2]
 
 

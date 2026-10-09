@@ -37,9 +37,9 @@ You can wrap it in `new Number(...))` to turn it into an object and attempt to u
                                  ^^ [1]
 
 References:
-   <BUILTINS>/misc.js:60:7
-   60|     : Iterable<Yield, Return, Next>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:63:11
+   63| interface Iterable<out Yield,out Return=void,in Next=void> {
+                 ^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- bindings.js:4:1

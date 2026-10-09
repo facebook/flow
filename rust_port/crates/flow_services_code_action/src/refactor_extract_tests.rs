@@ -103,7 +103,6 @@ fn dummy_context() -> Context<'static> {
         "AsyncGenerator",
         "Promise",
         "promise",
-        "$IterableOrAsyncIterableInternal",
     ] {
         let r = reason.dupe();
         let t = Type::new(TypeInner::AnyT(
