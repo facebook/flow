@@ -62,7 +62,7 @@ function index_with_template() {
 function jsx_tag() {
   const Tag = `h${n}`;
   <Tag />; // okay
-  ({}) as React.ElementConfig<typeof Tag>; // okay
+  ({}) as React.ComponentProps<typeof Tag>; // okay
 }
 
 // Folded union keys merge into a string dict instead of failing pairwise

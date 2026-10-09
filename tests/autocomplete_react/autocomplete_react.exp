@@ -206,10 +206,6 @@ Flags: --pretty
       "type":"type EffectCallback = () => void | (() => void)"
     },
     {
-      "name":"ElementConfig",
-      "type":"type ElementConfig<C> = React$ElementConfig<C>"
-    },
-    {
       "name":"ElementRef",
       "type":"type ElementRef<C extends string | component(...empty)> = C extends empty ? any : C extends infer S extends string ? $JSXIntrinsics[S][\"instance\"] : C extends component(...infer Props extends {...}) ? \"ref\" extends keyof Props ? Props extends {readonly ref?: RefSetter<infer I>, ...} ? I : unknown : void : empty"
     },
@@ -246,11 +242,11 @@ Flags: --pretty
     {"name":"Key","type":"type Key = React$Key"},
     {
       "name":"LazyExoticComponent",
-      "type":"type LazyExoticComponent<T extends ComponentType<any>> = component(...React$ElementConfig<T>)"
+      "type":"type LazyExoticComponent<T extends ComponentType<any>> = component(...ComponentProps<T>)"
     },
     {
       "name":"MemoExoticComponent",
-      "type":"type MemoExoticComponent<T extends ComponentType<any>> = component(...React$ElementConfig<T>)"
+      "type":"type MemoExoticComponent<T extends ComponentType<any>> = component(...ComponentProps<T>)"
     },
     {
       "name":"MixedElement",

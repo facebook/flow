@@ -338,7 +338,6 @@ component MyComponent(foo: number, bar: string = 'str') {
 ### `React.ComponentProps<typeof Component>` {#toc-react-componentprops}
 
 Use `React.ComponentProps` to extract the props accepted by a component or JSX intrinsic.
-Prefer it over `React.ElementConfig`.
 
 Like [React.PropsOf](#toc-react-propsof), this utility gets the type of the object that you must pass in to a
 component in order to instantiate it via `createElement()` or JSX. While `PropsOf` takes in an element of
@@ -365,11 +364,6 @@ For JSX intrinsics, pass the tag name, such as `React.ComponentProps<'div'>`.
 
 Types kept for backward compatibility. Prefer the alternatives noted below.
 
-### `React.ElementConfig<typeof Component>` {#toc-react-elementconfig}
-
-Use [`React.ComponentProps<typeof Component>`](#toc-react-componentprops) instead.
-`React.ElementConfig` is kept for backward compatibility.
-
 ### `ExactReactElement_DEPRECATED<typeof Component>` {#toc-react-element}
 
 :::warning
@@ -379,6 +373,12 @@ To enforce design system constraints, use [render types](./render-types.md) inst
 :::
 
 The type for the value of a JSX element, parameterized by the element's component type.
+
+## Deleted types {#toc-deleted-types}
+
+### `React.ElementConfig<typeof Component>` {#toc-react-elementconfig}
+
+This type has been removed. Use [`React.ComponentProps<typeof Component>`](#toc-react-componentprops) instead.
 
 ## See Also {#toc-see-also}
 

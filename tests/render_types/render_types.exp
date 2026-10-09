@@ -1210,8 +1210,8 @@ Cannot cast `rendersFooOrBar` to empty because `{...}` [1] is incompatible with 
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:430:38
-   430|   declare export type MixedElement = React.MixedElement;
+   <BUILTINS>/react.js:428:38
+   428|   declare export type MixedElement = React.MixedElement;
                                              ^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:112:22
    112|   rendersFooOrBar as empty; // ERROR
@@ -1246,8 +1246,8 @@ Cannot get `rendersFooOrBar.props` because property `props` is missing in `{...}
                           ^^^^^
 
 References:
-   <BUILTINS>/react.js:430:38
-   430|   declare export type MixedElement = React.MixedElement;
+   <BUILTINS>/react.js:428:38
+   428|   declare export type MixedElement = React.MixedElement;
                                              ^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1260,8 +1260,8 @@ Cannot get `rendersNode.props` because property `props` is missing in `Boolean` 
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
+   <BUILTINS>/react.js:441:30
+   441|   declare export type Node = React$Node;
                                      ^^^^^^^^^^ [1]
 
 
@@ -1275,8 +1275,8 @@ Cannot get `rendersNode.props` because property `props` is missing in `Iterable<
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
+   <BUILTINS>/react.js:441:30
+   441|   declare export type Node = React$Node;
                                      ^^^^^^^^^^ [1]
 
 
@@ -1289,8 +1289,8 @@ Cannot get `rendersNode.props` because property `props` is missing in `Number` [
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
+   <BUILTINS>/react.js:441:30
+   441|   declare export type Node = React$Node;
                                      ^^^^^^^^^^ [1]
 
 
@@ -1303,8 +1303,8 @@ Cannot get `rendersNode.props` because property `props` is missing in `React.Por
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
+   <BUILTINS>/react.js:441:30
+   441|   declare export type Node = React$Node;
                                      ^^^^^^^^^^ [1]
 
 
@@ -1317,8 +1317,8 @@ Cannot get `rendersNode.props` because property `props` is missing in `String` [
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
+   <BUILTINS>/react.js:441:30
+   441|   declare export type Node = React$Node;
                                      ^^^^^^^^^^ [1]
 
 
@@ -1331,8 +1331,8 @@ Cannot get `rendersNode.props` because property `props` is missing in `null` [1]
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
+   <BUILTINS>/react.js:441:30
+   441|   declare export type Node = React$Node;
                                      ^^^^^^^^^^ [1]
 
 
@@ -1345,8 +1345,8 @@ Cannot get `rendersNode.props` because property `props` is missing in `void` [1]
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
+   <BUILTINS>/react.js:441:30
+   441|   declare export type Node = React$Node;
                                      ^^^^^^^^^^ [1]
 
 
@@ -1359,8 +1359,8 @@ Cannot get `rendersNode.props` because property `props` is missing in `{...}` [1
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
+   <BUILTINS>/react.js:441:30
+   441|   declare export type Node = React$Node;
                                      ^^^^^^^^^^ [1]
 
 
@@ -1373,8 +1373,8 @@ Cannot cast `rendersBaz` to empty because `{...}` [1] is incompatible with `empt
           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:430:38
-   430|   declare export type MixedElement = React.MixedElement;
+   <BUILTINS>/react.js:428:38
+   428|   declare export type MixedElement = React.MixedElement;
                                              ^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:126:17
    126|   rendersBaz as empty; // ERROR
@@ -1390,8 +1390,8 @@ Cannot get `rendersBaz.props` because property `props` is missing in `{...}` [1]
                      ^^^^^
 
 References:
-   <BUILTINS>/react.js:430:38
-   430|   declare export type MixedElement = React.MixedElement;
+   <BUILTINS>/react.js:428:38
+   428|   declare export type MixedElement = React.MixedElement;
                                              ^^^^^^^^^^^^^^^^^^ [1]
 
 

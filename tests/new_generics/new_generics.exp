@@ -1217,8 +1217,8 @@ Cannot cast `a` to `React.ComponentType` because in type argument `P` [1]: `empt
           ^
 
 References:
-   <BUILTINS>/react.js:426:40
-   426|   declare export type ComponentType<in P extends {...}> = component(...P);
+   <BUILTINS>/react.js:424:40
+   424|   declare export type ComponentType<in P extends {...}> = component(...P);
                                                ^ [1]
    react.js:11:40
     11|   declare const a: React.ComponentType<P>;
@@ -1238,8 +1238,8 @@ incompatible with `empty` [3]. [incompatible-type]
           ^
 
 References:
-   <BUILTINS>/react.js:972:29
-   972|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:968:29
+   968|     declare class Component<Props, State = void> {
                                     ^^^^^ [1]
    react.js:12:36
     12|   declare const b: React.Component<{readonly a: number, ...}>;
