@@ -1425,9 +1425,7 @@ fn identifier_<'a>(
             ),
             _ => {
                 let reason = mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), loc.dupe());
-                tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason, |cx, tout| {
-                    flow_js::unify_non_speculating(cx, None, &t, tout)
-                })?
+                flow_typing_tvar::mk_resolved(cx, reason, t)
             }
         })
     };
