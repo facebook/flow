@@ -1,0 +1,146 @@
+Error --------------------------------------------------------------------------------------------------- method.js:42:1
+
+Cannot cast `result.info.serialize(...)` to string because `null` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   method.js:42:1
+   42| result.info.serialize('DOG') as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:15:35
+   15|   serialize(value: V | null): H | null;
+                                         ^^^^ [1]
+   method.js:42:33
+   42| result.info.serialize('DOG') as string; // ERROR
+                                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:42:1
+
+Cannot cast `result.info.serialize(...)` to string because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   method.js:42:1
+   42| result.info.serialize('DOG') as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:37:50
+   37| const info = new NullableInfo(new EnumInfo({DOG: 1}));
+                                                        ^ [1]
+   method.js:42:33
+   42| result.info.serialize('DOG') as string; // ERROR
+                                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:46:1
+
+Cannot cast `optionalResult?.info.serialize(...)` to string because `null` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   method.js:46:1
+   46| optionalResult?.info.serialize('DOG') as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:15:35
+   15|   serialize(value: V | null): H | null;
+                                         ^^^^ [1]
+   method.js:46:42
+   46| optionalResult?.info.serialize('DOG') as string; // ERROR
+                                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:46:1
+
+Cannot cast `optionalResult?.info.serialize(...)` to string because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   method.js:46:1
+   46| optionalResult?.info.serialize('DOG') as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:37:50
+   37| const info = new NullableInfo(new EnumInfo({DOG: 1}));
+                                                        ^ [1]
+   method.js:46:42
+   46| optionalResult?.info.serialize('DOG') as string; // ERROR
+                                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:51:1
+
+Cannot cast `plainResult.info.serialize(...)` to string because `null` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   method.js:51:1
+   51| plainResult.info.serialize('DOG') as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:15:35
+   15|   serialize(value: V | null): H | null;
+                                         ^^^^ [1]
+   method.js:51:38
+   51| plainResult.info.serialize('DOG') as string; // ERROR
+                                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:51:1
+
+Cannot cast `plainResult.info.serialize(...)` to string because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   method.js:51:1
+   51| plainResult.info.serialize('DOG') as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:48:53
+   48| const plainField = new FieldInfo(new EnumInfo({DOG: 1}));
+                                                           ^ [1]
+   method.js:51:38
+   51| plainResult.info.serialize('DOG') as string; // ERROR
+                                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:56:1
+
+Cannot cast `stringResult.info.serialize(...)` to number because `null` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   method.js:56:1
+   56| stringResult.info.serialize('DOG') as number; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:15:35
+   15|   serialize(value: V | null): H | null;
+                                         ^^^^ [1]
+   method.js:56:39
+   56| stringResult.info.serialize('DOG') as number; // ERROR
+                                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:56:1
+
+Cannot cast `stringResult.info.serialize(...)` to number because `"dog"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   method.js:56:1
+   56| stringResult.info.serialize('DOG') as number; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:53:71
+   53| const stringField = new FieldInfo(new NullableInfo(new EnumInfo({DOG: 'dog'})));
+                                                                             ^^^^^ [1]
+   method.js:56:39
+   56| stringResult.info.serialize('DOG') as number; // ERROR
+                                             ^^^^^^ [2]
+
+
+
+Found 8 errors

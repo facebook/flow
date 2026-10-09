@@ -28,6 +28,9 @@ use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_flow_common::flow_js_utils::get_prop_t_kit::IndexerFallbackMode;
 use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
+use flow_typing_implicit_instantiation_check::MethodOptionalChain;
+use flow_typing_implicit_instantiation_check::Operation;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallElemTData;
@@ -5110,30 +5113,71 @@ fn __flow_impl<'cx>(
                 Some(use_op) => use_op,
                 None => unknown_use(),
             };
-            let unify_bounds = match u.deref() {
-                UseTInner::MethodT(box MethodTData {
-                    use_op: _,
-                    reason: _,
-                    prop_reason: _,
-                    propref: _,
-                    method_action: box MethodAction::NoMethodAction(_),
-                }) => true,
-                _ => false,
+            let poly_t = (
+                tparams_loc.dupe(),
+                Vec1::try_from_vec(ids.to_vec())
+                    .expect("should have nonempty polymorphic type parameters"),
+                t.dupe(),
+            );
+            let method = match u.deref() {
+                UseTInner::MethodT(data) if !env.in_implicit_instantiation() => {
+                    match data.method_action.as_ref() {
+                        MethodAction::CallM(call) => {
+                            Some((data, &call.methodcalltype, &call.return_hint, None))
+                        }
+                        MethodAction::ChainM(chain) => Some((
+                            data,
+                            &chain.methodcalltype,
+                            &chain.return_hint,
+                            Some(MethodOptionalChain {
+                                exp_reason: chain.exp_reason.dupe(),
+                                lhs_reason: chain.lhs_reason.dupe(),
+                                lhs_expression: chain.lhs_expression.dupe(),
+                            }),
+                        )),
+                        MethodAction::NoMethodAction(_) => None,
+                    }
+                }
+                _ => None,
             };
-            let (t_, _) = FlowJs::instantiate_poly_with_env(
-                cx,
-                env,
-                trace,
-                use_op,
-                &reason_op,
-                reason_tapp,
-                Some(unify_bounds),
-                (
-                    tparams_loc.dupe(),
-                    Vec1::try_from_vec(ids.to_vec()).unwrap(),
-                    t.dupe(),
-                ),
-            )?;
+            let (t_, _) = if let Some((data, call, return_hint, optional_chain)) = method {
+                let check = ImplicitInstantiationCheck {
+                    lhs: l.dupe(),
+                    poly_t,
+                    operation: (
+                        use_op.dupe(),
+                        reason_op.dupe(),
+                        Operation::Method {
+                            prop_reason: data.prop_reason.dupe(),
+                            propref: data.propref.as_ref().clone(),
+                            call: call.clone(),
+                            optional_chain,
+                        },
+                    ),
+                };
+                implicit_instantiation::kit::run_call(
+                    cx,
+                    env,
+                    &check,
+                    return_hint,
+                    trace,
+                    use_op,
+                    &reason_op,
+                    reason_tapp,
+                )?
+            } else {
+                let unify_bounds = matches!(u.deref(), UseTInner::MethodT(data) if matches!(data.method_action.as_ref(), MethodAction::NoMethodAction(_)));
+                FlowJs::instantiate_poly_with_env(
+                    cx,
+                    env,
+                    trace,
+                    use_op,
+                    &reason_op,
+                    reason_tapp,
+                    Some(unify_bounds),
+                    poly_t,
+                )?
+            };
             rec_flow(cx, env, trace, (&t_, u))?;
         }
         // when a this-abstracted class flows to upper bounds, fix the class

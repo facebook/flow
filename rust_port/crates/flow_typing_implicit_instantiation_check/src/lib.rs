@@ -9,9 +9,12 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use flow_aloc::ALoc;
+use flow_common::error_ref::ExpressionReferenceData;
 use flow_common::reason::Reason;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::FuncallType;
+use flow_typing_type::type_::MethodCallType;
+use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::SpecializedCallee;
 use flow_typing_type::type_::SpeculationHintState;
 use flow_typing_type::type_::Targ;
@@ -46,9 +49,23 @@ impl Call {
     }
 }
 
+/// Optional call inputs retained while solving a polymorphic receiver.
+#[derive(Debug, Clone)]
+pub struct MethodOptionalChain {
+    pub exp_reason: Reason,
+    pub lhs_reason: Reason,
+    pub lhs_expression: ExpressionReferenceData<ALoc>,
+}
+
 #[derive(Debug, Clone)]
 pub enum Operation {
     SubtypeLowerPoly(Type),
+    Method {
+        prop_reason: Reason,
+        propref: PropRef,
+        call: MethodCallType,
+        optional_chain: Option<MethodOptionalChain>,
+    },
     Call(Call),
     Constructor(Option<Rc<[Targ]>>, Rc<[CallArg]>),
     ReactJSX {

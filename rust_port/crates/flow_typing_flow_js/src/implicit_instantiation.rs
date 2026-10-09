@@ -48,7 +48,9 @@ use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CallAction;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::CallArgInner;
+use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ChainMData;
 use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::ConstructorTData;
 use flow_typing_type::type_::DefT;
@@ -73,6 +75,9 @@ use flow_typing_type::type_::HintEvalResult;
 use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
 use flow_typing_type::type_::ImplicitInstantiationTvarData;
 use flow_typing_type::type_::LazyHintT;
+use flow_typing_type::type_::MethodAction;
+use flow_typing_type::type_::MethodCallType;
+use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
@@ -1720,6 +1725,62 @@ fn check_instantiation<'cx, Obs: Observer>(
                 None,
             )
         }
+        Operation::Method {
+            prop_reason,
+            propref,
+            call,
+            optional_chain,
+        } => {
+            let (_, inferred_targ_list) = merge_targs(&None)?;
+            let targs: Rc<[Type]> = inferred_targ_list
+                .iter()
+                .map(|(_, t, _, _)| t.dupe())
+                .collect();
+            let new_tout = flow_typing_tvar::mk(cx, reason_op.dupe());
+            let methodcalltype = MethodCallType {
+                meth_tout: open_tvar(&new_tout).dupe(),
+                ..call.clone()
+            };
+            let method_action = match optional_chain {
+                Some(chain) => MethodAction::ChainM(Box::new(ChainMData {
+                    exp_reason: chain.exp_reason.dupe(),
+                    lhs_reason: chain.lhs_reason.dupe(),
+                    lhs_expression: chain.lhs_expression.dupe(),
+                    methodcalltype,
+                    voided_out_collector: None,
+                    return_hint: hint_unavailable(),
+                    specialized_callee: None,
+                })),
+                None => MethodAction::CallM(Box::new(CallMData {
+                    methodcalltype,
+                    return_hint: hint_unavailable(),
+                    specialized_callee: None,
+                })),
+            };
+            (
+                inferred_targ_list,
+                FlowJs::mk_typeapp_instance_annot_with_env(
+                    cx,
+                    env,
+                    None,
+                    use_op.dupe(),
+                    reason_op,
+                    reason_tapp,
+                    true,
+                    None,
+                    &check.lhs,
+                    targs,
+                )?,
+                UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                    use_op: use_op.dupe(),
+                    reason: reason_op.dupe(),
+                    prop_reason: prop_reason.dupe(),
+                    propref: Box::new(propref.clone()),
+                    method_action: Box::new(method_action),
+                }))),
+                Some(new_tout),
+            )
+        }
         flow_typing_implicit_instantiation_check::Operation::Constructor(
             explicit_targs,
             call_args,
@@ -2024,6 +2085,7 @@ fn pin_types<'cx, Obs: Observer>(
         let generalized = match op {
             flow_typing_implicit_instantiation_check::Operation::Call(_)
             | flow_typing_implicit_instantiation_check::Operation::Constructor(_, _)
+            | Operation::Method { .. }
                 if result_tparam.is_const =>
             {
                 // Adjust 'const' type parameters. Keeping container reasons for
@@ -2145,7 +2207,10 @@ fn implicitly_instantiate<'cx, Obs: Observer>(
     let (_, _, ref op) = check.operation;
     let resolved_t = get_t(cx, t);
 
-    if let flow_typing_implicit_instantiation_check::Operation::SubtypeLowerPoly(_) = op {
+    if matches!(
+        op,
+        Operation::SubtypeLowerPoly(_) | Operation::Method { .. }
+    ) {
         let marked_tparams = Marked::new();
         let (inferred_targ_list, marked_tparams, tout) =
             check_instantiation::<Obs>(cx, env, &tparams_list, marked_tparams, check)?;
@@ -2506,6 +2571,7 @@ pub mod instantiation_solver {
                 targs.as_deref()
             }
             Operation::SubtypeLowerPoly(_) => None,
+            Operation::Method { call, .. } => call.meth_targs.as_deref(),
         };
         if let Some(targs) = targs {
             force_type_arguments(cx, targs);
@@ -3089,6 +3155,7 @@ pub mod kit {
         let args: &[CallArg] = match &check.operation.2 {
             Operation::Call(calltype) => calltype.call_args_tlist.as_ref(),
             Operation::Constructor(_, args) => args.as_ref(),
+            Operation::Method { call, .. } => call.meth_args_tlist.as_ref(),
             _ => return false,
         };
         args.iter().any(|arg| {

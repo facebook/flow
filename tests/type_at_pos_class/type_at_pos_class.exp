@@ -154,12 +154,12 @@ class-statics-poly.js:11:8 = Class<A<T>>
 'A' defined at class-statics-poly.js:3:6
 
 class-statics-poly.js:11:5,11:9
-class-statics-poly.js:16:5 = var bCtor: Class<B<empty>>
+class-statics-poly.js:16:5 = var bCtor: Class<B<unknown>>
 
 'B' defined at class-statics-poly.js:7:6
 
 class-statics-poly.js:16:5,16:9
-class-statics-poly.js:17:5 = var b: B<empty>
+class-statics-poly.js:17:5 = var b: B<unknown>
 
 'B' defined at class-statics-poly.js:7:6
 
