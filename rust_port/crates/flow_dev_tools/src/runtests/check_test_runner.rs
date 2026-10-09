@@ -94,7 +94,7 @@ fn should_list_test(
     if cfg!(windows) && config.skip_windows {
         return Ok(false);
     }
-    if check_only && config.cmd.trim() != "full-check" {
+    if check_only && !config.is_check_only() {
         return Ok(false);
     }
     Ok(true)

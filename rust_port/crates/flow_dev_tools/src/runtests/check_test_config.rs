@@ -11,8 +11,16 @@ use std::path::Path;
 
 use super::exists;
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub(super) enum TestVariant {
+    Standard,
+    WebsiteFlowCheck,
+    WebsiteDocsFlowCheck,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct TestConfig {
+    pub(super) variant: TestVariant,
     pub(super) auto_start: bool,
     pub(super) shell: String,
     pub(super) cmd: String,
@@ -28,8 +36,15 @@ pub(super) struct TestConfig {
     pub(super) skip_windows: bool,
 }
 
+impl TestConfig {
+    pub(super) fn is_check_only(&self) -> bool {
+        self.variant == TestVariant::Standard && self.cmd.trim() == "full-check"
+    }
+}
+
 pub(super) fn parse_test_config(test_dir: &Path) -> io::Result<TestConfig> {
     let mut config = TestConfig {
+        variant: TestVariant::Standard,
         auto_start: true,
         shell: String::new(),
         cmd: "full-check".to_owned(),
@@ -73,6 +88,19 @@ pub(super) fn parse_test_config(test_dir: &Path) -> io::Result<TestConfig> {
         let value = value.trim();
 
         match key {
+            "variant" => {
+                config.variant = match value {
+                    "standard" => TestVariant::Standard,
+                    "website_flow_check" => TestVariant::WebsiteFlowCheck,
+                    "website_docs_flow_check" => TestVariant::WebsiteDocsFlowCheck,
+                    _ => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidInput,
+                            format!("Unknown test variant: {value}"),
+                        ));
+                    }
+                };
+            }
             "auto_start" => config.auto_start = value != "false",
             "shell" => config.shell = value.to_owned(),
             "cmd" => {

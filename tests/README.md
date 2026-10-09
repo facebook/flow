@@ -50,6 +50,13 @@ $(buck2 build //flow:flow --show-full-output | awk '{print $2}') dev-tools runte
 
 This re-records the test output. Use this when you've intentionally changed Flow's behavior and need to update the `.exp` files.
 
+The documentation test updates its separate snapshots under
+`website/tests/snapshots/` with the same `-r` option:
+
+```bash
+<flow_binary> dev-tools runtests -r -t website_docs_flow_check
+```
+
 ## Test Structure
 
 Each test directory contains:
@@ -59,6 +66,11 @@ Each test directory contains:
 - **`.out` file** - Generated output from the last test run (auto-generated, not checked in)
 - **`.err` file** - Error output if the test failed (auto-generated)
 - **`test.sh`** (optional) - Custom test script for tests with special requirements
+
+The website checks use intrinsic Rust runner variants selected by
+`variant: website_flow_check` or `variant: website_docs_flow_check` in
+`.testconfig`. The docs variant extracts examples, validates error annotations,
+and compares or records the per-page snapshots without a test script.
 
 ## Tips
 

@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::future::Future;
 use std::io;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::pin::Pin;
@@ -28,8 +30,11 @@ use tokio::fs::symlink_file;
 
 use super::AnnotateExportsOptions;
 use super::ExecOptions;
+use super::check_test_config::TestVariant;
 use super::check_test_helpers::TestContext;
 use super::check_test_helpers::TestContextOptions;
+use super::check_website::WebsiteTestOptions;
+use super::check_website::run_website_test;
 use super::diff_output;
 use super::exec_file;
 use super::exec_shell;
@@ -95,7 +100,7 @@ pub(super) struct TestResult {
 // copying test directories with many files in a parallel runner.
 const COPY_CONCURRENCY: usize = 32;
 
-fn copy_dir<'a>(
+pub(super) fn copy_dir<'a>(
     src: &'a Path,
     dst: &'a Path,
 ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + 'a>> {
@@ -119,6 +124,12 @@ fn copy_dir<'a>(
                         copy_dir(&src_path, &dst_path).await?;
                     } else {
                         tokio::fs::copy(&src_path, &dst_path).await?;
+                        let mut permissions = metadata.permissions();
+                        #[cfg(unix)]
+                        permissions.set_mode(permissions.mode() | 0o200);
+                        #[cfg(windows)]
+                        permissions.set_readonly(false);
+                        tokio::fs::set_permissions(&dst_path, permissions).await?;
                     }
                     Ok::<(), io::Error>(())
                 }
@@ -282,7 +293,7 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
                 diff: None,
             });
         }
-        if check_only && config.cmd.trim() != "full-check" {
+        if check_only && !config.is_check_only() {
             return Ok(TestResult {
                 status: TestStatus::Skip,
                 name,
@@ -326,7 +337,25 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
         let mut err_content = String::new();
 
         // Execute test based on mode
-        if config.cmd.trim() == "full-check" {
+        if config.variant != TestVariant::Standard {
+            env.insert("FLOW_BUILTIN_LIB".to_owned(), "default".to_owned());
+            let flow_root = scripts_dir
+                .parent()
+                .ok_or_else(|| io::Error::other("scripts directory has no parent"))?;
+            let command_result = run_website_test(WebsiteTestOptions {
+                variant: config.variant,
+                flow_bin: &flow_bin,
+                website_dir: &flow_root.join("website"),
+                work_dir: &work_dir,
+                env: &env,
+                record,
+            })?;
+            out_content = command_result.stdout;
+            err_content = command_result.stderr;
+            if command_result.code != 0 {
+                return_status = TestStatus::Error;
+            }
+        } else if config.cmd.trim() == "full-check" {
             // Full-check mode
             if saved_state {
                 return Ok(TestResult {

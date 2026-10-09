@@ -16,6 +16,7 @@ mod check_run_queue;
 mod check_test_config;
 mod check_test_helpers;
 mod check_test_runner;
+mod check_website;
 
 use check_annotate_exports::AnnotateExportsOptions;
 use check_annotate_exports::run_annotate_exports;
@@ -104,6 +105,11 @@ pub fn run(args: Args) -> io::Result<bool> {
     };
 
     let bin = std::env::current_exe()?;
+    let flow_root = dir
+        .as_ref()
+        .map(std::path::absolute)
+        .transpose()?
+        .unwrap_or(flow_root);
 
     // Determine tests directory
     let tests_dir = match tests_dir {
