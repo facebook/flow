@@ -828,11 +828,10 @@ impl FlowJs {
         t: &Type,
         use_op: VirtualUseOp<ALoc>,
         reason_op: &Reason,
-        tool: react::Tool<Context<'cx>>,
         polarity: Polarity,
         tout: &Type,
     ) -> Result<(), FlowJsException> {
-        react_kit::get_config(cx, env, trace, t, use_op, reason_op, &tool, polarity, tout)
+        react_kit::get_config(cx, env, trace, t, use_op, reason_op, polarity, tout)
     }
 
     // ImplicitInstantiationKit methods

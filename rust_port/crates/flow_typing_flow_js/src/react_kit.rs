@@ -693,7 +693,6 @@ pub fn get_config<'cx>(
     component: &Type,
     use_op: UseOp,
     reason_op: &Reason,
-    _u: &react::Tool<Context<'cx>>,
     pole: Polarity,
     tout: &Type,
 ) -> Result<(), FlowJsException> {
@@ -1345,7 +1344,6 @@ pub(super) fn run_with_env<'cx>(
             l,
             use_op,
             reason_op,
-            u,
             Polarity::Positive,
             tout,
         ),

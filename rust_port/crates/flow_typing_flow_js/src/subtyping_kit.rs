@@ -5034,7 +5034,6 @@ pub fn rec_sub_t<'cx>(
                 l,
                 use_op.dupe(),
                 reasonl,
-                react::Tool::<Context<'cx>>::GetConfig { tout: l.dupe() },
                 Polarity::Negative,
                 config,
             )?;
