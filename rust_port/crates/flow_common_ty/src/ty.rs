@@ -5029,6 +5029,21 @@ where
     }
 }
 
+/// Returns the symbol printed as the declaration's head, if it has one.
+pub fn head_symbol_of_decl(d: &Decl<ALoc>) -> Option<&Symbol<ALoc>> {
+    match d {
+        Decl::VariableDecl(..) => None,
+        Decl::TypeAliasDecl(box DeclTypeAliasDeclData { name, .. }) => Some(name),
+        Decl::ClassDecl(box (sym, _))
+        | Decl::InterfaceDecl(box (sym, _))
+        | Decl::RecordDecl(box (sym, _)) => Some(sym),
+        Decl::EnumDecl(box DeclEnumDeclData { name, .. }) => Some(name),
+        Decl::NominalComponentDecl(box DeclNominalComponentDeclData { name, .. }) => Some(name),
+        Decl::NamespaceDecl(box DeclNamespaceDeclData { name, .. })
+        | Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => name.as_ref(),
+    }
+}
+
 pub fn symbols_of_elt<F>(loc_of_aloc: F, elt: &Elt<ALoc>) -> BTreeSet<Symbol<Loc>>
 where
     F: Fn(&ALoc) -> Loc,
@@ -5061,4 +5076,18 @@ where
             },
         },
     }
+}
+
+/// Collects the symbols printed inside an element, excluding a declaration's own name.
+pub fn symbols_of_elt_without_decl_head<F>(loc_of_aloc: F, elt: &Elt<ALoc>) -> BTreeSet<Symbol<Loc>>
+where
+    F: Fn(&ALoc) -> Loc,
+{
+    let mut refs = symbols_of_elt(&loc_of_aloc, elt);
+    if let Elt::Decl(d) = elt
+        && let Some(head) = head_symbol_of_decl(d)
+    {
+        refs.remove(&head.map_locs(&loc_of_aloc));
+    }
+    refs
 }

@@ -49,7 +49,6 @@ Flags:
 type Nested = {c: CLocal, t: TLocal}
 
 'CLocal' defined at exports.js:3:13
-'Nested' defined at main.js:30:5
 'TLocal' defined at exports.js:5:12
 
 main.js:30:6,30:11

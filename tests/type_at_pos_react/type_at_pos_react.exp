@@ -70,6 +70,5 @@ react_abstract_component.js:3:15,3:15
 react_abstract_component.js:8:15 = type RendersFoo = renders Foo
 
 'Foo' defined at react_abstract_component.js:7:18
-'RendersFoo' defined at react_abstract_component.js:8:5
 
 react_abstract_component.js:8:6,8:15

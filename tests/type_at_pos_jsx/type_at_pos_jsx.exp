@@ -86,9 +86,6 @@ test.js:66:18,66:18
 test.js:77:19
 Flags:
 component SpreadComp(a: number, b: string)
-
-'SpreadComp' defined at test.js:77:0
-
 test.js:77:19,77:28
 
 test.js:80:3
@@ -104,7 +101,6 @@ Flags:
 component OuterComp(x: Inner, y: number)
 
 'Inner' defined at test.js:83:5
-'OuterComp' defined at test.js:86:0
 
 test.js:86:19,86:27
 
@@ -114,64 +110,42 @@ component UnionComp(...A | B)
 
 'A' defined at test.js:89:5
 'B' defined at test.js:90:5
-'UnionComp' defined at test.js:92:0
 
 test.js:92:19,92:27
 
 test.js:98:19
 Flags:
 component MixedComp(a: number, b: string, c: number)
-
-'MixedComp' defined at test.js:98:0
-
 test.js:98:19,98:27
 
 test.js:103:19
 Flags:
 component OmitComp(a: number)
-
-'OmitComp' defined at test.js:103:0
-
 test.js:103:19,103:26
 
 test.js:106:19
 Flags:
 component PickComp(a: number)
-
-'PickComp' defined at test.js:106:0
-
 test.js:106:19,106:26
 
 test.js:109:19
 Flags:
 component ReadonlyComp(a: number, b: string)
-
-'ReadonlyComp' defined at test.js:109:0
-
 test.js:109:19,109:30
 
 test.js:112:19
 Flags:
 component PartialComp(a?: number, b?: string)
-
-'PartialComp' defined at test.js:112:0
-
 test.js:112:19,112:29
 
 test.js:121:19
 Flags:
 component ChainComp(a: number, extra: string)
-
-'ChainComp' defined at test.js:121:0
-
 test.js:121:19,121:27
 
 test.js:132:19
 Flags:
 component FourSpreads(a: number, b: number, c: number, d: number)
-
-'FourSpreads' defined at test.js:132:0
-
 test.js:132:19,132:29
 
 test.js:147:19
@@ -286,25 +260,16 @@ component BigComp(
   },
   ... 4 more component parameters ...
 )
-
-'BigComp' defined at test.js:147:0
-
 test.js:147:19,147:25
 
 test.js:156:19
 Flags:
 component OverComp(a: number, b: string, extra: boolean, keep: string)
-
-'OverComp' defined at test.js:156:0
-
 test.js:156:19,156:26
 
 test.js:162:19
 Flags:
 component IndexedComp(foo: number, ...{[string]: number})
-
-'IndexedComp' defined at test.js:162:0
-
 test.js:162:19,162:29
 
 test.js:172:15
@@ -328,9 +293,6 @@ test.js:178:15,178:18
 jsx_instantiation.js:3:19
 Flags:
 component Foo1<T>(x: T, y: T)
-
-'Foo1' defined at jsx_instantiation.js:3:0
-
 jsx_instantiation.js:3:19,3:22
 
 jsx_instantiation.js:10:6

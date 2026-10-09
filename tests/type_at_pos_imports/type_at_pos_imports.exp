@@ -1,9 +1,6 @@
 exports-class-cjs.js:3:23
 Flags:
 class klass<T>
-
-'klass' defined at exports-class-cjs.js:3:22
-
 exports-class-cjs.js:3:23,3:27
 
 exports-class-cjs.js:6:24
@@ -533,9 +530,6 @@ import-alias.js:50:8,50:19
 exports-class-cjs.js:3:23
 Flags: --do_not_use_typed_AST_for_imports
 class klass<T>
-
-'klass' defined at exports-class-cjs.js:3:22
-
 exports-class-cjs.js:3:23,3:27
 
 exports-class-cjs.js:6:24

@@ -171,8 +171,7 @@ module.exports = suite(
                   value: 'type T = C | D',
                 },
                 'Go to [C](<PLACEHOLDER_PROJECT_URL>/hover_refs.js#L5,7) | ' +
-                  '[D](<PLACEHOLDER_PROJECT_URL>/hover_refs_exports.js#L3,14) | ' +
-                  '[T](<PLACEHOLDER_PROJECT_URL>/hover_refs.js#L7,6)',
+                  '[D](<PLACEHOLDER_PROJECT_URL>/hover_refs_exports.js#L3,14)',
               ],
               range: {
                 end: {
@@ -207,7 +206,6 @@ module.exports = suite(
                   language: 'flow',
                   value: 'type ValuesPoly<X> = Values<X>',
                 },
-                'Go to [ValuesPoly](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
               ],
               range: {
                 end: {
@@ -237,7 +235,6 @@ module.exports = suite(
                   language: 'flow',
                   value: 'type ValuesPoly<X> = Values<X>',
                 },
-                'Go to [ValuesPoly](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
               ],
               range: {
                 end: {

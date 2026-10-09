@@ -1,41 +1,26 @@
 component.js:1:11
 Flags:
 component Foo(foo: number)
-
-'Foo' defined at component.js:1:0
-
 component.js:1:11,1:13
 
 component.js:3:11
 Flags:
 component Bar(bar: string) renders any
-
-'Bar' defined at component.js:3:0
-
 component.js:3:11,3:13
 
 component.js:5:11
 Flags:
 component Baz(foo: number) renders? any
-
-'Baz' defined at component.js:5:0
-
 component.js:5:11,5:13
 
 component.js:7:11
 Flags:
 component Qux(bar: string) renders* any
-
-'Qux' defined at component.js:7:0
-
 component.js:7:11,7:13
 
 component.js:9:11
 Flags:
 component Poly<T>(foo: T)
-
-'Poly' defined at component.js:9:0
-
 component.js:9:11,9:14
 
 component.js:11:11
@@ -43,7 +28,6 @@ Flags:
 type PolyRendersExactlyTypeApp1 = Poly<string>
 
 'Poly' defined at component.js:9:0
-'PolyRendersExactlyTypeApp1' defined at component.js:11:5
 
 component.js:11:6,11:31
 
@@ -52,7 +36,6 @@ Flags:
 type PolyRendersExactlyTypeApp1 = Poly<string>
 
 'Poly' defined at component.js:9:0
-'PolyRendersExactlyTypeApp1' defined at component.js:13:5
 
 component.js:13:6,13:31
 
@@ -60,7 +43,6 @@ component.js:15:11
 Flags:
 type ConcretizedPolyComponent = typeof Poly
 
-'ConcretizedPolyComponent' defined at component.js:15:5
 'Poly' defined at component.js:9:0
 
 component.js:15:6,15:29
@@ -91,24 +73,17 @@ Flags:
 type TypeofFoo = typeof Foo
 
 'Foo' defined at component.js:1:0
-'TypeofFoo' defined at component.js:27:5
 
 component.js:27:6,27:14
 
 render_types.js:1:6
 Flags:
 type X = renders any
-
-'X' defined at render_types.js:1:5
-
 render_types.js:1:6,1:6
 
 render_types.js:3:6
 Flags:
 type Y = renders any
-
-'Y' defined at render_types.js:3:5
-
 render_types.js:3:6,3:6
 
 render_types.js:8:6
@@ -116,7 +91,6 @@ Flags:
 type Z = renders Foo
 
 'Foo' defined at render_types.js:5:10
-'Z' defined at render_types.js:8:5
 
 render_types.js:8:6,8:6
 
@@ -126,7 +100,6 @@ type U = renders (Bar | Foo)
 
 'Bar' defined at render_types.js:6:10
 'Foo' defined at render_types.js:5:10
-'U' defined at render_types.js:10:5
 
 render_types.js:10:6,10:6
 
@@ -137,7 +110,6 @@ type V = renders Foo | React$RendersExactly<typeof Bar>
 'Bar' defined at render_types.js:6:0
 'Foo' defined at render_types.js:5:10
 'React$RendersExactly' defined at (lib) react.js:73:20
-'V' defined at render_types.js:12:5
 
 render_types.js:12:6,12:6
 
@@ -146,7 +118,6 @@ Flags:
 type MaybeRenders = renders? Foo
 
 'Foo' defined at render_types.js:5:10
-'MaybeRenders' defined at render_types.js:15:5
 
 render_types.js:15:6,15:17
 
@@ -155,7 +126,6 @@ Flags:
 type StarRenders = renders* Foo
 
 'Foo' defined at render_types.js:5:10
-'StarRenders' defined at render_types.js:18:5
 
 render_types.js:18:6,18:16
 
@@ -164,7 +134,6 @@ Flags:
 type PolyElement = renders Poly
 
 'Poly' defined at render_types.js:21:10
-'PolyElement' defined at render_types.js:22:5
 
 render_types.js:22:6,22:16
 
@@ -173,7 +142,6 @@ Flags:
 type PolyElementNoTargs = renders Poly
 
 'Poly' defined at render_types.js:21:10
-'PolyElementNoTargs' defined at render_types.js:25:5
 
 render_types.js:25:6,25:23
 
@@ -191,13 +159,11 @@ type UnionPoly = renders (Poly | Poly2)
 
 'Poly' defined at render_types.js:21:10
 'Poly2' defined at render_types.js:30:10
-'UnionPoly' defined at render_types.js:32:5
 
 render_types.js:32:6,32:14
 
 render_types.js:8:7 = type Z = renders Foo
 
 'Foo' defined at render_types.js:5:10
-'Z' defined at render_types.js:8:5
 
 render_types.js:8:6,8:6

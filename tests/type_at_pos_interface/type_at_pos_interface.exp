@@ -1,9 +1,6 @@
 interface.js:3:11
 Flags:
 interface IA
-
-'IA' defined at interface.js:3:10
-
 interface.js:3:11,3:12
 
 interface.js:10:15
@@ -66,9 +63,6 @@ interface.js:43:15,43:27
 interface.js:49:11
 Flags:
 interface Box<T>
-
-'Box' defined at interface.js:49:10
-
 interface.js:49:11,49:13
 
 interface.js:55:15

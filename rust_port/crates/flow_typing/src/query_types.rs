@@ -28,7 +28,9 @@ use flow_common_ty::ty::Prop;
 use flow_common_ty::ty::Ty;
 use flow_common_ty::ty::TypeAtPosResult;
 use flow_common_ty::ty::TypeParameterContext;
+use flow_common_ty::ty::head_symbol_of_decl;
 use flow_common_ty::ty::symbols_of_elt;
+use flow_common_ty::ty::symbols_of_elt_without_decl_head;
 use flow_common_ty::ty_symbol::ImportMode;
 use flow_common_ty::ty_symbol::Provenance;
 use flow_common_ty::ty_symbol::Symbol;
@@ -241,6 +243,30 @@ fn framed_of_identifier_reference(cx: &Context<'_>, file_sig: &FileSig, loc: &AL
         import: import_provenance(file_sig, &def.actual_name),
     });
     Framed { binder, alias }
+}
+
+fn is_local_definition_site<F>(
+    cx: &Context<'_>,
+    loc_of_aloc: &F,
+    loc: &Loc,
+    head_name: Option<&FlowSmolStr>,
+) -> bool
+where
+    F: Fn(&ALoc) -> Loc + ?Sized,
+{
+    let Some(head_name) = head_name else {
+        return false;
+    };
+    let aloc = ALoc::of_loc(loc.dupe());
+    cx.environment()
+        .var_info
+        .scopes
+        .def_of_use_opt(&aloc)
+        .is_some_and(|def| {
+            !is_imported_binding_kind(def.kind)
+                && &def.actual_name == head_name
+                && def.locs.iter().any(|def_loc| &loc_of_aloc(def_loc) == loc)
+        })
 }
 
 /// The `(index)` head name for the first constituent carrying a string-keyed
@@ -637,7 +663,17 @@ pub fn type_at_pos_type<'a>(
                         {
                             binder.type_parameter_context = type_parameter_context;
                         }
-                        let refs = include_refs.map(|loc_of_aloc| symbols_of_elt(loc_of_aloc, &ty));
+                        let refs = include_refs.map(|loc_of_aloc| {
+                            let head_name = match &ty {
+                                Elt::Decl(d) => head_symbol_of_decl(d).and_then(name_of_symbol),
+                                Elt::Type(_) => None,
+                            };
+                            if is_local_definition_site(cx, loc_of_aloc, &loc, head_name.as_ref()) {
+                                symbols_of_elt_without_decl_head(loc_of_aloc, &ty)
+                            } else {
+                                symbols_of_elt(loc_of_aloc, &ty)
+                            }
+                        });
                         // An aliased callable is headed `function f(…)`. A
                         // non-callable value import is headed `const x: T`, since
                         // the local import binding cannot be reassigned. Declarations

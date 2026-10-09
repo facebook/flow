@@ -151,37 +151,22 @@ implicit-instantiation.js:12:46,12:46
 interface.js
 At interface.js:6:6
 type I1 = interface {}
-
-'I1' defined at interface.js:6:5
-
 interface.js:6:6,6:7
 
 At interface.js:8:6
 type I2 = interface {(): number}
-
-'I2' defined at interface.js:8:5
-
 interface.js:8:6,8:7
 
 At interface.js:10:6
 type I3 = interface {readonly [my_key: string]: number}
-
-'I3' defined at interface.js:10:5
-
 interface.js:10:6,10:7
 
 At interface.js:12:6
 type I4 = interface {writeonly [my_key: string]: number}
-
-'I4' defined at interface.js:12:5
-
 interface.js:12:6,12:7
 
 At interface.js:14:6
 type I5 = interface {[my_key: string]: number}
-
-'I5' defined at interface.js:14:5
-
 interface.js:14:6,14:7
 
 At interface.js:16:6
@@ -189,7 +174,6 @@ type I6 = interface extends C, D {}
 
 'C' defined at interface.js:3:6
 'D' defined at interface.js:4:6
-'I6' defined at interface.js:16:5
 
 interface.js:16:6,16:7
 
@@ -197,7 +181,6 @@ At interface.js:18:6
 type I7 = interface extends C {(): number}
 
 'C' defined at interface.js:3:6
-'I7' defined at interface.js:18:5
 
 interface.js:18:6,18:7
 
@@ -330,9 +313,6 @@ mixed.js:18:17,18:18
 callable-object.js
 At callable-object.js:8:8
 type Obj1 = {(...args: ReadonlyArray<unknown>): void, f: <T>(x: T) => T, ...}
-
-'Obj1' defined at callable-object.js:8:5
-
 callable-object.js:8:6,8:9
 
 At callable-object.js:14:8
@@ -341,16 +321,10 @@ type Obj2 = {
   f: <T>(x: T) => T,
   ...
 }
-
-'Obj2' defined at callable-object.js:14:5
-
 callable-object.js:14:6,14:9
 
 At callable-object.js:20:8
 type Obj3 = {(...args: ReadonlyArray<unknown>): void, f: <T>(x: T) => T, ...}
-
-'Obj3' defined at callable-object.js:20:5
-
 callable-object.js:20:6,20:9
 
 At callable-object.js:26:8
@@ -377,7 +351,6 @@ type Obj4 = {
 'O2' defined at callable-object.js:4:20
 'O3' defined at callable-object.js:5:20
 'O4' defined at callable-object.js:6:20
-'Obj4' defined at callable-object.js:26:5
 
 callable-object.js:26:6,26:9
 
@@ -405,16 +378,12 @@ type Obj5 = {
 'O2' defined at callable-object.js:4:20
 'O3' defined at callable-object.js:5:20
 'O4' defined at callable-object.js:6:20
-'Obj5' defined at callable-object.js:35:5
 
 callable-object.js:35:6,35:9
 
 opaque.js
 At opaque.js:3:20
 type Foo = number
-
-'Foo' defined at opaque.js:3:19
-
 opaque.js:3:20,3:22
 
 At opaque.js:6:21
@@ -433,9 +402,6 @@ opaque.js:8:1,8:3
 
 At opaque.js:11:22
 type Bar = number
-
-'Bar' defined at opaque.js:11:20
-
 opaque.js:11:21,11:23
 
 At opaque.js:14:20
@@ -454,9 +420,6 @@ opaque.js:16:1,16:3
 
 At opaque.js:19:22
 type Baz
-
-'Baz' defined at opaque.js:19:20
-
 opaque.js:19:21,19:23
 
 At opaque.js:22:20
@@ -475,9 +438,6 @@ opaque.js:24:1,24:3
 
 At opaque.js:27:14
 type Bak<A> = number | A
-
-'Bak' defined at opaque.js:27:12
-
 opaque.js:27:13,27:15
 
 At opaque.js:30:21
@@ -496,9 +456,6 @@ opaque.js:32:1,32:3
 
 At opaque.js:35:22
 type Bam<A>
-
-'Bam' defined at opaque.js:35:20
-
 opaque.js:35:21,35:23
 
 At opaque.js:38:21
@@ -646,9 +603,6 @@ recursive.js:56:4,56:4
 
 At recursive.js:59:6
 type CA<out T> = ReadonlyArray<CA<T>>
-
-'CA' defined at recursive.js:59:5
-
 recursive.js:59:6,59:7
 
 At recursive.js:61:19
@@ -695,38 +649,27 @@ subst.js:27:7,27:8
 type-alias.js
 At type-alias.js:3:6
 type A = any (implicit)
-
-'A' defined at type-alias.js:3:5
-
 type-alias.js:3:6,3:6
 
 At type-alias.js:5:6
 type B = any | null
-
-'B' defined at type-alias.js:5:5
-
 type-alias.js:5:6,5:6
 
 At type-alias.js:7:6
 type C = A
 
 'A' defined at type-alias.js:3:5
-'C' defined at type-alias.js:7:5
 
 type-alias.js:7:6,7:6
 
 At type-alias.js:9:6
 type D = {x: number, ...}
-
-'D' defined at type-alias.js:9:5
-
 type-alias.js:9:6,9:6
 
 At type-alias.js:11:6
 type E = $Exact<D>
 
 'D' defined at type-alias.js:9:5
-'E' defined at type-alias.js:11:5
 
 type-alias.js:11:6,11:6
 
@@ -734,7 +677,6 @@ At type-alias.js:13:6
 type F = ?D
 
 'D' defined at type-alias.js:9:5
-'F' defined at type-alias.js:13:5
 
 type-alias.js:13:6,13:6
 
@@ -754,52 +696,35 @@ type-alias.js:20:6,20:6
 
 At type-alias.js:25:8
 type A = X
-
-'A' defined at type-alias.js:25:7
-
 type-alias.js:25:8,25:8
 
 At type-alias.js:27:8
 type B = any | null
-
-'B' defined at type-alias.js:27:7
-
 type-alias.js:27:8,27:8
 
 At type-alias.js:29:8
 type C = A
 
 'A' defined at type-alias.js:25:7
-'C' defined at type-alias.js:29:7
 
 type-alias.js:29:8,29:8
 
 At type-alias.js:31:8
 type D = {x: X, ...}
-
-'D' defined at type-alias.js:31:7
-
 type-alias.js:31:8,31:8
 
 At type-alias.js:33:8
 type E = $Exact<X>
-
-'E' defined at type-alias.js:33:7
-
 type-alias.js:33:8,33:8
 
 At type-alias.js:35:8
 type F = ?X
-
-'F' defined at type-alias.js:35:7
-
 type-alias.js:35:8,35:8
 
 At type-alias.js:40:6
 type H = G<number>
 
 'G' defined at type-alias.js:39:5
-'H' defined at type-alias.js:40:5
 
 type-alias.js:40:6,40:6
 
@@ -807,7 +732,6 @@ At type-alias.js:42:6
 type I = G<G<number> | string>
 
 'G' defined at type-alias.js:39:5
-'I' defined at type-alias.js:42:5
 
 type-alias.js:42:6,42:6
 
@@ -815,7 +739,6 @@ At type-alias.js:45:6
 type K = J<number>
 
 'J' defined at type-alias.js:44:5
-'K' defined at type-alias.js:45:5
 
 type-alias.js:45:6,45:6
 
@@ -823,7 +746,6 @@ At type-alias.js:48:6
 type M<Z> = L<number, Z>
 
 'L' defined at type-alias.js:47:5
-'M' defined at type-alias.js:48:5
 
 type-alias.js:48:6,48:6
 
@@ -831,7 +753,6 @@ At type-alias.js:51:6
 type O = N<number>
 
 'N' defined at type-alias.js:50:5
-'O' defined at type-alias.js:51:5
 
 type-alias.js:51:6,51:6
 
@@ -839,15 +760,11 @@ At type-alias.js:55:7
 type TKlass = typeof Klass
 
 'Klass' defined at type-alias.js:54:6
-'TKlass' defined at type-alias.js:55:5
 
 type-alias.js:55:6,55:11
 
 At type-alias.js:59:16
 type TypeOfWithTArgs = (v: string) => string
-
-'TypeOfWithTArgs' defined at type-alias.js:59:5
-
 type-alias.js:59:6,59:20
 
 type-destructor-trigger.js
@@ -861,15 +778,11 @@ type-destructor-trigger.js:11:7,11:27
 tuple.js
 At tuple.js:3:6
 type T = [1, b: 2, c?: 3]
-
-'T' defined at tuple.js:3:5
-
 tuple.js:3:6,3:6
 
 At tuple.js:6:6
 type S = [0, ...T, d?: void | 4]
 
-'S' defined at tuple.js:6:5
 'T' defined at tuple.js:3:5
 
 tuple.js:6:6,6:6
@@ -877,7 +790,6 @@ tuple.js:6:6,6:6
 At tuple.js:10:6
 type R = Readonly<Tup>
 
-'R' defined at tuple.js:10:5
 'Tup' defined at tuple.js:9:5
 
 tuple.js:10:6,10:6
@@ -885,7 +797,6 @@ tuple.js:10:6,10:6
 At tuple.js:13:6
 type P = Partial<Tup>
 
-'P' defined at tuple.js:13:5
 'Tup' defined at tuple.js:9:5
 
 tuple.js:13:6,13:6
@@ -893,7 +804,6 @@ tuple.js:13:6,13:6
 At tuple.js:16:6
 type Q = Partial<R>
 
-'Q' defined at tuple.js:16:5
 'R' defined at tuple.js:10:5
 
 tuple.js:16:6,16:6
@@ -902,15 +812,11 @@ At tuple.js:20:6
 type ROM = Readonly<M>
 
 'M' defined at tuple.js:19:5
-'ROM' defined at tuple.js:20:5
 
 tuple.js:20:6,20:8
 
 At tuple.js:23:6
 type Spread = [1, 2, ...[3, 4]]
-
-'Spread' defined at tuple.js:23:5
-
 tuple.js:23:6,23:11
 
 unions.js
@@ -1056,7 +962,6 @@ type LongUnion =
 'LongLongLongLongLongLongLongLongName2' defined at unions.js:108:20
 'LongLongLongLongLongLongLongLongName3' defined at unions.js:109:20
 'LongLongLongLongLongLongLongLongName4' defined at unions.js:110:20
-'LongUnion' defined at unions.js:112:5
 
 unions.js:112:6,112:14
 
@@ -1072,7 +977,6 @@ type LongUnionPoly = Poly<
 'LongLongLongLongLongLongLongLongName2' defined at unions.js:108:20
 'LongLongLongLongLongLongLongLongName3' defined at unions.js:109:20
 'LongLongLongLongLongLongLongLongName4' defined at unions.js:110:20
-'LongUnionPoly' defined at unions.js:115:5
 'Poly' defined at unions.js:72:20
 
 unions.js:115:6,115:18

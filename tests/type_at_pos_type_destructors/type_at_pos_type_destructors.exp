@@ -1,57 +1,36 @@
 conditional-types.js:1:6
 Flags:
 type T1 = number
-
-'T1' defined at conditional-types.js:1:5
-
 conditional-types.js:1:6,1:7
 
 conditional-types.js:4:6
 Flags:
 type T2 = string
-
-'T2' defined at conditional-types.js:4:5
-
 conditional-types.js:4:6,4:7
 
 conditional-types.js:7:6
 Flags:
 type T3 = string
-
-'T3' defined at conditional-types.js:7:5
-
 conditional-types.js:7:6,7:7
 
 conditional-types.js:11:6
 Flags:
 type T4_1 = string
-
-'T4_1' defined at conditional-types.js:11:5
-
 conditional-types.js:11:6,11:9
 
 conditional-types.js:13:6
 Flags:
 type T4_2 = string
-
-'T4_2' defined at conditional-types.js:13:5
-
 conditional-types.js:13:6,13:9
 
 conditional-types.js:17:6
 Flags:
 type T5 = number
-
-'T5' defined at conditional-types.js:17:5
-
 conditional-types.js:17:6,17:7
 
 conditional-types.js:21:6
 Flags:
 type T6 = number
-
-'T6' defined at conditional-types.js:21:5
-
 conditional-types.js:21:6,21:7
 
 conditional-types.js:25:6
@@ -59,7 +38,6 @@ Flags:
 type T7<T> = T extends infer T ? string : number
 
 'T' defined at conditional-types.js:25:29
-'T7' defined at conditional-types.js:25:5
 
 conditional-types.js:25:6,25:7
 
@@ -70,7 +48,6 @@ type T8<T> = T extends {bar: <T>(T) => void, foo: infer T, ...}
   : number
 
 'T' defined at conditional-types.js:29:35
-'T8' defined at conditional-types.js:29:5
 
 conditional-types.js:29:6,29:7
 
@@ -84,7 +61,6 @@ Flags:
 type B = $Exact<A>
 
 'A' defined at exact.js:3:5
-'B' defined at exact.js:4:5
 
 exact.js:4:6,4:6
 
@@ -138,9 +114,6 @@ exact.js:23:15,23:15
 exact.js:26:6
 Flags:
 type P<X> = $Exact<{m: (x: X) => void, ...}>
-
-'P' defined at exact.js:26:5
-
 exact.js:26:6,26:6
 
 exact.js:28:6
@@ -148,7 +121,6 @@ Flags:
 type Q<X> = $Exact<P<X>>
 
 'P' defined at exact.js:26:5
-'Q' defined at exact.js:28:5
 
 exact.js:28:6,28:6
 
@@ -166,7 +138,6 @@ type ReactA = ComponentProps<typeof MyComponent>
 
 'ComponentProps' defined at (lib) react.js:746:22
 'MyComponent' defined at react-component.js:5:6
-'ReactA' defined at react-component.js:12:5
 
 react-component.js:12:6,12:11
 
@@ -176,7 +147,6 @@ type ReactAP<X extends ElementType> = ComponentProps<X>
 
 'ComponentProps' defined at (lib) react.js:746:22
 'ElementType' defined at (lib) react.js:429:22
-'ReactAP' defined at react-component.js:14:5
 
 react-component.js:14:6,14:12
 
@@ -193,7 +163,6 @@ spread.js:12:6
 Flags:
 type EObj2 = {w: O, x: O, y: O, z: O}
 
-'EObj2' defined at spread.js:12:5
 'O' defined at spread.js:3:20
 
 spread.js:12:6,12:10
@@ -203,7 +172,6 @@ Flags:
 type C1 = {...C, o: O, ...}
 
 'C' defined at spread.js:5:5
-'C1' defined at spread.js:14:5
 'O' defined at spread.js:3:20
 
 spread.js:14:6,14:7
@@ -213,7 +181,6 @@ Flags:
 type C2 = {o: O, ...C, ...}
 
 'C' defined at spread.js:5:5
-'C2' defined at spread.js:16:5
 'O' defined at spread.js:3:20
 
 spread.js:16:6,16:7
@@ -223,7 +190,6 @@ Flags:
 type EC1 = {...$Exact<C>, o: O}
 
 'C' defined at spread.js:5:5
-'EC1' defined at spread.js:18:5
 'O' defined at spread.js:3:20
 
 spread.js:18:6,18:8
@@ -233,7 +199,6 @@ Flags:
 type EC2 = {o: O, ...C}
 
 'C' defined at spread.js:5:5
-'EC2' defined at spread.js:20:5
 'O' defined at spread.js:3:20
 
 spread.js:20:6,20:8
@@ -243,7 +208,6 @@ Flags:
 type Ctor1 = {...Ctor, o: O, ...}
 
 'Ctor' defined at spread.js:8:5
-'Ctor1' defined at spread.js:22:5
 'O' defined at spread.js:3:20
 
 spread.js:22:6,22:10
@@ -254,7 +218,6 @@ type P1<T> = {...P<T>, o: O, ...}
 
 'O' defined at spread.js:3:20
 'P' defined at spread.js:6:6
-'P1' defined at spread.js:24:5
 
 spread.js:24:6,24:7
 
@@ -263,7 +226,6 @@ Flags:
 type Rec = {o: O, ...Rec, ...}
 
 'O' defined at spread.js:3:20
-'Rec' defined at spread.js:26:5
 
 spread.js:26:6,26:8
 
@@ -271,7 +233,6 @@ spread.js:30:6
 Flags:
 type B1<T extends {...}, S extends {...}> = {...T, ...S, o: O, ...}
 
-'B1' defined at spread.js:30:5
 'O' defined at spread.js:3:20
 
 spread.js:30:6,30:7
@@ -280,7 +241,6 @@ spread.js:32:6
 Flags:
 type B2<T extends {...}> = {...T, o: O, ...}
 
-'B2' defined at spread.js:32:5
 'O' defined at spread.js:3:20
 
 spread.js:32:6,32:7
@@ -289,7 +249,6 @@ spread.js:34:6
 Flags:
 type B3<T extends {...}> = {o: O, ...T, ...}
 
-'B3' defined at spread.js:34:5
 'O' defined at spread.js:3:20
 
 spread.js:34:6,34:7
@@ -298,7 +257,6 @@ spread.js:36:6
 Flags:
 type B4<T extends {...}> = {o: O, ...T, oo: O, ...}
 
-'B4' defined at spread.js:36:5
 'O' defined at spread.js:3:20
 
 spread.js:36:6,36:7
@@ -307,7 +265,6 @@ spread.js:38:6
 Flags:
 type B5<T extends {...}> = {u: O, w: T, v: O, x: O, ...T, y: O, ...}
 
-'B5' defined at spread.js:38:5
 'O' defined at spread.js:3:20
 
 spread.js:38:6,38:7
@@ -316,7 +273,6 @@ spread.js:40:6
 Flags:
 type EB1<T extends {...}, S extends {...}> = {...T, ...S, o: O}
 
-'EB1' defined at spread.js:40:5
 'O' defined at spread.js:3:20
 
 spread.js:40:6,40:8
@@ -325,7 +281,6 @@ spread.js:42:6
 Flags:
 type EB2<T extends {...}> = {...T, o: O}
 
-'EB2' defined at spread.js:42:5
 'O' defined at spread.js:3:20
 
 spread.js:42:6,42:8
@@ -334,7 +289,6 @@ spread.js:44:6
 Flags:
 type EB3<T extends {...}> = {o: O, ...T}
 
-'EB3' defined at spread.js:44:5
 'O' defined at spread.js:3:20
 
 spread.js:44:6,44:8
@@ -343,7 +297,6 @@ spread.js:46:6
 Flags:
 type EB4<T extends {...}> = {o: O, ...T, oo: O}
 
-'EB4' defined at spread.js:46:5
 'O' defined at spread.js:3:20
 
 spread.js:46:6,46:8
@@ -352,7 +305,6 @@ spread.js:48:6
 Flags:
 type EB5<T extends {...}> = {u: O, w: T, v: O, x: O, ...T, y: O}
 
-'EB5' defined at spread.js:48:5
 'O' defined at spread.js:3:20
 
 spread.js:48:6,48:8
@@ -362,7 +314,6 @@ Flags:
 type PTA1<T extends {...}> = {...B2<T>, ...T, ...}
 
 'B2' defined at spread.js:32:5
-'PTA1' defined at spread.js:50:5
 
 spread.js:50:6,50:9
 
@@ -371,7 +322,6 @@ Flags:
 type PTA2<T extends {...}> = {...T, ...B2<T>, ...}
 
 'B2' defined at spread.js:32:5
-'PTA2' defined at spread.js:52:5
 
 spread.js:52:6,52:9
 
@@ -379,7 +329,6 @@ spread.js:54:6
 Flags:
 type EP1<T> = {...P<T>, o: O}
 
-'EP1' defined at spread.js:54:5
 'O' defined at spread.js:3:20
 'P' defined at spread.js:6:6
 
@@ -389,7 +338,6 @@ spread.js:56:6
 Flags:
 type EP2<T> = {o: O, ...P<T>}
 
-'EP2' defined at spread.js:56:5
 'O' defined at spread.js:3:20
 'P' defined at spread.js:6:6
 
@@ -400,7 +348,6 @@ Flags:
 type ECtor1 = {...Ctor, o: O}
 
 'Ctor' defined at spread.js:8:5
-'ECtor1' defined at spread.js:58:5
 'O' defined at spread.js:3:20
 
 spread.js:58:6,58:11
@@ -410,7 +357,6 @@ Flags:
 type ECtor2 = {o: O, ...Ctor}
 
 'Ctor' defined at spread.js:8:5
-'ECtor2' defined at spread.js:60:5
 'O' defined at spread.js:3:20
 
 spread.js:60:6,60:11
@@ -420,7 +366,6 @@ Flags:
 type PRec<X> = {o: O, ...PRec<X>, ...}
 
 'O' defined at spread.js:3:20
-'PRec' defined at spread.js:62:5
 
 spread.js:62:6,62:9
 
@@ -430,103 +375,68 @@ type IP1<T extends {...}> = {...B1<T>, ...} & {...B2<T>, ...}
 
 'B1' defined at spread.js:30:5
 'B2' defined at spread.js:32:5
-'IP1' defined at spread.js:64:5
 
 spread.js:64:6,64:8
 
 spread.js:66:6
 Flags:
 type Nest1<T extends {...}> = {...T, ...}
-
-'Nest1' defined at spread.js:66:5
-
 spread.js:66:6,66:10
 
 spread.js:68:6
 Flags:
 type Nest2<T extends {...}> = {...T, ...}
-
-'Nest2' defined at spread.js:68:5
-
 spread.js:68:6,68:10
 
 spread.js:70:6
 Flags:
 type UNest<T extends {...}> = {...T, ...}
-
-'UNest' defined at spread.js:70:5
-
 spread.js:70:6,70:10
 
 type-destructor.js:20:6
 Flags:
 type Country = "FR" | "IT" | "US"
-
-'Country' defined at type-destructor.js:20:5
-
 type-destructor.js:20:6,20:12
 
 type-destructor.js:23:6
 Flags:
 type KeysPoly<K> = keyof K
-
-'KeysPoly' defined at type-destructor.js:23:5
-
 type-destructor.js:23:6,23:13
 
 type-destructor.js:27:6
 Flags:
 type Prop$Values = number | string
-
-'Prop$Values' defined at type-destructor.js:27:5
-
 type-destructor.js:27:6,27:16
 
 type-destructor.js:31:6
 Flags:
 type ValuesOfFrozenObject = "a" | "b"
-
-'ValuesOfFrozenObject' defined at type-destructor.js:31:5
-
 type-destructor.js:31:6,31:25
 
 type-destructor.js:34:6
 Flags:
 type ValuesPoly<X> = Values<X>
-
-'ValuesPoly' defined at type-destructor.js:34:5
-
 type-destructor.js:34:6,34:15
 
 type-destructor.js:37:6
 Flags:
 type ValuesPolyBound<X extends {f: number, ...}> = Values<X>
-
-'ValuesPolyBound' defined at type-destructor.js:37:5
-
 type-destructor.js:37:6,37:20
 
 type-destructor.js:41:6
 Flags:
 type ReadOnlyObj = Readonly<{key: any, ...}>
-
-'ReadOnlyObj' defined at type-destructor.js:41:5
-
 type-destructor.js:41:6,41:16
 
 type-destructor.js:50:6
 Flags:
 type ElementTypeProps = string
-
-'ElementTypeProps' defined at type-destructor.js:50:5
-
 type-destructor.js:50:6,50:21
 
 type-destructor.js:52:6
 Flags:
 type ElementTypePropsPoly<K> = Props[K]
 
-'ElementTypePropsPoly' defined at type-destructor.js:52:5
 'Props' defined at type-destructor.js:3:5
 
 type-destructor.js:52:6,52:25
@@ -535,7 +445,6 @@ type-destructor.js:54:6
 Flags:
 type ElementTypePropsPolyBounded<K extends "name" | "age"> = Props[K]
 
-'ElementTypePropsPolyBounded' defined at type-destructor.js:54:5
 'Props' defined at type-destructor.js:3:5
 
 type-destructor.js:54:6,54:32
@@ -544,7 +453,6 @@ type-destructor.js:56:6
 Flags:
 type ElementTypePropsPolyBoundedEmpty<K extends "phone"> = Props[K]
 
-'ElementTypePropsPolyBoundedEmpty' defined at type-destructor.js:56:5
 'Props' defined at type-destructor.js:3:5
 
 type-destructor.js:56:6,56:37
@@ -552,25 +460,16 @@ type-destructor.js:56:6,56:37
 type-destructor.js:60:6
 Flags:
 type NonMaybeTypeNumber = number
-
-'NonMaybeTypeNumber' defined at type-destructor.js:60:5
-
 type-destructor.js:60:6,60:23
 
 type-destructor.js:62:6
 Flags:
 type NonMaybeTypeAbstract<X> = NonNullable<X>
-
-'NonMaybeTypeAbstract' defined at type-destructor.js:62:5
-
 type-destructor.js:62:6,62:25
 
 type-destructor.js:66:6
 Flags:
 type MappedTypeProps = {age: Array<number>, name: Array<string>, ...}
-
-'MappedTypeProps' defined at type-destructor.js:66:5
-
 type-destructor.js:66:6,66:20
 
 type-destructor.js:69:6
@@ -578,9 +477,6 @@ Flags:
 type MappedTypePoly<X, Y> = {
   [K in keyof {a: X, b?: Y, ...}]: Array<{a: X, b?: Y, ...}[K]>
 }
-
-'MappedTypePoly' defined at type-destructor.js:69:5
-
 type-destructor.js:69:6,69:19
 
 type-destructor.js:73:6
@@ -590,32 +486,22 @@ type MappedTypeFnReturnTypes = {
   getName: {k: "getName", v: string, ...},
   ...
 }
-
-'MappedTypeFnReturnTypes' defined at type-destructor.js:73:5
-
 type-destructor.js:73:6,73:28
 
 type-destructor.js:79:6
 Flags:
 type ConditionalExtractPropType = number
-
-'ConditionalExtractPropType' defined at type-destructor.js:79:5
-
 type-destructor.js:79:6,79:31
 
 type-destructor.js:92:6
 Flags:
 type ConditionalNestedObjType = number
-
-'ConditionalNestedObjType' defined at type-destructor.js:92:5
-
 type-destructor.js:92:6,92:29
 
 type-destructor.js:101:6
 Flags:
 type ConditionalIdPoly<R> = R extends infer N ? N : empty
 
-'ConditionalIdPoly' defined at type-destructor.js:101:5
 'N' defined at type-destructor.js:101:44
 
 type-destructor.js:101:6,101:22
@@ -629,7 +515,6 @@ type ConditionalExtractPropTypePoly<P> = PropObjPoly<P> extends {
   ? T
   : empty
 
-'ConditionalExtractPropTypePoly' defined at type-destructor.js:105:5
 'PropObjPoly' defined at type-destructor.js:104:5
 'T' defined at type-destructor.js:105:78
 
@@ -638,9 +523,6 @@ type-destructor.js:105:6,105:35
 type-destructor.js:109:6
 Flags:
 type ExportsM = {readonly x: number}
-
-'ExportsM' defined at type-destructor.js:109:5
-
 type-destructor.js:109:6,109:13
 
 type-destructor.js:113:18
@@ -656,9 +538,6 @@ type-destructor.js:115:18,115:28
 type-destructor.js:119:6
 Flags:
 type RecursiveTypeDestructor = {f: {g: {g: any}}}
-
-'RecursiveTypeDestructor' defined at type-destructor.js:119:5
-
 type-destructor.js:119:6,119:28
 
 type-destructor.js:126:6
@@ -666,17 +545,11 @@ Flags:
 type RecursiveTypeDestructorPoly<X> = {
   f: {h: RecursiveTypeDestructorPoly<X>["f"]} | X
 }
-
-'RecursiveTypeDestructorPoly' defined at type-destructor.js:126:5
-
 type-destructor.js:126:6,126:32
 
 type-destructor.js:132:6
 Flags:
 type $Pick<O extends {...}, K extends keyof O> = NonNullable<O>[K]
-
-'$Pick' defined at type-destructor.js:132:5
-
 type-destructor.js:132:6,132:10
 
 type-destructor.js:137:14
@@ -698,57 +571,36 @@ type-destructor.js:155:9,155:14
 mapped-type.js:7:6
 Flags:
 type MappedObj1 = {bar: number, foo: number}
-
-'MappedObj1' defined at mapped-type.js:7:5
-
 mapped-type.js:7:6,7:15
 
 mapped-type.js:9:6
 Flags:
 type MappedObj2 = {bar: string, foo: number}
-
-'MappedObj2' defined at mapped-type.js:9:5
-
 mapped-type.js:9:6,9:15
 
 mapped-type.js:11:6
 Flags:
 type MappedObj3 = {writeonly bar: string, writeonly foo: number}
-
-'MappedObj3' defined at mapped-type.js:11:5
-
 mapped-type.js:11:6,11:15
 
 mapped-type.js:13:6
 Flags:
 type MappedObj4 = {readonly bar: string, readonly foo: number}
-
-'MappedObj4' defined at mapped-type.js:13:5
-
 mapped-type.js:13:6,13:15
 
 mapped-type.js:15:6
 Flags:
 type MappedObj5 = {bar?: string, foo?: number}
-
-'MappedObj5' defined at mapped-type.js:15:5
-
 mapped-type.js:15:6,15:15
 
 mapped-type.js:17:6
 Flags:
 type MappedObj6 = {readonly bar?: string, readonly foo?: number}
-
-'MappedObj6' defined at mapped-type.js:17:5
-
 mapped-type.js:17:6,17:15
 
 mapped-type.js:19:6
 Flags:
 type MappedObj7 = {writeonly bar?: string, writeonly foo?: number}
-
-'MappedObj7' defined at mapped-type.js:19:5
-
 mapped-type.js:19:6,19:15
 
 mapped-type.js:23:6
@@ -759,65 +611,41 @@ type MappedObj8 = {
   foo?: number,
   ...
 }
-
-'MappedObj8' defined at mapped-type.js:23:5
-
 mapped-type.js:23:6,23:15
 
 mapped-type.js:25:6
 Flags:
 type MappedObj9 = {bar: number, foo: number}
-
-'MappedObj9' defined at mapped-type.js:25:5
-
 mapped-type.js:25:6,25:15
 
 mapped-type.js:29:6
 Flags:
 type Unevaluated1<T extends {...}> = {[key in keyof T]: T[key]}
-
-'Unevaluated1' defined at mapped-type.js:29:5
-
 mapped-type.js:29:6,29:17
 
 mapped-type.js:31:6
 Flags:
 type Unevaluated2<T extends {...}> = {readonly [key in keyof T]: T[key]}
-
-'Unevaluated2' defined at mapped-type.js:31:5
-
 mapped-type.js:31:6,31:17
 
 mapped-type.js:33:6
 Flags:
 type Unevaluated3<T extends {...}> = {writeonly [key in keyof T]: T[key]}
-
-'Unevaluated3' defined at mapped-type.js:33:5
-
 mapped-type.js:33:6,33:17
 
 mapped-type.js:35:6
 Flags:
 type Unevaluated4<T extends {...}> = {[key in keyof T]?: T[key]}
-
-'Unevaluated4' defined at mapped-type.js:35:5
-
 mapped-type.js:35:6,35:17
 
 mapped-type.js:37:6
 Flags:
 type Unevaluated5<T extends {...}> = {readonly [key in keyof T]?: T[key]}
-
-'Unevaluated5' defined at mapped-type.js:37:5
-
 mapped-type.js:37:6,37:17
 
 mapped-type.js:39:6
 Flags:
 type Unevaluated6<T extends {...}> = {writeonly [key in keyof T]?: T[key]}
-
-'Unevaluated6' defined at mapped-type.js:39:5
-
 mapped-type.js:39:6,39:17
 
 mapped-type.js:43:4
@@ -828,65 +656,41 @@ mapped-type.js:43:4,43:4
 mapped-type.js:50:6
 Flags:
 type MappedObjNonHomomorphic1 = {bar: number, foo: number}
-
-'MappedObjNonHomomorphic1' defined at mapped-type.js:50:5
-
 mapped-type.js:50:6,50:29
 
 mapped-type.js:52:6
 Flags:
 type MappedObjNonHomomorphic2 = {bar: string, foo: number}
-
-'MappedObjNonHomomorphic2' defined at mapped-type.js:52:5
-
 mapped-type.js:52:6,52:29
 
 mapped-type.js:54:6
 Flags:
 type MappedObjNonHomomorphic3 = {writeonly bar: string, writeonly foo: number}
-
-'MappedObjNonHomomorphic3' defined at mapped-type.js:54:5
-
 mapped-type.js:54:6,54:29
 
 mapped-type.js:56:6
 Flags:
 type MappedObjNonHomomorphic4 = {readonly bar: string, readonly foo: number}
-
-'MappedObjNonHomomorphic4' defined at mapped-type.js:56:5
-
 mapped-type.js:56:6,56:29
 
 mapped-type.js:58:6
 Flags:
 type MappedObjNonHomomorphic5 = {bar?: string, foo?: number}
-
-'MappedObjNonHomomorphic5' defined at mapped-type.js:58:5
-
 mapped-type.js:58:6,58:29
 
 mapped-type.js:60:6
 Flags:
 type MappedObjNonHomomorphic6 = {readonly bar?: string, readonly foo?: number}
-
-'MappedObjNonHomomorphic6' defined at mapped-type.js:60:5
-
 mapped-type.js:60:6,60:29
 
 mapped-type.js:62:6
 Flags:
 type MappedObjNonHomomorphic7 = {writeonly bar?: string, writeonly foo?: number}
-
-'MappedObjNonHomomorphic7' defined at mapped-type.js:62:5
-
 mapped-type.js:62:6,62:29
 
 mapped-type.js:66:6
 Flags:
 type UnevaluatedNonHomomorphic<T extends {...}> = {[key in T]: T}
-
-'UnevaluatedNonHomomorphic' defined at mapped-type.js:66:5
-
 mapped-type.js:66:6,66:30
 
 mapped-type.js:70:4
@@ -899,9 +703,6 @@ Flags:
 type SemiHomomorphic<O extends {...}, Keys extends keyof O> = {
   [key in O]: O[key]
 }
-
-'SemiHomomorphic' defined at mapped-type.js:75:5
-
 mapped-type.js:75:6,75:20
 
 mapped-type.js:78:4
@@ -953,9 +754,6 @@ type ObjSmall = {
   },
   ...
 }
-
-'ObjSmall' defined at evaluated-size-limit.js:6:5
-
 evaluated-size-limit.js:6:6,6:13
 
 evaluated-size-limit.js:12:6
@@ -1067,9 +865,6 @@ type ObjBig = {
   },
   ...
 }
-
-'ObjBig' defined at evaluated-size-limit.js:12:5
-
 evaluated-size-limit.js:12:6,12:11
 
 unestimable-operand.js:12:6
@@ -1175,9 +970,6 @@ type FromMapped =
   | "k097"
   | "k098"
   | ... 21 more union members ...
-
-'FromMapped' defined at unestimable-operand.js:12:5
-
 unestimable-operand.js:12:6,12:15
 
 unestimable-operand.js:17:6
@@ -1283,9 +1075,6 @@ type FromIntersected =
   | "k097"
   | "k098"
   | ... 21 more union members ...
-
-'FromIntersected' defined at unestimable-operand.js:17:5
-
 unestimable-operand.js:17:6,17:20
 
 unestimable-operand.js:143:6
@@ -1391,25 +1180,16 @@ type FromIface =
   | "k097"
   | "k098"
   | ... 21 more union members ...
-
-'FromIface' defined at unestimable-operand.js:143:5
-
 unestimable-operand.js:143:6,143:14
 
 unestimable-operand.js:149:6
 Flags:
 type FromPlain = "a" | "b"
-
-'FromPlain' defined at unestimable-operand.js:149:5
-
 unestimable-operand.js:149:6,149:14
 
 unions.js:12:6
 Flags:
 type ABCDType = "a" | "b" | "c" | "d"
-
-'ABCDType' defined at unions.js:12:5
-
 unions.js:12:6,12:13
 
 unions.js:15:30

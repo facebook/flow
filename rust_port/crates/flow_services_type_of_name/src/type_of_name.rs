@@ -387,7 +387,7 @@ fn format_ty_elt_response(
     source: export_index::Source,
     ty_elt: ALocElt,
 ) -> response::infer_type_of_name::T {
-    let refs = ty::symbols_of_elt(|aloc| reader.loc_of_aloc(aloc), &ty_elt);
+    let refs = ty::symbols_of_elt_without_decl_head(|aloc| reader.loc_of_aloc(aloc), &ty_elt);
     let opts = PrinterOptions::default();
     let (type_str, refs) = ty_printer::string_of_type_at_pos_result(
         ty_printer::TypeAtPosPrint {

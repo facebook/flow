@@ -1,9 +1,6 @@
 test.js:1:19
 Flags:
 namespace S
-
-'S' defined at test.js:1:18
-
 test.js:1:19,1:19
 
 test.js:7:4

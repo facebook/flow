@@ -1,9 +1,6 @@
 decls.js:1:6
 Flags:
 type G = (x: unknown) => x is number
-
-'G' defined at decls.js:1:5
-
 decls.js:1:6,1:6
 
 decls.js:3:10

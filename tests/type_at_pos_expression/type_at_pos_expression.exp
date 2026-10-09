@@ -89,29 +89,14 @@ literals.js:9:7,9:7
 literals.js:10:7 = const u: boolean | number | string
 literals.js:10:7,10:7
 literals.js:13:6 = type S = "A"
-
-'S' defined at literals.js:13:5
-
 literals.js:13:6,13:6
 literals.js:14:6 = type N = 1
-
-'N' defined at literals.js:14:5
-
 literals.js:14:6,14:6
 literals.js:15:6 = type F = 1.01
-
-'F' defined at literals.js:15:5
-
 literals.js:15:6,15:6
 literals.js:16:6 = type B = true
-
-'B' defined at literals.js:16:5
-
 literals.js:16:6,16:6
 literals.js:17:6 = type U = "A" | 1 | 1.01 | true
-
-'U' defined at literals.js:17:5
-
 literals.js:17:6,17:6
 literals.js:19:7 = const f1: (x: "A" | "B") => "A" | "B"
 literals.js:19:7,19:8

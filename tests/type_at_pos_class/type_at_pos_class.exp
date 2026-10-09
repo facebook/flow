@@ -4,9 +4,6 @@ annot_t.js:9:23 = class KeyedSeq<K, out V>
 
 annot_t.js:9:22,9:26
 class-0.js:3:7 = class A
-
-'A' defined at class-0.js:3:6
-
 class-0.js:3:7,3:7
 class-0.js:4:3 = (method) A.m(this: this): void
 class-0.js:4:3,4:3
@@ -77,7 +74,6 @@ class-4.js:9:11 (framed) = (property) Y.a: string
 class-4.js:9:11,9:11
 class-bound.js:4:6 = type C<T extends R<any>> = Class<T>
 
-'C' defined at class-bound.js:4:5
 'R' defined at class-bound.js:3:6
 
 class-bound.js:4:6,4:6
@@ -87,7 +83,6 @@ class-getters-setters.js:9:7 = (setter) A.x: ?string
 class-getters-setters.js:9:7,9:7
 class-poly-0.js:5:7 = class A<X extends Base>
 
-'A' defined at class-poly-0.js:5:6
 'Base' defined at class-poly-0.js:3:6
 
 class-poly-0.js:5:7,5:7
@@ -165,9 +160,6 @@ class-statics-poly.js:17:5 = var b: B<unknown>
 
 class-statics-poly.js:17:5,17:5
 declare_class.js:3:15 = class C
-
-'C' defined at declare_class.js:3:14
-
 declare_class.js:3:15,3:15
 declare_class.js:4:5 = var c: {C: typeof C}
 
@@ -175,9 +167,6 @@ declare_class.js:4:5 = var c: {C: typeof C}
 
 declare_class.js:4:5,4:5
 declare_class.js:6:15 = class P<X>
-
-'P' defined at declare_class.js:6:14
-
 declare_class.js:6:15,6:15
 declare_class.js:7:5 = var p: {P: typeof P}
 

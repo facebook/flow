@@ -12,9 +12,6 @@ Found exact match 'param' defined at basic.js:11:21,11:25 with type `boolean`
 
 === Classes ===
 Found exact match 'MyClass' defined at basic.js:18:7,18:13 with type `class MyClass` 
-where
-'MyClass' is defined at basic.js:18:7-13
-
 Found exact match 'instance' defined at basic.js:30:7,30:14 with type `MyClass` 
 where
 'MyClass' is defined at basic.js:18:7-13
@@ -23,9 +20,6 @@ Found exact match 'methodName' defined at basic.js:25:3,25:12 with type `(this: 
 
 === Type aliases ===
 Found exact match 'MyType' defined at basic.js:33:6,33:11 with type `type MyType = {bar: number, foo: string}` 
-where
-'MyType' is defined at basic.js:33:6-11
-
 Found exact match 'typeVar' defined at basic.js:34:7,34:13 with type `MyType` 
 where
 'MyType' is defined at basic.js:33:6-11 = {bar: number, foo: string}
@@ -39,17 +33,8 @@ Found exact match 'destructuredY' defined at basic.js:37:29,37:41 with type `str
 
 === React Components ===
 Found exact match 'BasicComponent' defined at react.js:7:11,7:24 with type `component BasicComponent(count: number, title: string)` 
-where
-'BasicComponent' is defined at react.js:7:1-54
-
 Found exact match 'OptionalProps' defined at react.js:12:11,12:23 with type `component OptionalProps(optional?: number, required: string)` 
-where
-'OptionalProps' is defined at react.js:12:1-60
-
 Found exact match 'GenericComponent' defined at react.js:17:11,17:26 with type `component GenericComponent<T>(data: T, formatter: (T) => string)` 
-where
-'GenericComponent' is defined at react.js:17:1-64
-
 Found exact match 'ConstrainedGeneric' defined at react.js:105:11,105:28 with type
 ```
 component ConstrainedGeneric<T extends {id: string, label: string}>(
@@ -57,28 +42,12 @@ component ConstrainedGeneric<T extends {id: string, label: string}>(
   selected?: T
 )
 ```
-where
-'ConstrainedGeneric' is defined at react.js:105:1-98
-
 Found exact match 'InexactRest' defined at react.js:22:11,22:21 with type `component InexactRest(bar: string, foo: number, ...{...})` 
-where
-'InexactRest' is defined at react.js:22:1-63
-
 Found exact match 'IndexedRest' defined at react.js:27:11,27:21 with type `component IndexedRest(foo: number, ...{[string]: number})` 
-where
-'IndexedRest' is defined at react.js:27:1-68
-
 Found exact match 'NamedProps' defined at react.js:32:11,32:20 with type `component NamedProps("aria-label": string, "data-id": string)` 
-where
-'NamedProps' is defined at react.js:32:1-84
-
 Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(age?: number, email: string, isActive: boolean, name: string)` 
-where
-'UserCard' is defined at react.js:37:1-43
-
 Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(...DataDisplayProps<T>)` 
 where
-'DataDisplay' is defined at react.js:49:1-55
 'DataDisplayProps' is defined at types.js:12:13-28
 
 Found exact match 'ProductItem' defined at react.js:59:11,59:21 with type
@@ -91,9 +60,6 @@ component ProductItem(
   title: string
 )
 ```
-where
-'ProductItem' is defined at react.js:59:1-49
-
 Found exact match 'UserProfile' defined at react.js:71:11,71:21 with type
 ```
 component UserProfile(
@@ -105,9 +71,6 @@ component UserProfile(
   showActions?: boolean
 )
 ```
-where
-'UserProfile' is defined at react.js:71:1,75:1
-
 Found exact match 'NotificationWithDocblock' defined at react.js:96:11,96:34 with type
 ```
 component NotificationWithDocblock(
@@ -116,9 +79,6 @@ component NotificationWithDocblock(
   severity?: "info" | "warning" | "error" | "success"
 )
 ```
-where
-'NotificationWithDocblock' is defined at react.js:96:1,100:1
-
 and documentation:
 
  A component that displays a notification message.
@@ -130,13 +90,7 @@ Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `compo
 
 === React Components (--expand-component-props) ===
 Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(age?: number, email: string, isActive: boolean, name: string)` 
-where
-'UserCard' is defined at react.js:37:1-43
-
 Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(data: T, formatter: (T) => string, showLabel?: boolean)` 
-where
-'DataDisplay' is defined at react.js:49:1-55
-
 Found exact match 'ProductItem' defined at react.js:59:11,59:21 with type
 ```
 component ProductItem(
@@ -147,9 +101,6 @@ component ProductItem(
   title: string
 )
 ```
-where
-'ProductItem' is defined at react.js:59:1-49
-
 Found exact match 'UserProfile' defined at react.js:71:11,71:21 with type
 ```
 component UserProfile(
@@ -161,23 +112,11 @@ component UserProfile(
   showActions?: boolean
 )
 ```
-where
-'UserProfile' is defined at react.js:71:1,75:1
-
 
 === React Components in empty file ===
 Found exact match 'BasicComponent' defined at react.js:7:1,7:54 with type `component BasicComponent(count: number, title: string)` 
-where
-'BasicComponent' is defined at react.js:7:1-54
-
 Found exact match 'OptionalProps' defined at react.js:12:1,12:60 with type `component OptionalProps(optional?: number, required: string)` 
-where
-'OptionalProps' is defined at react.js:12:1-60
-
 Found exact match 'GenericComponent' defined at react.js:17:1,17:64 with type `component GenericComponent<T>(data: T, formatter: (T) => string)` 
-where
-'GenericComponent' is defined at react.js:17:1-64
-
 Found exact match 'ConstrainedGeneric' defined at react.js:105:1,105:98 with type
 ```
 component ConstrainedGeneric<T extends {id: string, label: string}>(
@@ -185,21 +124,9 @@ component ConstrainedGeneric<T extends {id: string, label: string}>(
   selected?: T
 )
 ```
-where
-'ConstrainedGeneric' is defined at react.js:105:1-98
-
 Found exact match 'InexactRest' defined at react.js:22:1,22:63 with type `component InexactRest(bar: string, foo: number, ...{...})` 
-where
-'InexactRest' is defined at react.js:22:1-63
-
 Found exact match 'IndexedRest' defined at react.js:27:1,27:68 with type `component IndexedRest(foo: number, ...{[string]: number})` 
-where
-'IndexedRest' is defined at react.js:27:1-68
-
 Found exact match 'NamedProps' defined at react.js:32:1,32:84 with type `component NamedProps("aria-label": string, "data-id": string)` 
-where
-'NamedProps' is defined at react.js:32:1-84
-
 Found approximate match 'UserCardProps' (instead of 'UserCard') defined at types.js:4:13,4:25 with type
 ```
 type UserCardProps = {
@@ -209,9 +136,6 @@ type UserCardProps = {
   name: string
 }
 ```
-where
-'UserCardProps' is defined at types.js:4:13-25
-
 Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:13,12:28 with type
 ```
 type DataDisplayProps<T> = {
@@ -220,9 +144,6 @@ type DataDisplayProps<T> = {
   showLabel?: boolean
 }
 ```
-where
-'DataDisplayProps' is defined at types.js:12:13-28
-
 Found approximate match 'ProductItemProps' (instead of 'ProductItem') defined at types.js:19:13,19:28 with type
 ```
 type ProductItemProps = {
@@ -233,9 +154,6 @@ type ProductItemProps = {
   title: string
 }
 ```
-where
-'ProductItemProps' is defined at types.js:19:13-28
-
 Found exact match 'UserProfile' defined at react.js:71:1,75:1 with type
 ```
 component UserProfile(
@@ -247,9 +165,6 @@ component UserProfile(
   showActions?: boolean
 )
 ```
-where
-'UserProfile' is defined at react.js:71:1,75:1
-
 Found exact match 'NotificationWithDocblock' defined at react.js:96:1,100:1 with type
 ```
 component NotificationWithDocblock(
@@ -258,9 +173,6 @@ component NotificationWithDocblock(
   severity?: "info" | "warning" | "error" | "success"
 )
 ```
-where
-'NotificationWithDocblock' is defined at react.js:96:1,100:1
-
 and documentation:
 
  A component that displays a notification message.
@@ -274,9 +186,6 @@ type UserCardProps = {
   name: string
 }
 ```
-where
-'UserCardProps' is defined at types.js:4:13-25
-
 Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:13,12:28 with type
 ```
 type DataDisplayProps<T> = {
@@ -285,9 +194,6 @@ type DataDisplayProps<T> = {
   showLabel?: boolean
 }
 ```
-where
-'DataDisplayProps' is defined at types.js:12:13-28
-
 Found approximate match 'ProductItemProps' (instead of 'ProductItem') defined at types.js:19:13,19:28 with type
 ```
 type ProductItemProps = {
@@ -298,9 +204,6 @@ type ProductItemProps = {
   title: string
 }
 ```
-where
-'ProductItemProps' is defined at types.js:19:13-28
-
 Found exact match 'UserProfile' defined at react.js:71:1,75:1 with type
 ```
 component UserProfile(
@@ -312,31 +215,13 @@ component UserProfile(
   showActions?: boolean
 )
 ```
-where
-'UserProfile' is defined at react.js:71:1,75:1
-
 Found exact match 'UserCard' defined at react.js:37:1,37:43 with type `component UserCard(age?: number, email: string, isActive: boolean, name: string)` 
-where
-'UserCard' is defined at react.js:37:1-43
-
 Found exact match 'Array' defined as a library definition (no need to import) with type `class Array<T>` 
-where
-'Array' is defined at [LIB] lib.es5.js:587:15-19
-
 
 === Enums ===
 Found exact match 'MyStringEnum' defined at basic.js:57:6,57:17 with type `enum MyStringEnum {One, Three, Two}` 
-where
-'MyStringEnum' is defined at basic.js:57:6-17
-
 Found exact match 'MyNumberEnum' defined at basic.js:63:6,63:17 with type `enum MyNumberEnum {A, B, C}` 
-where
-'MyNumberEnum' is defined at basic.js:63:6-17
-
 Found exact match 'MyBooleanEnum' defined at basic.js:69:6,69:18 with type `enum MyBooleanEnum {No, Yes}` 
-where
-'MyBooleanEnum' is defined at basic.js:69:6-18
-
 Found exact match 'enumValue' defined at basic.js:74:7,74:15 with type `MyStringEnum` 
 where
 'MyStringEnum' is defined at basic.js:57:6-17
@@ -397,9 +282,6 @@ enum LargeEnum {
   /* ... 50 more members */
 }
 ```
-where
-'LargeEnum' is defined at basic.js:77:6-14
-
 
 === Prop Documentation ===
 Found exact match 'DocumentedComponent' defined at react.js:126:11,126:29 with type
@@ -410,9 +292,6 @@ component DocumentedComponent(
   userId: string
 )
 ```
-where
-'DocumentedComponent' is defined at react.js:126:1-56
-
 Prop documentation:
   displayName -  The user's display name
   isOnline -  Whether the user is currently online
@@ -432,14 +311,10 @@ component RefExpansionTest(
 where
 'Formatter' is defined at types.js:58:6-14 = (input: string) => string
 'LargeObjType' is defined at types.js:48:6-17 (6 fields)
-'RefExpansionTest' is defined at types.js:61:1,66:1
 'SevenColors' is defined at types.js:45:6-16 = "red" | "orange" | "yellow" | "green" | "blue" | ...
 'TextWrap' is defined at types.js:42:6-13 = "wrap" | "nowrap"
 
 Found exact match 'TextWrap' defined at types.js:42:6,42:13 with type `type TextWrap = "wrap" | "nowrap"` 
-where
-'TextWrap' is defined at types.js:42:6-13
-
 Found exact match 'SevenColors' defined at types.js:45:6,45:16 with type
 ```
 type SevenColors =
@@ -451,9 +326,6 @@ type SevenColors =
   | "indigo"
   | "violet"
 ```
-where
-'SevenColors' is defined at types.js:45:6-16
-
 Found exact match 'LargeObjType' defined at types.js:48:6,48:17 with type
 ```
 type LargeObjType = {
@@ -465,13 +337,7 @@ type LargeObjType = {
   field6: boolean
 }
 ```
-where
-'LargeObjType' is defined at types.js:48:6-17
-
 Found exact match 'Formatter' defined at types.js:58:6,58:14 with type `type Formatter = (input: string) => string` 
-where
-'Formatter' is defined at types.js:58:6-14
-
 Found exact match 'DataDisplayProps' defined at types.js:12:13,12:28 with type
 ```
 type DataDisplayProps<T> = {
@@ -480,72 +346,51 @@ type DataDisplayProps<T> = {
   showLabel?: boolean
 }
 ```
-where
-'DataDisplayProps' is defined at types.js:12:13-28
-
 
 === Utility Types ===
 Found exact match 'ReadOnlyUser' defined at complex_types.js:13:6,13:17 with type `type ReadOnlyUser = Readonly<User>` 
 where
-'ReadOnlyUser' is defined at complex_types.js:13:6-17
 'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
 
 Found exact match 'PartialUser' defined at complex_types.js:16:6,16:16 with type `type PartialUser = Partial<User>` 
 where
-'PartialUser' is defined at complex_types.js:16:6-16
 'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
 
 Found exact match 'RequiredUser' defined at complex_types.js:19:6,19:17 with type `type RequiredUser = Required<{age?: number, name?: string}>` 
-where
-'RequiredUser' is defined at complex_types.js:19:6-17
-
 Found exact match 'UserSummary' defined at complex_types.js:22:6,22:16 with type `type UserSummary = Pick<User, "name" | "email">` 
 where
 'Pick' is defined at [LIB] lib.es5.js:3476:6-9
 'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
-'UserSummary' is defined at complex_types.js:22:6-16
 
 Found exact match 'UserWithoutEmail' defined at complex_types.js:25:6,25:21 with type `type UserWithoutEmail = Omit<User, "email">` 
 where
 'Omit' is defined at [LIB] lib.es5.js:3481:6-9
 'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
-'UserWithoutEmail' is defined at complex_types.js:25:6-21
 
 Found exact match 'UserKeys' defined at complex_types.js:28:6,28:13 with type `type UserKeys = "age" | "email" | "isAdmin" | "name"` 
-where
-'UserKeys' is defined at complex_types.js:28:6-13
-
 Found exact match 'UserValues' defined at complex_types.js:29:6,29:15 with type `type UserValues = Values<User>` 
 where
 'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
-'UserValues' is defined at complex_types.js:29:6-15
 
 Found exact match 'StatusMap' defined at complex_types.js:32:6,32:14 with type `type StatusMap = Record<"active" | "inactive" | "pending", number>` 
 where
 'Record' is defined at [LIB] lib.es5.js:3487:6-11
-'StatusMap' is defined at complex_types.js:32:6-14
 
 
 === Nullable, NonNullable, Exclude, Extract ===
 Found exact match 'MaybeString' defined at complex_types.js:35:6,35:16 with type `type MaybeString = ?string` 
-where
-'MaybeString' is defined at complex_types.js:35:6-16
-
 Found exact match 'DefinitelyString' defined at complex_types.js:36:6,36:21 with type `type DefinitelyString = NonNullable<MaybeString>` 
 where
-'DefinitelyString' is defined at complex_types.js:36:6-21
 'MaybeString' is defined at complex_types.js:35:6-16 = ?string
 
 Found exact match 'ActiveStatus' defined at complex_types.js:40:6,40:17 with type `type ActiveStatus = Exclude<AllStatus, "deleted">` 
 where
-'ActiveStatus' is defined at complex_types.js:40:6-17
 'AllStatus' is defined at complex_types.js:39:6-14 = "active" | "inactive" | "pending" | "deleted"
 'Exclude' is defined at [LIB] lib.es5.js:3455:6-12
 
 Found exact match 'DangerStatus' defined at complex_types.js:41:6,41:17 with type `type DangerStatus = Extract<AllStatus, "inactive" | "deleted">` 
 where
 'AllStatus' is defined at complex_types.js:39:6-14 = "active" | "inactive" | "pending" | "deleted"
-'DangerStatus' is defined at complex_types.js:41:6-17
 'Extract' is defined at [LIB] lib.es5.js:3458:6-12
 
 
@@ -554,175 +399,99 @@ Found exact match 'SampleReturn' defined at complex_types.js:45:6,45:17 with typ
 where
 'ReturnType' is defined at [LIB] lib.es5.js:3437:6-15
 'SampleFn' is defined at complex_types.js:44:6-13 = (x: string, y: number) => boolean
-'SampleReturn' is defined at complex_types.js:45:6-17
 
 Found exact match 'SampleParams' defined at complex_types.js:46:6,46:17 with type `type SampleParams = Parameters<SampleFn>` 
 where
 'Parameters' is defined at [LIB] lib.es5.js:3442:6-15
 'SampleFn' is defined at complex_types.js:44:6-13 = (x: string, y: number) => boolean
-'SampleParams' is defined at complex_types.js:46:6-17
 
 Found exact match 'AnimalClass' defined at complex_types.js:55:6,55:16 with type `type AnimalClass = Class<Animal>` 
 where
 'Animal' is defined at complex_types.js:49:7-12
-'AnimalClass' is defined at complex_types.js:55:6-16
 
 
 === Exact and KeyMirror ===
 Found exact match 'ExactFromInexact' defined at complex_types.js:59:6,59:21 with type `type ExactFromInexact = $Exact<InexactBase>` 
 where
-'ExactFromInexact' is defined at complex_types.js:59:6-21
 'InexactBase' is defined at complex_types.js:58:6-16 = {age: number, name: string, ...}
 
 Found exact match 'KeyMirrorExample' defined at complex_types.js:62:6,62:21 with type `type KeyMirrorExample = $KeyMirror<{bar: string, foo: number}>` 
-where
-'KeyMirrorExample' is defined at complex_types.js:62:6-21
-
 
 === Intersection Types ===
 Found exact match 'Named' defined at complex_types.js:68:6,68:10 with type `type Named = HasName & HasAge` 
 where
 'HasAge' is defined at complex_types.js:67:6-11 = {age: number}
 'HasName' is defined at complex_types.js:66:6-12 = {name: string}
-'Named' is defined at complex_types.js:68:6-10
 
 
 === Tuple Types ===
 Found exact match 'Pair' defined at complex_types.js:72:6,72:9 with type `type Pair = [string, number]` 
-where
-'Pair' is defined at complex_types.js:72:6-9
-
 Found exact match 'LabeledTuple' defined at complex_types.js:73:6,73:17 with type `type LabeledTuple = [name: string, age: number, active: boolean]` 
-where
-'LabeledTuple' is defined at complex_types.js:73:6-17
-
 Found exact match 'ReadOnlyTuple' defined at complex_types.js:74:6,74:18 with type `type ReadOnlyTuple = Readonly<[string, number, boolean]>` 
-where
-'ReadOnlyTuple' is defined at complex_types.js:74:6-18
-
 Found exact match 'OptionalTuple' defined at complex_types.js:75:6,75:18 with type `type OptionalTuple = [required: string, optional?: number]` 
-where
-'OptionalTuple' is defined at complex_types.js:75:6-18
-
 
 === Promise Types ===
 Found exact match 'StringPromise' defined at complex_types.js:79:6,79:18 with type `type StringPromise = Promise<string>` 
 where
 'Promise' is defined at [LIB] lib.es5.js:3531:11-17
-'StringPromise' is defined at complex_types.js:79:6-18
 
 Found exact match 'NestedPromise' defined at complex_types.js:80:6,80:18 with type `type NestedPromise = Promise<Promise<number>>` 
 where
-'NestedPromise' is defined at complex_types.js:80:6-18
 'Promise' is defined at [LIB] lib.es5.js:3531:11-17
 
 
 === Readonly Collections ===
 Found exact match 'ReadOnlyArray_t' defined at complex_types.js:84:6,84:20 with type `type ReadOnlyArray_t = ReadonlyArray<number>` 
-where
-'ReadOnlyArray_t' is defined at complex_types.js:84:6-20
-
 Found exact match 'ReadOnlyMap_t' defined at complex_types.js:85:6,85:18 with type `type ReadOnlyMap_t = ReadonlyMap<string, number>` 
 where
-'ReadOnlyMap_t' is defined at complex_types.js:85:6-18
 'ReadonlyMap' is defined at [LIB] lib.es2015.symbol.wellknown.js:80:11-21
 
 Found exact match 'ReadOnlySet_t' defined at complex_types.js:86:6,86:18 with type `type ReadOnlySet_t = ReadonlySet<string>` 
 where
-'ReadOnlySet_t' is defined at complex_types.js:86:6-18
 'ReadonlySet' is defined at [LIB] lib.esnext.collection.js:29:11-21
 
 
 === Interfaces ===
 Found exact match 'Serializable' defined at complex_types.js:90:11,90:22 with type `interface Serializable` 
-where
-'Serializable' is defined at complex_types.js:90:11-22
-
 Found exact match 'Comparable' defined at complex_types.js:95:11,95:20 with type `interface Comparable<T>` 
-where
-'Comparable' is defined at complex_types.js:95:11-20
-
 Found exact match 'Printable' defined at complex_types.js:99:11,99:19 with type `interface Printable` 
-where
-'Printable' is defined at complex_types.js:99:11-19
-
 
 === Opaque Types ===
 Found exact match 'UserID' defined at complex_types.js:105:13,105:18 with type `type UserID = string` 
-where
-'UserID' is defined at complex_types.js:105:13-18
-
 Found exact match 'Timestamp' defined at complex_types.js:106:13,106:21 with type `type Timestamp = number` 
-where
-'Timestamp' is defined at complex_types.js:106:13-21
-
 
 === Complex Generics ===
 Found exact match 'Result' defined at complex_types.js:110:6,110:11 with type `type Result<T, E> = {ok: true, value: T} | {error: E, ok: false}` 
-where
-'Result' is defined at complex_types.js:110:6-11
-
 Found exact match 'TreeNode' defined at complex_types.js:112:6,112:13 with type `type TreeNode<T> = {children: Array<TreeNode<T>>, value: T}` 
-where
-'TreeNode' is defined at complex_types.js:112:6-13
-
 Found exact match 'Container' defined at complex_types.js:131:7,131:15 with type `class Container<T>` 
-where
-'Container' is defined at complex_types.js:131:7-15
-
 Found exact match 'Animal' defined at complex_types.js:49:7,49:12 with type `class Animal` 
-where
-'Animal' is defined at complex_types.js:49:7-12
-
 
 === Mapped Types ===
 Found exact match 'MakeReadonly' defined at complex_types.js:119:6,119:17 with type `type MakeReadonly<T extends {...}> = {readonly [K in keyof T]: T[K]}` 
-where
-'MakeReadonly' is defined at complex_types.js:119:6-17
-
 Found exact match 'MakeOptional' defined at complex_types.js:120:6,120:17 with type `type MakeOptional<T extends {...}> = {[K in keyof T]?: T[K]}` 
-where
-'MakeOptional' is defined at complex_types.js:120:6-17
-
 Found exact match 'Methodify' defined at complex_types.js:121:6,121:14 with type `type Methodify<T extends {...}> = {[K in keyof T]: () => T[K]}` 
-where
-'Methodify' is defined at complex_types.js:121:6-14
-
 Found exact match 'Validators' defined at complex_types.js:210:6,210:15 with type `type Validators<T extends {...}> = {[K in keyof T]: (value: T[K]) => boolean}` 
-where
-'Validators' is defined at complex_types.js:210:6-15
-
 
 === Conditional Types ===
 Found exact match 'UnwrapPromise' defined at complex_types.js:125:6,125:18 with type `type UnwrapPromise<T> = T extends Promise<infer V> ? V : T` 
 where
 'Promise' is defined at [LIB] lib.es5.js:3531:11-17
-'UnwrapPromise' is defined at complex_types.js:125:6-18
 'V' is defined at complex_types.js:125:49
 
 Found exact match 'UnwrapArray' defined at complex_types.js:126:6,126:16 with type `type UnwrapArray<T> = T extends ReadonlyArray<infer V> ? V : T` 
 where
-'UnwrapArray' is defined at complex_types.js:126:6-16
 'V' is defined at complex_types.js:126:53
 
 Found exact match 'IsString' defined at complex_types.js:127:6,127:13 with type `type IsString<T> = T extends string ? true : false` 
-where
-'IsString' is defined at complex_types.js:127:6-13
-
 
 === Complex Function Types ===
 Found exact match 'Middleware' defined at complex_types.js:143:6,143:15 with type `type Middleware<S, A> = (state: S, action: A, next: (A) => S) => S` 
-where
-'Middleware' is defined at complex_types.js:143:6-15
-
 Found exact match 'Callback' defined at complex_types.js:144:6,144:13 with type `type Callback<T> = (error: Error | null, result: T) => void` 
 where
-'Callback' is defined at complex_types.js:144:6-13
 'Error' is defined at [LIB] lib.es5.js:1116:11-15
 
 Found exact match 'AsyncFn' defined at complex_types.js:145:6,145:12 with type `type AsyncFn<T> = () => Promise<T>` 
 where
-'AsyncFn' is defined at complex_types.js:145:6-12
 'Promise' is defined at [LIB] lib.es5.js:3531:11-17
 
 
@@ -739,17 +508,8 @@ type DeepConfig = {
   features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>
 }
 ```
-where
-'DeepConfig' is defined at complex_types.js:149:6-15
-
 Found exact match 'ExactObj' defined at complex_types.js:170:6,170:13 with type `type ExactObj = {age: number, name: string}` 
-where
-'ExactObj' is defined at complex_types.js:170:6-13
-
 Found exact match 'InexactObj' defined at complex_types.js:171:6,171:15 with type `type InexactObj = {age: number, name: string, ...}` 
-where
-'InexactObj' is defined at complex_types.js:171:6-15
-
 
 === Component with Complex Refs ===
 Found exact match 'ComplexComponent' defined at complex_types.js:175:11,175:26 with type
@@ -761,7 +521,6 @@ component ComplexComponent(
 )
 ```
 where
-'ComplexComponent' is defined at complex_types.js:175:1,179:1
 'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
 'Error' is defined at [LIB] lib.es5.js:1116:11-15
 'ReadOnlyUser' is defined at complex_types.js:13:6-17 = Readonly<User>
@@ -770,64 +529,47 @@ where
 
 === Misc Complex Types ===
 Found exact match 'Direction' defined at complex_types.js:185:6,185:14 with type `type Direction = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"` 
-where
-'Direction' is defined at complex_types.js:185:6-14
-
 Found exact match 'DatabaseHost' defined at complex_types.js:189:6,189:17 with type `type DatabaseHost = DeepConfig["database"]["host"]` 
 where
-'DatabaseHost' is defined at complex_types.js:189:6-17
 'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
 
 Found exact match 'CacheTTL' defined at complex_types.js:190:6,190:13 with type `type CacheTTL = DeepConfig["cache"]["ttl"]` 
 where
-'CacheTTL' is defined at complex_types.js:190:6-13
 'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
 
 Found exact match 'ConfigType' defined at complex_types.js:195:6,195:15 with type `type ConfigType = DeepConfig` 
 where
-'ConfigType' is defined at complex_types.js:195:6-15
 'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
 
 
 === StringPrefix and StringSuffix ===
 Found exact match 'DataAttr' defined at complex_types.js:199:6,199:13 with type `type DataAttr = StringPrefix<"data-">` 
 where
-'DataAttr' is defined at complex_types.js:199:6-13
 'StringPrefix' is defined at [LIB] misc.js:112:6-17
 
 Found exact match 'ExclaimStr' defined at complex_types.js:200:6,200:15 with type `type ExclaimStr = StringSuffix<"!">` 
 where
-'ExclaimStr' is defined at complex_types.js:200:6-15
 'StringSuffix' is defined at [LIB] misc.js:121:6-17
 
 Found exact match 'CSSVar' defined at complex_types.js:201:6,201:11 with type `type CSSVar = StringPrefix<"var(--"> & StringSuffix<")">` 
 where
-'CSSVar' is defined at complex_types.js:201:6-11
 'StringPrefix' is defined at [LIB] misc.js:112:6-17
 'StringSuffix' is defined at [LIB] misc.js:121:6-17
 
 
 === Mapped Types over Tuples ===
 Found exact match 'NumberTuple' defined at complex_types.js:205:6,205:16 with type `type NumberTuple = [number, number, number]` 
-where
-'NumberTuple' is defined at complex_types.js:205:6-16
-
 Found exact match 'StringifiedTuple' defined at complex_types.js:206:6,206:21 with type `type StringifiedTuple = {[K in keyof NumberTuple]: string}` 
 where
 'NumberTuple' is defined at complex_types.js:205:6-16 = [number, number, number]
-'StringifiedTuple' is defined at complex_types.js:206:6-21
 
 
 === Complex Types from empty file (via index) ===
 Found exact match 'ReadOnlyUser' defined at complex_types.js:13:6,13:17 with type `type ReadOnlyUser = Readonly<User>` 
 where
-'ReadOnlyUser' is defined at complex_types.js:13:6-17
 'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
 
 Found exact match 'Result' defined at complex_types.js:110:6,110:11 with type `type Result<T, E> = {ok: true, value: T} | {error: E, ok: false}` 
-where
-'Result' is defined at complex_types.js:110:6-11
-
 Found exact match 'ComplexComponent' defined at complex_types.js:175:1,179:1 with type
 ```
 component ComplexComponent(
@@ -837,16 +579,12 @@ component ComplexComponent(
 )
 ```
 where
-'ComplexComponent' is defined at complex_types.js:175:1,179:1
 'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
 'Error' is defined at [LIB] lib.es5.js:1116:11-15
 'ReadOnlyUser' is defined at complex_types.js:13:6-17 = Readonly<User>
 'Result' is defined at complex_types.js:110:6-11
 
 Found exact match 'Container' defined at complex_types.js:131:7,131:15 with type `class Container<T>` 
-where
-'Container' is defined at complex_types.js:131:7-15
-
 
 === Batch Queries ===
 Found exact match 'myString' defined at basic.js:4:7,4:14 with type `string` 
@@ -867,9 +605,6 @@ type UserCardProps = {
   name: string
 }
 ```
-where
-'UserCardProps' is defined at types.js:4:13-25
-
 
 Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:13,12:28 with type
 ```
@@ -879,9 +614,6 @@ type DataDisplayProps<T> = {
   showLabel?: boolean
 }
 ```
-where
-'DataDisplayProps' is defined at types.js:12:13-28
-
 
 === Member Lookup ===
 Found exact match 'BasicComponent.title' defined at react.js:7:26,7:30 with type `string` 
