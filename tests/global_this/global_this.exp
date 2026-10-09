@@ -70,7 +70,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
 Cannot cast `Array` to `Node` because: [incompatible-type]
- - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+ - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or class `Array` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Array` [1] but exists in `Iterable<?React.Node, void, void>` [4].
 

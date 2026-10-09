@@ -699,7 +699,7 @@ Cannot resolve name `React`. [cannot-resolve-name]
 Error --------------------------------------------------------------------------------- type_only_react_namespace.js:5:3
 
 Cannot cast `Array` to `Node` because: [incompatible-type]
- - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+ - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or class `Array` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Array` [1] but exists in `Iterable<?React.Node, void, void>` [4].
 
@@ -728,7 +728,7 @@ References:
 Error -------------------------------------------------------------------------------- type_only_react_namespace.js:12:3
 
 Cannot cast `Array` to `Node` because: [incompatible-type]
- - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+ - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or class `Array` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Array` [1] but exists in `Iterable<?React.Node, void, void>` [4].
 

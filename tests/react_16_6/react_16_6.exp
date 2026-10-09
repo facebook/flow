@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `Suspense` element because in property `fallback`: [incompatible-type]
  - Either `() => React.MixedElement` [1] is incompatible with
-   `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+   `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or `() => React.MixedElement` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in `{...}` [1] but exists in
    `{"@@iterator"(this: Iterable<?React.Node, void, void>): Iterator<?React.Node, void, void>, ...}` [4].

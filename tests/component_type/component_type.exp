@@ -541,7 +541,7 @@ Error --------------------------------------------------------------------------
 
 All branches are incompatible: [incompatible-type]
  - Either class `NotAComponent` [1] is incompatible with
-   `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+   `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in
    `Iterable<?React.Node, void, void>` [4].
@@ -572,7 +572,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `NotAFunctionComponent` to component because: [incompatible-type]
  - Either class `NotAComponent` [1] is incompatible with
-   `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+   `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in
    `Iterable<?React.Node, void, void>` [4].

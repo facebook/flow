@@ -322,7 +322,7 @@ References:
 Error ---------------------------------------------------------------------------------------- builtin_intrinsic.js:25:4
 
 Cannot create `builtin` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in
    `{"@@iterator"(this: Iterable<?React.Node, void, void>): Iterator<?React.Node, void, void>, ...}` [4].
@@ -403,7 +403,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ component.js:41:4
 
 Cannot create `MyComponent` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in
    `{"@@iterator"(this: Iterable<?React.Node, void, void>): Iterator<?React.Node, void, void>, ...}` [4].
