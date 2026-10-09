@@ -2748,23 +2748,6 @@ fn merge_annot<'cx>(
             let reason = reason::mk_annot_reason(RFunctionPrototype, loc.dupe());
             Type::new(type_::TypeInner::FunProtoBindT(reason))
         }
-        Annot::ReactElementConfig(box (loc, t)) => {
-            let reason = reason::mk_reason(RType("React$ElementConfig".into()), loc.dupe());
-            let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
-                type_: reason.dupe(),
-            }));
-            let t = merge_impl(env, cx, file, t, false, false);
-            let id = eval_id_of_aloc(cx, loc.dupe());
-            Type::new(type_::TypeInner::EvalT {
-                type_: t,
-                defer_use_t: type_::TypeDestructorT::new(type_::TypeDestructorTInner(
-                    use_op,
-                    reason,
-                    Rc::new(type_::Destructor::ReactElementConfigType),
-                )),
-                id,
-            })
-        }
         Annot::Renders(inner) => {
             let AnnotRenders { loc, arg, variant } = inner.as_ref();
             let mut renders_env = env.dupe();

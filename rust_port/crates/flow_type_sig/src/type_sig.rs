@@ -2307,7 +2307,6 @@ pub enum Annot<Loc, T> {
     ObjKeyMirror(Box<AnnotObjKeyMirror<Loc, T>>),
     ClassT(Box<(Loc, T)>),
     FunctionBind(Box<Loc>),
-    ReactElementConfig(Box<(Loc, T)>),
     FunAnnot(Box<(Loc, FunSig<Loc, T>)>),
     ComponentAnnot(Box<(Loc, ComponentSig<Loc, T>)>),
     MappedTypeAnnot(Box<AnnotMappedTypeAnnot<Loc, T>>),
@@ -2448,8 +2447,7 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
             | Annot::Keys(inner)
             | Annot::Values(inner)
             | Annot::Exact(inner)
-            | Annot::ClassT(inner)
-            | Annot::ReactElementConfig(inner) => {
+            | Annot::ClassT(inner) => {
                 inner.0.hash(state);
                 inner.1.hash(state);
             }
@@ -2653,8 +2651,7 @@ impl<Loc, T> Annot<Loc, T> {
             | Annot::Keys(inner)
             | Annot::Values(inner)
             | Annot::Exact(inner)
-            | Annot::ClassT(inner)
-            | Annot::ReactElementConfig(inner) => {
+            | Annot::ClassT(inner) => {
                 f_loc(cx, &inner.0);
                 f_t(cx, &inner.1);
             }
@@ -3020,9 +3017,6 @@ impl<Loc, T> Annot<Loc, T> {
                 Annot::ClassT(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
             Annot::FunctionBind(box loc) => Annot::FunctionBind(Box::new(f_loc(cx, loc))),
-            Annot::ReactElementConfig(inner) => {
-                Annot::ReactElementConfig(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
-            }
             Annot::FunAnnot(inner) => Annot::FunAnnot(Box::new((
                 f_loc(cx, &inner.0),
                 inner.1.map(cx, &f_loc, &f_t),
