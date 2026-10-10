@@ -1,0 +1,185 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:12:3
+
+Cannot cast `result` to `Promise` because in type argument `R` [1]: `number` [2] is incompatible with `void` [3].
+[incompatible-type]
+
+   test.js:12:3
+     12|   result as Promise<void>; // ERROR
+           ^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:3531:23
+   3531| interface Promise<out R = unknown> {
+                               ^ [1]
+   test.js:7:38
+      7| function catchRepro(promise: Promise<number>) {
+                                              ^^^^^^ [2]
+   test.js:12:21
+     12|   result as Promise<void>; // ERROR
+                             ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:3
+
+Cannot cast `sometimes` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:47:3
+   47|   sometimes as () => empty; // ERROR
+         ^^^^^^^^^
+
+References:
+   test.js:45:26
+   45|   const sometimes = () => { if (condition) { assert(false); } };
+                                ^ [1]
+   test.js:47:22
+   47|   sometimes as () => empty; // ERROR
+                            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:51:3
+
+Cannot cast `trueArgument` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:51:3
+   51|   trueArgument as () => empty; // ERROR
+         ^^^^^^^^^^^^
+
+References:
+   test.js:49:29
+   49|   const trueArgument = () => { assert(true); };
+                                   ^ [1]
+   test.js:51:25
+   51|   trueArgument as () => empty; // ERROR
+                               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:55:3
+
+Cannot cast `unknownArgument` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:55:3
+   55|   unknownArgument as () => empty; // ERROR
+         ^^^^^^^^^^^^^^^
+
+References:
+   test.js:53:32
+   53|   const unknownArgument = () => { assert(condition); };
+                                      ^ [1]
+   test.js:55:28
+   55|   unknownArgument as () => empty; // ERROR
+                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:59:3
+
+Cannot cast `missingArgument` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:59:3
+   59|   missingArgument as () => empty; // ERROR
+         ^^^^^^^^^^^^^^^
+
+References:
+   test.js:57:32
+   57|   const missingArgument = () => { assert(); };
+                                      ^ [1]
+   test.js:59:28
+   59|   missingArgument as () => empty; // ERROR
+                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:63:3
+
+Cannot cast `otherParameter` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:63:3
+   63|   otherParameter as () => empty; // ERROR
+         ^^^^^^^^^^^^^^
+
+References:
+   test.js:61:31
+   61|   const otherParameter = () => { assertSecond(false, condition); };
+                                     ^ [1]
+   test.js:63:27
+   63|   otherParameter as () => empty; // ERROR
+                                 ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:67:3
+
+Cannot cast `precedingSpread` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:67:3
+   67|   precedingSpread as () => empty; // ERROR
+         ^^^^^^^^^^^^^^^
+
+References:
+   test.js:65:32
+   65|   const precedingSpread = () => { assertSecond(...spread, false); };
+                                      ^ [1]
+   test.js:67:28
+   67|   precedingSpread as () => empty; // ERROR
+                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:71:3
+
+Cannot cast `typeGuard` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:71:3
+   71|   typeGuard as () => empty; // ERROR
+         ^^^^^^^^^
+
+References:
+   test.js:69:26
+   69|   const typeGuard = () => { assertType(false); };
+                                ^ [1]
+   test.js:71:22
+   71|   typeGuard as () => empty; // ERROR
+                            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:75:3
+
+Cannot cast `optional` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:75:3
+   75|   optional as () => empty; // ERROR
+         ^^^^^^^^
+
+References:
+   test.js:73:25
+   73|   const optional = () => { optionalAssert?.(false); };
+                               ^ [1]
+   test.js:75:21
+   75|   optional as () => empty; // ERROR
+                           ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:81:3
+
+Cannot cast `nested` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   test.js:81:3
+   81|   nested as () => empty; // ERROR
+         ^^^^^^
+
+References:
+   test.js:77:23
+   77|   const nested = () => {
+                             ^ [1]
+   test.js:81:19
+   81|   nested as () => empty; // ERROR
+                         ^^^^^ [2]
+
+
+
+Found 10 errors

@@ -84,9 +84,9 @@ pub fn bare_asserted_argument<M: Dupe, T: Dupe>(
 /// never returns: no spread precedes the asserted index, and the asserted
 /// argument is present and is the literal `false`. A missing argument may
 /// hit a callee default, so those calls can return normally.
-pub fn bare_assertion_call_always_throws(
+pub fn bare_assertion_call_always_throws<M: Dupe, T: Dupe>(
     assertion: AssertionInfo,
-    arguments: &[ExpressionOrSpread<ALoc, ALoc>],
+    arguments: &[ExpressionOrSpread<M, T>],
 ) -> bool {
     // An omitted argument is not necessarily falsy: the callee may supply a
     // default parameter value, in which case the call can return normally.

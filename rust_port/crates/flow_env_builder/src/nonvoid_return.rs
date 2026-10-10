@@ -11,6 +11,7 @@
 //! Uses the visitor pattern to traverse the AST and detect if a function body
 //! might return a non-void value (explicit return with argument, throw, or body expression).
 
+use std::collections::BTreeMap;
 use std::ops::Deref;
 
 use dupe::Dupe;
@@ -21,16 +22,24 @@ use flow_parser::ast_utils::is_call_to_invariant;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 
-struct ReturnFinder {
+use crate::assertion_call_target::AssertionInfo;
+use crate::assertion_call_target::bare_assertion_call_always_throws;
+
+struct ReturnFinder<'a, L> {
     acc: bool,
     invariant_special_casing_disabled: bool,
+    assertion_calls: &'a BTreeMap<L, AssertionInfo>,
 }
 
-impl ReturnFinder {
-    fn new(invariant_special_casing_disabled: bool) -> Self {
+impl<'a, L> ReturnFinder<'a, L> {
+    fn new(
+        invariant_special_casing_disabled: bool,
+        assertion_calls: &'a BTreeMap<L, AssertionInfo>,
+    ) -> Self {
         Self {
             acc: false,
             invariant_special_casing_disabled,
+            assertion_calls,
         }
     }
 
@@ -39,7 +48,7 @@ impl ReturnFinder {
     }
 }
 
-impl<'ast, Loc: Dupe> AstVisitor<'ast, Loc> for ReturnFinder {
+impl<'ast, Loc: Dupe + Ord> AstVisitor<'ast, Loc> for ReturnFinder<'_, Loc> {
     fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
         loc
     }
@@ -64,6 +73,15 @@ impl<'ast, Loc: Dupe> AstVisitor<'ast, Loc> for ReturnFinder {
         _loc: &'ast Loc,
         expr: &'ast ast::expression::Call<Loc, Loc>,
     ) -> Result<(), !> {
+        if self
+            .assertion_calls
+            .get(expr.callee.loc())
+            .is_some_and(|assertion| {
+                bare_assertion_call_always_throws(*assertion, &expr.arguments.arguments)
+            })
+        {
+            self.set_acc(true);
+        }
         if !self.invariant_special_casing_disabled && is_call_to_invariant(&expr.callee) {
             // invariant() and invariant(false, ...) are treated like throw
             match &expr.arguments.arguments[..] {
@@ -144,12 +162,13 @@ impl<'ast, Loc: Dupe> AstVisitor<'ast, Loc> for ReturnFinder {
     }
 }
 
-pub fn might_have_nonvoid_return<'ast, L: Clone + Dupe>(
+pub fn might_have_nonvoid_return<'ast, L: Clone + Dupe + Ord>(
     loc: &'ast L,
     function: &'ast function::Function<L, L>,
     invariant_special_casing_disabled: bool,
+    assertion_calls: &BTreeMap<L, AssertionInfo>,
 ) -> bool {
-    let mut finder = ReturnFinder::new(invariant_special_casing_disabled);
+    let mut finder = ReturnFinder::new(invariant_special_casing_disabled, assertion_calls);
     let Ok(()) = finder.function_(loc, function);
     finder.acc
 }

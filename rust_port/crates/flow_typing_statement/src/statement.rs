@@ -20403,6 +20403,7 @@ pub fn mk_func_sig<'a>(
         &loc,
         func,
         cx.invariant_special_casing_disabled(),
+        &cx.environment().var_info.assertion_calls,
     ) || (!matches!(
         kind,
         func::Kind::Ordinary | func::Kind::Async | func::Kind::Ctor

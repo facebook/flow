@@ -836,6 +836,7 @@ pub fn pattern_has_annot(p: &ast::pattern::Pattern<ALoc, ALoc>) -> bool {
 
 fn func_is_synthesizable_from_annotation(
     invariant_special_casing_disabled: bool,
+    assertion_calls: &BTreeMap<ALoc, AssertionInfo>,
     f: &ast::function::Function<ALoc, ALoc>,
 ) -> FunctionSynthKind {
     use ast::function::ReturnAnnot;
@@ -848,6 +849,7 @@ fn func_is_synthesizable_from_annotation(
                 &ALoc::none(),
                 f,
                 invariant_special_casing_disabled,
+                assertion_calls,
             ) || f.generator
             {
                 FunctionSynthKind::MissingReturn(loc.dupe())
@@ -899,6 +901,7 @@ fn obj_this_write_locs(obj: &ast::expression::Object<ALoc, ALoc>) -> EnvSet<ALoc
 
 fn obj_properties_synthesizable(
     invariant_special_casing_disabled: bool,
+    assertion_calls: &BTreeMap<ALoc, AssertionInfo>,
     this_write_locs: EnvSet<ALoc>,
     obj: &ast::expression::Object<ALoc, ALoc>,
 ) -> ObjectSynthKind {
@@ -917,6 +920,7 @@ fn obj_properties_synthesizable(
 
     fn synthesizable_expression(
         invariant_special_casing_disabled: bool,
+        assertion_calls: &BTreeMap<ALoc, AssertionInfo>,
         acc: &mut Vec<ObjectMissingAnnot>,
         this_write_locs: &mut EnvSet<ALoc>,
         expr: &ast::expression::Expression<ALoc, ALoc>,
@@ -953,11 +957,16 @@ fn obj_properties_synthesizable(
             ExpressionInner::ArrowFunction { inner, .. }
             | ExpressionInner::Function { inner, .. } => handle_fun(
                 acc,
-                func_is_synthesizable_from_annotation(invariant_special_casing_disabled, inner),
+                func_is_synthesizable_from_annotation(
+                    invariant_special_casing_disabled,
+                    assertion_calls,
+                    inner,
+                ),
             ),
             ExpressionInner::Object { inner, .. } => {
                 match obj_properties_synthesizable(
                     invariant_special_casing_disabled,
+                    assertion_calls,
                     obj_this_write_locs(inner),
                     inner,
                 ) {
@@ -990,12 +999,14 @@ fn obj_properties_synthesizable(
                     let recursion_result = match elem {
                         ArrayElement::Expression(exp) => synthesizable_expression(
                             invariant_special_casing_disabled,
+                            assertion_calls,
                             acc,
                             this_write_locs,
                             exp,
                         ),
                         ArrayElement::Spread(spread) => synthesizable_expression(
                             invariant_special_casing_disabled,
+                            assertion_calls,
                             acc,
                             this_write_locs,
                             &spread.argument,
@@ -1046,6 +1057,7 @@ fn obj_properties_synthesizable(
                     if let object::Key::Identifier(_) = key {
                         if synthesizable_expression(
                             invariant_special_casing_disabled,
+                            assertion_calls,
                             &mut acc,
                             &mut current_this_write_locs,
                             value,
@@ -1068,6 +1080,7 @@ fn obj_properties_synthesizable(
                         &mut acc,
                         func_is_synthesizable_from_annotation(
                             invariant_special_casing_disabled,
+                            assertion_calls,
                             fn_inner,
                         ),
                     )
@@ -1389,6 +1402,7 @@ pub fn expression_is_definitely_synthesizable(
 
 fn def_of_function(
     invariant_special_casing_disabled: bool,
+    assertion_calls: &BTreeMap<ALoc, AssertionInfo>,
     tparams_map: TparamsMap,
     hints: AstHints,
     has_this_def: bool,
@@ -1402,6 +1416,7 @@ fn def_of_function(
         hints,
         synthesizable_from_annotation: func_is_synthesizable_from_annotation(
             invariant_special_casing_disabled,
+            assertion_calls,
             &function_,
         ),
         arrow,
@@ -2449,6 +2464,7 @@ impl<'a> DefFinder<'a> {
                     hints: func_hints_clone.clone(),
                     synthesizable_from_annotation: func_is_synthesizable_from_annotation(
                         this.invariant_special_casing_disabled,
+                        &this.assertion_calls,
                         expr,
                     ),
                     function_loc: function_loc.dupe(),
@@ -2478,6 +2494,7 @@ impl<'a> DefFinder<'a> {
                 let reason = func_reason(async_, generator, reason_loc);
                 let def = def_of_function(
                     this_ref.invariant_special_casing_disabled,
+                    &this_ref.assertion_calls,
                     this_ref.tparams.clone(),
                     func_hints_clone.clone(),
                     has_this_def,
@@ -2532,6 +2549,7 @@ impl<'a> DefFinder<'a> {
             let reason = func_reason(async_, generator, sig_loc.dupe());
             let def = def_of_function(
                 this.invariant_special_casing_disabled,
+                &this.assertion_calls,
                 this.tparams.clone(),
                 vec![],
                 true, // has_this_def:true
@@ -3957,6 +3975,7 @@ impl<'a> DefFinder<'a> {
                     {
                         let def = def_of_function(
                             this.invariant_special_casing_disabled,
+                            &this.assertion_calls,
                             this.tparams.clone(),
                             hints_clone.clone(),
                             false,
@@ -5687,6 +5706,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
             let this_write_locs = obj_this_write_locs(obj_inner.as_ref());
             match obj_properties_synthesizable(
                 self.invariant_special_casing_disabled,
+                &self.assertion_calls,
                 this_write_locs,
                 obj_inner.as_ref(),
             ) {

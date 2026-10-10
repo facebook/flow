@@ -44,7 +44,7 @@ class C{
   ["computed"]() { } // ok: literal computed key resolves to `computed`, no missing annot
 
   throwingInvariant1() { invariant() } // ok: no-arg call can return normally
-  throwingInvariant2() { invariant(false) } // ok: assertion calls don't trigger missing-annot
+  throwingInvariant2() { invariant(false) } // ERROR: missing return annotation
   nonthrowingInvariant() { invariant(this.prop1) } // ok
 }
 
