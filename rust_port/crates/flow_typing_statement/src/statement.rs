@@ -12,6 +12,7 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::VecDeque;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -44,6 +45,7 @@ use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::assertion_call_target::bare_asserted_argument;
 use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
+use flow_env_builder::assertion_call_target::callee_root_has_declared_type;
 use flow_env_builder::env_api::EnvKey;
 use flow_parser::ast;
 use flow_parser::ast::expression;
@@ -66,6 +68,7 @@ use flow_typing_errors::error_message::EObjectComputedPropertyPotentialOverwrite
 use flow_typing_errors::error_message::ETSSyntaxData;
 use flow_typing_errors::error_message::ETypeGuardIncompatibleWithFunctionKindData;
 use flow_typing_errors::error_message::EUnnecessaryInvariantData;
+use flow_typing_errors::error_message::EUnrecognizedAssertionCallData;
 use flow_typing_errors::error_message::EnumBigIntMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumBooleanMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumDuplicateMemberNameData;
@@ -92,6 +95,7 @@ use flow_typing_errors::intermediate_error_types::MatchInvalidCaseSyntax;
 use flow_typing_errors::intermediate_error_types::NamedReferenceData;
 use flow_typing_errors::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use flow_typing_errors::intermediate_error_types::TsLibSyntaxKind;
+use flow_typing_errors::intermediate_error_types::UnrecognizedAssertionCallee;
 use flow_typing_errors::intermediate_error_types::UnsupportedSyntax;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -2562,6 +2566,9 @@ fn statement_<'a>(
                     expr_t.dupe(),
                     type_env::in_async_scope(cx),
                 );
+            }
+            if cx.assertion_functions_enabled() {
+                check_unrecognized_assertion_calls(cx, &expr);
             }
             statement::Statement::new(StatementInner::Expression {
                 loc,
@@ -8457,6 +8464,101 @@ fn proven_bare_assertion_throw(
     bare_assertion_call_always_throws(assertion, arguments)
 }
 
+fn is_single_assertion_function(finalized: &VecDeque<Type>) -> bool {
+    if finalized.len() != 1 {
+        return false;
+    }
+    match finalized.front() {
+        Some(t)
+            if let TypeInner::DefT(_, def_t) = t.deref()
+                && let DefTInner::FunT(_, function) = def_t.deref() =>
+        {
+            function
+                .type_guard
+                .as_deref()
+                .is_some_and(|guard| guard.is_asserts())
+        }
+        _ => false,
+    }
+}
+
+/// Reports calls in expression-statement position (directly or as operands
+/// of a comma expression) whose callee is an assertion function that the
+/// targeted callee analysis did not prove, so the call does not narrow.
+fn check_unrecognized_assertion_calls(
+    cx: &Context<'_>,
+    expr: &expression::Expression<ALoc, (ALoc, Type)>,
+) {
+    match expr.deref() {
+        expression::ExpressionInner::Call { inner, .. } => {
+            check_unrecognized_assertion_call(cx, &inner.callee)
+        }
+        expression::ExpressionInner::Sequence { inner, .. } => {
+            for expr in inner.expressions.iter() {
+                check_unrecognized_assertion_calls(cx, expr);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn check_unrecognized_assertion_call(
+    cx: &Context<'_>,
+    callee: &expression::Expression<ALoc, (ALoc, Type)>,
+) {
+    use ast::expression::member;
+    let (callee_loc, _) = callee.loc();
+    if !cx.is_assertion_call_candidate(callee_loc)
+        || cx
+            .environment()
+            .var_info
+            .assertion_calls
+            .contains_key(callee_loc)
+    {
+        return;
+    }
+    let mut dotted = true;
+    let mut root = callee;
+    while let expression::ExpressionInner::Member { inner, .. } = root.deref() {
+        dotted &= matches!(inner.property, member::Property::PropertyIdentifier(_));
+        root = &inner.object;
+    }
+    let callee_kind = match root.deref() {
+        // TODO: TS narrows `this.assert(x)` and `super.assert(x)`, so these
+        // should be recognized rather than reported.
+        expression::ExpressionInner::This { .. } | expression::ExpressionInner::Super { .. } => {
+            return;
+        }
+        expression::ExpressionInner::Identifier {
+            loc: (use_loc, _),
+            inner,
+        } if dotted => {
+            let env = cx.environment();
+            let var_info = &env.var_info;
+            if callee_root_has_declared_type(&var_info.scopes, &var_info.providers, use_loc) {
+                UnrecognizedAssertionCallee::UnsupportedType
+            } else {
+                let def_loc = var_info
+                    .scopes
+                    .def_of_use_opt(use_loc)
+                    .map_or_else(|| use_loc.dupe(), |def| def.locs.first().dupe());
+                UnrecognizedAssertionCallee::UnannotatedRoot(NamedReferenceData {
+                    loc: def_loc,
+                    name: inner.name.dupe(),
+                })
+            }
+        }
+        _ => UnrecognizedAssertionCallee::UnsupportedTarget,
+    };
+    flow_js::add_output_non_speculating(
+        cx,
+        ErrorMessage::EUnrecognizedAssertionCall(Box::new(EUnrecognizedAssertionCallData {
+            loc: callee_loc.dupe(),
+            callee: callee_kind,
+        })),
+    );
+}
+
 /// Handles operations that may traverse optional chains
 ///
 /// Returns a tuple:
@@ -9715,10 +9817,14 @@ pub fn optional_chain<'a>(
     }
 
     fn specialize_callee(
+        cx: &Context<'_>,
         callee: expression::Expression<ALoc, (ALoc, Type)>,
         specialized_callee: &type_::SpecializedCallee,
     ) -> expression::Expression<ALoc, (ALoc, Type)> {
         let finalized = specialized_callee.finalized.borrow();
+        if cx.assertion_functions_enabled() && is_single_assertion_function(&finalized) {
+            cx.add_assertion_call_candidate(callee.loc().0.dupe());
+        }
         if finalized.is_empty() {
             callee
         } else {
@@ -10599,7 +10705,7 @@ pub fn optional_chain<'a>(
             let mut receiver_inner = receiver_ast(member_for_callee, obj_filtered_out.dupe());
             *receiver_inner.loc_mut() = (lookup_loc.dupe(), prop_t.dupe());
             let callee_expr_ast = expression::Expression::new(receiver_inner);
-            let callee_expr_ast = specialize_callee(callee_expr_ast, &specialized_callee);
+            let callee_expr_ast = specialize_callee(cx, callee_expr_ast, &specialized_callee);
             let sig_help = flow_js_utils::callee_recorder::type_for_sig_help(
                 reason_lookup.dupe(),
                 &specialized_callee,
@@ -10716,7 +10822,7 @@ pub fn optional_chain<'a>(
             let exp =
                     |callee_arg: expression::Expression<ALoc, (ALoc, Type)>|
                      -> ExpressionInner<ALoc, (ALoc, Type)> {
-                        let callee_arg = specialize_callee(callee_arg, &spec_callee);
+                        let callee_arg = specialize_callee(cx, callee_arg, &spec_callee);
                         call_ast(
                             filtered_out.dupe(),
                             sig_help,

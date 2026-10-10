@@ -12,6 +12,7 @@ use std::ops::Deref;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_analysis::bindings::Kind;
+use flow_analysis::scope_api::Def;
 use flow_analysis::scope_api::ScopeInfo;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
@@ -116,9 +117,9 @@ pub struct ImportedCallee {
 
 /// A call whose callee is rooted in a binding that could hold an assertion
 /// function: an import, a named definition, an annotated provider, a plain
-/// lexical value binding (which is classified later, erroring when it carries
-/// assertion behavior without an annotation), or a global reference such as a
-/// lib declaration (classified by name through builtins).
+/// lexical value binding (classified later from its signature type, when it
+/// has one), or a global reference such as a lib declaration (classified by
+/// name through builtins).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CalleeTarget<L> {
     pub call_loc: L,
@@ -202,9 +203,8 @@ impl<'a, L: LocSig> Collector<'a, L> {
             def.kind,
             Kind::Function | Kind::Class | Kind::DeclaredFunction | Kind::DeclaredClass
         );
-        // Plain lexical value bindings: an assertion function stored here
-        // without an annotation errors when used. Type-like and internal
-        // machinery bindings can never hold one.
+        // Plain lexical value bindings. Type-like and internal machinery
+        // bindings can never hold an assertion function.
         let is_lexical_value = matches!(
             def.kind,
             Kind::Var
@@ -217,19 +217,7 @@ impl<'a, L: LocSig> Collector<'a, L> {
                 | Kind::CatchParameter
                 | Kind::ComponentParameter
         );
-        let provider_locs: Vec<_> = def
-            .locs
-            .iter()
-            .filter_map(|def_loc| self.provider_info.providers_of_def(def_loc))
-            .filter(|providers| {
-                matches!(providers.state, State::AnnotatedVar { contextual: false })
-            })
-            .flat_map(|providers| providers.providers.iter())
-            .map(|provider| provider.reason.loc().dupe())
-            .filter(|provider_loc| self.provider_info.is_provider_of_annotated(provider_loc))
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .collect();
+        let provider_locs = annotated_provider_locs(self.provider_info, def);
         if !is_import && !is_named_definition && !is_lexical_value && provider_locs.is_empty() {
             return None;
         }
@@ -252,6 +240,43 @@ impl<'a, L: LocSig> Collector<'a, L> {
             import,
         })
     }
+}
+
+/// The annotated, non-contextual providers of `def`.
+fn annotated_provider_locs<L: LocSig>(provider_info: &ProviderInfo<L>, def: &Def<L>) -> Vec<L> {
+    def.locs
+        .iter()
+        .filter_map(|def_loc| provider_info.providers_of_def(def_loc))
+        .filter(|providers| matches!(providers.state, State::AnnotatedVar { contextual: false }))
+        .flat_map(|providers| providers.providers.iter())
+        .map(|provider| provider.reason.loc().dupe())
+        .filter(|provider_loc| provider_info.is_provider_of_annotated(provider_loc))
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect()
+}
+
+/// Whether the callee root used at `root_use_loc` has a declared type: a
+/// global, an import, a named definition, or a binding with an annotated
+/// provider. A call whose root lacks one cannot be classified unless its
+/// signature type is available.
+pub fn callee_root_has_declared_type<L: LocSig>(
+    scope_info: &ScopeInfo<L>,
+    provider_info: &ProviderInfo<L>,
+    root_use_loc: &L,
+) -> bool {
+    let Some(def) = scope_info.def_of_use_opt(root_use_loc) else {
+        return true;
+    };
+    matches!(
+        def.kind,
+        Kind::Import { .. }
+            | Kind::TsImport
+            | Kind::Function
+            | Kind::Class
+            | Kind::DeclaredFunction
+            | Kind::DeclaredClass
+    ) || !annotated_provider_locs(provider_info, def).is_empty()
 }
 
 /// Records the local bindings of one named-import map (value, type, or

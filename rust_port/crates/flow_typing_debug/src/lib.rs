@@ -130,6 +130,7 @@ use flow_typing_errors::error_message::EUnionOptimizationOnNonUnionData;
 use flow_typing_errors::error_message::EUnionPartialOptimizationNonUniqueKeyData;
 use flow_typing_errors::error_message::EUnionSpeculationFailedData;
 use flow_typing_errors::error_message::EUnnecessaryInvariantData;
+use flow_typing_errors::error_message::EUnrecognizedAssertionCallData;
 use flow_typing_errors::error_message::EUnsupportedExactData;
 use flow_typing_errors::error_message::EVarianceKeywordData;
 use flow_typing_errors::error_message::EnumAllMembersAlreadyCheckedData;
@@ -4361,6 +4362,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             "EAssertionFunctionFalsyAtExit ({})",
             string_of_aloc(None, loc)
         ),
+        ErrorMessage::EUnrecognizedAssertionCall(box EUnrecognizedAssertionCallData {
+            loc,
+            ..
+        }) => format!("EUnrecognizedAssertionCall ({})", string_of_aloc(None, loc)),
         ErrorMessage::EMatchError(e) => match e {
             MatchErrorKind::MatchNotExhaustive(box MatchNotExhaustiveData { loc, .. }) => {
                 format!("EMatchNotExhaustive ({})", string_of_aloc(None, loc))

@@ -1137,6 +1137,21 @@ References:
                    ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- local.js:193:3
+
+Cannot narrow with this call to an assertion function because `localAlias` [1] is not declared with an explicit type
+annotation. Annotate `localAlias` or call the assertion function directly. [unrecognized-assertion-call]
+
+   local.js:193:3
+   193|   localAlias(value); // error: `localAlias` needs an annotation to narrow
+          ^^^^^^^^^^
+
+References:
+   local.js:192:9
+   192|   const localAlias = assertNumber;
+                ^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- local.js:194:3
 
 Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
@@ -1417,6 +1432,15 @@ References:
                    ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- local.js:315:3
+
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   315|   intersected(value); // error: intersections do not narrow
+          ^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- local.js:316:3
 
 Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -1508,6 +1532,15 @@ References:
    local.js:353:12
    353|   value as number; // error: the local declaration shadows the module-level one
                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:359:3
+
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   359|   assertLocal(value); // error: overloads do not narrow
+          ^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:360:3
@@ -2068,6 +2101,15 @@ References:
                           ^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- test_context.js:12:1
+
+Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
+as `a.b.c`. [unrecognized-assertion-call]
+
+   12| ns['assert'](yes); // unrecognized-assertion-call error
+       ^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------- unnecessary.js:18:1
 
 This use of `assert` is unnecessary because `true` [1] is always truthy. [unnecessary-assertion]
@@ -2265,5 +2307,197 @@ References:
                           ^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- unrecognized.js:44:3
 
-Found 135 errors
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:44:3
+   44|   g(x); // error: `g` needs an annotation
+         ^
+
+References:
+   unrecognized.js:43:9
+   43|   const g = assertString;
+               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unrecognized.js:49:3
+
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:49:3
+   49|   g(x); // error: `g` needs an annotation
+         ^
+
+References:
+   unrecognized.js:48:7
+   48|   let g = assertString;
+             ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unrecognized.js:54:3
+
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:54:3
+   54|   g(x); // error: `g` needs an annotation
+         ^
+
+References:
+   unrecognized.js:53:24
+   53|   const {assertString: g} = utils;
+                              ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unrecognized.js:59:3
+
+Cannot narrow with this call to an assertion function because `o` [1] is not declared with an explicit type annotation.
+Annotate `o` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:59:3
+   59|   o.assertString(x); // error: `o` needs an annotation
+         ^^^^^^^^^^^^^^
+
+References:
+   unrecognized.js:58:9
+   58|   const o = {assertString};
+               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unrecognized.js:66:3
+
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:66:3
+   66|   g(x); // error: `g` needs an annotation
+         ^
+
+References:
+   unrecognized.js:63:9
+   63|   const g = <T>(value: T): asserts value is T & string => {
+               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unrecognized.js:71:4
+
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:71:4
+   71|   (g(x), g(x)); // error twice: `g` needs an annotation
+          ^
+
+References:
+   unrecognized.js:70:9
+   70|   const g = assertString;
+               ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:71:10
+
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:71:10
+   71|   (g(x), g(x)); // error twice: `g` needs an annotation
+                ^
+
+References:
+   unrecognized.js:70:9
+   70|   const g = assertString;
+               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unrecognized.js:75:3
+
+Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
+as `a.b.c`. [unrecognized-assertion-call]
+
+   75|   getAssert()(x); // error: not a dotted name
+         ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- unrecognized.js:79:3
+
+Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
+as `a.b.c`. [unrecognized-assertion-call]
+
+   79|   utils['assertString'](x); // error: not a dotted name
+         ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- unrecognized.js:83:3
+
+Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
+as `a.b.c`. [unrecognized-assertion-call]
+
+   83|   new C().assertString(x); // error: not a dotted name
+         ^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:117:3
+
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   117|   intersected(x); // error: intersection
+          ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:118:3
+
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   118|   overloaded(x); // error: overloaded
+          ^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:119:3
+
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   119|   g(x); // error: type parameter (TODO: TS narrows through the bound)
+          ^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:124:5
+
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:124:5
+   124|     g(x); // error: `g` needs an annotation
+            ^
+
+References:
+   unrecognized.js:123:56
+   123|   const h: (g: StringAssertion, x: unknown) => void = (g, x) => {
+                                                               ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:135:3
+
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   135|   assertionLast(x); // error: the assertion overload wins
+          ^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:136:3
+
+Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
+as `a.b.c`. [unrecognized-assertion-call]
+
+   136|   utils['assertString'](x); // error: previous speculation does not suppress this call
+          ^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 155 errors

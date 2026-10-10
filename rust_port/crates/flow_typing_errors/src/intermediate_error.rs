@@ -153,6 +153,7 @@ use super::intermediate_error_types::TupleElementReferenceData;
 use super::intermediate_error_types::TypeGuardReferenceData;
 use super::intermediate_error_types::TypeGuardReferenceKind;
 use super::intermediate_error_types::UnnecessaryInvariantConditionKind;
+use super::intermediate_error_types::UnrecognizedAssertionCallee;
 use super::intermediate_error_types::ValueAsTypeReference;
 use crate::error_message::CallTypeArityCallee;
 use crate::error_message::EExpectedBigIntLitData;
@@ -9167,6 +9168,30 @@ where
                 text(". Throw an error or call another assertion function on every path "),
                 text("where it is falsy."),
             ]),
+            MessageUnrecognizedAssertionCall(UnrecognizedAssertionCallee::UnsupportedTarget) => {
+                friendly::Message(vec![
+                    text("Cannot narrow with this call to an assertion function because the call "),
+                    text("target is not an identifier or a dotted name such as "),
+                    code("a.b.c"),
+                    text("."),
+                ])
+            }
+            MessageUnrecognizedAssertionCall(UnrecognizedAssertionCallee::UnannotatedRoot(
+                root,
+            )) => friendly::Message(vec![
+                text("Cannot narrow with this call to an assertion function because "),
+                hardcoded_string_desc_ref(&format!("`{}`", root.name), &root.loc),
+                text(" is not declared with an explicit type annotation. Annotate "),
+                code(root.name.as_str()),
+                text(" or call the assertion function directly."),
+            ]),
+            MessageUnrecognizedAssertionCall(UnrecognizedAssertionCallee::UnsupportedType) => {
+                friendly::Message(vec![
+                    text("Cannot narrow with this call to an assertion function because its "),
+                    text("declared type is not a single assertion function type. Overloaded "),
+                    text("functions, intersections, and type parameters do not narrow."),
+                ])
+            }
             MessageUnexpectedUseOfThisType => friendly::Message(vec![
                 text("Unexpected use of "),
                 code("this"),

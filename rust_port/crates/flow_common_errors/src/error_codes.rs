@@ -206,6 +206,7 @@ pub enum ErrorCode {
     IllegalAssertOperator,
     ConstantCondition,
     ReservedKeyword,
+    UnrecognizedAssertionCall,
 }
 
 pub fn code_of_lint(lint_kind: &LintKind) -> ErrorCode {
@@ -453,6 +454,7 @@ impl ErrorCode {
             IllegalAssertOperator => "illegal-assert-operator",
             ConstantCondition => "constant-condition",
             ReservedKeyword => "reserved-keyword",
+            UnrecognizedAssertionCall => "unrecognized-assertion-call",
         }
     }
 }

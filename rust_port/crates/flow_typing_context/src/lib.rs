@@ -12,6 +12,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -595,6 +596,7 @@ struct ContextInner<'cx> {
     refined_locations: RefCell<ALocMap<FlowOrdSet<ALoc>>>,
     aggressively_invalidated_locations: RefCell<ALocMap<RefinementInvalidation>>,
     switch_to_match_eligible_locations: RefCell<ALocSet>,
+    assertion_call_candidates: RefCell<HashSet<ALoc>>,
     node_cache: NodeCache<'cx, Context<'cx>>,
     ts_import_provenance: RefCell<ALocMap<(FlowImportSpecifier, FlowSmolStr)>>,
 }
@@ -871,6 +873,7 @@ impl<'cx> Context<'cx> {
             refined_locations: RefCell::new(ALocMap::new()),
             aggressively_invalidated_locations: RefCell::new(ALocMap::new()),
             switch_to_match_eligible_locations: RefCell::new(ALocSet::new()),
+            assertion_call_candidates: RefCell::new(HashSet::new()),
             ts_import_provenance: RefCell::new(ALocMap::new()),
         });
         Self(inner)
@@ -2245,6 +2248,22 @@ impl<'cx> Context<'cx> {
             .switch_to_match_eligible_locations
             .borrow_mut()
             .insert(loc);
+    }
+
+    /// Records a call whose finalized callee is a single assertion function.
+    pub fn add_assertion_call_candidate(&self, callee_loc: ALoc) {
+        self.0
+            .assertion_call_candidates
+            .borrow_mut()
+            .insert(callee_loc);
+    }
+
+    /// Whether call checking recorded an assertion function at this callee.
+    pub fn is_assertion_call_candidate(&self, callee_loc: &ALoc) -> bool {
+        self.0
+            .assertion_call_candidates
+            .borrow()
+            .contains(callee_loc)
     }
 
     pub fn add_missing_local_annot_lower_bound(&self, loc: ALoc, t: Type) {

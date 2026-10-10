@@ -1585,6 +1585,29 @@ pub struct NamedReferenceData<L: Dupe> {
     pub name: FlowSmolStr,
 }
 
+/// Why a statement-position call to an assertion function does not narrow.
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum UnrecognizedAssertionCallee<L: Dupe> {
+    /// The call target is not an identifier or a dotted name.
+    UnsupportedTarget,
+    /// The binding at the root of the call target is not declared with an
+    /// explicit type annotation.
+    UnannotatedRoot(NamedReferenceData<L>),
+    /// The callee's declared type is not a single assertion function type,
+    /// e.g. an overloaded function, an intersection, or a type parameter.
+    UnsupportedType,
+}
+
 /// A side of a property polarity mismatch.
 #[derive(
     Debug,
@@ -2499,6 +2522,10 @@ pub enum Message<L: Dupe> {
         falsy: Box<MessageTypeReferenceData<L>>,
         implicit_return: bool,
     },
+
+    /// A statement-position call to an assertion function that does not
+    /// narrow.
+    MessageUnrecognizedAssertionCall(UnrecognizedAssertionCallee<L>),
 
     MessageInvalidTypeGuardParamUnbound(TypeGuardParameterData<L>),
     MessageInvalidTypeGuardThisParam(L),

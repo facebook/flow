@@ -9,5 +9,5 @@ declare const message: [string];
 assertTruthy(yes); // constant-condition error
 assertGeneric<true>(yes); // constant-condition error
 ns.assert(yes); // constant-condition error
-ns['assert'](yes);
+ns['assert'](yes); // unrecognized-assertion-call error
 assertSecond(...message, yes);

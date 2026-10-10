@@ -155,6 +155,7 @@ use crate::intermediate_error_types::TupleElementReferenceData;
 use crate::intermediate_error_types::TypeGuardReferenceData;
 use crate::intermediate_error_types::TypeGuardReferenceKind;
 use crate::intermediate_error_types::UnnecessaryInvariantConditionKind;
+use crate::intermediate_error_types::UnrecognizedAssertionCallee;
 use crate::intermediate_error_types::UnsupportedSyntax;
 use crate::intermediate_error_types::ValueAsTypeReference;
 
@@ -2041,6 +2042,22 @@ pub struct EAssertionFunctionFalsyAtExitData<L: Dupe + PartialOrd + Ord + Partia
     pub implicit_return: bool,
 }
 
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EUnrecognizedAssertionCallData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub callee: UnrecognizedAssertionCallee<L>,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ENegativeTypeGuardConsistencyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub return_reason: ErrorReference<L>,
@@ -3599,6 +3616,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     ENegativeTypeGuardConsistency(Box<ENegativeTypeGuardConsistencyData<L>>),
 
     EAssertionFunctionFalsyAtExit(Box<EAssertionFunctionFalsyAtExitData<L>>),
+    EUnrecognizedAssertionCall(Box<EUnrecognizedAssertionCallData<L>>),
 
     ETypeParamConstIncompatibility(Box<ETypeParamConstIncompatibilityData<L>>),
 
@@ -5417,6 +5435,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 falsy: map_error_type_ref(falsy),
                 implicit_return,
             })),
+
+            EUnrecognizedAssertionCall(box EUnrecognizedAssertionCallData { loc, callee }) => {
+                EUnrecognizedAssertionCall(Box::new(EUnrecognizedAssertionCallData {
+                    loc: f(loc),
+                    callee: match callee {
+                        UnrecognizedAssertionCallee::UnsupportedTarget => {
+                            UnrecognizedAssertionCallee::UnsupportedTarget
+                        }
+                        UnrecognizedAssertionCallee::UnannotatedRoot(root) => {
+                            UnrecognizedAssertionCallee::UnannotatedRoot(NamedReferenceData {
+                                loc: f(root.loc),
+                                name: root.name,
+                            })
+                        }
+                        UnrecognizedAssertionCallee::UnsupportedType => {
+                            UnrecognizedAssertionCallee::UnsupportedType
+                        }
+                    },
+                }))
+            }
 
             ETypeParamConstIncompatibility(box ETypeParamConstIncompatibilityData {
                 use_op,
@@ -7626,6 +7664,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 implicit_return,
             })),
 
+            EUnrecognizedAssertionCall(data) => EUnrecognizedAssertionCall(data),
+
             EUnableToSpread(box EUnableToSpreadData {
                 spread_loc,
                 object1,
@@ -8435,6 +8475,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EAssertionFunctionFalsyAtExit(box EAssertionFunctionFalsyAtExitData {
                 loc,
                 ..
+            })
+            | Self::EUnrecognizedAssertionCall(box EUnrecognizedAssertionCallData {
+                loc, ..
             })
             | Self::EIllegalAssertOperator(box EIllegalAssertOperatorData {
                 op_loc: loc, ..
@@ -11153,6 +11196,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 implicit_return,
             }),
 
+            ErrorMessage::EUnrecognizedAssertionCall(box EUnrecognizedAssertionCallData {
+                callee,
+                ..
+            }) => Normal(Message::MessageUnrecognizedAssertionCall(callee)),
+
             ErrorMessage::ETypeParamConstIncompatibility(
                 box ETypeParamConstIncompatibilityData {
                     use_op,
@@ -12487,6 +12535,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | ErrorMessage::EAssertionFunctionFalsyAtExit(
                 box EAssertionFunctionFalsyAtExitData { .. },
             ) => Some(IncompatibleTypeGuard),
+            ErrorMessage::EUnrecognizedAssertionCall(box EUnrecognizedAssertionCallData {
+                ..
+            }) => Some(UnrecognizedAssertionCall),
             ErrorMessage::ETypeParamConstIncompatibility(
                 box ETypeParamConstIncompatibilityData { .. },
             )

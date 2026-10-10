@@ -190,7 +190,7 @@ function instanceMethod(value: unknown) {
 
 function unannotatedBodyLocalSilent(value: unknown) {
   const localAlias = assertNumber;
-  localAlias(value);
+  localAlias(value); // error: `localAlias` needs an annotation to narrow
   value as number; // error: unannotated body-locals have no signature roots
   value as string; // error: unannotated body-locals have no signature roots
 }
@@ -312,7 +312,7 @@ function disagreedUnionSilent(value: unknown) {
 }
 
 function intersectionSilent(value: unknown) {
-  intersected(value);
+  intersected(value); // error: intersections do not narrow
   value as string; // error: intersections never classify
 }
 
@@ -356,6 +356,6 @@ function localShadowsModuleLevel(value: unknown) {
 function localOverloadedSilent(value: unknown) {
   declare function assertLocal(value: unknown): asserts value is number;
   declare function assertLocal(value: unknown, message: string): void;
-  assertLocal(value);
+  assertLocal(value); // error: overloads do not narrow
   value as number; // error: overloaded callees never classify
 }
