@@ -41,6 +41,7 @@ pub(super) const LIB_ES2020_SYMBOL_WELLKNOWN_D_TS: &str =
     include_tslib!("lib.es2020.symbol.wellknown.d.ts");
 pub(super) const LIB_ES2021_STRING_D_TS: &str = include_tslib!("lib.es2021.string.d.ts");
 pub(super) const LIB_ES2022_ARRAY_D_TS: &str = include_tslib!("lib.es2022.array.d.ts");
+pub(super) const LIB_ES2022_ERROR_D_TS: &str = include_tslib!("lib.es2022.error.d.ts");
 pub(super) const LIB_ES2022_REGEXP_D_TS: &str = include_tslib!("lib.es2022.regexp.d.ts");
 pub(super) const LIB_ES2022_STRING_D_TS: &str = include_tslib!("lib.es2022.string.d.ts");
 pub(super) const LIB_ES2024_COLLECTION_D_TS: &str = include_tslib!("lib.es2024.collection.d.ts");
@@ -225,10 +226,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2022.array.d.ts", LIB_ES2022_ARRAY_D_TS),
     ("lib.es2022.d.ts", include_tslib!("lib.es2022.d.ts")),
-    (
-        "lib.es2022.error.d.ts",
-        include_tslib!("lib.es2022.error.d.ts"),
-    ),
+    ("lib.es2022.error.d.ts", LIB_ES2022_ERROR_D_TS),
     (
         "lib.es2022.full.d.ts",
         include_tslib!("lib.es2022.full.d.ts"),

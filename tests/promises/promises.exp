@@ -267,19 +267,26 @@ References:
                                           ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- any.js:29:26
+Error ------------------------------------------------------------------------------------------------------ any.js:29:7
 
-Cannot call `AggregateError` with `1` bound to `message` because `1` [1] is incompatible with `string` [2].
-[incompatible-type]
+Cannot call `AggregateError` because: [incompatible-type]
+ - Either `1` [1] is incompatible with `string` [2].
+ - Or `1` [1] is incompatible with `string` [3].
 
+   any.js:29:7
+   29|   new AggregateError([], 1); // Error: the message must be a string
+             ^^^^^^^^^^^^^^
+
+References:
    any.js:29:26
    29|   new AggregateError([], 1); // Error: the message must be a string
                                 ^ [1]
-
-References:
+   <BUILTINS>/lib.es2022.error.js:68:19
+   68|         message?: string,
+                         ^^^^^^ [2]
    <BUILTINS>/lib.es2021.promise.js:30:43
    30|     new (errors: Iterable<any>, message?: string): AggregateError;
-                                                 ^^^^^^ [2]
+                                                 ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- any.js:34:10
