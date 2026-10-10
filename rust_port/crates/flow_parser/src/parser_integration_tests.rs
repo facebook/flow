@@ -299,7 +299,7 @@ mod esprima_tests {
                         let file = file.strip_prefix(root_path).unwrap();
                         file.strip_prefix(&format!(
                             "{}{}",
-                            &test.test_name,
+                            test.test_name,
                             std::path::MAIN_SEPARATOR
                         ))
                         .unwrap_or(file)
@@ -1174,7 +1174,7 @@ mod esprima_tests {
             let mut result = TestResults::default();
             let mut shown_header = false;
             if verbose_mode != VerboseMode::Quiet {
-                eprintln!("=== {} ===", &test_name);
+                eprintln!("=== {} ===", test_name);
             }
             for (key, case) in cases {
                 match std::panic::catch_unwind(|| run_case(&case)) {
@@ -1194,9 +1194,9 @@ mod esprima_tests {
                     }
                     Ok(CaseResult::CaseError(errs)) => {
                         if verbose_mode == VerboseMode::Quiet && !shown_header {
-                            eprintln!("=== {} ===", &test_name);
+                            eprintln!("=== {} ===", test_name);
                         }
-                        eprintln!("[x] FAIL: {}", &key);
+                        eprintln!("[x] FAIL: {}", key);
                         for (err, _) in &errs {
                             eprintln!("    {}", err);
                         }
@@ -1215,9 +1215,9 @@ mod esprima_tests {
                     }
                     Err(_) => {
                         if verbose_mode == VerboseMode::Quiet && !shown_header {
-                            eprintln!("=== {} ===", &test_name);
+                            eprintln!("=== {} ===", test_name);
                         }
-                        eprintln!("[x] DEAD: {}", &key);
+                        eprintln!("[x] DEAD: {}", key);
                         result.crashed += 1;
                         shown_header = true;
                     }
@@ -1332,7 +1332,7 @@ mod hardcoded_tests {
                         let file = file.strip_prefix(root_path).unwrap();
                         file.strip_prefix(&format!(
                             "{}{}",
-                            &test.test_name,
+                            test.test_name,
                             std::path::MAIN_SEPARATOR
                         ))
                         .unwrap_or(file)
@@ -1618,7 +1618,7 @@ mod hardcoded_tests {
             let mut shown_header = false;
 
             if verbose_mode != VerboseMode::Quiet {
-                eprintln!("=== {} ===", &test_name);
+                eprintln!("=== {} ===", test_name);
             }
 
             for (key, case) in cases {
@@ -1640,9 +1640,9 @@ mod hardcoded_tests {
                     }
                     Ok(CaseResult::CaseError(errs)) => {
                         if verbose_mode == VerboseMode::Quiet && !shown_header {
-                            eprintln!("=== {} ===", &test_name);
+                            eprintln!("=== {} ===", test_name);
                         }
-                        eprintln!("[x] FAIL: {}", &key);
+                        eprintln!("[x] FAIL: {}", key);
                         for err in &errs {
                             eprintln!("    {}", err);
                         }
@@ -1654,9 +1654,9 @@ mod hardcoded_tests {
                     }
                     Err(_) => {
                         if verbose_mode == VerboseMode::Quiet && !shown_header {
-                            eprintln!("=== {} ===", &test_name);
+                            eprintln!("=== {} ===", test_name);
                         }
-                        eprintln!("[x] DEAD: {}", &key);
+                        eprintln!("[x] DEAD: {}", key);
                         result.crashed += 1;
                         shown_header = true;
                     }

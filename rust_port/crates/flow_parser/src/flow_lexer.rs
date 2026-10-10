@@ -878,9 +878,9 @@ fn check_sci_notation(remainder: &str) -> Option<(usize, bool)> {
             remainder = new_remainder;
         }
         remainder_mut = remainder;
-    } else if let Some(mut remainder) =
-        remainder_mut.strip_prefix(['1', '2', '3', '4', '5', '6', '7', '8', '9'])
-    {
+    } else {
+        let mut remainder =
+            remainder_mut.strip_prefix(['1', '2', '3', '4', '5', '6', '7', '8', '9'])?;
         // We are now sure it's a scinumber
         bump_counter += 1;
         while let Some(new_remainder) =
@@ -890,8 +890,6 @@ fn check_sci_notation(remainder: &str) -> Option<(usize, bool)> {
             remainder = new_remainder;
         }
         remainder_mut = remainder;
-    } else {
-        return None;
     }
 
     let is_sci_bigint = remainder_mut.starts_with('n');

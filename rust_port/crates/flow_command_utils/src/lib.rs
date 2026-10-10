@@ -1318,7 +1318,7 @@ fn should_emit_keepalive(
     last_print: Option<std::time::Instant>,
     interval: std::time::Duration,
 ) -> bool {
-    last_print.map_or(true, |t| now.duration_since(t) >= interval)
+    last_print.is_none_or(|t| now.duration_since(t) >= interval)
 }
 
 pub fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {

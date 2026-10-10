@@ -448,16 +448,10 @@ impl<'a> RequiresCalculator<'a> {
                             if let ast::pattern::object::Key::Identifier(remote_ident) =
                                 &normal_prop.key
                             {
-                                if let Some(bindings) = Self::require_pattern(&normal_prop.pattern)
-                                {
-                                    let remote = Identifier(
-                                        remote_ident.loc.dupe(),
-                                        remote_ident.name.dupe(),
-                                    );
-                                    named_bindings.push((remote, bindings));
-                                } else {
-                                    return None;
-                                }
+                                let bindings = Self::require_pattern(&normal_prop.pattern)?;
+                                let remote =
+                                    Identifier(remote_ident.loc.dupe(), remote_ident.name.dupe());
+                                named_bindings.push((remote, bindings));
                             } else {
                                 return None;
                             }

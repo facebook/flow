@@ -673,7 +673,6 @@ pub fn classify_enum_body<M: Dupe>(body: &Body<M>, body_loc: &M) -> Classificati
         members,
         explicit_type,
         has_unknown_members,
-        comments: _,
         ..
     } = body;
     let dup_errors = check_duplicate_names(members);

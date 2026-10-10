@@ -56,7 +56,6 @@ use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
-use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeGuardInner;
 use flow_typing_type::type_::TypeInner;

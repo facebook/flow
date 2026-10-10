@@ -633,10 +633,7 @@ where
             }
             (_, Change::Delete(x)) => trivial(x).map(|(loc, y)| vec![(loc, Change::Delete(y))]),
         };
-        match change {
-            Some(changes) => result.extend(changes),
-            None => return None,
-        }
+        result.extend(change?);
     }
     Some(result)
 }

@@ -605,10 +605,7 @@ pub fn cartesian_product(
             ([q, qs @ ..], [ss, rest @ ..]) => {
                 let mut acc = Vec::new();
                 for s in ss {
-                    match aux(format!("{}{}{}", prefix, q, s), qs, rest) {
-                        None => return None,
-                        Some(xs) => acc.extend(xs),
-                    }
+                    acc.extend(aux(format!("{}{}{}", prefix, q, s), qs, rest)?);
                 }
                 Some(acc)
             }

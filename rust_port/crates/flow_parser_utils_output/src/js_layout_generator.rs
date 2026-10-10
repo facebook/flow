@@ -5899,12 +5899,10 @@ pub fn type_(opts: &Opts, t: &ast::types::Type<Loc, Loc>) -> LayoutNode {
 
 fn type_with_parens(opts: &Opts, t: &ast::types::Type<Loc, Loc>) -> LayoutNode {
     match &**t {
-        ast::types::TypeInner::Function { inner: _, .. }
-        | ast::types::TypeInner::Union { inner: _, .. }
-        | ast::types::TypeInner::Intersection { inner: _, .. }
-        | ast::types::TypeInner::Conditional { inner: _, .. } => {
-            wrap_in_parens(false, type_(opts, t))
-        }
+        ast::types::TypeInner::Function { .. }
+        | ast::types::TypeInner::Union { .. }
+        | ast::types::TypeInner::Intersection { .. }
+        | ast::types::TypeInner::Conditional { .. } => wrap_in_parens(false, type_(opts, t)),
         _ => type_(opts, t),
     }
 }
@@ -6564,10 +6562,7 @@ fn type_object_property(
                 match (&prop.value, prop.method, prop.proto, prop.optional) {
                     // Functions with no special properties can be rendered as methods
                     (ast::types::object::PropertyValue::Init(Some(init_t)), true, false, false)
-                        if matches!(
-                            &**init_t,
-                            ast::types::TypeInner::Function { inner: _, .. }
-                        ) =>
+                        if matches!(&**init_t, ast::types::TypeInner::Function { .. }) =>
                     {
                         let func = match &**init_t {
                             ast::types::TypeInner::Function { inner: f, .. } => f,
@@ -6588,10 +6583,7 @@ fn type_object_property(
                     }
                     // Optional methods: key?(): Type
                     (ast::types::object::PropertyValue::Init(Some(init_t)), true, false, true)
-                        if matches!(
-                            &**init_t,
-                            ast::types::TypeInner::Function { inner: _, .. }
-                        ) =>
+                        if matches!(&**init_t, ast::types::TypeInner::Function { .. }) =>
                     {
                         let func = match &**init_t {
                             ast::types::TypeInner::Function { inner: f, .. } => f,

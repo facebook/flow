@@ -942,7 +942,7 @@ pub(super) fn run_with_env<'cx>(
                                     env,
                                     Some(trace),
                                     reason,
-                                    &t1,
+                                    t1,
                                 )?;
                                 let open_t = Type::new(TypeInner::OpenT(Tvar::new(
                                     reason.dupe(),

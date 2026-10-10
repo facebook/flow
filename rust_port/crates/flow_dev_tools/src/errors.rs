@@ -42,15 +42,6 @@ fn get_flow_errors_impl(
     }
 }
 
-pub(crate) fn get_flow_errors_with_warnings(
-    bin: &str,
-    error_check_command: ErrorCheckCommand,
-    root: &Path,
-    flowconfig_name: &str,
-) -> io::Result<FlowResult> {
-    get_flow_errors_impl(bin, error_check_command, root, true, flowconfig_name)
-}
-
 pub(crate) fn get_flow_errors(
     bin: &str,
     error_check_command: ErrorCheckCommand,

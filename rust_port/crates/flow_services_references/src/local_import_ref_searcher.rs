@@ -61,11 +61,7 @@ pub fn search<'cx>(
                 collect_bindings(&mut require_name_locs, bindings);
             }
             Require::Import {
-                named,
-                types,
-                ns,
-                type_ns: _,
-                ..
+                named, types, ns, ..
             } => {
                 let add_map = |map: &BTreeMap<
                     FlowSmolStr,

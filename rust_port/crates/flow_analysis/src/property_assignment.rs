@@ -290,11 +290,7 @@ impl<'ast> PropertyAssignment<'ast> {
         case: &'ast ast::statement::switch::Case<ALoc, ALoc>,
     ) -> Result<(InitEnv, Vec<Option<AbruptCompletion>>), AbruptCompletion> {
         let ast::statement::switch::Case {
-            test,
-            case_test_loc: _,
-            consequent,
-            comments: _,
-            ..
+            test, consequent, ..
         } = case;
         if let Some(test) = test {
             self.expression(test)?;
