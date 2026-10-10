@@ -1166,7 +1166,7 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::Never { loc, comments } => {
-            if !cx.ts_syntax() {
+            if !cx.ts_syntax() && !cx.is_global_libdef(cx.file()) {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -2059,12 +2059,14 @@ fn convert_inner<'a>(
                     // TS-only: `object` is a TypeScript primitive denoting any
                     // non-primitive value. Flow has no exact equivalent, but
                     // `.d.ts` library definitions reference it pervasively. We
-                    // accept the name only in .ts/.d.ts files and model it as a
+                    // accept the name in TS files and global libdefs and model it as a
                     // structurally-empty interface. Defining it here (rather than
-                    // in core.js) scopes it to TS files -- the only place it is
-                    // meaningful -- and keeps it available when consuming TS lib
+                    // in core.js) keeps it available when consuming TS lib
                     // defs that do not load core.js.
-                    "object" if flow_common::files::has_ts_ext(cx.file()) => {
+                    "object"
+                        if flow_common::files::has_ts_ext(cx.file())
+                            || cx.is_global_libdef(cx.file()) =>
+                    {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
                             let interface_ast = empty_interface_annot(loc.dupe());
                             let result = convert_inner(cx, env, &interface_ast)?;
@@ -2325,11 +2327,14 @@ fn convert_inner<'a>(
                     // inside object literal methods. That rewiring is moot in Flow -- Flow
                     // bans `this` references in object literals outright, and methods on
                     // classes/interfaces cannot be unbound from their declaring type -- so
-                    // there is no value to importing the semantics. We accept the name only
-                    // in .ts/.d.ts files so library `.d.ts` types parse and check, treating
+                    // there is no value to importing the semantics. We accept the name
+                    // in TS files and global libdefs, treating
                     // it as a structurally-empty interface (intersections like
                     // `M & ThisType<T>` reduce to `M`).
-                    "ThisType" if flow_common::files::has_ts_ext(cx.file()) => {
+                    "ThisType"
+                        if flow_common::files::has_ts_ext(cx.file())
+                            || cx.is_global_libdef(cx.file()) =>
+                    {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
                             let (_ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
