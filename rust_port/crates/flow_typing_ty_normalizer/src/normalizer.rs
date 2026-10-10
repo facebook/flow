@@ -24,6 +24,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_aloc::ALocFuzzy;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -524,12 +525,18 @@ fn symbol_from_loc<'cx>(
         Some(def_file) if current_source == def_file => Provenance::Local,
         Some(def_file) if env.genv.cx.is_global_libdef(def_file) => {
             Provenance::Library(flow_common_ty::ty_symbol::RemoteInfo {
-                imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
+                imported_as: env
+                    .imported_names()?
+                    .get(&ALocFuzzy(sym_def_loc.dupe()))
+                    .cloned(),
             })
         }
         Some(def_file) if matches!(def_file.inner(), FileKeyInner::SourceFile(_)) => {
             Provenance::Remote(flow_common_ty::ty_symbol::RemoteInfo {
-                imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
+                imported_as: env
+                    .imported_names()?
+                    .get(&ALocFuzzy(sym_def_loc.dupe()))
+                    .cloned(),
             })
         }
         Some(_) => Provenance::Local,
@@ -5870,7 +5877,7 @@ impl<I: NormalizerInput> Normalizer<I> {
                         name.to_string(),
                         import_mode,
                     );
-                    result.insert(def_loc, imported_ident);
+                    result.insert(ALocFuzzy(def_loc), imported_ident);
                 }
                 // unrecognizable remote type - skip
                 Ok(None) => {}

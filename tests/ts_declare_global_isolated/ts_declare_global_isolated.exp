@@ -37,5 +37,39 @@ References:
                                         ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------- normalizer_consumer.js:4:1
 
-Found 2 errors
+Cannot cast `stream` to empty because `Stream` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   normalizer_consumer.js:4:1
+   4| stream as empty; // ERROR
+      ^^^^^^
+
+References:
+   normalizer_consumer.js:3:23
+   3| declare const stream: GlobalSymbols.Stream;
+                            ^^^^^^^^^^^^^^^^^^^^ [1]
+   normalizer_consumer.js:4:11
+   4| stream as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- normalizer_consumer.js:7:1
+
+Cannot cast `imported` to empty because `Imported` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   normalizer_consumer.js:7:1
+   7| imported as empty; // ERROR
+      ^^^^^^^^
+
+References:
+   normalizer_consumer.js:6:25
+   6| declare const imported: Imported;
+                              ^^^^^^^^ [1]
+   normalizer_consumer.js:7:13
+   7| imported as empty; // ERROR
+                  ^^^^^ [2]
+
+
+
+Found 4 errors
