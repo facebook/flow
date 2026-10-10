@@ -157,6 +157,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         tslib_contents::LIB_ES2024_STRING_D_TS,
     ),
     ("lib.es5.js", LIB_ES5_JS),
+    ("lib.esnext.array.js", tslib_contents::LIB_ESNEXT_ARRAY_D_TS),
     ("lib.esnext.collection.js", LIB_ESNEXT_COLLECTION_JS),
     ("lib.esnext.decorators.js", LIB_ESNEXT_DECORATORS_JS),
     ("lib.esnext.disposable.js", LIB_ESNEXT_DISPOSABLE_JS),

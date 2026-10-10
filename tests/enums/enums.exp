@@ -2263,8 +2263,8 @@ incompatible with `void` [3]. [incompatible-type]
                                  ^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3532:23
+   3532| interface Promise<out R = unknown> {
                                ^ [1]
    exhaustive-check-implicit-return.js:208:33
     208| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive

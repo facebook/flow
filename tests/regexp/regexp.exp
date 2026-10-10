@@ -7,8 +7,8 @@ Cannot assign `patt.test(...)` to `match` because `boolean` [1] is incompatible 
                            ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:922:27
-   922|     test(string: string): boolean;
+   <BUILTINS>/lib.es5.js:923:27
+   923|     test(string: string): boolean;
                                   ^^^^^^^ [1]
    regexp.js:2:11
      2| var match:number = patt.test("Hello world!");
@@ -25,8 +25,8 @@ with `unknown`. [incompatible-type]
         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:902:11
-   902| interface RegExp {
+   <BUILTINS>/lib.es5.js:903:11
+   903| interface RegExp {
                   ^^^^^^ [1]
 
 

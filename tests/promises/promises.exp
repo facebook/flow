@@ -256,8 +256,8 @@ Cannot cast `Promise.any(...)` to `Promise` because in type argument `R` [1]: `s
            ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3532:23
+   3532| interface Promise<out R = unknown> {
                                ^ [1]
    <BUILTINS>/lib.es2021.promise.js:53:59
      53|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
@@ -299,8 +299,8 @@ Cannot return `Promise.any(...)` because in type argument `R` [1]: `unknown` [2]
                   ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3532:23
+   3532| interface Promise<out R = unknown> {
                                ^ [1]
    <BUILTINS>/lib.es2021.promise.js:53:59
      53|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
@@ -320,8 +320,8 @@ Cannot cast `p.finally(...)` to `Promise` because in type argument `R` [1]: `num
          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3532:23
+   3532| interface Promise<out R = unknown> {
                                ^ [1]
    finally.js:1:26
       1| declare const p: Promise<number>;
@@ -785,8 +785,8 @@ Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1]: `
          ^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3532:23
+   3532| interface Promise<out R = unknown> {
                                ^ [1]
    resolve_void.js:1:30
       1| Promise.resolve() as Promise<number>; // error
@@ -803,8 +803,8 @@ Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1]
                          ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3532:23
+   3532| interface Promise<out R = unknown> {
                                ^ [1]
    resolve_void.js:3:39
       3| Promise.resolve(undefined) as Promise<number>; // error
@@ -836,17 +836,17 @@ References:
    <BUILTINS>/lib.es2024.promise.js:22:26
      22|     resolve: (value: T | PromiseLike<T>) => void;
                                   ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:3539:18
-   3539|       onFulfill: null | void,
+   <BUILTINS>/lib.es5.js:3540:18
+   3540|       onFulfill: null | void,
                           ^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:3516:20
-   3516|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
+   <BUILTINS>/lib.es5.js:3517:20
+   3517|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es5.js:3549:18
-   3549|       onFulfill: (value: R) => Promise<U> | U,
+   <BUILTINS>/lib.es5.js:3550:18
+   3550|       onFulfill: (value: R) => Promise<U> | U,
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/lib.es5.js:3516:19
-   3516|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
+   <BUILTINS>/lib.es5.js:3517:19
+   3517|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
@@ -880,8 +880,8 @@ Cannot cast `promise` to `Promise` because in type argument `R` [1]: `number` [2
          ^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
+   <BUILTINS>/lib.es5.js:3532:23
+   3532| interface Promise<out R = unknown> {
                                ^ [1]
    withResolvers.js:1:58
       1| const {promise, resolve, reject} = Promise.withResolvers<number>();

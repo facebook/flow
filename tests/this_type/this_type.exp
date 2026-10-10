@@ -918,8 +918,8 @@ Cannot call `i16.set(...).copyWithin` because property `copyWithin` is missing i
                             ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:2104:53
-   2104|     set(array: ArrayLike<number>, offset?: number): void;
+   <BUILTINS>/lib.es5.js:2105:53
+   2105|     set(array: ArrayLike<number>, offset?: number): void;
                                                              ^^^^ [1]
 
 

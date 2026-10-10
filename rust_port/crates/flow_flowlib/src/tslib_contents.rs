@@ -54,6 +54,7 @@ pub(super) const LIB_ES2024_SHAREDMEMORY_JS: &str = concat!(
     include_tslib!("lib.es2024.sharedmemory.d.ts"),
 );
 pub(super) const LIB_ES2024_STRING_D_TS: &str = include_tslib!("lib.es2024.string.d.ts");
+pub(super) const LIB_ESNEXT_ARRAY_D_TS: &str = include_tslib!("lib.esnext.array.d.ts");
 pub(super) const LIB_ESNEXT_ERROR_D_TS: &str = include_tslib!("lib.esnext.error.d.ts");
 pub(super) const LIB_ESNEXT_PROMISE_D_TS: &str = include_tslib!("lib.esnext.promise.d.ts");
 pub(super) const LIB_ESNEXT_SHAREDMEMORY_D_TS: &str =
@@ -284,10 +285,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.es2024.string.d.ts", LIB_ES2024_STRING_D_TS),
     ("lib.es5.d.ts", include_tslib!("lib.es5.d.ts")),
     ("lib.es6.d.ts", include_tslib!("lib.es6.d.ts")),
-    (
-        "lib.esnext.array.d.ts",
-        include_tslib!("lib.esnext.array.d.ts"),
-    ),
+    ("lib.esnext.array.d.ts", LIB_ESNEXT_ARRAY_D_TS),
     (
         "lib.esnext.collection.d.ts",
         include_tslib!("lib.esnext.collection.d.ts"),
