@@ -29,6 +29,8 @@ pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.
 pub(super) const LIB_ES2015_SYMBOL_D_TS: &str = include_tslib!("lib.es2015.symbol.d.ts");
 pub(super) const LIB_ES2017_ARRAYBUFFER_D_TS: &str = include_tslib!("lib.es2017.arraybuffer.d.ts");
 pub(super) const LIB_ES2017_DATE_D_TS: &str = include_tslib!("lib.es2017.date.d.ts");
+pub(super) const LIB_ES2017_SHAREDMEMORY_D_TS: &str =
+    include_tslib!("lib.es2017.sharedmemory.d.ts");
 pub(super) const LIB_ES2017_STRING_D_TS: &str = include_tslib!("lib.es2017.string.d.ts");
 pub(super) const LIB_ES2018_REGEXP_D_TS: &str = include_tslib!("lib.es2018.regexp.d.ts");
 pub(super) const LIB_ES2019_STRING_D_TS: &str = include_tslib!("lib.es2019.string.d.ts");
@@ -122,10 +124,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2017.object.d.ts",
         include_tslib!("lib.es2017.object.d.ts"),
     ),
-    (
-        "lib.es2017.sharedmemory.d.ts",
-        include_tslib!("lib.es2017.sharedmemory.d.ts"),
-    ),
+    ("lib.es2017.sharedmemory.d.ts", LIB_ES2017_SHAREDMEMORY_D_TS),
     ("lib.es2017.string.d.ts", LIB_ES2017_STRING_D_TS),
     (
         "lib.es2017.typedarrays.d.ts",

@@ -449,7 +449,7 @@ Flags: --pretty
       "name":"setTimeout",
       "type":"<TArguments extends Array<unknown>>(callback: (...args: TArguments) => unknown, ms?: number, ...args: TArguments) => TimeoutID"
     },
-    {"name":"SharedArrayBuffer","type":"typeof SharedArrayBuffer"},
+    {"name":"SharedArrayBuffer","type":"SharedArrayBufferConstructor"},
     {"name":"String","type":"StringConstructor"},
     {"name":"Symbol","type":"SymbolConstructor"},
     {"name":"SyntaxError","type":"SyntaxErrorConstructor"},
