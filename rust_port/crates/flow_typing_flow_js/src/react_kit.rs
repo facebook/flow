@@ -33,6 +33,8 @@ use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorSpreadTypeData;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::GetPropTData;
 use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::Literal;
@@ -47,6 +49,8 @@ use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::PropRef;
+use flow_typing_type::type_::Property;
+use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::RendersVariant;
@@ -823,15 +827,140 @@ pub(super) fn run_with_env<'cx>(
         let component = l;
         let dropped = drop_generic(component.dupe());
         let intrinsic_to_props = |component: &Type| {
-            let props = Type::new(TypeInner::EvalT {
-                type_: component.dupe(),
-                defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+            // In the annotation expressions below, T is the intrinsic tag type, e.g. 'div'.
+            // Anchor errors for the synthesized annotation to T's source location.
+            let reason_component = type_util::reason_of_t(component);
+            let reason_props = reason_component
+                .dupe()
+                .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));
+            // Apply an annotation operation, such as A['props'] or $ReadOnly<A>.
+            let eval = |type_: Type, destructor: Destructor| {
+                FlowJs::mk_type_destructor_with_env(
+                    cx,
+                    env,
+                    trace,
                     unknown_use(),
-                    reason_op.dupe(),
-                    Rc::new(Destructor::ReactElementConfigType),
-                )),
-                id: eval::Id::generate_id(),
-            });
+                    &reason_props,
+                    &type_,
+                    &destructor,
+                    eval::Id::generate_id(),
+                )
+            };
+            // type Intrinsic = Intrinsics[T];
+            let intrinsic = {
+                // type Intrinsics = $JSXIntrinsics;
+                let intrinsics = {
+                    let reason_intrinsics = mk_reason(
+                        VirtualReasonDesc::RType("$JSXIntrinsics".into()),
+                        reason_component.loc().dupe(),
+                    );
+                    FlowJs::get_builtin_type_with_env(
+                        cx,
+                        env,
+                        None,
+                        &reason_intrinsics,
+                        None,
+                        "$JSXIntrinsics",
+                    )?
+                };
+                // Phrase lookup errors in terms of the tag T.
+                let intrinsic_use_op =
+                    VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ReactGetIntrinsic {
+                        literal: if let TypeInner::DefT(_, def_t) = component.deref()
+                            && let DefTInner::SingletonStrT { value: name, .. } = def_t.deref()
+                        {
+                            reason_component
+                                .dupe()
+                                .replace_desc(VirtualReasonDesc::RIdentifier(name.dupe()))
+                        } else {
+                            reason_component.dupe()
+                        },
+                    }));
+                // For a non-literal string T, require a matching indexer in Intrinsics.
+                if let TypeInner::DefT(_, def_t) = component.deref()
+                    && let DefTInner::StrGeneralT(_) = def_t.deref()
+                {
+                    FlowJs::rec_flow_with_env(
+                        cx,
+                        env,
+                        trace,
+                        &intrinsics,
+                        &UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                            use_op: intrinsic_use_op.dupe(),
+                            reason: reason_component.dupe(),
+                            type_: component.dupe(),
+                        }))),
+                    )?;
+                }
+                FlowJs::mk_type_destructor_with_env(
+                    cx,
+                    env,
+                    trace,
+                    intrinsic_use_op,
+                    reason_component,
+                    &intrinsics,
+                    &Destructor::ElementType {
+                        index_type: component.dupe(),
+                    },
+                    eval::Id::generate_id(),
+                )?
+            };
+            // type Props = Intrinsic['props'];
+            let props = eval(
+                intrinsic.dupe(),
+                Destructor::PropertyType {
+                    name: Name::new("props"),
+                },
+            )?;
+            // Same fields as {...Props, ref?: Ref}, with exactness inherited from Props.
+            let props = {
+                // The inline object annotation {ref?: Ref}.
+                let ref_slice = {
+                    // type Instance = Intrinsic['instance'];
+                    let instance = eval(
+                        intrinsic,
+                        Destructor::PropertyType {
+                            name: Name::new("instance"),
+                        },
+                    )?;
+                    // type Ref = React.RefSetter<Instance>;
+                    let ref_setter = FlowJs::get_builtin_react_typeapp_with_env(
+                        cx,
+                        env,
+                        reason_op,
+                        None,
+                        ExpectedModulePurpose::ReactModuleForReactRefSetterType,
+                        vec![instance],
+                    )?;
+                    // The property annotation ref?: Ref.
+                    let ref_prop = Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: None,
+                        key_loc: None,
+                        type_: type_util::optional(ref_setter, None, false),
+                        polarity: Polarity::Neutral,
+                    })));
+                    object::spread::OperandSlice::new(object::spread::OperandSliceInner {
+                        reason: reason_props.dupe(),
+                        prop_map: [(Name::new("ref"), ref_prop)].into_iter().collect(),
+                        generics: flow_typing_generics::spread_empty(),
+                        dict: None,
+                        reachable_targs: Rc::from([]),
+                    })
+                };
+                eval(
+                    props,
+                    Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
+                        object::spread::Target::Value {
+                            make_seal: object::spread::SealType::Sealed,
+                            strictness_kind: cx.type_strictness_kind(),
+                        },
+                        Default::default(),
+                        Some(ref_slice),
+                    ))),
+                )?
+            };
+            // type Config = Readonly<{...Props, ref?: Ref}>;
+            let props = eval(props, Destructor::ReadOnlyType)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
             Ok(props)
         };

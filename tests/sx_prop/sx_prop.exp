@@ -1,8 +1,8 @@
 Error ------------------------------------------------------------------------------------------------- no_import.js:5:2
 
 Cannot create `div` element because property `sx` is extra in `{sx: Array<1 | 2 | 3>}` [1] but missing in
-`{className?: string, ref?: React.RefSetter<HTMLDivElement>, style?: {[string]: string | number}}` [2]. Exact objects do
-not accept extra props. [incompatible-type]
+`{readonly className?: string, readonly ref?: React.RefSetter<HTMLDivElement>, readonly style?: {[str...` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    no_import.js:5:2
    5| <div sx={[1, 2, 3]} />; // ERROR — sx is not a known prop on div
@@ -99,8 +99,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- wrong_import.js:6:2
 
 Cannot create `div` element because property `sx` is extra in `{sx: Array<1 | 2 | 3>}` [1] but missing in
-`{className?: string, ref?: React.RefSetter<HTMLDivElement>, style?: {[string]: string | number}}` [2]. Exact objects do
-not accept extra props. [incompatible-type]
+`{readonly className?: string, readonly ref?: React.RefSetter<HTMLDivElement>, readonly style?: {[str...` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    wrong_import.js:6:2
    6| <div sx={[1, 2, 3]} />; // ERROR — sx is not a known prop on div

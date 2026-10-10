@@ -91,7 +91,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- strings.js:13:2
 
 Cannot create `div` element because property `id` is missing in `{}` [1] but exists in
-`{[StringPrefix<"data-">]: string, id: string, ref?: React.RefSetter<any>}` [2]. [incompatible-type]
+`{readonly [StringPrefix<"data-">]: string, readonly id: string, readonly ref?: React.RefSetter<any>}` [2].
+[incompatible-type]
 
    strings.js:13:2
    13| <div />; // This is not fine

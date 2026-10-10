@@ -782,7 +782,7 @@ impl FlowJs {
         eval_helpers::eval_selector(cx, env, trace, annot, reason, t, selector, tvar, index)
     }
 
-    fn mk_type_destructor_with_env<'cx>(
+    pub(crate) fn mk_type_destructor_with_env<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,

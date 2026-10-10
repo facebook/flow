@@ -2,8 +2,14 @@ Error --------------------------------------------------------------------------
 
 Property `instance` is missing in `{props: {}, ...}` [1]. [prop-missing]
 
+   test.js:4:2
    4| <noinstance ref={ref} />; // Error: the intrinsic has no `instance`
-       ^^^^^^^^^^ [1]
+       ^^^^^^^^^^
+
+References:
+   lib/jsx.js:2:15
+   2|   noinstance: {props: {}, ...},
+                    ^^^^^^^^^^^^^^^^ [1]
 
 
 
