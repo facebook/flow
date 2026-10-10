@@ -25,6 +25,7 @@ use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 use crate::type_::ArrRestTData;
+use crate::type_::AssertionFunctionConsistencyData;
 use crate::type_::BindTData;
 use crate::type_::CallTData;
 use crate::type_::ClassImplementsCheckData;
@@ -1252,6 +1253,17 @@ where
                 param_reason: mod_reason(param_reason),
                 guard_type_reason: mod_reason(guard_type_reason),
                 is_return_false_statement,
+            })),
+            AssertionFunctionConsistency(box AssertionFunctionConsistencyData {
+                exit_reason,
+                param_reason,
+                guard_type_reason,
+                implicit_return,
+            }) => AssertionFunctionConsistency(Box::new(AssertionFunctionConsistencyData {
+                exit_reason: mod_reason(exit_reason),
+                param_reason: mod_reason(param_reason),
+                guard_type_reason: mod_reason(guard_type_reason),
+                implicit_return,
             })),
             UnknownUse => UnknownUse,
         }

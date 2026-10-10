@@ -1362,6 +1362,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     | VirtualRootUseOp::RenderTypeInstantiation { .. }
                     | VirtualRootUseOp::ComponentRestParamCompatibility { .. }
                     | VirtualRootUseOp::PositiveTypeGuardConsistency(..)
+                    | VirtualRootUseOp::AssertionFunctionConsistency(..)
                     | VirtualRootUseOp::UnknownUse => false,
                 },
                 VirtualFrameUseOp::UnifyFlip if !should_replace => match root_of_op2 {

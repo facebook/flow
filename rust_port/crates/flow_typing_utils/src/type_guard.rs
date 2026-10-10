@@ -15,6 +15,8 @@ use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc::*;
 use flow_common::reason::mk_reason;
 use flow_env_builder::env_api;
+use flow_env_builder::env_api::AssertionConsistencyInfo;
+use flow_env_builder::env_api::AssertionExit;
 use flow_env_builder::pattern_helper;
 use flow_parser::ast::expression::Expression;
 use flow_parser::ast::expression::ExpressionInner;
@@ -22,6 +24,7 @@ use flow_parser::ast::function;
 use flow_parser::ast::pattern;
 use flow_typing_context::Context;
 use flow_typing_context::TypingMode;
+use flow_typing_errors::error_message::EAssertionFunctionFalsyAtExitData;
 use flow_typing_errors::error_message::ENegativeTypeGuardConsistencyData;
 use flow_typing_errors::error_message::ETypeGuardFunctionInvalidWritesData;
 use flow_typing_errors::error_message::ETypeGuardFunctionParamHavocedData;
@@ -34,6 +37,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver::default_no_lowers;
+use flow_typing_type::type_::AssertionFunctionConsistencyData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
@@ -192,6 +196,135 @@ fn check_type_guard_consistency<'cx>(
     Ok(())
 }
 
+// Assertion functions only narrow through abrupt completions: every point
+// where the function completes normally must already have narrowed the
+// asserted parameter. The check is one-sided since the throwing paths carry no
+// information.
+fn check_assertion_consistency<'cx>(
+    cx: &Context<'cx>,
+    reason: &Reason,
+    param_loc: &ALoc,
+    tg_param: &(ALoc, flow_data_structure_wrapper::smol_str::FlowSmolStr),
+    type_guard: Option<&Type>,
+) -> Result<(), JobError> {
+    let info = {
+        let env = cx.environment();
+        env.var_info
+            .assertion_consistency_maps
+            .get(&tg_param.0)
+            .cloned()
+    };
+    // Entry missing when the function never completes normally.
+    let Some(AssertionConsistencyInfo { havoced, exits }) = info else {
+        return Ok(());
+    };
+    let (name_loc, name) = tg_param;
+    let is_this = name.as_str() == "this";
+    let param_reason = if is_this {
+        mk_reason(RThis, param_loc.dupe())
+    } else {
+        mk_reason(RParameter(Some(name.dupe())), param_loc.dupe())
+    };
+    if let Some(havoced_loc_set) = havoced {
+        flow_js::add_output_non_speculating(
+            cx,
+            ErrorMessage::ETypeGuardFunctionParamHavoced(Box::new(
+                ETypeGuardFunctionParamHavocedData {
+                    type_guard: TypeGuardParameterData {
+                        loc: name_loc.dupe(),
+                        name: name.dupe(),
+                    },
+                    param_loc: param_loc.dupe(),
+                    is_this,
+                    call_locs: havoced_loc_set.iter().cloned().collect(),
+                },
+            )),
+        );
+        return Ok(());
+    }
+    for AssertionExit { return_loc, read } in exits {
+        let implicit_return = return_loc.is_none();
+        let exit_reason = match return_loc {
+            Some(loc) => mk_reason(RReturn, loc),
+            None => reason.dupe(),
+        };
+        let exit_loc = exit_reason.loc().dupe();
+        let t = match type_env::checked_type_guard_param_at_return(
+            cx,
+            param_reason.dupe(),
+            param_loc.dupe(),
+            exit_loc.dupe(),
+            &read.write_locs,
+        )? {
+            Ok(t) => t,
+            Err(write_locs) => {
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::ETypeGuardFunctionInvalidWrites(Box::new(
+                        ETypeGuardFunctionInvalidWritesData {
+                            loc: exit_loc,
+                            type_guard: NamedReferenceData {
+                                loc: name_loc.dupe(),
+                                name: name.dupe(),
+                            },
+                            write_locs,
+                        },
+                    )),
+                );
+                continue;
+            }
+        };
+        match type_guard {
+            Some(type_guard) => {
+                let use_op = UseOp::Op(Arc::new(VirtualRootUseOp::AssertionFunctionConsistency(
+                    Box::new(AssertionFunctionConsistencyData {
+                        exit_reason,
+                        param_reason: param_reason.dupe(),
+                        guard_type_reason: reason_of_t(type_guard).dupe(),
+                        implicit_return,
+                    }),
+                )));
+                flow_js::flow_non_speculating(
+                    cx,
+                    (&t, &UseT::new(UseTInner::UseT(use_op, type_guard.dupe()))),
+                )?;
+            }
+            None => {
+                // A bare `asserts x` promises that `x` is truthy, but there is no
+                // type for the truthy part of `t` to check against. Check the
+                // complement instead: what `t` can still be when falsy must be empty.
+                let falsy = predicate_kit::collect_predicate_for_filtering(
+                    cx,
+                    &t,
+                    &Predicate::new(PredicateInner::NotP(Predicate::new(
+                        PredicateInner::TruthyP,
+                    ))),
+                )?
+                .union_opt(param_reason.dupe())
+                .unwrap_or_else(|| default_no_lowers(&param_reason));
+                let empty_t = flow_typing_type::type_::empty_t::at(ALoc::default());
+                if !FlowJs::speculative_subtyping_succeeds(cx, &falsy, &empty_t)? {
+                    flow_js::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::EAssertionFunctionFalsyAtExit(Box::new(
+                            EAssertionFunctionFalsyAtExitData {
+                                loc: exit_loc,
+                                param: NamedReferenceData {
+                                    loc: name_loc.dupe(),
+                                    name: name.dupe(),
+                                },
+                                falsy: flow_js_utils::type_reference_for_error(&falsy),
+                                implicit_return,
+                            },
+                        )),
+                    );
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 /// `allow_this_type_guard` mirrors `type_annotation::allows_this_type_guards` on the
 /// annotation-only path: it is set only for non-static class methods, the one
 /// body-carrying context where `this` is bound to a class instance and can
@@ -257,6 +390,25 @@ pub fn check_type_guard<'cx>(
         } else {
             mk_reason(RTypeGuardParam(name.dupe()), name_loc.dupe())
         };
+        let check_consistency = |binding_loc: &ALoc| match (kind, type_guard) {
+            (TypeGuardKind::Asserts, _) => check_assertion_consistency(
+                cx,
+                reason,
+                binding_loc,
+                param_name,
+                type_guard.as_ref(),
+            ),
+            (_, Some(type_guard)) => check_type_guard_consistency(
+                cx,
+                reason,
+                type_guard_val.one_sided(),
+                binding_loc,
+                param_name,
+                &tg_reason,
+                type_guard,
+            ),
+            (_, None) => Ok(()),
+        };
         let bindings = pattern_helper::bindings_of_params(params);
         match bindings.get(name) {
             None => {
@@ -271,19 +423,7 @@ pub fn check_type_guard<'cx>(
                         Some(this_param) => &this_param.loc,
                         None => name_loc,
                     };
-                    if let Some(type_guard) = type_guard
-                        && !matches!(kind, TypeGuardKind::Asserts)
-                    {
-                        check_type_guard_consistency(
-                            cx,
-                            reason,
-                            type_guard_val.one_sided(),
-                            binding_loc,
-                            param_name,
-                            &tg_reason,
-                            type_guard,
-                        )?;
-                    }
+                    check_consistency(binding_loc)?;
                 } else if is_this_guard {
                     flow_js::add_output_non_speculating(
                         cx,
@@ -302,19 +442,7 @@ pub fn check_type_guard<'cx>(
             Some((p_loc, binding_kind))
                 if matches!(binding_kind.deref(), pattern_helper::Binding::Root) =>
             {
-                if let Some(type_guard) = type_guard
-                    && !matches!(kind, TypeGuardKind::Asserts)
-                {
-                    check_type_guard_consistency(
-                        cx,
-                        reason,
-                        type_guard_val.one_sided(),
-                        p_loc,
-                        param_name,
-                        &tg_reason,
-                        type_guard,
-                    )?;
-                }
+                check_consistency(p_loc)?;
             }
             Some(binding) => {
                 error_on_non_root_binding(name_loc, name, binding);

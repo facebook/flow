@@ -2023,6 +2023,24 @@ pub struct ETypeGuardIncompatibleWithFunctionKindData<L: Dupe + PartialOrd + Ord
     pub kind: FlowSmolStr,
 }
 
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EAssertionFunctionFalsyAtExitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub param: NamedReferenceData<L>,
+    pub falsy: ErrorTypeReferenceData<L>,
+    pub implicit_return: bool,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ENegativeTypeGuardConsistencyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub return_reason: ErrorReference<L>,
@@ -3580,6 +3598,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ENegativeTypeGuardConsistency(Box<ENegativeTypeGuardConsistencyData<L>>),
 
+    EAssertionFunctionFalsyAtExit(Box<EAssertionFunctionFalsyAtExitData<L>>),
+
     ETypeParamConstIncompatibility(Box<ETypeParamConstIncompatibilityData<L>>),
 
     ETypeParamConstInvalidPosition(Box<(L, FlowSmolStr)>),
@@ -4434,6 +4454,12 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
             guard_type: map_reason(guard_type),
             is_return_false_statement,
         },
+        Explanation::ExplanationAssertionFunctionConsistency { param, guard_type } => {
+            Explanation::ExplanationAssertionFunctionConsistency {
+                param: map_reason(param),
+                guard_type: map_reason(guard_type),
+            }
+        }
         Explanation::ExplanationAdditionalUnionMembers(data) => {
             let ExplanationAdditionalUnionMembersData {
                 left_loc,
@@ -5375,6 +5401,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => ENegativeTypeGuardConsistency(Box::new(ENegativeTypeGuardConsistencyData {
                 return_reason: map_error_ref(return_reason),
                 type_: map_error_type_ref(type_),
+            })),
+
+            EAssertionFunctionFalsyAtExit(box EAssertionFunctionFalsyAtExitData {
+                loc,
+                param,
+                falsy,
+                implicit_return,
+            }) => EAssertionFunctionFalsyAtExit(Box::new(EAssertionFunctionFalsyAtExitData {
+                loc: f(loc),
+                param: NamedReferenceData {
+                    loc: f(param.loc),
+                    name: param.name,
+                },
+                falsy: map_error_type_ref(falsy),
+                implicit_return,
             })),
 
             ETypeParamConstIncompatibility(box ETypeParamConstIncompatibilityData {
@@ -7573,6 +7614,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 type_: map_error_type_ref(type_),
             })),
 
+            EAssertionFunctionFalsyAtExit(box EAssertionFunctionFalsyAtExitData {
+                loc,
+                param,
+                falsy,
+                implicit_return,
+            }) => EAssertionFunctionFalsyAtExit(Box::new(EAssertionFunctionFalsyAtExitData {
+                loc,
+                param,
+                falsy: map_error_type_ref(falsy),
+                implicit_return,
+            })),
+
             EUnableToSpread(box EUnableToSpreadData {
                 spread_loc,
                 object1,
@@ -8376,6 +8429,10 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             })
             | Self::ETupleElementAfterInexactSpread(loc)
             | Self::ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
+                loc,
+                ..
+            })
+            | Self::EAssertionFunctionFalsyAtExit(box EAssertionFunctionFalsyAtExitData {
                 loc,
                 ..
             })
@@ -11083,6 +11140,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 type_: Box::new(expect_error_type_reference(type_)),
             }),
 
+            ErrorMessage::EAssertionFunctionFalsyAtExit(
+                box EAssertionFunctionFalsyAtExitData {
+                    param,
+                    falsy,
+                    implicit_return,
+                    ..
+                },
+            ) => Normal(Message::MessageAssertionFunctionFalsyAtExit {
+                param,
+                falsy: Box::new(expect_error_type_reference(falsy)),
+                implicit_return,
+            }),
+
             ErrorMessage::ETypeParamConstIncompatibility(
                 box ETypeParamConstIncompatibilityData {
                     use_op,
@@ -12145,7 +12215,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 | VirtualRootUseOp::FunReturnStatement { .. }
                 | VirtualRootUseOp::FunImplicitReturn(..) => Some(IncompatibleType),
                 VirtualRootUseOp::TypeGuardIncompatibility { .. }
-                | VirtualRootUseOp::PositiveTypeGuardConsistency(..) => Some(IncompatibleTypeGuard),
+                | VirtualRootUseOp::PositiveTypeGuardConsistency(..)
+                | VirtualRootUseOp::AssertionFunctionConsistency(..) => Some(IncompatibleTypeGuard),
                 _ => None,
             }
         }
@@ -12412,6 +12483,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ) => Some(FunctionPredicate),
             ErrorMessage::ENegativeTypeGuardConsistency(
                 box ENegativeTypeGuardConsistencyData { .. },
+            )
+            | ErrorMessage::EAssertionFunctionFalsyAtExit(
+                box EAssertionFunctionFalsyAtExitData { .. },
             ) => Some(IncompatibleTypeGuard),
             ErrorMessage::ETypeParamConstIncompatibility(
                 box ETypeParamConstIncompatibilityData { .. },

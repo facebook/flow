@@ -1895,6 +1895,21 @@ pub fn checked_type_guard_at_return<'cx>(
     pos_write_locs: &[WriteLoc<ALoc>],
     neg_refi: &EnvRead<ALoc>,
 ) -> Result<Result<(Type, Option<Predicate>), Vec<ALoc>>, JobError> {
+    match checked_type_guard_param_at_return(cx, reason, param_loc, return_loc, pos_write_locs)? {
+        Ok(t) => Ok(Ok((t, read_to_predicate(cx, neg_refi)?))),
+        Err(invalid_writes) => Ok(Err(invalid_writes)),
+    }
+}
+
+/// The type of a type guard parameter at a return point, or the locations of
+/// any writes that reassign it before that point.
+pub fn checked_type_guard_param_at_return<'cx>(
+    cx: &Context<'cx>,
+    reason: Reason,
+    param_loc: ALoc,
+    return_loc: ALoc,
+    write_locs: &[WriteLoc<ALoc>],
+) -> Result<Result<Type, Vec<ALoc>>, JobError> {
     fn is_invalid(
         param_loc: &ALoc,
         acc: (bool, Vec<ALoc>),
@@ -1919,24 +1934,23 @@ pub fn checked_type_guard_at_return<'cx>(
             _ => (true, acc_locs),
         }
     }
-    let (is_invalid_result, invalid_writes) = pos_write_locs
+    let (is_invalid_result, invalid_writes) = write_locs
         .iter()
         .fold((false, vec![]), |acc, wl| is_invalid(&param_loc, acc, wl));
     if is_invalid_result {
-        Ok(Err(invalid_writes))
-    } else {
-        let t = type_of_state(
-            LookupMode::ForValue,
-            ValKind::Internal,
-            cx,
-            return_loc,
-            reason,
-            pos_write_locs,
-            None,
-            None,
-        )?;
-        Ok(Ok((t, read_to_predicate(cx, neg_refi)?)))
+        return Ok(Err(invalid_writes));
     }
+    let t = type_of_state(
+        LookupMode::ForValue,
+        ValKind::Internal,
+        cx,
+        return_loc,
+        reason,
+        write_locs,
+        None,
+        None,
+    )?;
+    Ok(Ok(t))
 }
 
 pub fn inferred_type_guard_at_return<'cx>(

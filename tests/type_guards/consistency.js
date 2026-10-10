@@ -226,3 +226,11 @@ class Private_property_2 {
     return remote.#prop(value); // error prop-missing
   }
 }
+
+function nested_function_returns(x: unknown): x is number {
+  const f = () => {
+    return 1; // okay: belongs to the nested function
+  };
+  const g = () => 2; // okay: belongs to the nested function
+  return typeof x === 'number';
+}

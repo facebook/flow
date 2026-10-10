@@ -31,6 +31,7 @@ use flow_typing_errors::error_message::CallTypeArityCallee;
 use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::EAnnotationInferenceData;
 use flow_typing_errors::error_message::EArithmeticOperandData;
+use flow_typing_errors::error_message::EAssertionFunctionFalsyAtExitData;
 use flow_typing_errors::error_message::EAssignConstLikeBindingData;
 use flow_typing_errors::error_message::EBinaryInLHSData;
 use flow_typing_errors::error_message::EBinaryInRHSData;
@@ -4353,6 +4354,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, &return_reason.loc)
             )
         }
+        ErrorMessage::EAssertionFunctionFalsyAtExit(box EAssertionFunctionFalsyAtExitData {
+            loc,
+            ..
+        }) => format!(
+            "EAssertionFunctionFalsyAtExit ({})",
+            string_of_aloc(None, loc)
+        ),
         ErrorMessage::EMatchError(e) => match e {
             MatchErrorKind::MatchNotExhaustive(box MatchNotExhaustiveData { loc, .. }) => {
                 format!("EMatchNotExhaustive ({})", string_of_aloc(None, loc))

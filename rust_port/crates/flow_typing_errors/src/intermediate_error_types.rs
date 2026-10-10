@@ -1138,6 +1138,10 @@ pub enum Explanation<L: Dupe> {
         guard_type: VirtualReason<L>,
         is_return_false_statement: bool,
     },
+    ExplanationAssertionFunctionConsistency {
+        param: VirtualReason<L>,
+        guard_type: VirtualReason<L>,
+    },
     ExplanationAdditionalUnionMembers(Box<ExplanationAdditionalUnionMembersData<L>>),
     ExplanationObjectLiteralNeedsRecordSyntax {
         record_name: FlowSmolStr,
@@ -1306,6 +1310,9 @@ pub enum RootMessage<L: Dupe> {
     RootCannotInstantiateRenderType,
     RootCannotInstantiateTypeApp(VirtualReasonDesc<L>),
     RootCannotReturn(VirtualReasonDesc<L>),
+    RootCannotReturnFromAssertionFunction {
+        implicit_return: bool,
+    },
     RootCannotShadowProto(NamedReferenceData<L>),
     RootCannotShadowProtoProperty,
     RootCannotSpread(VirtualReasonDesc<L>),
@@ -2485,6 +2492,12 @@ pub enum Message<L: Dupe> {
     MessageNegativeTypeGuardConsistency {
         return_desc: VirtualReasonDesc<L>,
         type_: Box<MessageTypeReferenceData<L>>,
+    },
+
+    MessageAssertionFunctionFalsyAtExit {
+        param: NamedReferenceData<L>,
+        falsy: Box<MessageTypeReferenceData<L>>,
+        implicit_return: bool,
     },
 
     MessageInvalidTypeGuardParamUnbound(TypeGuardParameterData<L>),

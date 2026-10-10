@@ -22,6 +22,8 @@ use std::sync::Arc;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
+use env_api::AssertionConsistencyInfo;
+use env_api::AssertionConsistencyMaps;
 use env_api::Refinement;
 use env_api::TypeGuardConsistencyMaps;
 use flow_aloc::ALoc;
@@ -54,6 +56,7 @@ use flow_parser::ast::expression::Expression;
 use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::expression::LogicalOperator;
 use flow_parser::ast::statement::StatementInner;
+use flow_parser::ast::types::TypeGuardKind;
 use flow_parser::ast::types::TypeInner;
 use flow_parser::ast_utils;
 use flow_parser::ast_visitor;
@@ -917,6 +920,7 @@ struct TypeGuardNameInfoInner {
     id: usize,
     havoced: RefCell<Option<FlowOrdSet<ALoc>>>,
     inferred: bool,
+    is_assertion: bool,
 }
 
 #[derive(Debug, Clone, Dupe)]
@@ -1060,6 +1064,7 @@ struct NameResolverState {
     /// We also maintain a list of all write locations, for use in populating the env with types.
     write_entries: EnvMap<ALoc, EnvEntry<ALoc>>,
     type_guard_consistency_maps: TypeGuardConsistencyMaps<ALoc>,
+    assertion_consistency_maps: AssertionConsistencyMaps<ALoc>,
     curr_id: usize,
     /// Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
     /// any point in the code. The latest_refinement maps keep track of which entries to read.
@@ -1146,6 +1151,7 @@ impl NameResolverState {
             refinement_invalidation_info: CACHED_REFI_INFO.with(|c| c.clone()),
             write_entries: EnvMap::empty(),
             type_guard_consistency_maps: TypeGuardConsistencyMaps::new(),
+            assertion_consistency_maps: AssertionConsistencyMaps::new(),
             curr_id: 0,
             refinement_heap: RefCell::new(CACHED_REFI_HEAP.with(|c| c.clone())),
             latest_refinements: FlowVector::new(),
@@ -1875,6 +1881,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             &mut self.env_state.type_guard_consistency_maps,
             TypeGuardConsistencyMaps::new(),
         )
+    }
+
+    fn take_assertion_consistency_maps(&mut self) -> AssertionConsistencyMaps<ALoc> {
+        std::mem::take(&mut self.env_state.assertion_consistency_maps)
     }
 
     fn pred_func_map(&self) -> FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>> {
@@ -4060,6 +4070,21 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         Ok(())
     }
 
+    fn record_assertion_exit(&mut self, tg_info: &TypeGuardNameInfo, return_loc: Option<ALoc>) {
+        let read = self.synthesize_read(&tg_info.name);
+        let entry = self
+            .env_state
+            .assertion_consistency_maps
+            .entry(tg_info.loc.dupe())
+            .or_insert_with(AssertionConsistencyInfo::default);
+        // The havoc set only grows during the walk, so the latest one covers
+        // every exit recorded so far.
+        entry.havoced = tg_info.havoced.borrow().dupe();
+        entry
+            .exits
+            .push(env_api::AssertionExit { return_loc, read });
+    }
+
     fn visit_match_case<'ast, B, F>(
         &mut self,
         case: &'ast flow_parser::ast::match_::Case<ALoc, ALoc, B>,
@@ -5751,6 +5776,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             let env = resolver.env_snapshot();
             resolver.run(
                 |r| {
+                    let saved_type_guard_name = r.env_state.type_guard_name.take();
                     let completion_state = r.run_to_completion(|r2| {
                         let loc = body.0.dupe();
 
@@ -5799,6 +5825,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                             Ok(())
                         })
                     });
+                    r.env_state.type_guard_name = saved_type_guard_name;
 
                     r.commit_abrupt_completion_matching(
                         |c| matches!(c, AbruptCompletion::Return | AbruptCompletion::Throw),
@@ -5881,8 +5908,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             resolver.run(
                 |r| {
                     // If this is a type guard function type_guard_name will be set in
-                    // type_guard_annotation.
-                    let saved_type_guard_name = r.env_state.type_guard_name.dupe();
+                    // type_guard_annotation. Otherwise it must not refer to the guard of
+                    // an enclosing function.
+                    let saved_type_guard_name = r.env_state.type_guard_name.take();
                     let saved_inferred_candidate = r.env_state.inferred_type_guard_candidate.dupe();
                     r.env_state.inferred_type_guard_candidate =
                         flow_parser::ast_utils::get_inferred_type_guard_candidate(params, body, return_)
@@ -9501,11 +9529,14 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         &mut self,
         expr: &flow_parser::ast::expression::Expression<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
-        match &self.env_state.type_guard_name {
+        match self.env_state.type_guard_name.dupe() {
+            Some(tg_info) if tg_info.is_assertion => {
+                ast_visitor::body_expression_default(self, expr)?;
+                self.record_assertion_exit(&tg_info, Some(expr.loc().dupe()));
+            }
             Some(tg_info) => {
                 let return_reason = flow_common::reason::mk_expression_reason(expr);
-                let tg_info_clone = tg_info.dupe();
-                self.record_type_guard_maps(&tg_info_clone, return_reason, expr)?;
+                self.record_type_guard_maps(&tg_info, return_reason, expr)?;
             }
             None => {
                 ast_visitor::body_expression_default(self, expr)?;
@@ -9516,10 +9547,16 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
 
     fn return_(
         &mut self,
-        _loc: &ALoc,
+        loc: &ALoc,
         ret: &flow_parser::ast::statement::Return<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
-        match (&self.env_state.type_guard_name, &ret.argument) {
+        match (self.env_state.type_guard_name.dupe(), &ret.argument) {
+            (Some(tg_info), argument) if tg_info.is_assertion => {
+                if let Some(arg) = argument {
+                    self.expression(arg)?;
+                }
+                self.record_assertion_exit(&tg_info, Some(loc.dupe()));
+            }
             (None, _) | (Some(_), None) => {
                 if let Some(arg) = &ret.argument {
                     self.expression(arg)?;
@@ -9527,8 +9564,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             }
             (Some(tg_info), Some(argument)) => {
                 let return_reason = flow_common::reason::mk_expression_reason(argument);
-                let tg_info_clone = tg_info.dupe();
-                self.record_type_guard_maps(&tg_info_clone, return_reason, argument)?;
+                self.record_type_guard_maps(&tg_info, return_reason, argument)?;
             }
         }
         self.raise_abrupt_completion(AbruptCompletion::Return)
@@ -9900,7 +9936,14 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         &mut self,
         body: &(ALoc, flow_parser::ast::statement::Block<ALoc, ALoc>),
     ) -> Result<(), AbruptCompletion> {
-        ast_visitor::block_default(self, &body.0, &body.1)
+        let tg_info = self.env_state.type_guard_name.dupe();
+        ast_visitor::block_default(self, &body.0, &body.1)?;
+        if let Some(tg_info) = tg_info
+            && tg_info.is_assertion
+        {
+            self.record_assertion_exit(&tg_info, None);
+        }
+        Ok(())
     }
 
     fn component_body(
@@ -10460,6 +10503,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 id,
                 havoced: RefCell::new(None),
                 inferred: true,
+                is_assertion: false,
             }));
             self.env_state.type_guard_name = Some(info);
         }
@@ -10481,6 +10525,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             id,
             havoced: RefCell::new(None),
             inferred: false,
+            is_assertion: matches!(tg.guard.kind, TypeGuardKind::Asserts),
         }));
         self.env_state.type_guard_name = Some(info);
         ast_visitor::type_guard_annotation_default(self, tg)
@@ -12237,6 +12282,7 @@ pub struct NameResolverResult {
     pub env_entries: EnvMap<ALoc, EnvEntry<ALoc>>,
     pub providers: Rc<provider_api::Info<ALoc>>,
     pub type_guard_consistency_maps: TypeGuardConsistencyMaps<ALoc>,
+    pub assertion_consistency_maps: AssertionConsistencyMaps<ALoc>,
     pub refinement_of_id: RefinementOfId,
     pub pred_func_map: FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     pub interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
@@ -12257,6 +12303,7 @@ impl NameResolverResult {
             env_refinement_invalidation_info: self.env_refinement_invalidation_info,
             env_entries: self.env_entries,
             type_guard_consistency_maps: self.type_guard_consistency_maps,
+            assertion_consistency_maps: self.assertion_consistency_maps,
             providers: self.providers,
             refinement_of_id: Box::new(move |id| refinement_of_id.get(id)),
             pred_func_map: self.pred_func_map,
@@ -12360,6 +12407,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
     let (env_values, env_entries) = dead_code_marker.into_values_and_entries();
     let env_refinement_invalidation_info = env_walk.refinement_invalidation_info();
     let type_guard_consistency_maps = env_walk.take_type_guard_consistency_maps();
+    let assertion_consistency_maps = env_walk.take_assertion_consistency_maps();
     let refinement_heap = env_walk.env_state.refinement_heap.borrow().dupe();
     let refinement_of_id = RefinementOfId::new(refinement_heap);
     let pred_func_map = env_walk.pred_func_map();
@@ -12382,6 +12430,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
             env_entries,
             providers,
             type_guard_consistency_maps,
+            assertion_consistency_maps,
             refinement_of_id,
             pred_func_map,
             interface_merge_conflicts,

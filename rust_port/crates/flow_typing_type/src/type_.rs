@@ -1058,6 +1058,26 @@ pub struct PositiveTypeGuardConsistencyData<L: Dupe + PartialEq + Eq + PartialOr
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct AssertionFunctionConsistencyData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    /// The `return`, or the `asserts` annotation when control reaches the end
+    /// of the function body.
+    pub exit_reason: VirtualReason<L>,
+    pub param_reason: VirtualReason<L>,
+    pub guard_type_reason: VirtualReason<L>,
+    pub implicit_return: bool,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ConstrainedAssignmentData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub name: FlowSmolStr,
     pub declaration: L,
@@ -1292,6 +1312,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         rest_param: VirtualReason<L>,
     },
     PositiveTypeGuardConsistency(Box<PositiveTypeGuardConsistencyData<L>>),
+    AssertionFunctionConsistency(Box<AssertionFunctionConsistencyData<L>>),
     UnknownUse,
 }
 
@@ -11549,6 +11570,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             "ComponentRestParamCompatibility"
         }
         VirtualRootUseOp::PositiveTypeGuardConsistency(..) => "PositiveTypeGuardConsistency",
+        VirtualRootUseOp::AssertionFunctionConsistency(..) => "AssertionFunctionConsistency",
         VirtualRootUseOp::UnknownUse => "UnknownUse",
     }
 }

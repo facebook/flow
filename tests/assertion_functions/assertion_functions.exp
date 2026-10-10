@@ -205,6 +205,279 @@ References:
               ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- consistency.js:95:37
+
+Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   consistency.js:95:37
+   95| function emptyBody(value: unknown): asserts value is string {} // error: unknown ~> string
+                                           ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:95:27
+   95| function emptyBody(value: unknown): asserts value is string {} // error: unknown ~> string
+                                 ^^^^^^^ [1]
+   consistency.js:95:54
+   95| function emptyBody(value: unknown): asserts value is string {} // error: unknown ~> string
+                                                            ^^^^^^ [2]
+   consistency.js:95:20
+   95| function emptyBody(value: unknown): asserts value is string {} // error: unknown ~> string
+                          ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:97:41
+
+Cannot return from assertion function at the end of its body because `value` [1] may still be falsy here: it may be
+`?""` [2]. Throw an error or call another assertion function on every path where it is falsy. [incompatible-type-guard]
+
+   consistency.js:97:41
+   97| function bareEmptyBody(value: ?string): asserts value {} // error: may still be falsy
+                                               ^^^^^^^^^^^^^
+
+References:
+   consistency.js:97:49
+   97| function bareEmptyBody(value: ?string): asserts value {} // error: may still be falsy
+                                                       ^^^^^ [1]
+   consistency.js:97:24
+   97| function bareEmptyBody(value: ?string): asserts value {} // error: may still be falsy
+                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:99:42
+
+Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   consistency.js:99:42
+   99| function wrongDirection(value: unknown): asserts value is string { // error: unknown ~> string
+                                                ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:99:32
+   99| function wrongDirection(value: unknown): asserts value is string { // error: unknown ~> string
+                                      ^^^^^^^ [1]
+   consistency.js:99:59
+   99| function wrongDirection(value: unknown): asserts value is string { // error: unknown ~> string
+                                                                 ^^^^^^ [2]
+   consistency.js:99:25
+   99| function wrongDirection(value: unknown): asserts value is string { // error: unknown ~> string
+                               ^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:105:55
+
+Cannot return from assertion function at the end of its body because `number` [1] is incompatible with `string` [2].
+[incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   consistency.js:105:55
+   105| function partialNarrowing(value: ?(string | number)): asserts value is string { // error: number ~> string
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:105:45
+   105| function partialNarrowing(value: ?(string | number)): asserts value is string { // error: number ~> string
+                                                    ^^^^^^ [1]
+   consistency.js:105:72
+   105| function partialNarrowing(value: ?(string | number)): asserts value is string { // error: number ~> string
+                                                                               ^^^^^^ [2]
+   consistency.js:105:27
+   105| function partialNarrowing(value: ?(string | number)): asserts value is string { // error: number ~> string
+                                  ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:113:5
+
+Cannot return from assertion function because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   consistency.js:113:5
+   113|     return; // error: unknown ~> string
+            ^^^^^^^
+
+References:
+   consistency.js:111:29
+   111| function earlyReturn(value: unknown, skip: boolean): asserts value is string {
+                                    ^^^^^^^ [1]
+   consistency.js:111:71
+   111| function earlyReturn(value: unknown, skip: boolean): asserts value is string {
+                                                                              ^^^^^^ [2]
+   consistency.js:111:22
+   111| function earlyReturn(value: unknown, skip: boolean): asserts value is string {
+                             ^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:118:38
+
+Cannot use type guard parameter `value` [1] because at this return point it is written to in [2]. [function-predicate]
+
+   consistency.js:118:38
+   118| function reassigned(value: unknown): asserts value is string { // error: value is written to
+                                             ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:118:46
+   118| function reassigned(value: unknown): asserts value is string { // error: value is written to
+                                                     ^^^^^ [1]
+   consistency.js:119:3
+   119|   value = 'a';
+          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:122:37
+
+Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   consistency.js:122:37
+   122| function swallowed(value: unknown): asserts value is string { // error: catch path falls through unrefined
+                                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:122:27
+   122| function swallowed(value: unknown): asserts value is string { // error: catch path falls through unrefined
+                                  ^^^^^^^ [1]
+   consistency.js:122:54
+   122| function swallowed(value: unknown): asserts value is string { // error: catch path falls through unrefined
+                                                             ^^^^^^ [2]
+   consistency.js:122:20
+   122| function swallowed(value: unknown): asserts value is string { // error: catch path falls through unrefined
+                           ^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:128:48
+
+Cannot return from assertion function at the end of its body because `value` [1] may still be falsy here: it may be
+`false | void` [2]. Throw an error or call another assertion function on every path where it is falsy.
+[incompatible-type-guard]
+
+   consistency.js:128:48
+   128| function bareOnlyRemovesNull(value: ?boolean): asserts value { // error: may still be void or false
+                                                       ^^^^^^^^^^^^^
+
+References:
+   consistency.js:128:56
+   128| function bareOnlyRemovesNull(value: ?boolean): asserts value { // error: may still be void or false
+                                                               ^^^^^ [1]
+   consistency.js:128:30
+   128| function bareOnlyRemovesNull(value: ?boolean): asserts value { // error: may still be void or false
+                                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:136:5
+
+Cannot return from assertion function because `value` [1] may still be falsy here: it may be `?""` [2]. Throw an error
+or call another assertion function on every path where it is falsy. [incompatible-type-guard]
+
+   consistency.js:136:5
+   136|     return; // error: may still be falsy
+            ^^^^^^^
+
+References:
+   consistency.js:134:66
+   134| function bareEarlyReturn(value: ?string, skip: boolean): asserts value {
+                                                                         ^^^^^ [1]
+   consistency.js:134:26
+   134| function bareEarlyReturn(value: ?string, skip: boolean): asserts value {
+                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:142:3
+
+Cannot return from assertion function because `value` [1] may still be falsy here: it may be `?""` [2]. Throw an error
+or call another assertion function on every path where it is falsy. [incompatible-type-guard]
+
+   consistency.js:142:3
+   142|   undefined; // error: may still be falsy
+          ^^^^^^^^^
+
+References:
+   consistency.js:141:58
+   141| const bareArrowDoesNotNarrow = (value: ?string): asserts value =>
+                                                                 ^^^^^ [1]
+   consistency.js:141:33
+   141| const bareArrowDoesNotNarrow = (value: ?string): asserts value =>
+                                        ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- consistency.js:145:3
+
+Cannot return from assertion function because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   consistency.js:145:3
+   145|   undefined; // error: unknown ~> string
+          ^^^^^^^^^
+
+References:
+   consistency.js:144:36
+   144| const arrowDoesNotNarrow = (value: unknown): asserts value is string =>
+                                           ^^^^^^^ [1]
+   consistency.js:144:63
+   144| const arrowDoesNotNarrow = (value: unknown): asserts value is string =>
+                                                                      ^^^^^^ [2]
+   consistency.js:144:29
+   144| const arrowDoesNotNarrow = (value: unknown): asserts value is string =>
+                                    ^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:147:43
+
+Cannot use type guard parameter `value`, because `value` [1] is reassigned in [2]. [function-predicate]
+
+   consistency.js:147:43
+   147| function havoced(value: unknown): asserts value is string { // error: value is havoced by `reset()`
+                                                  ^^^^^
+
+References:
+   consistency.js:147:18
+   147| function havoced(value: unknown): asserts value is string { // error: value is havoced by `reset()`
+                         ^^^^^ [1]
+   consistency.js:152:3
+   152|   reset();
+          ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:165:14
+
+Cannot return from assertion function at the end of its body because `D` [1] is incompatible with `B` [2].
+[incompatible-type-guard]
+
+The type of this [3] needs to be compatible with the asserted type `B` [2] wherever the function returns normally. Throw
+an error or call another assertion function on every path where it is not.
+
+   consistency.js:165:14
+   165|   assertB(): asserts this is B {} // error: D ~> B
+                     ^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:164:7
+   164| class D extends A {
+              ^ [1]
+   consistency.js:165:30
+   165|   assertB(): asserts this is B {} // error: D ~> B
+                                     ^ [2]
+   consistency.js:165:22
+   165|   assertB(): asserts this is B {} // error: D ~> B
+                             ^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------------------------- imports.js:23:3
 
 Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -1993,4 +2266,4 @@ References:
 
 
 
-Found 122 errors
+Found 135 errors

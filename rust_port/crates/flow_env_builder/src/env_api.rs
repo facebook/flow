@@ -537,6 +537,26 @@ impl<L: Dupe + Eq + Ord + Hash> DerefMut for TypeGuardConsistencyMaps<L> {
     }
 }
 
+/// A point where an assertion function completes normally.
+#[derive(Debug, Clone)]
+pub struct AssertionExit<L: Dupe + Eq + Ord + Hash> {
+    /// The `return` statement or arrow expression body. `None` when control
+    /// reaches the end of the function body.
+    pub return_loc: Option<L>,
+    /// The asserted parameter at this exit.
+    pub read: Read<L>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct AssertionConsistencyInfo<L: Dupe + Eq + Ord + Hash> {
+    pub havoced: Option<FlowOrdSet<L>>,
+    pub exits: Vec<AssertionExit<L>>,
+}
+
+/// Keyed by the loc of the asserted parameter in the `asserts` annotation.
+/// Functions that never complete normally have no entry.
+pub type AssertionConsistencyMaps<L> = FlowOrdMap<L, AssertionConsistencyInfo<L>>;
+
 #[derive(Debug, Clone)]
 pub struct PredFuncInfo<L: Dupe> {
     pub class_stack: FlowVector<L>,
@@ -564,6 +584,7 @@ where
     pub env_refinement_invalidation_info: FlowOrdMap<L, RefinementInvalidation>,
     pub env_entries: EnvMap<L, EnvEntry<L>>,
     pub type_guard_consistency_maps: TypeGuardConsistencyMaps<L>,
+    pub assertion_consistency_maps: AssertionConsistencyMaps<L>,
     pub providers: Rc<provider_api::Info<L>>,
     pub refinement_of_id: Box<dyn Fn(i32) -> Refinement<L>>,
     pub pred_func_map: FlowRedBlackTreeMap<L, PredFuncInfo<L>>,
@@ -626,6 +647,7 @@ where
             env_refinement_invalidation_info: FlowOrdMap::new(),
             env_entries: EnvMap::empty(),
             type_guard_consistency_maps: TypeGuardConsistencyMaps::new(),
+            assertion_consistency_maps: AssertionConsistencyMaps::new(),
             providers: Rc::new(provider_api::Info::default()),
             refinement_of_id: Box::new(|_| {
                 panic!("Empty env info: refinement_of_id called on empty EnvInfo")

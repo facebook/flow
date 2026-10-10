@@ -1702,6 +1702,7 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         RootUseOp::RefinementCheck { test, .. } => Some(test),
         RootUseOp::SwitchRefinementCheck(_) => None,
         RootUseOp::PositiveTypeGuardConsistency(data) => Some(&data.reason),
+        RootUseOp::AssertionFunctionConsistency(data) => Some(&data.exit_reason),
         RootUseOp::UnknownUse => None,
     }
 }

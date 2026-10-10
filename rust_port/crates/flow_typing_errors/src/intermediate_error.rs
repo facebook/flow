@@ -30,6 +30,7 @@ use flow_parser::file_key::FileKey;
 use flow_parser::jsdoc;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
+use flow_typing_type::type_::AssertionFunctionConsistencyData;
 use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ClassOwnProtoCheckData;
 use flow_typing_type::type_::ConformToCommonInterfaceData;
@@ -2052,6 +2053,32 @@ where
                                     (all_frames, explanations),
                                     return_reason,
                                     RootMessage::RootCannotReturn(return_reason.desc.clone()),
+                                    custom_error_message,
+                                )
+                            }
+
+                            VirtualRootUseOp::AssertionFunctionConsistency(
+                                box AssertionFunctionConsistencyData {
+                                    exit_reason,
+                                    param_reason,
+                                    guard_type_reason,
+                                    implicit_return,
+                                },
+                            ) => {
+                                let (all_frames, mut explanations) = frames;
+                                explanations.push(
+                                    Explanation::ExplanationAssertionFunctionConsistency {
+                                        param: param_reason.dupe(),
+                                        guard_type: guard_type_reason.dupe(),
+                                    },
+                                );
+                                root(
+                                    loc,
+                                    (all_frames, explanations),
+                                    exit_reason,
+                                    RootMessage::RootCannotReturnFromAssertionFunction {
+                                        implicit_return: *implicit_return,
+                                    },
                                     custom_error_message,
                                 )
                             }
@@ -4136,6 +4163,16 @@ where
                 }
                 friendly::Message(features)
             }
+            ExplanationAssertionFunctionConsistency { param, guard_type } => {
+                friendly::Message(vec![
+                    text("The type of "),
+                    ref_(param),
+                    text(" needs to be compatible with the asserted type "),
+                    ref_(guard_type),
+                    text(" wherever the function returns normally. Throw an error or call "),
+                    text("another assertion function on every path where it is not"),
+                ])
+            }
             ExplanationConstrainedAssign(data) => {
                 let ExplanationConstrainedAssignData {
                     name,
@@ -5208,6 +5245,14 @@ where
                         text("Cannot return "),
                         friendly::desc_of_reason_desc(value),
                     ]),
+                ),
+                RootMessage::RootCannotReturnFromAssertionFunction { implicit_return } => (
+                    RootKind::OperationRoot,
+                    friendly::Message(vec![text(if *implicit_return {
+                        "Cannot return from assertion function at the end of its body"
+                    } else {
+                        "Cannot return from assertion function"
+                    })]),
                 ),
                 RootMessage::RootCannotShadowProto(proto) => (
                     RootKind::OperationRoot,
@@ -9105,6 +9150,22 @@ where
                 text(
                     "https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.",
                 ),
+            ]),
+            MessageAssertionFunctionFalsyAtExit {
+                param,
+                falsy,
+                implicit_return,
+            } => friendly::Message(vec![
+                text(if *implicit_return {
+                    "Cannot return from assertion function at the end of its body because "
+                } else {
+                    "Cannot return from assertion function because "
+                }),
+                hardcoded_string_desc_ref(&format!("`{}`", param.name), &param.loc),
+                text(" may still be falsy here: it may be "),
+                ref_of_ty_or_desc(&falsy.loc, &falsy.desc),
+                text(". Throw an error or call another assertion function on every path "),
+                text("where it is falsy."),
             ]),
             MessageUnexpectedUseOfThisType => friendly::Message(vec![
                 text("Unexpected use of "),
