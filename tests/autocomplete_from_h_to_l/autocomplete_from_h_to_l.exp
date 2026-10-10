@@ -68,6 +68,7 @@ Flags: --pretty
       "name":"indexOf",
       "type":"(this: String, searchString: string, position?: number) => number"
     },
+    {"name":"isWellFormed","type":"(this: String) => boolean"},
     {
       "name":"lastIndexOf",
       "type":"(this: String, searchString: string, position?: number) => number"
@@ -136,6 +137,7 @@ Flags: --pretty
     {"name":"toLowerCase","type":"(this: String) => string"},
     {"name":"toString","type":"(this: String) => string"},
     {"name":"toUpperCase","type":"(this: String) => string"},
+    {"name":"toWellFormed","type":"(this: String) => string"},
     {"name":"trim","type":"(this: String) => string"},
     {"name":"trimEnd","type":"(this: String) => string"},
     {"name":"trimLeft","type":"(this: String) => string"},

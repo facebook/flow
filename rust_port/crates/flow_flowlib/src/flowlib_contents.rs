@@ -80,6 +80,11 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         LIB_ES2015_SYMBOL_WELLKNOWN_JS,
     ),
     ("lib.es2016.array.include.js", LIB_ES2016_ARRAY_INCLUDE_JS),
+    (
+        "lib.es2017.arraybuffer.js",
+        tslib_contents::LIB_ES2017_ARRAYBUFFER_D_TS,
+    ),
+    ("lib.es2017.date.js", tslib_contents::LIB_ES2017_DATE_D_TS),
     ("lib.es2017.sharedmemory.js", LIB_ES2017_SHAREDMEMORY_JS),
     (
         "lib.es2017.string.js",
@@ -104,6 +109,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ("lib.es2020.bigint.js", LIB_ES2020_BIGINT_JS),
     ("lib.es2020.intl.js", LIB_ES2020_INTL_JS),
     ("lib.es2020.promise.js", LIB_ES2020_PROMISE_JS),
+    (
+        "lib.es2020.sharedmemory.js",
+        tslib_contents::LIB_ES2020_SHAREDMEMORY_D_TS,
+    ),
     ("lib.es2020.string.js", LIB_ES2020_STRING_JS),
     (
         "lib.es2020.symbol.wellknown.js",
@@ -118,6 +127,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ("lib.es2022.array.js", tslib_contents::LIB_ES2022_ARRAY_D_TS),
     ("lib.es2022.error.js", LIB_ES2022_ERROR_JS),
     (
+        "lib.es2022.regexp.js",
+        tslib_contents::LIB_ES2022_REGEXP_D_TS,
+    ),
+    (
         "lib.es2022.string.js",
         tslib_contents::LIB_ES2022_STRING_D_TS,
     ),
@@ -130,12 +143,29 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         "lib.es2024.promise.js",
         tslib_contents::LIB_ES2024_PROMISE_D_TS,
     ),
+    (
+        "lib.es2024.regexp.js",
+        tslib_contents::LIB_ES2024_REGEXP_D_TS,
+    ),
+    (
+        "lib.es2024.string.js",
+        tslib_contents::LIB_ES2024_STRING_D_TS,
+    ),
     ("lib.es5.js", LIB_ES5_JS),
     ("lib.esnext.collection.js", LIB_ESNEXT_COLLECTION_JS),
     ("lib.esnext.decorators.js", LIB_ESNEXT_DECORATORS_JS),
     ("lib.esnext.disposable.js", LIB_ESNEXT_DISPOSABLE_JS),
+    ("lib.esnext.error.js", tslib_contents::LIB_ESNEXT_ERROR_D_TS),
     ("lib.esnext.float16.js", LIB_ESNEXT_FLOAT16_JS),
     ("lib.esnext.iterator.js", LIB_ESNEXT_ITERATOR_JS),
+    (
+        "lib.esnext.promise.js",
+        tslib_contents::LIB_ESNEXT_PROMISE_D_TS,
+    ),
+    (
+        "lib.esnext.sharedmemory.js",
+        tslib_contents::LIB_ESNEXT_SHAREDMEMORY_D_TS,
+    ),
     ("misc.js", MISC_JS),
     ("react.js", REACT_JS),
 ];

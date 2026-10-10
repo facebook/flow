@@ -27,17 +27,28 @@ pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asyn
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
 pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
 pub(super) const LIB_ES2015_SYMBOL_D_TS: &str = include_tslib!("lib.es2015.symbol.d.ts");
+pub(super) const LIB_ES2017_ARRAYBUFFER_D_TS: &str = include_tslib!("lib.es2017.arraybuffer.d.ts");
+pub(super) const LIB_ES2017_DATE_D_TS: &str = include_tslib!("lib.es2017.date.d.ts");
 pub(super) const LIB_ES2017_STRING_D_TS: &str = include_tslib!("lib.es2017.string.d.ts");
 pub(super) const LIB_ES2018_REGEXP_D_TS: &str = include_tslib!("lib.es2018.regexp.d.ts");
 pub(super) const LIB_ES2019_STRING_D_TS: &str = include_tslib!("lib.es2019.string.d.ts");
 pub(super) const LIB_ES2019_SYMBOL_D_TS: &str = include_tslib!("lib.es2019.symbol.d.ts");
+pub(super) const LIB_ES2020_SHAREDMEMORY_D_TS: &str =
+    include_tslib!("lib.es2020.sharedmemory.d.ts");
 pub(super) const LIB_ES2020_SYMBOL_WELLKNOWN_D_TS: &str =
     include_tslib!("lib.es2020.symbol.wellknown.d.ts");
 pub(super) const LIB_ES2021_STRING_D_TS: &str = include_tslib!("lib.es2021.string.d.ts");
 pub(super) const LIB_ES2022_ARRAY_D_TS: &str = include_tslib!("lib.es2022.array.d.ts");
+pub(super) const LIB_ES2022_REGEXP_D_TS: &str = include_tslib!("lib.es2022.regexp.d.ts");
 pub(super) const LIB_ES2022_STRING_D_TS: &str = include_tslib!("lib.es2022.string.d.ts");
 pub(super) const LIB_ES2024_COLLECTION_D_TS: &str = include_tslib!("lib.es2024.collection.d.ts");
 pub(super) const LIB_ES2024_PROMISE_D_TS: &str = include_tslib!("lib.es2024.promise.d.ts");
+pub(super) const LIB_ES2024_REGEXP_D_TS: &str = include_tslib!("lib.es2024.regexp.d.ts");
+pub(super) const LIB_ES2024_STRING_D_TS: &str = include_tslib!("lib.es2024.string.d.ts");
+pub(super) const LIB_ESNEXT_ERROR_D_TS: &str = include_tslib!("lib.esnext.error.d.ts");
+pub(super) const LIB_ESNEXT_PROMISE_D_TS: &str = include_tslib!("lib.esnext.promise.d.ts");
+pub(super) const LIB_ESNEXT_SHAREDMEMORY_D_TS: &str =
+    include_tslib!("lib.esnext.sharedmemory.d.ts");
 
 pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.d.ts", include_tslib!("lib.d.ts")),
@@ -96,15 +107,9 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2016.intl.d.ts",
         include_tslib!("lib.es2016.intl.d.ts"),
     ),
-    (
-        "lib.es2017.arraybuffer.d.ts",
-        include_tslib!("lib.es2017.arraybuffer.d.ts"),
-    ),
+    ("lib.es2017.arraybuffer.d.ts", LIB_ES2017_ARRAYBUFFER_D_TS),
     ("lib.es2017.d.ts", include_tslib!("lib.es2017.d.ts")),
-    (
-        "lib.es2017.date.d.ts",
-        include_tslib!("lib.es2017.date.d.ts"),
-    ),
+    ("lib.es2017.date.d.ts", LIB_ES2017_DATE_D_TS),
     (
         "lib.es2017.full.d.ts",
         include_tslib!("lib.es2017.full.d.ts"),
@@ -192,10 +197,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2020.promise.d.ts",
         include_tslib!("lib.es2020.promise.d.ts"),
     ),
-    (
-        "lib.es2020.sharedmemory.d.ts",
-        include_tslib!("lib.es2020.sharedmemory.d.ts"),
-    ),
+    ("lib.es2020.sharedmemory.d.ts", LIB_ES2020_SHAREDMEMORY_D_TS),
     (
         "lib.es2020.string.d.ts",
         include_tslib!("lib.es2020.string.d.ts"),
@@ -240,10 +242,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2022.object.d.ts",
         include_tslib!("lib.es2022.object.d.ts"),
     ),
-    (
-        "lib.es2022.regexp.d.ts",
-        include_tslib!("lib.es2022.regexp.d.ts"),
-    ),
+    ("lib.es2022.regexp.d.ts", LIB_ES2022_REGEXP_D_TS),
     ("lib.es2022.string.d.ts", LIB_ES2022_STRING_D_TS),
     (
         "lib.es2023.array.d.ts",
@@ -277,18 +276,12 @@ pub static CONTENTS: &[(&str, &str)] = &[
         include_tslib!("lib.es2024.object.d.ts"),
     ),
     ("lib.es2024.promise.d.ts", LIB_ES2024_PROMISE_D_TS),
-    (
-        "lib.es2024.regexp.d.ts",
-        include_tslib!("lib.es2024.regexp.d.ts"),
-    ),
+    ("lib.es2024.regexp.d.ts", LIB_ES2024_REGEXP_D_TS),
     (
         "lib.es2024.sharedmemory.d.ts",
         include_tslib!("lib.es2024.sharedmemory.d.ts"),
     ),
-    (
-        "lib.es2024.string.d.ts",
-        include_tslib!("lib.es2024.string.d.ts"),
-    ),
+    ("lib.es2024.string.d.ts", LIB_ES2024_STRING_D_TS),
     ("lib.es5.d.ts", include_tslib!("lib.es5.d.ts")),
     ("lib.es6.d.ts", include_tslib!("lib.es6.d.ts")),
     (
@@ -308,10 +301,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.esnext.disposable.d.ts",
         include_tslib!("lib.esnext.disposable.d.ts"),
     ),
-    (
-        "lib.esnext.error.d.ts",
-        include_tslib!("lib.esnext.error.d.ts"),
-    ),
+    ("lib.esnext.error.d.ts", LIB_ESNEXT_ERROR_D_TS),
     (
         "lib.esnext.float16.d.ts",
         include_tslib!("lib.esnext.float16.d.ts"),
@@ -328,14 +318,8 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.esnext.iterator.d.ts",
         include_tslib!("lib.esnext.iterator.d.ts"),
     ),
-    (
-        "lib.esnext.promise.d.ts",
-        include_tslib!("lib.esnext.promise.d.ts"),
-    ),
-    (
-        "lib.esnext.sharedmemory.d.ts",
-        include_tslib!("lib.esnext.sharedmemory.d.ts"),
-    ),
+    ("lib.esnext.promise.d.ts", LIB_ESNEXT_PROMISE_D_TS),
+    ("lib.esnext.sharedmemory.d.ts", LIB_ESNEXT_SHAREDMEMORY_D_TS),
     ("lib.scripthost.d.ts", include_tslib!("lib.scripthost.d.ts")),
 ];
 
