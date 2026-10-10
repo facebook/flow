@@ -18,8 +18,116 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:89:1
 
+Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because property `grow` is missing in `ArrayBuffer` [1] but
+exists in `SharedArrayBuffer` [2]. [incompatible-type]
+
+   test.js:89:1
+   89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:87:39
+   87| declare const arrayBacked: Uint8Array<ArrayBuffer>;
+                                             ^^^^^^^^^^^ [1]
+   test.js:89:23
+   89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+                             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:1
+
+Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because property `growable` is missing in `ArrayBuffer` [1] but
+exists in `SharedArrayBuffer` [2]. [incompatible-type]
+
+   test.js:89:1
+   89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:87:39
+   87| declare const arrayBacked: Uint8Array<ArrayBuffer>;
+                                             ^^^^^^^^^^^ [1]
+   test.js:89:23
+   89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+                             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:1
+
+Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because property `maxByteLength` is missing in `ArrayBuffer` [1]
+but exists in `SharedArrayBuffer` [2]. [incompatible-type]
+
+   test.js:89:1
+   89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:87:39
+   87| declare const arrayBacked: Uint8Array<ArrayBuffer>;
+                                             ^^^^^^^^^^^ [1]
+   test.js:89:23
+   89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+                             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:1
+
 Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because in property `slice` > the return value: property
 `[toStringTag]` is missing in `ArrayBuffer` [1] but exists in `SharedArrayBuffer` [2]. [incompatible-type]
+
+   test.js:89:1
+     89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+         ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1237:42
+   1237|     slice(begin?: number, end?: number): ArrayBuffer;
+                                                  ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2017.sharedmemory.js:32:42
+     32|     slice(begin?: number, end?: number): SharedArrayBuffer;
+                                                  ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:1
+
+Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because in property `slice` > the return value: property `grow`
+is missing in `ArrayBuffer` [1] but exists in `SharedArrayBuffer` [2]. [incompatible-type]
+
+   test.js:89:1
+     89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+         ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1237:42
+   1237|     slice(begin?: number, end?: number): ArrayBuffer;
+                                                  ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2017.sharedmemory.js:32:42
+     32|     slice(begin?: number, end?: number): SharedArrayBuffer;
+                                                  ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:1
+
+Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because in property `slice` > the return value: property
+`growable` is missing in `ArrayBuffer` [1] but exists in `SharedArrayBuffer` [2]. [incompatible-type]
+
+   test.js:89:1
+     89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+         ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1237:42
+   1237|     slice(begin?: number, end?: number): ArrayBuffer;
+                                                  ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2017.sharedmemory.js:32:42
+     32|     slice(begin?: number, end?: number): SharedArrayBuffer;
+                                                  ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:1
+
+Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because in property `slice` > the return value: property
+`maxByteLength` is missing in `ArrayBuffer` [1] but exists in `SharedArrayBuffer` [2]. [incompatible-type]
 
    test.js:89:1
      89| arrayBacked.buffer as SharedArrayBuffer; // ERROR
@@ -65,6 +173,93 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:105:1
 
+Cannot cast `arrayOnlyView` to `ArrayBufferView` because: [incompatible-type]
+ - in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is incompatible with `SharedArrayBuffer` [3]
+    - in property `slice` > the return value: property `grow` is missing in `ArrayBuffer` [4] but exists in
+      `SharedArrayBuffer` [5]
+
+   test.js:105:1
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:3494:26
+   3494| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+                                  ^^^^^^^^^^^^ [1]
+   test.js:103:46
+    103| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
+                                                      ^^^^^^^^^^^ [2]
+   test.js:105:34
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+                                          ^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1237:42
+   1237|     slice(begin?: number, end?: number): ArrayBuffer;
+                                                  ^^^^^^^^^^^ [4]
+   <BUILTINS>/lib.es2017.sharedmemory.js:32:42
+     32|     slice(begin?: number, end?: number): SharedArrayBuffer;
+                                                  ^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:105:1
+
+Cannot cast `arrayOnlyView` to `ArrayBufferView` because: [incompatible-type]
+ - in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is incompatible with `SharedArrayBuffer` [3]
+    - in property `slice` > the return value: property `growable` is missing in `ArrayBuffer` [4] but exists in
+      `SharedArrayBuffer` [5]
+
+   test.js:105:1
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:3494:26
+   3494| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+                                  ^^^^^^^^^^^^ [1]
+   test.js:103:46
+    103| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
+                                                      ^^^^^^^^^^^ [2]
+   test.js:105:34
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+                                          ^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1237:42
+   1237|     slice(begin?: number, end?: number): ArrayBuffer;
+                                                  ^^^^^^^^^^^ [4]
+   <BUILTINS>/lib.es2017.sharedmemory.js:32:42
+     32|     slice(begin?: number, end?: number): SharedArrayBuffer;
+                                                  ^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:105:1
+
+Cannot cast `arrayOnlyView` to `ArrayBufferView` because: [incompatible-type]
+ - in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is incompatible with `SharedArrayBuffer` [3]
+    - in property `slice` > the return value: property `maxByteLength` is missing in `ArrayBuffer` [4] but exists in
+      `SharedArrayBuffer` [5]
+
+   test.js:105:1
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:3494:26
+   3494| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+                                  ^^^^^^^^^^^^ [1]
+   test.js:103:46
+    103| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
+                                                      ^^^^^^^^^^^ [2]
+   test.js:105:34
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+                                          ^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1237:42
+   1237|     slice(begin?: number, end?: number): ArrayBuffer;
+                                                  ^^^^^^^^^^^ [4]
+   <BUILTINS>/lib.es2017.sharedmemory.js:32:42
+     32|     slice(begin?: number, end?: number): SharedArrayBuffer;
+                                                  ^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:105:1
+
 Cannot cast `arrayOnlyView` to `ArrayBufferView` because in type argument `TArrayBuffer` [1]: property `[toStringTag]`
 is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
 
@@ -84,5 +279,68 @@ References:
                                           ^^^^^^^^^^^^^^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:105:1
 
-Found 4 errors
+Cannot cast `arrayOnlyView` to `ArrayBufferView` because in type argument `TArrayBuffer` [1]: property `grow` is missing
+in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
+
+   test.js:105:1
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:3494:26
+   3494| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+                                  ^^^^^^^^^^^^ [1]
+   test.js:103:46
+    103| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
+                                                      ^^^^^^^^^^^ [2]
+   test.js:105:34
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+                                          ^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:105:1
+
+Cannot cast `arrayOnlyView` to `ArrayBufferView` because in type argument `TArrayBuffer` [1]: property `growable` is
+missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
+
+   test.js:105:1
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:3494:26
+   3494| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+                                  ^^^^^^^^^^^^ [1]
+   test.js:103:46
+    103| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
+                                                      ^^^^^^^^^^^ [2]
+   test.js:105:34
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+                                          ^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:105:1
+
+Cannot cast `arrayOnlyView` to `ArrayBufferView` because in type argument `TArrayBuffer` [1]: property `maxByteLength`
+is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
+
+   test.js:105:1
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:3494:26
+   3494| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+                                  ^^^^^^^^^^^^ [1]
+   test.js:103:46
+    103| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
+                                                      ^^^^^^^^^^^ [2]
+   test.js:105:34
+    105| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+                                          ^^^^^^^^^^^^^^^^^ [3]
+
+
+
+Found 16 errors

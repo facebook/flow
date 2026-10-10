@@ -149,6 +149,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         tslib_contents::LIB_ES2024_REGEXP_D_TS,
     ),
     (
+        "lib.es2024.sharedmemory.js",
+        tslib_contents::LIB_ES2024_SHAREDMEMORY_JS,
+    ),
+    (
         "lib.es2024.string.js",
         tslib_contents::LIB_ES2024_STRING_D_TS,
     ),

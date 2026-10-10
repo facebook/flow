@@ -47,6 +47,12 @@ pub(super) const LIB_ES2022_STRING_D_TS: &str = include_tslib!("lib.es2022.strin
 pub(super) const LIB_ES2024_COLLECTION_D_TS: &str = include_tslib!("lib.es2024.collection.d.ts");
 pub(super) const LIB_ES2024_PROMISE_D_TS: &str = include_tslib!("lib.es2024.promise.d.ts");
 pub(super) const LIB_ES2024_REGEXP_D_TS: &str = include_tslib!("lib.es2024.regexp.d.ts");
+pub(super) const LIB_ES2024_SHAREDMEMORY_D_TS: &str =
+    include_tslib!("lib.es2024.sharedmemory.d.ts");
+pub(super) const LIB_ES2024_SHAREDMEMORY_JS: &str = concat!(
+    "/* flowlint unsafe-getters-setters:off */",
+    include_tslib!("lib.es2024.sharedmemory.d.ts"),
+);
 pub(super) const LIB_ES2024_STRING_D_TS: &str = include_tslib!("lib.es2024.string.d.ts");
 pub(super) const LIB_ESNEXT_ERROR_D_TS: &str = include_tslib!("lib.esnext.error.d.ts");
 pub(super) const LIB_ESNEXT_PROMISE_D_TS: &str = include_tslib!("lib.esnext.promise.d.ts");
@@ -274,10 +280,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2024.promise.d.ts", LIB_ES2024_PROMISE_D_TS),
     ("lib.es2024.regexp.d.ts", LIB_ES2024_REGEXP_D_TS),
-    (
-        "lib.es2024.sharedmemory.d.ts",
-        include_tslib!("lib.es2024.sharedmemory.d.ts"),
-    ),
+    ("lib.es2024.sharedmemory.d.ts", LIB_ES2024_SHAREDMEMORY_D_TS),
     ("lib.es2024.string.d.ts", LIB_ES2024_STRING_D_TS),
     ("lib.es5.d.ts", include_tslib!("lib.es5.d.ts")),
     ("lib.es6.d.ts", include_tslib!("lib.es6.d.ts")),
