@@ -19,14 +19,17 @@
 //!
 //! Error paths and `BabelMetadata` have no printed form and are asserted directly.
 
+use std::convert::Infallible;
 use std::sync::Arc;
 
+use dupe::Dupe;
 use flow_parser::ast;
 use flow_parser::ast::expression;
 use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::function;
 use flow_parser::ast::statement;
 use flow_parser::ast::statement::StatementInner;
+use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::estree_translator;
 use flow_parser::loc::Loc;
 use flow_parser::offset_utils::OffsetTable;
@@ -360,6 +363,52 @@ function Foo_withRef(
 ): React.Node {}
 "#
     );
+}
+
+#[test]
+fn component_forward_ref_preserves_source_locations() {
+    #[derive(Default)]
+    struct Identifiers(Vec<ast::Identifier<Loc, Loc>>);
+
+    impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, Infallible> for Identifiers {
+        fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
+            loc
+        }
+
+        fn normalize_type(loc: &'ast Loc) -> &'ast Loc {
+            loc
+        }
+
+        fn identifier(&mut self, id: &'ast ast::Identifier<Loc, Loc>) -> Result<(), Infallible> {
+            self.0.push(id.dupe());
+            Ok(())
+        }
+    }
+
+    for prefix in ["", "export ", "export default "] {
+        let program = parse(&format!(
+            "\n\n{prefix}component Foo(ref: Ref) {{\n  return null;\n}}"
+        ));
+        for target in [ReactRuntimeTarget::React18, ReactRuntimeTarget::React19] {
+            let (lowered, _) = component_lowering::lower_program(&program, target)
+                .expect("component should lower");
+            let mut identifiers = Identifiers::default();
+            let Ok(()) = identifiers.program(&lowered);
+            for id in &identifiers.0 {
+                assert_eq!(id.loc.source, program.loc.source, "location of {}", id.name);
+                assert!(id.loc.start.line >= 3, "location of {}", id.name);
+            }
+            let forward_ref = identifiers.0.iter().find(|id| id.name == "forwardRef");
+            match target {
+                ReactRuntimeTarget::React18 => {
+                    let loc = &forward_ref.expect("React 18 requires forwardRef").loc;
+                    assert_eq!((loc.start.line, loc.start.column), (3, prefix.len() as i32));
+                    assert_eq!((loc.end.line, loc.end.column), (5, 1));
+                }
+                ReactRuntimeTarget::React19 => assert!(forward_ref.is_none()),
+            }
+        }
+    }
 }
 
 #[test]

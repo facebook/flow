@@ -496,14 +496,7 @@ impl ComponentLowerer {
             let call = expression::Expression::new(ExpressionInner::Call {
                 loc: loc.dupe(),
                 inner: Arc::new(expression::Call {
-                    callee: ast_builder::expressions::member(
-                        Some(loc.dupe()),
-                        ast_builder::expressions::members::identifier_by_name(
-                            None,
-                            "forwardRef",
-                            react,
-                        ),
-                    ),
+                    callee: builders::member(loc, react, "forwardRef"),
                     targs: None,
                     arguments: expression::ArgList {
                         loc: loc.dupe(),
