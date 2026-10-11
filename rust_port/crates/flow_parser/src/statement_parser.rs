@@ -2549,7 +2549,7 @@ fn export_specifiers(
                 let (loc, mut specifier) = with_loc(None, env, |env| {
                     if peek::token(env) == &TokenKind::TType {
                         // consume `type`, but we don't know yet whether this is `type foo` or
-                        // `type as foo` (a value named "type"). *)
+                        // `type as foo` (a value named "type").
                         let type_keyword_or_local = identifier_name(env)?;
                         match peek::token(env) {
                             // `type` (a value named "type")
@@ -3614,7 +3614,7 @@ fn declare_export_default_type(
 // and named specifiers (`{ ... }`) are allowed - these are only valid for
 // `declare export`, not `export declare`.
 // The [err_expected] parameter specifies the error message to use when an
-// unexpected token is encountered. *)
+// unexpected token is encountered.
 fn declare_export_declaration_body(
     env: &mut ParserEnv,
     leading: Vec<Comment<Loc>>,
@@ -5358,7 +5358,7 @@ where
                             if let Some(loc) = str_token_loc_for_error {
                                 octal_locs.push(loc);
                             }
-                            // (* 14.1.1 says that it has to be "use strict" without any
+                            // 14.1.1 says that it has to be "use strict" without any
                             // escapes, so "use\x20strict" is disallowed.
                             Some((loc.dupe(), raw == "use strict"))
                         }

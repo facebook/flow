@@ -75,7 +75,6 @@ pub struct Options {
     /// Given `type Foo<A, B = Baz>`, `Foo<Bar, Baz>` is reduced to `Foo<Bar>`
     ///
     /// WARNING: May be slow due to the structural equality checks that this necessitates.
-    // omit_targ_defaults_option: bool;
     pub omit_targ_defaults_option: bool,
     /// Run an optimization pass that removes duplicates from unions and intersections.
     ///

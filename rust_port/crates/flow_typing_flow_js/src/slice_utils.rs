@@ -297,9 +297,7 @@ pub fn merge_dro(a: Option<ReactDro>, b: Option<ReactDro>) -> Option<ReactDro> {
     }
 }
 
-// *******************************
-// * Shared Object Kit Utilities *
-// *******************************
+// Shared Object Kit Utilities
 
 pub fn mk_slice_prop(
     key_loc: Option<ALoc>,
@@ -752,7 +750,7 @@ fn spread2<'cx>(
         // If the inexact slice is None, that means we still haven't hit an inexact object yet, so we can
         // take that slice to propagate as the source of the accumulator's inexactness.
         //
-        // If it's already Some s, then the reason the object on the left is inexact
+        // If it's already `Some`, then the reason the object on the left is inexact
         // is because of an earlier inexact object. We would have already encountered that inexact
         // object on the right in a previous iteration of spread2, so the next case in the
         // match would have already updated the inexact slice to the most recent inexact object.
@@ -1261,9 +1259,7 @@ pub fn check_component_config<'cx, A>(
     return_(cx, use_op, t)
 }
 
-// ***************
-// * Object Rest *
-// ***************
+// Object Rest
 
 pub fn object_rest<'cx, A>(
     add_output: &dyn Fn(
@@ -1596,9 +1592,7 @@ pub fn object_rest_with_env<'cx, A>(
     }
 }
 
-// *********************
-// * Object Make Exact *
-// *********************
+// Object Make Exact
 pub fn object_make_exact<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -1701,9 +1695,7 @@ pub fn object_make_exact<'cx>(
     })
 }
 
-// ********************
-// * Object Read Only *
-// ********************
+// Object Read Only
 pub fn object_read_only<'cx>(cx: &Context<'cx>, reason: &Reason, x: Vec1<object::Slice>) -> Type {
     let polarity = Polarity::Positive;
     let mk_read_only_object = |object::Slice {
@@ -1869,7 +1861,7 @@ pub fn object_update_optionality<'cx>(
     }
 }
 
-// Intersect two object slices: slice * slice -> slice
+// Intersect two object slices into one slice.
 //
 // In general it is unsound to combine intersection types, but since object
 // kit utilities never write to their arguments, it is safe in this specific
@@ -2741,7 +2733,6 @@ fn resolve_with_env<'cx, A>(
             return recurse(cx, env, use_op, reason, resolve_tool_new, tool, t_first);
         }
         // Propagate any.
-        // | AnyT (_, src) -> return cx use_op (AnyT.why src reason)
         TypeInner::AnyT(_, src) => {
             return return_(cx, use_op, any_t::why(*src, reason.dupe()));
         }
@@ -2920,7 +2911,7 @@ pub struct PerSourceDispatch {
     pub indexer_keys: Vec<Type>,
 }
 
-/* What to do with the source object's indexer (the [(None, Indexed dict_t)] arm). */
+/* What to do with the source object's indexer (the `(None, ObjKind::Indexed(dict_t))` arm). */
 #[derive(Debug, Clone)]
 pub enum SourceIndexerRemap {
     DropSourceIndexer,
@@ -2930,10 +2921,10 @@ pub enum SourceIndexerRemap {
 #[derive(Debug, Clone)]
 pub struct NameRemap {
     pub per_source: BTreeMap<Name, PerSourceDispatch>,
-    /* Source dict (when (None, Indexed _)) remap: drop the dict, or keep with a new key. */
+    /* Source dict (when `(None, ObjKind::Indexed(_))`) remap: drop the dict, or keep with a new key. */
     pub source_indexer: Option<SourceIndexerRemap>,
     /* Substituted destination keys derived from the "indexer side" of selected_keys (xs in
-     * `Some (named, xs)`). These are the non-literal entries of a SemiHomomorphic key tparam. */
+     * `Some((named, xs))`). These are the non-literal entries of a SemiHomomorphic key tparam. */
     pub selected_xs_keys: Vec<Type>,
 }
 
@@ -3181,7 +3172,6 @@ pub fn map_object<'cx>(
                         None => {
                             let f = any_field();
                             for (n, _r) in dest_names {
-                                /* (fun m (n, _r) -> NameUtils.Map.update n (fun e -> merge_field reason e f) m) */
                                 name_utils::map::update(
                                     n.dupe(),
                                     |e| merge_field(reason, e, &f),
@@ -3192,7 +3182,6 @@ pub fn map_object<'cx>(
                         Some(prop) => {
                             let (_, field) = build_source_field(src_key, prop)?;
                             for (n, _r) in dest_names {
-                                /* (fun m (n, _r) -> NameUtils.Map.update n (fun e -> merge_field reason e field) m) */
                                 name_utils::map::update(
                                     n.dupe(),
                                     |e| merge_field(reason, e, &field),
@@ -3306,15 +3295,15 @@ pub fn map_object<'cx>(
                 }
                 (None, xs, ObjKind::Indexed(dict_t)) if !xs.is_empty() => {
                     /* Selected_keys.xs entries with source dict — value comes from source dict_t.key,
-                     * matching the legacy `(Some (_, xs), Indexed dict_t)` arm. */
+                     * matching the legacy `(Some((_, xs)), ObjKind::Indexed(dict_t))` arm. */
                     let dict_optional = is_prop_optional(&dict_t.value);
                     let value = mk_prop_type(dict_t.key.dupe(), dict_optional)?;
                     let pol = mk_variance(variance, dict_t.dict_polarity);
                     (xs.iter().duped().collect(), Some(value), Some(pol))
                 }
                 (None, xs, _) if !xs.is_empty() => {
-                    /* Selected_keys.xs entries but no source dict — matches legacy `(Some (_, xs), _) -> Any`
-                     * value, neutral polarity. */
+                    /* Selected_keys.xs entries but no source dict — matches the legacy `(Some((_, xs)), _)`
+                     * arm: any value, neutral polarity. */
                     (
                         xs.iter().duped().collect(),
                         Some(any_t::why(AnySource::AnyError(None), reason.dupe())),
@@ -3344,7 +3333,7 @@ pub fn map_object<'cx>(
             match all_idx_keys.as_slice() {
                 [] => {
                     /* No destination indexer contributions. We default to Exact when selected_keys is Some
-                     * (matching legacy `(Some (_, []), _) -> Exact`) or when name_type explicitly dropped the
+                     * (matching the legacy arm for `Some` with no indexers) or when name_type explicitly dropped the
                      * source dict (`as empty` on the dict key). For homomorphic remaps without a destination
                      * indexer, preserve flags.obj_kind only when the remap is identity (every source key maps
                      * to itself); a non-identity remap produces a closed shape because the result's only

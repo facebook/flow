@@ -1294,14 +1294,6 @@ fn json_of_slice<'cx>(
             .collect(),
     );
     // TODO: prop_map needs more investigation
-    //   ( "generics",
-    //     JSON_Array
-    //       (Base.List.map
-    //          ~f:(fun gen ->
-    //            JSON_String (Subst_name.string_of_subst_name gen.Generic.generic.Generic.name))
-    //          slice.Type.Object.Spread.generics
-    //       )
-    //   );
     let generics_json = Json::Array(
         slice
             .generics

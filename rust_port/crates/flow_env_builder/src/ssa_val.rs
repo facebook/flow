@@ -488,8 +488,8 @@ fn normalize<L: LocSig>(t: &WriteStateInner<L>) -> BTreeSet<WriteStateInner<L>> 
 pub fn merge<L: LocSig>(cache: &mut ValCache<L>, t1: Val<L>, t2: Val<L>) -> Val<L> {
     // Merging can easily lead to exponential blowup in size of terms if we're not careful. We
     // amortize costs by computing normal forms as sets of "atomic" terms, so that merging would
-    // correspond to set union. (Atomic terms include Uninitialized, Loc _, and REF { contents =
-    // Unresolved _ }.) Note that normal forms might change over time, as unresolved refs become
+    // correspond to set union. (Atomic terms include `Uninitialized`, `Loc`, and unresolved refs.)
+    // Note that normal forms might change over time, as unresolved refs become
     // resolved; thus, we do not shortcut normalization of previously normalized terms. Still, we
     // expect (and have experimentally validated that) the cost of computing normal forms becomes
     // smaller over time as terms remain close to their final normal forms.
@@ -564,7 +564,7 @@ fn simplify_val<L: LocSig>(
     cache: &mut HashMap<usize, Rc<Vec<WriteLoc<L>>>>,
     t: &Val<L>,
 ) -> Rc<Vec<WriteLoc<L>>> {
-    // Mirrors OCaml's `IMap.find_opt t.id !cache |> Some v -> v`: cache hits
+    // Mirrors the OCaml cache lookup: cache hits
     // share the underlying list by reference (Rc::dupe is O(1)) instead of
     // deep-cloning a `Vec<WriteLoc<L>>`, which was a major hot spot for files
     // building up large refinement chains.

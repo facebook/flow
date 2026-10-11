@@ -462,7 +462,6 @@ fn resolve_requires_impl(
     cancelable: bool,
 ) -> Result<(), RecheckError> {
     with_memory_timer(options, "ResolveRequires", || {
-        // let node_modules_containers = !Files.node_modules_containers in
         let node_modules_containers =
             Arc::new(files::node_modules_containers.read().unwrap().clone());
         if cancelable {
@@ -3002,7 +3001,6 @@ pub fn init_from_saved_state(
     // 1. Handle deleted files (files in saved state that no longer exist on disk)
     // 2. Compute dirty modules by querying the already-populated heap
     // 3. Optionally verify file hashes
-    // Files.node_modules_containers := node_modules_containers;
     *files::node_modules_containers.write().unwrap() = saved_node_modules_containers;
     let parsed = parsed_files;
     let unparsed = unparsed_files;
@@ -3792,7 +3790,7 @@ pub fn recheck(
     let did_change_mergebase = changed_mergebase.unwrap_or(false);
     if !did_change_mergebase {
         // When the mergebase did not change, the only reinit trigger is a local libdef
-        // change. [Recheck_too_slow] cannot fire (it requires changed_mergebase=Some true),
+        // change. [Recheck_too_slow] cannot fire (it requires `changed_mergebase == Some(true)`),
         // and [missed_changes] without a mergebase change was already handled upstream
         // by adding focused files to [updates] (rechecker.ml).
         if let Some(change) = incompatible_lib_change {

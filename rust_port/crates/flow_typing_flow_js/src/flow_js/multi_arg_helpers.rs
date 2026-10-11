@@ -27,9 +27,7 @@ use flow_typing_type::type_::mk_methodtype;
 use super::helpers::*;
 use super::*;
 
-// *******************************************************************
-// * subtyping a sequence of arguments with a sequence of parameters *
-// *******************************************************************
+// subtyping a sequence of arguments with a sequence of parameters
 
 pub(super) fn multiflow_call<'cx>(
     cx: &Context<'cx>,
@@ -313,7 +311,7 @@ pub(super) fn multiflow_partial<'cx>(
                 }
                 // If there is a spread argument, then a tuple rest parameter will error
                 // anyway. So let's assume that the rest param is an array with unknown
-                // arity. Dropping elements from it isn't worth doing *)
+                // arity. Dropping elements from it isn't worth doing
                 Some(_) => rest_param_t.dupe(),
             };
             let elems: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam> =
@@ -567,7 +565,6 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         let (args, spread_after_opt, _seen_opt, inexact_spread) = args.iter().try_fold(
             (Vec::<ResolvedParam>::new(), false, false, false),
             |acc, arg| -> Result<_, FlowJsException> {
-                // let (args_rev, spread_after_opt, seen_opt, inexact_spread) = acc in
                 let (mut args, spread_after_opt, seen_opt, inexact_spread) = acc;
                 if inexact_spread {
                     // We have an element after an inexact spread
@@ -578,7 +575,6 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         ErrorMessage::ETupleElementAfterInexactSpread(reason.loc().dupe()),
                     )?;
                 }
-                // match arg with
                 match arg {
                     ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                         _,
@@ -727,9 +723,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     SpreadArrayResolveTo::ResolveToTupleType { .. }
                     | SpreadArrayResolveTo::ResolveToArray => false,
                 };
-                // let tuple_elements = match resolve_to with
                 let tuple_elements: Option<Vec<TupleElement>> = match resolve_to {
-                    // | ResolveToArrayLiteral _ | ResolveToTupleType _ ->
                     SpreadArrayResolveTo::ResolveToArrayLiteral { .. }
                     | SpreadArrayResolveTo::ResolveToTupleType { .. } => {
                         let mut early_break = false;
@@ -1098,7 +1092,6 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         }
                     }
                 }
-                // | Some (tset, last_inexact_tuple, generic) ->
                 Some((mut tset, last_inexact_tuple, generic)) => {
                     let resolved_len = resolved.len();
                     let head = resolved.first().expect("non-empty");
@@ -1310,7 +1303,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         ft: &FunType,
         resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     ) -> Result<(), FlowJsException> {
-        // (* Multiflows always come out of a flow *)
+        // Multiflows always come out of a flow
         let trace = trace.expect("All multiflows show have a trace");
         let params = &ft.params;
         let rest_param = &ft.rest_param;

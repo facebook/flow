@@ -1189,8 +1189,9 @@ pub fn push_toplevel_type<M: Dupe, A: Dupe, B: Dupe>(
 }
 
 pub fn hook_name(s: &str) -> bool {
-    // OCaml's is_cap checks c = Char.uppercase_ascii c, which is true for
-    // uppercase letters, digits, underscores, and any non-lowercase character.
+    // OCaml's is_cap checks that `c` equals its ASCII uppercase form, which is
+    // true for uppercase letters, digits, underscores, and any non-lowercase
+    // character.
     fn is_cap(c: char) -> bool {
         c == c.to_ascii_uppercase()
     }

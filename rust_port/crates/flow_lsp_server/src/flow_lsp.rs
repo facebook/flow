@@ -2395,7 +2395,6 @@ fn get_local_request_handler(
         ) | (lsp::LspResult::ErrorResult(_, _), _)
     );
     if is_mistyped {
-        // | _ ->
         return Err(internal_error_exception(format!(
             "Response {} has mistyped handler",
             lsp_fmt::result_name_to_string(&result)
@@ -3293,7 +3292,6 @@ fn main_handle_unsafe(
                 Ok(i_root) => i_root,
                 Err(err) => return Err((error_state, Box::new(FlowLspError::LspException(err)))),
             };
-            // let i_root = Lsp_helpers.get_root i_initialize_params |> File_path.make in
             let i_root = flow_common::files::cached_canonicalize(&i_root).unwrap_or(i_root);
             flow_parser::file_key::set_project_root(&i_root.to_string_lossy());
 

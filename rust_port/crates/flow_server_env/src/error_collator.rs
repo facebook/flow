@@ -484,7 +484,6 @@ pub struct PerFileErrors<'a> {
     pub errors: Vec<PerErrorInfo>,
 }
 
-// let compute_per_file_errors ~with_context_limit collated_errors =
 pub fn compute_per_file_errors(
     with_context_limit: usize,
     collated_errors: &OverlayCollatedErrors,

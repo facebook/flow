@@ -140,7 +140,6 @@ enum ErrorReason {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct TestName {
-    // filename * strict
     filename: String,
     use_strict: bool,
 }

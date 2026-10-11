@@ -316,8 +316,8 @@ pub(crate) fn module_of_module_ref(
         }
         Some(Err(mapped_name)) => {
             // TODO: We reach this codepath for requires that might resolve to builtin
-            // * modules. During check we check the master context, which we can also do
-            // * here.
+            // modules. During check we check the master context, which we can also do
+            // here.
             let name = match mapped_name {
                 None => module_ref.dupe(),
                 Some(FlowImportSpecifier::Userland(name)) => name.dupe(),

@@ -353,7 +353,7 @@ pub mod friendly {
     }
 
     /// Converts a string into a message_inline list. e.g.:
-    /// "hello `world`" becomes: [Text "hello ", Code "world"].
+    /// "hello `world`" becomes: [Text("hello "), Code("world")].
     ///
     /// The inverse of string_of_message_inlines.
     pub fn message_inlines_of_string(s: &str) -> Vec<MessageInline> {
@@ -376,7 +376,7 @@ pub mod friendly {
     }
 
     /// Converts a message_inline list into a string. e.g.:
-    /// [Text "hello ", Code "world"] becomes: "hello `world`"
+    /// [Text("hello "), Code("world")] becomes: "hello `world`"
     ///
     /// The inverse of message_inlines_of_string.
     pub(super) fn string_of_message_inlines(inlines: &[MessageInline]) -> String {
@@ -396,7 +396,7 @@ pub mod friendly {
 
     // Convenience functions for constructing friendly error messages. e.g.
     //
-    //     [ref lower; text " is incompatible with "; ref upper]
+    //     vec![reference(lower), text(" is incompatible with "), reference(upper)]
     //
     // Is an example of an incompatibility error message.
 
@@ -1590,8 +1590,8 @@ pub fn mk_error<L: Dupe>(
         /// Consider the following input of mk_error:
         ///
         /// frames (from outer to inner):
-        ///         (None, frame1) > (None, frame2) -> (Some m1, frame3) >
-        ///         (None, frame4) > (None, frame5) -> (Some m2, frame6) >
+        ///         (None, frame1) > (None, frame2) -> (Some(m1), frame3) >
+        ///         (None, frame4) > (None, frame5) -> (Some(m2), frame6) >
         ///         (None, frame7) > (None, frame8)
         /// message
         ///
@@ -2886,10 +2886,11 @@ pub mod cli_output {
     /// There are some special values influenced by logic
     /// in layout_friendly_error_group.
     ///
-    /// - We manually set the color of primary references to CustomColor `Primary
-    ///   which should always be red.
-    /// - We manually set the color of root locations to CustomColor `Root which
-    ///   should always be the default terminal color.
+    /// - We manually set the color of primary references to
+    ///   `CustomColor(CustomColorKind::Primary)` which should always be red.
+    /// - We manually set the color of root locations to
+    ///   `CustomColor(CustomColorKind::Root)` which should always be the default
+    ///   terminal color.
     fn get_tty_color_internal(color: &Color<CustomColorKind>) -> tty::RawColor {
         match color {
             Color::CustomColor(CustomColorKind::Primary) => tty::RawColor::Red,
@@ -2910,7 +2911,7 @@ pub mod cli_output {
     }
 
     /// Gets the Tty color from a stack of ids.
-    /// This function will ignore CustomColor `Root if there are other colors on the stack.
+    /// This function will ignore `CustomColor(CustomColorKind::Root)` if there are other colors on the stack.
     fn get_tty_color_from_stack(
         ids: &[i32],
         colors: &BTreeMap<i32, Color<CustomColorKind>>,
@@ -3046,10 +3047,10 @@ pub mod cli_output {
         /// this when a word is, by itself, larger then our line length. Returns a:
         ///
         /// ```text
-        /// (int * (Tty.style * string) list)
+        /// (usize, Vec<(tty::Style, String)>)
         /// ```
         ///
-        /// Where int represents the length of the last line.
+        /// Where the usize represents the length of the last line.
         fn hard_break_styles(
             styles: Vec<(tty::Style, String)>,
             line_length: usize,
@@ -3081,7 +3082,7 @@ pub mod cli_output {
         /// Concatenates a words data structure created by split_into_words into a:
         ///
         /// ```text
-        /// (Tty.style * string) list
+        /// Vec<(tty::Style, String)>
         /// ```
         ///
         /// Which can be rendered by the Tty module. This is where we will line
@@ -3315,8 +3316,6 @@ pub mod cli_output {
             None => "(builtins)".to_string(),
         }
     }
-
-    // todo: exception Oh_no_file_contents_have_changed
 
     /// Error indicating file contents have changed since parsing
     #[derive(Debug)]
@@ -4203,11 +4202,11 @@ pub mod cli_output {
             };
         // Create a custom color map for our primary location and root locations.
         let mut custom_colors: BTreeMap<i32, CustomColorKind> = BTreeMap::new();
-        // Set the custom color for all primary loc ids to `Primary.
+        // Set the custom color for all primary loc ids to `CustomColorKind::Primary`.
         for &id in &primary_loc_ids {
             custom_colors.insert(id, CustomColorKind::Primary);
         }
-        // Manually set the custom color for the root loc to `Root.
+        // Manually set the custom color for the root loc to `CustomColorKind::Root`.
         if let Some(id) = root_id {
             if custom_root_color {
                 custom_colors.insert(id, CustomColorKind::Root);

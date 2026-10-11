@@ -235,7 +235,7 @@ pub(super) fn assignment_cover(env: &mut ParserEnv) -> Result<PatternCover, Roll
                     try_parse::ParseResult::FailedToParse => {
                         // Well shoot. It doesn't parse cleanly as a normal
                         // expression or as an arrow_function. Let's treat it as a
-                        // normal assignment expression gone wrong *)
+                        // normal assignment expression gone wrong
                         assignment_but_not_arrow_function_cover(env)
                     }
                 }
@@ -1982,7 +1982,7 @@ fn function_expr(env: &mut ParserEnv) -> Result<expression::Expression<Loc, Loc>
                 env.with_allow_super(AllowedSuper::NoSuper, |env| {
                     // await is a keyword if *this* is an async function, OR if it's already
                     // a keyword in the current scope (e.g. if this is a non-async function
-                    // nested in an async function). *)
+                    // nested in an async function).
                     let await_ = allow_await || env.allow_await();
                     let mut params =
                         declaration_parser::parse_function_params(env, await_, allow_yield)?;

@@ -582,7 +582,7 @@ fn element_with_optional_opening_less_than(
                 && let Some(last_child) =
                     acc.pop_if(|last_child| child_is_unpaired(opening_name, last_child))
             {
-                // (* if the last child's opening and closing tags don't match, and the
+                // if the last child's opening and closing tags don't match, and the
                 // child's closing tag matches ours, then we're in a situation like
                 // <a><b></b><c></a>, where opening_name = a and the child has opening
                 // tag c and closing tag a.

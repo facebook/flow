@@ -213,7 +213,6 @@ fn evaluate_type_destructor_<'cx>(
     // once to an annotation instead of a tvar that gets a bound on both sides.
     let t = super::helpers::drop_resolved(cx, env, t);
     match t.deref() {
-        // | OpenT _
         _ if type_util::constraint_node_id(&t).is_some() => {
             let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
                 EvalTypeDestructorTData {
@@ -226,7 +225,6 @@ fn evaluate_type_destructor_<'cx>(
             )));
             rec_flow(cx, env, trace, (&t, &x))
         }
-        // | GenericT { bound = OpenT _; _ } ->
         TypeInner::GenericT(box GenericTData {
             bound,
             reason: g_reason,
@@ -302,7 +300,6 @@ fn evaluate_type_destructor_<'cx>(
     }
 }
 
-// and mk_type_destructor cx ~trace use_op reason t d id =
 pub(super) fn mk_type_destructor<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -313,7 +310,6 @@ pub(super) fn mk_type_destructor<'cx>(
     d: &Destructor,
     id: eval::Id,
 ) -> Result<Type, FlowJsException> {
-    // let evaluated = Context.evaluated cx in
     let evaluated = cx.evaluated();
     let conditional_has_implicit_instantiation_tvar = matches!(d, Destructor::ConditionalType(_))
         && frozen_implicit_instantiation_tvar(cx, &env.solving_implicit_instantiation(), t)

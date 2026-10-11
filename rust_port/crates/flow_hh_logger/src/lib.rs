@@ -178,11 +178,6 @@ pub mod level {
         }
     }
 
-    //   let log_duration level fmt t =
-    //     if passes_min_level level then
-    //       print_duration fmt t
-    //     else
-    //       t
     pub fn log_duration(level: T, fmt: &str, t: f64) -> f64 {
         if passes_min_level(level) {
             super::print_duration(fmt, t)

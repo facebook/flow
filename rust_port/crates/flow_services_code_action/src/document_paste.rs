@@ -151,14 +151,13 @@ impl<'a> ImportInformationExtractor<'a, '_> {
             let mref = Userland::from_smol_str(source_value.dupe());
             match flow_js_utils::import_export_utils::get_module_type_or_any(
                 self.cx,
-                false, // ~perform_platform_validation:false
-                None,  // ~import_kind_for_untyped_import_validation:None
+                false, // perform_platform_validation
+                None,  // import_kind_for_untyped_import_validation
                 source_loc.dupe(),
                 mref,
             ) {
                 Err(_) => (source_value.dupe(), false),
                 Ok(Ok(m)) => {
-                    // m.Type.module_reason |> Reason.def_loc_of_reason |> ALoc.source
                     let def_loc = m.module_reason.def_loc();
                     match def_loc.source() {
                         Some(f) => {
@@ -247,8 +246,6 @@ impl<'a> ImportInformationExtractor<'a, '_> {
                 ImportKind::ImportValue => ImportType::ImportNamedValue,
             };
             // We need to construct a synthetic remote identifier with name "default"
-            // The OCaml creates (fst identifier, { name = "default"; comments = None })
-            // In Rust we create a synthetic identifier
             let synthetic_remote = flow_parser::ast_utils::ident_of_source(
                 None,
                 default_spec.identifier.loc.dupe(),

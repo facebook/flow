@@ -306,7 +306,6 @@ fn unchecked_dependencies(
         }
     }
 
-    // let node_modules_containers = !Files.node_modules_containers in
     let node_modules_containers = files::node_modules_containers.read().unwrap();
     requires.iter().fold(
         FlowOrdSet::new(),

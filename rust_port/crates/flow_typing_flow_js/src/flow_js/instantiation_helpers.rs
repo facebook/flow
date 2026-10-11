@@ -167,7 +167,6 @@ pub(super) fn instantiate_poly_call_or_new_with_soln<'cx>(
     }
 }
 
-// and instantiate_poly_call_or_new cx trace lparts uparts check =
 pub(super) fn instantiate_poly_call_or_new<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,

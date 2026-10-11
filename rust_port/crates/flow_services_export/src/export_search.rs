@@ -142,7 +142,7 @@ pub fn subtract_count(removed_imports: &ExportIndex, search: &ExportSearch) -> E
     }
 }
 
-// (*Merge_import *)
+// Merge_import
 pub fn merge_export_import(new_index: &ExportIndex, search: &ExportSearch) -> ExportSearch {
     let index = export_index::merge_export_import(new_index, &search.index);
     ExportSearch {
@@ -210,9 +210,9 @@ fn compare_search_result(
     }
 }
 
-/// [take ~n:20 ~index matches] will return up to 20 search results,
-/// where each match in [matches] might contribute multiple results.
-/// sets [is_incomplete] if [n] is exceeded.
+/// `take` with `n = 20` will return up to 20 search results,
+/// where each match in `fuzzy_matches` might contribute multiple results.
+/// sets `is_incomplete` if `n` is exceeded.
 fn take(
     weighted: bool,
     n: usize,
@@ -411,7 +411,6 @@ pub fn search_both_values_and_types(
     }
 }
 
-// let get_index t = t.index
 pub fn get_index(t: &ExportSearch) -> &ExportIndex {
     &t.index
 }

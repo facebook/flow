@@ -153,7 +153,7 @@ fn with_sig<C: ConfigTypes, R>(
 // [EOverride] errors.
 //
 // Per-side dispatch happens at the call site via [map_sig], so [s] is
-// already the per-side signature — no [~static] argument needed.
+// already the per-side signature — no [static_] argument needed.
 fn update_override_members<C: ConfigTypes>(
     override_: bool,
     name: &Name,
@@ -172,7 +172,7 @@ fn update_override_members<C: ConfigTypes>(
 // Private members (ES [#name]) live in a separate namespace from public
 // members. Key [override_members] under the prefixed name (e.g. ["#foo"])
 // so it can't collide with a public inherited [foo] when the not-inherited
-// check does [SMap.mem]. (The inherited walk reads only public
+// check looks it up. (The inherited walk reads only public
 // own_props/proto_props, so a prefixed key correctly fails the membership
 // check.)
 fn private_member_key(name: &str) -> FlowSmolStr {
@@ -323,7 +323,7 @@ pub fn append_constructor_replacing_default<C: ConfigTypes>(
 // Track abstractness only on the instance side — [inst_abstract_props]
 // reads only [s.instance.abstract_members]; static-side writes are dead.
 // Add-only: a name in [abstract_members] means "some declared shape of
-// this name is abstract." Removing on [~abstract:false] would be wrong
+// this name is abstract." Removing when [abstract_] is false would be wrong
 // for accessor pairs — an abstract [get x] followed by a concrete [set x]
 // shares the name [x], and a remove would silently clear the getter
 // obligation. The in-class shadow case the prior implementation tried to
@@ -568,7 +568,7 @@ pub fn append_call<C: ConfigTypes>(static_: bool, t: Type, x: &mut class_types::
 
 // Construct signatures only exist on the instance side of an interface.
 // A static `new(): T` on a declared class is an ordinary static method and
-// goes through [append_method ~static:true] instead.
+// goes through [append_method] with [static_] set instead.
 pub fn append_construct<C: ConfigTypes>(t: Type, x: &mut class_types::Class<C>) {
     map_sig(
         false,
@@ -2307,10 +2307,9 @@ fn check_override_side<'cx>(
                         match own_loc_opt {
                             None => {}
                             Some(loc) => {
-                                // [inherited_owners] maps name -> string option (the
-                                // owner class's name, if it has one). [SMap.find_opt]
-                                // wraps that in another option, so flatten with
-                                // [Option.join].
+                                // [inherited_owners] maps each name to an `Option` (the
+                                // owner class's name, if it has one). [get] wraps that
+                                // in another `Option`, so flatten it.
                                 let base_class_name =
                                     inherited_owners.get(member_name).cloned().flatten();
                                 flow_js_utils::add_output_non_speculating(
@@ -2371,11 +2370,11 @@ fn check_override_obligations<'cx, C: crate::func_params_intf::Config>(
     let class_name = x.class_name.clone();
     // The implicit-override check is the only consumer of
     // [own_concrete_names_*]; building them when
-    // [skip_implicit_check = true] is pure waste (two [SMap.fold]s
+    // [skip_implicit_check] is set is pure waste (two map walks
     // per class allocating a fresh map that no one reads). Build
     // only when the implicit-override check will run.
     // [add_fields]/[add_funcs]/[add_methods] each insert a
-    // [name -> ALoc.t option] entry; the loc is used as the primary
+    // `Name` -> `Option<ALoc>` entry; the loc is used as the primary
     // loc for the [ImplicitOverrideMissingModifier] error. Abstract
     // members are subtracted because the implicit-override check is
     // about CONCRETE overrides — an [abstract foo()] shadowing a
@@ -2403,7 +2402,8 @@ fn check_override_obligations<'cx, C: crate::func_params_intf::Config>(
             let add_methods =
                 |m: &BTreeMap<Name, vec1::Vec1<class_types::FuncInfo<C>>>,
                  acc: &mut BTreeMap<Name, Option<ALoc>>| {
-                    // [methods] is [func_info Nel.t SMap.t]; take head's id_loc.
+                    // [methods] maps each name to a non-empty list of
+                    // [FuncInfo]; take the first one's id_loc.
                     for (k, infos) in m.iter() {
                         let info = infos.first();
                         acc.insert(k.dupe(), info.id_loc.clone());
@@ -2678,7 +2678,7 @@ pub fn make_thises<'a, C: ConfigTypes>(
         class_types::Super::Class(class_super) => {
             let (super_, static_super) = match &class_super.extends {
                 class_types::Extends::Explicit((annot_loc, c, targs)) => {
-                    // Eagerly specialize when there are no targs *)
+                    // Eagerly specialize when there are no targs
                     // TODO: We can also specialize when there are targs, because this
                     // code is not instantiated. However, the type normalizer
                     // expects a PolyT here.

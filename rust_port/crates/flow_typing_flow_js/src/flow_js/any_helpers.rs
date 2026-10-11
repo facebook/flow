@@ -19,7 +19,6 @@ use super::*;
 /// recusive call to __flow.
 pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type {
     let only_any = |_: &Type| any.dupe();
-    //   match t with
     match t.deref() {
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::ArrT(arr) => match arr.deref() {
@@ -48,15 +47,12 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                 }) => {
                     let new_elements = elements
                         .iter()
-                        .map(|te| {
-                            //       TupleElement { name; t = only_any t; polarity; optional; reason }
-                            TupleElement {
-                                name: te.name.dupe(),
-                                t: only_any(&te.t),
-                                polarity: te.polarity,
-                                optional: te.optional,
-                                reason: te.reason.dupe(),
-                            }
+                        .map(|te| TupleElement {
+                            name: te.name.dupe(),
+                            t: only_any(&te.t),
+                            polarity: te.polarity,
+                            optional: te.optional,
+                            reason: te.reason.dupe(),
                         })
                         .collect();
                     return Type::new(TypeInner::DefT(
@@ -394,7 +390,6 @@ pub(super) fn any_propagated<'cx>(
                         Ok(true)
                     }
                 }
-                // mk_instance ~for_type:false
                 DefTInner::ClassT(class_t) => {
                     covariant_flow(use_op, class_t)?;
                     Ok(true)
@@ -633,9 +628,7 @@ pub(super) fn any_propagated_use<'cx>(
         } if nominal_type.nominal_id == nominal::Id::InternalEnforceUnionOptimized => Ok(false),
         // Some types just need to be expanded and filled with any types
         TypeInner::NominalT { .. } => {
-            // rec_flow_t cx trace ~use_op (t, expand_any cx any t);
             rec_flow_t(cx, env, trace, use_op.dupe(), (l, &expand_any(cx, any, l)))?;
-            // true
             Ok(true)
         }
         // Keys cannot be tainted by any

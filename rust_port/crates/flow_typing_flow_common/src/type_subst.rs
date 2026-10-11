@@ -52,9 +52,7 @@ use flow_typing_visitors::type_visitor::TypeVisitor;
 
 use crate::flow_cache;
 
-// (*****************)
-// (* substitutions *)
-// (*****************)
+// substitutions
 
 #[derive(Debug, Clone)]
 pub enum Replacement<'cx> {
@@ -330,7 +328,7 @@ pub enum Purpose {
     // In generic conditional type, we have a step to replace all GenericT with any, to see whether
     // the check will still fail (so that we can always take the false branch).
     // During the substitution, we might encounter `Subst_name.Synthetic`. We shouldn't crash
-    // over there. Instead, we should keep them as is. *)
+    // over there. Instead, we should keep them as is.
     ConditionalTypeAnySubst,
 }
 
@@ -384,7 +382,6 @@ pub fn exports<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     map_cx: &MapCx,
     id: exports::Id,
 ) -> exports::Id {
-    // let exps = Context.find_exports cx id in
     let exps = cx.find_exports(id);
     let exps_prime = exps.ident_map(|ns| {
         let type_prime = mapper.type_(cx, map_cx, ns.type_.dupe());
@@ -798,7 +795,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                     // If the TypeAppT changed then one of the type arguments had a
                     // GenericT that was substituted. In this case, also change the use_op
                     // so we can point at the op which instantiated the types that
-                    // were substituted. *)
+                    // were substituted.
                     let new_use_op = use_op.as_ref().unwrap_or(op).dupe();
                     Type::new(TypeInner::TypeAppT(Box::new(TypeAppTData {
                         reason: reason.dupe(),
@@ -854,7 +851,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                     // singletons, a template literal type). Re-resolve so that
                     // `Uppercase<T>` with `T = 'foo'` collapses to `'FOO'`
                     // instead of remaining a deferred
-                    // `StringMappingT { arg = 'foo' }`, which subtyping would
+                    // `StringMappingT { arg: 'foo', .. }`, which subtyping would
                     // otherwise compare against the un-cased literal.
                     crate::string_case_transform::resolve(
                         None,
@@ -1131,7 +1128,6 @@ pub fn subst<'cx>(
         })
         .collect();
 
-    // substituter#type_ cx (map, force, placeholder_no_infer, purpose, use_op) ty
     let mut substituter = Substituter::new();
     substituter.type_(
         cx,
@@ -1177,7 +1173,6 @@ pub fn subst_destructor<'cx>(
         })
         .collect();
 
-    // substituter#destructor cx (map, force, placeholder_no_infer, purpose, use_op) des
     let mut substituter = Substituter::new();
     substituter.destructor(
         cx,

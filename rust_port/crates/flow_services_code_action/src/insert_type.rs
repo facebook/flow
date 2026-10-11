@@ -937,7 +937,7 @@ pub fn insert_type_custom_synth_type<'a>(
                 Box::new(|fk| get_type_sig(fk)),
                 0, // iteration
                 file,
-                std::collections::BTreeSet::new(), // reserved_names:SSet.empty
+                std::collections::BTreeSet::new(), // reserved_names
             );
             (&mut owned_rc, true)
         }

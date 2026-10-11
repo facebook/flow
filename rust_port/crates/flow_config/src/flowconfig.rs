@@ -451,7 +451,7 @@ pub mod opts {
     /// value (rather than being aggregated to it).
     ///
     /// For example: We want the default value of 'module.file_ext' to be
-    /// ['.js'; '.jsx'], but if the user specifies any 'module.file_ext'
+    /// `[".js", ".jsx"]`, but if the user specifies any 'module.file_ext'
     /// settings, we want to start from a clean list.
     fn opt<T>(
         parser: impl Fn(&str) -> Result<T, String>,

@@ -135,9 +135,7 @@ pub fn parse_message(
     })
 }
 
-// (***************************************************************)
-// (* Internal queue functions that run in the daemon process.    *)
-// (***************************************************************)
+// Internal queue functions that run in the daemon process.
 
 pub struct JsonrpcQueue {
     receiver: Receiver<Result<JsonrpcMessage, FlowLspError>>,
@@ -281,9 +279,7 @@ impl Default for JsonrpcQueue {
     }
 }
 
-// (************************************************)
-// (* Output functions for respond+notify          *)
-// (************************************************)
+// Output functions for respond+notify
 
 // respond: sends either a Response or an Error message, according
 // to whether the json has an error-code or not.
@@ -319,9 +315,7 @@ pub fn notify(writer: fn(&serde_json::Value), method_: &str, params: &serde_json
     writer(&message);
 }
 
-// (************************************************)
-// (* Output functions for request                 *)
-// (************************************************)
+// Output functions for request
 
 pub fn get_next_request_id() -> i32 {
     static NEXT_ID: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);

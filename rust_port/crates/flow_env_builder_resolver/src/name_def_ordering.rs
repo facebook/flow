@@ -1111,17 +1111,13 @@ where
         Ok(())
     }
 
-    // (* The default mapper visits a `declare namespace X { ... }`'s id with
-    //    pattern_identifier, which would add the id as a use-site dep. The
-    //    namespace's id is a definition site, not a use, and a merged
-    //    namespace id (when paired with a class/function/interface) has no
-    //    emitted def, so adding it as a dep produces a NameDefOrderingFailure
-    //    that aborts type-env initialization. Skip the id and only walk the
-    //    body. *)
-    // method! declare_namespace _loc namespace =
-    //   let { Ast.Statement.DeclareNamespace.body = (body_loc, body_block); _ } = namespace in
-    //   ignore @@ this#block body_loc body_block;
-    //   namespace
+    // The default mapper visits a `declare namespace X { ... }`'s id with
+    // pattern_identifier, which would add the id as a use-site dep. The
+    // namespace's id is a definition site, not a use, and a merged
+    // namespace id (when paired with a class/function/interface) has no
+    // emitted def, so adding it as a dep produces a NameDefOrderingFailure
+    // that aborts type-env initialization. Skip the id and only walk the
+    // body.
     fn declare_namespace(
         &mut self,
         _loc: &ALoc,
@@ -1389,7 +1385,7 @@ where
         }
         self.seen.insert(loc.dupe());
         // An expression might read an refined value. e.g. if (foo.bar) foo.bar.
-        // Therefore, we need to record these writes. *)
+        // Therefore, we need to record these writes.
         let writes = self.find_writes(false, true, loc);
         for t in writes {
             self.add(loc.dupe(), t);
@@ -1976,7 +1972,6 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
         })
     }
 
-    // let depends_of_fun synth tparams_map ~hints ~statics function_ state =
     fn depends_of_fun<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
         cx: &'cx Cx,
         autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
@@ -3057,8 +3052,8 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 state,
             ),
             Selector::Prop { prop_loc, .. } => {
-                // In `const {d: {a, b}} = obj`, each prop might be reading from a refined value, \
-                // which is a write. We need to track these dependencies as well. *)
+                // In `const {d: {a, b}} = obj`, each prop might be reading from a refined value,
+                // which is a write. We need to track these dependencies as well.
                 let mut visitor = UseVisitor::<Cx, Fl>::new(
                     cx,
                     false,
@@ -3097,7 +3092,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
         // When looking at a binding def, like `x = y`, in order to resolve this def we need
         // to have resolved the providers for `x`, as well as the type of `y`, in order to check
         // the type of `y` against `x`. So in addition to exploring the RHS, we also add the providers
-        // for `x` to the set of dependencies. *)
+        // for `x` to the set of dependencies.
         match lhs_member_expression {
             Some(e) => depends_of_expression::<Cx, Fl>(
                 cx,
@@ -4018,7 +4013,7 @@ pub fn build_graph<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
     // indirectly resolved when resolving their defining functions and classes. Therefore, when
     // we see a read of `this`/`super`, instead of saying it depends on the write of `this`/`super`,
     // we use this forwarding map to say it actually depends on the functions/classes that define
-    // `this`/`super`. *)
+    // `this`/`super`.
     let mut this_super_dep_loc_map: EnvMap<ALoc, EnvKey<ALoc>> = EnvMap::empty();
     for (kind_and_loc, (def, _, _, _, _)) in map.iter() {
         match def {

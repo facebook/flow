@@ -152,8 +152,8 @@ pub fn insert_render_type_at_loc<'a, 'cx>(
                         get_type_sig,
                         file_sig,
                         typed_ast,
-                        false, // ~omit_targ_defaults:false
-                        false, // ~strict:false
+                        false, // omit_targ_defaults
+                        false, // strict
                         remote_converter,
                         ast,
                         missing_renders_loc,

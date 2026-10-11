@@ -2337,7 +2337,6 @@ pub(super) fn rec_flow_t<'cx>(
     use_op: UseOp,
     (t1, t2): (&Type, &Type),
 ) -> Result<(), FlowJsException> {
-    // rec_flow cx trace (t1, UseT<Context<'cx>> (use_op, t2))
     rec_flow(
         cx,
         env,
@@ -2386,7 +2385,6 @@ pub(super) fn flow<'cx>(
     env: &FlowJsEnv,
     (lower, upper): (&Type, &UseT<Context<'cx>>),
 ) -> Result<(), FlowJsException> {
-    // try flow_opt cx (lower, upper) with
     match flow_opt(cx, env, None, (lower, upper)) {
         Ok(()) => Ok(()),
         Err(FlowJsException::LimitExceeded) => {

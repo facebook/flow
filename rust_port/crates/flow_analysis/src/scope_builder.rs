@@ -1328,8 +1328,7 @@ where
             }
         }
     }
-    // hoist_op:None in OCaml means use default (just run the function directly)
-    // This is equivalent to hoist_annotation=false in Rust
+    // No hoisting: `hoist_annotation` is false and the hoist op just runs the function directly.
     scoped_type_params(
         visitor,
         with_types,

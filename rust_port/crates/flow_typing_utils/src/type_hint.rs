@@ -746,7 +746,6 @@ fn instantiate_component<'cx>(
     component: &Type,
     instantiation_hint: &ConcrJsxHints<'cx>,
 ) -> Result<Type, SandboxError> {
-    // match get_t cx component with
     let component_resolved = get_t(cx, component.dupe());
     match component_resolved.deref() {
         TypeInner::DefT(_, def) => match def.deref() {

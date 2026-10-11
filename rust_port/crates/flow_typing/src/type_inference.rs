@@ -172,13 +172,10 @@ fn scan_for_lint_suppressions(
         pos
     }
 
-    // Given a string like `"flowlint-line foo:bar"`, returns `Some (Line, Some "foo:bar")`
+    // Given a string like `"flowlint-line foo:bar"`, returns `Some((Line, Some("foo:bar")))`
     fn parse_keyword(
         comment: &Located<String>,
     ) -> Option<(Located<RangeKeyword>, Option<Located<String>>)> {
-        //     let keywords =
-        //       [("flowlint-line", Line); ("flowlint-next-line", Next_line); ("flowlint", Unending)]
-        //     in
         const IGNORE_CHARS: &str = " \t\n\r*";
         let keywords = [
             ("flowlint-line", RangeKeyword::Line),
@@ -186,8 +183,8 @@ fn scan_for_lint_suppressions(
             ("flowlint", RangeKeyword::Unending),
         ];
 
-        // [prefix_length prefix str] returns the position of the first non-whitespace character in
-        // [str] after [prefix]. If [str] does not start with [prefix], or [prefix] is not followed by
+        // `prefix_length` returns the position of the first non-whitespace character in
+        // [s] after [prefix]. If [s] does not start with [prefix], or [prefix] is not followed by
         // whitespace, returns [None].
         fn prefix_length(prefix: &str, s: &str, ignore_chars: &str) -> Option<usize> {
             let sl = prefix.len();
@@ -204,9 +201,6 @@ fn scan_for_lint_suppressions(
             }
         }
 
-        //     let rec try_keyword comment = function
-        //       | [] -> None
-        //       | (prefix, range) :: todo ->
         fn try_keyword(
             comment: &Located<String>,
             keywords: &[(&str, RangeKeyword)],
@@ -659,9 +653,7 @@ pub fn scan_for_suppressions(
     )
 }
 
-// **********
-// * Driver *
-// **********
+// Driver
 
 struct DepSigsContext<'a, 'cx>(&'a Context<'cx>);
 

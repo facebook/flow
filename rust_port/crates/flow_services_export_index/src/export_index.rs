@@ -218,7 +218,6 @@ pub fn merge_all(indices: Vec<ExportIndex>) -> ExportIndex {
         }
     }
 
-    // let rec batch_fold acc batch batch_len = function
     fn batch_fold(indices: Vec<ExportIndex>) -> Vec<ExportIndex> {
         let mut acc = Vec::new();
         let mut batch = Vec::new();

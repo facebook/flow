@@ -18,7 +18,7 @@ use flow_parser::loc::Loc;
 // 2. It's not enough to trim the text, we also need to figure out the line and
 //    column for the start and end of the text
 pub fn trim_jsx_text(loc: Loc, value: &str) -> Option<(Loc, String)> {
-    // Removes all the spaces from the beginning of the string *)
+    // Removes all the spaces from the beginning of the string
     fn prefix_trim(s: &str) -> &str {
         s.trim_start_matches(' ')
     }
@@ -60,7 +60,6 @@ pub fn trim_jsx_text(loc: Loc, value: &str) -> Option<(Loc, String)> {
         }
     }
 
-    // match first_and_last_non_empty with
     match first_and_last_non_empty {
         None => None,
         Some((first_line, last_line)) => {

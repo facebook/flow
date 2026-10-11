@@ -102,7 +102,7 @@ const MAX_ADDR_LENGTH: isize = 103;
 
 pub fn get_path(path: &str) -> String {
     // Path will resolve the realpath, in case two processes are referring to the
-    // same socket using different paths (like with symlinks *)
+    // same socket using different paths (like with symlinks)
     #[cfg(windows)]
     let path_buf = PathBuf::from(path.replace('/', "\\"));
     #[cfg(not(windows))]

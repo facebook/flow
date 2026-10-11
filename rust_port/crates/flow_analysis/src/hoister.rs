@@ -31,7 +31,7 @@ use crate::bindings::Kind;
 //
 // Instead, it is implemented below by overriding several specific methods that
 // are known to introduce bindings. The logic here is sufficiently tricky that
-// we probably should not change it without extensive testing. *)
+// we probably should not change it without extensive testing.
 
 pub struct HoisterBase<Loc> {
     enable_enums: bool,

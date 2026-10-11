@@ -899,7 +899,7 @@ impl std::ops::Deref for RefinementProp {
 // latest_refinement stack (see below). The `total` describes the same changeset and
 // refinements, but in a propositional form that can be negated. We must maintain the invariant
 // that normalizing the `total` (using the normalize_total_refinements method below) produces the
-// applied and the changeset. *)
+// applied and the changeset.
 #[derive(Default, Debug, Clone, Dupe)]
 struct RefinementMaps {
     applied: AppliedRefinementMap,
@@ -3996,7 +3996,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     ) {
         use flow_parser::ast::expression::member::Property;
 
-        // match lhs with
         match &lhs.property {
             Property::PropertyPrivateName(pn) => {
                 // Yes, we want to havoc using the PROPERTY name here. This is because we
@@ -5062,22 +5061,17 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             // also be havoced. If only heap refinements are havoced then there's no
             // need to havoc the subject of the projection
             if lookup.projections.is_empty() {
-                // let { val_ref; havoc; heap_refinements; kind; ... } = this#env_read base in
                 if let Some(env_val) = self.env_read_opt(&lookup.base) {
-                    // if kind <> Bindings.Const && not (Val.is_undeclared_or_skipped !val_ref) then
                     if !matches!(
                         env_val.kind,
                         BindingsKind::Const | BindingsKind::DeclaredConst
                     ) && !ssa_val::is_undeclared_or_skipped(&env_val.val_ref.borrow())
                     {
-                        // this#havoc_heap_refinements heap_refinements;
                         env_val.heap_refinements.borrow_mut().clear();
-                        // let writes = Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref in
                         let writes = ssa_val::writes_of_uninitialized(
                             |id| self.refinement_may_be_undefined(RefinementId(id)),
                             &env_val.val_ref.borrow(),
                         );
-                        // val_ref := Base.List.fold ~init:havoc ~f:(fun acc write -> Val.merge acc (Val.of_write write)) writes
                         let new_val =
                             writes.into_iter().fold(env_val.havoc.dupe(), |acc, write| {
                                 let write_val =
@@ -6794,7 +6788,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         maps1: &RefinementMaps,
         maps2: &RefinementMaps,
     ) -> RefinementMaps {
-        // let total = if conjunction then ...
         let total = match (&maps1.total, &maps2.total) {
             (Some(t1), Some(t2)) => {
                 if conjunction {
@@ -6914,9 +6907,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     //
                     // We can't use null_test here because null_test requires some actual null for the
                     // sentinel refinement it can create. We can add some complexity here to introduce a
-                    // synthetic null Val.t and get sentinel refinements against null here, but that seems
+                    // synthetic null `Val` and get sentinel refinements against null here, but that seems
                     // like an unlikely way for nullish coalescing to be used. Instead, we simply add a
-                    // NotR MaybeR refinement to the left
+                    // NotR(MaybeR) refinement to the left
                     self.expression(left_expr)?;
                     let mut refining_locs = empty_refining_locs();
                     refining_locs.insert(loc.dupe());
@@ -6980,7 +6973,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     }
 
     /// Handle null test refinement.
-    // method null_test ~sense ~strict loc expr other =
     fn null_test(
         &mut self,
         sense: bool,
@@ -7129,7 +7121,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             let refis = match refinement_key::RefinementKey::of_expression(expr) {
                 None => refis,
                 Some(key) => {
-                    // let refinement = if strict then NotR UndefinedR else NotR MaybeR in
                     let refinement = if strict {
                         RefinementKind::NotR(Rc::new(RefinementKind::UndefinedR))
                     } else {
@@ -7239,7 +7230,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         Ok(())
     }
 
-    // method literal_test ~strict ~sense loc expr refinement other =
     fn literal_test(
         &mut self,
         strict: bool,
@@ -7295,8 +7285,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         use flow_parser::ast::expression::ExpressionInner;
         use flow_parser::ast::expression::member::Property as MemberProperty;
 
-        // let open Flow_ast in
-        // if strict then refis
         if strict {
             return refis;
         }
@@ -7797,7 +7785,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         // https://fburl.com/vf52s7rb on v0.155.0
         //
         // We should strongly consider disallowing the same refinement key to
-        // appear multiple times in the arguments. *)
+        // appear multiple times in the arguments.
         let arglist = &arguments.arguments;
         let has_spread = arglist
             .iter()
@@ -7832,7 +7820,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
         let mut refis: BTreeMap<Lookup, (ALoc, env_api::refi::Refinement<ALoc>)> = BTreeMap::new();
 
-        // Paremeter type-guard refinements *)
+        // Paremeter type-guard refinements
         // Function calls may introduce refinements if the function called is a
         // type-guard function. The EnvBuilder has no idea if a function is a
         // type-guard function or not. To handle that, we encode that a variable
@@ -7891,7 +7879,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 if let Some(key) = refinement_key::RefinementKey::of_expression(&inner.object) {
                     if !key_map.contains_key(&key.lookup) {
                         // TODO For now in `x.f(x)` we do not consider the this-refinement on x.
-                        // This is not fundamentally impossible, but causes crashes. *)
+                        // This is not fundamentally impossible, but causes crashes.
                         let call_exp = Expression::new(ExpressionInner::Call {
                             loc: loc.dupe(),
                             inner: Arc::new(call.clone()),
@@ -8038,7 +8026,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 let targs = &inner.call.targs;
                 let arguments = &inner.call.arguments;
 
-                // TODO: Currently, optional call foo?.(...) is not modeled as NotR (MaybeR) on foo and
+                // TODO: Currently, optional call foo?.(...) is not modeled as NotR(MaybeR) on foo and
                 // then call foo(...) at all. Before MethodT is un-entangled, let's not add the
                 // non-maybe refinement on callee for now.
                 let refi: BTreeMap<Lookup, (ALoc, Refinement<ALoc>)> = BTreeMap::new();
@@ -8109,7 +8097,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 (&inner.member.object, &inner.member.property)
             }
             ExpressionInner::Member { inner, .. } => (&inner.object, &inner.property),
-            // | _ -> raise Env_api.(Env_invariant (Some loc, Impossible "member_expression_refinement can only be called on OptionalMember or Member"))
             _ => {
                 panic!(
                     "member_expression_refinement can only be called on OptionalMember or Member"
@@ -12138,12 +12125,6 @@ impl<'ast, 'a, Cx: Context> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for Dead
         use flow_parser::ast::statement::Statement;
         use flow_parser::ast::statement::declare_namespace::Id;
 
-        // (match id with
-        // | Ast.Statement.DeclareNamespace.Global _ -> ()
-        // | Ast.Statement.DeclareNamespace.Local id ->
-        //   if Flow_ast_utils.is_type_only_declaration_statement (loc, Ast.Statement.DeclareNamespace m)
-        //   then ignore @@ this#binding_type_identifier id
-        //   else ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id);
         match &n.id {
             Id::Global(_) => {}
             Id::Local(id_ident) => {

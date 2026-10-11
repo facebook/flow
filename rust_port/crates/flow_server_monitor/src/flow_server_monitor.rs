@@ -103,7 +103,6 @@ pub struct StartArgs {
 // We want to send a "Starting" message immediately and a "Ready" message when the Flow server is
 // ready for the first time. This function sends the "Starting" message immediately and sets up a
 // callback for when the server is ready
-// let handle_waiting_start_command waiting_fd =
 pub fn handle_waiting_start_command(waiting_fd: Box<dyn Write + Send>) {
     let shared: Arc<Mutex<Option<Box<dyn Write + Send>>>> = Arc::new(Mutex::new(Some(waiting_fd)));
     // Close the fd, but don't worry if it's already closed
@@ -231,8 +230,8 @@ fn internal_start(
     // `flow server` wants to output to both stderr and the log, so we initialize Logger with this fd
     let log_fd = if is_daemon {
         // daemonize() already pointed our stdout/stderr at the freshly-opened
-        // monitor log (the spawn-model equivalent of OCaml's `Unix.dup2 fd
-        // Unix.stderr`). Re-opening here would rotate the live log onto `.old`.
+        // monitor log (the spawn-model equivalent of OCaml's `Unix.dup2` onto
+        // stderr). Re-opening here would rotate the live log onto `.old`.
         None
     } else {
         let fd = flow_server::server_daemon::try_open_log_file(&args.monitor_log_file)?;
@@ -392,7 +391,7 @@ fn internal_start(
 // The entry point for creating a daemonized flow server monitor (like from
 // `flow start`). Spawns the monitor child process via `flow_daemon::spawn`,
 // passing a serialized `MonitorEntryParam` (the bincode-friendly equivalent
-// of OCaml's `Daemon.spawn ... entry_point state`). The previous Rust impl
+// of the entry-point state OCaml passed to `Daemon.spawn`). The previous Rust impl
 // re-encoded `DaemonizeArgs` as ~30 CLI flags here; that is gone. The child
 // dispatches via `HH_SERVER_DAEMON=monitor` (set by `flow_daemon::spawn` on
 // the child's env) and runs the registered monitor entry handler in
@@ -440,7 +439,7 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
     let pid = handle.child.id();
 
     // We never write to the child process so we can close this channel
-    // (mirrors OCaml `Daemon.close_out oc`).
+    // (mirrors OCaml `Daemon.close_out`).
     if let Err(e) = flow_daemon::shutdown_out_write(&mut handle.channels.1) {
         flow_hh_logger::debug!("failed to shutdown monitor parent_out: {}", e);
     }

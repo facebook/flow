@@ -358,7 +358,6 @@ pub fn statement<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
                 inner: Arc::new(import_declaration(mapper, loc, inner)?),
             })
         }
-        // | ImportEqualsDeclaration decl -> ...
         StatementInner::ImportEqualsDeclaration { loc, inner } => {
             ast::statement::Statement::new(StatementInner::ImportEqualsDeclaration {
                 loc: mapper.on_loc_annot(loc)?,
@@ -4940,12 +4939,6 @@ pub fn import_declaration<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     })
 }
 
-// method import_equals_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportEqualsDeclaration.t) =
-//   let open Ast.Statement.ImportEqualsDeclaration in
-//   let { id = ident; module_reference; import_kind; is_export; comments } = decl in
-//   let ident' = ... in
-//   let module_reference' = this#import_equals_module_reference module_reference in
-//   let comments' = this#syntax_opt comments in
 fn import_equals_declaration<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
     decl: &ast::statement::ImportEqualsDeclaration<M, T>,

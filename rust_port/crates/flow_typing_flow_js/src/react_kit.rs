@@ -798,7 +798,6 @@ pub fn run<'cx>(
     run_with_env(cx, &FlowJsEnv::entry(), trace, use_op, reason_op, l, u)
 }
 
-// let run cx trace ~use_op reason_op l u =
 pub(super) fn run_with_env<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,

@@ -616,15 +616,7 @@ where
 
 /// Create a `Next` function from a list of work items.
 ///
-/// Similar to OCaml's `Bucket.make`:
-/// ```ocaml
-/// val make :
-///   num_workers:int ->
-///   ?progress_fn:(total:int -> start:int -> length:int -> unit) ->
-///   ?max_size:int ->
-///   'a list ->
-///   'a list next
-/// ```
+/// Similar to OCaml's `Bucket.make`.
 ///
 /// This creates batches of work items with optimal batch size for the given
 /// number of workers.

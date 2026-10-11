@@ -77,8 +77,8 @@ pub(crate) fn fix_signature_verification_error_at_loc<'a, 'cx>(
         get_type_sig,
         file_sig,
         typed_ast,
-        false, // ~omit_targ_defaults:false
-        false, // ~strict:false
+        false, // omit_targ_defaults
+        false, // strict
         remote_converter,
         ast,
         target,
@@ -105,13 +105,13 @@ pub fn fix_signature_verification_errors<'a, 'cx>(
     locs: &BTreeSet<Loc>,
 ) -> (ast::Program<Loc, Loc>, Vec<String>) {
     let mut remote_converter = insert_type_imports::imports_helper::RemoteConverter::new(
-        Box::new(|aloc| loc_of_aloc(aloc)),       // ~loc_of_aloc
-        file_options,                             // ~file_options
-        Box::new(|fk| get_haste_module_info(fk)), // ~get_haste_module_info
-        Box::new(|fk| get_type_sig(fk)),          // ~get_type_sig
-        0,                                        // ~iteration:0
-        file_key,                                 // ~file:file_key
-        BTreeSet::new(),                          // ~reserved_names:SSet.empty
+        Box::new(|aloc| loc_of_aloc(aloc)),
+        file_options,
+        Box::new(|fk| get_haste_module_info(fk)),
+        Box::new(|fk| get_type_sig(fk)),
+        0, // iteration
+        file_key,
+        BTreeSet::new(), // reserved_names
     );
     let mut ast = Arc::unwrap_or_clone(ast);
     let mut it_errors = Vec::<String>::new();

@@ -23,10 +23,6 @@ use crate::pure_dep_graph_operations;
 use crate::type_service;
 use crate::type_service::DetermineWhatToRecheckResult;
 
-// Like `>::` except it expects the function to return `unit Lwt.t` rather than `unit`
-// (Adapter macro is not needed in Rust — `#[test]` covers test wrapping; the underlying Rust
-// functions are sync, so no Lwt runtime is required.)
-
 fn assert_checked_sets_equal(expected: &CheckedSet, actual: &CheckedSet) {
     assert!(
         expected.debug_equal(actual),
@@ -56,7 +52,7 @@ fn filename_set_set_of_nested_list(lst: Vec<Vec<FileKey>>) -> FilenameSetSet {
 }
 
 fn assert_components_equal(expected: &[&[&str]], actual: &[Vec1<FileKey>]) {
-    // `expected`, for convenience, is just a list of lists. `actual` is a list of Nel.ts.
+    // `expected`, for convenience, is just a list of lists. `actual` is a list of `Vec1`s.
     let expected = filename_set_set_of_nested_list(
         expected
             .iter()
@@ -109,13 +105,13 @@ fn checked_files_of_graph(implementation_dependency_graph: &Graph<FileKey>) -> C
     result
 }
 
-// `Test_utils.make_options ()` in OCaml builds an `Options.t` from `FlowConfig.empty_config`,
-// `File_path.dummy_path`, and the default `make_options_flags ()` / `make_saved_state_flags ()`.
+// `Test_utils.make_options` in OCaml builds an `Options.t` from `FlowConfig.empty_config`,
+// `File_path.dummy_path`, and the default `make_options_flags` / `make_saved_state_flags`.
 // The code paths exercised by `debug_determine_what_to_recheck` and
 // `debug_include_dependencies_and_dependents` only read `options.profile`, `options.node_modules_errors`,
 // `options.root`, and `options.file_options` (via `with_memory_timer`, `filter_out_node_modules`,
 // and `unfocused_files_to_infer`). For all of these, `Options::default()` is field-equivalent
-// to `Test_utils.make_options ()`:
+// to `Test_utils.make_options`:
 //   - `profile`: OCaml `make_options_flags` defaults `profile = false` → `opt_profile = false`.
 //                Rust `Options` derives `Default`; `bool::default() = false`. Equal.
 //   - `node_modules_errors`: OCaml `FlowConfig.empty_config` sets `node_modules_errors = false`
@@ -125,7 +121,7 @@ fn checked_files_of_graph(implementation_dependency_graph: &Graph<FileKey>) -> C
 //                              `/tmp/fake/path/<name>.js` paths that contain no `node_modules`
 //                              segment, the filter is a no-op regardless of root/file_options.
 // Therefore `Options::default()` is provably observationally equivalent to
-// `Test_utils.make_options ()` for these tests.
+// `Test_utils.make_options` for these tests.
 fn make_options() -> Options {
     Options::default()
 }

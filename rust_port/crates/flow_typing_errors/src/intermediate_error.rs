@@ -3271,7 +3271,6 @@ where
         }
     };
 
-    //
     // An error between two incompatible types. A "lower" type and an "upper" type.
     let mk_incompatible_error = |additional_explanation: Option<Explanation<L>>,
                                  lower: VirtualReason<L>,

@@ -89,24 +89,9 @@ pub fn search<'cx>(
             | Require::ExportFrom { .. } => {}
         }
     }
-    //   let (local_locs, remote_locs) =
-    //     Base.List.fold
-    //       require_name_locs
-    //       ~init:(LocSet.empty, LocSet.empty)
-    //       ~f:(fun ((local_locs, remote_locs) as acc) (remote_loc, local_loc) ->
     let mut local_locs: BTreeSet<Loc> = BTreeSet::new();
     let mut remote_locs: BTreeSet<Loc> = BTreeSet::new();
     for (remote_loc, local_loc) in &require_name_locs {
-        //         match
-        //           GetDef_js.get_def
-        //             ~loc_of_aloc
-        //             ~cx
-        //             ~file_sig
-        //             ~ast
-        //             ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
-        //             ~purpose:Get_def_types.Purpose.FindReferences
-        //             remote_loc
-        //         with
         let result = get_def_js::get_def(
             loc_of_aloc,
             cx,

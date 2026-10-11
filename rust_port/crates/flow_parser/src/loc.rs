@@ -184,17 +184,17 @@ impl Loc {
         Self::span_compare(self, other) == 0
     }
 
-    /// Returns true if `self` intersects `other` at all */
+    /// Returns true if `self` intersects `other` at all.
     pub fn intersects(&self, other: &Loc) -> bool {
         self.source.cmp(&other.source) == std::cmp::Ordering::Equal
             && !(self.end < other.start || self.start > other.end)
     }
 
-    /** [lines_intersect loc1 loc2] returns true if [loc1] and [loc2] cover any part of
-    the same line, even if they don't actually intersect.
+    /** Returns true if `self` and `other` cover any part of the same line,
+    even if they don't actually intersect.
 
-    For example, if [loc1] ends and then [loc2] begins later on the same line,
-    [intersects loc1 loc2] is false, but [lines_intersect loc1 loc2] is true. */
+    For example, if `self` ends and then `other` begins later on the same line,
+    `self.intersects(other)` is false, but `self.lines_intersect(other)` is true. */
     pub fn lines_intersect(&self, other: &Loc) -> bool {
         self.source.cmp(&other.source) == std::cmp::Ordering::Equal
             && !(self.end.line < other.start.line || self.start.line > other.end.line)
@@ -253,7 +253,7 @@ impl Loc {
         self.source.as_ref()
     }
 
-    /// Produces a zero-width Loc, where start = end */
+    /// Produces a zero-width Loc, where start = end.
     pub fn cursor(source: Option<FileKey>, line: i32, column: i32) -> Self {
         Self {
             source,

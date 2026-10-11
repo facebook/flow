@@ -2649,7 +2649,6 @@ fn find_module(
     let mut phantom_acc = flow_services_module::PhantomAcc::default();
     let import_specifier =
         flow_common::flow_import_specifier::FlowImportSpecifier::userland(moduleref.into());
-    // ~node_modules_containers:!Files.node_modules_containers
     let node_modules_containers = files::node_modules_containers.read().unwrap();
     let resolved_module = flow_services_module::imported_module(
         options,
@@ -5676,7 +5675,7 @@ fn handle_global_find_references(
                     (lsp_prot::Response::LspFromServer(Some(response)), metadata)
                 }
                 // The most interesting path for global find refs. We schedule a recheck, and a new
-                // non-parallelizable command after the recheck to read the find ref *)
+                // non-parallelizable command after the recheck to read the find ref
                 Ok((def_info, local_refs)) => {
                     let def_locs =
                         flow_services_get_def::get_def_utils::all_locs_of_def_info(&def_info);

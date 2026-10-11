@@ -191,8 +191,6 @@ impl std::fmt::Display for PackageIncompatibleReason {
                 string_of_option(old),
                 string_of_option(new_)
             ),
-            // | Types_changed (old, new_) ->
-            //   Printf.sprintf "types changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
             Self::TypesChanged(old, new_) => write!(
                 f,
                 "types changed from `{}` to `{}`",

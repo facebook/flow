@@ -57,23 +57,8 @@ fn types_to_json(
     strip_root: Option<&str>,
     types: &[(flow_parser::loc::Loc, String)],
 ) -> serde_json::Value {
-    // let offset_table =
-    //   Base.Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
     let offset_table =
         file_content.map(|s| flow_parser::offset_utils::OffsetTable::make(s.as_str()));
-    // let types_json =
-    //   types
-    //   |> Base.List.map ~f:(fun (loc, t) ->
-    //          let json_assoc =
-    //            ("type", JSON_String t)
-    //            :: ("reasons", JSON_Array [])
-    //            :: ("loc", json_of_loc ~strip_root ~offset_table loc)
-    //            :: Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc
-    //          in
-    //          JSON_Object json_assoc
-    //      )
-    // in
-    // JSON_Array types_json
     serde_json::Value::Array(
         types
             .iter()

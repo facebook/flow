@@ -133,9 +133,9 @@ fn resolve_matched_wildcard_path(
     None
 }
 
-/// Given a list of JSON properties, loosely extract the properties and turn it into a
-/// [Expression.t SMap.t]. We aren't looking to validate the file, and don't currently
-/// care about any non-literal properties, so we skip over everything else.
+/// Loosely extract a JSON property into `map`, a map from property names to `Expression`s.
+/// We aren't looking to validate the file, and don't currently care about any non-literal
+/// properties, so we skip over everything else.
 fn extract_property(
     map: &mut HashMap<FlowSmolStr, ast::expression::Expression<Loc, Loc>>,
     property: &ast::expression::object::Property<Loc, Loc>,

@@ -2549,7 +2549,6 @@ pub fn resolve_env_entry<'cx>(
                             id,
                         )
                     }
-                    // | t -> t
                     _ => t_clone.dupe(),
                 }
             }));
@@ -2685,18 +2684,13 @@ pub fn init_implicit_const<'cx>(
 
 pub fn read_declared_type<'cx>(cx: &Context<'cx>, reason: Reason, loc: ALoc) -> Type {
     use flow_typing_type::type_::empty_t;
-    // match checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc loc with
     match checked_find_loc_env_write_opt(cx, DefLocType::OrdinaryNameLoc, loc) {
-        // | Some t -> t
         Some(t) => t,
-        // | None -> EmptyT.make reason
         None => empty_t::make(reason),
     }
 }
 
-// (************************)
-// (* Variable Declaration *)
-// (************************)
+// Variable Declaration
 
 pub fn init_env<'cx>(cx: &Context<'cx>, toplevel_scope_kind: ScopeKind) {
     use std::rc::Rc;

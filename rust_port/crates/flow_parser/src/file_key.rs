@@ -49,7 +49,7 @@ pub const FLOWLIB_MARKER: &str = "<BUILTIN_FLOW_LIB>///";
 // or to_string calls. All roots have enforced trailing slashes so that
 // strip_prefix always splits at a directory boundary.
 //
-// Using [string option ref] (not [string ref]) so that "not yet initialized"
+// Using `Option<String>` (not a bare `String`) so that "not yet initialized"
 // is distinguishable from "set to empty". Following Hack's Relative_path
 // convention: accessing an unset root raises an immediate, descriptive error
 // rather than silently producing a broken path.

@@ -255,7 +255,7 @@ fn split_overlapping_ranges(
         } else {
             // range 2 is in the middle of range 1, so split range 1 and consume
             // the first part, which doesn't overlap, and then recurse on
-            // range2::range1tail::rest
+            // range 2, the tail of range 1, and the remaining ranges
             let head_loc = (loc1_start, loc2_start - 1);
             let tail_loc = (loc2_end + 1, loc1_end);
             accum.push((head_loc, kind1));

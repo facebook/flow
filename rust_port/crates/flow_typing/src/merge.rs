@@ -335,21 +335,6 @@ fn detect_sketchy_null_checks<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, 
                             {
                                 exists_check.mixed_loc = t_loc.dupe();
                             }
-                            // (*           | DefT *)
-                            // (*               ( _, *)
-                            // (*                 EnumValueT *)
-                            // (*                   (ConcreteEnum *)
-                            // (*                     { representation_t = DefT (_, (BoolGeneralT | SingletonBoolT _)); _ } *)
-                            // (*                     ) *)
-                            // (*               ) *)
-                            // (*           | DefT *)
-                            // (*               ( _, *)
-                            // (*                 EnumValueT *)
-                            // (*                   (AbstractEnum *)
-                            // (*                     { representation_t = DefT (_, (BoolGeneralT | SingletonBoolT _)); _ } *)
-                            // (*                     ) *)
-                            // (*               ) -> *)
-                            // (*             { exists_check with enum_bool_loc = t_loc } *)
                             TypeInner::DefT(_, def_t)
                                 if match def_t.deref() {
                                     DefTInner::EnumValueT(ev) => {
@@ -1667,16 +1652,13 @@ fn emit_refinement_information_as_errors<'cx>(cx: &Context<'cx>) {
     }
 }
 
-// (* let check_assert_operator cx tast = *)
 fn check_assert_operator<'cx>(
     cx: &Context<'cx>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Result<(), JobError> {
-    // (* if Context.assert_operator_enabled cx then ignore (checker#program tast ...) *)
     if !cx.assert_operator_enabled() {
         return Ok(());
     }
-    // (* let check_specialized_assert_operator ~op_reason expr = *)
     fn check_specialized_assert_operator<'cx>(
         cx: &Context<'cx>,
         op_reason: &Reason,
@@ -1959,11 +1941,6 @@ pub fn post_merge_checks<'cx>(
 // Crucially, this copying process is shallow. We only copy what is necessary to
 // interpret a given type.
 
-// (* let copier = *)
-// (*   let open Type in *)
-// (*   let open Constraint in *)
-// (*   object (self) *)
-// (*     inherit [Context.t] Type_visitor.t as super *)
 struct CopierVisitor<'b, 'a> {
     src_cx: &'b Context<'a>,
     dst_cx: &'b Context<'a>,
@@ -1987,9 +1964,7 @@ impl<'b, 'a> type_visitor::TypeVisitor<()> for CopierVisitor<'b, 'a> {
         if dst_cx.graph().borrow().get(&id).is_some() {
             return;
         }
-        // (* let (root_id, constraints) = Context.find_constraints src_cx id in *)
         let (root_id, constraints) = src_cx.find_constraints(id);
-        // (* if id == root_id then *)
         if id == root_id {
             let state = match constraints {
                 Constraints::Unresolved(_) | Constraints::Resolved(_) => {

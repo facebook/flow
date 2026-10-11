@@ -138,10 +138,10 @@ pub struct CoverageVisitor {
     //   case we descend into the lower bounds of the tvar, marking its binding as
     //   Started in the tvar_cache.
     //
-    // - The tvar has been seen and has been resolved (status = Done _). In this case
+    // - The tvar has been seen and has been resolved (status is `Done`). In this case
     //   we reuse the cached result.
     //
-    // - The tvar is in the process of resolution (status = Started).
+    // - The tvar is in the process of resolution (status is `Started`).
     //   These are types of the form:
     //
     //   ```js

@@ -380,11 +380,11 @@ pub struct ComponentT<'cx> {
 
     // map from exists proposition locations to the types of values running through them
     exists_checks: RefCell<ALocMap<BTreeSet<Type>>>,
-    // map from exists proposition locations to the types of excuses for them *)
+    // map from exists proposition locations to the types of excuses for them
     // If a variable appears in something like `x || ''`, the existence check
     // is excused and not considered sketchy. (The program behaves identically to how it would
     // if the null check was made explicit (`x == null ? '' : x`), and this is a fairly
-    // common pattern. Excusing it eliminates a lot of noise from the lint rule. *)
+    // common pattern. Excusing it eliminates a lot of noise from the lint rule.)
     // The above example assumes that x is a string. If it were a different type
     // it wouldn't be excused.
     exists_excuses: RefCell<ALocMap<ExistsCheck>>,
@@ -2430,7 +2430,6 @@ pub struct CacheSnapshot {
     // eval_id_cache, id_cache, eval_repos_cache, fix_cache,
     // const_fold_cache use MultiLevelMap — their state is tracked internally
     // via push_level/pop_level, not stored here.
-    // subst_cache: snapshot_subst_cache = !(cx.ccx.subst_cache);
     snapshot_subst_cache: type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>,
     snapshot_spread_cache: SpreadCache,
     snapshot_evaluated: type_::eval::Map<Type>,
@@ -2607,7 +2606,6 @@ pub fn elab_open_memo_key<'cx>(op: &Op<'cx>, id: i32) -> Option<ElabOpenMemoKey>
 
 impl<'cx> Context<'cx> {
     pub fn take_cache_snapshot(&self) -> CacheSnapshot {
-        // snapshot_subst_cache = !(cx.ccx.subst_cache);
         let snapshot_subst_cache = self.0.ccx.subst_cache.borrow().dupe();
         self.0.ccx.eval_id_cache.borrow_mut().push_level();
         self.0.ccx.id_cache.borrow_mut().push_level();
@@ -2639,7 +2637,6 @@ impl<'cx> Context<'cx> {
             .constraint_cache
             .borrow_mut()
             .truncate_to(constraint_cache_level_count);
-        // cx.ccx.subst_cache := snapshot_subst_cache;
         *self.0.ccx.subst_cache.borrow_mut() = snapshot_subst_cache;
         self.0.ccx.eval_id_cache.borrow_mut().pop_level();
         self.0.ccx.id_cache.borrow_mut().pop_level();
@@ -2989,7 +2986,7 @@ impl<'cx> Context<'cx> {
         // To prevent cases where we might compare a concrete and an abstract
         // aloc (like in a cycle) we abstractify all incoming alocs before adding
         // them to the map. The only exception is for library files, which have only
-        // concrete definitions and by definition cannot appear in cycles. *)
+        // concrete definitions and by definition cannot appear in cycles.
         let aloc_id = self.make_aloc_id(aloc);
         let id = type_::properties::Id::of_aloc_id(type_sig, aloc_id);
         self.add_property_map(id.dupe(), pmap);

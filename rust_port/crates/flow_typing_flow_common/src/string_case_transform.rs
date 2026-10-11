@@ -55,7 +55,7 @@ pub fn name_of_kind(kind: StringMappingKind) -> &'static str {
 //    ASCII-only is a deliberate, soundness-preserving choice for v1: tests that
 //    exercise non-ASCII input cannot rely on a particular result.
 pub fn transform_string(kind: StringMappingKind, s: &str) -> String {
-    // ASCII-only by design. OCaml uses byte-indexed `s.[0]` + `String.sub`,
+    // ASCII-only by design. OCaml uses byte-indexed string access and slicing,
     // which is safe on non-ASCII because OCaml strings are byte sequences and
     // `Char.uppercase_ascii` returns non-ASCII bytes unchanged. Rust `&str` must
     // be valid UTF-8, so we step by `char` (which is a UTF-8-boundary-safe
@@ -96,7 +96,7 @@ pub fn transform_string(kind: StringMappingKind, s: &str) -> String {
     }
 }
 
-// Predicate matching `transform_string kind s = s`. Used in subtyping to test
+// Predicate matching `transform_string(kind, s) == s`. Used in subtyping to test
 //    whether a literal `s` is a member of `Kind<arg>` — the literal must already
 //    be in canonical form for the kind.
 pub fn is_canonical(kind: StringMappingKind, s: &str) -> bool {

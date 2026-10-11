@@ -6,7 +6,7 @@
  */
 
 //! This module contains a collection of functions that operate on types, with the LTI assumption
-//! the inspected type will never receive any additional future bounds. *)
+//! the inspected type will never receive any additional future bounds.
 
 use std::ops::Deref;
 use std::rc::Rc;
@@ -787,7 +787,6 @@ pub mod operators {
                 }
             };
 
-            // match (l, r) with
             match (l.deref(), r.deref()) {
                 // We allow comparison between enums and enum values with the same id.
                 (TypeInner::DefT(_, def_l), TypeInner::DefT(_, def_r))
@@ -1628,7 +1627,6 @@ pub mod special_cased_functions {
         */
         let fix_cache: Rc<RefCell<HashMap<Type, Type>>> = Rc::new(RefCell::new(HashMap::new()));
 
-        // let rec assign_from l use_op reason_op to_obj t kind =
         fn assign_from<'cx>(
             cx: &Context<'cx>,
             env: &FlowJsEnv,
@@ -1641,7 +1639,6 @@ pub mod special_cased_functions {
             t: &Type,
             kind: &ObjAssignKind,
         ) -> Result<(), FlowJsException> {
-            // match to_obj with
             match to_obj.deref() {
                 // Special case any. Otherwise this will lead to confusing errors when
                 // any tranforms to an object type.
@@ -2728,10 +2725,8 @@ pub mod type_assertions {
                 &|r| r.loc().dupe(),
                 &|cx, env, t| {
                     match t.deref() {
-                        // (********************)
-                        // (* `instanceof` RHS *)
-                        // (* right side of an `instanceof` binary expression must be an object *)
-                        // (********************)
+                        // `instanceof` RHS
+                        // right side of an `instanceof` binary expression must be an object
                         _ if flow_js_utils::object_like(t) => Ok(()),
                         // arrays are objects too, but not in `object_like`
                         TypeInner::DefT(_, def_t)

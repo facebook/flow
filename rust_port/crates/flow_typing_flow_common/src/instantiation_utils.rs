@@ -27,9 +27,7 @@ use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_util;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 
-// (***********************)
-// (* instantiation utils *)
-// (***********************)
+// instantiation utils
 
 pub mod implicit_type_argument {
     use super::*;

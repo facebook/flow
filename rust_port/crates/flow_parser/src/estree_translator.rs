@@ -3806,11 +3806,8 @@ fn component_declaration(
                     block(offset_table, config, body_loc, body_block)
                 }),
             ),
-            // ("id", identifier id);
             ("id", identifier(offset_table, config, &component.id)),
-            // ("implicitDeclare", bool implicit_declare);
             ("implicitDeclare", Value::Bool(implicit_declare)),
-            // ("params", component_params params);
             (
                 "params",
                 component_params(offset_table, config, &component.params),
@@ -5332,8 +5329,8 @@ fn function_type_rest(
     /* TODO: add a node for the rest param itself, including the `...`,
       like we do with RestElement on normal functions. This should be
       coordinated with Babel, ast-types, etc. so keeping the status quo for
-      now. Here's an example:
-      node "FunctionTypeRestParam" loc ["argument", function_type_param argument;
+      now. The new node would be a "FunctionTypeRestParam" with an
+      "argument" field.
     */
     function_type_param(
         offset_table,
@@ -5760,8 +5757,8 @@ fn generic_type(
 
     // Mirror upstream Hermes' mapGenericTypeAnnotation: collapse the
     // no-targs `this` identifier case to a ThisTypeAnnotation leaf node.
-    // OCaml's parser produces `Type::Generic { id: Unqualified "this",
-    // targs: None }` for both `type T = this` and `(this) => void` /
+    // The parser produces a `Generic` with an `Unqualified` `this` id and
+    // `targs: None` for both `type T = this` and `(this) => void` /
     // `m(): this`.
     if let (None, generic::Identifier::Unqualified(id)) = (&generic.targs, &generic.id)
         && id.name == "this"

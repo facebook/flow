@@ -29,7 +29,7 @@ pub enum Polarity {
 impl Polarity {
     // Subtype relation for polarities, interpreting neutral as positive &
     // negative: whenever compat(p1,p2) holds, things that have polarity p1 can
-    // appear in positions that have polarity p2. *)
+    // appear in positions that have polarity p2.
     pub fn compat(p1: Polarity, p2: Polarity) -> bool {
         match (p1, p2) {
             (Polarity::Positive, Polarity::Positive)

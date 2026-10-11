@@ -151,7 +151,7 @@ mod tparam_stack {
 
         /// Temporarily remove [name] from all frames; returns the frames it was
         /// present in so the caller can restore it after descending into a
-        /// nested scope. Mirrors OCaml's [SSet.remove "this" xs] which produces
+        /// nested scope. Mirrors OCaml's [SSet.remove], which produces
         /// a new immutable set scoped to the recursive call only.
         pub(super) fn remove_all(&mut self, name: &FlowSmolStr) -> Vec<(usize, bool)> {
             let mut removed = Vec::new();
@@ -1358,7 +1358,7 @@ pub(crate) mod scope {
             // Value-side incoming, type-side existing. Force the existing def
             // lazy to discriminate Interface (allowed for decl-merging) from
             // TypeAlias/OpaqueType (rejected). Mirrors the OCaml
-            // `Lazy.force def` in is_cross_namespace_conflict.
+            // `Lazy.force` in is_cross_namespace_conflict.
             (
                 IncomingBindingKind::Class | IncomingBindingKind::DeclareClass,
                 LocalBinding::TypeBinding { def, .. },
@@ -2989,7 +2989,6 @@ pub(crate) mod scope {
                     .iter()
                     .map(|t| rename_tparams_in_parsed(rename_map, t))
                     .collect(),
-                // constructs = List.map (rename_tparams_in_parsed rename_map) constructs;
                 constructs: sig
                     .constructs
                     .iter()
@@ -3204,7 +3203,6 @@ pub(crate) mod scope {
         let mut calls = old_sig.calls.clone();
         calls.extend(new_sig.calls.iter().cloned());
 
-        // constructs = old_s.constructs @ new_s.constructs;
         let mut constructs = old_sig.constructs.clone();
         constructs.extend(new_sig.constructs.iter().cloned());
 

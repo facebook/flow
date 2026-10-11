@@ -67,7 +67,7 @@ pub fn comparators_of_range(t: &[Part]) -> Vec<Comparator> {
 // the same version (major, minor, patch). for example, `>1.2.3-alpha` matches
 // `1.2.3-beta` and `1.2.4`, but not `1.2.4-alpha`. this is so that opting into
 // one prerelease version does not also opt you into all future prereleases.
-// this behavior can be overridden with `~include_prereleases:true`.
+// this behavior can be overridden by setting `include_prereleases`.
 pub fn satisfies(include_prereleases: bool, range: &[Part], version: &Version) -> bool {
     let satisfied = fold_comparators_of_range(
         &|acc: bool, comp| {

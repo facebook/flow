@@ -235,8 +235,6 @@ mod add_import_tests {
     fn import_named_below_existing_between_sections() {
         let binding = Bindings::Named(vec![named_binding("xyz")]);
         let from = "./xyz";
-        //
-        //
         let contents = r#"
           import { foo } from "./relative";
 
@@ -244,8 +242,6 @@ mod add_import_tests {
 
           foo
         "#;
-        //
-        //
         let expected = r#"
           import { foo } from "./relative";
           import { xyz } from "./xyz";
@@ -261,14 +257,12 @@ mod add_import_tests {
     fn import_named_sorted_existing() {
         let binding = Bindings::Named(vec![named_binding("baz")]);
         let from = "./baz";
-        //
         let contents = r#"
           import { bar } from "./bar";
           import { foo } from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import { bar } from "./bar";
           import { baz } from "./baz";
@@ -283,14 +277,12 @@ mod add_import_tests {
     fn import_named_unsorted_existing() {
         let binding = Bindings::Named(vec![named_binding("baz")]);
         let from = "./baz";
-        //
         let contents = r#"
           import { foo } from "./foo";
           import { bar } from "./bar";
 
           foo
         "#;
-        //
         let expected = r#"
           import { foo } from "./foo";
           import { bar } from "./bar";
@@ -305,13 +297,11 @@ mod add_import_tests {
     fn import_named_in_existing() {
         let binding = Bindings::Named(vec![named_binding("foo")]);
         let from = "./foo";
-        //
         let contents = r#"
           import { bar } from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import { bar, foo } from "./foo";
 
@@ -331,13 +321,11 @@ mod add_import_tests {
             named_binding_with_local("baz", "bazz"),
         ]);
         let from = "./foo";
-        //
         let contents = r#"
           import { bar } from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import { bar, baz as bazz, foo } from "./foo";
 
@@ -350,13 +338,11 @@ mod add_import_tests {
     fn import_named_below_existing_default() {
         let binding = Bindings::Named(vec![named_binding("foo")]);
         let from = "./foo";
-        //
         let contents = r#"
           import Foo from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import Foo from "./foo";
           import { foo } from "./foo";
@@ -370,14 +356,11 @@ mod add_import_tests {
     fn import_named_below_existing_type() {
         let binding = Bindings::Named(vec![named_binding("foo")]);
         let from = "./foo";
-        //
         let contents = r#"
           import type { IFoo } from "./foo";
 
           foo
         "#;
-        //
-        //
         let expected = r#"
           import type { IFoo } from "./foo";
 
@@ -395,7 +378,6 @@ mod add_import_tests {
         let contents = "
           foo
         ";
-        //
         let expected = r#"
           import foo from "./foo";
 
@@ -408,13 +390,11 @@ mod add_import_tests {
     fn import_default_duplicate() {
         let binding = Bindings::Default("Foo".to_string());
         let from = "./foo";
-        //
         let contents = r#"
           import Bar from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import Bar from "./foo";
           import Foo from "./foo";
@@ -431,7 +411,6 @@ mod add_import_tests {
         let contents = "
           foo
         ";
-        //
         let expected = r#"
           import type foo from "./foo";
 
@@ -444,13 +423,11 @@ mod add_import_tests {
     fn import_default_type_duplicate() {
         let binding = Bindings::DefaultType("Foo".to_string());
         let from = "./foo";
-        //
         let contents = r#"
           import type Bar from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import type Bar from "./foo";
           import type Foo from "./foo";
@@ -467,7 +444,6 @@ mod add_import_tests {
         let contents = "
           foo
         ";
-        //
         let expected = r#"
           import type { IFoo } from "./foo";
 
@@ -506,14 +482,11 @@ mod add_import_tests {
     fn import_type_above_existing_named() {
         let binding = Bindings::NamedType(vec![named_binding("IFoo")]);
         let from = "./foo";
-        //
         let contents = r#"
           import { foo } from "./foo";
 
           foo
         "#;
-        //
-        //
         let expected = r#"
           import type { IFoo } from "./foo";
 
@@ -528,14 +501,11 @@ mod add_import_tests {
     fn import_type_above_existing_default() {
         let binding = Bindings::NamedType(vec![named_binding("IFoo")]);
         let from = "./foo";
-        //
         let contents = r#"
           import foo from "./foo";
 
           foo
         "#;
-        //
-        //
         let expected = r#"
           import type { IFoo } from "./foo";
 
@@ -550,13 +520,11 @@ mod add_import_tests {
     fn import_type_above_existing_default_type() {
         let binding = Bindings::NamedType(vec![named_binding("IFoo")]);
         let from = "./foo";
-        //
         let contents = r#"
           import type Foo from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import type Foo from "./foo";
           import type { IFoo } from "./foo";
@@ -570,14 +538,12 @@ mod add_import_tests {
     fn import_type_unsorted_existing() {
         let binding = Bindings::NamedType(vec![named_binding("IBaz")]);
         let from = "./baz";
-        //
         let contents = r#"
           import { foo } from "./foo";
           import { bar } from "./bar";
 
           foo
         "#;
-        //
         let expected = r#"
           import { foo } from "./foo";
           import { bar } from "./bar";
@@ -595,7 +561,6 @@ mod add_import_tests {
         let contents = "
           foo
         ";
-        //
         let expected = r#"
           import * as React from "react";
 
@@ -608,13 +573,11 @@ mod add_import_tests {
     fn import_namespace_above_existing_named_from_same_module() {
         let binding = Bindings::Namespace("React".to_string());
         let from = "react";
-        //
         let contents = r#"
           import { foo } from "react";
 
           foo
         "#;
-        //
         let expected = r#"
           import * as React from "react";
           import { foo } from "react";
@@ -628,8 +591,6 @@ mod add_import_tests {
     fn import_namespace_above_existing_named() {
         let binding = Bindings::Namespace("Bar".to_string());
         let from = "./bar";
-        //
-        //
         let contents = r#"
           import type { IFoo } from "./foo";
 
@@ -637,8 +598,6 @@ mod add_import_tests {
 
           foo
         "#;
-        //
-        //
         let expected = r#"
           import type { IFoo } from "./foo";
 
@@ -654,13 +613,11 @@ mod add_import_tests {
     fn import_namespace_duplicate() {
         let binding = Bindings::Namespace("Foo".to_string());
         let from = "./foo";
-        //
         let contents = r#"
           import * as Bar from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import * as Bar from "./foo";
           import * as Foo from "./foo";
@@ -674,14 +631,12 @@ mod add_import_tests {
     fn import_multiple_named_after_namespace() {
         let binding = Bindings::Named(vec![named_binding("useContext")]);
         let from = "react";
-        //
         let contents = r#"
           import * as React from "react";
           import { useState } from "react";
 
           foo
         "#;
-        //
         let expected = r#"
           import * as React from "react";
           import { useContext, useState } from "react";
@@ -695,16 +650,11 @@ mod add_import_tests {
     fn insert_after_flow_comment() {
         let binding = Bindings::Named(vec![named_binding("foo")]);
         let from = "./foo";
-        //   // @flow
-        //
         let contents = "
           // @flow
 
           foo
         ";
-        //   // @flow
-        //
-        //
         let expected = r#"
           // @flow
 
@@ -719,9 +669,6 @@ mod add_import_tests {
     fn insert_after_directives() {
         let binding = Bindings::Named(vec![named_binding("foo")]);
         let from = "./foo";
-        //   // @flow
-        //
-        //
         let contents = r#"
           // @flow
 
@@ -729,10 +676,6 @@ mod add_import_tests {
 
           foo
         "#;
-        //   // @flow
-        //
-        //
-        //
         let expected = r#"
           // @flow
 
@@ -752,7 +695,6 @@ mod add_import_tests {
         let contents = "
           foo
         ";
-        //
         let expected = r#"
           import { foo } from "./foo";
 
@@ -769,14 +711,11 @@ mod add_import_tests {
     fn case_sensitive() {
         let binding = Bindings::Named(vec![named_binding("bar")]);
         let from = "bar";
-        //
         let contents = r#"
           import { foo } from "Foo";
 
           foo
         "#;
-        //
-        //
         let expected = r#"
           import { foo } from "Foo";
 
@@ -808,7 +747,6 @@ mod add_imports_tests {
         let contents = "
           foo
         ";
-        //
         let expected = r#"
           import { bar } from "./bar";
           import { foo } from "./foo";
@@ -837,8 +775,6 @@ mod add_imports_tests {
         let contents = "
           foo
         ";
-        //
-        //
         let expected = r#"
           import type { baz } from "./baz";
           import type { foo } from "./foo";
@@ -862,14 +798,11 @@ mod add_imports_tests {
                 Bindings::NamedType(vec![named_binding("baz")]),
             ),
         ];
-        //
         let contents = r#"
           import type { foo } from "./foo";
 
           (1: foo)
         "#;
-        //
-        //
         let expected = r#"
           import type { baz } from "./baz";
           import type { foo } from "./foo";
@@ -901,8 +834,6 @@ mod add_imports_tests {
         let contents = "
           foo
         ";
-        //
-        //
         let expected = r#"
           import type FooType from "./foo";
 
@@ -927,8 +858,6 @@ mod add_imports_tests {
                 Bindings::NamedType(vec![named_binding("baz")]),
             ),
         ];
-        //
-        //
         let contents = r#"
           import type { foo } from "./foo";
 
@@ -936,8 +865,6 @@ mod add_imports_tests {
 
           (1: foo)
         "#;
-        //
-        //
         let expected = r#"
           import type { baz } from "./baz";
           import type { foo } from "./foo";
@@ -962,13 +889,11 @@ mod add_imports_tests {
                 Bindings::Named(vec![named_binding("bar")]),
             ),
         ];
-        //
         let contents = r#"
           import { foo } from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import { bar } from "./bar";
           import { foo, other } from "./foo";
@@ -993,8 +918,6 @@ mod add_imports_tests {
         let contents = "
           foo
         ";
-        //
-        //
         let expected = r#"
           import { foo } from "Foo";
 
@@ -1012,14 +935,12 @@ mod organize_imports_tests {
 
     #[test]
     fn combine_specifiers() {
-        //
         let contents = r#"
           import { foo } from "./foo";
           import { bar } from "./foo";
 
           foo
         "#;
-        //
         let expected = r#"
           import { bar, foo } from "./foo";
 
@@ -1030,9 +951,6 @@ mod organize_imports_tests {
 
     #[test]
     fn maintain_comments() {
-        //   // leading on ./foo
-        //   // trailing on ./foo
-        //
         let contents = r#"
           import { foo } from "./foo";
 
@@ -1043,10 +961,6 @@ mod organize_imports_tests {
 
     #[test]
     fn move_comments() {
-        //   // leading on ./foo
-        //
-        //   // leading on ./bar
-        //
         let contents = r#"
           import { foo } from "./foo";
 
@@ -1054,9 +968,6 @@ mod organize_imports_tests {
 
           foo
         "#;
-        //   // leading on ./bar
-        //   // leading on ./foo
-        //
         let expected = r#"
           import { bar } from "./bar";
           import { foo } from "./foo";
@@ -1068,9 +979,6 @@ mod organize_imports_tests {
 
     #[test]
     fn combine_comments() {
-        //   // comment on foo
-        //   // comment on bar
-        //
         let contents = r#"
           import { foo } from "./foo";
           import { bar } from "./foo";

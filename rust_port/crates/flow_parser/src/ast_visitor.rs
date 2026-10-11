@@ -6323,7 +6323,6 @@ pub fn map_statement_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
                 inner: Arc::new(visitor.map_import_declaration(loc, inner)),
             }
         }
-        // | ImportEqualsDeclaration decl -> ...
         ast::statement::StatementInner::ImportEqualsDeclaration { loc, inner } => {
             ast::statement::StatementInner::ImportEqualsDeclaration {
                 loc: loc.dupe(),
@@ -7597,13 +7596,9 @@ pub fn class_element_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         ast::class::BodyElement::DeclareMethod(decl_meth) => {
             visitor.class_declare_method(decl_meth)?;
         }
-        // | AbstractMethod (annot, abs_meth) ->
-        //     AbstractMethod (this#on_type_annot annot, this#class_abstract_method abs_meth)
         ast::class::BodyElement::AbstractMethod(abs_meth) => {
             visitor.class_abstract_method(abs_meth)?;
         }
-        // | AbstractProperty (annot, abs_prop) ->
-        //     AbstractProperty (this#on_type_annot annot, this#class_abstract_property abs_prop)
         ast::class::BodyElement::AbstractProperty(abs_prop) => {
             visitor.class_abstract_property(abs_prop)?;
         }
@@ -7634,13 +7629,9 @@ pub fn map_class_element_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         ast::class::BodyElement::DeclareMethod(decl_meth) => {
             ast::class::BodyElement::DeclareMethod(visitor.map_class_declare_method(decl_meth))
         }
-        // | AbstractMethod (annot, abs_meth) ->
-        //     AbstractMethod (this#on_type_annot annot, this#class_abstract_method abs_meth)
         ast::class::BodyElement::AbstractMethod(abs_meth) => {
             ast::class::BodyElement::AbstractMethod(visitor.map_class_abstract_method(abs_meth))
         }
-        // | AbstractProperty (annot, abs_prop) ->
-        //     AbstractProperty (this#on_type_annot annot, this#class_abstract_property abs_prop)
         ast::class::BodyElement::AbstractProperty(abs_prop) => {
             ast::class::BodyElement::AbstractProperty(visitor.map_class_abstract_property(abs_prop))
         }

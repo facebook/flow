@@ -1270,7 +1270,6 @@ where
             });
         let pool = workers.as_ref().expect("workers required for init");
         let root = &options.root;
-        // let%lwt (_libs_ok, env) = Types_js.init ~profiling ~workers options in
         let (env, _libs_ok) = flow_services_inference::type_service::init_from_scratch(
             &options_arc,
             pool,

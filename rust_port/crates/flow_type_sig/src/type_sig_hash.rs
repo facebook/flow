@@ -194,7 +194,7 @@ fn edge_import<Loc>(
         Dependency::Resource(dep) => dep_edge(dep),
         Dependency::Unchecked => {
             // All unchecked dependencies are equivalent. If a dependency changes from
-            // unchecked to checked, then the hash will change anyway. *)
+            // unchecked to checked, then the hash will change anyway.
         }
     }
 }

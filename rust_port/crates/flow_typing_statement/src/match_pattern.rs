@@ -506,7 +506,6 @@ fn pattern_<'a>(
         match_pattern::MatchPattern::UnaryPattern { loc, inner } => {
             let operator = &inner.operator;
             let argument = &inner.argument;
-            // (match (operator, argument) with
             match (operator, argument) {
                 (_, (_, match_pattern::unary_pattern::Argument::NumberLiteral(lit)))
                     if lit.value == 0.0 =>

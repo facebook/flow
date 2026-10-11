@@ -1150,14 +1150,6 @@ pub mod value_union {
                 inexhaustible,
             } = self;
 
-            //   let (tuples_exact, tuples_inexact) =
-            //     tuples
-            //     |> Base.List.map ~f:ValueObject.to_pattern
-            //     |> Base.List.stable_sort ~compare:PatternObject.compare
-            //     |> Base.List.foldi ~init:(IMap.empty, IMap.empty) ~f:(fun i acc tuple_pattern ->
-            //            ...
-            //        )
-            //   in
             let mut tuple_patterns: Vec<pattern_object::PatternObject> =
                 tuples.iter().map(|vo| vo.to_pattern(cx)).collect();
             tuple_patterns.sort();

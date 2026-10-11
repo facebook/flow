@@ -403,7 +403,6 @@ enum UseTResult<'cx> {
     UpperT(Type),
 }
 
-// and rec t_of_use_t cx seen tvar u =
 fn t_of_use_t<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -1023,7 +1022,6 @@ fn reverse_obj_kit_rest<'cx>(
     })
 }
 
-// and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param =
 fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -2089,7 +2087,7 @@ fn pin_types<'cx, Obs: Observer>(
                 if result_tparam.is_const =>
             {
                 // Adjust 'const' type parameters. Keeping container reasons for
-                // compatibility with existing code. *)
+                // compatibility with existing code.
                 natural_inference::convert_literal_type_to_const(call_loc, cx, inferred.dupe())
             }
             _ => {
@@ -2159,7 +2157,6 @@ fn check_react_fun<'cx, Obs: Observer>(
     check_instantiation::<Obs>(cx, env, tparams, marked_tparams, check)
 }
 
-// let check_instance cx ~tparams ~implicit_instantiation =
 fn check_instance<'cx, Obs: Observer>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -2401,9 +2398,6 @@ pub mod instantiation_solver {
             tparam: &TypeParam,
             inferred: Type,
         ) -> InferredTarg {
-            // Debug_js.Verbose.print_if_verbose_lazy cx
-            //   (lazy [spf "Type parameter %s is pinned to %s"
-            //     (Subst_name.string_of_subst_name tparam.name) (Debug_js.dump_t cx ~depth:3 inferred)])
             flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
                 vec![format!(
                     "Type parameter {} is pinned to {}",
@@ -2601,7 +2595,6 @@ pub mod instantiation_solver {
             // the return hint flow or pin_types can add entries that may be
             // associated with error-producing checks. Only safe if
             // implicitly_instantiate did not produce errors.
-            // if not has_new_errors then preserved_constraint_cache := Some !constraint_cache;
             if !has_new_errors {
                 cx.constraint_cache_mut()
                     .move_top_entries_to_level(preserve_level);
@@ -2711,7 +2704,6 @@ pub mod instantiation_solver {
         // the preserve level survives with the entries from implicitly_instantiate.
         // If preserved, leave the level as-is — entries are visible to add()/fold().
         // If not preserved, discard the empty preserve level.
-        // Base.Option.iter !preserved_constraint_cache ~f:(fun cc -> constraint_cache := cc);
         if !preserved {
             cx.constraint_cache_mut().truncate_to(preserve_level);
         }
@@ -3433,7 +3425,7 @@ pub mod kit {
     }
 
     // TODO: await should look up Promise in the environment instead of going directly to
-    // the core definition. Otherwise, the following won't work with a polyfilled Promise! **)
+    // the core definition. Otherwise, the following won't work with a polyfilled Promise!
     // If argument is a Promise<T>, then (await argument) returns T.
     // otherwise it just returns the argument type.
     // TODO update this comment when recursive unwrapping of Promise is done.

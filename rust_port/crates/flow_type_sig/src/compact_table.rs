@@ -541,29 +541,24 @@ impl<T> Table<T> {
         self.0
     }
 
-    // let init = Array.init
     pub fn init(size: usize, f: impl FnMut(usize) -> T) -> Self {
         Table((0..size).map(f).collect())
     }
 
-    // let iteri = Array.iteri
     pub fn iteri(&self, mut f: impl FnMut(usize, &T)) {
         for (i, x) in self.0.iter().enumerate() {
             f(i, x);
         }
     }
 
-    // let map = Array.map
     pub fn map<U>(&self, f: impl FnMut(&T) -> U) -> Table<U> {
         Table(self.0.iter().map(f).collect())
     }
 
-    // let mapi = Array.mapi
     pub fn mapi<U>(&self, mut f: impl FnMut(usize, &T) -> U) -> Table<U> {
         Table(self.0.iter().enumerate().map(|(i, x)| f(i, x)).collect())
     }
 
-    // let to_array_map = map
     pub fn to_array_map<U>(&self, f: impl FnMut(&T) -> U) -> Table<U> {
         self.map(f)
     }

@@ -1196,7 +1196,7 @@ mod keep_alive_loop {
 
     pub(super) fn should_monitor_exit_with_signaled_server(signal: i32) -> bool {
         // While there are many scary things which can cause segfaults, in practice we've mostly seen
-        // them when the Flow server hits some infinite or very deep recursion (like Base.List.map ~f:on a
+        // them when the Flow server hits some infinite or very deep recursion (like Base.List.map on a
         // very large list). Often, this is triggered by some ephemeral command, which is rerun when
         // the server starts back up, leading to a cycle of segfaulting servers.
         //

@@ -569,7 +569,7 @@ pub(super) fn iter_with_filter<'cx, F>(
     }
 }
 
-/// Given [edges_to_t (id1, bounds1) t2], for each [id] in [id1] + [bounds1.lowertvars],
+/// Given [edges_to_t(.., (id1, bounds1), t2)], for each [id] in [id1] + [bounds1.lowertvars],
 /// [id.bounds.upper += t2]. When going through [bounds1.lowertvars], filter out [id1].
 ///
 /// As an optimization, skip [id1] when it will become either a resolved root or a
@@ -602,8 +602,8 @@ pub(super) fn edges_to_t<'cx>(
     );
 }
 
-/// Given [edges_from_t t1 (id2, bounds2)], for each [id] in [id2] + [bounds2.uppertvars],
-/// id.bounds.lower += t1]. When going through [bounds2.uppertvars], filter out [id2].
+/// Given [edges_from_t(.., t1, (id2, bounds2))], for each [id] in [id2] + [bounds2.uppertvars],
+/// [id.bounds.lower += t1]. When going through [bounds2.uppertvars], filter out [id2].
 ///
 /// As an optimization, skip [id2] when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
@@ -904,9 +904,7 @@ pub(super) fn add_lower_edges<'cx>(
     });
 }
 
-// (***************)
-// (* unification *)
-// (***************)
+// unification
 
 pub(super) fn unify_flip(use_op: UseOp) -> UseOp {
     UseOp::Frame(Arc::new(VirtualFrameUseOp::UnifyFlip), Arc::new(use_op))
@@ -933,9 +931,7 @@ pub(super) fn goto<'cx>(
 ) -> Result<(), FlowJsException> {
     let id1 = node1.id();
     let id2 = node2.id();
-    //   match (root1.constraints, root2.constraints) with
     match (root1.constraints, root2.constraints) {
-        //   | (Unresolved bounds1, Unresolved bounds2) ->
         (
             constraint::Constraints::Unresolved(bounds1),
             constraint::Constraints::Unresolved(bounds2),

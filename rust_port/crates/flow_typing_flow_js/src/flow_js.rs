@@ -16,7 +16,7 @@
 //! types remain; these flows are then viewed as links in a chain, bringing
 //! together further concrete types and type variables to participate in
 //! subtyping. This process continues till a fixpoint is reached---which itself
-//! is guaranteed to exist, and is usually reached in very few steps. *)
+//! is guaranteed to exist, and is usually reached in very few steps.
 
 use std::ops::Deref;
 use std::rc::Rc;

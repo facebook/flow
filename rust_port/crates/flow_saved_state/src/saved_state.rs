@@ -310,11 +310,6 @@ fn collect_non_flowlib_configured_libs(env: &Env, options: &Options) -> BTreeSet
 }
 
 fn collect_node_modules_containers(root: &Path) -> BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>> {
-    // let collect_node_modules_containers root =
-    //   SMap.fold
-    //     (fun key value acc -> SMap.add (normalize_path root key) value acc)
-    //     !Files.node_modules_containers
-    //     SMap.empty
     let node_modules_containers = files::node_modules_containers.read().unwrap();
     node_modules_containers
         .iter()
@@ -329,7 +324,6 @@ fn collect_node_modules_containers(root: &Path) -> BTreeMap<FlowSmolStr, BTreeSe
 
 fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDataForSerialization {
     flow_hh_logger::info!("Collecting env data for saved state");
-    // let root = Options.root options |> File_path.to_string in
     let root = options.root.as_path();
     let errors = env.errors();
     let duplicate_providers = errors
@@ -345,7 +339,6 @@ fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDa
             )
         })
         .collect();
-    // let node_modules_containers = collect_node_modules_containers root in
     let node_modules_containers = collect_node_modules_containers(root);
     SavedStateEnvDataForSerialization {
         flowconfig_hash: options.flowconfig_hash.dupe(),

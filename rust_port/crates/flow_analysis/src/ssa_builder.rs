@@ -165,7 +165,7 @@ mod val {
                 // Merging can easily lead to exponential blowup in size of terms if we're not careful.
                 // We amortize costs by computing normal forms as sets of "atomic" terms, so that
                 // merging would correspond to set union.
-                // (Atomic terms include Uninitialized, Loc _, and REF { contents = Unresolved _ }.)
+                // (Atomic terms include `Uninitialized`, `Loc(_)`, and `Ref` cells holding `Unresolved(_)`.)
                 // Note that normal forms might change over time, as unresolved refs become resolved;
                 // thus, we do not shortcut normalization of previously normalized terms.
                 let vals1 = Self::normalize(&t1.write_state);

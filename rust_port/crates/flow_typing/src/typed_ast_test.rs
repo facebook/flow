@@ -77,7 +77,7 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
     // Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
     // in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
     // we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
-    // to avoid any "Any value used as type" errors that may otherwise appear *)
+    // to avoid any "Any value used as type" errors that may otherwise appear
     let mk_builtins: Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>> =
         Rc::new(|_cx| {
             let reason =

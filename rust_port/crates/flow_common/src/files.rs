@@ -174,15 +174,14 @@ impl Default for FileOptions {
     }
 }
 
-// (* During node module resolution, we need to look for node_modules/ directories
-//  * as we walk up the path. But checking each directory for them would be expensive.
-//  * So instead we memorize which directories contain node_modules/ directories.
-//  *
-//  * This is complicated by the node_resolver_dirnames option, which means
-//  * node_modules/ directories might go by other names. So we need to keep track
-//  * of which directories contain node_modules/ directories and which aliases we've
-//  * seen *)
-// let node_modules_containers = ref SMap.empty
+// During node module resolution, we need to look for node_modules/ directories
+// as we walk up the path. But checking each directory for them would be expensive.
+// So instead we memorize which directories contain node_modules/ directories.
+//
+// This is complicated by the node_resolver_dirnames option, which means
+// node_modules/ directories might go by other names. So we need to keep track
+// of which directories contain node_modules/ directories and which aliases we've
+// seen
 #[allow(non_upper_case_globals)]
 pub static node_modules_containers: LazyLock<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>> =
     LazyLock::new(|| RwLock::new(BTreeMap::new()));
@@ -1032,7 +1031,6 @@ pub fn make_next_files(
             && realpath_filter(options, path, all, include_libdef)
     }
 
-    // let node_module_filter = is_node_module options in
     let node_module_filter = |file: &str| is_node_module(&options, file);
 
     let starting_point_paths = {
@@ -1086,13 +1084,6 @@ pub fn make_next_files(
                 let path = entry.path();
                 let path_str = path.to_string_lossy();
                 if node_module_filter(path_str.as_ref()) {
-                    // if node_module_filter file then
-                    //   node_modules_containers :=
-                    //     SMap.add
-                    //       ~combine:SSet.union
-                    //       (Filename.dirname file)
-                    //       (file |> Filename.basename |> SSet.singleton)
-                    //       !node_modules_containers;
                     let dirname = Path::new(&*path_str)
                         .parent()
                         .map(|p| p.to_string_lossy().to_string())
@@ -1296,7 +1287,7 @@ pub fn split_path(path: &str) -> Vec<String> {
                     // "/" becomes ["/"]
                     None => acc.insert(0, dir),
                     Some(_) => {
-                        // "/path/to/foo.js" becomes ["/path"; "to"; "foo.js"]
+                        // "/path/to/foo.js" becomes ["/path", "to", "foo.js"]
                         let new_first =
                             Path::new(&dir).join(&acc[0]).to_string_lossy().into_owned();
                         acc[0] = new_first;

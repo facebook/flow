@@ -1154,8 +1154,8 @@ fn try_method_bivariant<'cx>(
                 // guard above requires t_out is FunT, and Type_subst only rewrites
                 // tparam references inside), so the assertive match is exhaustive in
                 // practice. If it ever falls through, report an internal error rather
-                // than crashing — matches the OCaml behavior of add_output(EInternal
-                // (..., MethodBivariantInvariant ...)).
+                // than crashing — matches the OCaml behavior of reporting an `EInternal`
+                // `MethodBivariantInvariant` error.
                 let inner1_subst = flow_typing_flow_common::type_subst::subst(
                     cx,
                     Some(use_op.dupe()),
@@ -1794,7 +1794,6 @@ fn flow_obj_to_obj<'cx>(
             .fold_props(
                 lflds.dupe(),
                 |name, _prop, mut acc: Vec<Name>| {
-                    // if Context.has_prop cx uflds name then acc else name :: acc
                     if !cx.has_prop(uflds.dupe(), name) {
                         acc.push(name.dupe());
                     }
@@ -3009,8 +3008,9 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
 
-        // If we have a TypeAppT (c, ts) ~> TypeAppT (c, ts) then we want to
-        // concretize both cs to PolyTs so that we may referentially compare them.
+        // If we have a TypeAppT ~> TypeAppT then we want to concretize both type
+        // constructors (c, the `type_` field) to PolyTs so that we may
+        // referentially compare them.
         // We cannot compare the non-concretized versions since they may have been
         // reposition, they may be two OpenTs from different locations, or any other
         // way you can access the same PolyT via different means that results in a
@@ -3503,9 +3503,10 @@ pub fn rec_sub_t<'cx>(
         // where the underlying object is created solely for the purpose of
         // describing a keyset can be modeled using unions of singleton strings.
         //
-        // One may also legitimately wonder why SingletonStrT(_, key) cannot be
-        // always replaced by SingletonStrT(Some key). The reason is that types of the
-        // latter form (string literal types) are inferred to be the type of string
+        // One may also legitimately wonder why a SingletonStrT with value `key`
+        // cannot always be replaced by the literal string type of `key`. The
+        // reason is that types of the latter form (string literal types) are
+        // inferred to be the type of string
         // literals appearing as values, and we don't want to prematurely narrow
         // down the type of the location where such values may appear, since that
         // would preclude other strings to be stored in that location. Thus, by
@@ -4162,7 +4163,6 @@ pub fn rec_sub_t<'cx>(
                                 UseT::new(UseTInner::UseT(use_op.dupe(), u.dupe())),
                             ) {
                                 Err(FlowJsException::SpeculationSingletonError) => {
-                                    // Flow_js_utils.union_representative_use_op cx ~l ~representative use_op
                                     let use_op = flow_js_utils::union_representative_use_op(
                                         cx,
                                         l,
@@ -6498,7 +6498,8 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t, u)
         }
 
-        // Similar to the case of NominalT { upper_t=Some _ }  ~> NominalT { lower_t=Some _ }
+        // Similar to the NominalT ~> NominalT case where the lower bound has an
+        // `upper_t` and the upper bound has a `lower_t`.
         // We need to do the same for GenericT.
         (
             TypeInner::GenericT(box GenericTData {

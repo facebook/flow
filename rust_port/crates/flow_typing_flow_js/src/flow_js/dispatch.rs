@@ -393,10 +393,10 @@ fn flow_dict_key_to_keys<'cx>(
 /// this module, and the function `flow` outside this module.
 ///
 /// This is a trampoline wrapper that handles tail call optimization for
-/// mutually recursive chains in __flow_impl. In OCaml, calls like
-/// `rec_flow cx trace (result, u)` at the end of a match arm are in tail
-/// position and optimized by the compiler. In Rust, we return these as
-/// TailCall continuations and process them in a loop to avoid stack overflow.
+/// mutually recursive chains in __flow_impl. In OCaml, a `rec_flow` call at
+/// the end of a match arm is in tail position and optimized by the compiler.
+/// In Rust, we return these as TailCall continuations and process them in a
+/// loop to avoid stack overflow.
 pub(super) fn __flow<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -509,9 +509,7 @@ fn __flow_impl<'cx>(
         // ********
         // * eval *
         // ********
-        (TypeInner::EvalT { id: id1, .. }, UseTInner::UseT(_, t2)) if matches!(t2.deref(), TypeInner::EvalT { id: id2, .. } if id1 == id2) =>
-        {
-            // if Context.is_verbose cx then prerr_endline "EvalT ~> EvalT fast path"
+        (TypeInner::EvalT { id: id1, .. }, UseTInner::UseT(_, t2)) if matches!(t2.deref(), TypeInner::EvalT { id: id2, .. } if id1 == id2) => {
             if cx.is_verbose() {
                 eprintln!("EvalT ~> EvalT fast path");
             }
@@ -617,11 +615,9 @@ fn __flow_impl<'cx>(
                 // (especially EvalT from type sig), so we defend it again here.
                 UseTInner::ConcretizeT(box ConcretizeTData { seen, .. }) => {
                     let tvar_id = node.id();
-                    // ISet.mem tvar !seen
                     if seen.contains(&tvar_id) {
                         true
                     } else {
-                        // seen := ISet.add tvar !seen;
                         seen.insert(tvar_id);
                         false
                     }
@@ -961,7 +957,7 @@ fn __flow_impl<'cx>(
         }
         // Waits for a def type to become concrete, repositions it as an upper UseT<Context<'cx>>
         // using the stored reason. This can be used to store a reason as it flows
-        // through a tvar. *)
+        // through a tvar.
         (
             _,
             UseTInner::ReposUseT(box ReposUseTData {
@@ -1143,7 +1139,6 @@ fn __flow_impl<'cx>(
             let new_type_ =
                 flow_typing_tvar::mk_no_wrap_where(cx, r.dupe(), |cx, tvar_reason, tvar_id| {
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                    // rec_flow cx trace (type_, DeepReadOnlyT (tvar, (dro_loc, dro_type)))
                     rec_flow(
                         cx,
                         env,
@@ -1178,7 +1173,6 @@ fn __flow_impl<'cx>(
             let new_type_ =
                 flow_typing_tvar::mk_no_wrap_where(cx, r.dupe(), |cx, tvar_reason, tvar_id| {
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                    // rec_flow cx trace (type_, HooklikeT tvar)
                     rec_flow(
                         cx,
                         env,
@@ -1826,7 +1820,7 @@ fn __flow_impl<'cx>(
             },
         ) => {
             // Don't split the maybe type into its constituent members. Instead,
-            // reposition the entire maybe type. *)
+            // reposition the entire maybe type.
             let loc = reason_op.loc().dupe();
             let desc = if *use_desc {
                 Some(reason_op.desc(true).clone())
@@ -2032,9 +2026,9 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(cx, env, trace, (&t, u))?;
         }
-        // This is the second step in checking a TypeAppT (c, ts) ~> TypeAppT (c, ts).
-        // The first step is in subtyping_kit.rs, and concretizes the c for our
-        // upper bound TypeAppT.
+        // This is the second step in checking a TypeAppT ~> TypeAppT.
+        // The first step is in subtyping_kit.rs, and concretizes the c (the
+        // `type_` field) for our upper bound TypeAppT.
         //
         // When we have done that, then we want to concretize the lower bound. We
         // flip all our arguments to ConcretizeTypeAppsT and set the final element
@@ -2070,7 +2064,7 @@ fn __flow_impl<'cx>(
         // When we have concretized the c for our lower bound TypeAppT then we can
         // finally run our TypeAppT ~> TypeAppT logic. If we have referentially the
         // same PolyT for each TypeAppT then we want to check the type arguments
-        // only. (Checked in the when condition.) If we do not have the same PolyT
+        // only. (Checked in the match guard.) If we do not have the same PolyT
         // for each TypeAppT then we want to expand our TypeAppTs and compare the
         // expanded results.
         //
@@ -2126,7 +2120,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         // This is the case which implements the expansion for our
-        // TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal.
+        // TypeAppT ~> TypeAppT when the two PolyTs are unequal.
         (
             TypeInner::DefT(_, def_t),
             UseTInner::ConcretizeTypeAppsT(
@@ -2229,7 +2223,7 @@ fn __flow_impl<'cx>(
             }
         }
         // Concretize types for type inspection purpose up to this point. The rest are
-        // recorded as lower bound to the target tvar. *
+        // recorded as lower bound to the target tvar.
         (
             _,
             UseTInner::ConcretizeT(box ConcretizeTData {
@@ -3562,9 +3556,9 @@ fn __flow_impl<'cx>(
         ) => {
             collector.add(l.dupe());
         }
-        // This duplicates the (_, ReposLowerT u) near the end of this pattern
-        // match but has to appear here to preempt the (IntersectionT, _) in
-        // between so that we reposition the entire intersection.
+        // This duplicates the `ReposLowerT` arm near the end of this match but
+        // has to appear here to preempt the `IntersectionT` arm in between so
+        // that we reposition the entire intersection.
         (
             TypeInner::IntersectionT(_, _),
             UseTInner::ReposLowerT {
@@ -3945,7 +3939,7 @@ fn __flow_impl<'cx>(
                         |recursion_depth| -> Result<(), FlowJsException> {
                             match recursion_depth {
                                 0 => {
-                                    // The first time we see this, we process it normally *)
+                                    // The first time we see this, we process it normally
                                     let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
                                     rrt_resolved.push_front(ResolvedParam::ResolvedSpreadArg(
                                         Box::new(ResolvedSpreadArgData(
@@ -4196,8 +4190,8 @@ fn __flow_impl<'cx>(
             rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
         // NullProtoT is necessary as an upper bound, to distinguish between
-        // (ObjT _, NullProtoT _) constraints and (ObjT _, DefT (_, NullT)), but as
-        // a lower bound, it's the same as DefT (_, NullT)
+        // ObjT ~> NullProtoT constraints and ObjT ~> NullT ones, but as a lower
+        // bound, it's the same as NullT
         (TypeInner::NullProtoT(reason), _) => {
             let null_t = Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::NullT)));
             rec_flow(cx, env, trace, (&null_t, u))?;
@@ -4594,10 +4588,8 @@ fn __flow_impl<'cx>(
             }
         }
         (TypeInner::AnyT(_, _), UseTInner::ThisSpecializeT(r, _, k)) => {
-            // continue_repos cx trace r l k
             continue_repos(cx, env, trace, r, false, l, k)?;
         }
-        //   rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (
             TypeInner::DefT(_, def_t),
             UseTInner::ReposLowerT {
@@ -5454,7 +5446,6 @@ fn __flow_impl<'cx>(
                 tool,
             }),
         ) => {
-            // ReactJs.run cx trace ~use_op reason_op l tool
             react_kit::run_with_env(cx, env, trace, use_op.dupe(), reason_op, l, tool)?;
         }
 
@@ -6895,7 +6886,7 @@ fn __flow_impl<'cx>(
                     if property::write_t(lp).is_none() =>
                 {
                     // Without this exception, we will call rec_flow_p where
-                    // `write_t lp = None` and `write_t up = Some`, which is a polarity
+                    // `write_t(lp)` is `None` and `write_t(up)` is `Some`, which is a polarity
                     // mismatch error. Instead of this, we could "read" `mixed` from
                     // covariant props, which would always flow into `any`.
                 }
@@ -9298,7 +9289,7 @@ fn __flow_impl<'cx>(
         // won't exist at run time, so the read will return undefined; but for other
         // object types, the property *might* exist at run time, and since we don't
         // know what the type of the property would be, we set things up so that the
-        // result of the read cannot be used in any interesting way. *)
+        // result of the read cannot be used in any interesting way.
         // **************************************************************************
         (
             TypeInner::DefT(_, def_t),
@@ -9811,7 +9802,6 @@ fn __flow_impl<'cx>(
             let obj = helpers::get_builtin_type(cx, env, Some(trace), reason_op, None, "Object")?;
             rec_flow(cx, env, trace, (&obj, u))?;
         }
-        //   rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
         (
             TypeInner::FunProtoT(_),
             UseTInner::LookupT(box LookupTData {

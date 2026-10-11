@@ -29,7 +29,7 @@
 //
 // 0x40 - 0x7E + 2 ints: single line, start_rline < 0x3F
 //  { .tag = start_rline + 0x40;
-//    .0 = if start_rline = 0 then start_rcolumn - 0x40 else start_column;
+//    .0 = start_rcolumn - 0x40 if start_rline == 0, else start_column;
 //    .1 = length }
 //
 // 0x7F + 3 ints: single line, rline >= 0x3F
@@ -45,7 +45,7 @@
 //
 // 0xC0 - 0xFE + 3 ints: multi line, rline < 0x3F
 //  { .tag = start_rline + 0xC0;
-//    .0 = if start_rline = 0 then start_rcolumn - 0x40 else start_column;
+//    .0 = start_rcolumn - 0x40 if start_rline == 0, else start_column;
 //    .1 = end_rline;
 //    .2 = end_column }
 //

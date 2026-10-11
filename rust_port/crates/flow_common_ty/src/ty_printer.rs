@@ -231,9 +231,7 @@ where
     }
 }
 
-/*************************)
-(* Main Transformation   *)
-(*************************/
+/* Main Transformation */
 
 fn layout_of_elt_with_state<L: Dupe>(
     opts: &PrinterOptions,

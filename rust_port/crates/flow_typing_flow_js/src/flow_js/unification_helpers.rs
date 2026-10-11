@@ -196,12 +196,6 @@ fn __unify_inner<'cx>(
                 ) if id1 == id2 => {
                     return Ok(());
                 }
-                //   | ( DefT (_, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1; react_dro = _ })),
-                //       DefT (_, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2; react_dro = _ }))
-                //     ) ->
-                //   | ( DefT (r1, ArrT (TupleAT { ... })),
-                //       DefT (r2, ArrT (TupleAT { ... }))
-                //     ) ->
                 (DefTInner::ArrT(arr1), DefTInner::ArrT(arr2)) => {
                     match (arr1.deref(), arr2.deref()) {
                         (
@@ -528,7 +522,6 @@ fn __unify_inner<'cx>(
                                             l_obj.strictness_kind.join(u_obj.strictness_kind),
                                         )?;
                                     }
-                                    // | (None, None) -> ()
                                     (None, None) => {}
                                 }
                             }

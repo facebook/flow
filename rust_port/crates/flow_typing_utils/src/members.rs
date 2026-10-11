@@ -104,7 +104,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                     for (FunParam(name1, p_t1), FunParam(name2, p_t2)) in
                         ft1.params.iter().zip(ft2.params.iter())
                     {
-                        // (* TODO: How to merge param names? *)
+                        // TODO: How to merge param names?
                         params_names.push(match (name1, name2) {
                             (None, None) => None,
                             (Some(name), _) | (_, Some(name)) => Some(Name::new(name.clone())),
@@ -504,7 +504,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
             }
             // Non-matching DefT pairs
             // TODO: do we need to do anything special for merging Null with Void,
-            // Optional with other types, etc.? *)
+            // Optional with other types, etc.?
             _ => create_union(union_rep::make(
                 None,
                 union_rep::UnionKind::UnknownKind,
@@ -836,7 +836,6 @@ pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type
             } else {
                 instantiate_type(inst_t)
             };
-            //   extract_type cx inst_t
             extract_type(cx, inst_t)
         }
         TypeInner::IntersectionT(_, _) => GenericT::Success(this_t),

@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// open Lsp
-// open Lsp_fmt
-
 use std::collections::BTreeSet;
 
 use flow_lsp::lsp_fmt::print_connection_status;
@@ -22,9 +19,7 @@ use lsp_types::Uri;
 
 use crate::jsonrpc;
 
-// (************************************************************************)
-// (* Wrappers for some LSP methods                                        *)
-// (************************************************************************)
+// Wrappers for some LSP methods
 
 pub fn telemetry(writer: fn(&serde_json::Value), level: MessageType, message: &str) {
     jsonrpc::notify(

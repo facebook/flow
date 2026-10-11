@@ -56,7 +56,6 @@ struct Item<T> {
     workload: T,
 }
 
-/// INVARIANT: requeued_parallelizable_length = List.length requeued_parallelizable
 struct Inner {
     parallelizable: VecDeque<Item<ParallelizableWorkload>>,
     requeued_parallelizable: Vec<Item<ParallelizableWorkload>>,
@@ -173,7 +172,6 @@ impl WorkloadStream {
             })
         } else {
             inner.nonparallelizable.pop_front().map(|item| {
-                // Hh_logger.info "Dequeueing nonparallelizable %s after %3f seconds" name (Unix.gettimeofday () -. enqueue_time)
                 flow_hh_logger::info!(
                     "Dequeueing nonparallelizable {} after {:.3} seconds",
                     item.name,

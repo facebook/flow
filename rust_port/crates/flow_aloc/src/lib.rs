@@ -320,7 +320,6 @@ impl ALoc {
 
     pub fn to_loc(&self, table: &LazyALocTable) -> Loc {
         if self.is_keyed() {
-            // let table = Lazy.force table in
             let table: &Rc<ALocTable> = LazyCell::force(&**table);
             self.to_loc_with_table(table)
         } else {
@@ -411,7 +410,6 @@ impl ALoc {
                 Some(source) => match available_tables.get(source) {
                     // We don't have the right table, so just return the loc
                     None => self.dupe(),
-                    // of_loc (to_loc table loc)
                     Some(table) => ALoc::of_loc(self.to_loc(table)),
                 },
             }

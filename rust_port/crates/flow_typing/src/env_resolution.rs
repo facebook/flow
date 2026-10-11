@@ -2085,7 +2085,6 @@ fn resolve_binding<'cx>(
                                                         // For other selectors, call eval_selector directly on the
                                                         // original type. The flow mechanism will handle union
                                                         // distribution, matching the old DestructuringT behavior.
-                                                        // Flow_js.eval_selector cx ~annot reason t selector tout id
                                                         flow_js_exception_to_job_error(
                                                             flow_js::FlowJs::eval_selector(
                                                                 cx,

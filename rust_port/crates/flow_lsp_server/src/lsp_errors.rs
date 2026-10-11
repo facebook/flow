@@ -339,8 +339,8 @@ pub fn clear_all_live_errors_and_send(
     send_all_errors(send_json, state)
 }
 
-// my_list @ [] returns a list which is no longer physically identical to my_list. This is a
-// workaround
+// Appending an empty list returns a list which is no longer physically identical to the original
+// list. This is a workaround
 fn append(list_a: Errors, list_b: Errors) -> Errors {
     match (list_a.is_empty(), list_b.is_empty()) {
         (true, true) => vec![],

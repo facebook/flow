@@ -388,7 +388,6 @@ pub fn mk_check_file(
             let mut rr = resolved_requires.borrow_mut();
             let resolved = resolved_requires_data.get_resolved_modules();
             for (mref, m) in requires.iter().zip(resolved.iter()) {
-                // fun mref m -> lazy (dep_module_t cx mref m)
                 let key = mref.dupe();
                 let mref = mref.dupe();
                 let m = m.to_result();

@@ -6257,7 +6257,6 @@ fn mk_type_available_annotation_inner<'a>(
                         loc.debug_to_string(true)
                     )]
                 });
-                // node
                 cached.annotation
             }
             None => convert_annot(cx, env)?,
@@ -6505,7 +6504,6 @@ fn mk_type_param_inner<'a>(
             let annot_ast = convert_inner(cx, env, u)?;
             let (_, bound_val) = annot_ast.loc();
             let bound_val = bound_val.dupe();
-            // Available (bound_loc, ast)
             let bound_ast = ast::types::AnnotationOrHint::Available(ast::types::Annotation {
                 loc: bound_loc.dupe(),
                 annotation: annot_ast,
@@ -7428,8 +7426,8 @@ fn add_interface_properties<'a>(
             Property::NormalProperty(np) => {
                 // The [override] modifier is only meaningful on classes /
                 // [declare class]. For pure object-type / interface bodies
-                // (the [`Interface] case) it has no TS-aligned semantics, so
-                // keep rejecting it unconditionally. For [`DeclareClass]
+                // (the [ObjKind::Interface] case) it has no TS-aligned semantics, so
+                // keep rejecting it unconditionally. For [ObjKind::DeclareClass]
                 // under the [tslib_syntax] gate, thread it through to the
                 // same per-side [override_members] tracking that regular
                 // classes use; [check_override_obligations] will fire any

@@ -105,27 +105,6 @@ pub fn obj_test_proto<'a>(cx: &Context<'a>, reason: Reason, t: Type) -> Type {
     map_on_resolved_type(cx, reason, t, f)
 }
 
-// let get_prop cx use_op reason ?(op_reason = reason) name l =
-//   let f l =
-//     Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx op_reason (fun tout ->
-//         Flow.flow
-//           cx
-//           ( l,
-//             GetPropT
-//               {
-//                 use_op;
-//                 reason = op_reason;
-//                 id = None;
-//                 from_annot = false;
-//                 skip_optional = false;
-//                 propref = mk_named_prop ~reason name;
-//                 tout;
-//                 hint = hint_unavailable;
-//               }
-//           )
-//     )
-//   in
-//   map_on_resolved_type cx op_reason l f
 pub fn get_prop<'a>(
     cx: &Context<'a>,
     use_op: UseOp,

@@ -95,7 +95,7 @@ impl Ord for Tvar {
 
 /// A set that emulates OCaml's immutable set semantics for tvar cycle detection.
 ///
-/// In OCaml, `ISet.add id seen` creates a new set without modifying the original.
+/// In OCaml, `ISet.add` creates a new set without modifying the original.
 /// This wrapper provides `with_added` to temporarily add an element during a
 /// recursive call and automatically restore the set afterward, preventing bugs
 /// where the caller forgets to remove the element.
@@ -712,7 +712,6 @@ impl TypeDestructorT {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EnumConcreteInfoInner {
     pub enum_name: FlowSmolStr,
-    // enum_id: ALoc.id;
     pub enum_id: ALocId,
     pub members: FlowOrdMap<FlowSmolStr, ALoc>,
     pub representation_t: Type,
@@ -4672,13 +4671,13 @@ pub enum PredicateInner {
         propname: FlowSmolStr,
         reason: Reason,
     },
-    // `if (a.b)` yields `flow (a, PredicateT(PropTruthyP ("b"), tout))`
+    // `if (a.b)` flows `a` to `PredicateT(PropTruthyP("b"), tout)`
     PropTruthyP(FlowSmolStr, Reason),
-    // `if (a?.b === null)` yields `flow (a, PredicateT(PropIsExactlyNullP ("b"), tout))`
+    // `if (a?.b === null)` flows `a` to `PredicateT(PropIsExactlyNullP("b"), tout)`
     PropIsExactlyNullP(FlowSmolStr, Reason),
-    // `if (a?.b !== undefined)` yields `flow (a, PredicateT(PropNonVoidP ("b"), tout))`
+    // `if (a?.b !== undefined)` flows `a` to `PredicateT(PropNonVoidP("b"), tout)`
     PropNonVoidP(FlowSmolStr, Reason),
-    // `if (a.b?.c)` yields `flow (a, PredicateT(PropNonMaybeP ("b"), tout))`
+    // `if (a.b?.c)` flows `a` to `PredicateT(PropNonMaybeP("b"), tout)`
     PropNonMaybeP(FlowSmolStr, Reason),
     // Encondes the latent predicate associated with the [index]-th parameter
     // of the function in type [t]. We also include information for all type arguments
@@ -5142,7 +5141,7 @@ pub struct TupleATData {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ArrType {
     ArrayAT(Box<ArrayATData>),
-    /// TupleAT of elemt * tuple_types. Why do tuples carry around elemt? Well, so
+    /// TupleAT carries `elem_t` alongside `elements`. Why do tuples carry around `elem_t`? Well, so
     /// that they don't need to recompute their general type when you do
     /// `myTuple[expr]`
     TupleAT(Box<TupleATData>),
@@ -5168,7 +5167,7 @@ pub struct ObjType {
     pub call_t: Option<i32>,
     /// reachable_targs is populated during substitution. We use those reachable
     /// targs to avoid traversing the full objtype structure during any-propagation
-    /// and instead pollute the reachable_targs directly. *)
+    /// and instead pollute the reachable_targs directly.
     pub reachable_targs: Rc<[(Type, Polarity)]>,
     pub strictness_kind: TypeStrictnessKind,
 }
@@ -5299,11 +5298,11 @@ pub enum DerivedReference {
 ///   If the property is not found, emit an error against the stored type, the
 ///   object the lookup started from.
 ///
-/// NonstrictReturning None
+/// NonstrictReturning(NonstrictReturningData(None, _))
 ///   If the property is not found, do nothing. Note that lookups of this kind
 ///   will not add any constraints to the output tvar.
 ///
-/// NonstrictReturning (Some (default, result))
+/// NonstrictReturning(NonstrictReturningData(Some((default, result)), _))
 ///   If the property is not found, deliver the default type to `result`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NonstrictReturningData(
@@ -5772,11 +5771,11 @@ pub struct NamedSymbolInner {
     /// Optional [_for_extends] variant of [type_], populated only for re-export
     /// chains ([export type {X} from ...] and [export {X} from ...]) so that
     /// barrel-style re-exports preserve polymorphic [this]. When [Some], it
-    /// carries the un-canonicalized exporter-side type ([Poly?{ClassT
-    /// (ThisInstanceT _)}]) suitable for [this_typeapp] wrapping in
-    /// [extends]/[implements] consumers. When [None], consumers fall back to
-    /// [type_]. The regular import path always reads [type_]; only the
-    /// [_for_extends] read paths consult this field.
+    /// carries the un-canonicalized exporter-side type (a
+    /// [ClassT(ThisInstanceT(..))], possibly under a [PolyT]) suitable for
+    /// [this_typeapp] wrapping in [extends]/[implements] consumers. When
+    /// [None], consumers fall back to [type_]. The regular import path always
+    /// reads [type_]; only the [_for_extends] read paths consult this field.
     pub type_for_extends: Option<Type>,
 }
 
@@ -6255,7 +6254,7 @@ pub enum SpreadResolve {
     /// Once we've finished resolving spreads, try to construct a non-tuple array
     ResolveSpreadsToArray(Type, Type), // elem type, array type
     /// Once we've finished resolving spreads for a function's arguments, call the
-    /// function with those arguments *)
+    /// function with those arguments
     ResolveSpreadsToMultiflowCallFull(i32, Box<FunType>),
     ResolveSpreadsToMultiflowSubtypeFull(i32, Box<FunType>),
     /// Once we've finished resolving spreads for a function's arguments,
@@ -10761,8 +10760,6 @@ pub type EvalReposCacheMap = MultiLevelMap<(Type, TypeDestructorT, eval::Id), Ty
 pub type FixCacheMap = MultiLevelMap<(bool, Type), Type>;
 
 pub type ConstFoldMap = MultiLevelMap<(i32, Reason, i32), i32>;
-
-// ********************************************************* //
 
 pub fn open_tvar(tvar: &Type) -> &Tvar {
     match &**tvar {

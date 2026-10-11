@@ -44,7 +44,6 @@ impl<'a, 'cx> Marker<'a, 'cx> {
         res
     }
 
-    //     method base_expression c expr =
     fn base_expression<'ast>(
         &mut self,
         c: bool,

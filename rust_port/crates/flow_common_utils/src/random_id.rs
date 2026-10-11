@@ -10,7 +10,6 @@ pub const ALPHANUMERIC_ALPHABET: &str =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 /// Generates a random string containing characters from [alphabet].
-/// Be sure to initialize [Random] (e.g. [Random.self_init ()]).
 pub fn short_string_with_alphabet(alphabet: &str) -> String {
     let mask_30: u64 = (1u64 << 30) - 1;
     let hi: u64 = (rand::random::<u64>()) & mask_30;
@@ -26,7 +25,6 @@ pub fn short_string_with_alphabet(alphabet: &str) -> String {
 }
 
 /// Generates a random alphanumeric string.
-/// Be sure to initialize [Random] (e.g. [Random.self_init ()]).
 pub fn short_string() -> String {
     short_string_with_alphabet(ALPHANUMERIC_ALPHABET)
 }

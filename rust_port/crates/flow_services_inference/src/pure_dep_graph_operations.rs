@@ -12,7 +12,7 @@ use flow_common_utils::graph::GraphLike;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_parser::file_key::FileKey;
 
-/// `rdep_closure graph files` returns all files in `graph` which are reachable
+/// `rdep_closure(graph, files)` returns all files in `graph` which are reachable
 /// from `files`, directly or indirectly.
 fn rdep_closure<G>(graph: &G, files: &FlowOrdSet<FileKey>) -> FlowOrdSet<FileKey>
 where
@@ -45,7 +45,7 @@ where
     result
 }
 
-/// `calc_direct_dependencies graph files` will return the set of direct dependencies of
+/// `calc_direct_dependencies(graph, files)` will return the set of direct dependencies of
 /// `files`. This set includes `files`.
 pub fn calc_direct_dependencies(
     dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
@@ -64,7 +64,7 @@ pub fn calc_direct_dependencies(
     result
 }
 
-/// `calc_direct_dependents graph files` will return the set of direct dependents of
+/// `calc_direct_dependents(graph, files)` will return the set of direct dependents of
 /// `files`. This set includes `files`.
 pub fn calc_direct_dependents(
     dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
@@ -83,7 +83,7 @@ pub fn calc_direct_dependents(
     result
 }
 
-/// `calc_all_dependents graph files` will return the set of direct and transitive dependents of
+/// `calc_all_dependents(graph, files)` will return the set of direct and transitive dependents of
 /// `files`. This set include `files`.
 ///
 /// A file is a dependent of `files` whenever its code depends on any file whose *signature*, in

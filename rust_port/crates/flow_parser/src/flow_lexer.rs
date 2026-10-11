@@ -2253,16 +2253,16 @@ fn decode_html_entity(entity: &str) -> Option<u32> {
     }
 }
 
-// In OCaml sedlex, jsx_child_text uses longest-match semantics. The pattern
-// `Plus (Compl ('<' | '{' | '&' | eof | line_terminator_sequence_start))`
-// includes '>' and '}'. When '>' or '}' appears and is followed by more
-// "normal" chars, the Plus pattern produces a longer match than the single-char
-// '>' or '}' patterns, so no error is emitted. The error only fires when
-// '>' or '}' would tie at length 1 (i.e., the next char is '<', '{', '&',
-// a line terminator, or eof), and the earlier error pattern wins the tie.
+// In OCaml sedlex, jsx_child_text uses longest-match semantics. The normal-text
+// pattern matches one or more chars other than '<', '{', '&', eof, or a
+// line-terminator start, so it includes '>' and '}'. When '>' or '}' appears
+// and is followed by more "normal" chars, that pattern produces a longer match
+// than the single-char '>' or '}' patterns, so no error is emitted. The error
+// only fires when '>' or '}' would tie at length 1 (i.e., the next char is '<',
+// '{', '&', a line terminator, or eof), and the earlier error pattern wins the tie.
 //
 // This helper checks whether a following character would extend a
-// `Plus (Compl ...)` match beyond a single '>' or '}'.
+// normal-text match beyond a single '>' or '}'.
 fn jsx_child_text_remainder_has_normal(remainder: &str) -> bool {
     // match multi-char substrings that don't contain the start chars of the above patterns
     match remainder.chars().next() {
@@ -2279,7 +2279,6 @@ fn jsx_child_text_remainder_has_normal(remainder: &str) -> bool {
     }
 }
 
-// (* let rec jsx_child_text env buf raw lexbuf = *)
 fn consume_jsx_entity(remainder: &str) -> Option<(usize, String)> {
     if let Some(after_prefix) = remainder.strip_prefix("&#x") {
         let len = after_prefix
@@ -2357,13 +2356,15 @@ fn jsx_child_text(
     raw: &mut String,
 ) {
     // In OCaml, `normal_prev` doesn't exist. Instead, sedlex longest-match
-    // semantics handle '>' and '}' within `Plus (Compl ...)`. The Rust logos
-    // lexer tokenizes them separately, so we simulate the sedlex behavior:
+    // semantics handle '>' and '}' within the normal-text pattern (see
+    // `jsx_child_text_remainder_has_normal`). The Rust logos lexer tokenizes
+    // them separately, so we simulate the sedlex behavior:
     // - If preceded by normal text (`normal_prev`), '>' and '}' are always
-    //   part of the text (the `Plus` already started matching).
+    //   part of the text (the normal-text match already started).
     // - If NOT preceded by normal text, '>' and '}' are only text if followed
-    //   by a "normal" char (making `Plus (Compl ...)` match 2+ chars, winning
-    //   over the single-char error pattern). Otherwise, the error pattern wins.
+    //   by a "normal" char (making the normal-text pattern match 2+ chars,
+    //   winning over the single-char error pattern). Otherwise, the error
+    //   pattern wins.
     let mut normal_prev = false;
     loop {
         let offset = lexer.span().end;

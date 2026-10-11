@@ -10,9 +10,7 @@ use std::io::Write;
 use flow_command_spec::arg_spec;
 use flow_server_env::server_prot;
 
-//***********************************************************************
 // flow save-state command
-//***********************************************************************
 
 fn spec() -> flow_command_spec::Spec {
     let spec = flow_command_spec::Spec::new(

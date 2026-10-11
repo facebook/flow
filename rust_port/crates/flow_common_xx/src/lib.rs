@@ -75,7 +75,6 @@ mod tests {
 
     #[test]
     fn to_string_is_16_chars() {
-        // (* let state = Xx.init 0L in *)
         let state = State::new(0);
         let hash = state.digest();
         let str = format!("{:016x}", hash);
@@ -84,7 +83,6 @@ mod tests {
 
     #[test]
     fn equal_is_equal() {
-        // (* let a = *)
         let a = {
             let mut state = State::new(0);
             state.update(b"foo");

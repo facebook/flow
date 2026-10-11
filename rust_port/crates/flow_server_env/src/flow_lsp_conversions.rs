@@ -304,7 +304,7 @@ pub fn flow_edit_to_textedit(edit: (&Loc, String)) -> lsp_types::TextEdit {
     }
 }
 
-// ~, . and .. have no meaning in file urls so we don't canonicalize them *)
+// ~, . and .. have no meaning in file urls so we don't canonicalize them
 // but symlinks must be canonicalized before being used in flow:
 #[allow(non_snake_case)]
 pub fn lsp_DocumentIdentifier_to_flow_path(

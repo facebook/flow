@@ -84,7 +84,7 @@ fn run_daemon(param: Param, pair: ChannelPair<PollRequest, Msg>) {
 
     // Open a log file inside the daemon for diagnostics. OCaml routes its
     // output to the inherited stdout/stderr which the parent has redirected
-    // to the same log file via `Daemon.spawn (null_fd, log_fd, log_fd)`.
+    // to the same log file via `Daemon.spawn`.
     // For the Rust port we additionally open a `File` we own so we can write
     // structured progress lines without depending on the global tracing
     // subscriber being initialized in the child.

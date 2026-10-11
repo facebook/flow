@@ -598,7 +598,7 @@ fn exit_lex_child<L: LocSig>(loc: L, env: Env<L>) -> Env<L> {
 
 // Root visitor. Uses the `enter_lex_child` function parameter to manipulate the environment when it dives into a scope,
 // and calls `exit_lex_child` when it leaves a scope. For branching statements -- If, Try, and Switch -- it uses the same
-// initial env when it explores each branch, and then joins them using `join_envs`. It also has a "context" `cx type, which
+// initial env when it explores each branch, and then joins them using `join_envs`. It also has a "context" type `Cx`, which
 // is not accumulated (unlike the env) but stores contextual information using `in_context`.
 trait FinderBehavior<L: LocSig>: for<'a> AstVisitor<'a, L> {
     type Cx: Copy;

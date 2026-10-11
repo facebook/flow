@@ -24,10 +24,8 @@ use flow_type_sig::type_sig_options::TypeSigOptions;
 use crate::ast_extraction_utils::ast_extractor;
 use crate::refactor_extract_utils::variable_analysis;
 
-//   Source.contents source
 fn pretty_print(layout: &flow_parser_utils_output::layout::LayoutNode) -> String {
     let source: Source = pretty_printer::print(true, layout);
-    // Source.contents source
     source.contents()
 }
 
@@ -79,7 +77,6 @@ mod extract_tests {
     ) {
         let ast = parse(source);
         let tokens = ast_extractor::tokens(None, Some(dummy_filename()), source);
-        //   AstExtractor.extract tokens ast extract_range
         let ast_extractor::Extracted {
             extracted_statements,
             extracted_expression,
@@ -607,7 +604,6 @@ mod collect_function_method_inserting_points_tests {
                 )))
             }))
         });
-        // Context.make ccx metadata dummy_filename aloc_table resolve_require (fun _ -> ...)
         let builtins_values_clone = builtins_values.dupe();
         let builtin_types_clone = builtin_types.dupe();
         Context::make(
@@ -640,8 +636,6 @@ mod collect_function_method_inserting_points_tests {
     ) -> ast::Program<ALoc, (ALoc, Type)> {
         let comments = &ast.all_comments;
         let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
-        // Type_inference_js.infer_ast
-        //   cx dummy_filename File_sig.empty (Context.metadata cx) comments aloc_ast
         type_inference::infer_ast(
             &LintSettings::<Severity>::empty_severities(),
             cx,
@@ -682,7 +676,6 @@ function foo<A>() {
                 let cx = dummy_context();
                 let typed_ast = typed_ast_of_ast(&cx, &ast);
                 let extracted_loc = mk_loc(9, 12, 9, 42);
-                //   InsertionPointCollectors.collect_function_method_inserting_points
                 let actual: Vec<(FlowSmolStr, Loc, bool, Vec<String>)> =
                     insertion_point_collectors::collect_function_method_inserting_points(
                         &typed_ast,
@@ -690,8 +683,6 @@ function foo<A>() {
                         &|aloc: &ALoc| aloc.to_loc_exn().clone(),
                         extracted_loc,
                     )
-                    //          )
-                    //      )
                     .into_iter()
                     .map(|point| {
                         let tparam_names: Vec<String> = point
@@ -707,7 +698,6 @@ function foo<A>() {
                         )
                     })
                     .collect();
-                // ] in
                 let expected: Vec<(FlowSmolStr, Loc, bool, Vec<String>)> = vec![
                     (
                         "baz2".into(),
@@ -921,8 +911,6 @@ mod find_closest_enclosing_class_tests {
         let ast = parse(source);
         let cx = dummy_context();
         let typed_ast = typed_ast_of_ast(&cx, &ast);
-        //     InsertionPointCollectors.find_closest_enclosing_class
-        //       )
         let actual: Option<(Option<FlowSmolStr>, Loc, Vec<String>)> =
             insertion_point_collectors::find_closest_enclosing_class(
                 &typed_ast,
@@ -984,13 +972,11 @@ export default class <A> {
   "
     }
 
-    // );
     #[test]
     fn without_enclosing_class_scope() {
         assert_closest_enclosing_class_scope(None, source(), mk_loc(2, 0, 2, 17));
     }
 
-    // );
     #[test]
     fn mid_enclosing_class_scope() {
         assert_closest_enclosing_class_scope(
@@ -1000,7 +986,6 @@ export default class <A> {
         );
     }
 
-    // );
     #[test]
     fn inner_most_enclosing_class_scope() {
         assert_closest_enclosing_class_scope(
@@ -1569,7 +1554,6 @@ mod type_synthesizer_tests {
         let typed_ast = typed_ast_of_ast(&cx, &ast);
         let file_sig = file_sig_of_ast(&ast);
         let locs_set: BTreeSet<Loc> = locs.into_iter().collect();
-        // TypeSynthesizer.create_synthesizer_context
         type_synthesizer::create_synthesizer_context(
             cx,
             dummy_filename(),
@@ -1650,7 +1634,6 @@ mod type_synthesizer_tests {
                         )
                     }
                 };
-                // typeparams_string ^ type_string
                 format!("{}{}", typeparams_string, type_string)
             }
             Ok(None) => "<missing>".to_string(),
@@ -1679,7 +1662,6 @@ mod type_synthesizer_tests {
         let loc_of_c = mk_loc(5, 14, 5, 15);
         let loc_of_d = mk_loc(6, 39, 6, 40);
         let loc_of_missing = mk_loc(100, 14, 100, 15);
-        //   create_context source [loc_of_a; loc_of_b; loc_of_c; loc_of_d; loc_of_missing]
         let context = create_context(
             source,
             vec![

@@ -25,9 +25,7 @@ use flow_typing_type::type_::TypeStrictnessKind;
 use super::helpers::*;
 use super::*;
 
-// *********************
-// * inheritance utils *
-// *********************
+// inheritance utils
 
 pub(super) fn flow_type_args<'cx>(
     cx: &Context<'cx>,
@@ -120,7 +118,6 @@ pub(super) fn inst_type_to_obj_type<'cx>(
         None => ObjKind::Inexact,
     };
     let o = ObjType {
-        // flags = { obj_kind; react_dro = None };
         flags: Flags {
             obj_kind,
             react_dro: None,
@@ -139,7 +136,7 @@ pub(super) fn inst_type_to_obj_type<'cx>(
 }
 
 // dispatch checks to verify that lower satisfies the structural
-// requirements given in the tuple. *)
+// requirements given in the tuple.
 // TODO: own_props/proto_props is misleading, since they come from interfaces,
 // which don't have an own/proto distinction.
 pub(super) fn structural_subtype<'cx>(

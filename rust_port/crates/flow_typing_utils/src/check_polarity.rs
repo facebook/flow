@@ -505,7 +505,6 @@ fn check_polarity_impl<'cx>(
                     check_polarity_typeparam(cx, env, trace, seen, &tparams_acc, polarity, tp)?;
                     tparams_acc.insert(tp.name.dupe(), tp.clone());
                 }
-                //     check_polarity cx ?trace seen tparams polarity t
                 check_polarity_impl(cx, env, trace, seen, &tparams_acc, polarity, t_out)?;
             }
             DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
@@ -638,7 +637,6 @@ fn check_polarity_prop<'cx>(
     }
 }
 
-// and check_polarity_dict cx ?trace seen tparams polarity d =
 fn check_polarity_dict<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,

@@ -2591,12 +2591,12 @@ pub fn mk_pattern_reason<M: Dupe, T: Dupe>(patt: &ast::pattern::Pattern<M, T>) -
 ///
 /// The classifications we currently support:
 ///
-/// - `Scalar: The type *cannot* recursively hold any other types. For example,
+/// - `Scalar`: The type *cannot* recursively hold any other types. For example,
 ///   number is a scalar but an object like {p: number} is not.
-/// - `Nullish: The type is null or undefined. Nullish types are also `Scalar.
-/// - `Array: The type is an array. This depends on Flow's custom implementation
+/// - `Nullish`: The type is null or undefined. Nullish types are also `Scalar`.
+/// - `Array`: The type is an array. This depends on Flow's custom implementation
 ///   of arrays and tuples.
-/// - `Unclassified: Everything else which hasn't been classified yet.
+/// - `Unclassified`: Everything else which hasn't been classified yet.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReasonClassification {
     Scalar,

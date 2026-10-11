@@ -633,7 +633,7 @@ pub fn combine_construct_ts(ts: Vec<Type>) -> Option<Type> {
 // [proto_props], then normalizes: unbinds `this` (a construct sig has no
 // meaningful receiver — `new` produces a fresh instance) and sets [return_t]
 // to the instance. We walk manually rather than dispatching [MethodT] because
-// [MethodT NoMethodAction] returns an unresolved [OpenT] that
+// [MethodT] with [NoMethodAction] returns an unresolved [OpenT] that
 // [normalize_construct_sig] can't rewrite — by the time it resolves, subtyping
 // has already seen the raw method-bound funtype.
 pub fn extract_class_ctor_t<'cx>(
@@ -1725,7 +1725,7 @@ pub fn use_op_of_lookup_action(action: &flow_typing_type::type_::LookupAction) -
     }
 }
 
-// (** Errors *)
+// Errors
 
 #[derive(Debug, Clone)]
 pub struct SpeculativeError(pub Box<ErrorMessage<ALoc>>);
@@ -1793,9 +1793,7 @@ pub fn union_representative_use_op(
     use flow_typing_type::type_util::reason_of_t;
 
     match cx.find_resolved(representative) {
-        // | Some (UnionT _) -> use_op
         Some(resolved) if matches!(&*resolved, TypeInner::UnionT(_, _)) => use_op,
-        // | _ -> Frame (UnionRepresentative { union = reason_of_t l }, use_op)
         _ => VirtualUseOp::Frame(
             Arc::new(VirtualFrameUseOp::UnionRepresentative {
                 union: reason_of_t(l).dupe(),
@@ -3934,7 +3932,6 @@ pub fn mk_distributive_tparam_subst_fn<'cx>(
     let distributed_t = match distributed_t.deref() {
         _ if type_util::constraint_node_id(&distributed_t).is_some() => distributed_t.dupe(),
         _ if !free_var_finder(cx, None, &distributed_t).is_empty() => distributed_t.dupe(),
-        // | _ ->
         _ => {
             if has_unresolved_tvars(cx, &distributed_t) {
                 flow_typing_tvar::mk_resolved(
@@ -4005,7 +4002,6 @@ pub fn substitute_mapped_type_distributive_tparams<'cx>(
     }
 }
 
-// module ValueToTypeReferenceTransform = struct
 pub mod value_to_type_reference_transform {
     use std::ops::Deref;
 
@@ -4071,7 +4067,6 @@ pub mod value_to_type_reference_transform {
         run_on_concrete_type_with_env(cx, &FlowJsEnv::entry(), use_op, reason_op, kind, t)
     }
 
-    // let run_on_concrete_type cx ~use_op reason_op kind = function
     pub fn run_on_concrete_type_with_env<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
@@ -4979,8 +4974,9 @@ pub mod import_module_ns_t_kit {
         // [extends NS.X] / [implements NS.X] consumers go through
         // [Annot_GetTypeFromNamespaceT] which reads [types_tmap] first and
         // falls back to [GetPropT] on the values object — both paths need the
-        // raw form to detect the [Poly?{ClassT (ThisInstanceT _)}] shape and
-        // rebind [this]. When [type_for_extends] is [None] (the common case)
+        // raw form to detect the (optionally PolyT-wrapped)
+        // [ClassT(ThisInstanceT(..))] shape and rebind [this]. When
+        // [type_for_extends] is [None] (the common case)
         // we keep [type_] unchanged, matching the prior behavior.
         let named_symbol_to_field = |ns: &NamedSymbol| -> Property {
             let type_ = ns
@@ -5710,7 +5706,6 @@ pub mod export_named_t_kit {
     use flow_typing_type::type_::NamedSymbol;
     use flow_typing_type::type_::exports;
 
-    // let mod_ModuleT cx (value_tmap, type_tmap, export_kind) module_ =
     pub fn mod_module_t<'cx>(
         cx: &Context<'cx>,
         value_tmap: exports::T,
@@ -5996,7 +5991,6 @@ pub mod cjs_extract_named_exports_t_kit {
     use super::export_named_t_kit;
     use super::is_munged_prop_name;
 
-    // let rec on_type cx ~concretize (reason, local_module) t =
     pub fn on_type<'cx, F>(
         cx: &Context<'cx>,
         concretize: &F,
@@ -6034,7 +6028,6 @@ pub mod cjs_extract_named_exports_t_kit {
             // ObjT CommonJS export values have their properties turned into named exports.
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ObjT(_)) => {
                 if let DefTInner::ObjT(o) = def_t.deref() {
-                    // let { props_tmap; proto_t; _ } = o in
                     let props_tmap = o.props_tmap.dupe();
                     let proto_t = &o.proto_t;
                     // Copy props from the prototype
@@ -6090,7 +6083,6 @@ pub mod cjs_extract_named_exports_t_kit {
                         ExportKind::DirectExport,
                         &local_module,
                     );
-                    // local_module
                     Ok(local_module)
                 } else {
                     unreachable!()
@@ -7639,7 +7631,6 @@ pub mod get_prop_t_kit {
         )
     }
 
-    // let on_EnumObjectT cx trace enum_reason ~enum_object_t ~enum_value_t ~enum_info access =
     pub fn on_enum_object_t<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
@@ -8320,24 +8311,6 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
     propref_for_elem_t_with_env(cx, &FlowJsEnv::entry(), l)
 }
 
-// let propref_for_elem_t cx l =
-//   match l with
-//   | NominalT (reason, { upper_t = Some (DefT (_, SingletonStrT { value = name; _ })); _ })
-//   | GenericT { bound = DefT (_, SingletonStrT { value = name; _ }); reason; _ }
-//   | DefT (reason, SingletonStrT { value = name; _ }) ->
-//     update_lit_type_from_annot cx l;
-//     let reason = replace_desc_reason (RProperty (Some name)) reason in
-//     mk_named_prop ~reason ~from_indexed_access:true name
-//   | NominalT
-//       (reason_num, { upper_t = Some (DefT (_, SingletonNumT { value = (value, raw); _ })); _ })
-//   | GenericT { bound = DefT (_, SingletonNumT { value = (value, raw); _ }); reason = reason_num; _ }
-//   | DefT (reason_num, SingletonNumT { value = (value, raw); _ })
-//     when Js_number.is_float_safe_integer value ->
-//     update_lit_type_from_annot cx l;
-//     let reason = replace_desc_reason (RProperty (Some (OrdinaryName raw))) reason_num in
-//     let name = OrdinaryName (Dtoa.ecma_string_of_float value) in
-//     mk_named_prop ~reason ~from_indexed_access:true name
-//   | l -> Computed l
 pub fn propref_for_elem_t_with_env<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -8425,7 +8398,6 @@ pub fn propref_for_elem_t_with_env<'cx>(
             if let DefTInner::SingletonStrT { value: name, .. } = def.deref() {
                 update_lit_type_from_annot(cx, env, l);
                 let name = Name::new(name.dupe());
-                // let reason = replace_desc_reason (RProperty (Some name)) reason in
                 let reason = reason
                     .dupe()
                     .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
@@ -9211,9 +9183,7 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
     loop_inner(cx, tin, &mut seen_open_id, &mut seen_eval_id)
 }
 
-// (**********)
-// (* Tuples *)
-// (**********)
+// Tuples
 
 pub fn validate_tuple_elements<'cx>(
     cx: &Context<'cx>,

@@ -1003,7 +1003,6 @@ pub fn try_generalize<'cx>(
         let precise = || t_precise;
         adjust_precision(cx, syntactic_flags, precise, general, loc)
     } else {
-        // t
         t
     }
 }

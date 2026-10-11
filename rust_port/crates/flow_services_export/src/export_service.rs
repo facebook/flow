@@ -248,7 +248,7 @@ fn entries_of_exports<'a>(
     acc
 }
 
-// [add_exports ~source ~module_name exports index] adds [exports] to [index].
+// [add_exports] adds [exports] to [index].
 // For default and namespace exports, [module_name] is used as the exported name
 // (converted to a valid identifier firist).
 fn add_exports<'a>(
@@ -334,8 +334,8 @@ fn add_imports(
     }
 }
 
-// [add_exports_of_checked_file file_key parse haste_info index] extracts the
-// exports of [file_key] from its [parse] entry in shared memory. [haste_info]
+// [add_exports_of_checked_file] extracts the
+// exports of [file_key] from its [typed_parse] entry in shared memory. [haste_info]
 // is used to fetch the module name from [file_key].
 fn add_exports_of_checked_file(
     transaction: &Transaction,
@@ -395,9 +395,9 @@ fn add_exports_of_builtins(lib_exports: &Exports, index: &mut ExportIndex) {
     }
 }
 
-// [index_file ~reader (exports_to_add, exports_to_remove) file] reads the exports of [file] from
-// shared memory and adds all of the current exports to [exports_to_add], and all of the
-// previous exports to [exports_to_remove].
+// [index_file] reads the exports of [file_key] from
+// shared memory and adds all of the current exports to [new_available_exports], and all of the
+// previous exports to [old_available_exports].
 fn index_file(
     transaction: &Transaction,
     file_key: &FileKey,
@@ -453,7 +453,7 @@ fn index_file(
     }
 }
 
-// Indexes all of the files in [parsed] and returns two [Export_index.t]'s: the first is
+// Indexes all of the files in [parsed] and returns two [ExportIndex]es: the first is
 // all of the exports to add to the final index, and the second are to be removed.
 // The latter is important because exports are indexed by the export name, not the
 // filename; it would be expensive to walk the entire export index to check each exported
@@ -501,8 +501,8 @@ pub fn index(
         },
     ));
 
-    // each job returns Export_index.t's. we cons them onto lists and merge them all
-    // afterwards because the ~merge function blocks talking to workers so it needs to
+    // each job returns `ExportIndex`es. we cons them onto lists and merge them all
+    // afterwards because the merge function blocks talking to workers so it needs to
     // be as fast as possible in order to keep the workers busy. [Export_index.merge]
     // was found to be slow enough for this to matter. Using a large max_size reduces
     // the number of batches (and thus merge_all work) while still providing enough
@@ -583,7 +583,7 @@ pub fn index(
     )
 }
 
-// Initializes an [Export_search.t] with the exports of all of the [parsed] files
+// Initializes an [ExportSearch] with the exports of all of the [parsed] files
 // as well as the builtin libdefs.
 pub fn init(
     pool: &ThreadPool,
@@ -604,8 +604,8 @@ pub fn init(
     search
 }
 
-// [update ~changed previous] updates the exports for all of the [changed] files
-// in the [previous] [Export_search.t].
+// [update] updates the exports for all of the [dirty_files]
+// in the [previous] [ExportSearch].
 pub fn update(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,

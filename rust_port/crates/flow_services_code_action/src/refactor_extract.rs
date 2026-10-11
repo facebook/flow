@@ -562,10 +562,10 @@ fn available_refactors_for_statements<'a, 'b>(
             None => vec![],
             Some(cip) => {
                 match create_refactor(
-                    true,                                // ~is_method:true
-                    &create_unique_name_fn("newMethod"), // ~new_function_name:(create_unique_name "newMethod")
-                    &cip.body_loc,                       // ~target_body_loc
-                    &cip.tparams_rev,                    // ~target_tparams_rev:tparams_rev
+                    true, // is_method
+                    &create_unique_name_fn("newMethod"),
+                    &cip.body_loc,
+                    &cip.tparams_rev,
                 ) {
                     Ok((new_ast, added_imports)) => {
                         let title = match &cip.class_name {
@@ -597,10 +597,10 @@ fn available_refactors_for_statements<'a, 'b>(
                 point.function_name
             );
             let (new_ast, added_imports) = create_refactor(
-                false, // ~is_method:false
-                &new_function_name, // ~new_function_name
-                &point.body_loc, // ~target_body_loc
-                &point.tparams_rev, // ~target_tparams_rev:tparams_rev
+                false, // is_method
+                &new_function_name,
+                &point.body_loc,
+                &point.tparams_rev,
             )?;
             Ok(Refactor {
                 title,
@@ -610,10 +610,10 @@ fn available_refactors_for_statements<'a, 'b>(
         };
 
     let top_level_function_refactor: Result<Refactor, _> = create_refactor(
-        false,              // ~is_method:false
-        &new_function_name, // ~new_function_name
-        &ast.loc,           // ~target_body_loc:(fst ast)
-        &[],                // ~target_tparams_rev:[]
+        false, // is_method
+        &new_function_name,
+        &ast.loc,
+        &[], // target_tparams_rev
     )
     .map(|(new_ast, added_imports)| Refactor {
         title: "Extract to function in module scope".to_string(),
@@ -1172,7 +1172,6 @@ fn extract_from_type_refactors<'a, 'b>(
             let args: Vec<_> = type_params_to_add
                 .iter()
                 .map(|tp| {
-                    // Subst_name.string_of_subst_name name
                     let name_str = tp.name.string_of_subst_name().to_string();
                     ast_builder::types::unqualified_generic(None, None, None, &name_str)
                 })

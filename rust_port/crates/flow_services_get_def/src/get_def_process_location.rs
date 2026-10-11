@@ -976,7 +976,6 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         if (self.covers_target)(&loc) {
             self.own_named_def(loc, id.name.dupe())?;
         }
-        // id (original returns id; visitor just returns Ok)
         Ok(())
     }
 
@@ -1001,7 +1000,7 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         ast_visitor::enum_member_identifier_default(self, id)
     }
 
-    // object keys would normally hit this#t_identifier; this circumvents that.
+    // object keys would normally hit `t_identifier`; this circumvents that.
     fn object_key_identifier(&mut self, id: &'ast ast::Identifier<ALoc, T>) -> Result<(), Found> {
         let annot = &id.loc;
         if self.annot_covers_target(annot) {
@@ -1052,7 +1051,7 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
     }
 
     // for object properties using the shorthand {variableName} syntax,
-    // process the value before the key so that the explicit-non-find in this#object_key_identifier
+    // process the value before the key so that the explicit-non-find in `object_key_identifier`
     // doesn't make us miss the variable
     fn object_property(
         &mut self,

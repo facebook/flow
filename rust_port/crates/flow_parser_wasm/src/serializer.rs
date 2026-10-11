@@ -1054,8 +1054,8 @@ impl<'a> Serializer<'a> {
     fn serialize_type(&mut self, ty: &ast::types::Type<Loc, Loc>) {
         // Mirror upstream Hermes' mapGenericTypeAnnotation: collapse the
         // no-targs `this` identifier case to a ThisTypeAnnotation leaf node.
-        // OCaml's parser produces `Type::Generic { id: Unqualified "this",
-        // targs: None }` for both `type T = this` and `(this) => void` /
+        // The parser produces a `Type::Generic` with an unqualified `this` id
+        // and no targs for both `type T = this` and `(this) => void` /
         // `m(): this`.
         use ast::types::TypeInner;
         use ast::types::generic;

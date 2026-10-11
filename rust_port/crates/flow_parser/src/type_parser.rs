@@ -2349,11 +2349,6 @@ fn type_guard_annotation(
     Ok(types::TypeGuardAnnotation { loc, guard })
 }
 
-// and object_key_after_current_in_normal_mode ~is_class env =
-//   Eat.push_lex_mode env Lex_mode.NORMAL;
-//   let result = Peek.object_key_after_current ~is_class env in
-//   Eat.pop_lex_mode env;
-//   result
 fn object_key_after_current_in_normal_mode(env: &mut ParserEnv, is_class: bool) -> bool {
     eat::push_lex_mode(env, LexMode::Normal);
     let result = peek::current_token_is_followed_by_object_key(env, is_class);
@@ -2664,7 +2659,7 @@ fn object_type(
             // an "in" identifier. Now we eat it.
             eat::token(env)?;
             let source_type = type_inner(env)?;
-            // (* as <type> *)
+            // as <type>
             let name_type = match peek::token(env) {
                 TokenKind::TIdentifier { raw, .. } if raw == "as" => {
                     eat::token(env)?;
@@ -3980,13 +3975,13 @@ fn type_params(env: &mut ParserEnv) -> Result<Option<TypeParams<Loc, Loc>>, Roll
     // to an existing node.
     //
     // Note that we're in Lex_mode.TYPE here, so the tokens are those produced
-    // by [Flow_lexer.type_token]. *)
+    // by [Flow_lexer.type_token].
     fn token_is_maybe_end_of_list(env: &mut ParserEnv, token: &TokenKind) -> bool {
         match token {
             // Reserved words are lexed as identifiers in Lex_env.TYPE mode (if
             // they're not also reserved types). e.g. `switch` is a T_IDENTIFIER.
             // we're not expecting a type identifier, so let's assume it's a
-            // NORMAL-mode keyword and end the list. *)
+            // NORMAL-mode keyword and end the list.
             TokenKind::TIdentifier { raw, .. }
                 if is_reserved(raw) || is_contextually_reserved(raw) =>
             {
@@ -3996,11 +3991,11 @@ fn type_params(env: &mut ParserEnv) -> Result<Option<TypeParams<Loc, Loc>>, Roll
             TokenKind::TIdentifier { raw, .. } if raw == "enum" && env.parse_options().enums => {
                 true
             }
-            // adding a type above another: `type T<U\ntype V ...` (`type` is not an ES keyword) *)
+            // adding a type above another: `type T<U\ntype V ...` (`type` is not an ES keyword)
             TokenKind::TIdentifier { raw, .. } if raw == "type" => true,
-            // RHS: `type U<T = default = ...` (this only helps if there's a default!) *)
+            // RHS: `type U<T = default = ...` (this only helps if there's a default!)
             TokenKind::TAssign => true,
-            // start of function params: `function f<T|(...)` *)
+            // start of function params: `function f<T|(...)`
             TokenKind::TLparen => true,
             // class heritage: `class C<T| implements ...`
             TokenKind::TIdentifier { raw, .. } if raw == "implements" => true,

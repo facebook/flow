@@ -36,9 +36,6 @@ pub struct Errors<Loc> {
     pub private_property_errors: BTreeMap<FlowSmolStr, Vec<Error<Loc>>>,
 }
 
-// let public_property loc ident =
-//   let (_, ({ Ast.Identifier.name; comments = _ } as r)) = ident in
-//   (loc, { r with Ast.Identifier.name = "this." ^ name })
 fn public_property<'a>(
     loc: &'a ALoc,
     ident: &'a ast::Identifier<ALoc, ALoc>,
@@ -54,9 +51,6 @@ fn public_property<'a>(
     )
 }
 
-// let private_property loc ident =
-//   let (_, { Ast.PrivateName.name; comments }) = ident in
-//   (loc, { Ast.Identifier.name = "this.#" ^ name; comments })
 fn private_property<'a>(
     loc: &'a ALoc,
     ident: &'a ast::PrivateName<ALoc>,
@@ -340,23 +334,6 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, AbruptCompletion> for Proper
         Ok(())
     }
 
-    // method! member loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Member.t) =
-    //   match expr with
-    //   | { ... } ->
-    //     let property_name : string =
-    //       Flow_ast_utils.name_of_ident
-    //         Ast.Expression.Member.(
-    //           match property with
-    //           | PropertyIdentifier id -> public_property loc id
-    //           | PropertyPrivateName id -> private_property loc id
-    //           | PropertyExpression _ -> failwith "match on expr makes this impossible"
-    //         )
-    //     in
-    //     (match SMap.find_opt property_name init_env with
-    //     | Some false -> read_errors <- (loc, property_name) :: read_errors
-    //     | _ -> ());
-    //     expr
-    //   | _ -> super#member loc expr
     fn member(
         &mut self,
         loc: &'ast ALoc,
@@ -370,7 +347,6 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, AbruptCompletion> for Proper
                     | member::Property::PropertyPrivateName(_)),
                 comments: _,
             } if matches!(object.deref(), ExpressionInner::This { .. }) => {
-                // let property_name = Flow_ast_utils.name_of_ident @@ (match property with ...)
                 let property_name = ast_utils::name_of_ident(&match property {
                     member::Property::PropertyIdentifier(id) => public_property(loc, id).1,
                     member::Property::PropertyPrivateName(id) => private_property(loc, id).1,
@@ -379,7 +355,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, AbruptCompletion> for Proper
                     }
                 })
                 .dupe();
-                // (* Check if the property is tracked and not yet initialized *)
+                // Check if the property is tracked and not yet initialized
                 match self.init_env.get(&property_name) {
                     Some(false) => {
                         self.read_errors.push((loc.dupe(), property_name));
@@ -756,7 +732,6 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, AbruptCompletion> for Proper
         self.expression(discriminant)?;
         self.expecting_abrupt_completions(|this| {
             let initial_env = unreachable_env(&this.init_env);
-            // List.fold_left (fun acc stuff -> ... this#handle_switch_case acc case)
             let mut acc = (initial_env, vec![]);
             for case in cases.iter() {
                 acc = this.handle_switch_case(acc.0, acc.1, case)?;

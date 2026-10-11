@@ -6579,7 +6579,6 @@ pub fn merge_builtins<'cx>(
             for (module_name, module_def) in builtins.global_modules.iter() {
                 let module_loc = (*aloc)(&module_def.loc);
                 let lazy_module = map_module(&self_ref, module_loc, &module_def.module_kind);
-                // SMap.add module_name lazy_module acc
                 dependencies_map.insert(module_name.dupe(), lazy_module);
             }
 
@@ -6665,7 +6664,6 @@ pub fn merge_builtins<'cx>(
                 );
                 let lazy_val: flow_typing_builtins::LazyVal<'cx, Context<'cx>> =
                     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
-                        //   (fun (loc, _, (lazy t), _) -> (loc, t))
                         let (loc, _, _, general, _) = inner_lazy.get_forced(cx);
                         (loc.dupe(), general.get_forced(cx).dupe())
                     })
@@ -6686,7 +6684,6 @@ pub fn merge_builtins<'cx>(
                 );
                 let lazy_val: flow_typing_builtins::LazyVal<'cx, Context<'cx>> =
                     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
-                        //   (fun (loc, _, (lazy t), _) -> (loc, t))
                         let (loc, _, _, general, _) = inner_lazy.get_forced(cx);
                         (loc.dupe(), general.get_forced(cx).dupe())
                     })

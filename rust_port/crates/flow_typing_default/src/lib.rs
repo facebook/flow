@@ -17,11 +17,12 @@
 // In the above, x might be a number, a string, or something else provided
 // downstream. We can represent the default value associated with x as follows:
 //
-// Cons (
-//   (Expr `0`),
-//   (Selector
-//     (Expr `{x:""}`)
-//     (Prop "x")))
+// Cons(
+//   `0`,
+//   Selector(
+//     reason,
+//     Expr(`{x:""}`),
+//     Prop("x", has_default)))
 //
 // We can fold over the list structure of default values to "evaluate" them.
 // In practice, we only ever evaluate defaults to turn them into types. Still,

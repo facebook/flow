@@ -59,7 +59,6 @@ use flow_typing_type::type_util::reason_of_t;
 use flow_typing_visitors::type_mapper;
 use flow_utils_concurrency::job_error::JobError;
 
-// open Match_pattern_ir
 type SMap<V> = FlowOrdMap<FlowSmolStr, V>;
 type IMap<V> = FlowOrdMap<usize, V>;
 
@@ -174,9 +173,7 @@ pub fn get_class_info<'cx>(cx: &Context<'cx>, t: &Type) -> Option<(ALocId, Optio
     get_class_info_with_supers(cx, t).map(|(class_id, class_name, _, _)| (class_id, class_name))
 }
 
-// (***********************)
-// (* Datatype builders   *)
-// (***********************)
+// Datatype builders
 
 pub mod pattern_union_builder {
     use flow_parser::ast;
@@ -2227,7 +2224,6 @@ fn visit_mixed<'cx>(
     Ok(result)
 }
 
-// and mark_leaf_pattern_used ... =
 fn mark_leaf_pattern_used<'cx>(
     cx: &Context<'cx>,
     value_leafs_matched: &LeafSet,

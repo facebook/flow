@@ -30,7 +30,7 @@ struct Writer {
 
 type Item = (BreakMode, LayoutNode);
 
-// fits(width, rest, items) determines whether items @ rest can be printed in width
+// fits(width, rest, items) determines whether items followed by rest can be printed in width
 // characters. items and rest are separate as an optimization to avoid list concats.
 fn fits(width: i32, rest: &[Item], items: FlowVector<Item>) -> bool {
     if width < 0 {

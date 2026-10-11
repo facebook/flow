@@ -57,7 +57,7 @@ pub fn is_numeric_enum_member_name(name: &str) -> bool {
 // Resolve each TypeScript enum member to its literal value, applying TS
 // auto-numbering: a defaulted (uninitialized) member auto-increments from 0 (or
 // from one past the preceding numeric member), and an explicit numeric
-// initializer resets the counter. In an ambient enum (~ambient:true, i.e.
+// initializer resets the counter. In an ambient enum (`ambient` is true, i.e.
 // `declare enum` / .d.ts), a defaulted member has no statically-known value and
 // resolves to [type_sig.rs's TSEnumMemberComputed].
 //

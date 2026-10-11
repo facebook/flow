@@ -634,23 +634,16 @@ fn resolve_type_ref<'arena, 'ast>(
     ref_: &parse::Ref<'arena, 'ast>,
 ) {
     mark_loc(marker, &ref_.ref_loc);
-    // match P.Scope.lookup_type scope name with
     match parse::scope::lookup_type(scopes, ref_.scope, &ref_.name) {
-        // | Some (binding, _) ->
         Some((binding, _)) => {
-            //   mark_binding ~locs_to_dirtify binding;
             mark_binding(opts, scopes, tbls, marker, &binding);
-            //   ref.resolved <- Some binding;
             let _ = ref_.resolved.set(Some(binding));
-            //   (* Keep alive a co-existing value-side binding for the same name (e.g. an
-            //      `import { X }` next to an `interface X`). The check phase eagerly
-            //      resolves every parsed module ref regardless of marking, so dropping the
-            //      import here would leave the dep file out of the sig dep graph and the
-            //      merge set, causing workers to fail with Parsing_heaps.Leader_not_found
-            //      when checking reaches the unmerged dep. *)
-            //   (match P.Scope.lookup_value scope name with
-            //   | Some (value_binding, _) -> mark_binding ~locs_to_dirtify value_binding
-            //   | None -> ())
+            // Keep alive a co-existing value-side binding for the same name (e.g. an
+            // `import { X }` next to an `interface X`). The check phase eagerly
+            // resolves every parsed module ref regardless of marking, so dropping the
+            // import here would leave the dep file out of the sig dep graph and the
+            // merge set, causing workers to fail with Parsing_heaps.Leader_not_found
+            // when checking reaches the unmerged dep.
             match parse::scope::lookup_value(scopes, ref_.scope, &ref_.name) {
                 Some((value_binding, _)) => {
                     mark_binding(opts, scopes, tbls, marker, &value_binding);
@@ -658,7 +651,6 @@ fn resolve_type_ref<'arena, 'ast>(
                 None => {}
             }
         }
-        // | None -> ref.resolved <- None
         None => {
             let _ = ref_.resolved.set(None);
         }

@@ -45,7 +45,6 @@ fn asset_procfs_supported() -> Result<(), String> {
 
 /// In cgroup v1 a pid can be in multiple cgroups.
 /// In cgroup v2 it will only be in a single cgroup.
-// let first_cgroup_for_pid pid =
 pub fn first_cgroup_for_pid(pid: u32) -> Result<String, String> {
     asset_procfs_supported()?;
     let contents = read_proc_file("cgroup", pid)?;

@@ -69,8 +69,6 @@ fn no_package_info(_file_key: &FileKey) -> Option<Result<PackageJson, ()>> {
     None
 }
 
-//   >::: [
-
 #[test]
 fn removes_js_extension() {
     init_project_root();

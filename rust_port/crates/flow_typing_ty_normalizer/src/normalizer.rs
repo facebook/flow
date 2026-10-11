@@ -563,7 +563,7 @@ fn ty_symbol_from_symbol<'cx>(
 }
 
 // NOTE Due to repositioning, `reason_loc` may not point to the actual location
-// where `name` was defined. *)
+// where `name` was defined.
 fn symbol_from_reason<'cx>(
     env: &mut Env<'_, 'cx>,
     reason: &Reason,
@@ -1356,7 +1356,7 @@ mod type_converter {
                         // The default action is to avoid expansion by using the type alias name,
                         // when this can be trusted. The one case where we want to skip this process
                         // is when recovering the body of a type alias A. In that case the environment
-                        // field under_type_alias will be 'Some A'. If the type alias name in the reason
+                        // field under_type_alias will be `Some(A)`. If the type alias name in the reason
                         // is also A, then we are still at the top-level of the type-alias, so we
                         // proceed by expanding one level preserving the same environment.
                         let symbol = symbol_from_loc(env, loc.clone(), name.dupe())?;
@@ -1366,7 +1366,6 @@ mod type_converter {
                             let key = name.to_string();
                             tbl.entry(key).or_insert_with(|| t.dupe());
                         }
-                        // return (generic_talias symbol None)
                         Ok(generic_talias(symbol, None))
                     }
                     // We are now beyond the point of the one-off expansion. Reset the environment
@@ -1716,7 +1715,6 @@ mod type_converter {
                 ty::BuiltinOrSymbol::FunProto,
                 None,
             ))))),
-            // | FunProtoBindT _ -> ...
             TypeInner::FunProtoBindT(_) => {
                 if env.expand_internal_types() {
                     // Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any
@@ -3078,9 +3076,7 @@ mod type_converter {
         }
     }
 
-    // ************
-    // * EvalT    *
-    // ************
+    // EvalT
 
     fn spread_of_ty(ty: &ALocTy) -> Vec<ty::Prop<ALoc>> {
         match ty.as_ref() {
@@ -4063,8 +4059,8 @@ pub mod element_converter {
                             },
                             // Imported polymorphic interfaces.
                             // canonicalize_imported_type wraps a polymorphic interface as
-                            // [TypeT(ImportClassKind, TypeAppT _)] to mirror the
-                            // [ClassT(TypeAppT _)] wrapping used for classes, so [this]
+                            // [TypeT(ImportClassKind, TypeAppT(..))] to mirror the
+                            // [ClassT(TypeAppT(..))] wrapping used for classes, so [this]
                             // survives the import. Unwrap to the original PolyT so the
                             // inner instance can be rendered as an interface declaration
                             // rather than [Class<...>].
@@ -4146,8 +4142,6 @@ pub mod element_converter {
             Ok(ty::Elt::Type(ty))
         }
 
-        //   let singleton ~env ~orig_t t =
-        //     match t with
         fn singleton<'cx, I: NormalizerInput>(
             env: &mut Env<'_, 'cx>,
             state: &mut State,
@@ -4363,8 +4357,6 @@ pub mod element_converter {
                         // Monomorphic Type Aliases
                         DefTInner::TypeT(kind, inner_t) => {
                             // Check for ImportEnumKind + EnumValueT pattern first
-                            // | DefT (_, TypeT (ImportEnumKind, DefT (reason, EnumValueT _))) ->
-                            //   enum_decl ~env reason
                             if matches!(kind, TypeTKind::ImportEnumKind) {
                                 if let TypeInner::DefT(enum_reason, inner_def_t) = inner_t.deref() {
                                     if matches!(&**inner_def_t, DefTInner::EnumValueT(_)) {
@@ -4881,7 +4873,6 @@ mod expand_members {
         )
     }
 
-    // and instance_t ~env ~inherited ~source ~imode r static super implements inst =
     fn instance_t<'cx, I: NormalizerInput>(
         env: &mut Env<'_, 'cx>,
         state: &mut State,
@@ -5852,7 +5843,6 @@ impl<I: NormalizerInput> Normalizer<I> {
             file_sig,
             imported_names,
             options,
-            // ref_type_bodies = None;
             ref_type_bodies: None,
         };
 

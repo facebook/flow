@@ -796,9 +796,9 @@ pub(super) fn initializer(
                             eat::token(env)?;
                         }
                         _ => {
-                            // we could use [Expect.error env T_COMMA], but we're in a weird
-                            // cover grammar situation where we're storing errors in
-                            // [Pattern_cover]. if we used [Expect.error], the errors would
+                            // we could use `expect::error(env, &TokenKind::TComma)`, but we're
+                            // in a weird cover grammar situation where we're storing errors in
+                            // `PatternCoverErrors`. if we used `expect::error`, the errors would
                             // end up out of order.
                             let err = expect::get_error(env, &TokenKind::TComma);
                             // if the unexpected token is a semicolon, consume it to aid
@@ -1600,7 +1600,6 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     comments,
                 })),
             }
-            // end
         }
     }
 
@@ -2485,7 +2484,7 @@ fn class_body(
                         class::BodyElement::StaticBlock(_) => {
                             // No validation needed for static blocks
                         }
-                        // DeclareMethod is a bodyless method signature, no private name checking needed *)
+                        // DeclareMethod is a bodyless method signature, no private name checking needed
                         class::BodyElement::DeclareMethod(_) => {}
                         class::BodyElement::AbstractMethod(m) => {
                             if !abstract_ {

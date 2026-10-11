@@ -314,7 +314,6 @@ fn object_property<'a>(
         {
             let name = flow_common::js_number::ecma_string_of_float(lit.value);
             let name_smol = FlowSmolStr::new(&name);
-            // let acc = object_named_property ~has_default ~parent_loc cx acc loc name comments in
             let new_acc = object_named_property(
                 has_default,
                 parent_loc,

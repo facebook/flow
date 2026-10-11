@@ -190,8 +190,6 @@ mod depth {
     }
 }
 
-// exception FoundTokenAtRequestLoc of Token.t
-
 pub fn get_def<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     cx: &Context<'cx>,

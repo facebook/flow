@@ -460,7 +460,6 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             if type_.ptr_eq(&type_prime) && Rc::ptr_eq(targs, &targs_prime) {
                 t
             } else {
-                //   TypeAppT { reason; use_op; type_ = type_'; targs = targs'; from_value; use_desc }
                 Type::new(TypeInner::TypeAppT(Box::new(TypeAppTData {
                     reason: reason.dupe(),
                     use_op: use_op.clone(),
@@ -1839,7 +1838,6 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             if elem_t.ptr_eq(&elem_t_prime) && tuple_view_unchanged {
                 t
             } else {
-                //   ArrayAT { elem_t = elem_t'; tuple_view = tuple_view'; react_dro }
                 Rc::new(ArrType::ArrayAT(Box::new(ArrayATData {
                     react_dro: react_dro.clone(),
                     elem_t: elem_t_prime,
@@ -1856,7 +1854,6 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             inexact,
             strictness_kind,
         }) => {
-            // let elem_t' = self#type_ cx map_cx elem_t in
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
             let elements_prime = list_utils::ident_map(
                 |el| mapper.tuple_element(cx, map_cx, el.clone()),
@@ -1998,7 +1995,6 @@ pub fn predicate_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             {
                 p.dupe()
             } else {
-                //   LatentP (lazy (use_op, loc, t', targs', argts'), i)
                 Predicate::new(PredicateInner::LatentP(
                     Box::new(flow_typing_type::type_::PredFuncallInfo(
                         info.0.clone(),

@@ -478,7 +478,7 @@ fn consume_args(args: &[String]) -> (Vec<String>, Vec<String>) {
     (consumed, remaining)
 }
 
-/// [find_flag "--foo" flags] looks up the spec for the "--foo" flag.
+/// `find_flag("--foo", flags)` looks up the spec for the "--foo" flag.
 /// If the flag starts with "--no-" and there isn't an explicit flag
 /// by that name, then the flag without "no-" is looked up.
 ///
@@ -513,7 +513,7 @@ fn parse(
     let arg = &argv[0];
     let args = &argv[1..];
     if is_arg(arg) {
-        // split "--foo=bar"::args into "--foo"::"bar"::args
+        // split "--foo=bar" into "--foo" followed by "bar"
         let (arg_name, rest) = match arg.splitn(2, '=').collect::<Vec<_>>().as_slice() {
             [a, v] => {
                 let mut new_args = vec![v.to_string()];

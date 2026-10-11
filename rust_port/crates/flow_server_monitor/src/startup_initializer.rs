@@ -6,7 +6,7 @@
  */
 
 // Mirrors the OCaml split between `src/stubs/startup_initializer.ml` (OSS,
-// `init () = ()`) and `src/facebook/startup_initializer/startup_initializer.ml`
+// a no-op `init`) and `src/facebook/startup_initializer/startup_initializer.ml`
 // (internal, real one-time monitor startup work). The internal arm performs
 // `initFacebook` via the `flow_facebook_startup_initializer` crate so the EdenFS
 // watcher's Thrift client can obtain the `fbinit::FacebookInit` token it needs.

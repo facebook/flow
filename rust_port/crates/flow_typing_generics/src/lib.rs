@@ -56,7 +56,7 @@ pub struct GenericBound {
 /// like
 ///     function f<X: {}, Y: {}>(x: X, y: Y): {...X, ...Y} { return {...x, ...y} }
 /// the type {...X, ...Y} will be represented as a GenericT, whose type upper bound is
-/// {} and whose Generic.id is Op (Spread, [Y, X]). (Note that the ordering of this list of
+/// {} and whose [GenericId] is `Op(OpKind::Spread, [Y, X])`. (Note that the ordering of this list of
 /// generics is reversed from how it appears in values). This information can then be used to enforce
 /// that the only values that are well-typed lower bounds for the type are other
 /// spreads from the same generics, in the same order--as opposed to the unsoundnesses that

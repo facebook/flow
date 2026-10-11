@@ -2043,12 +2043,6 @@ pub(crate) mod peek {
         })
     }
 
-    // let is_object_key ~is_class env =
-    //   match token env with
-    //   | T_STRING _ | T_NUMBER _ | T_BIGINT _ | T_LBRACKET -> true
-    //   | T_POUND when is_class -> true
-    //   | t when token_is_reserved t -> true
-    //   | _ -> is_identifier_name env
     #[expect(dead_code)]
     pub(crate) fn is_object_key(env: &mut ParserEnv, is_class: bool) -> bool {
         match token(env) {
@@ -2541,7 +2535,7 @@ pub mod eat {
         Ok(())
     }
 
-    /* [maybe env t] eats the next token and returns [true] if it is [t], else return [false] */
+    /* `maybe(env, t)` eats the next token and returns `true` if it is `t`, else returns `false` */
     pub(crate) fn maybe(env: &mut ParserEnv, t: TokenKind) -> Result<bool, Rollback> {
         let is_t = peek::token(env) == &t;
         if is_t {
@@ -2679,8 +2673,8 @@ pub mod expect {
         Ok(())
     }
 
-    /// [token_maybe env T_FOO] eats a token if it is [T_FOO], and errors without consuming if
-    /// not. Returns whether it consumed a token, like [Eat.maybe].  
+    /// `token_maybe(env, t)` eats a token if it is `t`, and errors without consuming if
+    /// not. Returns whether it consumed a token, like `eat::maybe`.
     pub(crate) fn token_maybe(env: &mut ParserEnv, t: TokenKind) -> Result<bool, Rollback> {
         let ate = eat::maybe(env, t.clone())?;
         if !ate {
@@ -2689,8 +2683,8 @@ pub mod expect {
         Ok(ate)
     }
 
-    /// [token_opt env T_FOO] eats a token if it is [T_FOO], and errors without consuming if not.
-    /// This differs from [token], which always consumes. Only use [token_opt] when it's ok for
+    /// `token_opt(env, t)` eats a token if it is `t`, and errors without consuming if not.
+    /// This differs from `token`, which always consumes. Only use `token_opt` when it's ok for
     /// the parser to not advance, like if you are guaranteed that something else has eaten a
     /// token.
     pub(crate) fn token_opt(env: &mut ParserEnv, t: TokenKind) -> Result<(), Rollback> {

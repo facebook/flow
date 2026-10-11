@@ -318,7 +318,7 @@ fn convert_switch_inner<M: Dupe>(
                         let new_ok = assign_output_kind(name, &output_kind);
                         (vec![(**assignment_stmt).dupe()], new_ok)
                     }
-                    // (* `name = expr;` when the last case *)
+                    // `name = expr;` when the last case
                     // Check for single assignment without break (last case only)
                     _ if body_stmts_vec.len() == 1
                         && last_case

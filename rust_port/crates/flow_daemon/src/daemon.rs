@@ -28,7 +28,6 @@ pub struct InChannel<T> {
     _phantom: PhantomData<fn() -> T>,
 }
 
-// type 'a out_channel = Stdlib.out_channel
 pub struct OutChannel<T> {
     stream: TcpStream,
     _phantom: PhantomData<fn(T)>,
@@ -255,8 +254,8 @@ pub mod entry {
         let temp_file = NamedTempFile::with_prefix_in(&prefix, &temp_dir)?;
         let path = temp_file.path().to_owned();
         // Use `persist` to keep the file after `temp_file` drops; the child
-        // is responsible for deleting it (mirrors `daemon.ml:122
-        // `Sys.remove file` in `get_context`).
+        // is responsible for deleting it (mirrors the `Sys.remove` in OCaml's
+        // `get_context`).
         let (mut file, _path) = temp_file.keep().map_err(|e| e.error)?;
         bincode::serde::encode_into_std_write(&context, &mut file, bincode::config::legacy())
             .expect("Daemon::set_context: bincode serialize context");
@@ -364,8 +363,7 @@ pub fn null_fd() -> File {
 }
 
 // `StdioFd` lets callers either inherit one of the parent's standard streams
-// (matching OCaml's `if stdin <> Unix.stdin then close_if_open stdin` at lines
-// 207-213, where passing `Unix.stdin` means "inherit") or pass an owned file
+// (matching OCaml, where passing `Unix.stdin` means "inherit") or pass an owned file
 // that should be closed on the parent side after the spawn completes. We use
 // `std::fs::File` rather than `OwnedFd` because `OwnedFd` is Unix-only;
 // `File` is cross-platform and `Stdio::from(File)` exists on both Unix and
@@ -475,16 +473,12 @@ where
     let parent_out_addr = parent_out_listener.local_addr()?;
     let token: [u8; 32] = rand::random();
 
-    // Entry.set_context entry param (child_in, child_out);
     let param_file = entry::write_param_file(parent_in_addr, parent_out_addr, token, &param)?;
 
-    // let exe = Sys_utils.executable_path () in
     let exe = sys_utils::executable_path();
-    // let name = Base.Option.value ~default:(Entry.name_of_entry entry) name in
     let entry_name = name_of_entry(entry);
     let argv1 = name.unwrap_or(entry_name);
 
-    // let pid = Unix.create_process exe [| exe; name |] stdin stdout stderr in
     let mut cmd = Command::new(exe);
     cmd.arg(argv1);
     cmd.env(entry::ENV_DAEMON, entry_name);

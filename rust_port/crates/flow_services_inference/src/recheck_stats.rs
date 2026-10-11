@@ -50,9 +50,7 @@ pub struct Estimates {
 struct Averages {
     init_time: f64,
     per_file_time: f64,
-    // per_merge_file_time: float;
     per_merge_file_time: f64,
-    // per_check_file_time: float;
     per_check_file_time: f64,
     parsed_count: i64,
 }

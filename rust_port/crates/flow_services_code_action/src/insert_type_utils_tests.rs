@@ -25,10 +25,6 @@ fn stylize(t: Arc<Ty<ALoc>>) -> Arc<Ty<ALoc>> {
     mapper.on_t(&Loc::default(), t)
 }
 
-//   >::: [
-
-// ( "Stylize union: number with number literal" >:: fun ctxt ->
-// );
 #[test]
 fn stylize_union_number_with_number_literal() {
     let t_in = Arc::new(Ty::Union(
@@ -41,8 +37,6 @@ fn stylize_union_number_with_number_literal() {
     assert_eq!(t_exp, stylize(t_in));
 }
 
-// ( "Stylize union: string with string literal" >:: fun ctxt ->
-// );
 #[test]
 fn stylize_union_string_with_string_literal() {
     let t_in = Arc::new(Ty::Union(
@@ -55,8 +49,6 @@ fn stylize_union_string_with_string_literal() {
     assert_eq!(t_exp, stylize(t_in));
 }
 
-// ( "Stylize union: true and false" >:: fun ctxt ->
-// );
 #[test]
 fn stylize_union_true_and_false() {
     let t_in = Arc::new(Ty::Union(
@@ -69,8 +61,6 @@ fn stylize_union_true_and_false() {
     assert_eq!(t_exp, stylize(t_in));
 }
 
-// ( "Stylize union: true and bool" >:: fun ctxt ->
-// );
 #[test]
 fn stylize_union_true_and_bool() {
     let t_in = Arc::new(Ty::Union(
@@ -83,8 +73,6 @@ fn stylize_union_true_and_bool() {
     assert_eq!(t_exp, stylize(t_in));
 }
 
-// ( "Stylize union: string and number literals" >:: fun ctxt ->
-// );
 #[test]
 fn stylize_union_string_number_literals() {
     let t_in = Arc::new(Ty::Union(
@@ -102,8 +90,6 @@ fn stylize_union_string_number_literals() {
     assert_eq!(t_exp, stylize(t_in));
 }
 
-// ( "Sort types: numeric literals" >:: fun ctxt ->
-// );
 #[test]
 fn sort_types_numeric_literals() {
     let t_in = Arc::new(Ty::Union(
@@ -127,8 +113,6 @@ fn sort_types_numeric_literals() {
     assert_eq!(t_exp, insert_type::simplify(t_in));
 }
 
-// ( "Sort types: top, any" >:: fun ctxt ->
-// );
 #[test]
 fn sort_types_top_any() {
     let t_in = Arc::new(Ty::Union(
@@ -141,8 +125,6 @@ fn sort_types_top_any() {
     assert_eq!(t_exp, insert_type::simplify(t_in));
 }
 
-// ( "Sort types: bot, any" >:: fun ctxt ->
-// );
 #[test]
 fn sort_types_bot_any() {
     let t_in = Arc::new(Ty::Union(
@@ -155,10 +137,6 @@ fn sort_types_bot_any() {
     assert_eq!(t_exp, insert_type::simplify(t_in));
 }
 
-// ( "Sort types: any first" >:: fun ctxt ->
-//     Union (false, Void, Any (Annotated ALoc.none), [Null; Str; NumLit "5"; Bool])
-//     Union (false, Any (Annotated ALoc.none), Void, [Null; Bool; NumLit "5"; Str])
-// );
 #[test]
 fn sort_types_any_first() {
     let t_in = Arc::new(Ty::Union(

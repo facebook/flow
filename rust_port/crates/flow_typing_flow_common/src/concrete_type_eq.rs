@@ -27,7 +27,7 @@ pub fn swap_reason(t2: &Type, t1: &Type) -> Type {
     match (t2.deref(), t1.deref()) {
         // In reposition we also recurse and reposition some nested types. We need
         // to make sure we swap the types for these reasons as well. Otherwise our
-        // optimized union ~> union check will not pass. *)
+        // optimized union ~> union check will not pass.
         (TypeInner::MaybeT(_, inner_t2), TypeInner::MaybeT(r, inner_t1)) => {
             Type::new(TypeInner::MaybeT(r.dupe(), swap_reason(inner_t2, inner_t1)))
         }

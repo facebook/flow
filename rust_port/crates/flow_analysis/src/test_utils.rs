@@ -49,7 +49,6 @@ where
     list.iter().map(printer).collect::<Vec<_>>().join(", ")
 }
 
-// let eq printer v1 v2 = printer v1 = printer v2
 pub fn eq<T, F>(printer: F, v1: &T, v2: &T) -> bool
 where
     F: Fn(&T) -> String,

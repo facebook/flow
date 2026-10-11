@@ -147,7 +147,6 @@ pub mod insertion_point_collectors {
                             function_name: fn_name.dupe(),
                             body_loc,
                             is_method,
-                            // tparams_rev = List.filter not_this_typeparam tparams_rev;
                             tparams_rev: self
                                 .rev_bound_tparams
                                 .iter()
@@ -639,7 +638,7 @@ pub mod insertion_point_collectors {
         } else if body_loc.contains(&collector.extracted_loc) {
             let id = cls.id.as_ref().map(|id| id.name.dupe());
             let saved = collector.rev_bound_tparams.clone();
-            // Add tparams if present (forward iteration + insert(0,..) to match OCaml :: prepend)
+            // Add tparams if present, prepending each so the list stays reversed
             if let Some(tp) = &cls.tparams {
                 for param in tp.params.iter() {
                     let tparam = make_typeparam(param);
@@ -657,7 +656,7 @@ pub mod insertion_point_collectors {
                     .collect(),
             });
             collector.rev_bound_tparams = saved;
-            // Continue traversing with type_parameter_mapper#class_ which adds "this" tparam + class tparams
+            // Continue traversing the class body with the "this" tparam and the class tparams bound
             let this_tparam = make_class_this(cls);
             let saved = collector.rev_bound_tparams.clone();
             collector.rev_bound_tparams.insert(0, this_tparam);
@@ -670,7 +669,7 @@ pub mod insertion_point_collectors {
             class_collector_visit_class_body(collector, cls);
             collector.rev_bound_tparams = saved;
         } else {
-            // Continue traversing with type_parameter_mapper#class_ which adds "this" tparam + class tparams
+            // Continue traversing the class body with the "this" tparam and the class tparams bound
             let this_tparam = make_class_this(cls);
             let saved = collector.rev_bound_tparams.clone();
             collector.rev_bound_tparams.insert(0, this_tparam);
@@ -685,7 +684,7 @@ pub mod insertion_point_collectors {
         }
     }
 
-    // In OCaml, super#class_ does the full polymorphic_ast_mapper traversal, which
+    // In OCaml, the superclass `class_` does the full polymorphic_ast_mapper traversal, which
     // recursively visits ALL nested content (statements in methods, expressions, etc.)
     // and dispatches to the overridden class_ method for nested classes. We replicate
     // this by walking into the class body, method bodies, expressions, etc., looking
@@ -957,7 +956,7 @@ pub mod ast_extractor {
     }
 
     pub struct ExpressionWithConstantInsertionPoints {
-        pub constant_insertion_points: Vec<ConstantInsertionPoint>, /* Nel.t */
+        pub constant_insertion_points: Vec<ConstantInsertionPoint>, /* non-empty */
         pub expression: ast::expression::Expression<Loc, Loc>,
     }
 
@@ -1019,7 +1018,6 @@ pub mod ast_extractor {
             Collector {
                 tokens,
                 extract_range,
-                // Nel.one { title = "Extract to constant in module scope"; ... }
                 constant_insertion_points: vec![ConstantInsertionPoint {
                     title: "Extract to constant in module scope".to_string(),
                     function_body_loc: None,

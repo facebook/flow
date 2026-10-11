@@ -743,7 +743,6 @@ fn downstream_effects<'ev, 'b, 'cx>(
                     // Records don't contain React hooks/rules violation
                     Def::Record(_) => {}
                     Def::Binding(bind) => {
-                        // let rec handle_binding bind =
                         fn handle_binding<'ev, 'b, 'cx>(
                             bind: &Binding,
                             ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
@@ -1291,9 +1290,6 @@ impl<'ast>
     }
 }
 
-// let effect_visitor cx ~is_hook rrid tast =
-//   ...
-//   visitor ~toplevel:true ALocSet.empty
 struct EffectVisitorFactory<'b, 'cx> {
     ev_cx: EffectVisitorContext<'b, 'cx>,
 }
@@ -2036,7 +2032,6 @@ impl<'b, 'cx, 't>
         Ok(())
     }
 
-    // method! call ((call_loc, _) as annot) expr =
     fn call(
         &mut self,
         annot: &'t (ALoc, Type),

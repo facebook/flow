@@ -388,9 +388,7 @@ fn predicate_no_concretization<'cx>(
     p: &Predicate,
 ) -> Result<(), FlowJsException> {
     match p.deref() {
-        // (************************)
-        // (* deconstruction of && *)
-        // (************************)
+        // deconstruction of &&
         PredicateInner::AndP(p1, p2) => {
             let intermediate_type_collector = TypeCollector::create();
             let changed = Rc::new(RefCell::new(false));
@@ -430,9 +428,7 @@ fn predicate_no_concretization<'cx>(
             }
             Ok(())
         }
-        // (************************)
-        // (* deconstruction of || *)
-        // (************************)
+        // deconstruction of ||
         PredicateInner::OrP(p1, p2) => {
             let p1_clone = p1.dupe();
             concretize_and_run_predicate(
@@ -456,9 +452,7 @@ fn predicate_no_concretization<'cx>(
             )?;
             Ok(())
         }
-        // (*********************************)
-        // (* deconstruction of binary test *)
-        // (*********************************)
+        // deconstruction of binary test
         PredicateInner::BinaryP(b, r) => concretize_binary_rhs_and_run_binary_predicate(
             cx,
             env,
@@ -481,9 +475,7 @@ fn predicate_no_concretization<'cx>(
                     b,
                     result_collector,
                 ),
-                // (***********************)
-                // (* typeof _ ~ "boolean" *)
-                // (***********************)
+                // typeof _ ~ "boolean"
                 PredicateInner::BoolP(_) => {
                     report_filtering_result_to_predicate_result(
                         type_filter::not_boolean(l.dupe()),
@@ -491,9 +483,7 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (***********************)
-                // (* typeof _ ~ "string" *)
-                // (***********************)
+                // typeof _ ~ "string"
                 PredicateInner::StrP(_) => {
                     report_filtering_result_to_predicate_result(
                         type_filter::not_string(l.dupe()),
@@ -501,9 +491,7 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (***********************)
-                // (* typeof _ ~ "symbol" *)
-                // (***********************)
+                // typeof _ ~ "symbol"
                 PredicateInner::SymbolP(_) => {
                     report_filtering_result_to_predicate_result(
                         type_filter::not_symbol(l.dupe()),
@@ -511,26 +499,20 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (*********************)
-                // (* _ ~ "some string" *)
-                // (*********************)
+                // _ ~ "some string"
                 PredicateInner::SingletonStrP(box (_, _, lit)) => {
                     let filtered_str =
                         type_filter::not_string_literal(FlowSmolStr::new(lit), l.dupe());
                     report_filtering_result_to_predicate_result(filtered_str, result_collector);
                     Ok(())
                 }
-                // (*********************)
-                // (* _ ~ some number n *)
-                // (*********************)
+                // _ ~ some number n
                 PredicateInner::SingletonNumP(box (_, _, lit)) => {
                     let filtered_num = type_filter::not_number_literal(lit.clone(), l.dupe());
                     report_filtering_result_to_predicate_result(filtered_num, result_collector);
                     Ok(())
                 }
-                // (***********************)
-                // (* typeof _ ~ "number" *)
-                // (***********************)
+                // typeof _ ~ "number"
                 PredicateInner::NumP(_) => {
                     report_filtering_result_to_predicate_result(
                         type_filter::not_number(l.dupe()),
@@ -538,17 +520,13 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (*********************)
-                // (* _ ~ some bigint n *)
-                // (*********************)
+                // _ ~ some bigint n
                 PredicateInner::SingletonBigIntP(box (_, _, lit)) => {
                     let filtered_bigint = type_filter::not_bigint_literal(lit.clone(), l.dupe());
                     report_filtering_result_to_predicate_result(filtered_bigint, result_collector);
                     Ok(())
                 }
-                // (***********************)
-                // (* typeof _ ~ "bigint" *)
-                // (***********************)
+                // typeof _ ~ "bigint"
                 PredicateInner::BigIntP(_) => {
                     report_filtering_result_to_predicate_result(
                         type_filter::not_bigint(l.dupe()),
@@ -556,9 +534,7 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (***********************)
-                // (* typeof _ ~ "function" *)
-                // (***********************)
+                // typeof _ ~ "function"
                 PredicateInner::FunP => {
                     report_filtering_result_to_predicate_result(
                         type_filter::not_function(l.dupe()),
@@ -566,9 +542,7 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (***********************)
-                // (* typeof _ ~ "object" *)
-                // (***********************)
+                // typeof _ ~ "object"
                 PredicateInner::ObjP => {
                     report_filtering_result_to_predicate_result(
                         type_filter::not_object(l.dupe()),
@@ -576,9 +550,7 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (*******************)
-                // (* Array.isArray _ *)
-                // (*******************)
+                // Array.isArray _
                 PredicateInner::ArrP => {
                     report_filtering_result_to_predicate_result(
                         type_filter::not_array(l.dupe()),
@@ -586,9 +558,7 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (*******************)
-                // (* array length *)
-                // (*******************)
+                // array length
                 PredicateInner::ArrLenP { op, n } => {
                     report_filtering_result_to_predicate_result(
                         type_filter::array_length(false, op, *n, l.dupe()),
@@ -596,49 +566,37 @@ fn predicate_no_concretization<'cx>(
                     );
                     Ok(())
                 }
-                // (***********************)
-                // (* typeof _ ~ "undefined" *)
-                // (***********************)
+                // typeof _ ~ "undefined"
                 PredicateInner::VoidP => {
                     let filtered = type_filter::not_undefined(cx, l.dupe());
                     report_filtering_result_to_predicate_result(filtered, result_collector);
                     Ok(())
                 }
-                // (********)
-                // (* null *)
-                // (********)
+                // null
                 PredicateInner::NullP => {
                     let filtered = type_filter::not_null(cx, l.dupe());
                     report_filtering_result_to_predicate_result(filtered, result_collector);
                     Ok(())
                 }
-                // (*********)
-                // (* maybe *)
-                // (*********)
+                // maybe
                 PredicateInner::MaybeP => {
                     let filtered = type_filter::not_maybe(cx, l.dupe());
                     report_filtering_result_to_predicate_result(filtered, result_collector);
                     Ok(())
                 }
-                // (********)
-                // (* true *)
-                // (********)
+                // true
                 PredicateInner::SingletonBoolP(box (_, true)) => {
                     let filtered = type_filter::not_true(l.dupe());
                     report_filtering_result_to_predicate_result(filtered, result_collector);
                     Ok(())
                 }
-                // (*********)
-                // (* false *)
-                // (*********)
+                // false
                 PredicateInner::SingletonBoolP(box (_, false)) => {
                     let filtered = type_filter::not_false(l.dupe());
                     report_filtering_result_to_predicate_result(filtered, result_collector);
                     Ok(())
                 }
-                // (************************)
-                // (* truthyness *)
-                // (************************)
+                // truthyness
                 PredicateInner::TruthyP => {
                     let filtered = type_filter::not_truthy(cx, l.dupe());
                     report_filtering_result_to_predicate_result(filtered, result_collector);
@@ -678,9 +636,7 @@ fn predicate_no_concretization<'cx>(
                     ));
                     predicate_no_concretization(cx, env, trace, result_collector, l, &de_morgan)
                 }
-                // (********************)
-                // (* Latent predicate *)
-                // (********************)
+                // Latent predicate
                 PredicateInner::LatentP(pred_funcall_info, idx) => {
                     let fun_t = &pred_funcall_info.2;
                     let loc = pred_funcall_info.1.dupe();
@@ -730,9 +686,7 @@ fn predicate_no_concretization<'cx>(
                         result_collector,
                     )
                 }
-                // (**************)
-                // (* Impossible *)
-                // (**************)
+                // Impossible
                 PredicateInner::ImpossibleP => {
                     report_filtering_result_to_predicate_result(
                         type_filter::unchanged_result(l.dupe()),
@@ -742,9 +696,7 @@ fn predicate_no_concretization<'cx>(
                 }
             }
         }
-        // (***********************)
-        // (* typeof _ ~ "boolean" *)
-        // (***********************)
+        // typeof _ ~ "boolean"
         PredicateInner::BoolP(box loc) => {
             report_filtering_result_to_predicate_result(
                 type_filter::boolean(loc.dupe(), l.dupe()),
@@ -752,9 +704,7 @@ fn predicate_no_concretization<'cx>(
             );
             Ok(())
         }
-        // (***********************)
-        // (* typeof _ ~ "string" *)
-        // (***********************)
+        // typeof _ ~ "string"
         PredicateInner::StrP(box loc) => {
             report_filtering_result_to_predicate_result(
                 type_filter::string(loc.dupe(), l.dupe()),
@@ -762,9 +712,7 @@ fn predicate_no_concretization<'cx>(
             );
             Ok(())
         }
-        // (***********************)
-        // (* typeof _ ~ "symbol" *)
-        // (***********************)
+        // typeof _ ~ "symbol"
         PredicateInner::SymbolP(box loc) => {
             report_filtering_result_to_predicate_result(
                 type_filter::symbol(loc.dupe(), l.dupe()),
@@ -772,49 +720,36 @@ fn predicate_no_concretization<'cx>(
             );
             Ok(())
         }
-        // (*********************)
-        // (* _ ~ "some string" *)
-        // (*********************)
+        // _ ~ "some string"
         PredicateInner::SingletonStrP(box (expected_loc, _sense, lit)) => {
             let filtered_str =
                 type_filter::string_literal(expected_loc.dupe(), FlowSmolStr::new(lit), l.dupe());
             report_filtering_result_to_predicate_result(filtered_str, result_collector);
             Ok(())
         }
-        // (*********************)
-        // (* _ ~ some number n *)
-        // (*********************)
+        // _ ~ some number n
         PredicateInner::SingletonNumP(box (expected_loc, _sense, lit)) => {
             let filtered_num =
                 type_filter::number_literal(expected_loc.dupe(), lit.clone(), l.dupe());
             report_filtering_result_to_predicate_result(filtered_num, result_collector);
             Ok(())
         }
-        // (***********************)
-        // (* typeof _ ~ "number" *)
-        // (***********************)
+        // typeof _ ~ "number"
         PredicateInner::NumP(box loc) => {
-            //   report_filtering_result_to_predicate_result (Type_filter.number loc l) result_collector
             report_filtering_result_to_predicate_result(
                 type_filter::number(loc.dupe(), l.dupe()),
                 result_collector,
             );
             Ok(())
         }
-        // (*********************)
-        // (* _ ~ some bigint n *)
-        // (*********************)
+        // _ ~ some bigint n
         PredicateInner::SingletonBigIntP(box (expected_loc, _sense, lit)) => {
-            //   let filtered_bigint = Type_filter.bigint_literal expected_loc lit l in
             let filtered_bigint =
                 type_filter::bigint_literal(expected_loc.dupe(), lit.clone(), l.dupe());
-            //   report_filtering_result_to_predicate_result filtered_bigint result_collector
             report_filtering_result_to_predicate_result(filtered_bigint, result_collector);
             Ok(())
         }
-        // (***********************)
-        // (* typeof _ ~ "bigint" *)
-        // (***********************)
+        // typeof _ ~ "bigint"
         PredicateInner::BigIntP(box loc) => {
             report_filtering_result_to_predicate_result(
                 type_filter::bigint(loc.dupe(), l.dupe()),
@@ -822,9 +757,7 @@ fn predicate_no_concretization<'cx>(
             );
             Ok(())
         }
-        // (***********************)
-        // (* typeof _ ~ "function" *)
-        // (***********************)
+        // typeof _ ~ "function"
         PredicateInner::FunP => {
             report_filtering_result_to_predicate_result(
                 type_filter::function_(l.dupe()),
@@ -832,9 +765,7 @@ fn predicate_no_concretization<'cx>(
             );
             Ok(())
         }
-        // (***********************)
-        // (* typeof _ ~ "object" *)
-        // (***********************)
+        // typeof _ ~ "object"
         PredicateInner::ObjP => {
             report_filtering_result_to_predicate_result(
                 type_filter::object_(cx, l.dupe()),
@@ -842,9 +773,7 @@ fn predicate_no_concretization<'cx>(
             );
             Ok(())
         }
-        // (*******************)
-        // (* Array.isArray _ *)
-        // (*******************)
+        // Array.isArray _
         PredicateInner::ArrP => {
             report_filtering_result_to_predicate_result(
                 type_filter::array(l.dupe()),
@@ -852,9 +781,7 @@ fn predicate_no_concretization<'cx>(
             );
             Ok(())
         }
-        // (*******************)
-        // (* array length *)
-        // (*******************)
+        // array length
         PredicateInner::ArrLenP { op, n } => {
             report_filtering_result_to_predicate_result(
                 type_filter::array_length(true, op, *n, l.dupe()),
@@ -862,49 +789,37 @@ fn predicate_no_concretization<'cx>(
             );
             Ok(())
         }
-        // (***********************)
-        // (* typeof _ ~ "undefined" *)
-        // (***********************)
+        // typeof _ ~ "undefined"
         PredicateInner::VoidP => {
             let filtered = type_filter::undefined(l.dupe());
             report_filtering_result_to_predicate_result(filtered, result_collector);
             Ok(())
         }
-        // (********)
-        // (* null *)
-        // (********)
+        // null
         PredicateInner::NullP => {
             let filtered = type_filter::null_filter(l.dupe());
             report_filtering_result_to_predicate_result(filtered, result_collector);
             Ok(())
         }
-        // (*********)
-        // (* maybe *)
-        // (*********)
+        // maybe
         PredicateInner::MaybeP => {
             let filtered = type_filter::maybe(cx, l.dupe());
             report_filtering_result_to_predicate_result(filtered, result_collector);
             Ok(())
         }
-        // (********)
-        // (* true *)
-        // (********)
+        // true
         PredicateInner::SingletonBoolP(box (_, true)) => {
             let filtered = type_filter::true_(l.dupe());
             report_filtering_result_to_predicate_result(filtered, result_collector);
             Ok(())
         }
-        // (*********)
-        // (* false *)
-        // (*********)
+        // false
         PredicateInner::SingletonBoolP(box (_, false)) => {
             let filtered = type_filter::false_(l.dupe());
             report_filtering_result_to_predicate_result(filtered, result_collector);
             Ok(())
         }
-        // (************************)
-        // (* truthyness *)
-        // (************************)
+        // truthyness
         PredicateInner::TruthyP => {
             let filtered = type_filter::truthy(cx, l.dupe());
             report_filtering_result_to_predicate_result(filtered, result_collector);
@@ -926,9 +841,7 @@ fn predicate_no_concretization<'cx>(
         PredicateInner::PropNonVoidP(key, r) => {
             prop_non_void_test(cx, env, key, r, true, l, result_collector)
         }
-        // (********************)
-        // (* Latent predicate *)
-        // (********************)
+        // Latent predicate
         PredicateInner::LatentP(pred_funcall_info, idx) => {
             let fun_t = &pred_funcall_info.2;
             let loc = pred_funcall_info.1.dupe();
@@ -978,9 +891,7 @@ fn predicate_no_concretization<'cx>(
                 result_collector,
             )
         }
-        // (**************)
-        // (* Impossible *)
-        // (**************)
+        // Impossible
         PredicateInner::ImpossibleP => {
             report_filtering_result_to_predicate_result(
                 type_filter::empty(l.dupe()),
@@ -2197,8 +2108,8 @@ fn instanceof_test<'cx>(
         // instanceof on an ArrT is a special case since we treat ArrT as its own
         // type, rather than an InstanceT of the Array builtin class. So, we resolve
         // the ArrT to an InstanceT of Array, and redo the instanceof check. We do
-        // it at this stage instead of simply converting (ArrT, InstanceofP c)
-        // to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
+        // it at this stage instead of simply converting (ArrT, InstanceofP(c))
+        // to (InstanceT(Array), InstanceofP(c)) because this allows c to be resolved
         // first.
         (true, TypeInner::DefT(reason, def_t), InstanceofRhs::TypeOperand(right_t))
             if let DefTInner::ArrT(arrtype) = def_t.deref()
@@ -2399,7 +2310,6 @@ fn instanceof_test<'cx>(
             TypeInner::FunProtoT(reason),
             right @ InstanceofRhs::InternalExtendsOperand { .. },
         ) => {
-            //   let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
             let fun_proto = FlowJs::get_builtin_type_with_env(
                 cx,
                 env,
@@ -3069,9 +2979,7 @@ fn eq_test<'cx>(
     }
 }
 
-// (**********)
-// (* guards *)
-// (**********)
+// guards
 fn concretize_and_guard_prop<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,

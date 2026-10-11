@@ -1793,12 +1793,12 @@ define_nodes! {
     // byte aligned with upstream — without hand-coded workarounds.
     //
     // No `from` clause: there is no AST variant for ThisTypeAnnotation. The
-    // OCaml parser produces `Type::Generic { id: Identifier "this", targs:
-    // None }` for both `type T = this` AND `(this) => void` / `m(): this`.
+    // parser produces a `Type::Generic` with an `Unqualified` `this` id and
+    // `targs: None` for both `type T = this` AND `(this) => void` / `m(): this`.
     // The Rust `serialize_type` collapses that case to ThisTypeAnnotation
     // before falling through to the auto-dispatch (mirroring upstream
-    // `HermesToESTreeAdapter.mapGenericTypeAnnotation` and the OCaml
-    // `estree_translator.ml::generic_type` collapse).
+    // `HermesToESTreeAdapter.mapGenericTypeAnnotation` and the
+    // `estree_translator::generic_type` collapse).
     ThisTypeAnnotation = 229 {},
     // ChainExpression is the ESTree wrapper around an optional chain root.
     // No `from` clause: there is no AST variant for ChainExpression. The

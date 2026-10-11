@@ -215,8 +215,6 @@ pub(crate) fn error_recursive(cx: &Context, dst_cx: &Context, reason: &Reason) -
     type_::any_t::error(reason.dupe())
 }
 
-// (* OCaml: let force_module_type_thunk cx s () = *)
-// (*   Type.Constraint.ForcingState.force ~on_error:(fun r -> Error (error_recursive cx r)) s *)
 pub fn force_module_type_thunk<'cx>(
     src_cx: Context<'cx>,
     s: ModuleTypeForcingState<'cx, Context<'cx>>,
@@ -298,16 +296,14 @@ fn effective_dst_cx<'cx>(cx: &Context<'cx>) -> Context<'cx> {
     cx.merge_dst_cx().unwrap_or_else(|| cx.dupe())
 }
 
-// (*****************)
-// (* Instantiation *)
-// (*****************)
+// Instantiation
 struct AnnotInstantiationHelper;
 
 impl flow_js_utils::InstantiationHelper for AnnotInstantiationHelper {
     // We will not be solving implicit instantiation problems here. The only case
     // where we will need to use this function is when a PolyT needs to be used
     // as a monomorphic type. In this case, the only sensible thing to do is to
-    // use the bound of each parameter as the argument to the intantiation. *)
+    // use the bound of each parameter as the argument to the intantiation.
     fn mk_targ<'cx>(
         _cx: &Context<'cx>,
         typeparam: &type_::TypeParam,
@@ -440,9 +436,7 @@ pub fn concretize_type<'cx>(cx: &Context<'cx>, reason: Reason, type_: Type) -> T
     )
 }
 
-// (***********)
-// (* GetProp *)
-// (***********)
+// GetProp
 
 fn cg_lookup_<'cx>(
     cx: &Context<'cx>,
@@ -578,8 +572,6 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         Ok(reposition(cx, loc, t))
     }
 
-    // let cg_lookup cx _trace ~obj_t ~method_accessible:_ t (reason_op, _kind, propref, use_op, _ids) =
-    //   cg_lookup_ cx use_op t reason_op propref obj_t
     fn cg_lookup<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
@@ -667,12 +659,12 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
     }
 }
 
-/// [ensure_annot_resolved cx reason id] ensures that the annotation constraint
-/// associated with [id] has been resolved. If the respective constraint is already
-/// resolved then it returns immediately. Otherwise, it resolves [id] immediately
-/// to the 'any' type. In the case of an [Anno_op (_, _, dep_id)] constraint we also
-/// update the "dependents" set of [dep_id], so that we don't attempt to resolve
-/// [id] once again when [dep_id] gets resolved.
+/// Ensures that the annotation constraint associated with [id] has been resolved.
+/// If the respective constraint is already resolved then it returns immediately.
+/// Otherwise, it resolves [id] immediately to the 'any' type. In the case of an
+/// [AnnotOp] constraint that depends on [dep_id] we also update the "dependents" set
+/// of [dep_id], so that we don't attempt to resolve [id] once again when [dep_id]
+/// gets resolved.
 fn ensure_annot_resolved<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -756,10 +748,11 @@ fn mk_sig_tvar_with_env<'cx>(
     })
 }
 
-/// [resolve_id cx id1 t] resolves an annotation tvar [id1] to a type [t] *
-/// - If [t] is a concrete type, we mark [id1] as a resolved annotation tvar and
-///   record it as fully resolved in the type graph. *
-/// - If [t] is an OpenT (_, id2), then we unify [id1] and [id2]. (See merge_ids.)
+/// Resolves the annotation tvar [id] to the type [t].
+/// - If [t] is a concrete type, we mark [id] as a resolved annotation tvar and
+///   record it as fully resolved in the type graph.
+/// - If [t] is an `OpenT` with id [id2], we first ensure [id2] is resolved, then
+///   resolve [id] to the resulting type.
 fn resolve_id<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -1194,12 +1187,6 @@ fn elab_t_concrete<'cx>(
         }
         (TypeInner::DefT(def_reason, def_t), OpInner::AnnotUseTTypeT { reason, kind }) => {
             match def_t.deref() {
-                // | ( DefT (_, PolyT { tparams = ids; t_out = DefT (_, ReactAbstractComponentT _) as t; _ }),
-                //     Annot_UseT_TypeT (reason_op, RenderTypeKind)
-                //   ) ->
-                //   let subst_map = ...
-                //   let t_ = subst cx subst_map t in
-                //   elab_t cx t_ op
                 DefTInner::PolyT(box PolyTData { tparams, t_out, .. })
                     if matches!(kind, flow_typing_type::type_::TypeTKind::RenderTypeKind)
                         && matches!(
@@ -1578,7 +1565,6 @@ fn elab_t_concrete<'cx>(
         {
             elab_t(cx, env, dst_cx, Some(seen), inner_t.dupe(), op)
         }
-        //   elab_t cx ~seen t op
         (TypeInner::NominalT { nominal_type, .. }, _)
             if let type_::nominal::UnderlyingT::CustomError(
                 box type_::nominal::CustomErrorData { t: inner_t, .. },
@@ -2504,8 +2490,6 @@ fn elab_t_concrete<'cx>(
                         reason_op.dupe(),
                     )
                 }
-                // | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
-                //     elab_t cx ~seen values_type op
                 TypeInner::NamespaceT(ns) => {
                     elab_t(cx, env, dst_cx, Some(seen), ns.values_type.dupe(), op)
                 }
@@ -2669,8 +2653,8 @@ fn elab_t_concrete<'cx>(
                     reposition(cx, reason.loc().dupe(), instance.dupe())
                 }
                 // *********
-                // * Enums *
-                //  *********
+                //  Enums
+                // *********
                 TypeInner::DefT(_, def_t)
                     if let DefTInner::EnumObjectT {
                         enum_value_t,
@@ -3732,8 +3716,6 @@ fn lazy_cjs_extract_named_exports_with_env<'cx>(
                     OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(reason3.dupe()),
                 ),
             );
-            // | OpenT (_, id) -> get_fully_resolved_type cx id
-            // | t -> t
             Ok(match result.deref() {
                 TypeInner::OpenT(tvar) => {
                     get_fully_resolved_type(cx, &effective_dst_cx(cx), tvar.id() as i32)
@@ -4315,7 +4297,6 @@ pub fn obj_rest<'cx>(cx: &Context<'cx>, reason: Reason, xs: Vec<FlowSmolStr>, t:
     obj_rest_with_env(cx, &FlowJsEnv::entry(), reason, xs, t)
 }
 
-// and obj_rest cx reason xs t = elab_t cx t (Annot_ObjRestT (reason, xs))
 fn obj_rest_with_env<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,

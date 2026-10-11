@@ -47,8 +47,8 @@ impl ExitCondition {
         }
     }
 
-    // Async analogue of `wait`. The OCaml original is `Lwt_condition.wait ExitSignal.signal`,
-    // a cancellable suspension point. Dropping the returned future (e.g. via
+    // Async analogue of `wait`. The OCaml original waits on `ExitSignal.signal` with
+    // `Lwt_condition.wait`, a cancellable suspension point. Dropping the returned future (e.g. via
     // `tokio::select!` losing a race) actually cancels the wait, matching `Lwt.pick`
     // semantics. `Notified::enable` registers the waiter before we sample `value`, which
     // closes the subscribe-vs-broadcast race.

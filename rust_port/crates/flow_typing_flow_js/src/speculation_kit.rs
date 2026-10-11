@@ -417,7 +417,7 @@ pub fn try_custom<'cx, 'a>(
     .map_err(SpecMatchError::expect_speculative)
 }
 
-/// [try_singleton_throw_on_failure cx trace reason t u] runs the constraint
+/// `try_singleton_throw_on_failure` runs the constraint
 /// between (t, u) in a speculative environment. If an error is raised then a
 /// SpeculationSingletonError exception is raised. This needs to be caught by
 /// the caller of this function.
@@ -789,8 +789,6 @@ where
     return_errs(cx, env, spec, errs)
 }
 
-// and trials_of_spec = function
-//
 // Returns a lazy iterator instead of materializing all cases up front so that
 // when speculation succeeds early the unused tail cases are never constructed.
 // For our hot `keyof T`/`T[K]` workload the LHS is usually a singleton string
@@ -811,7 +809,7 @@ where
     match spec {
         // NB: Even though we know the use_op for the original constraint, don't
         // embed it in the nested constraints to avoid unnecessary verbosity. We
-        // will unwrap the original use_op once in EUnionSpeculationFailed. *)
+        // will unwrap the original use_op once in EUnionSpeculationFailed.
         CasesSpec::UnionCases { use_op, l, us, .. } => {
             let spec_use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
                 use_op.dupe(),

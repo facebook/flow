@@ -2801,7 +2801,7 @@ pub fn mk_possibly_generic_render_type(
 // Construct signatures don't have a meaningful `this`, and the class
 // `constructor` we sometimes use as a synthetic construct signature has the
 // class-instance type as its return. This helper walks the funtype leaves of
-// [t] (plain [FunT], [PolyT { t_out = FunT }], or [IntersectionT] of either)
+// [t] (plain [FunT], a [PolyT] whose [t_out] is a [FunT], or [IntersectionT] of either)
 // and rewrites each leaf's [this_t] to an unconstrained any, optionally also
 // overriding [return_t]. Construct signatures do not have a meaningful
 // receiver, but keeping [ThisMethod] preserves the lenient method-to-method

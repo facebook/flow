@@ -4257,7 +4257,7 @@ impl<'a> DefFinder<'a> {
                     EqTestAction::TypeOf(ref expr, ref value) => {
                         let expr_tuple = (expr.loc().dupe(), expr.dupe());
                         self.visit_expression(cond, &vec![], &expr_tuple.1)?;
-                        // For TypeOf: ignore @@ this#expression value (use NoContext)
+                        // For TypeOf: visit the value under NoContext
                         let value_tuple = (value.loc().dupe(), value.clone());
                         self.visit_expression(
                             EnclosingContext::NoContext,
@@ -4277,7 +4277,7 @@ impl<'a> DefFinder<'a> {
                     | EqTestAction::Void(ref expr, ref value) => {
                         let expr_tuple = (expr.loc().dupe(), expr.dupe());
                         self.visit_expression(cond, &vec![], &expr_tuple.1)?;
-                        // For Null/Void: ignore @@ this#expression value (use NoContext)
+                        // For Null/Void: visit the value under NoContext
                         let value_tuple = (value.loc().dupe(), value.clone());
                         self.visit_expression(
                             EnclosingContext::NoContext,
@@ -5431,7 +5431,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                     self.statement(stmt)?;
                 }
 
-                // const f = () => {}; const f = function () {}; *)
+                // const f = () => {}; const f = function () {};
                 StatementInner::VariableDeclaration { inner, .. }
                     if inner.declarations.len() == 1
                         && matches!(

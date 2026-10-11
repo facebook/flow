@@ -1103,13 +1103,9 @@ pub fn compute_env_of_contents(
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>))
     };
-    // let resolved_modules =
     let resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)> = {
-        // let node_modules_containers = !Files.node_modules_containers in
         let node_modules_containers = files::node_modules_containers.read().unwrap();
-        // let f mref =
         let f = |mref: &FlowImportSpecifier| {
-            // Module_js.imported_module ~options ~reader ~node_modules_containers ~importing_file:file mref
             flow_services_module::imported_module(
                 &options,
                 &transaction,
@@ -1119,7 +1115,6 @@ pub fn compute_env_of_contents(
                 mref,
             )
         };
-        // Flow_import_specifier.Map.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
         file_sig
             .require_loc_map()
             .into_keys()

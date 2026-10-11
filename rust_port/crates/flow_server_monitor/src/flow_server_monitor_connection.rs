@@ -17,10 +17,6 @@
 // 2. There is a stream of things to write to the connection. Other threads can add things to this
 //    stream
 // 3. There is a loop which reads from the stream and writes to the connection
-//
-// We didn't **really** need to make this a functor. CONNECTION.t could in theory be parameterized.
-// However, glevi liked writing `ServerConnection.write conn` over `Connection.write conn`. So it's
-// a minor stylistic choice.
 
 use std::io;
 use std::sync::Arc;

@@ -17,13 +17,6 @@ use flow_parser::loc::Loc;
 
 use crate::package_exports::PackageExports;
 
-// type t = {
-//   name: string option;
-//   main: string option;
-//   types: string option;
-//   haste_commonjs: bool;
-//   exports: Package_exports.t option;
-// }
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PackageJson {
     name: Option<FlowSmolStr>,
@@ -34,7 +27,6 @@ pub struct PackageJson {
 }
 
 impl PackageJson {
-    // let empty = { name = None; main = None; types = None; haste_commonjs = false; exports = None }
     pub fn empty() -> PackageJson {
         PackageJson {
             name: None,
@@ -45,8 +37,6 @@ impl PackageJson {
         }
     }
 
-    // let create ~name ~main ~types ~haste_commonjs ~exports =
-    //   { name; main; types; haste_commonjs; exports }
     pub fn create(
         name: Option<FlowSmolStr>,
         main: Option<FlowSmolStr>,
@@ -71,7 +61,6 @@ impl PackageJson {
         self.main.clone()
     }
 
-    // let types package = package.types
     pub fn types(&self) -> Option<FlowSmolStr> {
         self.types.clone()
     }
@@ -91,11 +80,6 @@ impl PackageJson {
         }
         let name = string_opt(prop_map.get("name"));
         let main = find_main_property(&prop_map, node_main_fields);
-        // let types =
-        //   match SMap.find_opt "types" prop_map |> string_opt with
-        //   | Some _ as t -> t
-        //   | None -> SMap.find_opt "typings" prop_map |> string_opt
-        // in
         let types = match string_opt(prop_map.get("types")) {
             Some(t) => Some(t),
             None => string_opt(prop_map.get("typings")),
@@ -138,9 +122,9 @@ fn package_exports_opt(
     expr.and_then(PackageExports::parse)
 }
 
-/// Given a list of JSON properties, loosely extract the properties and turn it into a
-/// [Expression.t SMap.t]. We aren't looking to validate the file, and don't currently
-/// care about any non-literal properties, so we skip over everything else.
+/// Loosely extract a JSON property into `map`, a map from property names to expressions.
+/// We aren't looking to validate the file, and don't currently care about any non-literal
+/// properties, so we skip over everything else.
 fn extract_property(
     map: &mut HashMap<FlowSmolStr, ast::expression::Expression<Loc, Loc>>,
     property: &ast::expression::object::Property<Loc, Loc>,

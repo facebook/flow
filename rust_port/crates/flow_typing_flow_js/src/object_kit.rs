@@ -59,7 +59,7 @@ use crate::flow_js::FlowJs;
 use crate::slice_utils;
 use crate::tvar_resolver;
 
-// We use this function to transform a resolved UnionT into a ((name * reason) list * Type.t),
+// We use this function to transform a resolved UnionT into a `(Vec<(Name, Reason)>, Vec<Type>)`,
 // which represents a tuple of key names (with reasons for error messages) and an indexer to be
 // used to create a new object. All SinlgetonStrTs/StrTs are turned into keys and all other
 // non-empty types are turned into indexers. This is how we support non-homomorphic mapped types,
@@ -544,9 +544,7 @@ pub(super) fn run_with_env<'cx>(
         )
     };
 
-    // **************************
-    // * Check component config *
-    // **************************
+    // Check component config
     let check_component_config = |pmap: &properties::PropertiesMap,
                                   cx: &Context<'cx>,
                                   use_op: UseOp,
@@ -570,9 +568,7 @@ pub(super) fn run_with_env<'cx>(
         )
     };
 
-    // ***************
-    // * Object Rest *
-    // ***************
+    // Object Rest
     let object_rest = |options: &object::rest::MergeMode,
                        state: &object::rest::State,
                        cx: &Context<'cx>,
@@ -668,9 +664,7 @@ pub(super) fn run_with_env<'cx>(
         )
     };
 
-    // *********************
-    // * Object Make Exact *
-    // *********************
+    // Object Make Exact
     let object_make_exact = |cx: &Context<'cx>,
                              _use_op: UseOp,
                              reason: &Reason,
@@ -679,13 +673,12 @@ pub(super) fn run_with_env<'cx>(
      -> Result<(), FlowJsException> {
         // We always use an unknown_use intentionally when flowing to the tout. The use_op associated
         // with the tvar is more relevant with the use of the $Exact type than the use_op associated
-        // with the $Exact instantiation *)
+        // with the $Exact instantiation
         let t = slice_utils::object_make_exact(cx, env, reason, x)?;
         FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &t, tout)?;
         Ok(())
     };
 
-    // ********************
     let object_read_only = |cx: &Context<'cx>,
                             _use_op: UseOp,
                             reason: &Reason,
@@ -706,9 +699,7 @@ pub(super) fn run_with_env<'cx>(
         Ok(())
     };
 
-    // ******************
-    // * Object Partial *
-    // ******************
+    // Object Partial
     let object_partial = |cx: &Context<'cx>,
                           _use_op: UseOp,
                           reason: &Reason,
@@ -734,9 +725,7 @@ pub(super) fn run_with_env<'cx>(
         Ok(())
     };
 
-    // *******************
-    // * Object Required *
-    // *******************
+    // Object Required
     let object_required = |cx: &Context<'cx>,
                            _use_op: UseOp,
                            reason: &Reason,
@@ -762,9 +751,7 @@ pub(super) fn run_with_env<'cx>(
         Ok(())
     };
 
-    // **************
-    // * Object Rep *
-    // **************
+    // Object Rep
     let object_rep = |cx: &Context<'cx>,
                       use_op: UseOp,
                       reason: &Reason,
@@ -831,7 +818,6 @@ pub(super) fn run_with_env<'cx>(
         Ok(())
     };
 
-    // ****************
     let react_config = |ref_manipulation: &object::react_config::RefManipulation,
                         state: &object::react_config::State,
                         cx: &Context<'cx>,
@@ -1174,7 +1160,7 @@ pub(super) fn run_with_env<'cx>(
                 Ok(())
             }
             // If we had default props and those defaults resolved then finish our
-            // props object with those default props. *)
+            // props object with those default props.
             object::react_config::State::Defaults { config } => {
                 let mut all_results: Vec<Type> = Vec::new();
                 for c in config.0.iter() {
@@ -1206,9 +1192,7 @@ pub(super) fn run_with_env<'cx>(
         }
     };
 
-    // **************
-    // * Object Map *
-    // **************
+    // Object Map
     let object_map = |prop_type: &Type,
                       name_type: &Option<Type>,
                       mapped_type_flags: &MappedTypeFlags,
@@ -1276,9 +1260,7 @@ pub(super) fn run_with_env<'cx>(
         Ok(())
     };
 
-    // *********************
-    // * Object Resolution *
-    // *********************
+    // Object Resolution
     let next = |cx: &Context<'cx>,
                 use_op: UseOp,
                 tool: &object::Tool,

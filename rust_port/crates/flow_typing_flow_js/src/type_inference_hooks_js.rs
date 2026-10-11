@@ -172,6 +172,5 @@ pub fn dispatch_obj_to_obj_hook<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) {
 }
 
 pub fn is_for_ide() -> bool {
-    // !hook_state.for_ide
     HOOK_STATE.with(|state| state.borrow().for_ide)
 }

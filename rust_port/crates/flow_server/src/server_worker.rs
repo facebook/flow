@@ -41,13 +41,11 @@ pub mod server_worker_state {
         file_key::set_project_root(project_root);
         file_key::set_flowlib_root(flowlib_root);
 
-        // let init_id = init_id ^ "." ^ Random_id.short_string () in
         let init_id = format!(
             "{}.{}",
             init_id,
             flow_common_utils::random_id::short_string()
         );
-        // FlowEventLogger.init_worker ~init_id (Unix.gettimeofday ());
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()

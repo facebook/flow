@@ -950,7 +950,7 @@ fn visit_toplevel_statement<'a>(
 // - For cjs, we will first try to pick the location of module.exports, then
 //   fallback to the first module.exports prop assignment
 // - For esm, we will first try to pick the location of default exports, then
-//   fallback to the first export. *)
+//   fallback to the first export.
 fn module_exports_sig_loc(info: &module_info::ModuleInfo) -> Option<ALoc> {
     let first_loc_of_named_exports = |named: &exports::T| -> Option<ALoc> {
         let mut locs: Vec<ALoc> = named

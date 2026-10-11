@@ -194,7 +194,7 @@ pub mod class {
     /// fallback when binding kind isn't statically visible.
     ///
     /// [ClassLikeRawMono]/[ClassLikeRawPoly] carry an explicit *raw*
-    /// ([ClassT(ThisInstanceT _)]-shaped) override of the converted [c]. Used
+    /// ([ClassT(ThisInstanceT(..))]-shaped) override of the converted [c]. Used
     /// when [c] from [convert_qualification] is in canonicalized form (cross-
     /// module imports go through [import_named_specifier_type] which calls
     /// [canonicalize_imported_type]'s [fix_this_instance], destroying the

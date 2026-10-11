@@ -741,7 +741,8 @@ fn identifier(ident: &ast::Identifier<Loc, Loc>) -> LayoutNode {
     identifier_with_comments(&ident.loc, &ident.name, ident.comments.as_ref())
 }
 
-// given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary
+// given a list of (Loc, CommentsBounds, LayoutNode) triples, insert newlines between the nodes
+// when necessary
 fn list_with_newlines(nodes: &[(Loc, CommentsBounds, LayoutNode)]) -> Vec<LayoutNode> {
     list_with_newlines_impl(LayoutNode::empty(), pretty_hardline(), true, nodes)
 }

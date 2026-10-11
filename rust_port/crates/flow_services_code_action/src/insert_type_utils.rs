@@ -484,7 +484,6 @@ impl<Extra: BaseStats> UntypedAcc<Extra> {
     }
 }
 
-//
 #[derive(Debug, Clone)]
 pub struct Acc<Extra: BaseStats> {
     pub changed_set: BTreeSet<flow_parser::file_key::FileKey>,
@@ -608,7 +607,6 @@ pub mod validator {
     pub use super::error::ValidationError;
     use super::*;
 
-    //
     pub struct TypeValidatorVisitor<'a> {
         pub loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
         pub env: &'a RefCell<Vec<ValidationError>>,
@@ -743,9 +741,6 @@ pub mod validator {
     }
 }
 
-//
-//
-//
 pub struct MapperTypePrintingHardcodedFixes;
 
 impl MapperTypePrintingHardcodedFixes {
@@ -871,18 +866,13 @@ pub fn patch_up_type_ast(
     MapperTypePrintingHardcodedFixes.type_(type_)
 }
 
-//
-//        * it is imported with the same mechanism we import other Remote symbols.
-//        * Otherwise, we refer to these names as 'React.NAME'. *)
-//             kind,
-//             args_opt
+// If a React library symbol was imported by the user, it is imported with the same mechanism we
+// import other Remote symbols. Otherwise, we refer to these names as 'React.NAME'.
 pub struct PatchUpReactMapper;
 
 impl flow_common_ty::ty_ancestors::TyEndoBase<Loc, ALoc> for PatchUpReactMapper {}
 
 impl flow_common_ty::ty::TyEndoTy<ALoc, Loc> for PatchUpReactMapper {
-    //         kind,
-    //         args_opt
     fn on_t(&mut self, loc: &Loc, t: ALocTy) -> ALocTy {
         match t.as_ref() {
             ty::Ty::Generic(box (symbol, kind, args_opt)) => {
@@ -912,11 +902,11 @@ impl PatchUpReactMapper {
 }
 
 pub fn reverse_append_all<T>(lists: Vec<Vec<T>>) -> Vec<T> {
-    // So fold_left with rev_append builds: rev(last) ++ ... ++ rev(first)
+    // Builds rev(last) ++ ... ++ rev(first), i.e. the reverse of all lists concatenated.
     let mut result = Vec::new();
     for mut list in lists {
         list.reverse();
-        // Prepend reversed list to result (OCaml semantics: rev_append l acc = rev(l) @ acc)
+        // Prepend the reversed list to the result.
         list.append(&mut result);
         result = list;
     }
@@ -930,9 +920,6 @@ pub struct PartitionAcc {
     pub others: Vec<ALocTy>,
 }
 
-//
-//            * ignore the element *)
-//             a
 pub struct StylizeTyMapper;
 
 impl flow_common_ty::ty_ancestors::TyEndoBase<Loc, ALoc> for StylizeTyMapper {}
@@ -970,7 +957,7 @@ impl StylizeTyMapper {
     fn on_union(&mut self, loc: &Loc, t: ALocTy, from_bounds: bool) -> ALocTy {
         let filter_union = |a: PartitionAcc, t: &ALocTy| -> PartitionAcc {
             match (t.as_ref(), &a) {
-                //   a
+                // The general type is already in the partition: ignore the element.
                 (ty::Ty::Bool | ty::Ty::BoolLit(_), PartitionAcc { bools, .. })
                     if bools.len() == 1 && matches!(bools[0].as_ref(), ty::Ty::Bool) =>
                 {
@@ -1136,7 +1123,6 @@ pub mod graphql {
         })
     }
 
-    //   visit_type defs tgt ~opt_chain ty' t'
     fn visit_readonlyarray(
         defs: &BTreeMap<Loc, (ALoc, String, flow_common_ty::ty_symbol::ImportMode)>,
         tgt: &Loc,
@@ -1202,7 +1188,6 @@ pub mod graphql {
                     Some(targs) if targs.arguments.len() == 1
                 ) =>
             {
-                // visit_readonlyarray defs tgt ~opt_chain ty t'
                 let targs = generic.targs.as_ref().unwrap();
                 visit_readonlyarray(defs, tgt, opt_chain, ty_, &targs.arguments[0])
             }
@@ -1266,7 +1251,6 @@ pub mod graphql {
         }
     }
 
-    //     visit_declaration defs tgt decl
     fn visit_statement(
         defs: &BTreeMap<Loc, (ALoc, String, flow_common_ty::ty_symbol::ImportMode)>,
         tgt: &Loc,
@@ -1319,7 +1303,6 @@ pub mod graphql {
         )
     }
 
-    //     r
     pub fn extract_graphql_fragment(
         cx: &flow_typing_context::Context,
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
@@ -1441,7 +1424,8 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
         tys: &[ALocTy],
     ) -> ALocTy {
         let metadata = self.cx.metadata();
-        //  * union. This is a heuristic that helps union resolution later on. *)
+        // Move `any`/dynamic members to the front of the union as a single sanitized `any`.
+        // This is a heuristic that helps union resolution later on.
         let (ty1, ty2, tys) = match (ty1.as_ref(), ty2.as_ref()) {
             (ty::Ty::Any(_), _) => (self.sanitized_any.dupe(), ty2.dupe(), tys.to_vec()),
             (_, ty::Ty::Any(_)) => (self.sanitized_any.dupe(), ty1.dupe(), tys.to_vec()),
@@ -1588,7 +1572,6 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                                     _ => true,
                                 })
                                 .collect();
-                            //   :: ts
                             let react_mixed_element = Arc::new(ty::Ty::Generic(Box::new((
                                 Symbol {
                                     sym_name: FlowSmolStr::new_inline("React.MixedElement"),
@@ -1666,28 +1649,19 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
         }
     }
 
-    //     add_warning loc Warning.Empty_NoUpper;
-    //     sanitized_any
-    //     add_warning loc Warning.Empty_SomeKnownUpper;
-    //                   kind, Some [(Ty.Str | Ty.StrLit _)] )
-    //                   kind, Some _ )
     pub fn on_t(&mut self, env: &Loc, t: ALocTy) -> ALocTy {
         let metadata = self.cx.metadata();
         let loc = env.dupe();
         match t.as_ref() {
-            //   add_warning loc Warning.Empty_NoUpper;
-            //   sanitized_any
             ty::Ty::Bot(ty::BotKind::NoLowerWithUpper(ty::UpperBoundKind::NoUpper)) => {
                 (self.add_warning)(loc, warning::Kind::EmptyNoUpper);
                 self.sanitized_any.dupe()
             }
             ty::Ty::Bot(ty::BotKind::EmptyType) => t,
-            //   add_warning loc Warning.Empty_SomeKnownUpper;
             ty::Ty::Bot(ty::BotKind::NoLowerWithUpper(ty::UpperBoundKind::SomeKnownUpper(ub))) => {
                 (self.add_warning)(loc, warning::Kind::EmptySomeKnownUpper);
                 self.on_t(env, ub.dupe())
             }
-            //                 kind, Some [(Ty.Str | Ty.StrLit _)] )
             ty::Ty::Generic(box (symbol, kind, Some(args)))
                 if symbol.sym_name == "ExactReactElement_DEPRECATED"
                     && matches!(
@@ -1707,7 +1681,6 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                     Arc::new(ty::Ty::Generic(Box::new((new_symbol, *kind, None)))),
                 )
             }
-            //                 kind, Some _ )
             ty::Ty::Generic(box (symbol, kind, Some(_)))
                 if symbol.sym_name == "ExactReactElement_DEPRECATED"
                     && matches!(
@@ -1753,7 +1726,6 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                 let aloc = obj.obj_def_loc.as_ref().unwrap();
                 let remote_file = aloc.source().unwrap();
                 if remote_file.as_str().ends_with("graphql.js") {
-                    //         ~get_ast_from_heap file_sig typed_ast aloc with
                     let result = graphql::extract_graphql_fragment(
                         self.cx,
                         self.loc_of_aloc,
@@ -1800,8 +1772,9 @@ impl<'a, 'cx> flow_common_ty::ty::TyEndoTy<ALoc, Loc>
 pub mod make_hardcoded_fixes {
     use super::*;
 
-    //    * In certain kinds of codemods this has shown to cause fewer [ambiguous-speculation]
-    //    * errros. *)
+    // Merge the array members of a union into a single read-only array of the union of their
+    // element types. In certain kinds of codemods this has shown to cause fewer
+    // [ambiguous-speculation] errors.
     pub fn array_simplification(t: ALocTy) -> ALocTy {
         let members = ty::bk_union(&t);
         let mut arr_members: Vec<ALocTy> = Vec::new();
@@ -1831,13 +1804,6 @@ pub mod make_hardcoded_fixes {
         }
     }
 
-    //       ~cx ~loc_of_aloc ~get_ast_from_heap ~file_sig ~typed_ast
-    //       ~generalize_maybe ~generalize_react_mixed_element ~merge_arrays
-    //       ~lint_severities ~allow_dollar_flowfixme acc loc t =
-    //       new type_normalization_hardcoded_fixes_mapper
-    //         ~cx ~loc_of_aloc ~get_ast_from_heap ~file_sig ~typed_ast
-    //         ~lint_severities ~allow_dollar_flowfixme ~generalize_maybe
-    //         ~generalize_react_mixed_element ~add_warning
     pub fn run<Extra: BaseStats>(
         cx: &flow_typing_context::Context,
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,

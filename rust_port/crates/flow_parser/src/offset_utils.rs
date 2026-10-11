@@ -10,8 +10,8 @@ use crate::wtf8;
 
 /// Classify each codepoint. We care about how many bytes each codepoint takes, in order to
 /// compute offsets in terms of bytes instead of codepoints. We also care about various kinds of
-/// newlines. To reduce memory, it is important that this is a basic variant with no parameters
-/// (so, don't make it `Chars of int`).
+/// newlines. To reduce memory, it is important that this is a fieldless enum
+/// (so, don't give a variant a payload like `Chars(u32)`).
 #[derive(Debug, Clone, Copy)]
 enum Kind {
     // Char has a codepoint greater than or equal to 0x0 but less than 0x80
@@ -100,7 +100,7 @@ impl OffsetTable {
             acc.push(kind);
         }
 
-        // Traverses a `kind list`, breaking it up into an `Vec<Vec<i32>>`, where each `Vec<i32>`
+        // Traverses a `&[Kind]`, breaking it up into a `Vec<Vec<u32>>`, where each `Vec<u32>`
         // contains the offsets at each character (aka codepoint) of a line.
         fn build_table(size_of_kind: fn(&Kind) -> u32, kinds: &[Kind]) -> Vec<Vec<u32>> {
             let mut offset: u32 = 0;
@@ -236,15 +236,6 @@ impl OffsetTable {
         })
     }
 
-    // let line_lengths table =
-    //   Array.fold_left
-    //     (fun (prev_line_end, lengths_rev) line ->
-    //       let line_end = line.(Array.length line - 1) in
-    //       (line_end, (line_end - prev_line_end) :: lengths_rev))
-    //     (-1, [])
-    //     table
-    //   |> snd
-    //   |> List.rev
     pub fn line_lengths(&self) -> Vec<i64> {
         let table = match self.kind {
             OffsetKind::Utf8 => &self.utf8_table,
@@ -260,21 +251,6 @@ impl OffsetTable {
         lengths_rev
     }
 
-    // let contains_multibyte_character table =
-    //   let exception FoundMultibyte in
-    //   try
-    //     Array.iter
-    //       (fun line ->
-    //         Array.iteri
-    //           (fun i offset ->
-    //             if i > 0 then
-    //               let offset_before = line.(i - 1) in
-    //               if offset - offset_before > 1 then raise FoundMultibyte)
-    //           line)
-    //       table;
-    //     false
-    //   with
-    //   | FoundMultibyte -> true
     pub fn contains_multibyte_character(&self) -> bool {
         let table = match self.kind {
             OffsetKind::Utf8 => &self.utf8_table,

@@ -1420,7 +1420,7 @@ fn identifier_<'a>(
         let t = natural_inference::try_generalize(cx, syntactic_flags, &loc, t);
         let desc = desc_of_t(&t);
         // We want to make sure that the reason description for the type we return
-        // is always `RIdentifier name`.
+        // is always `RIdentifier(name)`.
         Ok(match desc {
             VirtualReasonDesc::RIdentifier(name_prime) if *name == *name_prime => t,
             _ if matches!(t.deref(), TypeInner::OpenT(_)) => mod_reason_of_t(
@@ -2079,7 +2079,6 @@ fn export_specifiers<'a>(
                 imported_name_def_loc,
             })
         };
-    // function
     match specifier {
         // [declare] export [type] {[type] foo [as bar]} [from ...];
         statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers) => {
@@ -2769,7 +2768,7 @@ fn statement_<'a>(
                                 loc: mem_loc,
                                 inner: mem,
                             } if refinement::keys::key(true, &mem.object).is_some() => {
-                                // _object = (_, x) => replace loc with case loc: (loc, x)
+                                // Move the member's object to the case location.
                                 let mut new_object_inner = (*mem.object).clone();
                                 *new_object_inner.loc_mut() = case.loc.dupe();
                                 let new_object = expression::Expression::new(new_object_inner);
@@ -4940,8 +4939,8 @@ fn validate_declare_component_params<'a>(
                 },
             );
         }
-        // Check for as bindings and string literal params *)
-        // - Identifier params with as bindings are not allowed *)
+        // Check for as bindings and string literal params
+        // - Identifier params with as bindings are not allowed
         // - String literal params without as bindings are required to have one
         match name {
             statement::component_params::ParamName::Identifier(_) if !shorthand => {
@@ -6441,8 +6440,8 @@ pub fn empty_array<'a>(cx: &Context<'a>, loc: ALoc) -> Result<(Reason, Type), Jo
     Ok((reason, elemt))
 }
 
-/// can raise Abnormal.(Exn (_, _))
-/// annot should become a Type.t option when we have the ability to
+/// can raise `Abnormal.Exn`
+/// annot should become an `Option<Type>` when we have the ability to
 /// inspect annotations and recurse into them
 fn expression_inner<'a>(
     encl_ctx: Option<EnclosingContext>,
@@ -9028,7 +9027,6 @@ pub fn optional_chain<'a>(
                 let reason_lookup = mk_reason(RProperty(Some(name.dupe())), callee_loc.dupe());
                 let reason_prop = mk_reason(RProperty(Some(name.dupe())), ploc.dupe());
                 let super_t = super_(cx, super_loc.dupe())?;
-                // check_super_abstract cx super_t name super_loc;
                 check_super_abstract(cx, &super_t, &name, super_loc.dupe())?;
                 let meth_generic_this = type_::empty_t::make(reason.dupe());
                 let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
@@ -9436,7 +9434,6 @@ pub fn optional_chain<'a>(
                 let name = &id.name;
                 let comments = &member.comments;
                 let super_t = super_(cx, super_loc.dupe())?;
-                // check_super_abstract cx super_t (OrdinaryName name) super_loc;
                 check_super_abstract(cx, &super_t, &Name::new(name.dupe()), super_loc.dupe())?;
                 let prop_name = Name::new(name.dupe());
                 let expr_reason = mk_reason(RProperty(Some(prop_name.dupe())), loc.dupe());
@@ -9745,7 +9742,7 @@ pub fn optional_chain<'a>(
                 } = conf;
                 // Proceeding as normal: no need to worry about optionality, so T2 from
                 // above is None. We don't need to consider optional short-circuiting, so
-                // we can call expression_ rather than optional_chain. *)
+                // we can call expression_ rather than optional_chain.
                 let object_ast =
                     expression_inner(None, None, None, FrozenKind::NotFrozen, None, cx, obj_)?;
                 let obj_t = object_ast.loc().1.dupe();
@@ -9845,7 +9842,7 @@ pub fn optional_chain<'a>(
         try_non_chain(cx, loc.dupe(), &e_prime, &*call_ast, &*member_ast)?
     {
         // Nothing to do with respect to optional chaining, because we're in a
-        // case where chaining isn't allowed. *)
+        // case where chaining isn't allowed.
         let mut res_inner = res_inner.clone();
         *res_inner.loc_mut() = (res_loc, lhs_t.dupe());
         return Ok((lhs_t.dupe(), vec![], expression::Expression::new(res_inner)));
@@ -11955,7 +11952,6 @@ fn assign_member<'a>(
             let prop_name = Name::new(name.dupe());
             let prop_reason = mk_reason(RProperty(Some(prop_name.dupe())), prop_loc.dupe());
             let super_t = super_(cx, super_loc.dupe())?;
-            // check_super_abstract cx super_t prop_name super_loc;
             check_super_abstract(cx, &super_t, &prop_name, super_loc.dupe())?;
             let prop_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
                 cx,
@@ -16735,10 +16731,10 @@ pub fn mk_class_sig<'a>(
 
                     /* Convert a function-type Param using the same primitives as
                     [type_annotation.rs]'s [mk_method_func_sig], then project out the
-                    extra fields needed to build a [Func_stmt_config_types.Types.Param].
-                    Returns (resolved t, typed Function.Param AST, typed Identifier.t
-                    for the Pattern.Identifier, annotation_or_hint, optional flag,
-                    name string option for the [(name, t)] fun_param tuple). */
+                    extra fields needed to build a [func_stmt_config_types::Param].
+                    Returns the resolved type, the typed function param AST, the typed
+                    identifier for the pattern, the annotation or hint, the optional
+                    flag, and the param name (if any) for the [FunParam]. */
                     let convert_param = |param_loc: ALoc,
                                          p: &ast::types::function::ParamKind<ALoc, ALoc>|
                      -> Result<
@@ -18175,8 +18171,8 @@ pub fn mk_class_sig<'a>(
                                 let ts_accessibility = &abs_meth.ts_accessibility;
                                 let comments = &abs_meth.comments;
                                 check_ts_accessibility(cx, ts_accessibility);
-                                // This branch only runs when [Context.tslib_syntax cx] is
-                                // true (see the [not (Context.tslib_syntax cx)] guard above
+                                // This branch only runs when [Context.tslib_syntax] is
+                                // true (see the gate-off guard above
                                 // that error-mappers the element). Under the gate, [override]
                                 // is a real modifier; thread it through the adder below.
                                 match key {
@@ -18345,7 +18341,7 @@ pub fn mk_class_sig<'a>(
                                 let variance = &abs_prop.variance;
                                 let comments = &abs_prop.comments;
                                 check_ts_accessibility(cx, ts_accessibility);
-                                // This branch only runs when [Context.tslib_syntax cx] is
+                                // This branch only runs when [Context.tslib_syntax] is
                                 // true (see the gate-off branch above that error-mappers
                                 // the element). Under the gate, [override] is a real
                                 // modifier; thread it through the adder below.
@@ -18602,7 +18598,6 @@ pub fn mk_class_sig<'a>(
                         .into_iter()
                         .map(|f| f(cx))
                         .collect::<Result<_, _>>()?;
-                    //     extends = extends_ast_f ();
                     let extends_fn = extends_ast_f_cell
                         .borrow_mut()
                         .take()
