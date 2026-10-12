@@ -90,6 +90,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         "lib.es2017.string.js",
         tslib_contents::LIB_ES2017_STRING_D_TS,
     ),
+    (
+        "lib.es2017.typedarrays.js",
+        tslib_contents::LIB_ES2017_TYPEDARRAYS_D_TS,
+    ),
     ("lib.es2018.asyncgenerator.js", LIB_ES2018_ASYNCGENERATOR_JS),
     ("lib.es2018.asynciterable.js", LIB_ES2018_ASYNCITERABLE_JS),
     (
