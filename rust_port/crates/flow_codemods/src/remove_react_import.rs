@@ -14,6 +14,8 @@ use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
 
 use crate::utils::codemod_ast_mapper::CodemodAstMapper;
 
@@ -245,7 +247,9 @@ impl RemoveReactImportMapper {
             None => return prog,
             Some(loc) => loc,
         };
-        let scope_info = scope_builder::program(false, false, &prog);
+        let file_sig = FileSig::from_program(&file, &prog, &FileSigOptions::default());
+        let scope_info =
+            scope_builder::program(false, false, file_sig.requires().is_empty(), &prog);
         let unused = {
             let def = scope_info
                 .def_of_use_opt(&react_import_def_loc)

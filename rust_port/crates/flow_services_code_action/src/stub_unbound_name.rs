@@ -158,8 +158,9 @@ pub fn stub<'a, 'b>(
     let is_valid_target = |id_loc: &ALoc| -> bool {
         let id_loc = loc_of_aloc(id_loc);
         id_loc.contains(&cursor_loc) && {
-            let scope_info = scope_info_lazy
-                .get_or_init(|| scope_builder::program(cx.enable_enums(), true, ast));
+            let scope_info = scope_info_lazy.get_or_init(|| {
+                scope_builder::program(cx.enable_enums(), true, file_sig.requires().is_empty(), ast)
+            });
             !scope_info.is_local_use(&id_loc)
         }
     };

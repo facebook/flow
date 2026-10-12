@@ -11,3 +11,12 @@ GlobalNamespace.secondMember as number;
 globalOverload("value") as string;
 globalOverload(1) as number;
 globalOverload(true); // ERROR
+
+
+declare const iterator: ScopedIterator<number>;
+iterator.next() as number;
+const mapped = ScopedIterator.from(iterator).map((value: number): string => "value");
+mapped.next() as string;
+mapped.next() as number; // ERROR
+
+declare const constructor: ScopedIteratorConstructor; // ERROR

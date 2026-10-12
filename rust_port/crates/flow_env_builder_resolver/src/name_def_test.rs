@@ -6,6 +6,7 @@
  */
 
 use flow_aloc::ALoc;
+use flow_analysis::test_utils::parse;
 use flow_analysis::test_utils::parse_with_alocs;
 use flow_common::options::JsxMode;
 use flow_common::options::ReactRuntime;
@@ -21,6 +22,8 @@ use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::parse_jsx_pragma_expression;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
 
 use crate::dependency_sigs::Context;
 use crate::dependency_sigs::Flow;
@@ -206,8 +209,14 @@ fn print_order(lst: &[OrderingResult]) -> String {
 fn print_init_test(contents: &str) -> String {
     let ast = parse_with_alocs(contents);
     let cx = TestCx::default();
-    let (_, env) =
-        name_resolver::program_with_scope::<TestCx, TestFlow>(&cx, false, FlowOrdSet::new(), &ast);
+    let file_sig = FileSig::from_program(&cx.file(), &parse(contents), &FileSigOptions::default());
+    let (_, env) = name_resolver::program_with_scope::<TestCx, TestFlow>(
+        &cx,
+        false,
+        FlowOrdSet::new(),
+        &file_sig,
+        &ast,
+    );
     let env = env.to_env_info();
     let hooks = autocomplete_hooks();
     let (inits, _) = name_def::find_defs(
@@ -241,8 +250,14 @@ fn print_order_test(
         }
     }
     let ast = parse_with_alocs(contents);
-    let (_, env) =
-        name_resolver::program_with_scope::<TestCx, TestFlow>(&cx, false, FlowOrdSet::new(), &ast);
+    let file_sig = FileSig::from_program(&cx.file(), &parse(contents), &FileSigOptions::default());
+    let (_, env) = name_resolver::program_with_scope::<TestCx, TestFlow>(
+        &cx,
+        false,
+        FlowOrdSet::new(),
+        &file_sig,
+        &ast,
+    );
     let env = env.to_env_info();
     let hooks = autocomplete_hooks();
     let (inits, _) = name_def::find_defs(

@@ -1,3 +1,4 @@
 [options]
 all=true
 builtin_lib=experimental.tslib
+experimental.builtin_ts_libdef_dynamic_discovery=true

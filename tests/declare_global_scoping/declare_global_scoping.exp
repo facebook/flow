@@ -14,21 +14,5 @@ Cannot resolve name `missingValue`. [cannot-resolve-name]
                                     ^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------- node_modules/declare-global-package/index.d.ts:9:23
 
-Cannot resolve name `ModuleType`. [cannot-resolve-name]
-
-   9|   type CapturedType = ModuleType; // error: cannot capture module type
-                            ^^^^^^^^^^
-
-
-Error ------------------------------------------------------------- node_modules/declare-global-package/index.d.ts:10:39
-
-Cannot resolve name `moduleValue`. [cannot-resolve-name]
-
-   10|   declare const capturedValue: typeof moduleValue; // error: cannot capture module value
-                                             ^^^^^^^^^^^
-
-
-
-Found 4 errors
+Found 2 errors

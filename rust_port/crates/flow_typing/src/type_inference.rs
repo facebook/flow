@@ -733,8 +733,13 @@ fn initialize_env_with_mode<'cx>(
         flow_utils_concurrency::job_error::JobError,
     > = (|| {
         let dep_cx = DepSigsContext(cx);
+        let empty_file_sig = FileSig::empty();
+        let file_sig = match &declared_types_mode {
+            DeclaredTypesMode::Skip => &empty_file_sig,
+            DeclaredTypesMode::Compute { file_sig, .. } => *file_sig,
+        };
         let (program_loc, scopes, ssa_values, unbound_names, providers) =
-            name_resolver::prepass(&dep_cx, aloc_ast);
+            name_resolver::prepass(&dep_cx, file_sig, aloc_ast);
         // The targeted callee analysis runs between the prepass and the
         // resolver walk; files without candidates return early from packing.
         let resolved_declared_types = if cx.assertion_functions_enabled() {
@@ -775,6 +780,7 @@ fn initialize_env_with_mode<'cx>(
                 unbound_names,
                 providers,
                 assertion_calls.clone(),
+                file_sig,
                 aloc_ast,
             );
         let info = info.to_env_info();

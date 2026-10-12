@@ -699,7 +699,12 @@ fn local_value_identifiers(
     )>,
     flow_utils_concurrency::job_error::JobError,
 > {
-    let scope_info = scope_builder::program(typing.cx.enable_enums(), false, &typing.ast);
+    let scope_info = scope_builder::program(
+        typing.cx.enable_enums(),
+        false,
+        typing.file_sig.requires().is_empty(),
+        &typing.ast,
+    );
     let ac_scope_id = scope_info.closest_enclosing_scope(ac_loc, flow_common::reason::in_range);
     let names_and_locs = scope_info.fold_scope_chain(
         ac_scope_id,

@@ -62,6 +62,7 @@ use flow_parser::ast_utils;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
+use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::type_param_analysis::analyze_type_params;
 use flow_typing_errors::error_message::BindingError;
 use flow_typing_errors::error_message::EAssignConstLikeBindingData;
@@ -470,23 +471,14 @@ mod full_env {
 
         pub(super) fn isolated_globals(&self) -> Self {
             let root_scope = self.scopes.first().expect("Missing global scope");
-            let value_local_stacked_env = root_scope
+            let globals = root_scope
                 .value_local_stacked_env
                 .iter()
                 .filter_map(|(name, stack)| {
-                    stack
-                        .first()
-                        .map(|binding| (name.dupe(), vec![binding.dupe()]))
+                    stack.first().map(|binding| (name.dupe(), binding.dupe()))
                 })
                 .collect();
-            FullEnv {
-                scopes: vec![FunctionScope {
-                    value_local_stacked_env,
-                    type_local_stacked_env: BTreeMap::new(),
-                    value_captured: Rc::new(RefCell::new(BTreeMap::new())),
-                    type_captured: Rc::new(RefCell::new(BTreeMap::new())),
-                }],
-            }
+            FullEnv::init(globals)
         }
 
         pub(super) fn fold_current_function_scope_values<A, F>(&self, init: A, mut f: F) -> A
@@ -1672,6 +1664,7 @@ fn empty_refinements() -> RefinementMaps {
 use flow_parser::ast::Program;
 
 struct NameResolver<'a, Cx: Context, Fl: Flow<Cx = Cx>> {
+    has_imports: bool,
     cx: &'a Cx,
     class_stack: FlowVector<ALoc>,
     env_state: NameResolverState,
@@ -1699,18 +1692,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> WithBindings<ALoc, AbruptCompletion>
         visit: impl FnOnce(&mut Self) -> Result<T, AbruptCompletion>,
     ) -> Result<T, AbruptCompletion> {
         self.with_scoped_bindings(ThisSuperBindingEnv::FunctionEnv, &bindings, visit)
-    }
-
-    fn with_isolated_bindings<T>(
-        &mut self,
-        _lexical: bool,
-        _loc: ALoc,
-        bindings: Bindings<ALoc>,
-        visit: impl FnOnce(&mut Self) -> Result<T, AbruptCompletion>,
-    ) -> Result<T, AbruptCompletion> {
-        self.with_isolated_env(|resolver| {
-            resolver.with_scoped_bindings(ThisSuperBindingEnv::FunctionEnv, &bindings, visit)
-        })
     }
 
     fn with_type_param_default<T>(
@@ -1787,6 +1768,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             cx,
             env_state,
             cache,
+            has_imports: false,
             simplify_cache: RefCell::new(HashMap::new()),
             enable_enums,
             is_ts,
@@ -8455,15 +8437,38 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         .unwrap_or_default()
     }
 
-    fn statements_with_isolated_bindings(
+    fn statements_with_global_bindings(
         &mut self,
         loc: ALoc,
-        bindings: flow_analysis::bindings::Bindings<ALoc>,
+        bindings: Bindings<ALoc>,
         statements: &[flow_parser::ast::statement::Statement<ALoc, ALoc>],
     ) -> Option<AbruptCompletion> {
-        self.with_isolated_env(|resolver| {
-            resolver.statements_with_bindings(loc, bindings, statements)
-        })
+        let names: FlowOrdSet<_> = bindings.to_map().into_keys().collect();
+        let global_bindings: BTreeMap<_, _> = names
+            .iter()
+            .map(|name| {
+                let val = ssa_val::global(&mut self.cache.borrow_mut(), name.dupe());
+                let entry = EnvVal::new(EnvValInner {
+                    val_ref: Rc::new(RefCell::new(val.dupe())),
+                    havoc: val,
+                    writes_by_closure_provider_val: None,
+                    def_loc: None,
+                    heap_refinements: empty_heap_refinements(),
+                    kind: BindingsKind::Var,
+                    kind_at_loc: BTreeMap::new(),
+                });
+                (name.dupe(), entry)
+            })
+            .collect();
+        let snapshot = self
+            .env_state
+            .env
+            .push_new_bindings(global_bindings.clone(), global_bindings);
+        let saved_exclude_syms = std::mem::replace(&mut self.env_state.exclude_syms, names);
+        let result = self.statements_with_bindings(loc, bindings, statements);
+        self.env_state.exclude_syms = saved_exclude_syms;
+        self.pop_env(snapshot);
+        result
     }
 
     fn synthesize_read(&self, name: &FlowSmolStr) -> env_api::Read<ALoc> {
@@ -11442,7 +11447,13 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         };
         let saved_exclude_syms = std::mem::take(&mut self.env_state.exclude_syms);
         let _completion = if matches!(m.id, Id::Global(_)) {
-            self.statements_with_isolated_bindings(block_loc.dupe(), bindings, statements)
+            if self.has_imports {
+                self.with_isolated_env(|resolver| {
+                    resolver.statements_with_global_bindings(block_loc.dupe(), bindings, statements)
+                })
+            } else {
+                self.statements_with_global_bindings(block_loc.dupe(), bindings, statements)
+            }
         } else {
             self.statements_with_bindings(block_loc.dupe(), bindings, statements)
         };
@@ -12304,6 +12315,7 @@ impl NameResolverResult {
 /// flow is modeled.
 pub fn prepass<Cx: Context>(
     cx: &Cx,
+    file_sig: &FileSig,
     program: &Program<ALoc, ALoc>,
 ) -> (
     ALoc,
@@ -12322,9 +12334,15 @@ pub fn prepass<Cx: Context>(
         JsxMode::JsxPragma(_, ast) => Some(ast),
     };
     let enable_enums = cx.enable_enums();
-    let scopes = scope_builder::program(enable_enums, true, program);
+    let allow_declare_global_captures = file_sig.requires().is_empty();
+    let scopes = scope_builder::program(enable_enums, true, allow_declare_global_captures, program);
     let (_ssa_completion_state, (ssa_values, unbound_names)) =
-        ssa_builder::program_with_scope_and_jsx_pragma(enable_enums, jsx_ast, program);
+        ssa_builder::program_with_scope_and_jsx_pragma(
+            enable_enums,
+            jsx_ast,
+            allow_declare_global_captures,
+            program,
+        );
     let providers = Rc::new(provider_api::find_providers(program));
     (loc, scopes, ssa_values, unbound_names, providers)
 }
@@ -12333,9 +12351,10 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
     cx: &Cx,
     is_lib: bool,
     exclude_syms: FlowOrdSet<FlowSmolStr>,
+    file_sig: &FileSig,
     program: &Program<ALoc, ALoc>,
 ) -> (Option<AbruptCompletion>, NameResolverResult) {
-    let (loc, scopes, ssa_values, unbound_names, providers) = prepass(cx, program);
+    let (loc, scopes, ssa_values, unbound_names, providers) = prepass(cx, file_sig, program);
     walk_with_prepass::<Cx, Fl>(
         cx,
         is_lib,
@@ -12346,6 +12365,7 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
         unbound_names,
         providers,
         BTreeMap::new(),
+        file_sig,
         program,
     )
 }
@@ -12362,6 +12382,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
     unbound_names: BTreeSet<FlowSmolStr>,
     providers: Rc<provider_api::Info<ALoc>>,
     assertion_calls: BTreeMap<ALoc, AssertionInfo>,
+    file_sig: &FileSig,
     program: &Program<ALoc, ALoc>,
 ) -> (Option<AbruptCompletion>, NameResolverResult) {
     let prepass = (&scopes, &ssa_values, &unbound_names);
@@ -12375,6 +12396,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
         assertion_calls,
         program_loc,
     );
+    env_walk.has_imports = !file_sig.requires().is_empty();
     let completion_state = env_walk.visit_program(program);
     env_walk.cache.borrow_mut().clear();
     // Fill in dead code reads
@@ -12428,8 +12450,9 @@ pub fn program<Cx: Context, Fl: Flow<Cx = Cx>>(
     cx: &Cx,
     is_lib: bool,
     exclude_syms: FlowOrdSet<FlowSmolStr>,
+    file_sig: &FileSig,
     program: &Program<ALoc, ALoc>,
 ) -> NameResolverResult {
-    let (_, result) = program_with_scope::<Cx, Fl>(cx, is_lib, exclude_syms, program);
+    let (_, result) = program_with_scope::<Cx, Fl>(cx, is_lib, exclude_syms, file_sig, program);
     result
 }

@@ -17,6 +17,7 @@ use flow_parser::ast::statement::StatementInner;
 use flow_parser::ast_utils;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
+use flow_parser_utils::file_sig::FileSig;
 use flow_typing_errors::error_message::ErrorMessage;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -552,8 +553,11 @@ fn filter_irrelevant_errors(module_kind: ModuleKind, errors: &mut Vec<ErrorMessa
     }
 }
 
-pub fn check_program(ast: &ast::Program<ALoc, ALoc>) -> Vec<ErrorMessage<ALoc>> {
-    let scope_info = scope_builder::program(true, true, ast);
+pub fn check_program(
+    file_sig: &FileSig,
+    ast: &ast::Program<ALoc, ALoc>,
+) -> Vec<ErrorMessage<ALoc>> {
+    let scope_info = scope_builder::program(true, true, file_sig.requires().is_empty(), ast);
     let is_local_use = |loc: &ALoc| scope_info.is_local_use(loc);
     let mut walk = ExportsErrorChecker::new(&is_local_use);
     let Ok(()) = walk.program(ast);

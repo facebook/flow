@@ -73,7 +73,8 @@ pub fn local_refs_of_find_ref_request<'cx>(
         )?;
         let import_def_locs = search_result.local_locs;
         let remote_locs = search_result.remote_locs;
-        let scope_info = scope_builder::program(cx.enable_enums(), true, ast);
+        let scope_info =
+            scope_builder::program(cx.enable_enums(), true, file_sig.requires().is_empty(), ast);
         // Property refs might contain binding destructuring pattern identifiers.
         // We should find all local references of them.
         let prop_ref_locs: Vec<Loc> = prop_refs.iter().map(|(_, loc)| loc.dupe()).collect();

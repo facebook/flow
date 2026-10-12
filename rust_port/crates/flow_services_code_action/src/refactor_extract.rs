@@ -678,9 +678,18 @@ fn extract_from_statements_refactors<'a, 'b>(
                 None => insert_new_function_call_loc.dupe(),
                 Some(loc) => Loc::between(insert_new_function_call_loc, &loc),
             };
-            let scope_info = flow_analysis::scope_builder::program(cx.enable_enums(), true, ast);
+            let scope_info = flow_analysis::scope_builder::program(
+                cx.enable_enums(),
+                true,
+                file_sig.requires().is_empty(),
+                ast,
+            );
             let (_ssa_abnormal, (ssa_values, _possible_globals)) =
-                flow_analysis::ssa_builder::program_with_scope(cx.enable_enums(), ast);
+                flow_analysis::ssa_builder::program_with_scope(
+                    cx.enable_enums(),
+                    file_sig.requires().is_empty(),
+                    ast,
+                );
             let relevant_defs = variable_analysis::collect_relevant_defs_with_scope(
                 &scope_info,
                 &ssa_values,
@@ -971,9 +980,18 @@ fn extract_from_expression_refactors<'a, 'b>(
 ) -> Vec<Refactor> {
     let info = information_collectors::collect_expression_information(expression);
     let extracted_expression_loc = expression.loc().dupe();
-    let scope_info = flow_analysis::scope_builder::program(cx.enable_enums(), true, ast);
+    let scope_info = flow_analysis::scope_builder::program(
+        cx.enable_enums(),
+        true,
+        file_sig.requires().is_empty(),
+        ast,
+    );
     let (_ssa_abnormal, (ssa_values, _possible_globals)) =
-        flow_analysis::ssa_builder::program_with_scope(cx.enable_enums(), ast);
+        flow_analysis::ssa_builder::program_with_scope(
+            cx.enable_enums(),
+            file_sig.requires().is_empty(),
+            ast,
+        );
     let relevant_defs = variable_analysis::collect_relevant_defs_with_scope(
         &scope_info,
         &ssa_values,

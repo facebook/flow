@@ -230,6 +230,7 @@ mod tests {
                 &dep_cx,
                 false,
                 FlowOrdSet::new(),
+                &FileSig::empty(),
                 &fake_program,
             );
             let env = LocEnv::with_info(

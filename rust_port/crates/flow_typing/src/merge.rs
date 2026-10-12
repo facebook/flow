@@ -1197,11 +1197,12 @@ fn check_union_opt<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
 
 fn detect_import_export_errors<'cx>(
     cx: &Context<'cx>,
+    file_sig: &FileSig,
     program: &ast::Program<ALoc, ALoc>,
     metadata: &Metadata,
 ) {
-    strict_es6_import_export::detect_errors(cx, program, metadata);
-    for msg in module_exports_checker::check_program(program) {
+    strict_es6_import_export::detect_errors(cx, file_sig, program, metadata);
+    for msg in module_exports_checker::check_program(file_sig, program) {
         flow_js_utils::add_output_non_speculating(cx, msg);
     }
 }
@@ -1908,7 +1909,7 @@ pub fn post_merge_checks<'cx>(
     detect_test_prop_misses(cx);
     detect_unnecessary_optional_chains(cx);
     detect_constant_conditions(cx)?;
-    detect_import_export_errors(cx, ast, metadata);
+    detect_import_export_errors(cx, &file_sig, ast, metadata);
     detect_invalid_strict_comparison(cx)?;
     detect_unused_promises(cx)?;
     check_union_opt(cx)?;
@@ -2093,6 +2094,7 @@ fn merge_libs_from_ordered_asts(
     global_augmentation_asts: &[(
         &ast::Program<Loc, Loc>,
         flow_common::type_strictness::TypeStrictnessKind,
+        &FileSig,
     )],
 ) -> (
     flow_error::ErrorSet,
@@ -2146,6 +2148,7 @@ pub fn merge_lib_files(
     global_augmentation_asts: &[(
         flow_common::type_strictness::TypeStrictnessKind,
         Arc<ast::Program<Loc, Loc>>,
+        Arc<FileSig>,
     )],
 ) -> (flow_error::ErrorSet, MasterContext) {
     let global_libdefs: Arc<BTreeSet<FileKey>> = Arc::new(
@@ -2163,7 +2166,7 @@ pub fn merge_lib_files(
         .collect();
     let global_augmentation_asts: Vec<_> = global_augmentation_asts
         .iter()
-        .map(|(strictness_kind, ast)| (ast.as_ref(), *strictness_kind))
+        .map(|(strictness_kind, ast, file_sig)| (ast.as_ref(), *strictness_kind, file_sig.as_ref()))
         .collect();
     let (builtin_errors, builtin_locs, builtins) =
         merge_libs_from_ordered_asts(sig_opts, &ordered_asts, &global_augmentation_asts);

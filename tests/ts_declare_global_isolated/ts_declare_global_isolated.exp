@@ -37,6 +37,31 @@ References:
                                         ^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------------- consumer.js:20:1
+
+Cannot cast `mapped.next()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   consumer.js:20:1
+   20| mapped.next() as number; // ERROR
+       ^^^^^^^^^^^^^
+
+References:
+   consumer.js:18:67
+   18| const mapped = ScopedIterator.from(iterator).map((value: number): string => "value");
+                                                                         ^^^^^^ [1]
+   consumer.js:20:18
+   20| mapped.next() as number; // ERROR
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:22:28
+
+Cannot resolve name `ScopedIteratorConstructor`. [cannot-resolve-name]
+
+   22| declare const constructor: ScopedIteratorConstructor; // ERROR
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------- normalizer_consumer.js:4:1
 
 Cannot cast `stream` to empty because `Stream` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -72,4 +97,4 @@ References:
 
 
 
-Found 4 errors
+Found 6 errors

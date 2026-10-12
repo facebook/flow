@@ -10,10 +10,14 @@ use std::collections::HashSet;
 use dupe::Dupe;
 use flow_parser::ParseOptions;
 use flow_parser::ast;
+use flow_parser::file_key::FileKey;
+use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::parse_program_without_file;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
 use pretty_assertions::assert_eq;
 
 use crate::bindings::Kind;
@@ -35,14 +39,22 @@ fn mk_loc(start: (i32, i32), end: (i32, i32)) -> Loc {
     }
 }
 
-fn parse(contents: &str) -> ast::Program<Loc, Loc> {
+fn parse(enable_enums: bool, contents: &str) -> (ast::Program<Loc, Loc>, FileSig) {
     let options = ParseOptions {
         enums: true,
         components: true,
         ..Default::default()
     };
     let (ast, _errors) = parse_program_without_file(true, None, Some(options), Ok(contents));
-    ast
+    let file_sig = FileSig::from_program(
+        &FileKey::new(FileKeyInner::SourceFile("test.js".to_owned())),
+        &ast,
+        &FileSigOptions {
+            enable_enums,
+            ..Default::default()
+        },
+    );
+    (ast, file_sig)
 }
 
 fn loc_debug_string(loc: &Loc) -> String {
@@ -57,7 +69,8 @@ fn loc_list_to_string(locs: &[Loc]) -> String {
 }
 
 fn mk_scope_builder_all_uses_test(enable_enums: bool, contents: &str, expected_all_uses: Vec<Loc>) {
-    let info = program(enable_enums, true, &parse(contents));
+    let (ast, file_sig) = parse(enable_enums, contents);
+    let info = program(enable_enums, true, file_sig.requires().is_empty(), &ast);
     let mut all_uses: Vec<Loc> = info.all_uses().into_iter().cloned().collect();
     all_uses.sort_by(|a, b| a.compare_ignore_source(b));
 
@@ -73,7 +86,8 @@ fn mk_scope_builder_locs_of_defs_of_all_uses_test(
     contents: &str,
     expected_locs_of_defs: Vec<Vec<Loc>>,
 ) {
-    let info = program(enable_enums, true, &parse(contents));
+    let (ast, file_sig) = parse(enable_enums, contents);
+    let info = program(enable_enums, true, file_sig.requires().is_empty(), &ast);
     let mut all_uses: Vec<&Loc> = info.all_uses().into_iter().collect();
     all_uses.sort_by(|a, b| a.compare_ignore_source(b));
 
@@ -106,7 +120,8 @@ fn mk_scope_builder_uses_of_all_uses_test(
     contents: &str,
     expected_uses: Vec<Vec<Loc>>,
 ) {
-    let info = program(enable_enums, true, &parse(contents));
+    let (ast, file_sig) = parse(enable_enums, contents);
+    let info = program(enable_enums, true, file_sig.requires().is_empty(), &ast);
     let mut all_uses: Vec<&Loc> = info.all_uses().into_iter().collect();
     all_uses.sort_by(|a, b| a.compare_ignore_source(b));
 
@@ -139,7 +154,8 @@ fn mk_scope_builder_toplevel_scopes_test(
     contents: &str,
     expected_defs_in_toplevel: Vec<&str>,
 ) {
-    let info = program(enable_enums, false, &parse(contents));
+    let (ast, file_sig) = parse(enable_enums, contents);
+    let info = program(enable_enums, false, file_sig.requires().is_empty(), &ast);
 
     let toplevel_scopes = vec![ScopeId(0)];
     let mut actual_defs_in_toplevel = HashSet::new();
@@ -170,7 +186,8 @@ fn mk_autocomplete_identifiers_test(
     ac_loc: Loc,
     expected_names: Vec<&str>,
 ) {
-    let scope_info = program(enable_enums, false, &parse(contents));
+    let (ast, file_sig) = parse(enable_enums, contents);
+    let scope_info = program(enable_enums, false, file_sig.requires().is_empty(), &ast);
 
     // get the innermost scope enclosing the requested location
     let ac_scope_id =
@@ -212,7 +229,8 @@ fn mk_scope_builder_scope_loc_test(
     contents: &str,
     expected_scope_locs: Vec<(u32, Loc)>,
 ) {
-    let info = program(enable_enums, true, &parse(contents));
+    let (ast, file_sig) = parse(enable_enums, contents);
+    let info = program(enable_enums, true, file_sig.requires().is_empty(), &ast);
 
     let mut scope_locs: Vec<(u32, Loc)> = info
         .scopes

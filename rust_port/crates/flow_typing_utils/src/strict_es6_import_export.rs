@@ -18,6 +18,7 @@ use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::statement::StatementInner;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
+use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
 use flow_typing_context::Metadata;
 use flow_typing_errors::error_message::EExportRenamedDefaultData;
@@ -806,16 +807,26 @@ fn detect_mixed_import_and_require_error<'cx>(cx: &Context<'cx>, declarations: &
     }
 }
 
-fn detect_errors_from_ast<'cx>(cx: &Context<'cx>, ast: &ast::Program<ALoc, ALoc>) {
-    let scope_info = scope_builder::program(cx.enable_enums(), true, ast);
+fn detect_errors_from_ast<'cx>(
+    cx: &Context<'cx>,
+    file_sig: &FileSig,
+    ast: &ast::Program<ALoc, ALoc>,
+) {
+    let scope_info =
+        scope_builder::program(cx.enable_enums(), true, file_sig.requires().is_empty(), ast);
     let declarations = gather_declarations(ast);
     detect_mixed_import_and_require_error(cx, &declarations);
     let mut visitor = ImportExportVisitor::new(cx, &scope_info, &declarations);
     let Ok(()) = visitor.program(ast);
 }
 
-pub fn detect_errors<'cx>(cx: &Context<'cx>, ast: &ast::Program<ALoc, ALoc>, metadata: &Metadata) {
+pub fn detect_errors<'cx>(
+    cx: &Context<'cx>,
+    file_sig: &FileSig,
+    ast: &ast::Program<ALoc, ALoc>,
+    metadata: &Metadata,
+) {
     if metadata.frozen.strict_es6_import_export {
-        detect_errors_from_ast(cx, ast)
+        detect_errors_from_ast(cx, file_sig, ast)
     }
 }

@@ -87,7 +87,7 @@ pub fn is_external_module(file: &FileKey, ast: &Program<Loc, Loc>) -> bool {
             .any(|statement| is_external_module_statement(statement))
 }
 
-pub fn has_top_level_declare_global(ast: &Program<Loc, Loc>) -> bool {
+pub fn has_top_level_declare_global<Loc: Dupe>(ast: &Program<Loc, Loc>) -> bool {
     ast.statements.iter().any(|statement| {
         matches!(
             &**statement,

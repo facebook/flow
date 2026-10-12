@@ -487,6 +487,7 @@ dependencies = [
  "flow_data_structure_wrapper",
  "flow_lint_settings",
  "flow_parser",
+ "flow_parser_utils",
  "pretty_assertions",
  "vec1",
 ]
@@ -2236,6 +2237,7 @@ dependencies = [
  "flow_lazy",
  "flow_lint_settings",
  "flow_parser",
+ "flow_parser_utils",
  "flow_type_sig",
  "flow_typing_builtins",
  "flow_typing_context",

@@ -6,7 +6,11 @@
  */
 
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::file_key::FileKey;
+use flow_parser::file_key::FileKeyInner;
 use flow_parser::parse_program_without_file;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
 use pretty_assertions::assert_eq;
 
 use crate::type_sig_options::TypeSigOptions;
@@ -156,12 +160,19 @@ fn print_builtins_with_global_augmentations(
         .iter()
         .map(|ast| (ast, flow_common::type_strictness::TypeStrictnessKind::Flow))
         .collect();
+    let file_key = FileKey::new(FileKeyInner::SourceFile("test.ts".to_owned()));
+    let file_sigs: Vec<_> = global_augmentation_asts
+        .iter()
+        .map(|ast| FileSig::from_program(&file_key, ast, &FileSigOptions::default()))
+        .collect();
     let global_augmentation_ast_refs: Vec<_> = global_augmentation_asts
         .iter()
-        .map(|ast| {
+        .zip(&file_sigs)
+        .map(|(ast, file_sig)| {
             (
                 ast,
                 flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(true),
+                file_sig,
             )
         })
         .collect();
@@ -23180,26 +23191,30 @@ Locs:
 1. [1:22-28]
 2. [2:14-33]
 3. [2:35-41]
-4. [4:7-22]
-5. [4:25-39]
-6. [5:16-36]
-7. [5:38-64]
-8. [5:45-64]
-9. [6:7-22]
-10. [6:25-35]
-11. [7:16-36]
-12. [7:38-56]
-13. [7:45-56]
-14. [8:7-16]
-15. [8:19-26]
-16. [9:7-21]
-17. [9:24-33]
-18. [10:16-26]
-19. [10:28-34]
-20. [11:16-35]
-21. [11:37-54]
-22. [11:44-54]
-23. [0:0]
+4. [1:12-22]
+5. [1:25-31]
+6. [2:21-32]
+7. [2:34-40]
+8. [4:7-22]
+9. [4:25-39]
+10. [5:16-36]
+11. [5:38-64]
+12. [5:45-64]
+13. [6:7-22]
+14. [6:25-35]
+15. [7:16-36]
+16. [7:38-56]
+17. [7:45-56]
+18. [8:7-16]
+19. [8:19-26]
+20. [9:7-21]
+21. [9:24-33]
+22. [10:16-26]
+23. [10:28-34]
+24. [11:16-35]
+25. [11:37-54]
+26. [11:44-54]
+27. [0:0]
 Local defs:
 0. TypeAlias(
     DefTypeAlias {
@@ -23230,16 +23245,11 @@ Local defs:
     DefTypeAlias {
         id_loc: 4,
         custom_error_loc_opt: None,
-        name: "GlobalReference",
+        name: "ModuleType",
         tparams: Mono,
-        body: TyRef(
-            Unqualified(
-                LocalRef(
-                    PackedRefLocal {
-                        ref_loc: 5,
-                        index: 0,
-                    },
-                ),
+        body: Annot(
+            Number(
+                5,
             ),
         ),
         strictness_kind: TypeScriptLoose,
@@ -23248,41 +23258,26 @@ Local defs:
 3. Variable(
     DefVariable {
         id_loc: 6,
-        name: "globalValueReference",
+        name: "moduleValue",
         def: Annot(
-            Typeof(
-                AnnotTypeof {
-                    loc: 7,
-                    qname: [
-                        "existingGlobalValue",
-                    ],
-                    t: Ref(
-                        LocalRef(
-                            PackedRefLocal {
-                                ref_loc: 8,
-                                index: 1,
-                            },
-                        ),
-                    ),
-                    targs: None,
-                },
+            Number(
+                7,
             ),
         ),
     },
 )
 4. TypeAlias(
     DefTypeAlias {
-        id_loc: 9,
+        id_loc: 8,
         custom_error_loc_opt: None,
-        name: "ModuleReference",
+        name: "GlobalReference",
         tparams: Mono,
         body: TyRef(
             Unqualified(
-                BuiltinRef(
-                    PackedRefBuiltin {
-                        ref_loc: 10,
-                        type_ref: true,
-                        name: "ModuleType",
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 9,
+                        index: 0,
                     },
                 ),
             ),
@@ -23292,21 +23287,20 @@ Local defs:
 )
 5. Variable(
     DefVariable {
-        id_loc: 11,
-        name: "moduleValueReference",
+        id_loc: 10,
+        name: "globalValueReference",
         def: Annot(
             Typeof(
                 AnnotTypeof {
-                    loc: 12,
+                    loc: 11,
                     qname: [
-                        "moduleValue",
+                        "existingGlobalValue",
                     ],
                     t: Ref(
-                        BuiltinRef(
-                            PackedRefBuiltin {
-                                ref_loc: 13,
-                                type_ref: false,
-                                name: "moduleValue",
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 12,
+                                index: 1,
                             },
                         ),
                     ),
@@ -23318,30 +23312,16 @@ Local defs:
 )
 6. TypeAlias(
     DefTypeAlias {
-        id_loc: 14,
+        id_loc: 13,
         custom_error_loc_opt: None,
-        name: "LocalType",
-        tparams: Mono,
-        body: Annot(
-            Boolean(
-                15,
-            ),
-        ),
-        strictness_kind: TypeScriptLoose,
-    },
-)
-7. TypeAlias(
-    DefTypeAlias {
-        id_loc: 16,
-        custom_error_loc_opt: None,
-        name: "LocalReference",
+        name: "ModuleReference",
         tparams: Mono,
         body: TyRef(
             Unqualified(
                 LocalRef(
                     PackedRefLocal {
-                        ref_loc: 17,
-                        index: 6,
+                        ref_loc: 14,
+                        index: 2,
                     },
                 ),
             ),
@@ -23349,33 +23329,22 @@ Local defs:
         strictness_kind: TypeScriptLoose,
     },
 )
-8. Variable(
+7. Variable(
     DefVariable {
-        id_loc: 18,
-        name: "localValue",
-        def: Annot(
-            String(
-                19,
-            ),
-        ),
-    },
-)
-9. Variable(
-    DefVariable {
-        id_loc: 20,
-        name: "localValueReference",
+        id_loc: 15,
+        name: "moduleValueReference",
         def: Annot(
             Typeof(
                 AnnotTypeof {
-                    loc: 21,
+                    loc: 16,
                     qname: [
-                        "localValue",
+                        "moduleValue",
                     ],
                     t: Ref(
                         LocalRef(
                             PackedRefLocal {
-                                ref_loc: 22,
-                                index: 8,
+                                ref_loc: 17,
+                                index: 3,
                             },
                         ),
                     ),
@@ -23385,9 +23354,78 @@ Local defs:
         ),
     },
 )
-10. NamespaceBinding(
+8. TypeAlias(
+    DefTypeAlias {
+        id_loc: 18,
+        custom_error_loc_opt: None,
+        name: "LocalType",
+        tparams: Mono,
+        body: Annot(
+            Boolean(
+                19,
+            ),
+        ),
+        strictness_kind: TypeScriptLoose,
+    },
+)
+9. TypeAlias(
+    DefTypeAlias {
+        id_loc: 20,
+        custom_error_loc_opt: None,
+        name: "LocalReference",
+        tparams: Mono,
+        body: TyRef(
+            Unqualified(
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 21,
+                        index: 8,
+                    },
+                ),
+            ),
+        ),
+        strictness_kind: TypeScriptLoose,
+    },
+)
+10. Variable(
+    DefVariable {
+        id_loc: 22,
+        name: "localValue",
+        def: Annot(
+            String(
+                23,
+            ),
+        ),
+    },
+)
+11. Variable(
+    DefVariable {
+        id_loc: 24,
+        name: "localValueReference",
+        def: Annot(
+            Typeof(
+                AnnotTypeof {
+                    loc: 25,
+                    qname: [
+                        "localValue",
+                    ],
+                    t: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 26,
+                                index: 10,
+                            },
+                        ),
+                    ),
+                    targs: None,
+                },
+            ),
+        ),
+    },
+)
+12. NamespaceBinding(
     DefNamespaceBinding {
-        id_loc: 23,
+        id_loc: 27,
         name: "globalThis",
         values: {
             "existingGlobalValue": (
@@ -23402,56 +23440,56 @@ Local defs:
                 ),
             ),
             "globalThis": (
-                23,
+                27,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 23,
-                            index: 10,
+                            ref_loc: 27,
+                            index: 12,
                         },
                     ),
                 ),
             ),
             "globalValueReference": (
-                6,
+                10,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 6,
-                            index: 3,
+                            ref_loc: 10,
+                            index: 5,
                         },
                     ),
                 ),
             ),
             "localValue": (
-                18,
+                22,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 18,
-                            index: 8,
+                            ref_loc: 22,
+                            index: 10,
                         },
                     ),
                 ),
             ),
             "localValueReference": (
-                20,
+                24,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 20,
-                            index: 9,
+                            ref_loc: 24,
+                            index: 11,
                         },
                     ),
                 ),
             ),
             "moduleValueReference": (
-                11,
+                15,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 11,
-                            index: 5,
+                            ref_loc: 15,
+                            index: 7,
                         },
                     ),
                 ),
@@ -23470,45 +23508,45 @@ Local defs:
                 ),
             ),
             "GlobalReference": (
-                4,
+                8,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 4,
-                            index: 2,
+                            ref_loc: 8,
+                            index: 4,
                         },
                     ),
                 ),
             ),
             "LocalReference": (
-                16,
+                20,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 16,
-                            index: 7,
+                            ref_loc: 20,
+                            index: 9,
                         },
                     ),
                 ),
             ),
             "LocalType": (
-                14,
+                18,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 14,
-                            index: 6,
+                            ref_loc: 18,
+                            index: 8,
                         },
                     ),
                 ),
             ),
             "ModuleReference": (
-                9,
+                13,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 9,
-                            index: 4,
+                            ref_loc: 13,
+                            index: 6,
                         },
                     ),
                 ),

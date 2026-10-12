@@ -203,7 +203,8 @@ pub fn get_def<'cx>(
     // Note: The Result here propagates Worker_should_cancel/timeout via JobError.
     // Both inner errors (from process_request) propagate via the Result chain.
     let require_loc_map = file_sig.require_loc_map();
-    let scope_info = scope_builder::program(cx.enable_enums(), true, ast);
+    let scope_info =
+        scope_builder::program(cx.enable_enums(), true, file_sig.requires().is_empty(), ast);
     let is_local_use = |aloc: &ALoc| -> bool {
         let loc = loc_of_aloc(aloc);
         scope_info.is_local_use(&loc)

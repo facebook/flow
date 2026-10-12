@@ -6,6 +6,7 @@
  */
 
 use flow_aloc::ALoc;
+use flow_analysis::test_utils::parse;
 use flow_analysis::test_utils::parse_with_alocs;
 use flow_common::options::JsxMode;
 use flow_common::options::ReactRuntime;
@@ -23,6 +24,8 @@ use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::parse_jsx_pragma_expression;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
 
 use crate::dependency_sigs::Context;
 use crate::dependency_sigs::Flow;
@@ -212,7 +215,9 @@ fn print_ssa_test(
     let aloc_ast = parse_with_alocs(contents);
     let is_lib = lib.unwrap_or(false);
     let exclude = exclude_syms.unwrap_or_default();
-    let result = name_resolver::program::<TestCx, TestFlow>(&cx, is_lib, exclude, &aloc_ast);
+    let file_sig = FileSig::from_program(&cx.file(), &parse(contents), &FileSigOptions::default());
+    let result =
+        name_resolver::program::<TestCx, TestFlow>(&cx, is_lib, exclude, &file_sig, &aloc_ast);
     print_values(|id| result.refinement_of_id.get(id))(
         &result.env_values,
         &result.env_refinement_invalidation_info,

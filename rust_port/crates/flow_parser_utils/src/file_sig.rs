@@ -341,7 +341,7 @@ struct RequiresCalculator<'a> {
 
 impl<'a> RequiresCalculator<'a> {
     fn new(file_key: &'a FileKey, ast: &ast::Program<Loc, Loc>, opts: &'a FileSigOptions) -> Self {
-        let scope_info = scope_builder::program(opts.enable_enums, true, ast);
+        let scope_info = scope_builder::program(opts.enable_enums, true, true, ast);
         Self {
             file_key,
             opts,

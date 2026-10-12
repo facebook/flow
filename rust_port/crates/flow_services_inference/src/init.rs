@@ -118,7 +118,8 @@ fn load_lib_files(
                     ast,
                 );
                 if reader.has_ts_global_augmentation(file) {
-                    global_augmentation_asts.push(ast);
+                    let file_sig = reader.get_file_sig_unsafe(file);
+                    global_augmentation_asts.push((ast.0, ast.1, file_sig));
                 } else {
                     ordered_asts.push(ast);
                 }
@@ -174,8 +175,9 @@ fn load_lib_files(
                 let file_keys_with_comments: Vec<(FileKey, &[flow_parser::ast::Comment<Loc>])> =
                     ordered_asts
                         .iter()
-                        .chain(global_augmentation_asts.iter())
-                        .map(|(_, ast)| {
+                        .map(|(_, ast)| ast)
+                        .chain(global_augmentation_asts.iter().map(|(_, ast, _)| ast))
+                        .map(|ast| {
                             let loc = &ast.loc;
                             let source = loc
                                 .source

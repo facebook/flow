@@ -22,6 +22,7 @@ use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::polymorphic_ast_mapper::LocMapper;
+use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils_output::js_layout_generator;
 use flow_services_autocomplete::lsp_import_edits;
 use flow_services_autocomplete::module_system_info::LspModuleSystemInfo;
@@ -264,11 +265,13 @@ impl<'a> ImportInformationExtractor<'a, '_> {
 pub fn prepare_document_paste(
     cx: &Context,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    file_sig: &FileSig,
     ast: &ast::Program<Loc, Loc>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     ranges: &[Loc],
 ) -> Vec<ImportItem> {
-    let scope = scope_builder::program(cx.enable_enums(), true, ast);
+    let scope =
+        scope_builder::program(cx.enable_enums(), true, file_sig.requires().is_empty(), ast);
     let mut collector = ImportedDefCollector {
         scope: &scope,
         ranges,
@@ -296,10 +299,11 @@ pub fn provide_document_paste_edits(
     layout_options: &js_layout_generator::Opts,
     module_system_info: &LspModuleSystemInfo,
     src_dir: Option<&str>,
+    file_sig: &FileSig,
     ast: &ast::Program<Loc, Loc>,
     import_items: &[ImportItem],
 ) -> Vec<(Loc, String)> {
-    let scope_info = scope_builder::program(true, true, ast);
+    let scope_info = scope_builder::program(true, true, file_sig.requires().is_empty(), ast);
     // Scope_api.With_Loc.toplevel_scopes is [0] in OCaml.
     // ScopeId(0) is pub(super), but scopes is a public BTreeMap<ScopeId, Scope>.
     // The first entry (smallest key) is ScopeId(0) — the toplevel scope.

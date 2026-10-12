@@ -28,6 +28,8 @@ use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::parse_error::ParseError;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
 use flow_server_utils::file_input::FileInput;
 use flow_typing_errors::error_message::ErrorMessage;
 
@@ -148,6 +150,14 @@ pub fn main(path: Option<String>, filename: Option<String>) {
         }
         None => flow_parser::parse_program_without_file(false, None, parse_options, Ok(&content)),
     };
+    let file_sig = FileSig::from_program(
+        &TestCx.file(),
+        &ast,
+        &FileSigOptions {
+            enable_enums: true,
+            ..Default::default()
+        },
+    );
     let ast = flow_aloc::loc_to_aloc_ast(&ast);
 
     if errors.is_empty() {
@@ -156,6 +166,7 @@ pub fn main(path: Option<String>, filename: Option<String>) {
             &TestCx,
             false,
             FlowOrdSet::new(),
+            &file_sig,
             ast,
         );
         let env = env.to_env_info();

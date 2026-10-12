@@ -1915,7 +1915,8 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                 genv.imported_names.dupe()
             };
             log("scope info");
-            let scope_info = scope_builder::program(options.enums, false, ast);
+            let scope_info =
+                scope_builder::program(options.enums, false, file_sig.requires().is_empty(), ast);
             log("module documentations");
             let offset_table_of_file_key = |file_key: &FileKey| -> Option<Arc<OffsetTable>> {
                 offset_cache.offset_table_of_file_key(file_key)

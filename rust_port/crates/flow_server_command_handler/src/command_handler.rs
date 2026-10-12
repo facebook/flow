@@ -107,7 +107,13 @@ fn binder_kind_at_aloc(
     let loc = transaction.loc_of_aloc(aloc);
     let file = loc.source.as_ref()?;
     let ast = transaction.get_ast(file)?;
-    let scope_info = flow_analysis::scope_builder::program(cx.enable_enums(), true, &ast);
+    let file_sig = transaction.get_file_sig(file)?;
+    let scope_info = flow_analysis::scope_builder::program(
+        cx.enable_enums(),
+        true,
+        file_sig.requires().is_empty(),
+        &ast,
+    );
     let def = scope_info.def_of_use_opt(&loc)?;
     binder_kind_of_binding_kind(def.kind)
 }
@@ -3714,6 +3720,7 @@ fn find_code_actions(
                     let scope_info = flow_analysis::scope_builder::program(
                         typecheck_artifacts.cx.enable_enums(),
                         false,
+                        parse_artifacts.file_sig.requires().is_empty(),
                         &parse_artifacts.ast,
                     );
                     let transaction_clone = transaction.clone();
@@ -6403,6 +6410,7 @@ fn prepare_document_paste(
                         flow_services_code_action::document_paste::prepare_document_paste(
                             &typecheck_artifacts.cx,
                             &loc_of_aloc,
+                            &parse_artifacts.file_sig,
                             &parse_artifacts.ast,
                             &typecheck_artifacts.typed_ast,
                             &ranges,
@@ -6477,6 +6485,7 @@ fn provide_document_paste(
                 &layout_options,
                 &module_system_info,
                 src_dir.as_deref(),
+                &parse_artifacts.file_sig,
                 &parse_artifacts.ast,
                 &imports,
             );

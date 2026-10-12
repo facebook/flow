@@ -7,6 +7,11 @@
 
 //! Port of `services/code_action/__tests__/autofix_type_to_value_import_tests.ml`
 
+use flow_parser::file_key::FileKey;
+use flow_parser::file_key::FileKeyInner;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
+
 fn indent_len(s: &str) -> usize {
     let mut i = 0;
     let bytes = s.as_bytes();
@@ -51,8 +56,17 @@ fn assert_fixed(expected: &str, loc: flow_parser::loc::Loc, contents: &str) {
     let expected = dedent_trim(expected);
     let contents = dedent_trim(contents);
     let ast = parse(&contents);
-    let new_ast = crate::autofix_type_to_value_import::convert_type_to_value_import(&ast, loc)
-        .expect("convert_type_to_value_import returned None");
+    let file_sig = FileSig::from_program(
+        &FileKey::new(FileKeyInner::SourceFile("test.js".to_owned())),
+        &ast,
+        &FileSigOptions {
+            enable_enums: true,
+            ..Default::default()
+        },
+    );
+    let new_ast =
+        crate::autofix_type_to_value_import::convert_type_to_value_import(&file_sig, &ast, loc)
+            .expect("convert_type_to_value_import returned None");
     let diff = crate::insert_type::mk_diff(&ast, &new_ast);
     let opts = flow_parser_utils_output::js_layout_generator::default_opts();
     let patch =

@@ -323,6 +323,7 @@ struct Ssa<L: Dupe> {
 }
 
 pub struct SsaBuilder<Loc: Dupe + Clone + Eq + Ord + Hash + Default> {
+    allow_declare_global_captures: bool,
     enable_enums: bool,
     /// We maintain a map of read locations to raw Val.t terms, which are
     /// simplified to lists of write locations once the analysis is done.
@@ -362,8 +363,9 @@ pub struct SsaBuilder<Loc: Dupe + Clone + Eq + Ord + Hash + Default> {
 }
 
 impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
-    fn new(enable_enums: bool) -> Self {
+    fn new(enable_enums: bool, allow_declare_global_captures: bool) -> Self {
         Self {
+            allow_declare_global_captures,
             enable_enums,
             unresolved_ref_id_counter: 0,
             values: BTreeMap::new(),
@@ -2001,20 +2003,19 @@ impl<'ast, Loc: Dupe + Clone + Eq + Ord + Hash + Default>
     ) -> Result<(), AbruptCompletion> {
         use ast::statement::declare_namespace::Id;
 
-        let isolated = match &namespace.id {
-            Id::Global(_) => true,
+        match &namespace.id {
+            Id::Global(_) => {}
             Id::Local(id) => {
                 self.pattern_identifier(Some(ast::VariableKind::Const), id)?;
-                false
             }
-        };
+        }
         let (loc, body) = &namespace.body;
         let bindings = {
             let mut hoist = Hoister::new(self.enable_enums, true);
             let Ok(()) = hoist.block(loc, body);
             hoist.into_bindings()
         };
-        if isolated {
+        if matches!(namespace.id, Id::Global(_)) && !self.allow_declare_global_captures {
             self.with_isolated_bindings(true, loc.dupe(), bindings, |this| this.block(loc, body))
         } else {
             self.with_bindings(true, loc.dupe(), bindings, |this| this.block(loc, body))
@@ -2146,10 +2147,11 @@ pub type ProgramWithScopeResult<Loc> = (
 pub fn program_with_scope_and_jsx_pragma<Loc: Dupe + Clone + Eq + Ord + Hash + Default>(
     enable_enums: bool,
     jsx_ast: Option<&ast::expression::Expression<Loc, Loc>>,
+    allow_declare_global_captures: bool,
     program: &ast::Program<Loc, Loc>,
 ) -> ProgramWithScopeResult<Loc> {
     let loc = &program.loc;
-    let mut builder = SsaBuilder::new(enable_enums);
+    let mut builder = SsaBuilder::new(enable_enums, allow_declare_global_captures);
 
     // Before we introduce bindings for the top levels, we must read every
     // identifier in the jsx_pragma so that we can record them as unbound names
@@ -2174,15 +2176,17 @@ pub fn program_with_scope_and_jsx_pragma<Loc: Dupe + Clone + Eq + Ord + Hash + D
 
 pub fn program_with_scope<Loc: Dupe + Clone + Eq + Ord + Hash + Default>(
     enable_enums: bool,
+    allow_declare_global_captures: bool,
     program: &ast::Program<Loc, Loc>,
 ) -> ProgramWithScopeResult<Loc> {
-    program_with_scope_and_jsx_pragma(enable_enums, None, program)
+    program_with_scope_and_jsx_pragma(enable_enums, None, allow_declare_global_captures, program)
 }
 
 pub fn program<Loc: Dupe + Clone + Eq + Ord + Hash + Default>(
     enable_enums: bool,
+    allow_declare_global_captures: bool,
     program: &ast::Program<Loc, Loc>,
 ) -> Values<Loc> {
-    let (_, (values, _)) = program_with_scope(enable_enums, program);
+    let (_, (values, _)) = program_with_scope(enable_enums, allow_declare_global_captures, program);
     values
 }

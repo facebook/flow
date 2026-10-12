@@ -994,8 +994,7 @@ pub(crate) mod scope {
             modules: BTreeMap<FlowSmolStr, (LocNode<'arena>, Rc<RefCell<Exports<'arena, 'ast>>>)>,
         },
         DeclareGlobal {
-            values: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
-            types: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
+            parent: ScopeId,
             global_target: ScopeId,
         },
         DeclareModule {
@@ -1011,6 +1010,7 @@ pub(crate) mod scope {
             parent: ScopeId,
         },
         Module {
+            parent: Option<ScopeId>,
             values: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             types: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             exports: Rc<RefCell<Exports<'arena, 'ast>>>,
@@ -1060,7 +1060,6 @@ pub(crate) mod scope {
             for scope in &self.scopes {
                 let values = match scope {
                     Scope::Global { values, .. }
-                    | Scope::DeclareGlobal { values, .. }
                     | Scope::DeclareModule { values, .. }
                     | Scope::DeclareNamespace { values, .. }
                     | Scope::Module { values, .. }
@@ -1069,7 +1068,7 @@ pub(crate) mod scope {
                     // decide which roots their analysis can address: names
                     // that escape module scope are filtered downstream.
                     | Scope::Lexical { values, .. } => values,
-                    Scope::ConditionalTypeExtends(_) => continue,
+                    Scope::DeclareGlobal { .. } | Scope::ConditionalTypeExtends(_) => continue,
                 };
                 for binding in values.values() {
                     for loc in super::binding_locs(binding) {
@@ -1098,49 +1097,41 @@ pub(crate) mod scope {
         platform_availability_set: Option<PlatformSet>,
     ) -> ScopeId {
         scopes.push(Scope::Module {
+            parent: None,
             values: BTreeMap::new(),
             types: BTreeMap::new(),
             exports: Exports::create(strict, platform_availability_set),
         })
     }
 
-    pub(crate) fn push_declare_global<'arena, 'ast>(
+    pub(crate) fn create_augmentation_module<'arena, 'ast>(
         scopes: &mut Scopes<'arena, 'ast>,
         global_target: ScopeId,
     ) -> ScopeId {
-        let (values, types) = match scopes.get(global_target) {
-            Scope::Global { values, types, .. } => (values.clone(), types.clone()),
-            _ => panic!("DeclareGlobal target must be a Global scope"),
-        };
+        scopes.push(Scope::Module {
+            parent: Some(global_target),
+            values: BTreeMap::new(),
+            types: BTreeMap::new(),
+            exports: Exports::create(true, None),
+        })
+    }
+
+    pub(crate) fn push_declare_global<'arena, 'ast>(
+        scopes: &mut Scopes<'arena, 'ast>,
+        parent: ScopeId,
+        global_target: ScopeId,
+    ) -> ScopeId {
         scopes.push(Scope::DeclareGlobal {
-            values,
-            types,
+            parent,
             global_target,
         })
     }
 
-    pub(crate) fn finalize_declare_global<'arena, 'ast>(
-        scopes: &mut Scopes<'arena, 'ast>,
-        scope: ScopeId,
-    ) {
-        let (values, types, global_target) = match scopes.get(scope) {
-            Scope::DeclareGlobal {
-                values,
-                types,
-                global_target,
-            } => (values.clone(), types.clone(), *global_target),
-            _ => panic!("Expected DeclareGlobal scope"),
-        };
-        let Scope::Global {
-            values: global_values,
-            types: global_types,
-            ..
-        } = scopes.get_mut(global_target)
-        else {
-            panic!("DeclareGlobal target must be a Global scope")
-        };
-        *global_values = values;
-        *global_types = types;
+    fn binding_scope(scopes: &Scopes, id: ScopeId) -> ScopeId {
+        match scopes.get(id) {
+            Scope::DeclareGlobal { global_target, .. } => *global_target,
+            _ => id,
+        }
     }
 
     pub(super) fn push_lex(scopes: &mut Scopes, parent: ScopeId) -> ScopeId {
@@ -1381,8 +1372,8 @@ pub(crate) mod scope {
         type_only: bool,
         incoming: IncomingBindingKind,
     ) {
-        let existing = match scopes.get(id) {
-            Scope::Global { values, types, .. } | Scope::DeclareGlobal { values, types, .. } => {
+        let existing = match scopes.get(binding_scope(scopes, id)) {
+            Scope::Global { values, types, .. } => {
                 let map = if type_only { values } else { types };
                 map.get(name).map(|binding| binding.dupe())
             }
@@ -1464,7 +1455,6 @@ pub(crate) mod scope {
         ) -> CheckBindResult<'arena, 'ast> {
             match scopes.get(id) {
                 Scope::Global { values, types, .. }
-                | Scope::DeclareGlobal { values, types, .. }
                 | Scope::DeclareModule { values, types, .. }
                 | Scope::DeclareNamespace { values, types, .. }
                 | Scope::Module { values, types, .. }
@@ -1482,10 +1472,13 @@ pub(crate) mod scope {
                         CheckBindResult::Missing
                     }
                 }
-                Scope::ConditionalTypeExtends(_) => CheckBindResult::Skip,
+                Scope::DeclareGlobal { .. } | Scope::ConditionalTypeExtends(_) => {
+                    CheckBindResult::Skip
+                }
             }
         }
 
+        let id = binding_scope(scopes, id);
         let new_binding = match scope_check_bind(scopes, id, name, type_only) {
             CheckBindResult::SameKindExisting {
                 existing,
@@ -1506,7 +1499,6 @@ pub(crate) mod scope {
         };
         match scopes.get_mut(id) {
             Scope::Global { values, types, .. }
-            | Scope::DeclareGlobal { values, types, .. }
             | Scope::DeclareModule { values, types, .. }
             | Scope::DeclareNamespace { values, types, .. }
             | Scope::Module { values, types, .. }
@@ -1517,7 +1509,7 @@ pub(crate) mod scope {
                     values.insert(name.clone(), new_binding);
                 }
             }
-            Scope::ConditionalTypeExtends(_) => {}
+            Scope::DeclareGlobal { .. } | Scope::ConditionalTypeExtends(_) => {}
         }
     }
 
@@ -1528,9 +1520,13 @@ pub(crate) mod scope {
     ) -> Option<(BindingNode<'arena, 'ast>, ScopeId)> {
         loop {
             match scopes.get(id) {
-                Scope::Global { values, .. } | Scope::Module { values, .. } => {
+                Scope::Global { values, .. } => {
                     return values.get(name).map(|binding| (binding.dupe(), id));
                 }
+                Scope::Module { parent, values, .. } => match values.get(name) {
+                    Some(binding) => return Some((binding.dupe(), id)),
+                    None => id = (*parent)?,
+                },
                 Scope::ConditionalTypeExtends(ConditionalTypeExtends { parent, .. }) => {
                     id = *parent;
                 }
@@ -1542,13 +1538,14 @@ pub(crate) mod scope {
                     }
                 },
                 Scope::DeclareGlobal {
-                    values,
+                    parent,
                     global_target,
-                    ..
-                } => match values.get(name) {
-                    Some(binding) => return Some((binding.dupe(), id)),
-                    None => id = *global_target,
-                },
+                } => {
+                    if let Some(binding) = lookup_value(scopes, *global_target, name) {
+                        return Some(binding);
+                    }
+                    id = *parent;
+                }
                 Scope::DeclareNamespace { parent, values, .. } => match values
                     .get(name)
                     .map(|binding| binding.dupe())
@@ -1574,14 +1571,9 @@ pub(crate) mod scope {
             | Scope::DeclareNamespace { values, .. }
             | Scope::Module { values, .. }
             | Scope::Lexical { values, .. } => values.get(name).map(|binding| binding.dupe()),
-            Scope::DeclareGlobal {
-                values,
-                global_target,
-                ..
-            } => values
-                .get(name)
-                .map(|binding| binding.dupe())
-                .or_else(|| lookup_value_in_scope(scopes, *global_target, name)),
+            Scope::DeclareGlobal { global_target, .. } => {
+                lookup_value_in_scope(scopes, *global_target, name)
+            }
             Scope::ConditionalTypeExtends(_) => None,
         }
     }
@@ -1647,12 +1639,9 @@ pub(crate) mod scope {
             | Scope::DeclareNamespace { values, types, .. }
             | Scope::Module { values, types, .. }
             | Scope::Lexical { values, types, .. } => lookup_scope(name, values, types),
-            Scope::DeclareGlobal {
-                values,
-                types,
-                global_target,
-            } => lookup_scope(name, values, types)
-                .or_else(|| lookup_type_in_scope(scopes, *global_target, name)),
+            Scope::DeclareGlobal { global_target, .. } => {
+                lookup_type_in_scope(scopes, *global_target, name)
+            }
             Scope::ConditionalTypeExtends(_) => None,
         }
     }
@@ -1763,9 +1752,15 @@ pub(crate) mod scope {
                         id = *parent;
                     }
                 },
-                Scope::Module { values, types, .. } => {
-                    return lookup_scope(name, values, types).map(|binding| (binding, id));
-                }
+                Scope::Module {
+                    parent,
+                    values,
+                    types,
+                    ..
+                } => match lookup_scope(name, values, types) {
+                    Some(binding) => return Some((binding, id)),
+                    None => id = (*parent)?,
+                },
                 Scope::DeclareModule {
                     parent,
                     values,
@@ -1778,13 +1773,14 @@ pub(crate) mod scope {
                     }
                 },
                 Scope::DeclareGlobal {
+                    parent,
                     global_target,
-                    values,
-                    types,
-                } => match lookup_scope(name, values, types) {
-                    Some(binding) => return Some((binding, id)),
-                    None => id = *global_target,
-                },
+                } => {
+                    if let Some(binding) = lookup_type(scopes, *global_target, name) {
+                        return Some(binding);
+                    }
+                    id = *parent;
+                }
             }
         }
     }
@@ -1841,14 +1837,13 @@ pub(crate) mod scope {
         id: ScopeId,
         name: &FlowSmolStr,
     ) -> Option<BindingNode<'arena, 'ast>> {
-        match scopes.get(id) {
+        match scopes.get(binding_scope(scopes, id)) {
             Scope::Global { types, .. }
-            | Scope::DeclareGlobal { types, .. }
             | Scope::DeclareModule { types, .. }
             | Scope::DeclareNamespace { types, .. }
             | Scope::Module { types, .. }
             | Scope::Lexical { types, .. } => types.get(name).map(|binding| binding.dupe()),
-            Scope::ConditionalTypeExtends(_) => None,
+            Scope::DeclareGlobal { .. } | Scope::ConditionalTypeExtends(_) => None,
         }
     }
 
@@ -1857,14 +1852,13 @@ pub(crate) mod scope {
         id: ScopeId,
         name: &FlowSmolStr,
     ) -> Option<BindingNode<'arena, 'ast>> {
-        match scopes.get(id) {
+        match scopes.get(binding_scope(scopes, id)) {
             Scope::Global { values, .. }
-            | Scope::DeclareGlobal { values, .. }
             | Scope::DeclareModule { values, .. }
             | Scope::DeclareNamespace { values, .. }
             | Scope::Module { values, .. }
             | Scope::Lexical { values, .. } => values.get(name).map(|binding| binding.dupe()),
-            Scope::ConditionalTypeExtends(_) => None,
+            Scope::DeclareGlobal { .. } | Scope::ConditionalTypeExtends(_) => None,
         }
     }
 
@@ -3266,8 +3260,8 @@ pub(crate) mod scope {
         // positions (type lookups fall back to values when the type namespace has
         // no entry).
         let merged_class_node: Option<LocalDefNode<'arena, 'ast>> =
-            match lookup_value(scopes, id, &name) {
-                Some((BindingNode::LocalBinding(class_node), _)) => {
+            match lookup_local_value(scopes, id, &name) {
+                Some(BindingNode::LocalBinding(class_node)) => {
                     let is_dc = matches!(
                         &*class_node.0.data(),
                         LocalBinding::DeclareClassBinding { .. }
@@ -3538,8 +3532,8 @@ pub(crate) mod scope {
             InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
         )> = {
             let candidate_type_node: Option<LocalDefNode<'arena, 'ast>> =
-                match lookup_type(scopes, id, &name) {
-                    Some((BindingNode::LocalBinding(node), _)) => {
+                match lookup_local_type(scopes, id, &name) {
+                    Some(BindingNode::LocalBinding(node)) => {
                         let is_tb = matches!(&*node.0.data(), LocalBinding::TypeBinding { .. });
                         if is_tb { Some(node) } else { None }
                     }
@@ -5451,14 +5445,14 @@ pub(crate) mod scope {
             }
             _ => panic!("The scope must be DeclareNamespace"),
         };
+        let parent = binding_scope(scopes, parent);
         let (values, types) = match scopes.get_mut(parent) {
             Scope::Global { values, types, .. }
-            | Scope::DeclareGlobal { values, types, .. }
             | Scope::DeclareModule { values, types, .. }
             | Scope::DeclareNamespace { values, types, .. }
             | Scope::Module { values, types, .. }
             | Scope::Lexical { values, types, .. } => (values, types),
-            Scope::ConditionalTypeExtends(_) => {
+            Scope::DeclareGlobal { .. } | Scope::ConditionalTypeExtends(_) => {
                 panic!("The host scope cannot be ConditionalTypeExtends")
             }
         };
@@ -5565,14 +5559,14 @@ pub(crate) mod scope {
                 let (ns_values, ns_types) =
                     namespace_binding_of_values_and_types(id, values, types);
                 let parent = *parent;
+                let parent = binding_scope(scopes, parent);
                 let (parent_values, parent_types) = match scopes.get_mut(parent) {
                     Scope::Global { values, types, .. }
-                    | Scope::DeclareGlobal { values, types, .. }
                     | Scope::DeclareModule { values, types, .. }
                     | Scope::DeclareNamespace { values, types, .. }
                     | Scope::Module { values, types, .. }
                     | Scope::Lexical { values, types, .. } => (values, types),
-                    Scope::ConditionalTypeExtends(_) => {
+                    Scope::DeclareGlobal { .. } | Scope::ConditionalTypeExtends(_) => {
                         panic!("The host scope cannot be ConditionalTypeExtends")
                     }
                 };

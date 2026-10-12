@@ -18,6 +18,7 @@ use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::ast_visitor::map_expression_default;
 use flow_parser::ast_visitor::map_statement_default;
 use flow_parser::loc::Loc;
+use flow_parser_utils::file_sig::FileSig;
 
 use crate::contains_mapper::ContainsMapper;
 
@@ -405,10 +406,11 @@ impl Mapper {
 }
 
 pub fn convert_type_to_value_import(
+    file_sig: &FileSig,
     ast: &ast::Program<Loc, Loc>,
     loc: Loc,
 ) -> Option<ast::Program<Loc, Loc>> {
-    let scope_info = scope_builder::program(true, true, ast);
+    let scope_info = scope_builder::program(true, true, file_sig.requires().is_empty(), ast);
     if scope_info.all_uses().contains(&loc) {
         match scope_info.def_of_use_opt(&loc) {
             Some(def)

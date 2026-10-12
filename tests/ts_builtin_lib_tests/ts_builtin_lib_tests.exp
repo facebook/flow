@@ -1,39 +1,3 @@
-Error ----------------------------------------------------------------------- <BUILTINS>/lib.es2015.generator.d.ts:24:22
-
-Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `empty` [2] is incompatible with
-`Readonly<[]>` [3]. [incompatible-type]
-
-   <BUILTINS>/lib.es2015.generator.d.ts:24:22
-   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
-                            ^^ [3]
-
-References:
-   <BUILTINS>/lib.es2015.generator.d.ts:22:70
-   22| interface Generator<T = unknown, TReturn = any, TNext = any> extends IteratorObject<T, TReturn, TNext> {
-                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.esnext.iterator.d.ts:30:27
-   30|     abstract next(value?: TNext): IteratorResult<T, TResult>;
-                                 ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------- <BUILTINS>/lib.es2015.generator.d.ts:24:27
-
-Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `empty` [2] is incompatible with
-`[TNext]` [3]. [incompatible-type]
-
-   <BUILTINS>/lib.es2015.generator.d.ts:24:27
-   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
-                                 ^^^^^^^ [3]
-
-References:
-   <BUILTINS>/lib.es2015.generator.d.ts:22:70
-   22| interface Generator<T = unknown, TReturn = any, TNext = any> extends IteratorObject<T, TReturn, TNext> {
-                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.esnext.iterator.d.ts:30:27
-   30|     abstract next(value?: TNext): IteratorResult<T, TResult>;
-                                 ^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------- <BUILTINS>/lib.es2015.generator.d.ts:25:19
 
 Cannot extend `IteratorObject` [1] with `Generator` because in property `return` > the first parameter: `empty` [2] is
@@ -50,40 +14,6 @@ References:
    <BUILTINS>/lib.es2015.iterable.d.ts:45:21
    45|     return?(value?: TReturn): IteratorResult<T, TReturn>;
                            ^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------- <BUILTINS>/lib.es2015.iterable.d.ts:56:1
-
-Non-`abstract` class `IterableIterator` does not implement inherited `abstract` member next [1]. [invalid-abstract]
-
-   <BUILTINS>/lib.es2015.iterable.d.ts:56:1
-       v----------------------------------------------------------------------------------------------
-   56| interface IterableIterator<T, TReturn = any, TNext = any> extends Iterator<T, TReturn, TNext> {
-   57|     [Symbol.iterator](): IterableIterator<T, TReturn, TNext>;
-   58| }
-       ^
-
-References:
-   <BUILTINS>/lib.es2015.iterable.d.ts:44:5
-   44|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
-           ^^^^ [1]
-
-
-Error ------------------------------------------------------------------------- <BUILTINS>/lib.es2015.iterable.d.ts:63:1
-
-Non-`abstract` class `IteratorObject` does not implement inherited `abstract` member next [1]. [invalid-abstract]
-
-   <BUILTINS>/lib.es2015.iterable.d.ts:63:1
-       v----------------------------------------------------------------------------------------------------
-   63| interface IteratorObject<T, TReturn = unknown, TNext = unknown> extends Iterator<T, TReturn, TNext> {
-   64|     [Symbol.iterator](): IteratorObject<T, TReturn, TNext>;
-   65| }
-       ^
-
-References:
-   <BUILTINS>/lib.es2015.iterable.d.ts:44:5
-   44|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
-           ^^^^ [1]
 
 
 Error ------------------------------------------------------------------- <BUILTINS>/lib.es2018.asyncgenerator.d.ts:25:5
@@ -112,52 +42,5 @@ References:
                                    ^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------- <BUILTINS>/lib.esnext.iterator.d.ts:26:1
 
-Cannot use value export statements in a library file. The statement will be ignored. [unsupported-syntax]
-
-   26| export {};
-       ^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------- <BUILTINS>/lib.esnext.iterator.d.ts:39:1
-
-Cannot use declare global statements in a library file. The statement will be ignored. [unsupported-syntax]
-
-        v---------------
-    39| declare global {
-    40|     // Global `IteratorObject<T, TReturn, TNext>` interface that can be augmented by polyfills
-    41|     interface IteratorObject<T, TReturn, TNext> {
-    42|         /**
-    43|          * Returns this iterator.
-    44|          */
-    45|         [Symbol.iterator](): IteratorObject<T, TReturn, TNext>;
-    46|         /**
-    47|          * Creates an iterator whose values are the result of applying the callback to the values from this iterator.
-    48|          * @param callbackfn A function that accepts up to two arguments to be used to transform values from the underlying iterator.
-    49|          */
-    50|         map<U>(callbackfn: (value: T, index: number) => U): IteratorObject<U, undefined, unknown>;
-    51|         /**
-    52|          * Creates an iterator whose values are those from this iterator for which the provided predicate returns true.
-    53|          * @param predicate A function that accepts up to two arguments to be used to test values from the underlying iterator.
-      :
-   130|         find<S extends T>(predicate: (value: T, index: number) => value is S): S | undefined;
-   131|         find(predicate: (value: T, index: number) => unknown): T | undefined;
-   132|         readonly [Symbol.toStringTag]: string;
-   133|     }
-   134|     // Global `IteratorConstructor` interface that can be augmented by polyfills
-   135|     interface IteratorConstructor extends IteratorObjectConstructor {
-   136|         /**
-   137|          * Creates a native iterator from an iterator or iterable object.
-   138|          * Returns its input if the input already inherits from the built-in Iterator class.
-   139|          * @param value An iterator or iterable object to convert a native iterator.
-   140|          */
-   141|         from<T>(value: Iterator<T, unknown, undefined> | Iterable<T, unknown, undefined>): IteratorObject<T, undefined, unknown>;
-   142|     }
-   143|     var Iterator: IteratorConstructor;
-   144| }
-        ^
-
-
-
-Found 8 errors
+Found 2 errors

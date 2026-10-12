@@ -1893,8 +1893,10 @@ pub fn ast_transforms_of_error(
                 vec![AstTransformOfError {
                     title: format!("Convert type import of `{}` to value import", name),
                     diagnostic_title: "convert_type_to_value_import".to_string(),
-                    transform: Box::new(|_cx, _file_sig, ast, _typed_ast, loc| {
-                        autofix_type_to_value_import::convert_type_to_value_import(ast, loc)
+                    transform: Box::new(|_cx, file_sig, ast, _typed_ast, loc| {
+                        autofix_type_to_value_import::convert_type_to_value_import(
+                            &file_sig, ast, loc,
+                        )
                     }),
                     target_loc: error_loc.dupe(),
                     confidence: QuickfixConfidence::BestEffort,

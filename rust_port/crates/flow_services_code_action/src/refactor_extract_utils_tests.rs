@@ -16,6 +16,8 @@ use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::parse_program_file;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
 use flow_parser_utils_output::js_layout_generator;
 use flow_parser_utils_output::pretty_printer;
 use flow_parser_utils_output::source::Source;
@@ -1007,9 +1009,17 @@ mod collect_relevant_defs_with_scope_tests {
         extracted_loc: Loc,
     ) {
         let ast = parse(source);
-        let scope_info = scope_builder::program(true, true, &ast);
+        let file_sig = FileSig::from_program(
+            &dummy_filename(),
+            &ast,
+            &FileSigOptions {
+                enable_enums: true,
+                ..Default::default()
+            },
+        );
+        let scope_info = scope_builder::program(true, true, file_sig.requires().is_empty(), &ast);
         let (_abnormal_completion_state, (ssa_values, _possible_globals)) =
-            ssa_builder::program_with_scope(true, &ast);
+            ssa_builder::program_with_scope(true, file_sig.requires().is_empty(), &ast);
         let result = variable_analysis::collect_relevant_defs_with_scope(
             &scope_info,
             &ssa_values,
@@ -1137,9 +1147,17 @@ mod undefined_variables_after_extraction_tests {
         extracted_loc: Loc,
     ) {
         let ast = parse(source);
-        let scope_info = scope_builder::program(true, true, &ast);
+        let file_sig = FileSig::from_program(
+            &dummy_filename(),
+            &ast,
+            &FileSigOptions {
+                enable_enums: true,
+                ..Default::default()
+            },
+        );
+        let scope_info = scope_builder::program(true, true, file_sig.requires().is_empty(), &ast);
         let (_abnormal_completion_state, (ssa_values, _possible_globals)) =
-            ssa_builder::program_with_scope(true, &ast);
+            ssa_builder::program_with_scope(true, file_sig.requires().is_empty(), &ast);
         let result = variable_analysis::collect_relevant_defs_with_scope(
             &scope_info,
             &ssa_values,
@@ -1248,9 +1266,17 @@ mod escaping_locally_defined_variables_tests {
         extracted_statements_loc: Loc,
     ) {
         let ast = parse(source);
-        let scope_info = scope_builder::program(true, true, &ast);
+        let file_sig = FileSig::from_program(
+            &dummy_filename(),
+            &ast,
+            &FileSigOptions {
+                enable_enums: true,
+                ..Default::default()
+            },
+        );
+        let scope_info = scope_builder::program(true, true, file_sig.requires().is_empty(), &ast);
         let (_abnormal_completion_state, (ssa_values, _possible_globals)) =
-            ssa_builder::program_with_scope(true, &ast);
+            ssa_builder::program_with_scope(true, file_sig.requires().is_empty(), &ast);
         let result = variable_analysis::collect_escaping_local_defs(
             &scope_info,
             &ssa_values,

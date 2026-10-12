@@ -1495,6 +1495,7 @@ impl<Loc: Dupe> Env<Loc> {
 
 // The main scope builder visitor
 pub struct ScopeBuilder<Loc> {
+    allow_declare_global_captures: bool,
     enable_enums: bool,
     with_types: bool,
     info: ScopeInfo<Loc>,
@@ -1506,8 +1507,9 @@ pub struct ScopeBuilder<Loc> {
 }
 
 impl<Loc: Dupe + Eq + Ord + Hash + Default> ScopeBuilder<Loc> {
-    pub fn new(enable_enums: bool, with_types: bool) -> Self {
+    pub fn new(enable_enums: bool, with_types: bool, allow_declare_global_captures: bool) -> Self {
         Self {
+            allow_declare_global_captures,
             enable_enums,
             with_types,
             info: ScopeInfo::empty(),
@@ -2055,20 +2057,21 @@ impl<'ast, Loc: Dupe + Eq + Ord + Hash + Default> AstVisitor<'ast, Loc> for Scop
             keyword: _,
             comments: _,
         } = n;
-        let isolated = match id {
-            ast::statement::declare_namespace::Id::Global(_) => true,
+        match id {
+            ast::statement::declare_namespace::Id::Global(_) => {}
             ast::statement::declare_namespace::Id::Local(id) => {
                 let Ok(()) = self.pattern_identifier(Some(ast::VariableKind::Const), id);
-                false
             }
-        };
+        }
         let (loc, block) = body;
         let bindings = {
             let mut hoist = Hoister::new(self.enable_enums, self.with_types);
             let Ok(()) = hoist.block(loc, block);
             hoist.into_bindings()
         };
-        if isolated {
+        if matches!(id, ast::statement::declare_namespace::Id::Global(_))
+            && !self.allow_declare_global_captures
+        {
             self.with_isolated_bindings(false, loc.dupe(), bindings, |this| this.block(loc, block))
         } else {
             self.with_bindings(false, loc.dupe(), bindings, |this| this.block(loc, block))
@@ -2283,10 +2286,11 @@ impl<'ast, Loc: Dupe + Eq + Ord + Hash + Default> AstVisitor<'ast, Loc> for Scop
 pub fn program<Loc: Dupe + Eq + Ord + Hash + Default>(
     enable_enums: bool,
     with_types: bool,
+    allow_declare_global_captures: bool,
     program: &ast::Program<Loc, Loc>,
 ) -> ScopeInfo<Loc> {
     let loc = &program.loc;
-    let mut walk = ScopeBuilder::new(enable_enums, with_types);
+    let mut walk = ScopeBuilder::new(enable_enums, with_types, allow_declare_global_captures);
     let bindings = {
         let mut hoist = Hoister::new(enable_enums, with_types);
         let Ok(()) = hoist.program(program);

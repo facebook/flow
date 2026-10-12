@@ -19,6 +19,7 @@ use flow_parser::ast::Program;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
+use flow_parser_utils::file_sig::FileSig;
 
 use crate::compact_table::Index;
 use crate::compact_table::Table;
@@ -38,7 +39,7 @@ fn parse_libs<'arena: 'ast, 'ast>(
     opts: &TypeSigOptions,
     arenas: &'arena bumpalo::Bump,
     ordered_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
-    global_augmentation_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
+    global_augmentation_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind, &FileSig)],
 ) -> (
     parse::scope::Scopes<'arena, 'ast>,
     parse::Tables<'arena, 'ast>,
@@ -69,9 +70,16 @@ fn parse_libs<'arena: 'ast, 'ast>(
         }
     }
     if opts.declare_global_support {
-        let augmentation_scope = parse::scope::push_declare_global(&mut scopes, global_scope);
-        for (ast, strictness_kind) in global_augmentation_asts {
+        for (ast, strictness_kind, file_sig) in global_augmentation_asts {
             tbls.set_strictness_kind(*strictness_kind);
+            let module_scope = parse::scope::create_augmentation_module(&mut scopes, global_scope);
+            let parent = if file_sig.requires().is_empty() {
+                module_scope
+            } else {
+                global_scope
+            };
+            let augmentation_scope =
+                parse::scope::push_declare_global(&mut scopes, parent, global_scope);
             for stmt in ast.statements.iter() {
                 if let flow_parser::ast::statement::StatementInner::DeclareNamespace {
                     inner: decl,
@@ -89,10 +97,11 @@ fn parse_libs<'arena: 'ast, 'ast>(
                         &mut tbls,
                         decl.as_ref(),
                     );
+                } else {
+                    parse::statement(opts, module_scope, &mut scopes, &mut tbls, stmt);
                 }
             }
         }
-        parse::scope::finalize_declare_global(&mut scopes, augmentation_scope);
     }
     parse::scope::bind_global_this(&mut scopes, &mut tbls, global_scope, LOC_NONE);
     let builtins = parse::scope::builtins_exn(&scopes, global_scope);
@@ -367,7 +376,7 @@ pub fn parse_and_pack_builtins<'arena: 'ast, 'ast>(
     opts: &TypeSigOptions,
     arenas: &'arena bumpalo::Bump,
     ordered_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
-    global_augmentation_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
+    global_augmentation_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind, &FileSig)],
 ) -> (Vec<Errno<Index<Loc>>>, Table<Loc>, Builtins<Loc>) {
     let (scopes, tbls, globals) = parse_libs(opts, arenas, ordered_asts, global_augmentation_asts);
     pack_builtins(opts, scopes, tbls, globals)

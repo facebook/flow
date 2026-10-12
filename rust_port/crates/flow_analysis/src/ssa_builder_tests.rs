@@ -11,9 +11,13 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
 use flow_parser::ParseOptions;
 use flow_parser::ast;
+use flow_parser::file_key::FileKey;
+use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::parse_program_without_file;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::FileSigOptions;
 use pretty_assertions::assert_eq;
 
 use crate::ssa_api::Values;
@@ -52,7 +56,16 @@ fn mk_write(start: (i32, i32), end: (i32, i32), name: &str) -> WriteLoc<Loc> {
 }
 
 fn mk_ssa_builder_test(enable_enums: bool, contents: &str, expected_values: Values<Loc>) {
-    let values = program(enable_enums, &parse(contents));
+    let ast = parse(contents);
+    let file_sig = FileSig::from_program(
+        &FileKey::new(FileKeyInner::SourceFile("test.js".to_owned())),
+        &ast,
+        &FileSigOptions {
+            enable_enums,
+            ..Default::default()
+        },
+    );
+    let values = program(enable_enums, file_sig.requires().is_empty(), &ast);
     assert_eq!(
         print_values(&expected_values),
         print_values(&values),
