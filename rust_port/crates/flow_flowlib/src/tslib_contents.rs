@@ -23,6 +23,7 @@ macro_rules! include_tslib {
     };
 }
 
+pub(super) const LIB_DECORATORS_LEGACY_D_TS: &str = include_tslib!("lib.decorators.legacy.d.ts");
 pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asynciterable.d.ts");
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
 pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
@@ -69,10 +70,7 @@ pub(super) const LIB_ESNEXT_SHAREDMEMORY_D_TS: &str =
 pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.d.ts", include_tslib!("lib.d.ts")),
     ("lib.decorators.d.ts", include_tslib!("lib.decorators.d.ts")),
-    (
-        "lib.decorators.legacy.d.ts",
-        include_tslib!("lib.decorators.legacy.d.ts"),
-    ),
+    ("lib.decorators.legacy.d.ts", LIB_DECORATORS_LEGACY_D_TS),
     ("lib.dom.asynciterable.d.ts", LIB_DOM_ASYNCITERABLE_D_TS),
     ("lib.dom.d.ts", LIB_DOM_D_TS),
     ("lib.dom.iterable.d.ts", LIB_DOM_ITERABLE_D_TS),
