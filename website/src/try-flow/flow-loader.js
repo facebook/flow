@@ -104,6 +104,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.es2022.object.js',
   'lib.es2022.regexp.js',
   'lib.es2022.string.js',
+  'lib.es2023.array.js',
   'lib.es2023.collection.js',
   'lib.es2024.collection.js',
   'lib.es2024.promise.js',
