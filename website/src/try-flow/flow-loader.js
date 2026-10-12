@@ -97,6 +97,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.es2019.symbol.js',
   'lib.es2020.sharedmemory.js',
   'lib.es2020.symbol.wellknown.js',
+  'lib.es2021.promise.js',
   'lib.es2021.string.js',
   'lib.es2021.weakref.js',
   'lib.es2022.array.js',

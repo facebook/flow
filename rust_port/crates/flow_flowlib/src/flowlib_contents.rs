@@ -43,7 +43,6 @@ flowlib_file!(LIB_ES2020_BIGINT_JS, "lib.es2020.bigint.js");
 flowlib_file!(LIB_ES2020_INTL_JS, "lib.es2020.intl.js");
 flowlib_file!(LIB_ES2020_PROMISE_JS, "lib.es2020.promise.js");
 flowlib_file!(LIB_ES2020_STRING_JS, "lib.es2020.string.js");
-flowlib_file!(LIB_ES2021_PROMISE_JS, "lib.es2021.promise.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
 flowlib_file!(LIB_ESNEXT_DECORATORS_JS, "lib.esnext.decorators.js");
 flowlib_file!(LIB_ESNEXT_DISPOSABLE_JS, "lib.esnext.disposable.js");
@@ -121,7 +120,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         "lib.es2020.symbol.wellknown.js",
         tslib_contents::LIB_ES2020_SYMBOL_WELLKNOWN_D_TS,
     ),
-    ("lib.es2021.promise.js", LIB_ES2021_PROMISE_JS),
+    (
+        "lib.es2021.promise.js",
+        tslib_contents::LIB_ES2021_PROMISE_D_TS,
+    ),
     (
         "lib.es2021.string.js",
         tslib_contents::LIB_ES2021_STRING_D_TS,
