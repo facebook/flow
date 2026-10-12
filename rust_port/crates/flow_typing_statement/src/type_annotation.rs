@@ -7621,6 +7621,8 @@ fn add_interface_properties<'a>(
                             })
                         )
                     );
+                    let optional_method =
+                        np.optional && cx.type_strictness_kind().is_typescript_loose();
                     let polarity = if ambiguous_numeric_key {
                         typed_ast_utils::polarity(np.variance.as_ref())
                     } else {
@@ -7768,27 +7770,44 @@ fn add_interface_properties<'a>(
                                                 let ft = crate::func_sig::methodtype(
                                                     cx,
                                                     this_write_loc,
-                                                    this.dupe(),
+                                                    if optional_method {
+                                                        type_::implicit_mixed_this(
+                                                            type_util::reason_of_t(&this).dupe(),
+                                                        )
+                                                    } else {
+                                                        this.dupe()
+                                                    },
                                                     &fsig,
                                                 );
-                                                let append = DeferredMethod {
-                                                    static_: np.static_,
-                                                    abstract_: abstract_on,
-                                                    override_: override_on_declare_class,
-                                                    name: name.dupe(),
-                                                    id_loc: id_loc.dupe(),
-                                                    func_sig: fsig,
-                                                };
-                                                if !computed_key_appends_at_merge(&ck.expression) {
-                                                    append.apply(&mut s);
-                                                } else if !shadowing_member_last_locs
-                                                    .accessors
-                                                    .get(&(np.static_, name.dupe()))
-                                                    .is_some_and(|last| {
-                                                        last.quick_compare(&id_loc).is_gt()
-                                                    })
-                                                {
-                                                    deferred_methods.push(append);
+                                                if optional_method {
+                                                    add_field_or_proto(
+                                                        name.dupe(),
+                                                        id_loc.dupe(),
+                                                        type_util::optional(ft.dupe(), None, false),
+                                                        &mut s,
+                                                    );
+                                                } else {
+                                                    let append = DeferredMethod {
+                                                        static_: np.static_,
+                                                        abstract_: abstract_on,
+                                                        override_: override_on_declare_class,
+                                                        name: name.dupe(),
+                                                        id_loc: id_loc.dupe(),
+                                                        func_sig: fsig,
+                                                    };
+                                                    if !computed_key_appends_at_merge(
+                                                        &ck.expression,
+                                                    ) {
+                                                        append.apply(&mut s);
+                                                    } else if !shadowing_member_last_locs
+                                                        .accessors
+                                                        .get(&(np.static_, name.dupe()))
+                                                        .is_some_and(|last| {
+                                                            last.quick_compare(&id_loc).is_gt()
+                                                        })
+                                                    {
+                                                        deferred_methods.push(append);
+                                                    }
                                                 }
                                                 prop_asts.push(Property::NormalProperty(
                                                     ast::types::object::NormalProperty {
@@ -8104,10 +8123,23 @@ fn add_interface_properties<'a>(
                                         let ft = crate::func_sig::methodtype(
                                             cx,
                                             this_write_loc,
-                                            this.dupe(),
+                                            if optional_method {
+                                                type_::implicit_mixed_this(
+                                                    type_util::reason_of_t(&this).dupe(),
+                                                )
+                                            } else {
+                                                this.dupe()
+                                            },
                                             &fsig,
                                         );
-                                        if is_construct_sig {
+                                        if optional_method {
+                                            add_field_or_proto(
+                                                Name::new(name.dupe()),
+                                                key_loc.dupe(),
+                                                type_util::optional(ft.dupe(), None, false),
+                                                &mut s,
+                                            );
+                                        } else if is_construct_sig {
                                             // Construct sigs are stored on the instance side
                                             // of an interface only. Stored raw; [read_construct_t]
                                             // normalizes on read.

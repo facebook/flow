@@ -2787,7 +2787,7 @@ fn merge_annot<'cx>(
                 ))),
             ))
         }
-        Annot::FunAnnot(box (loc, def)) => {
+        Annot::FunAnnot(box (loc, def)) | Annot::MethodAnnot(box (loc, _, def)) => {
             let reason = reason::mk_annot_reason(RFunctionType, loc.dupe());
             let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
             merge_fun(
@@ -2798,9 +2798,10 @@ fn merge_annot<'cx>(
                 FunctionReferenceKind::FunctionType,
                 def,
                 statics,
+                matches!(annot, Annot::MethodAnnot(_)) && def.strictness_kind.is_typescript_loose(),
+                matches!(annot, Annot::MethodAnnot(box (_, true, _))),
                 false,
-                false,
-                false,
+                matches!(annot, Annot::MethodAnnot(_)),
             )
         }
         Annot::ComponentAnnot(box (loc, def)) => {
@@ -3233,6 +3234,7 @@ fn merge_value<'cx>(
                 FunctionReferenceKind::Function,
                 def,
                 statics_t,
+                false,
                 false,
                 false,
                 false,
@@ -3784,6 +3786,7 @@ fn merge_obj_value_prop<'cx>(
                         false,
                         false,
                         false,
+                        false,
                     )
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
@@ -3833,6 +3836,7 @@ fn merge_class_prop<'cx>(
                         true,
                         is_static,
                         uses_this,
+                        false,
                     )
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
@@ -3873,6 +3877,7 @@ fn merge_obj_annot_prop<'cx>(
                 FunctionReferenceKind::FunctionType,
                 def,
                 statics,
+                false,
                 false,
                 false,
                 false,
@@ -3918,6 +3923,7 @@ fn merge_interface_prop<'cx>(
                     statics,
                     true,
                     is_static,
+                    false,
                     false,
                 )
             };
@@ -5004,6 +5010,7 @@ fn merge_fun<'cx>(
     is_method: bool,
     is_static: bool,
     uses_this: bool,
+    is_optional_method: bool,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     use flow_type_sig::type_sig;
@@ -5029,6 +5036,7 @@ fn merge_fun<'cx>(
         let this_t = match &def_ref.this_param {
             None => {
                 if is_method
+                    && !is_optional_method
                     && (!is_static || uses_this)
                     && let Some(this) = env.tps.get(&FlowSmolStr::new_inline("this"))
                 {
@@ -5674,6 +5682,7 @@ fn merge_declare_fun<'cx>(
                 false,
                 false,
                 false,
+                false,
             )
         })
         .collect();
@@ -5827,6 +5836,7 @@ pub fn merge_def<'cx>(
                 FunctionReferenceKind::Function,
                 &inner.def,
                 statics_t,
+                false,
                 false,
                 false,
                 false,

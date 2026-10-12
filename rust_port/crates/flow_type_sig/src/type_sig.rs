@@ -2309,6 +2309,7 @@ pub enum Annot<Loc, T> {
     ClassT(Box<(Loc, T)>),
     FunctionBind(Box<Loc>),
     FunAnnot(Box<(Loc, FunSig<Loc, T>)>),
+    MethodAnnot(Box<(Loc, bool, FunSig<Loc, T>)>),
     ComponentAnnot(Box<(Loc, ComponentSig<Loc, T>)>),
     MappedTypeAnnot(Box<AnnotMappedTypeAnnot<Loc, T>>),
     ObjAnnot(Box<AnnotObjAnnot<Loc, T>>),
@@ -2478,6 +2479,11 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
             Annot::FunAnnot(inner) => {
                 inner.0.hash(state);
                 inner.1.hash(state);
+            }
+            Annot::MethodAnnot(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+                inner.2.hash(state);
             }
             Annot::ComponentAnnot(inner) => {
                 inner.0.hash(state);
@@ -2693,6 +2699,10 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::FunAnnot(inner) => {
                 f_loc(cx, &inner.0);
                 inner.1.iter(cx, f_loc, f_t);
+            }
+            Annot::MethodAnnot(inner) => {
+                f_loc(cx, &inner.0);
+                inner.2.iter(cx, f_loc, f_t);
             }
             Annot::ComponentAnnot(inner) => {
                 f_loc(cx, &inner.0);
@@ -3021,6 +3031,11 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::FunAnnot(inner) => Annot::FunAnnot(Box::new((
                 f_loc(cx, &inner.0),
                 inner.1.map(cx, &f_loc, &f_t),
+            ))),
+            Annot::MethodAnnot(inner) => Annot::MethodAnnot(Box::new((
+                f_loc(cx, &inner.0),
+                inner.1,
+                inner.2.map(cx, &f_loc, &f_t),
             ))),
             Annot::ComponentAnnot(inner) => Annot::ComponentAnnot(Box::new((
                 f_loc(cx, &inner.0),

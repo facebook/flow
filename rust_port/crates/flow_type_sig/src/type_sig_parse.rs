@@ -2334,6 +2334,11 @@ pub(crate) mod scope {
                     loc.dupe(),
                     rename_tparams_in_fun_sig(rename_map, def),
                 ))),
+                Annot::MethodAnnot(box (loc, is_static, def)) => Annot::MethodAnnot(Box::new((
+                    loc.dupe(),
+                    *is_static,
+                    rename_tparams_in_fun_sig(rename_map, def),
+                ))),
                 Annot::ComponentAnnot(box (loc, def)) => Annot::ComponentAnnot(Box::new((
                     loc.dupe(),
                     rename_tparams_in_component_sig(rename_map, def),
@@ -7669,6 +7674,7 @@ fn optional_method_as_field<'arena, 'ast>(
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
     xs: &mut tparam_stack::TParamStack,
+    is_static: bool,
     id_loc: &Loc,
     fn_loc: &Loc,
     func: &ast::types::Function<Loc, Loc>,
@@ -7683,7 +7689,7 @@ fn optional_method_as_field<'arena, 'ast>(
     let id_loc = tbls.push_loc(id_loc.dupe());
     let def = function_type(true, opts, scope, scopes, tbls, xs, func);
     let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(Parsed::Annot(
-        Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))),
+        Box::new(ParsedAnnot::MethodAnnot(Box::new((fn_loc, is_static, def)))),
     )))));
     (id_loc, t)
 }
@@ -7755,8 +7761,8 @@ fn object_type<'arena, 'ast>(
                             function_type(true, opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(
-                                Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
-                                    fn_loc, def,
+                                Parsed::Annot(Box::new(ParsedAnnot::MethodAnnot(Box::new((
+                                    fn_loc, p.static_, def,
                                 ))))),
                             ))));
                             let polarity_val =
@@ -7795,6 +7801,7 @@ fn object_type<'arena, 'ast>(
                                         scopes,
                                         tbls,
                                         xs,
+                                        p.static_,
                                         &id_loc,
                                         fn_loc,
                                         inner.as_ref(),
@@ -8193,6 +8200,7 @@ fn interface_props<'arena, 'ast>(
                                 scopes,
                                 tbls,
                                 xs,
+                                p.static_,
                                 &id_loc,
                                 fn_loc,
                                 inner.as_ref(),
@@ -8281,8 +8289,8 @@ fn interface_props<'arena, 'ast>(
                             function_type(true, opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(
-                                Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
-                                    fn_loc, def,
+                                Parsed::Annot(Box::new(ParsedAnnot::MethodAnnot(Box::new((
+                                    fn_loc, p.static_, def,
                                 ))))),
                             ))));
                             let polarity_val =
@@ -8530,6 +8538,7 @@ fn declare_class_props<'arena, 'ast>(
                                 scopes,
                                 tbls,
                                 xs,
+                                p.static_,
                                 &id_loc,
                                 fn_loc,
                                 inner.as_ref(),
@@ -8626,8 +8635,8 @@ fn declare_class_props<'arena, 'ast>(
                             function_type(true, opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(
-                                Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
-                                    fn_loc, def,
+                                Parsed::Annot(Box::new(ParsedAnnot::MethodAnnot(Box::new((
+                                    fn_loc, p.static_, def,
                                 ))))),
                             ))));
                             let polarity_val =
@@ -11862,8 +11871,9 @@ fn class_def<'arena: 'ast, 'ast>(
                         let def =
                             function_type(true, opts, scope, scopes, tbls, &mut xs, f.as_ref());
                         let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(
-                            Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
+                            Parsed::Annot(Box::new(ParsedAnnot::MethodAnnot(Box::new((
                                 fn_loc_node,
+                                *is_static,
                                 def,
                             ))))),
                         ))));

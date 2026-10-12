@@ -246,16 +246,45 @@ fn try_property_method_bivariant<'cx>(
     lower_property: &Property,
     upper_property: &Property,
 ) -> Result<bool, FlowJsException> {
-    let PropertyInner::Method { type_: ut, .. } = upper_property.deref() else {
-        return Ok(false);
+    fn is_method(t: &Type) -> bool {
+        match t.deref() {
+            TypeInner::DefT(_, d) => match d.deref() {
+                DefTInner::FunT(_, ft) => ft.this_t.1 == ThisStatus::ThisMethod,
+                DefTInner::PolyT(poly) => is_method(&poly.t_out),
+                _ => false,
+            },
+            TypeInner::IntersectionT(_, rep) => rep.members_iter().all(is_method),
+            _ => false,
+        }
+    }
+    let ut = match upper_property.deref() {
+        PropertyInner::Method { type_, .. } => type_,
+        PropertyInner::Field(field) => &field.type_,
+        _ => return Ok(false),
     };
+    let ut = cx.find_resolved(ut).unwrap_or_else(|| ut.dupe());
+    let (ut, upper_optional) = match ut.deref() {
+        TypeInner::OptionalT { type_, .. } => (
+            cx.find_resolved(type_).unwrap_or_else(|| type_.dupe()),
+            true,
+        ),
+        _ => (ut, false),
+    };
+    if !matches!(upper_property.deref(), PropertyInner::Method { .. }) && !is_method(&ut) {
+        return Ok(false);
+    }
     let lt = match lower_property.deref() {
         PropertyInner::Field(field) => &field.type_,
         PropertyInner::Method { type_, .. } => type_,
         _ => return Ok(false),
     };
     let lt = cx.find_resolved(lt).unwrap_or_else(|| lt.dupe());
-    let ut = cx.find_resolved(ut).unwrap_or_else(|| ut.dupe());
+    let lt = match lt.deref() {
+        TypeInner::OptionalT { type_, .. } if upper_optional => {
+            cx.find_resolved(type_).unwrap_or_else(|| type_.dupe())
+        }
+        _ => lt,
+    };
     try_method_bivariant(cx, env, trace, use_op, &lt, &ut)
 }
 
