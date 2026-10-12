@@ -86,6 +86,7 @@ const SPLIT_FLOWLIB_FILES: ReadonlyArray<string> = [
 // Flowlib files taken verbatim from `tslib/`. They keep their `.js` name so they are checked as
 // Flow libdefs, but their contents are fetched from the `.d.ts` file.
 const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
+  'lib.decorators.js',
   'lib.decorators.legacy.js',
   'lib.es2015.symbol.js',
   'lib.es2017.arraybuffer.js',

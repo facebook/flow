@@ -20,7 +20,6 @@ macro_rules! flowlib_file {
     };
 }
 
-flowlib_file!(LIB_DECORATORS_JS, "lib.decorators.js");
 flowlib_file!(LIB_ES5_JS, "lib.es5.js");
 flowlib_file!(LIB_ES2015_COLLECTION_JS, "lib.es2015.collection.js");
 flowlib_file!(LIB_ES2015_CORE_JS, "lib.es2015.core.js");
@@ -56,7 +55,7 @@ flowlib_file!(DOM_EXTRA_TO_BE_REMOVED_JS, "dom_extra_to_be_removed.js");
 /// Files taken verbatim from `tslib/` keep a `.js` name so they are checked as Flow libdefs: a
 /// `.d.ts` partial would make every interface it merges into TS-loose.
 pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
-    ("lib.decorators.js", LIB_DECORATORS_JS),
+    ("lib.decorators.js", tslib_contents::LIB_DECORATORS_D_TS),
     (
         "lib.decorators.legacy.js",
         tslib_contents::LIB_DECORATORS_LEGACY_D_TS,
