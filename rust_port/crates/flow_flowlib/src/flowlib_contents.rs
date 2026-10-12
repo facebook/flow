@@ -79,6 +79,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2017.date.js", tslib_contents::LIB_ES2017_DATE_D_TS),
     (
+        "lib.es2017.object.js",
+        tslib_contents::LIB_ES2017_OBJECT_D_TS,
+    ),
+    (
         "lib.es2017.sharedmemory.js",
         tslib_contents::LIB_ES2017_SHAREDMEMORY_D_TS,
     ),
