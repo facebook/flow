@@ -41,7 +41,6 @@ flowlib_file!(LIB_ES2020_INTL_JS, "lib.es2020.intl.js");
 flowlib_file!(LIB_ES2020_PROMISE_JS, "lib.es2020.promise.js");
 flowlib_file!(LIB_ES2020_STRING_JS, "lib.es2020.string.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
-flowlib_file!(LIB_ESNEXT_DECORATORS_JS, "lib.esnext.decorators.js");
 flowlib_file!(LIB_ESNEXT_FLOAT16_JS, "lib.esnext.float16.js");
 flowlib_file!(LIB_ESNEXT_ITERATOR_JS, "lib.esnext.iterator.js");
 flowlib_file!(MISC_JS, "misc.js");
@@ -176,7 +175,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ("lib.es5.js", LIB_ES5_JS),
     ("lib.esnext.array.js", tslib_contents::LIB_ESNEXT_ARRAY_D_TS),
     ("lib.esnext.collection.js", LIB_ESNEXT_COLLECTION_JS),
-    ("lib.esnext.decorators.js", LIB_ESNEXT_DECORATORS_JS),
+    (
+        "lib.esnext.decorators.js",
+        tslib_contents::LIB_ESNEXT_DECORATORS_D_TS,
+    ),
     (
         "lib.esnext.disposable.js",
         tslib_contents::LIB_ESNEXT_DISPOSABLE_D_TS,
