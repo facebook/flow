@@ -224,7 +224,7 @@ Cannot expect `AsyncGenerator` as the return type of async generator function be
 
 References:
    <BUILTINS>/lib.es2018.asyncgenerator.js:23:30
-   23| interface AsyncGenerator<out Yield,out Return,in Next> {
+   23| interface AsyncGenerator<out Yield,out Return,in Next> extends AsyncIteratorObject<Yield,Return,Next> {
                                     ^^^^^ [1]
    generator.js:21:45
    21| async function *genError1(): AsyncGenerator<number, void, void> {
@@ -244,7 +244,7 @@ In type argument `Yield` [1]: `string` [2] is incompatible with `number` [3]. [i
 
 References:
    <BUILTINS>/lib.es2018.asyncgenerator.js:23:30
-   23| interface AsyncGenerator<out Yield,out Return,in Next> {
+   23| interface AsyncGenerator<out Yield,out Return,in Next> extends AsyncIteratorObject<Yield,Return,Next> {
                                     ^^^^^ [1]
    <BUILTINS>/lib.es2015.promise.js:52:59
    52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :

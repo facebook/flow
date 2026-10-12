@@ -70,6 +70,27 @@ References:
                    ^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- iterator_object.js:8:1
+
+Cannot cast `gen()` to `AsyncIteratorObject` because in type argument `TReturn` [1]: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
+
+   iterator_object.js:8:1
+     8| gen() as AsyncIteratorObject<number, number, boolean>; // Error: string ~> number
+        ^^^^^
+
+References:
+   <BUILTINS>/lib.esnext.disposable.js:193:34
+   193| interface AsyncIteratorObject<T, TReturn, TNext> extends AsyncDisposable {
+                                         ^^^^^^^ [1]
+   iterator_object.js:1:47
+     1| async function* gen(): AsyncGenerator<number, string, boolean> {
+                                                      ^^^^^^ [2]
+   iterator_object.js:8:38
+     8| gen() as AsyncIteratorObject<number, number, boolean>; // Error: string ~> number
+                                             ^^^^^^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- return.js:6:3
 
 Cannot cast `result.value` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
@@ -173,4 +194,4 @@ References:
 
 
 
-Found 10 errors
+Found 11 errors
