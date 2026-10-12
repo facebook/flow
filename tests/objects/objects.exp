@@ -189,11 +189,11 @@ with `number` [2]. [incompatible-type]
         ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:244:16
-   244|     valueOf(): unknown;
+   <BUILTINS>/lib.es5.js:240:16
+   240|     valueOf(): unknown;
                        ^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:323:16
-   323|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:319:16
+   319|     valueOf(): number;
                        ^^^^^^ [2]
 
 
@@ -403,8 +403,8 @@ Cannot cast `y['hasOwnProperty']` to string because `(prop: unknown) => boolean`
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:228:5
-   228|     hasOwnProperty(prop: unknown): boolean;
+   <BUILTINS>/lib.es5.js:224:5
+   224|     hasOwnProperty(prop: unknown): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    objects.js:18:24
     18| y['hasOwnProperty'] as string; // error, prototype method is not a string

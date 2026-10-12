@@ -100,6 +100,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2019.array.js", LIB_ES2019_ARRAY_JS),
     (
+        "lib.es2019.object.js",
+        tslib_contents::LIB_ES2019_OBJECT_D_TS,
+    ),
+    (
         "lib.es2019.string.js",
         tslib_contents::LIB_ES2019_STRING_D_TS,
     ),
@@ -127,6 +131,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ("lib.es2021.weakref.js", LIB_ES2021_WEAKREF_JS),
     ("lib.es2022.array.js", tslib_contents::LIB_ES2022_ARRAY_D_TS),
     ("lib.es2022.error.js", tslib_contents::LIB_ES2022_ERROR_D_TS),
+    (
+        "lib.es2022.object.js",
+        tslib_contents::LIB_ES2022_OBJECT_D_TS,
+    ),
     (
         "lib.es2022.regexp.js",
         tslib_contents::LIB_ES2022_REGEXP_D_TS,
