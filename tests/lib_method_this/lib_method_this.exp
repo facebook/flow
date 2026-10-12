@@ -1,0 +1,36 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:5:3
+
+Cannot define method `get` [1] on `C` because `C` [2] is incompatible with `number` [3]. [incompatible-type]
+
+   test.js:5:3
+   5|   get(this: number): string { // error: `C` is incompatible with `number`
+        ^^^ [1]
+
+References:
+   test.js:4:7
+   4| class C {
+            ^ [2]
+   test.js:5:13
+   5|   get(this: number): string { // error: `C` is incompatible with `number`
+                  ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:11:3
+
+Cannot define method `get` [1] on `I` because `I<This>` [2] is incompatible with `empty` [3]. [incompatible-type]
+
+   test.js:11:3
+   11|   get(this: This): void; // error: `I` is incompatible with `This`
+         ^^^ [1]
+
+References:
+   test.js:10:11
+   10| interface I<This> {
+                 ^ [2]
+   test.js:11:13
+   11|   get(this: This): void; // error: `I` is incompatible with `This`
+                   ^^^^ [3]
+
+
+
+Found 2 errors

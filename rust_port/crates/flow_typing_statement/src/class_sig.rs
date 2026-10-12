@@ -1506,11 +1506,11 @@ fn check_methods<'a, C: crate::func_params_intf::Config>(
     x: &class_types::Class<C>,
     self_: &Type,
 ) {
-    let skip_in_ts = files::has_ts_ext(cx.file());
+    let skip = files::has_ts_ext(cx.file()) || cx.is_global_lib_context();
     let check_method =
         |msig: &func_class_sig_types::func::Func<C>, static_: bool, name: &str, id_loc: ALoc| {
             if let Some(this_param) = func_sig::this_param(&msig.fparams) {
-                if skip_in_ts {
+                if skip {
                     return;
                 }
                 let self_val = if static_ {
