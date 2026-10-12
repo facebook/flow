@@ -325,12 +325,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1228:28
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                    ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1228:68
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                                                            ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:3495:13
+   3495|     object: interface {} | ReadonlyArray<unknown>;
+                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2023.collection.js:21:13
+     21|     symbol: symbol;
+                     ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:18:23
@@ -348,12 +348,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1228:28
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                    ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1228:68
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                                                            ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:3495:13
+   3495|     object: interface {} | ReadonlyArray<unknown>;
+                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2023.collection.js:21:13
+     21|     symbol: symbol;
+                     ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:19:23
@@ -371,12 +371,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1228:28
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                    ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1228:68
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                                                            ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:3495:13
+   3495|     object: interface {} | ReadonlyArray<unknown>;
+                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2023.collection.js:21:13
+     21|     symbol: symbol;
+                     ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:24
@@ -394,12 +394,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                 ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1228:28
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                    ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1228:68
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                                                            ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:3495:13
+   3495|     object: interface {} | ReadonlyArray<unknown>;
+                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2023.collection.js:21:13
+     21|     symbol: symbol;
+                     ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:27
@@ -417,12 +417,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                    ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1228:28
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                    ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1228:68
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                                                            ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:3495:13
+   3495|     object: interface {} | ReadonlyArray<unknown>;
+                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2023.collection.js:21:13
+     21|     symbol: symbol;
+                     ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:30
@@ -440,12 +440,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                       ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1228:28
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                    ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1228:68
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                                                            ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:3495:13
+   3495|     object: interface {} | ReadonlyArray<unknown>;
+                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2023.collection.js:21:13
+     21|     symbol: symbol;
+                     ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:31:15
@@ -466,12 +466,12 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1228:28
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                    ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1228:68
-   1228| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
-                                                                            ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:3495:13
+   3495|     object: interface {} | ReadonlyArray<unknown>;
+                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2023.collection.js:21:13
+     21|     symbol: symbol;
+                     ^^^^^^ [3]
 
 
 

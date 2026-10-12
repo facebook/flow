@@ -394,7 +394,7 @@ Flags: --pretty
     {"name":"escape","type":"(str: string) => string"},
     {"name":"EvalError","type":"EvalErrorConstructor"},
     {"name":"exports","type":"{writeonly [key: string]: unknown}"},
-    {"name":"FinalizationRegistry","type":"typeof FinalizationRegistry"},
+    {"name":"FinalizationRegistry","type":"FinalizationRegistryConstructor"},
     {"name":"Float16Array","type":"Float16ArrayConstructor"},
     {"name":"Float32Array","type":"Float32ArrayConstructor"},
     {"name":"Float64Array","type":"Float64ArrayConstructor"},
@@ -462,7 +462,7 @@ Flags: --pretty
     {"name":"unescape","type":"(str: string) => string"},
     {"name":"URIError","type":"URIErrorConstructor"},
     {"name":"WeakMap","type":"WeakMapConstructor"},
-    {"name":"WeakRef","type":"typeof WeakRef"},
+    {"name":"WeakRef","type":"WeakRefConstructor"},
     {"name":"WeakSet","type":"WeakSetConstructor"}
   ]
 }
