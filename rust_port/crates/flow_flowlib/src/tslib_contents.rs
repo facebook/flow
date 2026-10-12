@@ -56,6 +56,7 @@ pub(super) const LIB_ES2022_OBJECT_D_TS: &str = include_tslib!("lib.es2022.objec
 pub(super) const LIB_ES2022_REGEXP_D_TS: &str = include_tslib!("lib.es2022.regexp.d.ts");
 pub(super) const LIB_ES2022_STRING_D_TS: &str = include_tslib!("lib.es2022.string.d.ts");
 pub(super) const LIB_ES2024_COLLECTION_D_TS: &str = include_tslib!("lib.es2024.collection.d.ts");
+pub(super) const LIB_ES2024_OBJECT_D_TS: &str = include_tslib!("lib.es2024.object.d.ts");
 pub(super) const LIB_ES2024_PROMISE_D_TS: &str = include_tslib!("lib.es2024.promise.d.ts");
 pub(super) const LIB_ES2024_REGEXP_D_TS: &str = include_tslib!("lib.es2024.regexp.d.ts");
 pub(super) const LIB_ES2024_SHAREDMEMORY_D_TS: &str =
@@ -258,10 +259,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2024.full.d.ts",
         include_tslib!("lib.es2024.full.d.ts"),
     ),
-    (
-        "lib.es2024.object.d.ts",
-        include_tslib!("lib.es2024.object.d.ts"),
-    ),
+    ("lib.es2024.object.d.ts", LIB_ES2024_OBJECT_D_TS),
     ("lib.es2024.promise.d.ts", LIB_ES2024_PROMISE_D_TS),
     ("lib.es2024.regexp.d.ts", LIB_ES2024_REGEXP_D_TS),
     ("lib.es2024.sharedmemory.d.ts", LIB_ES2024_SHAREDMEMORY_D_TS),

@@ -165,6 +165,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         tslib_contents::LIB_ES2024_COLLECTION_D_TS,
     ),
     (
+        "lib.es2024.object.js",
+        tslib_contents::LIB_ES2024_OBJECT_D_TS,
+    ),
+    (
         "lib.es2024.promise.js",
         tslib_contents::LIB_ES2024_PROMISE_D_TS,
     ),
