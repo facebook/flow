@@ -116,6 +116,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.es2024.sharedmemory.js',
   'lib.es2024.string.js',
   'lib.esnext.array.js',
+  'lib.esnext.disposable.js',
   'lib.esnext.error.js',
   'lib.esnext.promise.js',
   'lib.esnext.sharedmemory.js',
