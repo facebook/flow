@@ -252,19 +252,19 @@ Cannot cast `Promise.any(...)` to `Promise` because in type argument `R` [1]: `s
 `number` [3]. [incompatible-type]
 
    any.js:23:3
-     23|   Promise.any([a, b]) as Promise<number>; // Error: string is incompatible with number
-           ^^^^^^^^^^^^^^^^^^^
+    23|   Promise.any([a, b]) as Promise<number>; // Error: string is incompatible with number
+          ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
-                               ^ [1]
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
    <BUILTINS>/lib.es2021.promise.js:48:59
-     48|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
-                                                                   ^^^^^^^^^^ [2]
+    48|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
+                                                                  ^^^^^^^^^^ [2]
    any.js:23:34
-     23|   Promise.any([a, b]) as Promise<number>; // Error: string is incompatible with number
-                                          ^^^^^^ [3]
+    23|   Promise.any([a, b]) as Promise<number>; // Error: string is incompatible with number
+                                         ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ any.js:29:7
@@ -295,19 +295,19 @@ Cannot return `Promise.any(...)` because in type argument `R` [1]: `unknown` [2]
 [incompatible-type]
 
    any.js:34:10
-     34|   return Promise.any(a); // Error
-                  ^^^^^^^^^^^^^^
+    34|   return Promise.any(a); // Error
+                 ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
-                               ^ [1]
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
    <BUILTINS>/lib.es2021.promise.js:48:59
-     48|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
-                                                                   ^^^^^^^^^^ [2]
+    48|     any<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
+                                                                  ^^^^^^^^^^ [2]
    any.js:33:41
-     33| function test6<X>(a: Array<X>): Promise<X> {
-                                                 ^ [3]
+    33| function test6<X>(a: Array<X>): Promise<X> {
+                                                ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- finally.js:12:1
@@ -316,41 +316,44 @@ Cannot cast `p.finally(...)` to `Promise` because in type argument `R` [1]: `num
 `string` [3]. [incompatible-type]
 
    finally.js:12:1
-     12| p.finally(() => {}) as Promise<string>; // Error: the resolved value is unchanged
-         ^^^^^^^^^^^^^^^^^^^
+    12| p.finally(() => {}) as Promise<string>; // Error: the resolved value is unchanged
+        ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
-                               ^ [1]
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
    finally.js:1:26
-      1| declare const p: Promise<number>;
-                                  ^^^^^^ [2]
+     1| declare const p: Promise<number>;
+                                 ^^^^^^ [2]
    finally.js:12:32
-     12| p.finally(() => {}) as Promise<string>; // Error: the resolved value is unchanged
-                                        ^^^^^^ [3]
+    12| p.finally(() => {}) as Promise<string>; // Error: the resolved value is unchanged
+                                       ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- finally.js:14:11
+Error -------------------------------------------------------------------------------------------------- finally.js:14:3
 
-Cannot call `p.finally` with `1` bound to `onfinally` because: [incompatible-type]
- - Either `1` [1] is incompatible with `() => unknown` [2].
- - Or `1` [1] is incompatible with `void` [3].
+Cannot call `p.finally` because: [incompatible-type]
+ - Either `1` [1] is incompatible with `() => void` [2].
+ - Or `1` [1] is incompatible with `() => unknown` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
+   finally.js:14:3
+    14| p.finally(1); // Error: not a function
+          ^^^^^^^
+
+References:
    finally.js:14:11
-   14| p.finally(1); // Error: not a function
-                 ^ [1]
-
-References:
-   <BUILTINS>/lib.es2018.promise.js:34:26
-   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
-                                ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2018.promise.js:34:43
-   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
-                                                 ^^^^^^^^^ [3]
+    14| p.finally(1); // Error: not a function
+                  ^ [1]
+   <BUILTINS>/lib.es2018.promise.js:30:26
+    30|     finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+                                 ^^^^^^^^^^ [2]
+   <BUILTINS>/misc.js:217:24
+   217|   finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                               ^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
@@ -366,9 +369,9 @@ References:
    finally.js:17:40
    17| declare class NarrowFinally<R> extends Promise<R> {
                                               ^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2018.promise.js:34:25
-   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2018.promise.js:30:25
+   30|     finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
@@ -384,9 +387,9 @@ References:
    finally.js:17:40
    17| declare class NarrowFinally<R> extends Promise<R> {
                                               ^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2018.promise.js:34:43
-   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
-                                                 ^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2018.promise.js:30:40
+   30|     finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+                                              ^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
@@ -402,9 +405,63 @@ References:
    finally.js:17:40
    17| declare class NarrowFinally<R> extends Promise<R> {
                                               ^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2018.promise.js:34:55
-   34|     finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
-                                                             ^^^^ [3]
+   <BUILTINS>/lib.es2018.promise.js:30:52
+   30|     finally(onfinally?: (() => void) | undefined | null): Promise<T>;
+                                                          ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- finally.js:18:22
+
+Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+`() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
+
+   finally.js:18:22
+    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+                             ^^^^^^^^^^^^^ [2]
+
+References:
+   finally.js:17:40
+    17| declare class NarrowFinally<R> extends Promise<R> {
+                                               ^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:217:23
+   217|   finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- finally.js:18:22
+
+Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+`() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
+
+   finally.js:18:22
+    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+                             ^^^^^^^^^^^^^ [2]
+
+References:
+   finally.js:17:40
+    17| declare class NarrowFinally<R> extends Promise<R> {
+                                               ^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:217:41
+   217|   finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                                                ^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- finally.js:18:22
+
+Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+`() => unknown` [2] is incompatible with `null` [3]. [incompatible-type]
+
+   finally.js:18:22
+    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+                             ^^^^^^^^^^^^^ [2]
+
+References:
+   finally.js:17:40
+    17| declare class NarrowFinally<R> extends Promise<R> {
+                                               ^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:217:53
+   217|   finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
+                                                            ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19
@@ -781,16 +838,16 @@ Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1]: `
 `number` [3]. [incompatible-type]
 
    resolve_void.js:1:1
-      1| Promise.resolve() as Promise<number>; // error
-         ^^^^^^^^^^^^^^^^^ [2]
+     1| Promise.resolve() as Promise<number>; // error
+        ^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
-                               ^ [1]
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
    resolve_void.js:1:30
-      1| Promise.resolve() as Promise<number>; // error
-                                      ^^^^^^ [3]
+     1| Promise.resolve() as Promise<number>; // error
+                                     ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- resolve_void.js:3:17
@@ -799,16 +856,16 @@ Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1]
 `number` [3]. [incompatible-type]
 
    resolve_void.js:3:17
-      3| Promise.resolve(undefined) as Promise<number>; // error
-                         ^^^^^^^^^ [2]
+     3| Promise.resolve(undefined) as Promise<number>; // error
+                        ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
-                               ^ [1]
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
    resolve_void.js:3:39
-      3| Promise.resolve(undefined) as Promise<number>; // error
-                                               ^^^^^^ [3]
+     3| Promise.resolve(undefined) as Promise<number>; // error
+                                              ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- withResolvers.js:4:9
@@ -876,19 +933,19 @@ Cannot cast `promise` to `Promise` because in type argument `R` [1]: `number` [2
 [incompatible-type]
 
    withResolvers.js:8:1
-      8| promise as Promise<string>; // Error: number ~> string
-         ^^^^^^^
+     8| promise as Promise<string>; // Error: number ~> string
+        ^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
-                               ^ [1]
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
    withResolvers.js:1:58
-      1| const {promise, resolve, reject} = Promise.withResolvers<number>();
-                                                                  ^^^^^^ [2]
+     1| const {promise, resolve, reject} = Promise.withResolvers<number>();
+                                                                 ^^^^^^ [2]
    withResolvers.js:8:20
-      8| promise as Promise<string>; // Error: number ~> string
-                            ^^^^^^ [3]
+     8| promise as Promise<string>; // Error: number ~> string
+                           ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- withResolvers.js:10:31
@@ -906,4 +963,4 @@ References:
 
 
 
-Found 50 errors
+Found 53 errors

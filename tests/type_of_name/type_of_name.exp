@@ -433,11 +433,11 @@ Found exact match 'OptionalTuple' defined at complex_types.js:75:6,75:18 with ty
 === Promise Types ===
 Found exact match 'StringPromise' defined at complex_types.js:79:6,79:18 with type `type StringPromise = Promise<string>` 
 where
-'Promise' is defined at [LIB] lib.es5.js:3531:11-17
+'Promise' is defined at [LIB] misc.js:216:11-17
 
 Found exact match 'NestedPromise' defined at complex_types.js:80:6,80:18 with type `type NestedPromise = Promise<Promise<number>>` 
 where
-'Promise' is defined at [LIB] lib.es5.js:3531:11-17
+'Promise' is defined at [LIB] misc.js:216:11-17
 
 
 === Readonly Collections ===
@@ -475,7 +475,7 @@ Found exact match 'Validators' defined at complex_types.js:210:6,210:15 with typ
 === Conditional Types ===
 Found exact match 'UnwrapPromise' defined at complex_types.js:125:6,125:18 with type `type UnwrapPromise<T> = T extends Promise<infer V> ? V : T` 
 where
-'Promise' is defined at [LIB] lib.es5.js:3531:11-17
+'Promise' is defined at [LIB] misc.js:216:11-17
 'V' is defined at complex_types.js:125:49
 
 Found exact match 'UnwrapArray' defined at complex_types.js:126:6,126:16 with type `type UnwrapArray<T> = T extends ReadonlyArray<infer V> ? V : T` 
@@ -492,7 +492,7 @@ where
 
 Found exact match 'AsyncFn' defined at complex_types.js:145:6,145:12 with type `type AsyncFn<T> = () => Promise<T>` 
 where
-'Promise' is defined at [LIB] lib.es5.js:3531:11-17
+'Promise' is defined at [LIB] misc.js:216:11-17
 
 
 === Nested/Deep Object Types ===

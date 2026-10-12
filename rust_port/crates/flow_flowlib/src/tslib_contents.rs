@@ -34,6 +34,7 @@ pub(super) const LIB_ES2017_DATE_D_TS: &str = include_tslib!("lib.es2017.date.d.
 pub(super) const LIB_ES2017_SHAREDMEMORY_D_TS: &str =
     include_tslib!("lib.es2017.sharedmemory.d.ts");
 pub(super) const LIB_ES2017_STRING_D_TS: &str = include_tslib!("lib.es2017.string.d.ts");
+pub(super) const LIB_ES2018_PROMISE_D_TS: &str = include_tslib!("lib.es2018.promise.d.ts");
 pub(super) const LIB_ES2018_REGEXP_D_TS: &str = include_tslib!("lib.es2018.regexp.d.ts");
 pub(super) const LIB_ES2019_STRING_D_TS: &str = include_tslib!("lib.es2019.string.d.ts");
 pub(super) const LIB_ES2019_OBJECT_D_TS: &str = include_tslib!("lib.es2019.object.d.ts");
@@ -160,10 +161,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2018.intl.d.ts",
         include_tslib!("lib.es2018.intl.d.ts"),
     ),
-    (
-        "lib.es2018.promise.d.ts",
-        include_tslib!("lib.es2018.promise.d.ts"),
-    ),
+    ("lib.es2018.promise.d.ts", LIB_ES2018_PROMISE_D_TS),
     ("lib.es2018.regexp.d.ts", LIB_ES2018_REGEXP_D_TS),
     (
         "lib.es2019.array.d.ts",

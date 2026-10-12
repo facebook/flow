@@ -93,6 +93,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.es2017.date.js',
   'lib.es2017.sharedmemory.js',
   'lib.es2017.string.js',
+  'lib.es2018.promise.js',
   'lib.es2018.regexp.js',
   'lib.es2019.object.js',
   'lib.es2019.string.js',

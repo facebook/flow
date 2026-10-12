@@ -4,19 +4,19 @@ Cannot cast `p` to `Promise` because in type argument `R` [1]: `unknown` [2] is 
 [incompatible-type]
 
    reason_of_inferred_targs.js:2:1
-      2| p as Promise<string>; // error
-         ^
+     2| p as Promise<string>; // error
+        ^
 
 References:
-   <BUILTINS>/lib.es5.js:3531:23
-   3531| interface Promise<out R = unknown> {
-                               ^ [1]
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
    <BUILTINS>/lib.es2015.promise.js:28:13
-     28|     new<R = unknown>(callback: (
-                     ^^^^^^^ [2]
+    28|     new<R = unknown>(callback: (
+                    ^^^^^^^ [2]
    reason_of_inferred_targs.js:2:14
-      2| p as Promise<string>; // error
-                      ^^^^^^ [3]
+     2| p as Promise<string>; // error
+                     ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:7:17
