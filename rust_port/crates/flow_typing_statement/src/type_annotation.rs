@@ -3588,14 +3588,14 @@ fn convert_inner<'a>(
                     // rejects it), so those keep the object lowering and the `new`
                     // member stays an ordinary method.
                     //
-                    // Gated on the file the annotation is written in: in TypeScript
-                    // `{new(): T}` unambiguously *is* a construct signature, whereas
-                    // in Flow it has always meant an object with a method named
-                    // `new`. A Flow file consuming a TS declaration only reads the
+                    // Gated on the file the annotation is written in: TypeScript and
+                    // library definitions spell a construct signature this way, whereas
+                    // Flow source has always read `{new(): T}` as an object with a method
+                    // named `new`. A Flow file consuming such a declaration only reads the
                     // resulting type, so it constructs just fine.
                     let (obj_t, properties_ast) = if has_construct_sig
                         && !has_spread
-                        && flow_common::files::has_ts_ext(cx.file())
+                        && (flow_common::files::has_ts_ext(cx.file()) || cx.is_global_lib_context())
                     {
                         let reason = reason::mk_annot_reason(
                             reason::VirtualReasonDesc::RObjectType,

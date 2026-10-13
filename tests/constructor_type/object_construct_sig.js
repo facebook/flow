@@ -1,8 +1,9 @@
-// `{new(): T}` in a *Flow* file keeps its long-standing meaning: an object with
-// a method named `new`. Only TypeScript spells a construct signature this way,
-// so the desugar to an inline interface is gated on the file extension. See
-// `tests/tslib_syntax/object_construct_sig*` for the TS side and for a Flow file
-// consuming a TS-authored construct signature.
+// `{new(): T}` in a *Flow* source file keeps its long-standing meaning: an object
+// with a method named `new`. TypeScript files and library definitions spell a
+// construct signature this way, so the desugar to an inline interface is gated on
+// the file. See `tests/tslib_syntax/object_construct_sig*` for the TS side and for
+// a Flow file consuming a TS-authored construct signature, and
+// `lib_construct_sig.js` for a library definition.
 
 declare const c: {new (): {x: number}};
 c.new().x as number; // OK — ordinary method

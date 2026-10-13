@@ -8000,15 +8000,12 @@ fn object_type<'arena, 'ast>(
     // desugar [ConstructorType] gets in [annot]. A spread has no interface
     // equivalent ([interface_props] drops it), so those keep the object lowering
     // and the `new` member stays an ordinary method. Mirrors the routing in
-    // [type_annotation.rs] [convert]'s `Object` case, including its TypeScript
-    // gate: only in TS does `{new(): T}` unambiguously mean a construct
-    // signature. Consumers in Flow files read the resulting annotation, so they
-    // are unaffected by the gate.
-    //
-    // The TS check reads [Tables::strictness_kind] rather than
-    // [opts.is_ts_file] because [parse_libs] shares one [TypeSigOptions] across
-    // every lib file and tracks per-file TS-ness on the tables instead.
-    let has_construct_sig = tbls.strictness_kind.is_typescript_loose()
+    // [type_annotation.rs] [convert]'s `Object` case, including its gate: TS and
+    // library definitions spell a construct signature this way, whereas Flow
+    // source has always read `{new(): T}` as a method named `new`. Consumers in
+    // Flow files read the resulting annotation, so they are unaffected by the
+    // gate.
+    let has_construct_sig = (tbls.strictness_kind.is_typescript_loose() || opts.for_builtins)
         && o.properties.iter().any(|p| match p {
             O::Property::NormalProperty(p) => is_construct_signature(p),
             _ => false,

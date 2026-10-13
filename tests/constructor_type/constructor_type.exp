@@ -1,3 +1,11 @@
+Error ----------------------------------------------------------------------------- flow-typed/lib_construct_sig.js:8:36
+
+Cannot create exact type from `{...}` [1]. [invalid-exact]
+
+   8| declare type LibExactCtor = $Exact<{new (): {x: number}}>; // ERROR
+                                         ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- constructor_type.js:11:8
 
 Cannot call `c2` with `"bad"` bound to `x` because `"bad"` [1] is incompatible with `number` [2]. [incompatible-type]
@@ -112,99 +120,119 @@ References:
                                ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- object_construct_sig.js:9:5
+Error ----------------------------------------------------------------------------------------- lib_construct_sig.js:4:9
 
-Cannot use `new` on `{new(): {x: number}}` [1]. Only classes and interfaces with a construct signature can be
-constructed. [invalid-constructor]
+Cannot call `LibCtor.new` because property `new` is missing in
+`interface {new(x: number): {x: number}; prototype: {x: number}}` [1]. [prop-missing]
 
-   object_construct_sig.js:9:5
-   9| new c();             // ERROR: invalid-constructor
-          ^
+   lib_construct_sig.js:4:9
+   4| LibCtor.new(1); // ERROR: not a method named `new`
+              ^^^
 
 References:
-   object_construct_sig.js:7:18
-   7| declare const c: {new (): {x: number}};
-                       ^^^^^^^^^^^^^^^^^^^^^ [1]
+   flow-typed/lib_construct_sig.js:1:22
+                           v
+   1| declare var LibCtor: {
+   2|   new (x: number): {x: number},
+   3|   prototype: {x: number},
+   4|   helper(): string,
+   5| };
+      ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- object_construct_sig.js:13:5
+Error ------------------------------------------------------------------------------------- object_construct_sig.js:10:5
 
 Cannot use `new` on `{new(): {x: number}}` [1]. Only classes and interfaces with a construct signature can be
 constructed. [invalid-constructor]
 
-   object_construct_sig.js:13:5
-   13| new quoted(); // ERROR: invalid-constructor
+   object_construct_sig.js:10:5
+   10| new c();             // ERROR: invalid-constructor
+           ^
+
+References:
+   object_construct_sig.js:8:18
+    8| declare const c: {new (): {x: number}};
+                        ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- object_construct_sig.js:14:5
+
+Cannot use `new` on `{new(): {x: number}}` [1]. Only classes and interfaces with a construct signature can be
+constructed. [invalid-constructor]
+
+   object_construct_sig.js:14:5
+   14| new quoted(); // ERROR: invalid-constructor
            ^^^^^^
 
 References:
-   object_construct_sig.js:12:23
-   12| declare const quoted: {"new"(): {x: number}};
+   object_construct_sig.js:13:23
+   13| declare const quoted: {"new"(): {x: number}};
                              ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- object_construct_sig.js:16:5
+Error ------------------------------------------------------------------------------------- object_construct_sig.js:17:5
 
 Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
 [invalid-constructor]
 
-   object_construct_sig.js:16:5
-   16| new optionalMethod(); // ERROR: invalid-constructor
+   object_construct_sig.js:17:5
+   17| new optionalMethod(); // ERROR: invalid-constructor
            ^^^^^^^^^^^^^^
 
 References:
-   object_construct_sig.js:15:31
-   15| declare const optionalMethod: {new?(): {x: number}};
+   object_construct_sig.js:16:31
+   16| declare const optionalMethod: {new?(): {x: number}};
                                      ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- object_construct_sig.js:19:5
+Error ------------------------------------------------------------------------------------- object_construct_sig.js:20:5
 
 Cannot use `new` on `{new: () => {x: number}}` [1]. Only classes and interfaces with a construct signature can be
 constructed. [invalid-constructor]
 
-   object_construct_sig.js:19:5
-   19| new field(); // ERROR: invalid-constructor
+   object_construct_sig.js:20:5
+   20| new field(); // ERROR: invalid-constructor
            ^^^^^
 
 References:
-   object_construct_sig.js:18:22
-   18| declare const field: {new: () => {x: number}};
+   object_construct_sig.js:19:22
+   19| declare const field: {new: () => {x: number}};
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- object_construct_sig.js:32:1
-
-Cannot cast `c` to `ICtor` because a construct signature declaring the expected parameter / return type is missing in
-`{new(): {x: number}}` [1] but exists in `ICtor` [2]. [incompatible-type]
-
-   object_construct_sig.js:32:1
-   32| c as ICtor;     // ERROR — object type is not a construct signature here
-       ^
-
-References:
-   object_construct_sig.js:7:18
-    7| declare const c: {new (): {x: number}};
-                        ^^^^^^^^^^^^^^^^^^^^^ [1]
-   object_construct_sig.js:32:6
-   32| c as ICtor;     // ERROR — object type is not a construct signature here
-            ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------- object_construct_sig.js:33:1
 
-Cannot cast `c` to `ArrowCtor` because a construct signature declaring the expected parameter / return type is missing
-in `{new(): {x: number}}` [1] but exists in `ArrowCtor` [2]. [incompatible-type]
+Cannot cast `c` to `ICtor` because a construct signature declaring the expected parameter / return type is missing in
+`{new(): {x: number}}` [1] but exists in `ICtor` [2]. [incompatible-type]
 
    object_construct_sig.js:33:1
-   33| c as ArrowCtor; // ERROR — likewise
+   33| c as ICtor;     // ERROR — object type is not a construct signature here
        ^
 
 References:
-   object_construct_sig.js:7:18
-    7| declare const c: {new (): {x: number}};
+   object_construct_sig.js:8:18
+    8| declare const c: {new (): {x: number}};
                         ^^^^^^^^^^^^^^^^^^^^^ [1]
    object_construct_sig.js:33:6
-   33| c as ArrowCtor; // ERROR — likewise
+   33| c as ICtor;     // ERROR — object type is not a construct signature here
+            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- object_construct_sig.js:34:1
+
+Cannot cast `c` to `ArrowCtor` because a construct signature declaring the expected parameter / return type is missing
+in `{new(): {x: number}}` [1] but exists in `ArrowCtor` [2]. [incompatible-type]
+
+   object_construct_sig.js:34:1
+   34| c as ArrowCtor; // ERROR — likewise
+       ^
+
+References:
+   object_construct_sig.js:8:18
+    8| declare const c: {new (): {x: number}};
+                        ^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_construct_sig.js:34:6
+   34| c as ArrowCtor; // ERROR — likewise
             ^^^^^^^^^ [2]
 
 
@@ -699,4 +727,4 @@ References:
 
 
 
-Found 43 errors
+Found 45 errors
