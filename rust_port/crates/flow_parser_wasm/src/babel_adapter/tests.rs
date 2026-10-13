@@ -727,3 +727,38 @@ function Foo({value}: $ReadOnly<{ value: R }>): React.Node {
 "#
     );
 }
+
+#[test]
+fn runnable_erasure_runs_after_existing_runtime_lowerings() {
+    let source = "enum E {A}\nrecord R {value: number}\ncomponent Foo(value: R) { return match (value) { const x => R {value: x} }; }";
+    assert_eq!(
+        print(&crate::strip_flow::lower_program(
+            &super::lower_program(
+                source,
+                &parse(source),
+                &BabelLoweringOptions {
+                    lower_enums: true,
+                    enum_runtime: EnumRuntime::Default,
+                    react_runtime_target: ReactRuntimeTarget::React19,
+                },
+            )
+            .expect("runtime transforms should lower")
+            .program,
+        )),
+        r#"const E = require("flow-enums-runtime").Mirrored(["A"]);
+class R {
+  constructor({value}) {
+    this.value = value;
+  }
+}
+function Foo({value}) {
+  return ($$gen$m0 => {
+    {
+      const x = $$gen$m0;
+      return new R({ value: x });
+    }
+  })(value);
+}
+"#
+    );
+}

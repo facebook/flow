@@ -24,6 +24,7 @@ mod babel_adapter;
 pub mod node_kinds;
 pub mod position;
 pub mod serializer;
+pub mod strip_flow;
 
 use std::ffi::CString;
 
