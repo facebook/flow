@@ -1,0 +1,71 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
+
+Cannot extend `Options` [1] with `Locale` because in property `name`: `void` [2] is incompatible with `string` [3].
+[incompatible-type]
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   test.js:13:1
+       v----------------------------------------------------------------------------------------------------
+   13| interface Locale extends Options { // ERROR: writable `name` is invariant outside library definitions
+   14|   name: string;
+   15| }
+       ^
+
+References:
+   test.js:13:26
+   13| interface Locale extends Options { // ERROR: writable `name` is invariant outside library definitions
+                                ^^^^^^^ [1]
+   test.js:11:10
+   11|   name?: string;
+                ^^^^^^ [2]
+   test.js:14:9
+   14|   name: string;
+               ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:11
+
+Cannot extend `Options` [1] with `Narrowed` because property `name` is read-only in `Narrowed` [2] but writable in
+`Options` [1]. [incompatible-variance]
+
+   test.js:16:11
+   16| interface Narrowed extends Options { // ERROR: `name` is read-only here but writable in `Options`
+                 ^^^^^^^^ [2]
+
+References:
+   test.js:16:28
+   16| interface Narrowed extends Options { // ERROR: `name` is read-only here but writable in `Options`
+                                  ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:1
+
+Cannot extend `Base` [1] with `Derived` because in property `x`: `number` [2] is incompatible with `string` [3].
+[incompatible-type]
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   test.js:23:1
+       v---------------------------------------------------------------------------------------------------
+   23| declare class Derived extends Base { // ERROR: writable `x` is invariant outside library definitions
+   24|   x: string;
+   25| }
+       ^
+
+References:
+   test.js:23:31
+   23| declare class Derived extends Base { // ERROR: writable `x` is invariant outside library definitions
+                                     ^^^^ [1]
+   test.js:21:15
+   21|   x: string | number;
+                     ^^^^^^ [2]
+   test.js:24:6
+   24|   x: string;
+            ^^^^^^ [3]
+
+
+
+Found 3 errors

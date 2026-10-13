@@ -1759,7 +1759,13 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
                 own: own_name_map,
                 proto: proto_name_map,
                 static_: static_name_map,
-                strictness_kind: cx.type_strictness_kind(),
+                // Overrides in library definitions are checked by TypeScript's rules: an
+                // inherited property may be redeclared with a subtype.
+                strictness_kind: if cx.is_global_lib_context() {
+                    TypeStrictnessKind::TypeScriptLoose
+                } else {
+                    cx.type_strictness_kind()
+                },
                 reference,
             },
         }))),
