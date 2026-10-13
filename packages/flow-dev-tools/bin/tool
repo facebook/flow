@@ -19,7 +19,7 @@ const testsDir = path.resolve(packageRoot, "..", "..", "tests");
 // Resolve modules relative to this package, not the cwd
 const babel = require(require.resolve("@babel/core", { paths: [packageRoot] }));
 const presetFlow = require.resolve("@babel/preset-flow", { paths: [packageRoot] });
-const hermesParserPlugin = require.resolve("babel-plugin-syntax-hermes-parser", { paths: [packageRoot] });
+const flowParserPlugin = require.resolve("flow-parser/babel-plugin", { paths: [packageRoot] });
 
 const originalCompile = Module.prototype._compile;
 Module.prototype._compile = function (code, filename) {
@@ -27,7 +27,7 @@ Module.prototype._compile = function (code, filename) {
     const result = babel.transformSync(code, {
       filename,
       presets: [presetFlow],
-      plugins: [hermesParserPlugin],
+      plugins: [flowParserPlugin],
     });
     code = result.code;
   }

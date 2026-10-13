@@ -18,7 +18,7 @@ Module.prototype._compile = function (code, filename) {
     const result = babel.transformSync(code, {
       filename,
       presets: ['@babel/preset-flow'],
-      plugins: ['babel-plugin-syntax-hermes-parser'],
+      plugins: ['flow-parser/babel-plugin'],
     });
     code = result.code;
   }
