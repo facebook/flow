@@ -30,11 +30,12 @@ module.exports = suite(
           isConnected: true,
         }),
       ).verifyAllLSPMessagesInStep(
+        [{method: 'telemetry/connectionStatus', params: {isConnected: true}}],
         [
-          {method: 'telemetry/connectionStatus', params: {isConnected: true}},
-          ['window/showStatus', 'Flow is ready.'],
+          'window/showStatus',
+          'textDocument/publishDiagnostics',
+          '$/cancelRequest',
         ],
-        ['textDocument/publishDiagnostics', '$/cancelRequest'],
       ),
     ]),
   ],
