@@ -7901,7 +7901,7 @@ fn expression_<'a>(
             let tag_ast = expression(None, None, None, cx, &inner.tag)?;
             let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
             let t = tag_ast.loc().1.dupe();
-            let reason = mk_reason(VirtualReasonDesc::RCustom("encaps tag".into()), loc.dupe());
+            let reason = mk_reason(RFunctionCall(Arc::new(desc_of_t(&t).clone())), loc.dupe());
             let reason_array = mk_reason(VirtualReasonDesc::RArray, reason.loc().dupe());
             let ret_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
             let ret_tvar = Tvar::new(reason.dupe(), ret_id as u32);

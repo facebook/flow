@@ -40,49 +40,49 @@ References:
                                                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ tagged_template.js:25:5
+Error ------------------------------------------------------------------------------------------ tagged_template.js:34:5
 
 Cannot cast `quasis.raw` to empty because `ReadonlyArray<string>` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
-   tagged_template.js:25:5
-    25|     quasis.raw as empty; // ERROR
+   tagged_template.js:34:5
+    34|     quasis.raw as empty; // ERROR
             ^^^^^^^^^^
 
 References:
    <BUILTINS>/lib.es5.js:738:17
    738|   readonly raw: ReadonlyArray<string>;
                         ^^^^^^^^^^^^^^^^^^^^^ [1]
-   tagged_template.js:25:19
-    25|     quasis.raw as empty; // ERROR
+   tagged_template.js:34:19
+    34|     quasis.raw as empty; // ERROR
                           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ tagged_template.js:34:3
+Error ------------------------------------------------------------------------------------------ tagged_template.js:43:3
 
 Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   tagged_template.js:34:3
-    34|   x as empty; // ERROR
+   tagged_template.js:43:3
+    43|   x as empty; // ERROR
           ^
 
 References:
    <BUILTINS>/lib.es2015.core.js:364:115
    364|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
                                                                                                                           ^^^^^^ [1]
-   tagged_template.js:34:8
-    34|   x as empty; // ERROR
+   tagged_template.js:43:8
+    43|   x as empty; // ERROR
                ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- tagged_template.js:36:14
+Error ----------------------------------------------------------------------------------------- tagged_template.js:45:14
 
 Cannot call `String.raw` with `'foo'` bound to `callSite` because `"foo"` [1], a primitive, cannot be used as a subtype
 of `interface {readonly raw: ReadonlyArray<string>}` [2]. You can wrap it in `new String(...))` to turn it into an
 object and attempt to use it as a subtype of an interface. [incompatible-type]
 
-   tagged_template.js:36:14
-    36|   String.raw('foo'); // ERROR
+   tagged_template.js:45:14
+    45|   String.raw('foo'); // ERROR
                      ^^^^^ [1]
 
 References:
@@ -91,20 +91,20 @@ References:
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ tagged_template.js:45:3
+Error ------------------------------------------------------------------------------------------ tagged_template.js:54:3
 
 Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   tagged_template.js:45:3
-    45|   x as empty; // ERROR
+   tagged_template.js:54:3
+    54|   x as empty; // ERROR
           ^
 
 References:
    <BUILTINS>/lib.es2015.core.js:364:115
    364|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
                                                                                                                           ^^^^^^ [1]
-   tagged_template.js:45:8
-    45|   x as empty; // ERROR
+   tagged_template.js:54:8
+    54|   x as empty; // ERROR
                ^^^^^ [2]
 
 

@@ -19,6 +19,15 @@
 }
 
 {
+  // generic rest param
+  declare const quasis: TaggedTemplateLiteralArray;
+  declare const tag: <T = {}>(quasis: TaggedTemplateLiteralArray, ...exprs: Array<T>) => Array<T>;
+  tag`foo` as Array<{}>; // OK
+  tag(quasis) as Array<{}>; // OK
+  tag`foo${1}` as Array<number>; // OK
+}
+
+{
   // raw property
   const tag = (quasis: TaggedTemplateLiteralArray, x: number) => {
     quasis.raw as ReadonlyArray<string>; // OK
