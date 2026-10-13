@@ -24,5 +24,23 @@ Invalid type cast syntax. Use the form `<expr> as <type>` instead of the form `(
          ^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:34:11
 
-Found 2 errors
+Invalid type cast syntax. Use the form `<expr> as <type>` instead of the form `(<expr>: <type>)`.
+[invalid-type-cast-syntax]
+
+   34|     prop: ([]: Array<number>), // ERROR
+                 ^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:38:17
+
+Invalid type cast syntax. Use the form `<expr> as <type>` instead of the form `(<expr>: <type>)`.
+[invalid-type-cast-syntax]
+
+   38| class B extends (Object: any) { // ERROR
+                       ^^^^^^^^^^^^^
+
+
+
+Found 4 errors

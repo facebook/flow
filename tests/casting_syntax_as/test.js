@@ -28,3 +28,12 @@
 // Extends
 class A extends (Object as any) { // OK
 }
+
+{
+  const obj = {
+    prop: ([]: Array<number>), // ERROR
+  };
+}
+
+class B extends (Object: any) { // ERROR
+}

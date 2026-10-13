@@ -172,7 +172,6 @@ pub struct FrozenMetadata {
     pub automatic_require_default: bool,
     pub babel_loose_array_spread: bool,
     pub ban_spread_key_props: bool,
-    pub casting_syntax_only_support_as_excludes: Arc<[Regex]>,
     pub component_syntax: bool,
     pub async_component_syntax: bool,
     pub async_component_syntax_includes: Arc<[Regex]>,
@@ -234,7 +233,6 @@ impl Default for FrozenMetadata {
             automatic_require_default: false,
             babel_loose_array_spread: false,
             ban_spread_key_props: false,
-            casting_syntax_only_support_as_excludes: Arc::from([]),
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Arc::from([]),
@@ -627,9 +625,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
 
             automatic_require_default: options.automatic_require_default,
             babel_loose_array_spread: options.babel_loose_array_spread,
-            casting_syntax_only_support_as_excludes: options
-                .casting_syntax_only_support_as_excludes
-                .dupe(),
             component_syntax: options.component_syntax,
             async_component_syntax: options.async_component_syntax,
             async_component_syntax_includes: options.async_component_syntax_includes.dupe(),
@@ -1083,16 +1078,6 @@ impl<'cx> Context<'cx> {
         name: &Userland,
     ) -> Option<(Reason, LazyModuleType<'cx, Context<'cx>>)> {
         self.builtins().get_builtin_module_opt(self, name)
-    }
-
-    pub fn supports_legacy_colon_cast_syntax(&self) -> bool {
-        self.in_dirlist(
-            &self
-                .0
-                .metadata
-                .frozen
-                .casting_syntax_only_support_as_excludes,
-        )
     }
 
     pub fn component_syntax(&self) -> bool {

@@ -151,7 +151,6 @@ pub mod opts {
         pub babel_loose_array_spread: Option<bool>,
         pub ban_spread_key_props: Option<bool>,
         pub builtin_ts_libdef_dynamic_discovery: bool,
-        pub casting_syntax_only_support_as_excludes: Vec<String>,
         pub component_syntax: bool,
         pub async_component_syntax: bool,
         pub async_component_syntax_includes: Vec<String>,
@@ -291,7 +290,6 @@ pub mod opts {
             babel_loose_array_spread: None,
             ban_spread_key_props: None,
             builtin_ts_libdef_dynamic_discovery: false,
-            casting_syntax_only_support_as_excludes: Vec::new(),
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Vec::new(),
@@ -2070,22 +2068,6 @@ pub mod opts {
                             opts.builtin_ts_libdef_dynamic_discovery = v;
                             Ok(())
                         },
-                        values,
-                        config,
-                    )
-                },
-            ),
-            (
-                "experimental.casting_syntax.only_support_as.excludes",
-                |values, config| {
-                    parse_string(
-                        |opts, v| {
-                            opts.casting_syntax_only_support_as_excludes
-                                .push(ocaml_str_to_rust_regex(&v));
-                            Ok(())
-                        },
-                        Some(|opts| opts.casting_syntax_only_support_as_excludes = Vec::new()),
-                        true,
                         values,
                         config,
                     )

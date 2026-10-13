@@ -2172,7 +2172,6 @@ pub fn make_options(
                 babel_loose_array_spread,
                 ban_spread_key_props,
                 builtin_ts_libdef_dynamic_discovery: _,
-                casting_syntax_only_support_as_excludes,
                 component_syntax,
                 async_component_syntax,
                 async_component_syntax_includes,
@@ -2386,16 +2385,6 @@ pub fn make_options(
     flow_parser::file_key::set_project_root(&root.to_string_lossy());
     flow_parser::file_key::set_flowlib_root(&flowlib_path.to_string_lossy());
 
-    let casting_syntax_only_support_as_excludes: Arc<[Regex]> =
-        casting_syntax_only_support_as_excludes
-            .iter()
-            .map(|s| {
-                let expanded = flow_common::files::expand_project_root_token(&root, s);
-                Regex::new(&expanded).unwrap()
-            })
-            .collect::<Vec<_>>()
-            .into();
-
     let hook_compatibility_excludes: Arc<[Regex]> = hook_compatibility_excludes
         .iter()
         .map(|s| {
@@ -2546,7 +2535,6 @@ pub fn make_options(
         babel_loose_array_spread,
         ban_spread_key_props,
         builtin_ts_libdef_dynamic_discovery,
-        casting_syntax_only_support_as_excludes,
         component_syntax,
         async_component_syntax,
         async_component_syntax_includes,
