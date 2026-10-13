@@ -1546,16 +1546,16 @@ pub(crate) mod scope {
                     }
                     id = *parent;
                 }
-                Scope::DeclareNamespace { parent, values, .. } => match values
-                    .get(name)
-                    .map(|binding| binding.dupe())
-                    .or_else(|| lookup_merged_namespace_member_value(scopes, id, name))
-                {
-                    Some(binding) => return Some((binding.dupe(), id)),
-                    None => {
-                        id = *parent;
+                Scope::DeclareNamespace { parent, values, .. } => {
+                    match lookup_merged_namespace_member_value(scopes, id, name)
+                        .or_else(|| values.get(name).map(|binding| binding.dupe()))
+                    {
+                        Some(binding) => return Some((binding.dupe(), id)),
+                        None => {
+                            id = *parent;
+                        }
                     }
-                },
+                }
             }
         }
     }
@@ -1682,18 +1682,13 @@ pub(crate) mod scope {
         name: &FlowSmolStr,
     ) -> Option<BindingNode<'arena, 'ast>> {
         let (host, path) = namespace_path_and_host(scopes, id)?;
-        for prefix_len in (1..=path.len()).rev() {
-            let mut path = path.iter().take(prefix_len);
-            let first = path.next()?;
-            let mut binding = lookup_type_in_scope(scopes, host, first)?;
-            for namespace_name in path {
-                binding = namespace_member_type(scopes, binding, namespace_name)?;
-            }
-            if let Some(binding) = namespace_member_type(scopes, binding, name) {
-                return Some(binding);
-            }
+        let mut path = path.iter();
+        let first = path.next()?;
+        let mut binding = lookup_type_in_scope(scopes, host, first)?;
+        for namespace_name in path {
+            binding = namespace_member_type(scopes, binding, namespace_name)?;
         }
-        None
+        namespace_member_type(scopes, binding, name)
     }
 
     fn lookup_merged_namespace_member_value<'arena, 'ast>(
@@ -1702,18 +1697,13 @@ pub(crate) mod scope {
         name: &FlowSmolStr,
     ) -> Option<BindingNode<'arena, 'ast>> {
         let (host, path) = namespace_path_and_host(scopes, id)?;
-        for prefix_len in (1..=path.len()).rev() {
-            let mut path = path.iter().take(prefix_len);
-            let first = path.next()?;
-            let mut binding = lookup_value_in_scope(scopes, host, first)?;
-            for namespace_name in path {
-                binding = namespace_member_value(scopes, binding, namespace_name)?;
-            }
-            if let Some(binding) = namespace_member_value(scopes, binding, name) {
-                return Some(binding);
-            }
+        let mut path = path.iter();
+        let first = path.next()?;
+        let mut binding = lookup_value_in_scope(scopes, host, first)?;
+        for namespace_name in path {
+            binding = namespace_member_value(scopes, binding, namespace_name)?;
         }
-        None
+        namespace_member_value(scopes, binding, name)
     }
 
     pub(crate) fn lookup_type<'a, 'arena, 'ast>(
@@ -1734,8 +1724,8 @@ pub(crate) mod scope {
                     values,
                     types,
                     ..
-                } => match lookup_scope(name, values, types)
-                    .or_else(|| lookup_merged_namespace_member_type(scopes, id, name))
+                } => match lookup_merged_namespace_member_type(scopes, id, name)
+                    .or_else(|| lookup_scope(name, values, types))
                 {
                     Some(binding) => return Some((binding, id)),
                     None => {
