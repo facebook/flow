@@ -272,14 +272,12 @@ impl ReasonDescFunction {
 )]
 pub enum VirtualReasonDesc<L: Dupe> {
     RAnyExplicit,
-    RAnyImplicit,
     RNumber,
     RBigInt,
     RString,
     RBoolean,
     RMixed,
     REmpty,
-    REmptyArrayElement,
     RVoid,
     RNull,
     RVoidedNull,
@@ -290,7 +288,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RConditionalType,
     RMatch,
     RMatchPattern,
-    RMatchWildcard,
     RObject,
     RObjectLit,
     RObjectLitUnsound,
@@ -304,15 +301,11 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RConstArrayLit,
     REmptyArrayLit,
     RArrayType,
-    RArrayElement,
     RArrayHole,
     RROArrayType,
     RTupleType,
     RTupleUnknownElementFromInexact,
     RFunctionType,
-    RFunctionBody,
-    RFunctionUnusedArgument,
-    RJSXChild,
     RJSXText,
     RFbt,
     RTemplateString,
@@ -324,10 +317,8 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RConstructorVoidReturn,
     RUnion,
     RUnionType,
-    RIntersection,
     RIntersectionType,
     RKeySet,
-    RAnd,
     RConditional,
     RPrototype,
     RObjectPrototype,
@@ -346,26 +337,17 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RSomeProperty,
     RAsyncImport,
     RNonnullAssert,
-    RMixins,
-    RUnaryMinus,
-    RUnaryNot,
-    RRest,
     RGlobalObject,
     RProviders,
-    RForOfElement,
     RUpdate,
-    RUnusedYield,
-    RUnusedReturn,
     RCommonInterface,
     RContextualVariable,
     RNext,
     RModuleReference,
     RNewFunction,
     RNewArray,
-    RArrayLength,
     RImportMeta,
     RAwait,
-    RAsyncReturn,
     RCallableObjectType,
     RClassExtends,
     RClassMixins,
@@ -382,10 +364,8 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RUninitialized,
     RPossiblyUninitialized,
     RUnannotatedNext,
-    RTypeGuard,
     RComponentType,
     RRendersNothing,
-    RAutocompleteToken,
     RStringLit(FlowSmolStr),
     RTemplateLiteralType,
     RNumberLit(FlowSmolStr),
@@ -403,7 +383,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RTupleElement {
         name: Option<FlowSmolStr>,
     },
-    RTupleLength(i32),
     RTupleOutOfBoundsAccess(i32),
     RFunction(ReasonDescFunction),
     RFunctionCall(Option<Arc<VirtualReasonDesc<L>>>),
@@ -448,7 +427,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RMethodCall(Option<FlowSmolStr>),
     RParameter(Option<FlowSmolStr>),
     RRestParameter(Option<FlowSmolStr>),
-    RPatternParameter(FlowSmolStr),
     RIdentifier(FlowSmolStr),
     RPropertyAssignment(Option<FlowSmolStr>),
     RProperty(Option<Name>),
@@ -458,12 +436,8 @@ pub enum VirtualReasonDesc<L: Dupe> {
         property: FlowSmolStr,
     },
     RPropertyOf(Name, Arc<VirtualReasonDesc<L>>),
-    RPropertyIsAString(Name),
     RMissingProperty(Option<Name>),
-    RUnknownProperty(Option<Name>),
     RUnknownUnspecifiedProperty(Arc<VirtualReasonDesc<L>>),
-    RUndefinedProperty(Name),
-    RNameProperty(Arc<VirtualReasonDesc<L>>),
     RNamedImportedType(Userland, FlowSmolStr),
     RImportStarType(FlowSmolStr),
     RImportStarTypeOf(FlowSmolStr),
@@ -486,7 +460,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RBound(Arc<VirtualReasonDesc<L>>),
     RRefined(Arc<VirtualReasonDesc<L>>),
     RRefinedElement(Arc<VirtualReasonDesc<L>>),
-    RIncompatibleInstantiation(SubstName),
     RPartialOf(Arc<VirtualReasonDesc<L>>),
     RRequiredOf(Arc<VirtualReasonDesc<L>>),
     RModule(Userland),
@@ -496,19 +469,11 @@ pub enum VirtualReasonDesc<L: Dupe> {
         name_opt: Option<Name>,
         from_component_syntax: bool,
     },
-    RReactChildrenOrType(Arc<VirtualReasonDesc<L>>),
-    RReactChildrenOrUndefinedOrType(Arc<VirtualReasonDesc<L>>),
     RPossiblyMissingPropFromObj(Name, Arc<VirtualReasonDesc<L>>),
     RUnionBranching(Arc<VirtualReasonDesc<L>>, i32),
     RTypeGuardParam(FlowSmolStr),
     RComponent(FlowSmolStr),
     RPropsOfComponent(Arc<VirtualReasonDesc<L>>),
-    RInstanceOfComponent(Arc<VirtualReasonDesc<L>>),
-    RDefaultTypeArgumentAtIndex {
-        desc_type: Arc<VirtualReasonDesc<L>>,
-        desc_default: Arc<VirtualReasonDesc<L>>,
-        position: i32,
-    },
     RRenderType(Arc<VirtualReasonDesc<L>>),
     RRenderMaybeType(Arc<VirtualReasonDesc<L>>),
     RRenderStarType(Arc<VirtualReasonDesc<L>>),
@@ -524,7 +489,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
         match self {
             // Simple variants with no locations - need to reconstruct for type conversion
             RAnyExplicit => RAnyExplicit,
-            RAnyImplicit => RAnyImplicit,
             RNumber => RNumber,
             RBigInt => RBigInt,
             RString => RString,
@@ -555,20 +519,15 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RConstArrayLit => RConstArrayLit,
             REmptyArrayLit => REmptyArrayLit,
             RArrayType => RArrayType,
-            RArrayElement => RArrayElement,
             RArrayNthElement(i) => RArrayNthElement(*i),
             RArrayHole => RArrayHole,
             RROArrayType => RROArrayType,
             RTupleType => RTupleType,
             RTupleElement { name } => RTupleElement { name: name.dupe() },
-            RTupleLength(i) => RTupleLength(*i),
             RTupleOutOfBoundsAccess(i) => RTupleOutOfBoundsAccess(*i),
             RTupleUnknownElementFromInexact => RTupleUnknownElementFromInexact,
             RFunction(func) => RFunction(*func),
             RFunctionType => RFunctionType,
-            RFunctionBody => RFunctionBody,
-            RFunctionUnusedArgument => RFunctionUnusedArgument,
-            RJSXChild => RJSXChild,
             RJSXFunctionCall(s) => RJSXFunctionCall(s.dupe()),
             RJSXIdentifier(s1, s2) => RJSXIdentifier(s1.dupe(), s2.dupe()),
             RJSXElementProps(s) => RJSXElementProps(s.dupe()),
@@ -578,9 +537,7 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RUninitialized => RUninitialized,
             RPossiblyUninitialized => RPossiblyUninitialized,
             RUnannotatedNext => RUnannotatedNext,
-            REmptyArrayElement => REmptyArrayElement,
             RMappedType => RMappedType,
-            RTypeGuard => RTypeGuard,
             RTypeGuardParam(s) => RTypeGuardParam(s.dupe()),
             RComponent(n) => RComponent(n.dupe()),
             RComponentType => RComponentType,
@@ -601,10 +558,8 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RConstructorVoidReturn => RConstructorVoidReturn,
             RUnion => RUnion,
             RUnionType => RUnionType,
-            RIntersection => RIntersection,
             RIntersectionType => RIntersectionType,
             RKeySet => RKeySet,
-            RAnd => RAnd,
             RConditional => RConditional,
             RPrototype => RPrototype,
             RObjectPrototype => RObjectPrototype,
@@ -626,7 +581,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RMethodCall(opt) => RMethodCall(opt.dupe()),
             RParameter(opt) => RParameter(opt.dupe()),
             RRestParameter(opt) => RRestParameter(opt.dupe()),
-            RPatternParameter(s) => RPatternParameter(s.dupe()),
             RIdentifier(n) => RIdentifier(n.dupe()),
             RPropertyAssignment(opt) => RPropertyAssignment(opt.dupe()),
             RProperty(opt) => RProperty(opt.dupe()),
@@ -635,10 +589,7 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 object_: object_.dupe(),
                 property: property.dupe(),
             },
-            RPropertyIsAString(n) => RPropertyIsAString(n.dupe()),
             RMissingProperty(opt) => RMissingProperty(opt.dupe()),
-            RUnknownProperty(opt) => RUnknownProperty(opt.dupe()),
-            RUndefinedProperty(n) => RUndefinedProperty(n.dupe()),
             RSomeProperty => RSomeProperty,
             RNamedImportedType(u, s) => RNamedImportedType(u.clone(), s.dupe()),
             RImportStarType(s) => RImportStarType(s.dupe()),
@@ -649,32 +600,22 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RCode(s) => RCode(s.dupe()),
             RCustom(s) => RCustom(s.dupe()),
             RNonnullAssert => RNonnullAssert,
-            RMixins => RMixins,
-            RUnaryMinus => RUnaryMinus,
-            RUnaryNot => RUnaryNot,
-            RRest => RRest,
             RGlobalObject => RGlobalObject,
             RProviders => RProviders,
-            RForOfElement => RForOfElement,
             RUpdate => RUpdate,
-            RUnusedYield => RUnusedYield,
-            RUnusedReturn => RUnusedReturn,
             RCommonInterface => RCommonInterface,
             RContextualVariable => RContextualVariable,
             RNext => RNext,
             RModuleReference => RModuleReference,
             RNewFunction => RNewFunction,
             RNewArray => RNewArray,
-            RArrayLength => RArrayLength,
             RImportMeta => RImportMeta,
             RAwait => RAwait,
-            RAsyncReturn => RAsyncReturn,
             RCallableObjectType => RCallableObjectType,
             RClassExtends => RClassExtends,
             RClassMixins => RClassMixins,
             RReactKey => RReactKey,
             RNoProviders => RNoProviders,
-            RIncompatibleInstantiation(s) => RIncompatibleInstantiation(s.clone()),
             ROpaqueType(s) => ROpaqueType(s.dupe()),
             RObjectKeyMirror => RObjectKeyMirror,
             RIndexedAccess { optional } => RIndexedAccess {
@@ -682,10 +623,8 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             },
             RConditionalType => RConditionalType,
             RRendersNothing => RRendersNothing,
-            RAutocompleteToken => RAutocompleteToken,
             RMatch => RMatch,
             RMatchPattern => RMatchPattern,
-            RMatchWildcard => RMatchWildcard,
             RObjectPatternRestProp => RObjectPatternRestProp,
             RArrayPatternRestProp => RArrayPatternRestProp,
             RModule(u) => RModule(u.clone()),
@@ -728,7 +667,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RTypeParamBound(d) => RTypeParamBound(Arc::new(d.map_locs(f))),
             RTypeParamDefault(d) => RTypeParamDefault(Arc::new(d.map_locs(f))),
             RPropertyOf(n, d) => RPropertyOf(n.dupe(), Arc::new(d.map_locs(f))),
-            RNameProperty(d) => RNameProperty(Arc::new(d.map_locs(f))),
             RPolyType(d) => RPolyType(Arc::new(d.map_locs(f))),
             RExactType(d) => RExactType(Arc::new(d.map_locs(f))),
             ROptional(d) => ROptional(Arc::new(d.map_locs(f))),
@@ -748,25 +686,11 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RRequiredOf(d) => RRequiredOf(Arc::new(d.map_locs(f))),
             RMatchingProp(s, d) => RMatchingProp(s.dupe(), Arc::new(d.map_locs(f))),
             RImplicitThis(d) => RImplicitThis(Arc::new(d.map_locs(f))),
-            RReactChildrenOrType(d) => RReactChildrenOrType(Arc::new(d.map_locs(f))),
-            RReactChildrenOrUndefinedOrType(d) => {
-                RReactChildrenOrUndefinedOrType(Arc::new(d.map_locs(f)))
-            }
             RPossiblyMissingPropFromObj(n, d) => {
                 RPossiblyMissingPropFromObj(n.dupe(), Arc::new(d.map_locs(f)))
             }
             RUnionBranching(d, i) => RUnionBranching(Arc::new(d.map_locs(f)), *i),
             RPropsOfComponent(d) => RPropsOfComponent(Arc::new(d.map_locs(f))),
-            RInstanceOfComponent(d) => RInstanceOfComponent(Arc::new(d.map_locs(f))),
-            RDefaultTypeArgumentAtIndex {
-                desc_type,
-                desc_default,
-                position,
-            } => RDefaultTypeArgumentAtIndex {
-                desc_type: Arc::new(desc_type.map_locs(f)),
-                desc_default: Arc::new(desc_default.map_locs(f)),
-                position: *position,
-            },
             RRenderType(d) => RRenderType(Arc::new(d.map_locs(f))),
             RRenderMaybeType(d) => RRenderMaybeType(Arc::new(d.map_locs(f))),
             RRenderStarType(d) => RRenderStarType(Arc::new(d.map_locs(f))),
@@ -1480,8 +1404,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RBoolean => "boolean".to_string(),
         RMixed => "`unknown`".to_string(),
         REmpty => "empty".to_string(),
-        REmptyArrayElement => "unknown element of empty array".to_string(),
-        RAnyImplicit => "implicit 'any'".to_string(),
         RAnyExplicit => "explicit 'any'".to_string(),
         RVoid => "undefined".to_string(),
         RNull => "null".to_string(),
@@ -1512,7 +1434,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RConditionalType => "conditional type".to_string(),
         RMatch => "match".to_string(),
         RMatchPattern => "match pattern".to_string(),
-        RMatchWildcard => "match wildcard".to_string(),
         RMatchingProp(k, v) => format!(
             "object with property `{}` that matches {}",
             k,
@@ -1533,7 +1454,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RConstArrayLit => "const array literal".to_string(),
         REmptyArrayLit => "empty array literal".to_string(),
         RArrayType => "array type".to_string(),
-        RArrayElement => "array element".to_string(),
         RArrayNthElement(i) => format!("element {}", i),
         RArrayHole => "undefined (due to array hole)".to_string(),
         RInferredUnionElemArray { .. } => "inferred union of array element types \
@@ -1553,20 +1473,16 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RTupleUnknownElementFromInexact => {
             "an unknown element of an inexact tuple type".to_string()
         }
-        RTupleLength(i) => format!("length `{}` (number) of tuple", i),
 
         // Functions
         RFunction(func) => format!("{}function", func.prefix()),
         RFunctionType => "function type".to_string(),
-        RFunctionBody => "function body".to_string(),
         RFunctionCall(d) => format!(
             "call of {}",
             d.as_deref().map(string_of_desc).unwrap_or_default()
         ),
-        RFunctionUnusedArgument => "unused function argument".to_string(),
 
         // JSX
-        RJSXChild => "JSX child".to_string(),
         RJSXFunctionCall(raw_jsx) => format!("`{}(...)`", raw_jsx),
         RJSXIdentifier(_, name) => format!("`{}`", name),
         RJSXElement(x) => match x {
@@ -1630,10 +1546,8 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Unions and intersections
         RUnion => "union".to_string(),
         RUnionType => "union type".to_string(),
-        RIntersection => "intersection".to_string(),
         RIntersectionType => "intersection type".to_string(),
         RKeySet => "key set".to_string(),
-        RAnd => "and".to_string(),
         RConditional => "conditional".to_string(),
 
         // Prototypes
@@ -1701,7 +1615,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RParameter(None) => "parameter".to_string(),
         RRestParameter(Some(x)) => format!("rest parameter `{}`", x),
         RRestParameter(None) => "rest parameter".to_string(),
-        RPatternParameter(x) => format!("pattern parameter `{}`", x),
         RIdentifier(x) => format!("`{}`", prettify_react_util(x.as_str())),
         RPropertyAssignment(x) => match x {
             Some(x) => format!("assignment of property `{}`", x),
@@ -1716,27 +1629,19 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RPropertyOf(x, d) => {
             format!("property `{}` of {}", x, string_of_desc(d))
         }
-        RPropertyIsAString(x) if x.matches_str("") => "empty string".to_string(),
-        RPropertyIsAString(x) => format!("string `{}`", x),
         RMissingProperty(Some(x)) => {
             format!("`void` (due to access of non-existent property `{}`)", x)
         }
         RMissingProperty(None) => {
             "`void` (due to access of a computed property which does not exist)".to_string()
         }
-        RUnknownProperty(Some(x)) => {
-            format!("property `{}` of unknown type", x)
-        }
-        RUnknownProperty(None) => "computed property of unknown type".to_string(),
         RUnknownUnspecifiedProperty(d) => {
             format!(
                 "an unknown property that may exist on the inexact {}",
                 string_of_desc(d)
             )
         }
-        RUndefinedProperty(x) => format!("undefined property `{}`", x),
         RSomeProperty => "some property".to_string(),
-        RNameProperty(d) => format!("property `name` of {}", string_of_desc(d)),
 
         // Imports
         RNamedImportedType(module_name, _) => {
@@ -1754,26 +1659,17 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Misc operations
         RNonnullAssert => "!".to_string(),
-        RMixins => "mixins".to_string(),
-        RUnaryMinus => "unary minus".to_string(),
-        RUnaryNot => "unary not".to_string(),
-        RRest => "rest".to_string(),
         RGlobalObject => "global object".to_string(),
         RProviders => "providers".to_string(),
-        RForOfElement => "for-of element".to_string(),
         RUpdate => "update".to_string(),
-        RUnusedYield => "unused yield".to_string(),
-        RUnusedReturn => "unused return".to_string(),
         RCommonInterface => "common interface".to_string(),
         RContextualVariable => "contextual variable".to_string(),
         RNext => "next".to_string(),
         RModuleReference => "module reference".to_string(),
         RNewFunction => "new Function(..)".to_string(),
         RNewArray => "new Array(..)".to_string(),
-        RArrayLength => "array length".to_string(),
         RImportMeta => "import.meta".to_string(),
         RAwait => "await".to_string(),
-        RAsyncReturn => "async return".to_string(),
         RCallableObjectType => "callable object type".to_string(),
         RClassExtends => "class extends".to_string(),
         RClassMixins => "class mixins".to_string(),
@@ -1809,7 +1705,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RBound(d) => format!("bound {}", string_of_desc(d)),
         RRefined(d) => format!("refined {}", string_of_desc(d)),
         RRefinedElement(d) => format!("array element of refined {}", string_of_desc(d)),
-        RIncompatibleInstantiation(name) => name.formatted_string_of_subst_name(),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),
         RRequiredOf(d) => format!("required of {}", string_of_desc(d)),
 
@@ -1830,12 +1725,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         },
         RReactDefaultProps => "default props of React component".to_string(),
         RReactChildren => "children array".to_string(),
-        RReactChildrenOrType(d) => {
-            format!("children array or {}", string_of_desc(d))
-        }
-        RReactChildrenOrUndefinedOrType(d) => {
-            format!("children array or {}", string_of_desc(d))
-        }
         RReactRef => "React component ref".to_string(),
         RPossiblyMissingPropFromObj(propname, desc) => {
             format!(
@@ -1854,43 +1743,16 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         }
 
         // Type guards and components
-        RTypeGuard => "type guard".to_string(),
         RTypeGuardParam(param) => format!("type guard parameter `{}`", param),
         RComponent(name) => format!("component {}", name.as_str()),
         RComponentType => "component".to_string(),
         RPropsOfComponent(d) => format!("props of {}", string_of_desc(d)),
-        RInstanceOfComponent(d) => format!("instance of {}", string_of_desc(d)),
-        RDefaultTypeArgumentAtIndex {
-            desc_type,
-            desc_default,
-            position,
-        } => {
-            let position_suffix = match *position {
-                11..=13 => "th",
-                _ => match position % 10 {
-                    1 => "st",
-                    2 => "nd",
-                    3 => "rd",
-                    _ => "th",
-                },
-            };
-            format!(
-                "{} (default type argument for {}'s {}{} position)",
-                string_of_desc(desc_default),
-                string_of_desc(desc_type),
-                position,
-                position_suffix
-            )
-        }
 
         // Renders
         RRenderType(d) => format!("renders {}", string_of_desc(d)),
         RRenderMaybeType(d) => format!("renders? {}", string_of_desc(d)),
         RRenderStarType(d) => format!("renders* {}", string_of_desc(d)),
         RRendersNothing => "a value that renders nothing".to_string(),
-
-        // Autocomplete
-        RAutocompleteToken => "autocomplete token".to_string(),
     }
 }
 
