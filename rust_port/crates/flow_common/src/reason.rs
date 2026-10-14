@@ -314,7 +314,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RThisType,
     RImplicitInstantiation,
     RConstructorVoidReturn,
-    RUnion,
     RUnionType,
     RIntersectionType,
     RKeySet,
@@ -551,7 +550,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RThisType => RThisType,
             RImplicitInstantiation => RImplicitInstantiation,
             RConstructorVoidReturn => RConstructorVoidReturn,
-            RUnion => RUnion,
             RUnionType => RUnionType,
             RIntersectionType => RIntersectionType,
             RKeySet => RKeySet,
@@ -1535,7 +1533,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RConstructorVoidReturn => "constructor void return".to_string(),
 
         // Unions and intersections
-        RUnion => "union".to_string(),
         RUnionType => "union type".to_string(),
         RIntersectionType => "intersection type".to_string(),
         RKeySet => "key set".to_string(),

@@ -1459,9 +1459,7 @@ pub fn object_<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
                         changed_result(empty_t::why(reason_of_t(&t).dupe()))
                     }
                     MixedFlavor::MixedEverything | MixedFlavor::MixedNonVoid => {
-                        let union_reason = reason_of_t(&t)
-                            .dupe()
-                            .replace_desc_new(VirtualReasonDesc::RUnion);
+                        let union_reason = reason_of_t(&t).dupe().replace_desc_new(None);
                         changed_result(Type::new(TypeInner::UnionT(
                             union_reason,
                             union_rep::make(
