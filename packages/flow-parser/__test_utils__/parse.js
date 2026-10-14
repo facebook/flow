@@ -36,8 +36,6 @@ const prettierConfig = Object.freeze({
   trailingComma: 'all',
   bracketSpacing: false,
   bracketSameLine: true,
-  plugins: ['prettier-plugin-hermes-parser'],
-  parser: 'hermes',
 });
 
 declare function parse(

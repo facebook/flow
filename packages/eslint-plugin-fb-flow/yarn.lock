@@ -1466,6 +1466,27 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.4.2.tgz#f5c23c107f0f37de8dbdf24f13722b3b98d52726"
   integrity sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==
 
+flow-eslint@^0.335.0:
+  version "0.335.0"
+  resolved "https://registry.yarnpkg.com/flow-eslint/-/flow-eslint-0.335.0.tgz#a8383914568f16475ef5cd62c157843b62e52910"
+  integrity sha512-G/6qz7O1Otv3/fhZBvVyBQFvDihHZnRIXhJAwQ2HjWhurszVDHSrO4ZOEdCdZTMRtLmCltfPOBTMJRDaKERNCA==
+  dependencies:
+    esrecurse "^4.3.0"
+    flow-estree "0.335.0"
+    flow-parser "0.335.0"
+
+flow-estree@0.335.0:
+  version "0.335.0"
+  resolved "https://registry.yarnpkg.com/flow-estree/-/flow-estree-0.335.0.tgz#6867e678070b0edb13ff37636d8aaf4b444516bb"
+  integrity sha512-sfJYlOSnrbBI4ruZ7UG5OJLz16E1hs+Kkt/De8F7vm6UafLfvZIWjkoBmZtKoN6EIOa3zgGkVczt0xpmmQixGA==
+
+flow-parser@0.335.0:
+  version "0.335.0"
+  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.335.0.tgz#27c879530fd7fe9521129b15e6d9cedd9860c645"
+  integrity sha512-TpG7cWiAAh5EoOjaGuzggks8HOM6DJhey1RmMmnzGUd+AYmsl77S5EXvb6gxAEGX40FyfkXEwsvQcuI6Knkm7g==
+  dependencies:
+    flow-estree "0.335.0"
+
 form-data@^3.0.0:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-3.0.4.tgz#938273171d3f999286a4557528ce022dc2c98df1"
@@ -1622,27 +1643,6 @@ hasown@^2.0.2:
   integrity sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==
   dependencies:
     function-bind "^1.1.2"
-
-hermes-eslint@0.36.1:
-  version "0.36.1"
-  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.36.1.tgz#c7263e3a3db38621f16b9b122fee14c062faf4ea"
-  integrity sha512-aX8LUlLRHLAkELYWdz4IhRnZ/+Sbmmo5TzDEtsDiDuPIplaStzMnX84aTmPufQOyxZir5GjGxAiqdt+y4GcooA==
-  dependencies:
-    esrecurse "^4.3.0"
-    hermes-estree "0.36.1"
-    hermes-parser "0.36.1"
-
-hermes-estree@0.36.1:
-  version "0.36.1"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.36.1.tgz#71368d9e78238728e11ef1f458a8921d0564a572"
-  integrity sha512-guv1nQ6IJ7S83NRFPWc3SA7IBZrdNC9kapwOq6uXvF4wP+sDCgjzQbKPCoyYmoyZRzztF/n/c36l/rccCZSiCw==
-
-hermes-parser@0.36.1:
-  version "0.36.1"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.36.1.tgz#f619b9f99bf34e80fb6f7024b1c62944d2beb14a"
-  integrity sha512-GApNk4zLHi2UWoWZZkx7LNCOSzLSc5lB55pZ/PhK7ycFeg7u5LcF88p/WbpIi1XUDtE0MpHE3uRR3u3KB7TjSQ==
-  dependencies:
-    hermes-estree "0.36.1"
 
 html-encoding-sniffer@^2.0.1:
   version "2.0.1"

@@ -9,7 +9,7 @@
  */
 
 import type {CodemodModule} from '../Types';
-import {t} from 'hermes-transform';
+import {t} from 'flow-transform';
 import {codemod} from '../Types';
 
 const UTILITY_TYPES = new Set([

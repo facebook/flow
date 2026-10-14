@@ -3,7 +3,7 @@
   "version": "2.46.0",
   "description": "A utility for upgrading your codebase to the latest version of Flow.",
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "license": "MIT",
   "files": [
@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && babel src --out-dir dist --ignore '**/__tests__'",
-    "test": "jest",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
     "flow": "flow",
     "prepublish": "yarn run build",
     "postpublish": "node ./scripts/postpublish.js"
@@ -31,21 +31,20 @@
   "homepage": "https://github.com/facebook/flow/tree/master/packages/flow-upgrade#readme",
   "dependencies": {
     "@babel/highlight": "^7.18.6",
-    "babel-plugin-syntax-hermes-parser": "0.36.1",
     "chalk": "^2.0.1",
+    "flow-eslint": "^0.335.0",
+    "flow-estree": "^0.335.0",
+    "flow-parser": "^0.335.0",
+    "flow-transform": "^0.335.0",
     "fs-extra": "10.1.0",
-    "hermes-estree": "0.36.1",
-    "hermes-parser": "0.36.1",
-    "hermes-transform": "0.36.1",
     "klaw-sync": "^6.0.0",
     "ora": "^5.4.1",
-    "prettier-plugin-hermes-parser": "0.29.1",
     "prompt-confirm": "^1.2.0",
     "semver": "^7.3.7",
     "yargs": "^17.0.1"
   },
   "peerDependencies": {
-    "prettier": "2.8.8"
+    "prettier": "^3.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.8",
@@ -55,6 +54,6 @@
     "flow-bin": "^0.227.0",
     "jest": "^27.5.1",
     "memfs": "^3.4.3",
-    "prettier": "2.8.8"
+    "prettier": "3.9.4"
   }
 }

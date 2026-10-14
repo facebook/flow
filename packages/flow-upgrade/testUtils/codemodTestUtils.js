@@ -9,11 +9,10 @@
  */
 
 import type {CodemodModule} from '../src/Types';
-import type {TransformContext} from 'hermes-transform';
 
 import {redirectConsole, restoreConsole} from '../src/utils/redirectConsole';
 import babelHighlight from '@babel/highlight';
-import {transform as hermesTransform} from 'hermes-transform';
+import {transform} from 'flow-transform';
 
 type AnyObject = $ReadOnly<{...}>;
 
@@ -117,28 +116,11 @@ export function testCodemod<TConfig: ?AnyObject, TCliArgs: ?AnyObject>(
           '',
         ].join('\n'),
         async () => {
-          // WORKAROUND: Reset modules to avoid hermes-transform/prettier caching bug
-          // where transformation results are reused across tests in the same file.
-          if (typeof jest !== 'undefined') {
-            jest.resetModules();
-            const {transform: freshTransform} = require('hermes-transform');
-            const result = await freshTransform(
-              code,
-              (ctx: TransformContext) => codemodModule.transform(ctx),
-              prettierConfig,
-            );
-            expect(result.trim()).toEqual(test.output.trim());
-            return;
-          }
-
-          const transform = (() => {
-            return (ctx: TransformContext) =>
-              // $FlowFixMe[incompatible-call]
-              // $FlowFixMe[incompatible-exact]
-              // $FlowFixMe[prop-missing]
-              codemodModule.transform(ctx);
-          })();
-          const result = await hermesTransform(code, transform, prettierConfig);
+          const result = await transform(
+            code,
+            codemodModule.transform,
+            prettierConfig,
+          );
           expect(result.trim()).toEqual(test.output.trim());
         },
       );

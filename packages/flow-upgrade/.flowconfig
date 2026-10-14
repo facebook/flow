@@ -1,9 +1,9 @@
 [ignore]
 **/node_modules/**
 !**/node_modules/@babel/highlight/**
-!**/node_modules/hermes-transform/**
-!**/node_modules/hermes-estree/**
-!**/node_modules/hermes-eslint/**
+!**/node_modules/flow-transform/**
+!**/node_modules/flow-estree/**
+!**/node_modules/flow-eslint/**
 **/__tests__/fixtures/**
 
 [options]

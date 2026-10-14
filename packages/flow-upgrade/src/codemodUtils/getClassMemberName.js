@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {ClassMember} from 'hermes-estree';
+import type {ClassMember} from 'flow-estree';
 
 export function getClassMemberName(member: ClassMember): ?string {
   if (member.key.type === 'PrivateIdentifier') {

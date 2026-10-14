@@ -12,7 +12,7 @@
 
 import type {HermesNode} from './HermesAST';
 import type {FlowParserProgram} from './FlowParserDeserializer';
-import type {DocblockDirectives, Program} from 'hermes-estree';
+import type {DocblockDirectives, Program} from 'flow-estree';
 
 const DIRECTIVE_REGEX = /^\s*@([a-zA-Z0-9_-]+)( +.+)?$/;
 

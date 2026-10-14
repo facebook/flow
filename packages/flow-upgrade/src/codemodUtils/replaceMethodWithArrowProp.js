@@ -8,10 +8,10 @@
  * @flow
  */
 
-import type {MethodDefinition} from 'hermes-estree';
-import type {TransformContext} from 'hermes-transform';
+import type {MethodDefinition} from 'flow-estree';
+import type {TransformContext} from 'flow-transform';
 
-import {t} from 'hermes-transform';
+import {t} from 'flow-transform';
 
 /**
  * Converts method definition to an arrow function property

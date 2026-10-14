@@ -237,6 +237,9 @@ jobs:
     - name: Install package dependencies
       working-directory: packages
       run: yarn install --frozen-lockfile
+    - name: Install bootstrap dependencies
+      working-directory: packages/scripts/bootstrap
+      run: yarn install --frozen-lockfile
     - name: Build packages
       working-directory: packages
       run: ./scripts/build.sh "${RUNNER_TEMP}/flow-parser-wasm.js"

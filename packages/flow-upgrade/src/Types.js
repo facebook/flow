@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {TransformVisitor} from 'hermes-transform';
+import type {TransformVisitor} from 'flow-transform';
 
 export type CliOptions = $ReadOnly<{
   all: boolean,

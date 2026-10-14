@@ -1751,13 +1751,6 @@ babel-plugin-polyfill-regenerator@^0.2.2:
   dependencies:
     "@babel/helper-define-polyfill-provider" "^0.2.2"
 
-babel-plugin-syntax-hermes-parser@0.36.1:
-  version "0.36.1"
-  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-hermes-parser/-/babel-plugin-syntax-hermes-parser-0.36.1.tgz#970277618fbec67b400bf8b01e4f61ba96ef5a40"
-  integrity sha512-ycduwJbvdvIMmVvlAZqGggS+pm5Eu4Bk9pcV9Sm2Z4PJNRVsKkv0g7vHj+LeuC1gHTeF67sJXFOq61IlqCa2hA==
-  dependencies:
-    hermes-parser "0.36.1"
-
 babel-preset-current-node-syntax@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/babel-preset-current-node-syntax/-/babel-preset-current-node-syntax-1.0.1.tgz#b4399239b89b2a011f9ddbe3e4f401fc40cff73b"
@@ -2566,6 +2559,40 @@ flow-enums-runtime@^0.0.6:
   resolved "https://registry.yarnpkg.com/flow-enums-runtime/-/flow-enums-runtime-0.0.6.tgz#5bb0cd1b0a3e471330f4d109039b7eba5cb3e787"
   integrity sha512-3PYnM29RFXwvAN6Pc/scUfkI7RwhQ/xqyLUyPNlXUp9S40zI8nup9tUSrTLSVnWGBN38FNiGWbwZOB6uR4OGdw==
 
+flow-eslint@0.335.0, flow-eslint@^0.335.0:
+  version "0.335.0"
+  resolved "https://registry.yarnpkg.com/flow-eslint/-/flow-eslint-0.335.0.tgz#a8383914568f16475ef5cd62c157843b62e52910"
+  integrity sha512-G/6qz7O1Otv3/fhZBvVyBQFvDihHZnRIXhJAwQ2HjWhurszVDHSrO4ZOEdCdZTMRtLmCltfPOBTMJRDaKERNCA==
+  dependencies:
+    esrecurse "^4.3.0"
+    flow-estree "0.335.0"
+    flow-parser "0.335.0"
+
+flow-estree@0.335.0, flow-estree@^0.335.0:
+  version "0.335.0"
+  resolved "https://registry.yarnpkg.com/flow-estree/-/flow-estree-0.335.0.tgz#6867e678070b0edb13ff37636d8aaf4b444516bb"
+  integrity sha512-sfJYlOSnrbBI4ruZ7UG5OJLz16E1hs+Kkt/De8F7vm6UafLfvZIWjkoBmZtKoN6EIOa3zgGkVczt0xpmmQixGA==
+
+flow-parser@0.335.0, flow-parser@^0.335.0:
+  version "0.335.0"
+  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.335.0.tgz#27c879530fd7fe9521129b15e6d9cedd9860c645"
+  integrity sha512-TpG7cWiAAh5EoOjaGuzggks8HOM6DJhey1RmMmnzGUd+AYmsl77S5EXvb6gxAEGX40FyfkXEwsvQcuI6Knkm7g==
+  dependencies:
+    flow-estree "0.335.0"
+
+flow-transform@^0.335.0:
+  version "0.335.0"
+  resolved "https://registry.yarnpkg.com/flow-transform/-/flow-transform-0.335.0.tgz#ec49dedfd5507da0228f715ad20315c6ebf6ae75"
+  integrity sha512-TUBmPSufhaWaD0Amw/wR8v6+F+CLbnY8aHoUyb3hykEp6kDiPrCvem96uhN/uJ8CnjO2OODxxsisa0ikYaBt5w==
+  dependencies:
+    "@babel/code-frame" "^7.16.0"
+    esquery "^1.4.0"
+    flow-enums-runtime "^0.0.6"
+    flow-eslint "0.335.0"
+    flow-estree "0.335.0"
+    flow-parser "0.335.0"
+    string-width "4.2.3"
+
 for-in@^0.1.3:
   version "0.1.8"
   resolved "https://registry.yarnpkg.com/for-in/-/for-in-0.1.8.tgz#d8773908e31256109952b1fdb9b3fa867d2775e1"
@@ -2827,52 +2854,6 @@ hasown@^2.0.4:
   integrity sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==
   dependencies:
     function-bind "^1.1.2"
-
-hermes-eslint@0.36.1:
-  version "0.36.1"
-  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.36.1.tgz#c7263e3a3db38621f16b9b122fee14c062faf4ea"
-  integrity sha512-aX8LUlLRHLAkELYWdz4IhRnZ/+Sbmmo5TzDEtsDiDuPIplaStzMnX84aTmPufQOyxZir5GjGxAiqdt+y4GcooA==
-  dependencies:
-    esrecurse "^4.3.0"
-    hermes-estree "0.36.1"
-    hermes-parser "0.36.1"
-
-hermes-estree@0.29.1:
-  version "0.29.1"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.29.1.tgz#043c7db076e0e8ef8c5f6ed23828d1ba463ebcc5"
-  integrity sha512-jl+x31n4/w+wEqm0I2r4CMimukLbLQEYpisys5oCre611CI5fc9TxhqkBBCJ1edDG4Kza0f7CgNz8xVMLZQOmQ==
-
-hermes-estree@0.36.1:
-  version "0.36.1"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.36.1.tgz#71368d9e78238728e11ef1f458a8921d0564a572"
-  integrity sha512-guv1nQ6IJ7S83NRFPWc3SA7IBZrdNC9kapwOq6uXvF4wP+sDCgjzQbKPCoyYmoyZRzztF/n/c36l/rccCZSiCw==
-
-hermes-parser@0.29.1:
-  version "0.29.1"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.29.1.tgz#436b24bcd7bb1e71f92a04c396ccc0716c288d56"
-  integrity sha512-xBHWmUtRC5e/UL0tI7Ivt2riA/YBq9+SiYFU7C1oBa/j2jYGlIF9043oak1F47ihuDIxQ5nbsKueYJDRY02UgA==
-  dependencies:
-    hermes-estree "0.29.1"
-
-hermes-parser@0.36.1:
-  version "0.36.1"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.36.1.tgz#f619b9f99bf34e80fb6f7024b1c62944d2beb14a"
-  integrity sha512-GApNk4zLHi2UWoWZZkx7LNCOSzLSc5lB55pZ/PhK7ycFeg7u5LcF88p/WbpIi1XUDtE0MpHE3uRR3u3KB7TjSQ==
-  dependencies:
-    hermes-estree "0.36.1"
-
-hermes-transform@0.36.1:
-  version "0.36.1"
-  resolved "https://registry.yarnpkg.com/hermes-transform/-/hermes-transform-0.36.1.tgz#7adfc0314520e3ac2837403d6664f71d40254fce"
-  integrity sha512-Sqkm+EqykT6fj6AYgxfhaMU55hQ6Zs0z8myIugWNSTAMeuX+zAR9Ptv/HJvE75kDsj523vxj75DVxNXw9q/JGA==
-  dependencies:
-    "@babel/code-frame" "^7.16.0"
-    esquery "^1.4.0"
-    flow-enums-runtime "^0.0.6"
-    hermes-eslint "0.36.1"
-    hermes-estree "0.36.1"
-    hermes-parser "0.36.1"
-    string-width "4.2.3"
 
 html-encoding-sniffer@^2.0.1:
   version "2.0.1"
@@ -4172,19 +4153,10 @@ prelude-ls@~1.1.2:
   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.1.2.tgz#21932a549f5e52ffd9a827f570e04be62a97da54"
   integrity sha1-IZMqVJ9eUv/ZqCf1cOBL5iqX2lQ=
 
-prettier-plugin-hermes-parser@0.29.1:
-  version "0.29.1"
-  resolved "https://registry.yarnpkg.com/prettier-plugin-hermes-parser/-/prettier-plugin-hermes-parser-0.29.1.tgz#7dc419426fe58fcd2250b0813b5c4543f9742432"
-  integrity sha512-rGJ53E9HBHCaSz1TC/UZG+jEPjot5qa21d7qafljPbp1jxcCI8PwdVqWahHSfmAf+8dEPHx6NdZ6ajSBoOb+WA==
-  dependencies:
-    hermes-estree "0.29.1"
-    hermes-parser "0.29.1"
-    prettier-plugin-hermes-parser "0.29.1"
-
-prettier@2.8.8:
-  version "2.8.8"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.8.8.tgz#e8c5d7e98a4305ffe3de2e1fc4aca1a71c28b1da"
-  integrity sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==
+prettier@3.9.4:
+  version "3.9.4"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.9.4.tgz#a9c477cf1614376bd1f6bbc593d8c0d414bcec87"
+  integrity sha512-yWG/o/4oJfo036EKAfK6ACAoDOfHeRHx4tuxkfBZiauURiaSmYwlpOr5LQqKtIkRD2z1PLteme2WoxEnj4tHTg==
 
 pretty-format@^27.5.1:
   version "27.5.1"

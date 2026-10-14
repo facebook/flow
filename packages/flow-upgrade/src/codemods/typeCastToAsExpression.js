@@ -13,10 +13,10 @@ import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
 
-import type {AsExpression, TypeCastExpression} from 'hermes-estree';
-import type {MaybeDetachedNode} from 'hermes-transform';
+import type {AsExpression, TypeCastExpression} from 'flow-estree';
+import type {MaybeDetachedNode} from 'flow-transform';
 
-import {t} from 'hermes-transform';
+import {t} from 'flow-transform';
 
 function convertTypeCast(
   node: TypeCastExpression,

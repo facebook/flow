@@ -13,10 +13,11 @@ import os from 'os';
 import path from 'path';
 
 import convertLegacyUtilityTypes from '../codemods/convertLegacyUtilityTypes';
+import typeCastToAsExpression from '../codemods/typeCastToAsExpression';
 import runCodemods from '../runCodemods';
 
 describe('runCodemods', () => {
-  it('transforms each file independently', async () => {
+  it('transforms each file independently through multiple codemods', async () => {
     const dir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'flow-upgrade-run-codemods-'),
     );
@@ -26,11 +27,13 @@ describe('runCodemods', () => {
 // This is file A.js.
 type A1 = $ReadOnlyArray<mixed>;
 type A2 = $Keys<$Values<A1>>;
+const a = (null: $ReadOnly<A1>);
 `,
       'B.js': `// @flow
 // This is file B.js.
 type B1 = $NonMaybeType<mixed>;
 type B2 = $ReadOnly<B1>;
+const b = (null: $NonMaybeType<B1>);
 `,
     };
     const expected: {[string]: string} = {
@@ -38,11 +41,13 @@ type B2 = $ReadOnly<B1>;
 // This is file A.js.
 type A1 = ReadonlyArray<unknown>;
 type A2 = keyof Values<A1>;
+const a = null as Readonly<A1>;
 `,
       'B.js': `// @flow
 // This is file B.js.
 type B1 = NonNullable<unknown>;
 type B2 = Readonly<B1>;
+const b = null as NonNullable<B1>;
 `,
     };
 
@@ -54,12 +59,16 @@ type B2 = Readonly<B1>;
         filePaths.push(filePath);
       }
 
-      await runCodemods([convertLegacyUtilityTypes], filePaths, {
-        all: true,
-        prettierOptions: {},
-        silent: true,
-        yes: true,
-      });
+      await runCodemods(
+        [convertLegacyUtilityTypes, typeCastToAsExpression],
+        filePaths,
+        {
+          all: true,
+          prettierOptions: {},
+          silent: true,
+          yes: true,
+        },
+      );
 
       for (const [name, expectedContents] of Object.entries(expected)) {
         const actual = await fs.readFile(path.join(dir, name), 'utf8');

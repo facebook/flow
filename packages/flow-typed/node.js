@@ -9,7 +9,7 @@
  */
 
 // Adapted from https://github.com/flow-typed/flow-typed/blob/main/definitions/environments/node/flow_v0.261.x-/node.js
-// containing only what's needed for hermes-parser.
+// containing only what's needed for flow-parser.
 
 declare class URL {}
 

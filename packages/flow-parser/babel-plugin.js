@@ -23,7 +23,7 @@ type Options = {
   // this plugin, otherwise falling back to Babel's parser.
   //
   // This is independent of `parserOpts.flow`, which may customise 'detect'
-  // behaviour within hermes-parser (downstream from this plugin).
+  // behaviour within flow-parser (downstream from this plugin).
   //
   // Defaults to 'all'.
   parseLangTypes?: 'flow' | 'all',

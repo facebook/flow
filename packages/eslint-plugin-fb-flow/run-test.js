@@ -14,7 +14,7 @@ const {RuleTester: ESLintTester} = require('eslint');
 const plugin = require('./index');
 
 ESLintTester.setDefaultConfig({
-  parser: require.resolve('hermes-eslint'),
+  parser: require.resolve('flow-eslint'),
   parserOptions: {
     ecmaVersion: 6,
     sourceType: 'module',

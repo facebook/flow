@@ -8,17 +8,12 @@
  * @flow
  */
 
-import type {Reference} from 'hermes-eslint';
-import type {
-  ESNode,
-  Identifier,
-  ObjectProperty,
-  Statement,
-} from 'hermes-estree';
-import type {DetachedNode} from 'hermes-transform';
+import type {Reference} from 'flow-eslint';
+import type {ESNode, Identifier, ObjectProperty, Statement} from 'flow-estree';
+import type {DetachedNode} from 'flow-transform';
 import type {CodemodModule} from '../Types';
 
-import {t} from 'hermes-transform';
+import {t} from 'flow-transform';
 import {codemod} from '../Types';
 
 export default codemod({

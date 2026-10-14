@@ -8,6 +8,7 @@ set -xe -o pipefail
 
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FLOW_PARSER_SRC_DIR="$THIS_DIR/../flow-parser/oxidized-src"
+BOOTSTRAP_DIR="$THIS_DIR/bootstrap"
 
 PACKAGES=(
   flow-estree
@@ -25,10 +26,11 @@ BOOTSTRAP_PACKAGES=(
 # The parser override in babel.config.js requires the workspace plugin to be
 # built. Disable it for the bootstrap pass below; we unset just before the final
 # pass when the chain is ready.
-export SKIP_HERMES_PARSER_OVERRIDE=1
+export SKIP_FLOW_PARSER_OVERRIDE=1
 
 # Yarn install all packages
 yarn install --offline
+yarn --cwd "$BOOTSTRAP_DIR" install --frozen-lockfile --offline
 
 # Generate Flow transform builders from the checked-in Flow ESTree schema.
 yarn babel-node "$THIS_DIR/transform/genTransformNodeTypes.js"
@@ -108,7 +110,7 @@ done
 node "$THIS_DIR/genFlowWasmParser.js" "$WASM_PARSER"
 
 # Bootstrap pass: strip Flow from the parser-plugin chain first, with the
-# parser override still disabled (SKIP_HERMES_PARSER_OVERRIDE is set above).
+# parser override still disabled (SKIP_FLOW_PARSER_OVERRIDE is set above).
 # After this loop their dist/index.js files are valid plain JS, so the
 # override can be re-enabled for the remaining packages.
 #
@@ -122,7 +124,7 @@ for package in "${BOOTSTRAP_PACKAGES[@]}"; do
     continue
   fi
   find "$PACKAGE_DIST_DIR" -type f -name "*.js" | while read -r file; do
-    yarn flow-remove-types --quiet --pretty --remove-empty-imports \
+    yarn --cwd "$BOOTSTRAP_DIR" flow-remove-types --quiet --pretty --remove-empty-imports \
       --out-file "$file.stripped" \
       "$file"
     mv "$file.stripped" "$file"
@@ -143,7 +145,7 @@ done
 
 # Re-enable the override so the remaining packages can be parsed with
 # flow-parser (they contain Flow `as` cast syntax).
-unset SKIP_HERMES_PARSER_OVERRIDE
+unset SKIP_FLOW_PARSER_OVERRIDE
 
 for package in "${PACKAGES[@]}"; do
   # Skip packages already processed in the bootstrap pass above.

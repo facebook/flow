@@ -14,7 +14,7 @@ import type {
   ClassExpression,
   ClassMember,
   MemberExpression,
-} from 'hermes-estree';
+} from 'flow-estree';
 
 import {getClassMemberName} from '../codemodUtils/getClassMemberName';
 import {replaceMethodWithArrowProp} from '../codemodUtils/replaceMethodWithArrowProp';

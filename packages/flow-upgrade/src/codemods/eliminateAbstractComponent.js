@@ -9,11 +9,11 @@
  */
 
 import type {CodemodModule} from '../Types';
-import type {GenericTypeAnnotation, TypeAnnotationType} from 'hermes-estree';
-import type {MaybeDetachedNode} from 'hermes-transform';
+import type {GenericTypeAnnotation, TypeAnnotationType} from 'flow-estree';
+import type {MaybeDetachedNode} from 'flow-transform';
 
 import {codemod} from '../Types';
-import {t} from 'hermes-transform';
+import {t} from 'flow-transform';
 
 function eliminateAbstractComponent(
   node: GenericTypeAnnotation,

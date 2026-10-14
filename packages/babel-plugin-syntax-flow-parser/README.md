@@ -1,6 +1,6 @@
 # babel-plugin-syntax-flow-parser
 
-Hermes parser plugin for [Babel](https://babeljs.io/). This plugin switches Babel to use `flow-parser` instead of the `@babel/parser`. The Flow parser uses Rust compiled to WASM for full Flow syntax support.
+Flow parser plugin for [Babel](https://babeljs.io/). This plugin switches Babel to use `flow-parser` instead of the `@babel/parser`. The Flow parser uses Rust compiled to WASM for full Flow syntax support.
 
 ## Install
 

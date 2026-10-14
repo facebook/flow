@@ -37,7 +37,7 @@ module.exports = {
         {
           // Use flow-parser as Babel's parser so it understands newer
           // Flow syntax (e.g. `as` casts) beyond what the bundled @babel/parser
-          // supports. Disabled by `SKIP_HERMES_PARSER_OVERRIDE=1` during the
+          // supports. Disabled by `SKIP_FLOW_PARSER_OVERRIDE=1` during the
           // build's bootstrap phase — the plugin's dependency chain
           // (`flow-parser`, `flow-estree`) has to be built before the plugin
           // can be required.
@@ -51,7 +51,7 @@ module.exports = {
 };
 
 function overrideEnabled() {
-  if (process.env.SKIP_HERMES_PARSER_OVERRIDE) {
+  if (process.env.SKIP_FLOW_PARSER_OVERRIDE) {
     return false;
   }
   // The plugin re-exports `flow-parser/babel-plugin`, which requires

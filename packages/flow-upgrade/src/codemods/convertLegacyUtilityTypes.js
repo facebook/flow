@@ -11,7 +11,7 @@
 import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
-import {t} from 'hermes-transform';
+import {t} from 'flow-transform';
 
 /**
  * This codemod transforms legacy Flow utility types to their modern TypeScript-compatible equivalents:

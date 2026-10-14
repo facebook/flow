@@ -35,7 +35,6 @@
     "hermes-estree": "0.36.1",
     "hermes-parser": "0.36.1",
     "minimist": ">=1.2.6",
-    "prettier-plugin-hermes-parser": "0.31.1",
     "string-width": "4.2.3"
   },
   "engines": {

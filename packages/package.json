@@ -19,15 +19,13 @@
     "eslint-plugin-ft-flow": "^3.0.11",
     "eslint-plugin-jest": "^29.15.0",
     "flow-bin": "^0.313.0",
-    "flow-remove-types": "^2.322.0",
     "glob": "^8.0.3",
     "globals": "^17.4.0",
     "jest": "^30.0.5",
     "jest-specific-snapshot": "^5.0.0",
     "mkdirp": "^1.0.4",
     "patch-package": "^6.5.0",
-    "prettier": "3.9.4",
-    "prettier-plugin-hermes-parser": "*"
+    "prettier": "3.9.4"
   },
   "scripts": {
     "build": "./scripts/build.sh",

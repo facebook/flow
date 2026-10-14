@@ -1,0 +1,11 @@
+{
+  "name": "flow-parser-bootstrap",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "flow-remove-types": "^2.335.0"
+  }
+}

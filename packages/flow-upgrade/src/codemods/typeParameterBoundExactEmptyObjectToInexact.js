@@ -11,7 +11,7 @@
 import type {CodemodModule} from '../Types';
 
 import {codemod} from '../Types';
-import {t} from 'hermes-transform';
+import {t} from 'flow-transform';
 
 export default codemod({
   title: 'Replace `T: {}` with `T: {...}` in type parameter bounds',
@@ -35,9 +35,6 @@ export default codemod({
                 properties: [],
                 callProperties: [],
                 exact: false,
-                /* $FlowExpectedError[incompatible-call]
-                 * TODO: hermes-transform mandates that inexact must be
-                 * `false`, which is wrong. */
                 inexact: true,
                 indexers: [],
                 internalSlots: [],
