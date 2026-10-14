@@ -1057,6 +1057,14 @@ pub fn statement(
             ),
             StatementInner::Block { loc, inner } => block(opts, loc, inner),
             StatementInner::Expression { loc, inner } => {
+                let opts = &Opts {
+                    preserve_formatting: opts.preserve_formatting
+                        || inner
+                            .directive
+                            .as_ref()
+                            .is_some_and(|directive| directive.contains('\\')),
+                    ..*opts
+                };
                 let ctxt = ExpressionContext {
                     left: ExpressionContextLeft::InExpressionStatement,
                     ..NORMAL_CONTEXT

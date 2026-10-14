@@ -1227,6 +1227,7 @@ dependencies = [
  "flow_parser_utils",
  "flow_server_utils",
  "pretty_assertions",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

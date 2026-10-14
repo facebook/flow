@@ -7,12 +7,15 @@
 
 pub mod ast_diff_printer;
 pub mod compact_printer;
+pub mod indented_printer;
 pub mod js_layout_generator;
 pub mod layout;
 pub mod pretty_printer;
 pub mod replacement_printer;
 pub mod source;
 
+#[cfg(test)]
+mod indented_printer_test;
 #[cfg(test)]
 mod js_layout_generator_test;
 #[cfg(test)]

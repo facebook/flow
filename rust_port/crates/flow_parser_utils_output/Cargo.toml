@@ -14,6 +14,7 @@ flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_parser = { path = "../flow_parser" }
 flow_parser_utils = { path = "../flow_parser_utils" }
 flow_server_utils = { path = "../flow_server_utils" }
+thiserror = "2.0.21"
 
 [dev-dependencies]
 pretty_assertions = { version = "1.4.1", features = ["alloc"], default-features = false }
