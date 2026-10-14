@@ -309,7 +309,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RJSXText,
     RFbt,
     RTemplateString,
-    RUnknownString,
     RUnionEnum,
     RThis,
     RThisType,
@@ -546,7 +545,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 is_empty: *is_empty,
             },
             RTemplateString => RTemplateString,
-            RUnknownString => RUnknownString,
             RUnionEnum => RUnionEnum,
             REnum { name } => REnum { name: name.dupe() },
             RThis => RThis,
@@ -719,7 +717,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
             Some(
                 RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
                 | RTemplateLiteralType | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RJSXText
-                | RFbt | RTemplateString | RUnknownString | RUnionEnum | RKeySet | RRegExp,
+                | RFbt | RTemplateString | RUnionEnum | RKeySet | RRegExp,
             ) => Scalar,
 
             Some(
@@ -1508,7 +1506,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Template strings and enums
         RTemplateString => "template string".to_string(),
-        RUnknownString => "some string with unknown value".to_string(),
         RUnionEnum => "literal union".to_string(),
         REnum { name } => match name {
             Some(n) => format!("enum `{}`", n),

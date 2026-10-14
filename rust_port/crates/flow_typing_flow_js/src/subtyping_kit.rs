@@ -3874,9 +3874,7 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
             if matches!(ld.deref(), DefTInner::StrGeneralT(_)) =>
         {
-            let reason_next = reason_s
-                .dupe()
-                .replace_desc_new(VirtualReasonDesc::RUnknownString);
+            let reason_next = reason_s.dupe().replace_desc_new(None);
             let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
@@ -3905,9 +3903,7 @@ pub fn rec_sub_t<'cx>(
             TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::StrGeneralT(_))
         ) =>
         {
-            let reason_next = reason_s
-                .dupe()
-                .replace_desc_new(VirtualReasonDesc::RUnknownString);
+            let reason_next = reason_s.dupe().replace_desc_new(None);
             let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
