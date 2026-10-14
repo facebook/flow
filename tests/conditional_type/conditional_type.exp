@@ -1175,6 +1175,169 @@ References:
              ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- rest_args.js:6:1
+
+Cannot cast `choose(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_args.js:6:1
+   6| choose(1, 2) as string; // ERROR
+      ^^^^^^^^^^^^
+
+References:
+   rest_args.js:2:37
+   2|   R extends ReadonlyArray<number> ? number : string;
+                                          ^^^^^^ [1]
+   rest_args.js:6:17
+   6| choose(1, 2) as string; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rest_args.js:7:1
+
+Cannot cast `choose(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   rest_args.js:7:1
+   7| choose(1, 'a') as number; // ERROR
+      ^^^^^^^^^^^^^^
+
+References:
+   rest_args.js:2:46
+   2|   R extends ReadonlyArray<number> ? number : string;
+                                                   ^^^^^^ [1]
+   rest_args.js:7:19
+   7| choose(1, 'a') as number; // ERROR
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ rest_args.js:18:1
+
+Cannot cast `choose(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_args.js:18:1
+   18| choose(...numbers) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   rest_args.js:2:37
+    2|   R extends ReadonlyArray<number> ? number : string;
+                                           ^^^^^^ [1]
+   rest_args.js:18:23
+   18| choose(...numbers) as string; // ERROR
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ rest_args.js:19:1
+
+Cannot cast `choose(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   rest_args.js:19:1
+   19| choose(...strings) as number; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   rest_args.js:2:46
+    2|   R extends ReadonlyArray<number> ? number : string;
+                                                    ^^^^^^ [1]
+   rest_args.js:19:23
+   19| choose(...strings) as number; // ERROR
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ rest_args.js:24:1
+
+Cannot cast `choose(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_args.js:24:1
+   24| choose(...iterableNumbers) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   rest_args.js:2:37
+    2|   R extends ReadonlyArray<number> ? number : string;
+                                           ^^^^^^ [1]
+   rest_args.js:24:31
+   24| choose(...iterableNumbers) as string; // ERROR
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- rest_args.js:30:32
+
+Cannot call `apply` with `1` bound to `value` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_args.js:30:32
+   30| apply(value => collect(value), 1) as Array<string>; // ERROR
+                                      ^ [1]
+
+References:
+   rest_args.js:30:44
+   30| apply(value => collect(value), 1) as Array<string>; // ERROR
+                                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- rest_args.js:38:43
+
+Cannot call `applySpread` with `1` bound to `value` because `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   rest_args.js:38:43
+   38| applySpread(values => collect(...values), 1) as Array<string>; // ERROR
+                                                 ^ [1]
+
+References:
+   rest_args.js:38:55
+   38| applySpread(values => collect(...values), 1) as Array<string>; // ERROR
+                                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ rest_args.js:46:9
+
+Cannot call `partial` because in array element: `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   rest_args.js:46:9
+   46| partial('a'); // ERROR
+               ^^^ [1]
+
+References:
+   rest_args.js:40:63
+   40| declare function takesNumbers(label: string, ...values: Array<number>): void;
+                                                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ rest_args.js:48:1
+
+Cannot cast `describe(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_args.js:48:1
+   48| describe(partial) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   rest_args.js:42:37
+   42|   R extends ReadonlyArray<number> ? number : string;
+                                           ^^^^^^ [1]
+   rest_args.js:48:22
+   48| describe(partial) as string; // ERROR
+                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ rest_args.js:56:1
+
+Cannot cast `tailKind` to string literal `bad` because `"tail"` [1] is incompatible with `"bad"` [2].
+[incompatible-type]
+
+   rest_args.js:56:1
+   56| tailKind as 'bad'; // ERROR
+       ^^^^^^^^
+
+References:
+   rest_args.js:54:25
+   54| declare const tailKind: TailKind<[number, string, boolean]>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   rest_args.js:56:13
+   56| tailKind as 'bad'; // ERROR
+                   ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- rest_param_infer.js:15:1
 
 Cannot cast `a` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1367,4 +1530,4 @@ References:
 
 
 
-Found 88 errors
+Found 98 errors

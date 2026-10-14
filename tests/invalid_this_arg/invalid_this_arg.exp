@@ -336,6 +336,23 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:16:1
 
+Cannot call `o.m.call` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   rejected.js:16:1
+   16| o.m.call(...args); // error: spread first argument
+       ^^^
+
+References:
+   rejected.js:15:27
+   15| declare const args: Array<unknown>;
+                                 ^^^^^^^ [1]
+   rejected.js:2:34
+    2|   m: (this: {x: number, ...}, y: number) => void,
+                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:16:1
+
 Cannot call `o.m.call` because in the `this` parameter: `{x: number, ...}` [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
@@ -350,23 +367,6 @@ References:
    rejected.js:15:27
    15| declare const args: Array<unknown>;
                                  ^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- rejected.js:16:5
-
-Cannot call `o.m.call` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
-
-   rejected.js:16:5
-   16| o.m.call(...args); // error: spread first argument
-           ^^^^
-
-References:
-   rejected.js:15:27
-   15| declare const args: Array<unknown>;
-                                 ^^^^^^^ [1]
-   rejected.js:2:34
-    2|   m: (this: {x: number, ...}, y: number) => void,
-                                        ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:16:5

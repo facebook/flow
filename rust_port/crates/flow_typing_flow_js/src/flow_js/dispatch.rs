@@ -3824,6 +3824,9 @@ fn __flow_impl<'cx>(
                         }
                     };
                     rec_flow_t(cx, env, trace, unknown_use(), (l, &resolve_to_type))?;
+                    if !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(cx, l) {
+                        tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &elem_t);
+                    }
                     ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t,
                         tuple_view: None,

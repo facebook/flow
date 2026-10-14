@@ -306,6 +306,17 @@ pub(super) fn multiflow_partial<'cx>(
                                 }))),
                             ),
                         )?;
+                        if !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(
+                            cx,
+                            &rest_param_t,
+                        ) {
+                            tvar_resolver::resolve(
+                                cx,
+                                tvar_resolver::default_no_lowers,
+                                true,
+                                tout,
+                            );
+                        }
                         Ok::<(), FlowJsException>(())
                     })?
                 }
@@ -349,7 +360,7 @@ pub(super) fn multiflow_partial<'cx>(
                 .replace_desc(VirtualReasonDesc::RRestArrayLit(Arc::new(
                     reason_op.desc(true).clone(),
                 )));
-            let arg_array = {
+            {
                 let arg_array_reason2 = arg_array_reason.dupe();
                 let use_op = use_op.dupe();
                 flow_typing_tvar::mk_where(cx, arg_array_reason.dupe(), |cx, tout| {
@@ -369,26 +380,48 @@ pub(super) fn multiflow_partial<'cx>(
                         elem_t,
                         tout: tout.dupe(),
                     };
-                    resolve_spread_list(cx, env, use_op.dupe(), reason_op, elems.dupe(), resolve_to)
-                })?
-            };
-            {
-                let use_op = VirtualUseOp::Frame(
-                    Arc::new(VirtualFrameUseOp::FunRestParam {
-                        lower: reason_of_t(&arg_array).dupe(),
-                        upper: reason_of_t(rest_param_t).dupe(),
-                    }),
-                    Arc::new(use_op.dupe()),
-                );
-                rec_flow(
-                    cx,
-                    env,
-                    trace,
-                    (
-                        &arg_array,
-                        &UseT::new(UseTInner::UseT(use_op, rest_param_t.dupe())),
-                    ),
-                )?;
+                    resolve_spread_list(
+                        cx,
+                        env,
+                        use_op.dupe(),
+                        reason_op,
+                        elems.dupe(),
+                        resolve_to,
+                    )?;
+                    let use_op = VirtualUseOp::Frame(
+                        Arc::new(VirtualFrameUseOp::FunRestParam {
+                            lower: reason_of_t(tout).dupe(),
+                            upper: reason_of_t(rest_param_t).dupe(),
+                        }),
+                        Arc::new(use_op.dupe()),
+                    );
+                    rec_flow(
+                        cx,
+                        env,
+                        trace,
+                        (
+                            tout,
+                            &UseT::new(UseTInner::UseT(use_op, rest_param_t.dupe())),
+                        ),
+                    )?;
+                    if !flow_js_utils::tvar_visitors::has_placeholders(cx, rest_param_t)
+                        && elems.iter().all(|arg| {
+                            let t = match arg {
+                                UnresolvedParam::UnresolvedArg(box UnresolvedArgData(
+                                    element,
+                                    _,
+                                )) => &element.t,
+                                UnresolvedParam::UnresolvedSpreadArg(t) => t,
+                            };
+                            !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(
+                                cx, t,
+                            )
+                        })
+                    {
+                        tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, tout);
+                    }
+                    Ok::<(), FlowJsException>(())
+                })?;
             }
             Ok((
                 Vec::from(unused_parlist),
@@ -1195,6 +1228,18 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                     &UseT::new(UseTInner::UseT(use_op.dupe(), tvar.dupe())),
                                 ),
                             )?;
+                        }
+                        if tset.iter().all(|type_ex| {
+                            !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(
+                                cx, &type_ex.0,
+                            )
+                        }) {
+                            tvar_resolver::resolve(
+                                cx,
+                                tvar_resolver::default_no_lowers,
+                                true,
+                                tvar,
+                            );
                         }
                         Ok::<(), FlowJsException>(())
                     })?;

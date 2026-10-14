@@ -138,6 +138,7 @@ use crate::flow_js::FlowJs;
 use crate::marked::Marked;
 use crate::natural_inference;
 use crate::speculation_kit;
+use crate::tvar_resolver;
 
 fn union_flatten_list(ts: impl IntoIterator<Item = Type>) -> Vec<Type> {
     ts.into_iter().flat_map(union_flatten).collect()
@@ -608,6 +609,14 @@ fn t_of_use_t<'cx>(
                                             tout: t_prime.dupe(),
                                         }));
                                         FlowJs::flow_with_env(cx, env, &t, &UseT::new(u_inner))?;
+                                        if !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(cx, &t) {
+                                            tvar_resolver::resolve(
+                                                cx,
+                                                tvar_resolver::default_no_lowers,
+                                                true,
+                                                t_prime,
+                                            );
+                                        }
                                         Ok::<(), FlowJsException>(())
                                     },
                                 )?;
@@ -1080,6 +1089,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
             let rest_elem_t =
                 flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |cx, _r, tout_id| {
                     let tout_tvar = Tvar::new(reason.dupe(), tout_id as u32);
+                    let tout_t = Type::new(TypeInner::OpenT(tout_tvar.dupe()));
                     let u_inner = UseTInner::GetElemT(Box::new(GetElemTData {
                         use_op: unknown_use(),
                         reason: reason.dupe(),
@@ -1091,6 +1101,12 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                         tout: Box::new(tout_tvar),
                     }));
                     FlowJs::flow_with_env(cx, env, rest_param_t, &UseT::new(u_inner))?;
+                    if !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(
+                        cx,
+                        rest_param_t,
+                    ) {
+                        tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &tout_t);
+                    }
                     Ok::<(), FlowJsException>(())
                 })?;
             let elem_t = match tuple_ts.as_slice() {
