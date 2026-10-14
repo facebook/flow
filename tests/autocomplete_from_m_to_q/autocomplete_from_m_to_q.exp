@@ -407,6 +407,7 @@ Flags: --pretty
     {"name":"Int16Array","type":"Int16ArrayConstructor"},
     {"name":"Int32Array","type":"Int32ArrayConstructor"},
     {"name":"Int8Array","type":"Int8ArrayConstructor"},
+    {"name":"Intl","type":"typeof Intl"},
     {"name":"isFinite","type":"(number: unknown) => boolean"},
     {"name":"isNaN","type":"(number: unknown) => boolean"},
     {"name":"Iterator","type":"IteratorConstructor"},

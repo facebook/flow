@@ -3,16 +3,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `patt.test(...)` to `match` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    regexp.js:2:20
-     2| var match:number = patt.test("Hello world!");
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+      2| var match:number = patt.test("Hello world!");
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:919:27
-   919|     test(string: string): boolean;
-                                  ^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1063:27
+   1063|     test(string: string): boolean;
+                                   ^^^^^^^ [1]
    regexp.js:2:11
-     2| var match:number = patt.test("Hello world!");
-                  ^^^^^^ [2]
+      2| var match:number = patt.test("Hello world!");
+                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- regexp.js:5:1
@@ -21,13 +21,13 @@ Cannot cast `regExp[Symbol.matchAll]` to function type because in the `this` par
 with `unknown`. [incompatible-type]
 
    regexp.js:5:1
-     5| regExp[Symbol.matchAll] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp`
-        ^^^^^^^^^^^^^^^^^^^^^^^
+      5| regExp[Symbol.matchAll] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp`
+         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:899:11
-   899| interface RegExp {
-                  ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1043:11
+   1043| interface RegExp {
+                   ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- regexp.js:13:1

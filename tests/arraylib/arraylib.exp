@@ -95,16 +95,16 @@ Error --------------------------------------------------------------------------
 Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    array_lib.js:58:29
-    58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                    ^^^^^^^^^^^^^^^^
+     58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
+                                     ^^^^^^^^^^^^^^^^
 
 References:
    array_lib.js:58:4
-    58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
-           ^^ [1]
-   <BUILTINS>/lib.es5.js:877:13
-   877|     length: number;
-                    ^^^^^^ [2]
+     58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
+            ^^ [1]
+   <BUILTINS>/lib.es5.js:1021:13
+   1021|     length: number;
+                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:59:34
@@ -112,16 +112,16 @@ Error --------------------------------------------------------------------------
 Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    array_lib.js:59:34
-    59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                         ^^^^^^^^^^^^^^^^
+     59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+                                          ^^^^^^^^^^^^^^^^
 
 References:
    array_lib.js:59:4
-    59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-           ^^ [1]
-   <BUILTINS>/lib.es5.js:877:13
-   877|     length: number;
-                    ^^^^^^ [2]
+     59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+            ^^ [1]
+   <BUILTINS>/lib.es5.js:1021:13
+   1021|     length: number;
+                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ array_lib.js:71:3
@@ -312,22 +312,22 @@ Flow is showing the union/intersection branches that got closest to passing. Oth
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    filter_error_msg_quality_test.js:3:9
-     3| str_arr.filter(s => s.length) as Array<boolean>;
-                ^^^^^^
+      3| str_arr.filter(s => s.length) as Array<boolean>;
+                 ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:877:13
-   877|     length: number;
-                    ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1021:13
+   1021|     length: number;
+                     ^^^^^^ [1]
    <BUILTINS>/lib.es5.js:610:109
-   610|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
-                                                                                                                    ^^^^^^^^^^^^^^^^^^ [2]
+    610|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+                                                                                                                     ^^^^^^^^^^^^^^^^^^ [2]
    filter_error_msg_quality_test.js:2:30
-     2| declare const str_arr: Array<string>;
-                                     ^^^^^^ [3]
+      2| declare const str_arr: Array<string>;
+                                      ^^^^^^ [3]
    filter_error_msg_quality_test.js:3:40
-     3| str_arr.filter(s => s.length) as Array<boolean>;
-                                               ^^^^^^^ [4]
+      3| str_arr.filter(s => s.length) as Array<boolean>;
+                                                ^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------- filter_error_msg_quality_test.js:7:18
