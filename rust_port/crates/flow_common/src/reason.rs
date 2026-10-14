@@ -351,7 +351,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RCallableObjectType,
     RClassExtends,
     RClassMixins,
-    RReactKey,
     RNoProviders,
     RReadOnlyType,
     RObjectPatternRestProp,
@@ -611,7 +610,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RCallableObjectType => RCallableObjectType,
             RClassExtends => RClassExtends,
             RClassMixins => RClassMixins,
-            RReactKey => RReactKey,
             RNoProviders => RNoProviders,
             ROpaqueType(s) => ROpaqueType(s.dupe()),
             RObjectKeyMirror => RObjectKeyMirror,
@@ -1668,7 +1666,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RCallableObjectType => "callable object type".to_string(),
         RClassExtends => "class extends".to_string(),
         RClassMixins => "class mixins".to_string(),
-        RReactKey => "React key".to_string(),
         RNoProviders => "no providers".to_string(),
 
         // Type wrappers

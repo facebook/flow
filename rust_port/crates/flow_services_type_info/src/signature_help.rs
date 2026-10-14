@@ -841,7 +841,7 @@ pub fn find_signatures<'a>(
         }) => {
             let ts = if name == "key" {
                 // 'key' is special-cased
-                let reason_key = reason::mk_reason(reason::VirtualReasonDesc::RReactKey, key_loc);
+                let reason_key = reason::mk_reason(None, key_loc);
                 let key_t =
                     flow_js::get_builtin_type_non_speculating(cx, &reason_key, None, "React$Key")?;
                 let t = type_util::maybe(key_t);

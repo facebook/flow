@@ -1234,7 +1234,7 @@ pub(super) fn run_with_env<'cx>(
         {
             let reason_key = type_util::reason_of_t(&normalized_jsx_props)
                 .dupe()
-                .replace_desc(VirtualReasonDesc::RReactKey);
+                .replace_desc(None);
             // Create the key type.
             let key_t = type_util::optional(
                 type_util::maybe(FlowJs::get_builtin_type_with_env(
