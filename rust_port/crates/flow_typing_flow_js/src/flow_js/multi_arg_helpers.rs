@@ -1501,13 +1501,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             .map(|(name, _)| name.as_ref().map(|n| Name::new(n.dupe())))
             .collect();
         let params_tlist: Vec<Type> = remaining_params.iter().map(|(_, t)| t.dupe()).collect();
-        // "bound function type", positioned at reason_op
-        let bound_reason = call_reason.dupe().replace_desc(
-            reason_op
-                .desc(true)
-                .cloned()
-                .map(|desc| VirtualReasonDesc::RBound(Arc::new(desc))),
-        );
+        let bound_reason = call_reason.dupe().replace_desc(None);
         let def_reason = reason_op.dupe();
         let funt = Type::new(TypeInner::DefT(
             reason_op.dupe(),
