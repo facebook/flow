@@ -1407,6 +1407,96 @@ References:
                                ^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- reversed_rest_params.js:18:1
+
+Cannot cast `after_first` to tuple type because `[number, boolean]` [1] has 2 elements but `[number]` [2] has 1 element.
+[invalid-tuple-arity]
+
+   reversed_rest_params.js:18:1
+   18| after_first as [number]; // error: arity
+       ^^^^^^^^^^^
+
+References:
+   reversed_rest_params.js:16:28
+   16| declare const after_first: AfterFirst<typeof tuple_rest>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   reversed_rest_params.js:18:16
+   18| after_first as [number]; // error: arity
+                      ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- reversed_rest_params.js:21:1
+
+Cannot cast `after_second` to tuple type because in index `0`: `boolean` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   reversed_rest_params.js:21:1
+   21| after_second as [number]; // error: boolean ~> number
+       ^^^^^^^^^^^^
+
+References:
+   reversed_rest_params.js:15:58
+   15| declare function tuple_rest(a: string, ...rest: [number, boolean]): void;
+                                                                ^^^^^^^ [1]
+   reversed_rest_params.js:21:18
+   21| after_second as [number]; // error: boolean ~> number
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- reversed_rest_params.js:26:1
+
+Cannot cast `array_after_first` to tuple type because `[b: number, ...Array<boolean>]` [1] has 1 or more elements but
+`[number]` [2] has 1 element. [invalid-tuple-arity]
+
+   reversed_rest_params.js:26:1
+   26| array_after_first as [number]; // error: arity
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   reversed_rest_params.js:24:34
+   24| declare const array_after_first: AfterFirst<typeof array_rest>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   reversed_rest_params.js:26:22
+   26| array_after_first as [number]; // error: arity
+                            ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ reversed_rest_params.js:51:31
+
+Cannot call `after_first_call` with function bound to `g` because in the first argument: `number` [1] is incompatible
+with `string` [2]. [incompatible-type]
+
+   reversed_rest_params.js:51:31
+   51| after_first_call(no_rest_two, (b: string) => {}); // error: number ~> string
+                                     ^^^^^^^^^^^^^^^^^
+
+References:
+   reversed_rest_params.js:44:44
+   44| declare function no_rest_two(a: string, b: number): void;
+                                                  ^^^^^^ [1]
+   reversed_rest_params.js:51:35
+   51| after_first_call(no_rest_two, (b: string) => {}); // error: number ~> string
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ reversed_rest_params.js:53:34
+
+Cannot call `after_first_call` with function bound to `g` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   reversed_rest_params.js:53:34
+   53| after_first_call(array_rest_one, (b: string) => {}); // error: number ~> string
+                                        ^^^^^^^^^^^^^^^^^
+
+References:
+   reversed_rest_params.js:45:59
+   45| declare function array_rest_one(a: string, ...rest: Array<number>): void;
+                                                                 ^^^^^^ [1]
+   reversed_rest_params.js:53:38
+   53| after_first_call(array_rest_one, (b: string) => {}); // error: number ~> string
+                                            ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- subst.js:4:3
 
 Cannot cast `num` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1548,4 +1638,4 @@ References:
 
 
 
-Found 99 errors
+Found 104 errors

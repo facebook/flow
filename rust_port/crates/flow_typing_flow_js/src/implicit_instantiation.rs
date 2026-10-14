@@ -68,7 +68,6 @@ use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::FunType;
 use flow_typing_type::type_::FuncallType;
 use flow_typing_type::type_::GenericTData;
-use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumKind;
 use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::HintEvalResult;
@@ -104,6 +103,8 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::TypeParamInner;
 use flow_typing_type::type_::UnifyCause;
+use flow_typing_type::type_::UnresolvedArgData;
+use flow_typing_type::type_::UnresolvedParam;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
@@ -117,7 +118,6 @@ use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::implicit_instantiation_reference_kind;
 use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_::nominal;
-use flow_typing_type::type_::num_module_t;
 use flow_typing_type::type_::object;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
 use flow_typing_type::type_::object::ObjectToolReactConfigData;
@@ -733,7 +733,7 @@ fn t_of_use_t<'cx>(
         }) if resolve_spread_type.rrt_unresolved.is_empty() => {
             match &resolve_spread_type.rrt_resolve_to {
                 SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(_, funtype) => {
-                    let solution =
+                    use_t_result_of_t_option(
                         reverse_resolve_spread_multiflow_subtype_full_partial_resolution(
                             cx,
                             env,
@@ -742,8 +742,8 @@ fn t_of_use_t<'cx>(
                             &resolve_spread_type.rrt_resolved,
                             &funtype.params,
                             &funtype.rest_param,
-                        )?;
-                    Ok(UseTResult::UpperT(solution))
+                        ),
+                    )
                 }
                 // The spread receives what the tuple does, minus the elements before it.
                 SpreadResolve::ResolveSpreadsToTupleType {
@@ -1086,10 +1086,9 @@ fn reverse_obj_kit_rest<'cx>(
     })
 }
 
+// The params as a tuple type: `[...params, ...rest]`.
 fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
     cx: &Context<'cx>,
-    env: &FlowJsEnv,
-    tvar: &Type,
     reason: &Reason,
     params: &[FunParam],
     rest_param: &Option<FunRestParam>,
@@ -1140,62 +1139,46 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                 .update_desc(|_| Some(flow_common::reason::VirtualReasonDesc::RTupleType));
             (reason_out, t)
         }
-        Some(rest_param_val) => {
-            let rest_param_t = &rest_param_val.2;
-            let rest_elem_t =
-                flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |cx, _r, tout_id| {
-                    let tout_tvar = Tvar::new(reason.dupe(), tout_id as u32);
-                    let tout_t = Type::new(TypeInner::OpenT(tout_tvar.dupe()));
-                    let u_inner = UseTInner::GetElemT(Box::new(GetElemTData {
-                        use_op: unknown_use(),
-                        reason: reason.dupe(),
-                        id: None,
-                        from_annot: true,
-                        skip_optional: false,
-                        access_iterables: false,
-                        key_t: num_module_t::make(reason.dupe()),
-                        tout: Box::new(tout_tvar),
-                    }));
-                    FlowJs::flow_with_env(cx, env, rest_param_t, &UseT::new(u_inner))?;
-                    if !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(
-                        cx,
-                        rest_param_t,
-                    ) {
-                        tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &tout_t);
-                    }
-                    Ok::<(), FlowJsException>(())
-                })?;
-            let elem_t = match tuple_ts.as_slice() {
-                [] => rest_elem_t,
-                [t, ts @ ..] => Type::new(TypeInner::UnionT(
-                    reason.dupe(),
-                    union_rep::make(
-                        None,
-                        union_rep::UnionKind::ImplicitInstantiationKind,
-                        rest_elem_t,
-                        t.dupe(),
-                        ts.iter().duped().collect::<Rc<[_]>>(),
-                    ),
-                )),
-            };
-            let t = ArrType::ArrayAT(Box::new(ArrayATData {
-                elem_t,
-                tuple_view: None,
-                react_dro: None,
-                strictness_kind: cx.type_strictness_kind(),
-            }));
+        // `[...rest]` is `rest`, which keeps a generic rest param.
+        Some(FunRestParam(_, _, rest_param_t)) if params.is_empty() => {
+            return Ok(rest_param_t.dupe());
+        }
+        Some(FunRestParam(_, _, rest_param_t)) => {
+            let elements = tuple_elements
+                .into_iter()
+                .map(|el| UnresolvedParam::UnresolvedArg(Box::new(UnresolvedArgData(el, None))))
+                .chain(std::iter::once(UnresolvedParam::UnresolvedSpreadArg(
+                    rest_param_t.dupe(),
+                )))
+                .collect();
             let reason_out = reason
                 .dupe()
-                .update_desc(|_| Some(flow_common::reason::VirtualReasonDesc::RArray));
-            (reason_out, t)
+                .update_desc(|_| Some(flow_common::reason::VirtualReasonDesc::RTupleType));
+            return flow_js_utils::mk_tuple_type(
+                cx,
+                cx.type_strictness_kind(),
+                eval::Id::generate_id(),
+                |_cx, use_op, reason, t, destructor, id| {
+                    Ok(Type::new(TypeInner::EvalT {
+                        type_: t,
+                        defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+                            use_op,
+                            reason,
+                            Rc::new(destructor),
+                        )),
+                        id,
+                    }))
+                },
+                false,
+                reason_out,
+                elements,
+            );
         }
     };
-    let solution = Type::new(TypeInner::DefT(
+    Ok(Type::new(TypeInner::DefT(
         reason_out,
         DefT::new(DefTInner::ArrT(std::rc::Rc::new(arr_type))),
-    ));
-    FlowJs::flow_t_with_env(cx, env, &solution, tvar)?;
-    Ok(solution)
+    )))
 }
 
 fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
@@ -1206,19 +1189,36 @@ fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
     resolved: &flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     params: &[FunParam],
     rest_param: &Option<FunRestParam>,
-) -> Result<Type, FlowJsException> {
-    // We remove resolved params one by one from the start.
-    // When we run out of params but we still have resolved_params,
-    // they go to the rest param, or are ignored if there is no rest param.
+) -> Result<Option<Type>, FlowJsException> {
+    // The spread receives the params after the resolved arguments. The resolved arguments past
+    // the positional params went to the rest param, so they are dropped from it.
     let remaining_params = params.get(resolved.len()..).unwrap_or_default();
-    reverse_resolve_spread_multiflow_subtype_full_no_resolution(
+    let params_t = reverse_resolve_spread_multiflow_subtype_full_no_resolution(
         cx,
-        env,
-        tvar,
         reason,
         remaining_params,
         rest_param,
-    )
+    )?;
+    let solution = match resolved.len().saturating_sub(params.len()) {
+        0 => Some(params_t),
+        index => {
+            let arr_rest_result = flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tout| {
+                let u_inner = UseTInner::ArrRestT(Box::new(ArrRestTData {
+                    use_op: unknown_use(),
+                    reason: reason.dupe(),
+                    index: index as i32,
+                    tout: tout.dupe(),
+                }));
+                FlowJs::flow_with_env(cx, env, &params_t, &UseT::new(u_inner))?;
+                Ok::<(), FlowJsException>(())
+            })?;
+            merge_lower_bounds(cx, env, &arr_rest_result)?
+        }
+    };
+    if let Some(solution) = &solution {
+        FlowJs::flow_t_with_env(cx, env, solution, tvar)?;
+    }
+    Ok(solution)
 }
 
 enum PinningSource<'cx> {
