@@ -22,6 +22,8 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_;
+use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
@@ -39,6 +41,7 @@ use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ResolvedArgData;
 use flow_typing_type::type_::ResolvedParam;
 use flow_typing_type::type_::ThisTypeAppTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
@@ -253,20 +256,43 @@ fn check_polarity_impl<'cx>(
             check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Positive, inner_t)?;
         }
         TypeInner::EvalT {
-            defer_use_t, id, ..
+            type_: inner_t,
+            defer_use_t,
+            id,
         } if matches!(
             defer_use_t.deref(),
             type_::TypeDestructorTInner(_, _, d) if matches!(d.deref(), Destructor::ReadOnlyType)
         ) =>
         {
             if seen.insert(id.dupe()) {
-                let type_::TypeDestructorTInner(_, reason, _) = defer_use_t.deref();
-                let concrete_types =
-                    flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(
-                        cx, env, reason, t,
+                // `$ReadOnly` makes the elements of a tuple type spread read-only.
+                if let TypeInner::EvalT {
+                    type_: first_spread,
+                    defer_use_t: inner_defer_use_t,
+                    ..
+                } = inner_t.deref()
+                    && let type_::TypeDestructorTInner(_, _, inner_d) = inner_defer_use_t.deref()
+                    && let Destructor::SpreadTupleType(spread) = inner_d.deref()
+                {
+                    check_tuple_spread_polarity(
+                        cx,
+                        env,
+                        trace,
+                        seen,
+                        tparams,
+                        Polarity::Positive,
+                        first_spread,
+                        spread,
                     )?;
-                for ct in &concrete_types {
-                    check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Positive, ct)?;
+                } else {
+                    let type_::TypeDestructorTInner(_, reason, _) = defer_use_t.deref();
+                    let concrete_types =
+                        flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(
+                            cx, env, reason, t,
+                        )?;
+                    for ct in &concrete_types {
+                        check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Positive, ct)?;
+                    }
                 }
             }
         }
@@ -276,13 +302,9 @@ fn check_polarity_impl<'cx>(
             defer_use_t,
             ..
         } if let type_::TypeDestructorTInner(_, _, d) = defer_use_t.deref()
-            && let Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData {
-                resolved,
-                unresolved,
-                ..
-            }) = d.deref() =>
+            && let Destructor::SpreadTupleType(spread) = d.deref() =>
         {
-            check_polarity_impl(
+            check_tuple_spread_polarity(
                 cx,
                 env,
                 trace,
@@ -290,19 +312,8 @@ fn check_polarity_impl<'cx>(
                 tparams,
                 Polarity::Neutral,
                 first_spread,
+                spread,
             )?;
-            for param in resolved.iter() {
-                if let ResolvedParam::ResolvedArg(box ResolvedArgData(elem, _)) = param {
-                    check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Neutral, &elem.t)?;
-                }
-            }
-            for param in unresolved.iter() {
-                let t = match param {
-                    UnresolvedParam::UnresolvedArg(box UnresolvedArgData(elem, _)) => &elem.t,
-                    UnresolvedParam::UnresolvedSpreadArg(t) => t,
-                };
-                check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Neutral, t)?;
-            }
         }
         TypeInner::NominalT { nominal_type, .. } => {
             let mut tps_list = Vec::new();
@@ -739,6 +750,83 @@ fn check_polarity_typeparam<'cx>(
     check_polarity_impl(cx, env, trace, seen, tparams, mult_polarity, bound)?;
     if let Some(default) = default {
         check_polarity_impl(cx, env, trace, seen, tparams, mult_polarity, default)?;
+    }
+    Ok(())
+}
+
+// The elements of a tuple type spread end up as elements of the resulting tuple, with
+// `elem_polarity`: the elements before the first spread, the elements of the spread arguments, and
+// the elements after it. The spread itself is not evaluated, since evaluating it with type
+// parameters reports errors at the definition.
+fn check_tuple_spread_polarity<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: Option<DepthTrace>,
+    seen: &mut HashSet<eval::Id>,
+    tparams: &BTreeMap<SubstName, TypeParam>,
+    elem_polarity: Polarity,
+    first_spread: &Type,
+    spread: &DestructorSpreadTupleTypeData,
+) -> Result<(), FlowJsException> {
+    let DestructorSpreadTupleTypeData {
+        resolved,
+        unresolved,
+        ..
+    } = spread;
+    check_spread_argument_polarity(cx, env, trace, seen, tparams, elem_polarity, first_spread)?;
+    for param in resolved.iter() {
+        if let ResolvedParam::ResolvedArg(box ResolvedArgData(elem, _)) = param {
+            check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, &elem.t)?;
+        }
+    }
+    for param in unresolved.iter() {
+        match param {
+            UnresolvedParam::UnresolvedArg(box UnresolvedArgData(elem, _)) => {
+                check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, &elem.t)?;
+            }
+            UnresolvedParam::UnresolvedSpreadArg(t) => {
+                check_spread_argument_polarity(cx, env, trace, seen, tparams, elem_polarity, t)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+// A spread argument's elements are read and copied, so their own polarity does not matter.
+fn check_spread_argument_polarity<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: Option<DepthTrace>,
+    seen: &mut HashSet<eval::Id>,
+    tparams: &BTreeMap<SubstName, TypeParam>,
+    elem_polarity: Polarity,
+    t: &Type,
+) -> Result<(), FlowJsException> {
+    if let TypeInner::GenericT(_) = t.deref() {
+        return check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, t);
+    }
+    let concrete_types =
+        flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(
+            cx,
+            env,
+            reason_of_t(t),
+            t,
+        )?;
+    for ct in &concrete_types {
+        match ct.deref() {
+            TypeInner::DefT(_, d) if let DefTInner::ArrT(arr) = d.deref() => match arr.deref() {
+                ArrType::TupleAT(box TupleATData { elements, .. }) => {
+                    for elem in elements.iter() {
+                        check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, &elem.t)?;
+                    }
+                }
+                ArrType::ArrayAT(box ArrayATData { elem_t, .. })
+                | ArrType::ROArrayAT(box (elem_t, _)) => {
+                    check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, elem_t)?;
+                }
+            },
+            _ => check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, ct)?,
+        }
     }
     Ok(())
 }

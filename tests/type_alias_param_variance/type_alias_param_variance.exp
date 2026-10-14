@@ -133,18 +133,18 @@ References:
                          ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- tuple_spread.js:5:45
+Error --------------------------------------------------------------------------------------------- tuple_spread.js:6:45
 
 Cannot use `X` [1] in an input/output position because `X` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   tuple_spread.js:5:45
-   5| type Contravariant<in X> = [...[readonly x: X], string]; // ERROR: spread elements are writable
+   tuple_spread.js:6:45
+   6| type Contravariant<in X> = [...[readonly x: X], string]; // ERROR: spread elements are writable
                                                   ^
 
 References:
-   tuple_spread.js:5:23
-   5| type Contravariant<in X> = [...[readonly x: X], string]; // ERROR: spread elements are writable
+   tuple_spread.js:6:23
+   6| type Contravariant<in X> = [...[readonly x: X], string]; // ERROR: spread elements are writable
                             ^ [1]
 
 
