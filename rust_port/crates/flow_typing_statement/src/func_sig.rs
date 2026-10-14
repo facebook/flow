@@ -240,13 +240,12 @@ impl FuncScopeVisitor<'_, '_, '_> {
                 // Convert the return expression's type T to Promise<T>. If the
                 // expression type is itself a Promise<T>, ensure we still return
                 // a Promise<T> via Promise.resolve.
-                let async_return_reason =
-                    reason::mk_reason(reason::VirtualReasonDesc::RAsyncReturn, loc.dupe());
+                let async_return_reason = reason::mk_reason(None, loc.dupe());
                 let awaited =
                     type_operation_utils::promise::await_(self.cx, &async_return_reason, t)?;
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
                     self.cx,
-                    &reason::mk_reason(type_util::desc_of_t(t).clone(), loc.dupe()),
+                    &reason::mk_reason(type_util::desc_of_t(t).cloned(), loc.dupe()),
                     None,
                     "Promise",
                     vec![awaited],
@@ -258,7 +257,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
                 // Y and R are internals, installed earlier.
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
                     self.cx,
-                    &reason::mk_reason(type_util::desc_of_t(t).clone(), loc.dupe()),
+                    &reason::mk_reason(type_util::desc_of_t(t).cloned(), loc.dupe()),
                     None,
                     "Generator",
                     vec![self.yield_t.dupe(), t.dupe(), self.next_t.dupe()],
@@ -268,7 +267,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
             Kind::AsyncGenerator { .. } => {
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
                     self.cx,
-                    &reason::mk_reason(type_util::desc_of_t(t).clone(), loc.dupe()),
+                    &reason::mk_reason(type_util::desc_of_t(t).cloned(), loc.dupe()),
                     None,
                     "AsyncGenerator",
                     vec![self.yield_t.dupe(), t.dupe(), self.next_t.dupe()],
@@ -524,7 +523,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
         Some(FunctionBody::BodyExpression(expr)) => expr.loc().dupe(),
         None => ALoc::none(),
     };
-    let reason = reason::mk_reason(reason::VirtualReasonDesc::RFunctionBody, body_loc.dupe());
+    let reason = reason::mk_reason(None, body_loc.dupe());
 
     // Set the scope early so default exprs can reference earlier params
     let prev_scope_kind = {

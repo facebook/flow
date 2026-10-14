@@ -257,7 +257,11 @@ pub mod callee_finder {
     /// of the toplevel alias, but that would be more complex that fixing this here.
     pub fn fix_reason_of_t(t: &Type) -> Type {
         type_util::mod_reason_of_t(
-            &|reason| reason.update_desc(|desc| desc.invalidate_rtype_alias()),
+            &|reason| {
+                reason.update_desc(|desc| {
+                    desc.map(flow_common::reason::VirtualReasonDesc::invalidate_rtype_alias)
+                })
+            },
             t,
         )
     }
@@ -593,7 +597,7 @@ pub mod callee_finder {
                     let callee_loc_owned = callee_loc.dupe();
                     let get_callee_type =
                         move || -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-                            let desc = type_util::desc_of_t(&class_t).clone();
+                            let desc = type_util::desc_of_t(&class_t).cloned();
                             let ctor_reason = reason::mk_reason(desc, callee_loc_owned);
                             let instance = flow_typing_tvar::mk_where::<
                                 flow_utils_concurrency::job_error::JobError,

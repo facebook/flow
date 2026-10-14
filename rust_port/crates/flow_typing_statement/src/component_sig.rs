@@ -254,7 +254,7 @@ pub fn component_type<'a, C: crate::component_params_intf::Config>(
 ) -> Result<Type, JobError> {
     let config_reason = reason
         .dupe()
-        .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));
+        .update_desc(|desc| desc.map(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc))));
     let config = component_params::config::<C>(cx, in_annotation, &config_reason, params, rest)?;
     let component_kind = match id_opt {
         None => type_::ComponentKind::Structural,

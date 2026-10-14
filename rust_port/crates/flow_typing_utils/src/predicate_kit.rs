@@ -644,7 +644,7 @@ fn predicate_no_concretization<'cx>(
                     let targs = &pred_funcall_info.3;
                     let argts = &pred_funcall_info.4;
                     let reason = mk_reason(
-                        VirtualReasonDesc::RFunctionCall(Arc::new(desc_of_t(fun_t).clone())),
+                        VirtualReasonDesc::RFunctionCall(desc_of_t(fun_t).cloned().map(Arc::new)),
                         loc,
                     );
                     call_latent_param_pred(
@@ -669,7 +669,7 @@ fn predicate_no_concretization<'cx>(
                     let targs = &pred_funcall_info.3;
                     let argts = &pred_funcall_info.4;
                     let reason = mk_reason(
-                        VirtualReasonDesc::RFunctionCall(Arc::new(desc_of_t(fun_t).clone())),
+                        VirtualReasonDesc::RFunctionCall(desc_of_t(fun_t).cloned().map(Arc::new)),
                         loc,
                     );
                     call_latent_this_pred(
@@ -849,7 +849,7 @@ fn predicate_no_concretization<'cx>(
             let targs = &pred_funcall_info.3;
             let argts = &pred_funcall_info.4;
             let reason = mk_reason(
-                VirtualReasonDesc::RFunctionCall(Arc::new(desc_of_t(fun_t).clone())),
+                VirtualReasonDesc::RFunctionCall(desc_of_t(fun_t).cloned().map(Arc::new)),
                 loc,
             );
             call_latent_param_pred(
@@ -874,7 +874,7 @@ fn predicate_no_concretization<'cx>(
             let targs = &pred_funcall_info.3;
             let argts = &pred_funcall_info.4;
             let reason = mk_reason(
-                VirtualReasonDesc::RFunctionCall(Arc::new(desc_of_t(fun_t).clone())),
+                VirtualReasonDesc::RFunctionCall(desc_of_t(fun_t).cloned().map(Arc::new)),
                 loc,
             );
             call_latent_this_pred(
@@ -1377,7 +1377,9 @@ fn intersect<'cx>(
             }
         }
         if types_differ(cx, env, 0, t1_conc, t2) {
-            let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
+            let r = reason1
+                .dupe()
+                .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
             Ok(Some(Type::new(TypeInner::DefT(
                 r,
                 DefT::new(DefTInner::EmptyT),
@@ -1388,7 +1390,9 @@ fn intersect<'cx>(
             // Filter out null and void types from the input if comparing with any
             let t1_wrapped = ConcretizedType::wrap_unsafe(t1.dupe());
             if is_null(&t1_wrapped) || is_void(&t1_wrapped) {
-                let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
+                let r = reason1
+                    .dupe()
+                    .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
                 Ok(Some(Type::new(TypeInner::DefT(
                     r,
                     DefT::new(DefTInner::EmptyT),
@@ -1488,7 +1492,9 @@ fn intersect<'cx>(
                 )? {
                     Some(t) => t,
                     None => {
-                        let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
+                        let r = reason1
+                            .dupe()
+                            .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
                         Type::new(TypeInner::IntersectionT(
                             r,
                             inter_rep::make(t2.dupe(), t1_inner, Rc::from([])),
@@ -1497,7 +1503,9 @@ fn intersect<'cx>(
                 };
                 mapped.push(item);
             }
-            let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
+            let r = reason1
+                .dupe()
+                .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
             Ok(type_util::union_of_ts(r, mapped, None))
         }
     }
@@ -1517,7 +1525,9 @@ fn type_guard_diff<'cx>(
     if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
         || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t1, t2)?
     {
-        let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
+        let r = reason1
+            .dupe()
+            .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
         Ok(FilterResult {
             type_: Type::new(TypeInner::DefT(r, DefT::new(DefTInner::EmptyT))),
             changed: true,
@@ -1548,7 +1558,9 @@ fn type_guard_diff<'cx>(
             ts.push(t1_inner);
             changed = true;
         }
-        let r1 = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
+        let r1 = reason1
+            .dupe()
+            .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
         Ok(FilterResult {
             type_: type_util::union_of_ts(r1, ts, None),
             changed,
@@ -2122,7 +2134,7 @@ fn instanceof_test<'cx>(
             let right = InstanceofRhs::InternalExtendsOperand {
                 reason: r
                     .dupe()
-                    .update_desc(|d| VirtualReasonDesc::RExtends(Arc::new(d))),
+                    .update_desc(|d| d.map(|d| VirtualReasonDesc::RExtends(Arc::new(d)))),
                 c: arr.dupe(),
                 a: a.dupe(),
                 seen: SeenClasses::new(),
@@ -2149,7 +2161,7 @@ fn instanceof_test<'cx>(
             let right = InstanceofRhs::InternalExtendsOperand {
                 reason: r
                     .dupe()
-                    .update_desc(|d| VirtualReasonDesc::RExtends(Arc::new(d))),
+                    .update_desc(|d| d.map(|d| VirtualReasonDesc::RExtends(Arc::new(d)))),
                 c: arr.dupe(),
                 a: a.dupe(),
                 seen: SeenClasses::new(),
@@ -2184,7 +2196,7 @@ fn instanceof_test<'cx>(
             let right = InstanceofRhs::InternalExtendsOperand {
                 reason: r
                     .dupe()
-                    .update_desc(|d| VirtualReasonDesc::RExtends(Arc::new(d))),
+                    .update_desc(|d| d.map(|d| VirtualReasonDesc::RExtends(Arc::new(d)))),
                 c: c.dupe(),
                 a: a.dupe(),
                 seen: SeenClasses::new(),
@@ -2394,7 +2406,7 @@ fn instanceof_test<'cx>(
             let right = InstanceofRhs::InternalExtendsOperand {
                 reason: r
                     .dupe()
-                    .update_desc(|d| VirtualReasonDesc::RExtends(Arc::new(d))),
+                    .update_desc(|d| d.map(|d| VirtualReasonDesc::RExtends(Arc::new(d)))),
                 c: c.dupe(),
                 a: a.dupe(),
                 seen: SeenClasses::new(),

@@ -1084,7 +1084,11 @@ pub(super) fn handle_frozen_tvar<'cx>(
             ImplicitInstantiationTvarData {
                 reason: use_reason.dupe(),
                 name: SubstName::name(
-                    flow_common::reason::string_of_desc(use_reason.desc(true)).into(),
+                    use_reason
+                        .desc(true)
+                        .map(flow_common::reason::string_of_desc)
+                        .unwrap_or_default()
+                        .into(),
                 ),
                 bound: Type::new(TypeInner::OpenT(rigid)),
                 id: derived_id,
@@ -1834,12 +1838,12 @@ pub(super) fn reposition_reason<'cx>(
 ) -> Result<Type, FlowJsException> {
     let loc = reason.loc().dupe();
     let desc = if use_desc {
-        Some(reason.desc(false).clone())
+        Some(reason.desc(false))
     } else {
         None
     };
     let annot_loc = reason.annot_loc().map(|l| l.dupe());
-    reposition(cx, env, trace, loc, desc.as_ref(), annot_loc, t.dupe())
+    reposition(cx, env, trace, loc, desc, annot_loc, t.dupe())
 }
 
 // set the position of the given def type from a reason
@@ -1848,7 +1852,7 @@ pub(super) fn reposition<'cx>(
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     loc: ALoc,
-    desc: Option<&ReasonDesc>,
+    desc: Option<Option<&ReasonDesc>>,
     annot_loc: Option<ALoc>,
     t: Type,
 ) -> Result<Type, FlowJsException> {
@@ -1875,7 +1879,7 @@ pub(super) fn reposition<'cx>(
 
     let mod_reason = |reason: Reason| -> Reason {
         match desc {
-            Some(d) => Reason::new(d.clone(), loc.dupe()),
+            Some(d) => Reason::new(d.cloned(), loc.dupe()),
             None => reason.reposition_and_opt_annotate(loc.dupe(), annot_loc.dupe()),
         }
     };
@@ -1884,7 +1888,7 @@ pub(super) fn reposition<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         trace: Option<DepthTrace>,
-        desc: Option<&ReasonDesc>,
+        desc: Option<Option<&ReasonDesc>>,
         mod_reason: &dyn Fn(Reason) -> Reason,
         seen: &mut IntHashMap<i32, Type>,
         t: &Type,
@@ -2101,7 +2105,7 @@ pub(super) fn reposition<'cx>(
             TypeInner::AnnotT(r, inner_t, use_desc) => Ok(Type::new(TypeInner::AnnotT(
                 mod_reason(r.dupe()),
                 inner_t.dupe(),
-                matches!(desc, Some(ReasonDesc::RReactElement { .. })) || *use_desc,
+                matches!(desc, Some(Some(ReasonDesc::RReactElement { .. }))) || *use_desc,
             ))),
             TypeInner::TypeAppT(box TypeAppTData {
                 reason,
@@ -2116,7 +2120,7 @@ pub(super) fn reposition<'cx>(
                 type_: type_.dupe(),
                 targs: targs.dupe(),
                 from_value: *from_value,
-                use_desc: matches!(desc, Some(ReasonDesc::RReactElement { .. })) || *use_desc,
+                use_desc: matches!(desc, Some(Some(ReasonDesc::RReactElement { .. }))) || *use_desc,
             })))),
             TypeInner::NominalT {
                 reason: r,

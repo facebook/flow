@@ -497,19 +497,13 @@ pub mod pattern_union_builder {
         let next_i = i + 1;
         match pattern_ast {
             MatchPattern::BindingPattern { .. } => {
-                let reason = flow_common::reason::mk_reason(
-                    flow_common::reason::VirtualReasonDesc::RMatchWildcard,
-                    loc.dupe(),
-                );
+                let reason = flow_common::reason::mk_reason(None, loc.dupe());
                 pattern_union =
                     add_wildcard(cx, raise_errors, guarded, last, pattern_union, reason);
                 (pattern_union, next_i)
             }
             MatchPattern::WildcardPattern { .. } => {
-                let reason = flow_common::reason::mk_reason(
-                    flow_common::reason::VirtualReasonDesc::RMatchWildcard,
-                    loc.dupe(),
-                );
+                let reason = flow_common::reason::mk_reason(None, loc.dupe());
                 pattern_union =
                     add_wildcard(cx, raise_errors, guarded, last, pattern_union, reason);
                 (pattern_union, next_i)
@@ -1013,10 +1007,12 @@ mod value_union_builder {
                             let mut enum_leafs: LeafSet = FlowOrdSet::default();
                             for (member_name, member_loc) in members.iter() {
                                 let reason = flow_common::reason::mk_reason(
-                                    flow_common::reason::VirtualReasonDesc::REnumMember {
-                                        enum_desc: Arc::new(enum_reason.desc(true).clone()),
-                                        member_name: member_name.dupe(),
-                                    },
+                                    enum_reason.desc(true).cloned().map(|enum_desc| {
+                                        flow_common::reason::VirtualReasonDesc::REnumMember {
+                                            enum_desc: Arc::new(enum_desc),
+                                            member_name: member_name.dupe(),
+                                        }
+                                    }),
                                     member_loc.dupe(),
                                 );
                                 enum_leafs.insert(leaf::Leaf(
@@ -1028,11 +1024,14 @@ mod value_union_builder {
                                 ));
                             }
                             if has_unknown_members {
-                                let reason = enum_reason.dupe().replace_desc(
-                                    flow_common::reason::VirtualReasonDesc::REnumUnknownMembers(
-                                        Arc::new(enum_reason.desc(true).clone()),
-                                    ),
-                                );
+                                let reason =
+                                    enum_reason
+                                        .dupe()
+                                        .replace_desc(enum_reason.desc(true).cloned().map(|desc| {
+                                        flow_common::reason::VirtualReasonDesc::REnumUnknownMembers(
+                                            Arc::new(desc),
+                                        )
+                                    }));
                                 value_union.enum_unknown_members.push((
                                     reason,
                                     enum_info.enum_name.dupe(),

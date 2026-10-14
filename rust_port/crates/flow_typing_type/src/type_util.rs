@@ -190,7 +190,7 @@ pub fn singleton_reason_of_t(t: &Type) -> Reason {
     }
 }
 
-pub fn desc_of_t(t: &Type) -> &ReasonDesc {
+pub fn desc_of_t(t: &Type) -> Option<&ReasonDesc> {
     reason_of_t(t).desc(true)
 }
 
@@ -2111,9 +2111,9 @@ pub fn mk_named_prop(
 }
 
 pub fn optional(t: Type, annot_loc: Option<ALoc>, use_desc: bool) -> Type {
-    let reason = reason_of_t(&t)
-        .dupe()
-        .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::ROptional(Arc::new(desc)));
+    let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
+        desc.map(|desc| flow_common::reason::VirtualReasonDesc::ROptional(Arc::new(desc)))
+    });
     let reason = match annot_loc {
         Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
@@ -2126,9 +2126,9 @@ pub fn optional(t: Type, annot_loc: Option<ALoc>, use_desc: bool) -> Type {
 }
 
 pub fn maybe(t: Type) -> Type {
-    let reason = reason_of_t(&t)
-        .dupe()
-        .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::RMaybe(Arc::new(desc)));
+    let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
+        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RMaybe(Arc::new(desc)))
+    });
     Type::new(TypeInner::MaybeT(reason, t))
 }
 
@@ -2153,27 +2153,25 @@ pub fn make_exact_object(
     // This case analysis aims at recovering a potential type alias associated
     // with an $Exact<> constructor.
     let reason_obj = match reason_op.desc(false) {
-        RTypeAlias(box (n, loc, _)) => {
+        Some(RTypeAlias(box (n, loc, _))) => {
             let n = n.dupe();
             let loc = loc.dupe();
             reason_obj.update_desc(|desc| match &desc {
-                RTypeAlias(box (_, _, inner_desc)) => {
-                    flow_common::reason::VirtualReasonDesc::RTypeAlias(Box::new((
-                        n.dupe(),
-                        loc.dupe(),
-                        inner_desc.clone(),
-                    )))
+                Some(RTypeAlias(box (_, _, inner_desc))) => {
+                    Some(flow_common::reason::VirtualReasonDesc::RTypeAlias(
+                        Box::new((n.dupe(), loc.dupe(), inner_desc.clone())),
+                    ))
                 }
-                _ => flow_common::reason::VirtualReasonDesc::RTypeAlias(Box::new((
-                    n.dupe(),
-                    loc.dupe(),
-                    Arc::new(desc),
-                ))),
+                _ => Some(flow_common::reason::VirtualReasonDesc::RTypeAlias(
+                    Box::new((n.dupe(), loc.dupe(), desc.map(Arc::new))),
+                )),
             })
         }
         _ => {
             // If r is an RTypeAlias, then this alias is no longer valid.
-            reason_obj.update_desc(|desc| desc.invalidate_rtype_alias())
+            reason_obj.update_desc(|desc| {
+                desc.map(flow_common::reason::VirtualReasonDesc::invalidate_rtype_alias)
+            })
         }
     };
 
@@ -2200,9 +2198,9 @@ pub fn class_type(t: Type, structural: bool, annot_loc: Option<ALoc>) -> Type {
     let reason = if structural {
         reason_of_t(&t).dupe()
     } else {
-        reason_of_t(&t)
-            .dupe()
-            .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::RClass(Arc::new(desc)))
+        reason_of_t(&t).dupe().update_desc_new(|desc| {
+            desc.map(|desc| flow_common::reason::VirtualReasonDesc::RClass(Arc::new(desc)))
+        })
     };
     let reason = match annot_loc {
         Some(loc) => reason.reposition_and_annotate(loc),
@@ -2212,9 +2210,9 @@ pub fn class_type(t: Type, structural: bool, annot_loc: Option<ALoc>) -> Type {
 }
 
 pub fn extends_use_type<CX>(use_op: UseOp, l: Type, u: Type) -> UseT<CX> {
-    let reason = reason_of_t(&u)
-        .dupe()
-        .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::RExtends(Arc::new(desc)));
+    let reason = reason_of_t(&u).dupe().update_desc_new(|desc| {
+        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RExtends(Arc::new(desc)))
+    });
     UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
         use_op,
         reason,
@@ -2235,9 +2233,9 @@ pub fn poly_type(
     use crate::type_::DefT;
     use crate::type_::DefTInner;
 
-    let reason = reason_of_t(&t)
-        .dupe()
-        .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::RPolyType(Arc::new(desc)));
+    let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
+        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RPolyType(Arc::new(desc)))
+    });
     let annot_loc = reason.loc().dupe();
     let reason = reason.annotate(annot_loc);
     Type::new(TypeInner::DefT(
@@ -2290,9 +2288,11 @@ pub fn typeapp_with_use_op(
     t: Type,
     targs: Vec<Type>,
 ) -> Type {
-    let reason = reason.replace_desc(flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(
-        desc_of_t(&t).clone(),
-    )));
+    let reason = reason.replace_desc(
+        desc_of_t(&t)
+            .cloned()
+            .map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc))),
+    );
     Type::new(TypeInner::TypeAppT(Box::new(TypeAppTData {
         reason,
         use_op,
@@ -2325,7 +2325,9 @@ pub fn typeapp_annot(
 ) -> Type {
     use flow_common::reason::mk_annot_reason;
 
-    let desc = flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc_of_t(&t).clone()));
+    let desc = desc_of_t(&t)
+        .cloned()
+        .map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc)));
     let reason = mk_annot_reason(desc, loc);
     let use_op = UseOp::Op(Arc::new(RootUseOp::TypeApplication {
         type_: reason.dupe(),
@@ -2342,7 +2344,7 @@ pub fn typeapp_annot(
 
 pub fn implicit_typeapp(t: Type, targs: Vec<Type>, annot_loc: Option<ALoc>) -> Type {
     let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
-        flow_common::reason::VirtualReasonDesc::RTypeAppImplicit(Arc::new(desc))
+        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RTypeAppImplicit(Arc::new(desc)))
     });
     let reason = match annot_loc {
         Some(loc) => reason.reposition_and_annotate(loc),
@@ -2369,7 +2371,7 @@ pub fn this_typeapp(
 ) -> Type {
     let reason = match &targs {
         Some(_) => reason_of_t(&t).dupe().update_desc_new(|desc| {
-            flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc))
+            desc.map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc)))
         }),
         None => reason_of_t(&t).dupe(),
     };
@@ -2389,7 +2391,7 @@ pub fn typeof_annotation(reason: Reason, t: Type, targs: Option<Vec<Type>>) -> T
     use flow_common::reason::mk_annot_reason;
 
     let annot_loc = reason.loc().dupe();
-    let desc_for_tapp = reason.desc(true).clone();
+    let desc_for_tapp = reason.desc(true).cloned();
     let t_annot = Type::new(TypeInner::AnnotT(
         reason.dupe().opt_annotate(Some(annot_loc.dupe())),
         t,
@@ -2398,7 +2400,8 @@ pub fn typeof_annotation(reason: Reason, t: Type, targs: Option<Vec<Type>>) -> T
     match targs {
         None => t_annot,
         Some(targs) => {
-            let desc = flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc_for_tapp));
+            let desc = desc_for_tapp
+                .map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc)));
             let reason_tapp = mk_annot_reason(desc, annot_loc.dupe());
             let use_op = UseOp::Op(Arc::new(RootUseOp::TypeApplication { type_: reason_tapp }));
             typeapp_with_use_op(true, false, reason, use_op, t_annot, targs)
@@ -2410,16 +2413,14 @@ pub fn push_type_alias_reason(r: &Reason, t: Type) -> Type {
     use flow_common::reason::VirtualReasonDesc::RTypeAlias;
 
     match r.desc(false) {
-        RTypeAlias(box (n, _, _)) => {
+        Some(RTypeAlias(box (n, _, _))) => {
             let n = n.dupe();
             mod_reason_of_t(
                 &|reason: Reason| {
                     reason.update_desc(|desc| {
-                        flow_common::reason::VirtualReasonDesc::RTypeAlias(Box::new((
-                            n.dupe(),
-                            None,
-                            Arc::new(desc),
-                        )))
+                        Some(flow_common::reason::VirtualReasonDesc::RTypeAlias(
+                            Box::new((n.dupe(), None, desc.map(Arc::new))),
+                        ))
                     })
                 },
                 &t,
@@ -2562,9 +2563,7 @@ pub fn tuple_length(reason: Reason, inexact: bool, num_req: i32, num_total: i32)
     } else {
         let ts: Vec<Type> = (num_req..=num_total)
             .map(|n: i32| {
-                let r = reason
-                    .dupe()
-                    .replace_desc(VirtualReasonDesc::RTupleLength(n));
+                let r = reason.dupe().replace_desc(None);
                 let float = n as f64;
                 let string = n.to_string().into();
                 let t = DefT::new(D::SingletonNumT {

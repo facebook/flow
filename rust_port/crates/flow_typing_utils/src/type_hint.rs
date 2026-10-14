@@ -263,7 +263,7 @@ fn in_sandbox_cx<'cx>(
         cx.reset_errors(ErrorSet::empty());
         let resolved = tvar_resolver::resolved_t_abortable(
             |r| match r.desc(true) {
-                VirtualReasonDesc::RInferredUnionElemArray { is_empty: true, .. } => {
+                Some(VirtualReasonDesc::RInferredUnionElemArray { is_empty: true, .. }) => {
                     Some(tvar_resolver::default_no_lowers(r))
                 }
                 _ => None,
@@ -606,7 +606,8 @@ fn instantiate_callee<'cx>(
                                 None => {
                                     let call_args_tlist: Vec<CallArg> = {
                                         let checked_t = |t: &Type, loc: ALoc| -> Type {
-                                            let desc = type_util::reason_of_t(t).desc(true).clone();
+                                            let desc =
+                                                type_util::reason_of_t(t).desc(true).cloned();
                                             let reason = flow_common::reason::mk_reason(desc, loc);
                                             type_env::find_write(
                                                 cx,
@@ -1793,10 +1794,7 @@ fn evaluate_hint_inner<'cx>(
     }
     Ok(match hint {
         Hint::HintPlaceholder => HintEvalResult::HintAvailable(
-            any_t::annot(flow_common::reason::mk_reason(
-                VirtualReasonDesc::RAnyImplicit,
-                ALoc::default(),
-            )),
+            any_t::annot(flow_common::reason::mk_reason(None, ALoc::default())),
             HintKind::ExpectedTypeHint,
         ),
         Hint::HintT(t, kind) => fully_resolve_final_result(cx, t?, kind),

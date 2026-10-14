@@ -268,10 +268,7 @@ pub(super) fn multiflow_partial<'cx>(
             let mut rev_elems: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam> =
                 flow_data_structure_wrapper::list::FlowOcamlList::new();
             for (arg, generic) in unused_arglist.iter() {
-                let reason = flow_common::reason::mk_reason(
-                    VirtualReasonDesc::RArrayElement,
-                    reason_of_t(arg).loc().dupe(),
-                );
+                let reason = flow_common::reason::mk_reason(None, reason_of_t(arg).loc().dupe());
                 rev_elems.push_front(UnresolvedParam::UnresolvedArg(Box::new(UnresolvedArgData(
                     flow_typing_type::type_util::mk_tuple_element(
                         reason,
@@ -357,9 +354,9 @@ pub(super) fn multiflow_partial<'cx>(
                 };
             let arg_array_reason = reason_op
                 .dupe()
-                .replace_desc(VirtualReasonDesc::RRestArrayLit(Arc::new(
-                    reason_op.desc(true).clone(),
-                )));
+                .replace_desc(VirtualReasonDesc::RRestArrayLit(
+                    reason_op.desc(true).cloned().map(Arc::new),
+                ));
             {
                 let arg_array_reason2 = arg_array_reason.dupe();
                 let use_op = use_op.dupe();
@@ -444,10 +441,7 @@ pub(super) fn resolve_call_list<'cx>(
         .iter()
         .map(|arg| match arg.deref() {
             CallArgInner::Arg(t) => {
-                let reason = flow_common::reason::mk_reason(
-                    VirtualReasonDesc::RArrayElement,
-                    loc_of_t(t).dupe(),
-                );
+                let reason = flow_common::reason::mk_reason(None, loc_of_t(t).dupe());
                 UnresolvedParam::UnresolvedArg(Box::new(UnresolvedArgData(
                     flow_typing_type::type_util::mk_tuple_element(
                         reason,
@@ -1309,11 +1303,12 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             .collect();
         let params_tlist: Vec<Type> = remaining_params.iter().map(|(_, t)| t.dupe()).collect();
         // "bound function type", positioned at reason_op
-        let bound_reason = call_reason
-            .dupe()
-            .replace_desc(VirtualReasonDesc::RBound(Arc::new(
-                reason_op.desc(true).clone(),
-            )));
+        let bound_reason = call_reason.dupe().replace_desc(
+            reason_op
+                .desc(true)
+                .cloned()
+                .map(|desc| VirtualReasonDesc::RBound(Arc::new(desc))),
+        );
         let def_reason = reason_op.dupe();
         let funt = Type::new(TypeInner::DefT(
             reason_op.dupe(),

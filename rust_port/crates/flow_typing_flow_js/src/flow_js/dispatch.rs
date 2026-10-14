@@ -635,7 +635,7 @@ fn __flow_impl<'cx>(
                     _ => {}
                 }
                 let u = match r.desc(true) {
-                    VirtualReasonDesc::RTypeParam(..) => type_util::mod_use_op_of_use_t(
+                    Some(VirtualReasonDesc::RTypeParam(..)) => type_util::mod_use_op_of_use_t(
                         |op| {
                             UseOp::Frame(
                                 Arc::new(VirtualFrameUseOp::ImplicitTypeParam),
@@ -774,21 +774,10 @@ fn __flow_impl<'cx>(
         (TypeInner::AnnotT(r, t, use_desc), UseTInner::ConcretizeT(..)) => {
             // TODO: directly derive loc and desc from the reason of tvar
             let loc = r.loc().dupe();
-            let desc = if *use_desc {
-                Some(r.desc(true).clone())
-            } else {
-                None
-            };
+            let desc = if *use_desc { Some(r.desc(true)) } else { None };
             let annot_loc = r.annot_loc().map(|l| l.dupe());
-            let repos_t = helpers::reposition(
-                cx,
-                env,
-                Some(trace),
-                loc,
-                desc.as_ref(),
-                annot_loc,
-                t.dupe(),
-            )?;
+            let repos_t =
+                helpers::reposition(cx, env, Some(trace), loc, desc, annot_loc, t.dupe())?;
             rec_flow(cx, env, trace, (&repos_t, u))?;
         }
         (TypeInner::DefT(reason, def_t), UseTInner::ConvertEmptyPropsToMixedT(_, collector))
@@ -821,7 +810,7 @@ fn __flow_impl<'cx>(
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
             let r = r.dupe().reposition_and_opt_annotate(loc, annot_loc);
             let r = if *use_desc {
-                r.replace_desc(reason.desc(true).clone())
+                r.replace_desc(reason.desc(true).cloned())
             } else {
                 r
             };
@@ -851,7 +840,7 @@ fn __flow_impl<'cx>(
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
             let r = r.dupe().reposition_and_opt_annotate(loc, annot_loc);
             let r = if *use_desc {
-                r.replace_desc(reason.desc(true).clone())
+                r.replace_desc(reason.desc(true).cloned())
             } else {
                 r
             };
@@ -886,7 +875,7 @@ fn __flow_impl<'cx>(
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
             let r = r.dupe().reposition_and_opt_annotate(loc, annot_loc);
             let r = if *use_desc {
-                r.replace_desc(reason.desc(true).clone())
+                r.replace_desc(reason.desc(true).cloned())
             } else {
                 r
             };
@@ -931,7 +920,7 @@ fn __flow_impl<'cx>(
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
             let r = r.dupe().reposition_and_opt_annotate(loc, annot_loc);
             let r = if *use_desc {
-                r.replace_desc(reason.desc(true).clone())
+                r.replace_desc(reason.desc(true).cloned())
             } else {
                 r
             };
@@ -1828,12 +1817,11 @@ fn __flow_impl<'cx>(
             // reposition the entire maybe type.
             let loc = reason_op.loc().dupe();
             let desc = if *use_desc {
-                Some(reason_op.desc(true).clone())
+                Some(reason_op.desc(true))
             } else {
                 None
             };
-            let repos =
-                helpers::reposition(cx, env, Some(trace), loc, desc.as_ref(), None, l.dupe())?;
+            let repos = helpers::reposition(cx, env, Some(trace), loc, desc, None, l.dupe())?;
             rec_flow(cx, env, trace, (&repos, inner_u))?;
         }
         (
@@ -3189,7 +3177,9 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             let distribute = || -> Result<(), FlowJsException> {
-                let reason = reason.dupe().update_desc(|d| d.invalidate_rtype_alias());
+                let reason = reason
+                    .dupe()
+                    .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
                 let mut members = rep.members_iter();
                 let t0 = members.next().unwrap();
                 let t1 = members.next().unwrap();
@@ -3263,7 +3253,9 @@ fn __flow_impl<'cx>(
                         })
                         .collect();
                     if value_types.len() == members.len() {
-                        let reason = reason.dupe().update_desc(|d| d.invalidate_rtype_alias());
+                        let reason = reason
+                            .dupe()
+                            .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
                         match value_types.as_slice() {
                             [] => {}
                             [t] => {
@@ -5586,7 +5578,9 @@ fn __flow_impl<'cx>(
                 let tmap1 = inst.type_args.dupe();
                 let tmap2 = inst_super.type_args.dupe();
                 let ureason = reason_op.dupe().update_desc_new(|desc| match desc {
-                    VirtualReasonDesc::RExtends(inner_desc) => inner_desc.as_ref().clone(),
+                    Some(VirtualReasonDesc::RExtends(inner_desc)) => {
+                        Some(inner_desc.as_ref().clone())
+                    }
                     other => other,
                 });
                 flow_type_args(
@@ -9450,9 +9444,7 @@ fn __flow_impl<'cx>(
                     // any other exact types. Considering exact types inexact is sound, so
                     // there is no problem falling back to the same conservative
                     // approximation we use for inexact types in those cases.
-                    let r = reason_op
-                        .dupe()
-                        .replace_desc(VirtualReasonDesc::RUnknownProperty(name.dupe()));
+                    let r = reason_op.dupe().replace_desc(None);
                     Some((
                         Type::new(TypeInner::DefT(
                             r,
@@ -10270,8 +10262,9 @@ fn __flow_impl<'cx>(
                     None => {}
                     Some(error) => {
                         let type_or_explanatory_desc = |t: &Type| {
-                            let desc = reason_of_t(t).desc(true);
-                            if desc.is_explanatory() {
+                            if let Some(desc) = reason_of_t(t).desc(true)
+                                && desc.is_explanatory()
+                            {
                                 TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(desc.clone()))
                             } else {
                                 TypeOrTypeDescT::Type(t.dupe())

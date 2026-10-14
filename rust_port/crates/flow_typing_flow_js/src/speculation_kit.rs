@@ -16,7 +16,6 @@ use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
-use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
 use flow_typing_errors::error_message::EUnionOptimizationData;
@@ -100,7 +99,7 @@ enum CasesSpec<'cx, 'a> {
 }
 
 fn mk_intersection_reason(r: &Reason, _ls: &[Type]) -> Reason {
-    r.dupe().replace_desc(VirtualReasonDesc::RIntersection)
+    r.dupe().replace_desc(None)
 }
 
 fn log_synthesis_result(

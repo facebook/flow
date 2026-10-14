@@ -769,7 +769,9 @@ fn unwrap_unless_aliased<'cx>(env: &mut Env<'_, 'cx>, t: &Type) -> Option<Type> 
             // As a result, we don't have to unwrap them
             let reason = flow_typing_type::type_util::reason_of_t(t);
             match reason.desc(false) {
-                flow_common::reason::VirtualReasonDesc::RTypeAlias(box (_, Some(_), _)) => None,
+                Some(flow_common::reason::VirtualReasonDesc::RTypeAlias(box (_, Some(_), _))) => {
+                    None
+                }
                 _ => Some(t.dupe()),
             }
         }
@@ -1195,17 +1197,21 @@ mod reason_utils {
         fn loop_<'cx>(
             env: &mut Env<'_, 'cx>,
             reason: &Reason,
-            desc: &ReasonDesc<ALoc>,
+            desc: Option<&ReasonDesc<ALoc>>,
         ) -> Result<Option<ALocSymbol>, Error> {
             match desc {
-                ReasonDesc::REnum { name: Some(name) } => {
+                Some(ReasonDesc::REnum { name: Some(name) }) => {
                     Ok(Some(symbol_from_reason(env, reason, name.dupe())?))
                 }
-                ReasonDesc::RTypeAlias(box (name, Some(loc), _)) => {
+                Some(ReasonDesc::RTypeAlias(box (name, Some(loc), _))) => {
                     Ok(Some(symbol_from_loc(env, loc.dupe(), name.dupe())?))
                 }
-                ReasonDesc::RType(name) => Ok(Some(symbol_from_reason(env, reason, name.dupe())?)),
-                ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
+                Some(ReasonDesc::RType(name)) => {
+                    Ok(Some(symbol_from_reason(env, reason, name.dupe())?))
+                }
+                Some(ReasonDesc::RUnionBranching(inner_desc, _)) => {
+                    loop_(env, reason, Some(inner_desc))
+                }
                 _ => Ok(None),
             }
         }
@@ -1233,16 +1239,20 @@ mod reason_utils {
         fn loop_<'cx>(
             env: &mut Env<'_, 'cx>,
             reason: &Reason,
-            desc: &ReasonDesc<ALoc>,
+            desc: Option<&ReasonDesc<ALoc>>,
         ) -> Result<ALocSymbol, Error> {
             match desc {
-                ReasonDesc::RNamedImportedType(_, name)
-                | ReasonDesc::RDefaultImportedType(name, _)
-                | ReasonDesc::RImportStarType(name)
-                | ReasonDesc::RImportStarTypeOf(name)
-                | ReasonDesc::RImportStar(name) => symbol_from_reason(env, reason, name.dupe()),
-                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
-                ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
+                Some(
+                    ReasonDesc::RNamedImportedType(_, name)
+                    | ReasonDesc::RDefaultImportedType(name, _)
+                    | ReasonDesc::RImportStarType(name)
+                    | ReasonDesc::RImportStarTypeOf(name)
+                    | ReasonDesc::RImportStar(name),
+                ) => symbol_from_reason(env, reason, name.dupe()),
+                Some(ReasonDesc::RType(name)) => symbol_from_reason(env, reason, name.dupe()),
+                Some(ReasonDesc::RUnionBranching(inner_desc, _)) => {
+                    loop_(env, reason, Some(inner_desc))
+                }
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
                     Some("could not extract imported type alias name from reason"),
@@ -1260,12 +1270,14 @@ mod reason_utils {
         fn loop_<'cx>(
             env: &mut Env<'_, 'cx>,
             reason: &Reason,
-            desc: &ReasonDesc<ALoc>,
+            desc: Option<&ReasonDesc<ALoc>>,
         ) -> Result<ALocSymbol, Error> {
             match desc {
-                ReasonDesc::ROpaqueType(name) => symbol_from_reason(env, reason, name.dupe()),
-                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
-                ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
+                Some(ReasonDesc::ROpaqueType(name)) => symbol_from_reason(env, reason, name.dupe()),
+                Some(ReasonDesc::RType(name)) => symbol_from_reason(env, reason, name.dupe()),
+                Some(ReasonDesc::RUnionBranching(inner_desc, _)) => {
+                    loop_(env, reason, Some(inner_desc))
+                }
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
                     Some("could not extract opaque name from reason"),
@@ -1281,14 +1293,14 @@ mod reason_utils {
         reason: &Reason,
         inst: &flow_typing_type::type_::InstType,
     ) -> Result<ALocSymbol, Error> {
-        if matches!(reason.desc(true), ReasonDesc::RThisType) {
+        if matches!(reason.desc(true), Some(ReasonDesc::RThisType)) {
             return symbol_from_reason(env, reason, FlowSmolStr::new_inline("this"));
         }
         if let Some(name) = &inst.class_name {
             return symbol_from_loc(env, inst.class_id.0.dupe(), name.dupe());
         }
         match reason.desc(true) {
-            ReasonDesc::RType(name) | ReasonDesc::RIdentifier(name) => {
+            Some(ReasonDesc::RType(name) | ReasonDesc::RIdentifier(name)) => {
                 symbol_from_reason(env, reason, name.dupe())
             }
             _ => Err(terr(
@@ -1312,12 +1324,12 @@ mod reason_utils {
         reason: &Reason,
     ) -> Result<Option<ALocSymbol>, Error> {
         match reason.desc(true) {
-            ReasonDesc::RModule(name) => Ok(Some(symbol_from_reason(
+            Some(ReasonDesc::RModule(name)) => Ok(Some(symbol_from_reason(
                 env,
                 reason,
                 FlowSmolStr::new(name.display()),
             )?)),
-            ReasonDesc::RExports => Ok(None),
+            Some(ReasonDesc::RExports) => Ok(None),
             _ => Err(terr(
                 ErrorKind::UnsupportedTypeCtor,
                 Some("could not extract module name from reason"),
@@ -1407,11 +1419,11 @@ mod type_converter {
             _ => {
                 let reason = flow_typing_type::type_util::reason_of_t(t);
                 match reason.desc(false) {
-                    flow_common::reason::VirtualReasonDesc::RTypeAlias(box (
+                    Some(flow_common::reason::VirtualReasonDesc::RTypeAlias(box (
                         name,
                         Some(loc),
                         _,
-                    )) => {
+                    ))) => {
                         // The default action is to avoid expansion by using the type alias name,
                         // when this can be trusted. The one case where we want to skip this process
                         // is when recovering the body of a type alias A. In that case the environment
@@ -2175,7 +2187,7 @@ mod type_converter {
                     tuple_view: Some(_),
                     ..
                 }),
-                VirtualReasonDesc::RRestArrayLit(_),
+                Some(VirtualReasonDesc::RRestArrayLit(_)),
             )
             | (ArrType::TupleAT(box TupleATData { .. }), _) => {
                 let (elements, inexact) = match arr {
@@ -4056,7 +4068,7 @@ pub mod element_converter {
             TypeTKind::TypeParamKind => {
                 let desc = reason.desc(true);
                 match desc {
-                    flow_common::reason::VirtualReasonDesc::RType(name) => {
+                    Some(flow_common::reason::VirtualReasonDesc::RType(name)) => {
                         let loc = reason.def_loc().clone();
                         Ok(ty::Elt::Type(Arc::new(ty::Ty::Bound(Box::new((
                             loc,
@@ -4064,8 +4076,11 @@ pub mod element_converter {
                         ))))))
                     }
                     _ => {
-                        let msg =
-                            format!("type param: {}", flow_common::reason::string_of_desc(desc));
+                        let msg = format!(
+                            "type param: {}",
+                            desc.map(flow_common::reason::string_of_desc)
+                                .unwrap_or_default()
+                        );
                         Err(terr(ErrorKind::BadTypeAlias, Some(&msg), Some(t)))
                     }
                 }
@@ -4568,7 +4583,7 @@ pub mod element_converter {
                         }) if env.toplevel_is_type_identifier_reference() => {
                             let orig_reason = type_util::reason_of_t(orig_t);
                             match orig_reason.desc(true) {
-                                ReasonDesc::RIdentifier(name) => {
+                                Some(ReasonDesc::RIdentifier(name)) => {
                                     return component_decl::<I>(
                                         env,
                                         state,

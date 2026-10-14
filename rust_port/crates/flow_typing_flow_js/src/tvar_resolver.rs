@@ -28,7 +28,7 @@ use flow_typing_visitors::type_visitor::TypeVisitor;
 pub fn default_no_lowers(r: &Reason) -> Type {
     let desc = {
         match r.desc(true) {
-            VirtualReasonDesc::RIdentifier(x) => {
+            Some(VirtualReasonDesc::RIdentifier(x)) => {
                 VirtualReasonDesc::RCustom(format!("`{}` (resolved to type `empty`)", x).into())
             }
             _ => VirtualReasonDesc::REmpty,

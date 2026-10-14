@@ -872,7 +872,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
             use flow_common::reason::VirtualReasonDesc;
             let t_out_reason = reason_of_t(&t_out);
             match t_out_reason.desc(false) {
-                VirtualReasonDesc::RTypeAlias(box (name, Some(_), desc)) => {
+                Some(VirtualReasonDesc::RTypeAlias(box (name, Some(_), desc))) => {
                     let new_desc = flow_common::reason::VirtualReasonDesc::RTypeAlias(Box::new((
                         name.dupe(),
                         None,

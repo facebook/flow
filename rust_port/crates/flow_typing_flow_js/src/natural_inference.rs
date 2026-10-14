@@ -124,7 +124,7 @@ fn is_builtin_promise<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
                         cx.is_lib_reason(r)
                             && matches!(
                                 r.desc(true),
-                                VirtualReasonDesc::RClass(inner)
+                                Some(VirtualReasonDesc::RClass(inner))
                                     if matches!(
                                         &**inner,
                                         VirtualReasonDesc::RType(name)
@@ -149,7 +149,7 @@ fn is_literal_union(r: &Reason, rep: &union_rep::UnionRep) -> bool {
         | UnionKind::LogicalKind => true,
         UnionKind::ProvidersKind | UnionKind::ResolvedKind | UnionKind::UnknownKind => {
             match r.desc(true) {
-                VirtualReasonDesc::RInferredUnionElemArray { .. } => true,
+                Some(VirtualReasonDesc::RInferredUnionElemArray { .. }) => true,
                 _ => false,
             }
         }
@@ -349,7 +349,7 @@ fn literal_type_mapper_type_dispatch<'cx>(
         TypeInner::DefT(r, def_t)
             if matches!(def_t.deref(), DefTInner::ArrT(_)) && is_literal_array_reason(r) =>
         {
-            let t = if matches!(r.desc(true), VirtualReasonDesc::RArrayLitUnsound) {
+            let t = if matches!(r.desc(true), Some(VirtualReasonDesc::RArrayLitUnsound)) {
                 mod_reason_of_t(&|r| r.replace_desc_new(VirtualReasonDesc::RArrayLit), t)
             } else {
                 t.dupe()
@@ -359,7 +359,7 @@ fn literal_type_mapper_type_dispatch<'cx>(
         TypeInner::DefT(r, def_t)
             if matches!(def_t.deref(), DefTInner::ObjT(_)) && is_literal_object_reason(r) =>
         {
-            let t = if matches!(r.desc(true), VirtualReasonDesc::RObjectLitUnsound) {
+            let t = if matches!(r.desc(true), Some(VirtualReasonDesc::RObjectLitUnsound)) {
                 mod_reason_of_t(&|r| r.replace_desc_new(VirtualReasonDesc::RObjectLit), t)
             } else {
                 t.dupe()

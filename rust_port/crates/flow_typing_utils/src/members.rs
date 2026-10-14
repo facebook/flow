@@ -532,23 +532,29 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
         }
         (TypeInner::MaybeT(_, inner1), TypeInner::MaybeT(_, inner2)) => {
             let merged = merge_type(cx, (inner1.dupe(), inner2.dupe()));
-            let reason = locationless_reason(VirtualReasonDesc::RMaybe(Arc::new(
-                desc_of_t(&merged).clone(),
-            )));
+            let reason = locationless_reason(
+                desc_of_t(&merged)
+                    .cloned()
+                    .map(|desc| VirtualReasonDesc::RMaybe(Arc::new(desc))),
+            );
             Type::new(TypeInner::MaybeT(reason, merged))
         }
         (TypeInner::MaybeT(_, inner1), _) => {
             let merged = merge_type(cx, (inner1.dupe(), t2));
-            let reason = locationless_reason(VirtualReasonDesc::RMaybe(Arc::new(
-                desc_of_t(&merged).clone(),
-            )));
+            let reason = locationless_reason(
+                desc_of_t(&merged)
+                    .cloned()
+                    .map(|desc| VirtualReasonDesc::RMaybe(Arc::new(desc))),
+            );
             Type::new(TypeInner::MaybeT(reason, merged))
         }
         (_, TypeInner::MaybeT(_, inner2)) => {
             let merged = merge_type(cx, (t1, inner2.dupe()));
-            let reason = locationless_reason(VirtualReasonDesc::RMaybe(Arc::new(
-                desc_of_t(&merged).clone(),
-            )));
+            let reason = locationless_reason(
+                desc_of_t(&merged)
+                    .cloned()
+                    .map(|desc| VirtualReasonDesc::RMaybe(Arc::new(desc))),
+            );
             Type::new(TypeInner::MaybeT(reason, merged))
         }
         (TypeInner::UnionT(_, rep1), TypeInner::UnionT(_, rep2)) => {
@@ -773,9 +779,7 @@ fn resolve_tvar<'cx>(cx: &Context<'cx>, id: i32) -> Type {
     // changes, the above decision would continue to make sense: as errors
     // become stricter, type resolution should become even more lenient to
     // improve failure tolerance.
-    let init = flow_typing_type::type_::unsoundness::unresolved_any(locationless_reason(
-        VirtualReasonDesc::RAnyImplicit,
-    ));
+    let init = flow_typing_type::type_::unsoundness::unresolved_any(locationless_reason(None));
     ts.into_iter().fold(init, |u, t| merge_type(cx, (t, u)))
 }
 

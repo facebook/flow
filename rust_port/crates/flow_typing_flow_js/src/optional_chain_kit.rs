@@ -54,7 +54,7 @@ fn run_on_concretized<'cx>(
             callee_recorder::add_callee_use(env, callee_recorder::Kind::Tast, l.dupe(), upper);
             let void = {
                 match r.desc(true) {
-                    VirtualReasonDesc::RNull => Type::new(TypeInner::DefT(
+                    Some(VirtualReasonDesc::RNull) => Type::new(TypeInner::DefT(
                         r.dupe().replace_desc(VirtualReasonDesc::RVoidedNull),
                         DefT::new(DefTInner::VoidT),
                     )),

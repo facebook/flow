@@ -415,7 +415,7 @@ pub mod friendly {
         use flow_common::reason::string_of_desc;
 
         let desc = if desc.is_scalar() {
-            desc.unwrap()
+            desc.unwrap().unwrap_or(desc)
         } else {
             desc
         };
@@ -427,7 +427,9 @@ pub mod friendly {
     }
 
     fn desc_helper<L: dupe::Dupe>(r: &flow_common::reason::VirtualReason<L>) -> Vec<MessageInline> {
-        desc_of_reason_desc_help(r.desc(false))
+        r.desc(false)
+            .map(desc_of_reason_desc_help)
+            .unwrap_or_default()
     }
 
     pub fn desc<L: dupe::Dupe, R>(r: &flow_common::reason::VirtualReason<L>) -> MessageFeature<R> {
@@ -435,9 +437,9 @@ pub mod friendly {
     }
 
     pub fn desc_of_reason_desc<L: dupe::Dupe, R>(
-        desc: &flow_common::reason::VirtualReasonDesc<L>,
+        desc: Option<&flow_common::reason::VirtualReasonDesc<L>>,
     ) -> MessageFeature<R> {
-        MessageFeature::Inline(desc_of_reason_desc_help(desc))
+        MessageFeature::Inline(desc.map(desc_of_reason_desc_help).unwrap_or_default())
     }
 
     pub fn ref_map<L, F>(

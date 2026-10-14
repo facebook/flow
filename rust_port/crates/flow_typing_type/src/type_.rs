@@ -10583,7 +10583,7 @@ impl<'a, CX: 'a> TypeContext<'a, CX> {
         let mut graph = self.graph.borrow_mut();
         // Create the dummy error type once, outside the loop.
         // It's cheap to dupe (Rc clone) but expensive to create (Arc + Rc allocations).
-        let default = any_t::error(locationless_reason(VirtualReasonDesc::RAnyImplicit));
+        let default = any_t::error(locationless_reason(None));
         for node in graph.values_mut() {
             if let Node::Root(root) = node {
                 match &mut root.constraints {
@@ -11030,10 +11030,10 @@ pub mod empty_t {
 pub mod any_t {
     use super::*;
 
-    pub fn desc(source: &AnySource) -> flow_common::reason::ReasonDesc {
+    pub fn desc(source: &AnySource) -> Option<flow_common::reason::ReasonDesc> {
         match source {
-            AnySource::AnnotatedAny => flow_common::reason::VirtualReasonDesc::RAnyExplicit,
-            _ => flow_common::reason::VirtualReasonDesc::RAnyImplicit,
+            AnySource::AnnotatedAny => Some(flow_common::reason::VirtualReasonDesc::RAnyExplicit),
+            _ => None,
         }
     }
 
@@ -11461,10 +11461,10 @@ pub mod desc_format {
     }
 
     pub fn name_of_instance_reason(r: &Reason) -> String {
-        let desc = r.desc.unwrap();
-        match desc {
-            VirtualReasonDesc::RType(name) => name.to_string(),
-            _ => flow_common::reason::string_of_desc(desc),
+        match r.desc(true) {
+            Some(VirtualReasonDesc::RType(name)) => name.to_string(),
+            Some(desc) => flow_common::reason::string_of_desc(desc),
+            None => String::new(),
         }
     }
 
@@ -11479,9 +11479,8 @@ pub mod desc_format {
     }
 
     pub fn name_of_type_reason(r: &Reason) -> Name {
-        let desc = r.desc.unwrap();
-        match desc {
-            VirtualReasonDesc::RType(name) => Name::new(name.dupe()),
+        match r.desc(true) {
+            Some(VirtualReasonDesc::RType(name)) => Name::new(name.dupe()),
             _ => panic!("not a type reason"),
         }
     }
@@ -12006,8 +12005,9 @@ perhaps the data types can be refactored to make them more specialized. */
 want to encourage this pattern, but we also don't want to block uses of this
 pattern. Thus, we compromise by not tracking the property types. */
 pub fn dummy_static(reason: Reason) -> Type {
-    let r =
-        reason.update_desc(|desc| flow_common::reason::VirtualReasonDesc::RStatics(Arc::new(desc)));
+    let r = reason.update_desc(|desc| {
+        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RStatics(Arc::new(desc)))
+    });
     unsoundness::dummy_static_any(r)
 }
 
@@ -12031,7 +12031,8 @@ pub fn dummy_this(loc: ALoc) -> Type {
 }
 
 pub fn implicit_mixed_this(reason: Reason) -> Type {
-    let r = reason.update_desc(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc)));
+    let r = reason
+        .update_desc(|desc| desc.map(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc))));
     mixed_t::make(r)
 }
 
@@ -12276,7 +12277,7 @@ pub fn mk_object_def_type(
     pmap: properties::Id,
     proto: Type,
 ) -> TypeInner {
-    let reason = reason.update_desc(|desc| desc.invalidate_rtype_alias());
+    let reason = reason.update_desc(|desc| desc.map(VirtualReasonDesc::invalidate_rtype_alias));
     TypeInner::DefT(
         reason,
         DefT::new(DefTInner::ObjT(Rc::new(mk_objecttype(
@@ -12460,15 +12461,17 @@ pub fn apply_opt_use<CX>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
 }
 
 pub fn mk_enum_type(reason: Reason, enum_info: Rc<EnumInfo>) -> Type {
-    let reason = reason.update_desc(|desc| match &desc {
-        VirtualReasonDesc::REnum { name } => {
-            if let Some(name_str) = name {
-                VirtualReasonDesc::RType(name_str.dupe())
-            } else {
-                desc.clone()
+    let reason = reason.update_desc(|desc| {
+        desc.map(|desc| match &desc {
+            VirtualReasonDesc::REnum { name } => {
+                if let Some(name_str) = name {
+                    VirtualReasonDesc::RType(name_str.dupe())
+                } else {
+                    desc.clone()
+                }
             }
-        }
-        _ => desc.clone(),
+            _ => desc.clone(),
+        })
     });
     Type::new(TypeInner::DefT(
         reason,

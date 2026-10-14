@@ -6,7 +6,6 @@
  */
 
 use std::ops::Deref;
-use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_common::polarity::Polarity;
@@ -40,11 +39,8 @@ pub mod implicit_type_argument {
         let loc_op = reason_op.loc().dupe();
         let desc = VirtualReasonDesc::RTypeParam(Box::new((
             typeparam.name.dupe(),
-            (Arc::new(reason_op.desc(true).clone()), loc_op.dupe()),
-            (
-                Arc::new(reason_tapp.desc(true).clone()),
-                reason_tapp.def_loc().dupe(),
-            ),
+            loc_op.dupe(),
+            reason_tapp.def_loc().dupe(),
         )));
         mk_reason(desc, typeparam.reason.def_loc().dupe()).reposition(loc_op)
     }
@@ -71,9 +67,9 @@ pub mod implicit_type_argument {
     pub fn abstract_targ(tvar: &Type) -> Option<Type> {
         type_util::constraint_node_id(tvar)?;
         let reason = type_util::reason_of_t(tvar);
-        let desc = reason.desc(true).clone();
+        let desc = reason.desc(true).cloned();
         match &desc {
-            VirtualReasonDesc::RTypeParam(box (_, _, _)) => {
+            Some(VirtualReasonDesc::RTypeParam(box (_, _, _))) => {
                 let reason = locationless_reason(desc);
                 Some(Type::new(TypeInner::OpenT(Tvar::new(reason, 0))))
             }

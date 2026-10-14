@@ -1134,7 +1134,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
             }));
             let reason_out = reason
                 .dupe()
-                .update_desc(|_| flow_common::reason::VirtualReasonDesc::RTupleType);
+                .update_desc(|_| Some(flow_common::reason::VirtualReasonDesc::RTupleType));
             (reason_out, t)
         }
         Some(rest_param_val) => {
@@ -1183,7 +1183,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
             }));
             let reason_out = reason
                 .dupe()
-                .update_desc(|_| flow_common::reason::VirtualReasonDesc::RArray);
+                .update_desc(|_| Some(flow_common::reason::VirtualReasonDesc::RArray));
             (reason_out, t)
         }
     };
@@ -2423,12 +2423,18 @@ pub mod instantiation_solver {
         ) -> Result<InferredTarg, FlowJsException> {
             let inferred = match &tparam.default {
                 None => type_util::mod_reason_of_t(
-                    &|r: Reason| r.update_desc(|d| VirtualReasonDesc::RTypeParamBound(Arc::new(d))),
+                    &|r: Reason| {
+                        r.update_desc(|d| {
+                            d.map(|d| VirtualReasonDesc::RTypeParamBound(Arc::new(d)))
+                        })
+                    },
                     &tparam.bound,
                 ),
                 Some(t) => type_util::mod_reason_of_t(
                     &|r: Reason| {
-                        r.update_desc(|d| VirtualReasonDesc::RTypeParamDefault(Arc::new(d)))
+                        r.update_desc(|d| {
+                            d.map(|d| VirtualReasonDesc::RTypeParamDefault(Arc::new(d)))
+                        })
                     },
                     t,
                 ),
@@ -2476,7 +2482,9 @@ pub mod instantiation_solver {
                 Some(inferred) => {
                     let inferred = type_util::mod_reason_of_t(
                         &|r: Reason| {
-                            r.update_desc(|d| VirtualReasonDesc::RTypeParamDefault(Arc::new(d)))
+                            r.update_desc(|d| {
+                                d.map(|d| VirtualReasonDesc::RTypeParamDefault(Arc::new(d)))
+                            })
                         },
                         inferred,
                     );

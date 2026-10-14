@@ -1255,7 +1255,10 @@ fn refine<'cx>(
             } = res;
             let predicate = predicate_of_refinement(cx, kind)?;
             let refined_reason = mk_reason(
-                VirtualReasonDesc::RRefined(Arc::new(reason.desc(true).clone())),
+                reason
+                    .desc(true)
+                    .cloned()
+                    .map(|desc| VirtualReasonDesc::RRefined(Arc::new(desc))),
                 loc,
             );
             let (t, actually_refined_refining_locs_prime) = match predicate {
@@ -2758,10 +2761,7 @@ pub fn init_env<'cx>(cx: &Context<'cx>, toplevel_scope_kind: ScopeKind) {
                     if is_provider(cx, loc.dupe()) {
                         // If an illegal write is considered as a provider, we still need to give it a
                         // slot to prevent crashing in code that queries provider types.
-                        let reason = mk_reason(
-                            flow_common::reason::VirtualReasonDesc::RAnyImplicit,
-                            loc.dupe(),
-                        );
+                        let reason = mk_reason(None, loc.dupe());
                         let reason_clone = reason.dupe();
                         let initial_state: flow_lazy::Lazy<
                             Context<'cx>,

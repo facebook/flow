@@ -640,10 +640,7 @@ fn resolve_hint<'cx>(
                     .map(|el| match el {
                         ArrayElementPatternHint::ArrayElementPatternHint(h) => {
                             let t = resolve_hint_node(cx, loc.dupe(), h)?;
-                            let elem_reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RArrayElement,
-                                hint_loc.dupe(),
-                            );
+                            let elem_reason = reason::mk_reason(None, hint_loc.dupe());
                             Ok(type_::UnresolvedParam::UnresolvedArg(Box::new(
                                 type_::UnresolvedArgData(
                                     type_util::mk_tuple_element(
@@ -1451,10 +1448,7 @@ fn resolve_binding<'cx>(
                                             e,
                                         )?;
                                         let e_loc = e.loc();
-                                        let elem_reason = reason::mk_reason(
-                                            reason::VirtualReasonDesc::RArrayElement,
-                                            e_loc.dupe(),
-                                        );
+                                        let elem_reason = reason::mk_reason(None, e_loc.dupe());
                                         Ok(type_::UnresolvedParam::UnresolvedArg(Box::new(
                                             type_::UnresolvedArgData(
                                                 type_util::mk_tuple_element(
@@ -1470,10 +1464,7 @@ fn resolve_binding<'cx>(
                                     }
                                     ArrayElement::Hole(hole_loc) => {
                                         let t = type_::empty_t::at(loc.dupe());
-                                        let elem_reason = reason::mk_reason(
-                                            reason::VirtualReasonDesc::RArrayElement,
-                                            hole_loc.dupe(),
-                                        );
+                                        let elem_reason = reason::mk_reason(None, hole_loc.dupe());
                                         Ok(type_::UnresolvedParam::UnresolvedArg(Box::new(
                                             type_::UnresolvedArgData(
                                                 type_util::mk_tuple_element(
@@ -1818,7 +1809,7 @@ fn resolve_binding<'cx>(
                     .collect();
                 let elem_t = flow_typing_tvar::mk_where(
                     cx,
-                    reason::mk_reason(reason::VirtualReasonDesc::REmptyArrayElement, loc.dupe()),
+                    reason::mk_reason(None, loc.dupe()),
                     |cx, tvar| -> Result<(), JobError> {
                         for t in &ts {
                             let use_t = UseT::new(type_::UseTInner::UseT(
@@ -1832,10 +1823,7 @@ fn resolve_binding<'cx>(
                 )?;
                 (elem_t, None, reason.dupe())
             } else {
-                let elem_t = type_::empty_t::make(reason::mk_reason(
-                    reason::VirtualReasonDesc::REmptyArrayElement,
-                    loc.dupe(),
-                ));
+                let elem_t = type_::empty_t::make(reason::mk_reason(None, loc.dupe()));
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     flow_typing_errors::error_message::ErrorMessage::EEmptyArrayNoProvider {
@@ -1959,7 +1947,7 @@ fn resolve_binding<'cx>(
             if cx.use_unknown_in_catch_variables() {
                 Ok(type_::mixed_t::at(loc))
             } else {
-                let r = reason::mk_reason(reason::VirtualReasonDesc::RAnyImplicit, loc);
+                let r = reason::mk_reason(None, loc);
                 Ok(any_t::make(
                     AnySource::AnyError(Some(type_::AnyErrorKind::MissingAnnotation)),
                     r,
@@ -1967,7 +1955,7 @@ fn resolve_binding<'cx>(
             }
         }
         Binding::Root(Root::DeclareVariableMissingAnnotationAndInit) => {
-            let r = reason::mk_reason(reason::VirtualReasonDesc::RAnyImplicit, loc);
+            let r = reason::mk_reason(None, loc);
             Ok(any_t::make(
                 AnySource::AnyError(Some(type_::AnyErrorKind::MissingAnnotation)),
                 r,
@@ -1987,11 +1975,8 @@ fn resolve_binding<'cx>(
                     type_::str_module_t::at(loc)
                 }
                 name_def_types::ForKind::Of { await_ } => {
-                    let reason = reason::mk_reason(
-                        reason::VirtualReasonDesc::RForOfElement,
-                        // TODO: loc should be loc of loop
-                        loc,
-                    );
+                    // TODO: loc should be loc of loop
+                    let reason = reason::mk_reason(None, loc);
                     statement::for_of_elemt(cx, right_t, reason, *await_)?
                 }
             })
@@ -2803,12 +2788,8 @@ fn resolve_generator_next<'cx>(
                 "Generator"
             };
             flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, next| {
-                let yield_reason = reason
-                    .dupe()
-                    .replace_desc(reason::VirtualReasonDesc::RUnusedYield);
-                let return_reason = reason
-                    .dupe()
-                    .replace_desc(reason::VirtualReasonDesc::RUnusedReturn);
+                let yield_reason = reason.dupe().replace_desc(None);
+                let return_reason = reason.dupe().replace_desc(None);
                 let yield_t = type_::empty_t::make(yield_reason);
                 let return_targ = type_::empty_t::make(return_reason);
                 let t = flow_js::FlowJs::get_builtin_typeapp(

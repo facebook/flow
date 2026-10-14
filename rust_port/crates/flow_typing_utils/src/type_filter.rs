@@ -1558,8 +1558,8 @@ pub fn array(t: Type) -> FilterResult {
                     // If we always wrapped the reason desc in `RRefinedElement`, we may diverge
                     // when typechecking loops instead of being caught by the constraint cache. Instead
                     // we only wrap one element deep.
-                    VirtualReasonDesc::RRefinedElement(_) => desc,
-                    _ => VirtualReasonDesc::RRefinedElement(Arc::new(desc)),
+                    Some(VirtualReasonDesc::RRefinedElement(_)) => desc,
+                    _ => desc.map(|desc| VirtualReasonDesc::RRefinedElement(Arc::new(desc))),
                 });
                 changed_result(Type::new(TypeInner::DefT(
                     r.dupe().replace_desc_new(VirtualReasonDesc::RROArrayType),

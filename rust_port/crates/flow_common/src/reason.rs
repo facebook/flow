@@ -406,7 +406,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RTupleLength(i32),
     RTupleOutOfBoundsAccess(i32),
     RFunction(ReasonDescFunction),
-    RFunctionCall(Arc<VirtualReasonDesc<L>>),
+    RFunctionCall(Option<Arc<VirtualReasonDesc<L>>>),
     RJSXFunctionCall(FlowSmolStr),
     RJSXIdentifier(FlowSmolStr, FlowSmolStr),
     RJSXElementProps(FlowSmolStr),
@@ -434,19 +434,13 @@ pub enum VirtualReasonDesc<L: Dupe> {
         member_name: FlowSmolStr,
     },
     REnumUnknownMembers(Arc<VirtualReasonDesc<L>>),
-    RConstructorCall(Arc<VirtualReasonDesc<L>>),
+    RConstructorCall(Option<Arc<VirtualReasonDesc<L>>>),
     RRecordType(FlowSmolStr),
     RImplicitThis(Arc<VirtualReasonDesc<L>>),
     RType(FlowSmolStr),
-    RTypeAlias(Box<(FlowSmolStr, Option<L>, Arc<VirtualReasonDesc<L>>)>),
+    RTypeAlias(Box<(FlowSmolStr, Option<L>, Option<Arc<VirtualReasonDesc<L>>>)>),
     ROpaqueType(FlowSmolStr),
-    RTypeParam(
-        Box<(
-            SubstName,
-            (Arc<VirtualReasonDesc<L>>, L),
-            (Arc<VirtualReasonDesc<L>>, L),
-        )>,
-    ),
+    RTypeParam(Box<(SubstName, L, L)>),
     RTypeParamDefault(Arc<VirtualReasonDesc<L>>),
     RTypeParamBound(Arc<VirtualReasonDesc<L>>),
     RTypeof(FlowSmolStr),
@@ -481,7 +475,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RExactType(Arc<VirtualReasonDesc<L>>),
     ROptional(Arc<VirtualReasonDesc<L>>),
     RMaybe(Arc<VirtualReasonDesc<L>>),
-    RRestArrayLit(Arc<VirtualReasonDesc<L>>),
+    RRestArrayLit(Option<Arc<VirtualReasonDesc<L>>>),
     RTypeApp(Arc<VirtualReasonDesc<L>>),
     RTypeAppImplicit(Arc<VirtualReasonDesc<L>>),
     RExtends(Arc<VirtualReasonDesc<L>>),
@@ -711,7 +705,7 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RReadOnlyType => RReadOnlyType,
 
             // Recursive variants
-            RFunctionCall(d) => RFunctionCall(Arc::new(d.map_locs(f))),
+            RFunctionCall(d) => RFunctionCall(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RUnknownUnspecifiedProperty(d) => RUnknownUnspecifiedProperty(Arc::new(d.map_locs(f))),
             RUnaryOperator(s, d) => RUnaryOperator(s.dupe(), Arc::new(d.map_locs(f))),
             RBinaryOperator(box (s, d1, d2)) => RBinaryOperator(Box::new((
@@ -724,17 +718,13 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 Arc::new(d1.map_locs(f)),
                 Arc::new(d2.map_locs(f)),
             ))),
-            RConstructorCall(d) => RConstructorCall(Arc::new(d.map_locs(f))),
+            RConstructorCall(d) => RConstructorCall(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RTypeAlias(box (s, loc_opt, d)) => RTypeAlias(Box::new((
                 s.dupe(),
                 loc_opt.as_ref().map(f),
-                Arc::new(d.map_locs(f)),
+                d.as_ref().map(|d| Arc::new(d.map_locs(f))),
             ))),
-            RTypeParam(box (s, (d1, l1), (d2, l2))) => RTypeParam(Box::new((
-                s.clone(),
-                (Arc::new(d1.map_locs(f)), f(l1)),
-                (Arc::new(d2.map_locs(f)), f(l2)),
-            ))),
+            RTypeParam(box (s, l1, l2)) => RTypeParam(Box::new((s.clone(), f(l1), f(l2)))),
             RTypeParamBound(d) => RTypeParamBound(Arc::new(d.map_locs(f))),
             RTypeParamDefault(d) => RTypeParamDefault(Arc::new(d.map_locs(f))),
             RPropertyOf(n, d) => RPropertyOf(n.dupe(), Arc::new(d.map_locs(f))),
@@ -743,7 +733,7 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RExactType(d) => RExactType(Arc::new(d.map_locs(f))),
             ROptional(d) => ROptional(Arc::new(d.map_locs(f))),
             RMaybe(d) => RMaybe(Arc::new(d.map_locs(f))),
-            RRestArrayLit(d) => RRestArrayLit(Arc::new(d.map_locs(f))),
+            RRestArrayLit(d) => RRestArrayLit(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RTypeApp(d) => RTypeApp(Arc::new(d.map_locs(f))),
             RTypeAppImplicit(d) => RTypeAppImplicit(Arc::new(d.map_locs(f))),
             RExtends(d) => RExtends(Arc::new(d.map_locs(f))),
@@ -794,11 +784,11 @@ impl<A: Dupe> VirtualReasonDesc<A> {
 
 impl<L: Dupe> VirtualReasonDesc<L> {
     /// Unwrap type aliases and union branching
-    pub fn unwrap(&self) -> &VirtualReasonDesc<L> {
+    pub fn unwrap(&self) -> Option<&VirtualReasonDesc<L>> {
         match self {
-            VirtualReasonDesc::RTypeAlias(box (_, _, inner))
-            | VirtualReasonDesc::RUnionBranching(inner, _) => inner.unwrap(),
-            _ => self,
+            VirtualReasonDesc::RTypeAlias(box (_, _, inner)) => inner.as_deref()?.unwrap(),
+            VirtualReasonDesc::RUnionBranching(inner, _) => inner.unwrap(),
+            _ => Some(self),
         }
     }
 
@@ -808,24 +798,28 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         use VirtualReasonDesc::*;
 
         match self.unwrap() {
-            RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
-            | RTemplateLiteralType | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RJSXText
-            | RFbt | RTemplateString | RUnknownString | RUnionEnum | RKeySet | RRegExp => Scalar,
+            Some(
+                RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
+                | RTemplateLiteralType | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RJSXText
+                | RFbt | RTemplateString | RUnknownString | RUnionEnum | RKeySet | RRegExp,
+            ) => Scalar,
 
-            RVoid | RNull | RVoidedNull | RUninitialized | RPossiblyUninitialized | RNullOrVoid => {
-                Nullish
-            }
+            Some(
+                RVoid | RNull | RVoidedNull | RUninitialized | RPossiblyUninitialized | RNullOrVoid,
+            ) => Nullish,
 
-            RArray
-            | RArrayLit
-            | RArrayLitUnsound
-            | RConstArrayLit
-            | REmptyArrayLit
-            | RArrayType
-            | RROArrayType
-            | RTupleType
-            | RRestArrayLit(_)
-            | RArrayPatternRestProp => Array,
+            Some(
+                RArray
+                | RArrayLit
+                | RArrayLitUnsound
+                | RConstArrayLit
+                | REmptyArrayLit
+                | RArrayType
+                | RROArrayType
+                | RTupleType
+                | RRestArrayLit(_)
+                | RArrayPatternRestProp,
+            ) => Array,
 
             _ => Unclassified,
         }
@@ -843,17 +837,19 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         use VirtualReasonDesc::*;
 
         match self.unwrap() {
-            RUninitialized
-            | RPossiblyUninitialized
-            | RTupleOutOfBoundsAccess(_)
-            | RTupleUnknownElementFromInexact
-            | RUnknownUnspecifiedProperty(_)
-            | RReactElement { .. }
-            | RRendersNothing
-            | RRenderType(_)
-            | RRenderMaybeType(_)
-            | RRenderStarType(_) => true,
-            RTypeApp(inner) | RTypeAppImplicit(inner) => inner.is_explanatory(),
+            Some(
+                RUninitialized
+                | RPossiblyUninitialized
+                | RTupleOutOfBoundsAccess(_)
+                | RTupleUnknownElementFromInexact
+                | RUnknownUnspecifiedProperty(_)
+                | RReactElement { .. }
+                | RRendersNothing
+                | RRenderType(_)
+                | RRenderMaybeType(_)
+                | RRenderStarType(_),
+            ) => true,
+            Some(RTypeApp(inner) | RTypeAppImplicit(inner)) => inner.is_explanatory(),
             _ => false,
         }
     }
@@ -881,7 +877,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
     serde::Deserialize
 )]
 pub struct VirtualReasonInner<L: Dupe> {
-    pub desc: VirtualReasonDesc<L>,
+    pub desc: Option<VirtualReasonDesc<L>>,
     pub loc: L,
     pub def_loc_opt: Option<L>,
     pub annot_loc_opt: Option<L>,
@@ -987,7 +983,7 @@ impl Reason {
         self.is_lib()
             && matches!(
                 self.desc(true),
-                VirtualReasonDesc::RClass(inner) if matches!(&**inner, VirtualReasonDesc::RType(s) if s.as_str() == "Promise")
+                Some(VirtualReasonDesc::RClass(inner)) if matches!(&**inner, VirtualReasonDesc::RType(s) if s.as_str() == "Promise")
             )
     }
 
@@ -1018,7 +1014,7 @@ impl<A: Dupe> VirtualReason<A> {
         F: Fn(&A) -> B,
     {
         VirtualReason::new_with(
-            self.desc.map_locs(&f),
+            self.desc.as_ref().map(|desc| desc.map_locs(&f)),
             f(&self.loc),
             self.def_loc_opt.as_ref().map(&f),
             self.annot_loc_opt.as_ref().map(&f),
@@ -1032,9 +1028,9 @@ impl<L: Dupe> VirtualReason<L> {
         ErrorReference::new(self.loc().dupe(), self.desc.clone())
     }
 
-    pub fn new(desc: VirtualReasonDesc<L>, loc: L) -> Self {
+    pub fn new(desc: impl Into<Option<VirtualReasonDesc<L>>>, loc: L) -> Self {
         VirtualReason(Arc::new(VirtualReasonInner {
-            desc,
+            desc: desc.into(),
             loc,
             def_loc_opt: None,
             annot_loc_opt: None,
@@ -1042,7 +1038,7 @@ impl<L: Dupe> VirtualReason<L> {
     }
 
     pub fn new_with(
-        desc: VirtualReasonDesc<L>,
+        desc: Option<VirtualReasonDesc<L>>,
         loc: L,
         def_loc_opt: Option<L>,
         annot_loc_opt: Option<L>,
@@ -1081,12 +1077,9 @@ impl<L: Dupe> VirtualReason<L> {
     }
 
     /// Get the description, optionally unwrapping type aliases
-    pub fn desc(&self, unwrap: bool) -> &VirtualReasonDesc<L> {
-        if unwrap {
-            self.0.desc.unwrap()
-        } else {
-            &self.0.desc
-        }
+    pub fn desc(&self, unwrap: bool) -> Option<&VirtualReasonDesc<L>> {
+        let desc = self.0.desc.as_ref()?;
+        if unwrap { desc.unwrap() } else { Some(desc) }
     }
 
     // Simple way to get derived reasons whose descriptions are
@@ -1095,7 +1088,7 @@ impl<L: Dupe> VirtualReason<L> {
     /// Replace desc, but keep loc, def_loc, annot_loc
     pub fn update_desc<F>(self, f: F) -> VirtualReason<L>
     where
-        F: FnOnce(VirtualReasonDesc<L>) -> VirtualReasonDesc<L>,
+        F: FnOnce(Option<VirtualReasonDesc<L>>) -> Option<VirtualReasonDesc<L>>,
     {
         VirtualReason::new_with(
             f(self.desc.clone()),
@@ -1108,15 +1101,15 @@ impl<L: Dupe> VirtualReason<L> {
     /// Replace desc, keep loc, but clobber def_loc, annot_loc as in new reason
     pub fn update_desc_new<F>(self, f: F) -> VirtualReason<L>
     where
-        F: FnOnce(VirtualReasonDesc<L>) -> VirtualReasonDesc<L>,
+        F: FnOnce(Option<VirtualReasonDesc<L>>) -> Option<VirtualReasonDesc<L>>,
     {
         VirtualReason::new(f(self.desc.clone()), self.loc.dupe())
     }
 
     /// Replace desc, but keep loc, def_loc, annot_loc
-    pub fn replace_desc(self, desc: VirtualReasonDesc<L>) -> VirtualReason<L> {
+    pub fn replace_desc(self, desc: impl Into<Option<VirtualReasonDesc<L>>>) -> VirtualReason<L> {
         VirtualReason::new_with(
-            desc,
+            desc.into(),
             self.loc.dupe(),
             self.def_loc_opt.as_ref().map(|l| l.dupe()),
             self.annot_loc_opt.as_ref().map(|l| l.dupe()),
@@ -1124,7 +1117,10 @@ impl<L: Dupe> VirtualReason<L> {
     }
 
     /// Replace desc, keep loc, but clobber def_loc, annot_loc as in new reason
-    pub fn replace_desc_new(self, desc: VirtualReasonDesc<L>) -> VirtualReason<L> {
+    pub fn replace_desc_new(
+        self,
+        desc: impl Into<Option<VirtualReasonDesc<L>>>,
+    ) -> VirtualReason<L> {
         VirtualReason::new(desc, self.loc.dupe())
     }
 }
@@ -1424,12 +1420,15 @@ pub fn json_of_loc(
     )
 }
 
-pub fn mk_reason<L: Dupe>(desc: VirtualReasonDesc<L>, loc: L) -> VirtualReason<L> {
+pub fn mk_reason<L: Dupe>(
+    desc: impl Into<Option<VirtualReasonDesc<L>>>,
+    loc: L,
+) -> VirtualReason<L> {
     VirtualReason::new(desc, loc)
 }
 
 /// Lift a string to a reason. Usually used as a dummy reason.
-pub fn locationless_reason(desc: ReasonDesc) -> Reason {
+pub fn locationless_reason(desc: impl Into<Option<ReasonDesc>>) -> Reason {
     mk_reason(desc, ALoc::none())
 }
 
@@ -1560,7 +1559,10 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RFunction(func) => format!("{}function", func.prefix()),
         RFunctionType => "function type".to_string(),
         RFunctionBody => "function body".to_string(),
-        RFunctionCall(d) => format!("call of {}", string_of_desc(d)),
+        RFunctionCall(d) => format!(
+            "call of {}",
+            d.as_deref().map(string_of_desc).unwrap_or_default()
+        ),
         RFunctionUnusedArgument => "unused function argument".to_string(),
 
         // JSX
@@ -1646,13 +1648,16 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Constructors
         RConstructor => "constructor".to_string(),
         RDefaultConstructor => "default constructor".to_string(),
-        RConstructorCall(d) => match &**d {
-            RPolyType(inner) => match &**inner {
+        RConstructorCall(d) => match d.as_deref() {
+            Some(poly @ RPolyType(inner)) => match &**inner {
                 RClass(innermost) => string_of_desc(innermost),
-                _ => string_of_desc(d),
+                _ => string_of_desc(poly),
             },
-            RClass(inner) => string_of_desc(inner),
-            _ => format!("new {}", string_of_desc(d)),
+            Some(RClass(inner)) => string_of_desc(inner),
+            _ => format!(
+                "new {}",
+                d.as_deref().map(string_of_desc).unwrap_or_default()
+            ),
         },
 
         // Records
@@ -1891,7 +1896,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
 pub fn string_of_reason(strip_root: Option<&str>, r: &Reason) -> String {
     let spos = string_of_aloc(strip_root, &r.loc);
-    let desc = string_of_desc(&r.desc);
+    let desc = r.desc.as_ref().map(string_of_desc).unwrap_or_default();
     if spos.is_empty() {
         desc
     } else if desc.is_empty() {
@@ -1905,7 +1910,7 @@ pub fn dump_reason(strip_root: Option<&str>, r: &Reason) -> String {
     format!(
         "{}: {:?}",
         string_of_aloc(strip_root, &r.loc),
-        string_of_desc(&r.desc)
+        r.desc.as_ref().map(string_of_desc).unwrap_or_default()
     )
 }
 
@@ -1915,26 +1920,30 @@ pub fn dump_reason(strip_root: Option<&str>, r: &Reason) -> String {
 /// speculative matching (even though we don't yet enforce them).
 pub fn is_instantiable_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     match r.desc(true) {
-        VirtualReasonDesc::RTypeParam(..)
-        | VirtualReasonDesc::RThisType
-        | VirtualReasonDesc::RImplicitInstantiation => true,
-        VirtualReasonDesc::RInferredUnionElemArray {
+        Some(
+            VirtualReasonDesc::RTypeParam(..)
+            | VirtualReasonDesc::RThisType
+            | VirtualReasonDesc::RImplicitInstantiation,
+        ) => true,
+        Some(VirtualReasonDesc::RInferredUnionElemArray {
             instantiable,
             is_empty: _,
-        } => *instantiable,
+        }) => *instantiable,
         _ => false,
     }
 }
 
 pub fn is_literal_object_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     match r.desc(true) {
-        VirtualReasonDesc::RObjectLitUnsound
-        | VirtualReasonDesc::RObjectPatternRestProp
-        | VirtualReasonDesc::RFunction(_)
-        | VirtualReasonDesc::RReactProps
-        | VirtualReasonDesc::RReactElement { .. }
-        | VirtualReasonDesc::RJSXElementProps(_) => true,
-        VirtualReasonDesc::RStatics(inner) => {
+        Some(
+            VirtualReasonDesc::RObjectLitUnsound
+            | VirtualReasonDesc::RObjectPatternRestProp
+            | VirtualReasonDesc::RFunction(_)
+            | VirtualReasonDesc::RReactProps
+            | VirtualReasonDesc::RReactElement { .. }
+            | VirtualReasonDesc::RJSXElementProps(_),
+        ) => true,
+        Some(VirtualReasonDesc::RStatics(inner)) => {
             matches!(&**inner, VirtualReasonDesc::RFunction(_))
         }
         _ => false,
@@ -1943,21 +1952,23 @@ pub fn is_literal_object_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
 
 pub fn is_literal_array_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     match r.desc(true) {
-        VirtualReasonDesc::RArrayLitUnsound
-        | VirtualReasonDesc::REmptyArrayLit
-        | VirtualReasonDesc::RRestArrayLit(_)
-        | VirtualReasonDesc::RReactChildren
-        | VirtualReasonDesc::RArrayPatternRestProp => true,
+        Some(
+            VirtualReasonDesc::RArrayLitUnsound
+            | VirtualReasonDesc::REmptyArrayLit
+            | VirtualReasonDesc::RRestArrayLit(_)
+            | VirtualReasonDesc::RReactChildren
+            | VirtualReasonDesc::RArrayPatternRestProp,
+        ) => true,
         _ => false,
     }
 }
 
 pub fn is_literal_function_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
-    matches!(r.desc(true), VirtualReasonDesc::RFunction(_))
+    matches!(r.desc(true), Some(VirtualReasonDesc::RFunction(_)))
 }
 
 pub fn is_record_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
-    matches!(r.desc(true), VirtualReasonDesc::RRecordType(_))
+    matches!(r.desc(true), Some(VirtualReasonDesc::RRecordType(_)))
 }
 
 pub fn is_lib_reason(r: &Reason) -> bool {
@@ -1983,7 +1994,7 @@ pub fn is_promise_reason(r: &Reason) -> bool {
         return false;
     }
     match r.desc(true) {
-        VirtualReasonDesc::RClass(inner) => {
+        Some(VirtualReasonDesc::RClass(inner)) => {
             matches!(
                 &**inner,
                 VirtualReasonDesc::RType(name) if name.as_str() == "Promise"
@@ -1993,8 +2004,8 @@ pub fn is_promise_reason(r: &Reason) -> bool {
     }
 }
 
-pub fn mk_annot_reason(desc: ReasonDesc, annot_loc: ALoc) -> Reason {
-    VirtualReason::new_with(desc, annot_loc.dupe(), None, Some(annot_loc))
+pub fn mk_annot_reason(desc: impl Into<Option<ReasonDesc>>, annot_loc: ALoc) -> Reason {
+    VirtualReason::new_with(desc.into(), annot_loc.dupe(), None, Some(annot_loc))
 }
 
 /// Creates a description string for an arbitrary expression. This description
@@ -2613,7 +2624,7 @@ pub fn react_element_desc_of_component_reason<L: Dupe>(
     reason: &VirtualReason<L>,
 ) -> VirtualReasonDesc<L> {
     match reason.desc(false) {
-        VirtualReasonDesc::RComponent(name) => VirtualReasonDesc::RReactElement {
+        Some(VirtualReasonDesc::RComponent(name)) => VirtualReasonDesc::RReactElement {
             name_opt: Some(Name::new(name.dupe())),
             from_component_syntax: true,
         },

@@ -1192,7 +1192,7 @@ where
                         )
                     };
 
-                    if is_named_type(&upper.desc) {
+                    if upper.desc.as_ref().is_some_and(is_named_type) {
                         match use_op {
                             VirtualUseOp::Op(root) => match root.as_ref() {
                                 VirtualRootUseOp::AssignVar { var: Some(_), .. }
@@ -3334,9 +3334,9 @@ where
                         VirtualUseOp::Op(inner_root) => match inner_root.as_ref() {
                             VirtualRootUseOp::FunCall(..) | VirtualRootUseOp::FunCallMethod(..) => {
                                 let new_def = def.dupe().update_desc(|desc| match desc {
-                                    VirtualReasonDesc::RFunctionType => {
-                                        VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal)
-                                    }
+                                    Some(VirtualReasonDesc::RFunctionType) => Some(
+                                        VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal),
+                                    ),
                                     _ => desc,
                                 });
                                 Message::MessageFunctionRequiresAnotherArgument {
@@ -3609,8 +3609,8 @@ where
                         ) =>
                     {
                         let new_def = def.dupe().update_desc(|desc| match desc {
-                            VirtualReasonDesc::RFunctionType => {
-                                VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal)
+                            Some(VirtualReasonDesc::RFunctionType) => {
+                                Some(VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal))
                             }
                             _ => desc,
                         });
@@ -4077,7 +4077,7 @@ where
             code(&ty_str)
         }
         ErrorTypeDesc::ReasonDesc(desc) => {
-            friendly::desc_of_reason_desc(&desc.map_locs(&loc_of_aloc))
+            friendly::desc_of_reason_desc(Some(&desc.map_locs(&loc_of_aloc)))
         }
         ErrorTypeDesc::Unknown => code("?"),
     };
@@ -4997,9 +4997,9 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot access "),
-                        friendly::desc_of_reason_desc(index),
+                        friendly::desc_of_reason_desc(index.as_ref()),
                         text(" on "),
-                        friendly::desc_of_reason_desc(object_),
+                        friendly::desc_of_reason_desc(object_.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotAddComputedProperty => (
@@ -5011,7 +5011,7 @@ where
                         RootKind::OperationRoot,
                         friendly::Message(vec![
                             text("Cannot assign "),
-                            friendly::desc_of_reason_desc(init),
+                            friendly::desc_of_reason_desc(init.as_ref()),
                             text(" to variable"),
                         ]),
                     ),
@@ -5019,9 +5019,9 @@ where
                         RootKind::OperationRoot,
                         friendly::Message(vec![
                             text("Cannot assign "),
-                            friendly::desc_of_reason_desc(init),
+                            friendly::desc_of_reason_desc(init.as_ref()),
                             text(" to "),
-                            friendly::desc_of_reason_desc(target),
+                            friendly::desc_of_reason_desc(target.as_ref()),
                         ]),
                     ),
                 },
@@ -5029,14 +5029,14 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot call "),
-                        friendly::desc_of_reason_desc(fn_),
+                        friendly::desc_of_reason_desc(fn_.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotCallStandalone(fn_) => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot call "),
-                        friendly::desc_of_reason_desc(fn_),
+                        friendly::desc_of_reason_desc(fn_.as_ref()),
                         text(" as a standalone function"),
                     ]),
                 ),
@@ -5044,9 +5044,9 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot call "),
-                        friendly::desc_of_reason_desc(fn_),
+                        friendly::desc_of_reason_desc(fn_.as_ref()),
                         text(" with "),
-                        friendly::desc_of_reason_desc(lower),
+                        friendly::desc_of_reason_desc(lower.as_ref()),
                         text(" bound to "),
                         code(name),
                     ]),
@@ -5055,9 +5055,9 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot call "),
-                        friendly::desc_of_reason_desc(fn_),
+                        friendly::desc_of_reason_desc(fn_.as_ref()),
                         text(" with "),
-                        friendly::desc_of_reason_desc(lower),
+                        friendly::desc_of_reason_desc(lower.as_ref()),
                         text(" bound to "),
                         text(&format!("the {} parameter", ordinal(*n))),
                     ]),
@@ -5066,23 +5066,23 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Incorrect arguments passed to "),
-                        friendly::desc_of_reason_desc(op),
+                        friendly::desc_of_reason_desc(op.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotCast { lower, upper } => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot cast "),
-                        friendly::desc_of_reason_desc(lower),
+                        friendly::desc_of_reason_desc(lower.as_ref()),
                         text(" to "),
-                        friendly::desc_of_reason_desc(upper),
+                        friendly::desc_of_reason_desc(upper.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotCheckAgainst { test, discriminant } => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Invalid check of "),
-                        friendly::desc_of_reason_desc(test),
+                        friendly::desc_of_reason_desc(test.as_ref()),
                         text(" against "),
                         ref_(discriminant),
                     ]),
@@ -5098,9 +5098,9 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot coerce "),
-                        friendly::desc_of_reason_desc(from),
+                        friendly::desc_of_reason_desc(from.as_ref()),
                         text(" to "),
-                        friendly::desc_of_reason_desc(target),
+                        friendly::desc_of_reason_desc(target.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotConformToCommonInterface {
@@ -5144,7 +5144,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot create "),
-                        friendly::desc_of_reason_desc(component),
+                        friendly::desc_of_reason_desc(component.as_ref()),
                         text(" element"),
                     ]),
                 ),
@@ -5152,7 +5152,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot create record "),
-                        friendly::desc_of_reason_desc(constructor),
+                        friendly::desc_of_reason_desc(constructor.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotDeclareRef => (
@@ -5182,7 +5182,7 @@ where
                         text("Cannot define "),
                         ref_(method_),
                         text(" on "),
-                        friendly::desc_of_reason_desc(name),
+                        friendly::desc_of_reason_desc(name.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotDefineShadowedProtoProperty => (
@@ -5193,16 +5193,16 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot delete "),
-                        friendly::desc_of_reason_desc(prop),
+                        friendly::desc_of_reason_desc(prop.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotExpectImplicitReturn { upper, fn_ } => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot expect "),
-                        friendly::desc_of_reason_desc(upper),
+                        friendly::desc_of_reason_desc(upper.as_ref()),
                         text(" as the return type of "),
-                        friendly::desc_of_reason_desc(fn_),
+                        friendly::desc_of_reason_desc(fn_.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotExtendClass { extends, def } => (
@@ -5211,21 +5211,21 @@ where
                         text("Cannot extend "),
                         ref_(extends),
                         text(" with "),
-                        friendly::desc_of_reason_desc(def),
+                        friendly::desc_of_reason_desc(def.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotGetProp(prop) => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot get "),
-                        friendly::desc_of_reason_desc(prop),
+                        friendly::desc_of_reason_desc(prop.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotGetRest(op) => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot get rest of "),
-                        friendly::desc_of_reason_desc(op),
+                        friendly::desc_of_reason_desc(op.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotImplementClass { implements, def } => (
@@ -5234,16 +5234,16 @@ where
                         text("Cannot implement "),
                         ref_(implements),
                         text(" with "),
-                        friendly::desc_of_reason_desc(def),
+                        friendly::desc_of_reason_desc(def.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotInitializeField { field, body } => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot initialize "),
-                        friendly::desc_of_reason_desc(field),
+                        friendly::desc_of_reason_desc(field.as_ref()),
                         text(" with "),
-                        friendly::desc_of_reason_desc(body),
+                        friendly::desc_of_reason_desc(body.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotInstantiateEval(type_) => (
@@ -5254,7 +5254,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot instantiate "),
-                        friendly::desc_of_reason_desc(type_),
+                        friendly::desc_of_reason_desc(type_.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotInstantiateRenderType => (
@@ -5269,7 +5269,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot return "),
-                        friendly::desc_of_reason_desc(value),
+                        friendly::desc_of_reason_desc(value.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotReturnFromAssertionFunction { implicit_return } => (
@@ -5298,21 +5298,21 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot spread "),
-                        friendly::desc_of_reason_desc(op),
+                        friendly::desc_of_reason_desc(op.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotUpdate(prop) => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot update "),
-                        friendly::desc_of_reason_desc(prop),
+                        friendly::desc_of_reason_desc(prop.as_ref()),
                     ]),
                 ),
                 RootMessage::RootCannotUseInferTypeBound { infer } => (
                     RootKind::ShortExplanationRoot,
                     friendly::Message(vec![
                         text("The infer type "),
-                        friendly::desc_of_reason_desc(infer),
+                        friendly::desc_of_reason_desc(infer.as_ref()),
                         text(" must have consistent bounds"),
                     ]),
                 ),
@@ -5333,7 +5333,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot yield "),
-                        friendly::desc_of_reason_desc(value),
+                        friendly::desc_of_reason_desc(value.as_ref()),
                     ]),
                 ),
             }
@@ -7959,7 +7959,7 @@ where
             ]),
             MessageInvalidTrivialRecursiveDefinition(description) => friendly::Message(vec![
                 text("Invalid trivially recursive definition of "),
-                friendly::desc_of_reason_desc(description),
+                friendly::desc_of_reason_desc(description.as_ref()),
                 text(". "),
             ]),
             MessageInvalidTrivialRecursiveTypeParameter(name) => friendly::Message(vec![
@@ -8173,17 +8173,17 @@ where
             ]),
             MessageMissingAnnotation(d) => friendly::Message(vec![
                 text("Missing an annotation on "),
-                friendly::desc_of_reason_desc(d),
+                friendly::desc_of_reason_desc(d.as_ref()),
                 text("."),
             ]),
             MessageMissingAnnotationDueToContextualTypingFailure(d) => friendly::Message(vec![
                 text("An annotation on "),
-                friendly::desc_of_reason_desc(d),
+                friendly::desc_of_reason_desc(d.as_ref()),
                 text(" is required because Flow cannot infer its type from local context."),
             ]),
             MessageMissingAnnotationForGenericFunction(d) => friendly::Message(vec![
                 text("Missing an annotation on "),
-                friendly::desc_of_reason_desc(d),
+                friendly::desc_of_reason_desc(d.as_ref()),
                 text(" because generic functions must be fully annotated."),
             ]),
             MessageLowerIsNotReactComponent(lower) => {
@@ -9166,7 +9166,7 @@ where
                 type_,
             } => friendly::Message(vec![
                 text("Cannot return "),
-                friendly::desc_of_reason_desc(return_desc),
+                friendly::desc_of_reason_desc(return_desc.as_ref()),
                 text(" because the negation of the predicate encoded in this expression"),
                 text(" needs to completely refine away the guard type "),
                 ref_of_type_desc(&type_.loc, &type_.desc),
@@ -10566,9 +10566,9 @@ where
                         _ => desc.clone(),
                     }
                 }
-                let lower_desc = loop_render_desc(&lower.desc);
+                let lower_desc = lower.desc.as_ref().map(loop_render_desc);
                 let lower_r = lower.dupe().replace_desc(lower_desc);
-                let upper_desc = loop_render_desc(&upper.desc);
+                let upper_desc = upper.desc.as_ref().map(loop_render_desc);
                 let upper_r = upper.dupe().replace_desc(upper_desc);
                 friendly::Message(vec![
                     ref_(&lower_r),

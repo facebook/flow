@@ -209,7 +209,7 @@ pub(crate) fn error_recursive(cx: &Context, dst_cx: &Context, reason: &Reason) -
     let loc = reason.loc().dupe();
     let msg = ErrorMessage::ETrivialRecursiveDefinition(ErrorReference::new(
         loc.dupe(),
-        reason.desc(false).clone(),
+        reason.desc(false).cloned(),
     ));
     flow_js_utils::add_annot_inference_error(cx, dst_cx, msg);
     type_::any_t::error(reason.dupe())

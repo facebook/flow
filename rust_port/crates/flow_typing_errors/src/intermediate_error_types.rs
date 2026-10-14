@@ -1234,39 +1234,39 @@ pub enum Frame<L: Dupe> {
 )]
 pub enum RootMessage<L: Dupe> {
     RootCannotAccessIndex {
-        index: VirtualReasonDesc<L>,
-        object_: VirtualReasonDesc<L>,
+        index: Option<VirtualReasonDesc<L>>,
+        object_: Option<VirtualReasonDesc<L>>,
     },
     RootCannotAddComputedProperty,
     RootCannotAssign {
-        init: VirtualReasonDesc<L>,
-        target: Option<VirtualReasonDesc<L>>,
+        init: Option<VirtualReasonDesc<L>>,
+        target: Option<Option<VirtualReasonDesc<L>>>,
     },
-    RootCannotCall(VirtualReasonDesc<L>),
-    RootCannotCallStandalone(VirtualReasonDesc<L>),
+    RootCannotCall(Option<VirtualReasonDesc<L>>),
+    RootCannotCallStandalone(Option<VirtualReasonDesc<L>>),
     RootCannotCallWithNamedParam {
-        fn_: VirtualReasonDesc<L>,
-        lower: VirtualReasonDesc<L>,
+        fn_: Option<VirtualReasonDesc<L>>,
+        lower: Option<VirtualReasonDesc<L>>,
         name: FlowSmolStr,
     },
     RootCannotCallWithNthParam {
-        fn_: VirtualReasonDesc<L>,
-        lower: VirtualReasonDesc<L>,
+        fn_: Option<VirtualReasonDesc<L>>,
+        lower: Option<VirtualReasonDesc<L>>,
         n: i32,
     },
-    RootCannotCallObjectAssign(VirtualReasonDesc<L>),
+    RootCannotCallObjectAssign(Option<VirtualReasonDesc<L>>),
     RootCannotCast {
-        lower: VirtualReasonDesc<L>,
-        upper: VirtualReasonDesc<L>,
+        lower: Option<VirtualReasonDesc<L>>,
+        upper: Option<VirtualReasonDesc<L>>,
     },
     RootCannotCheckAgainst {
-        test: VirtualReasonDesc<L>,
+        test: Option<VirtualReasonDesc<L>>,
         discriminant: VirtualReason<L>,
     },
     RootCannotCheckAgainstSwitchDiscriminant(L),
     RootCannotCoerce {
-        from: VirtualReasonDesc<L>,
-        target: VirtualReasonDesc<L>,
+        from: Option<VirtualReasonDesc<L>>,
+        target: Option<VirtualReasonDesc<L>>,
     },
     RootCannotConformToCommonInterface {
         originate_from_import: bool,
@@ -1275,8 +1275,8 @@ pub enum RootMessage<L: Dupe> {
         conflict: MergedDeclarationConflict,
         first_decl: VirtualReason<L>,
     },
-    RootCannotCreateElement(VirtualReasonDesc<L>),
-    RootCannotCreateRecord(VirtualReasonDesc<L>),
+    RootCannotCreateElement(Option<VirtualReasonDesc<L>>),
+    RootCannotCreateRecord(Option<VirtualReasonDesc<L>>),
     RootCannotDeclareRef,
     RootCannotDeclareTypeGuard {
         type_guard_loc: L,
@@ -1284,47 +1284,47 @@ pub enum RootMessage<L: Dupe> {
     },
     RootCannotDefineClassMethod {
         method_: VirtualReason<L>,
-        name: VirtualReasonDesc<L>,
+        name: Option<VirtualReasonDesc<L>>,
     },
     RootCannotDefineShadowedProtoProperty,
-    RootCannotDelete(VirtualReasonDesc<L>),
+    RootCannotDelete(Option<VirtualReasonDesc<L>>),
     RootCannotExpectImplicitReturn {
-        upper: VirtualReasonDesc<L>,
-        fn_: VirtualReasonDesc<L>,
+        upper: Option<VirtualReasonDesc<L>>,
+        fn_: Option<VirtualReasonDesc<L>>,
     },
     RootCannotExtendClass {
         extends: VirtualReason<L>,
-        def: VirtualReasonDesc<L>,
+        def: Option<VirtualReasonDesc<L>>,
     },
-    RootCannotGetProp(VirtualReasonDesc<L>),
-    RootCannotGetRest(VirtualReasonDesc<L>),
+    RootCannotGetProp(Option<VirtualReasonDesc<L>>),
+    RootCannotGetRest(Option<VirtualReasonDesc<L>>),
     RootCannotImplementClass {
         implements: VirtualReason<L>,
-        def: VirtualReasonDesc<L>,
+        def: Option<VirtualReasonDesc<L>>,
     },
     RootCannotInitializeField {
-        field: VirtualReasonDesc<L>,
-        body: VirtualReasonDesc<L>,
+        field: Option<VirtualReasonDesc<L>>,
+        body: Option<VirtualReasonDesc<L>>,
     },
     RootCannotInstantiateEval(VirtualReason<L>),
     RootCannotInstantiateRenderType,
-    RootCannotInstantiateTypeApp(VirtualReasonDesc<L>),
-    RootCannotReturn(VirtualReasonDesc<L>),
+    RootCannotInstantiateTypeApp(Option<VirtualReasonDesc<L>>),
+    RootCannotReturn(Option<VirtualReasonDesc<L>>),
     RootCannotReturnFromAssertionFunction {
         implicit_return: bool,
     },
     RootCannotShadowProto(NamedReferenceData<L>),
     RootCannotShadowProtoProperty,
-    RootCannotSpread(VirtualReasonDesc<L>),
-    RootCannotUpdate(VirtualReasonDesc<L>),
+    RootCannotSpread(Option<VirtualReasonDesc<L>>),
+    RootCannotUpdate(Option<VirtualReasonDesc<L>>),
     RootCannotUseInferTypeBound {
-        infer: VirtualReasonDesc<L>,
+        infer: Option<VirtualReasonDesc<L>>,
     },
     RootCannotUseTypeGuard {
         guard_type: VirtualReason<L>,
         param_name: FlowSmolStr,
     },
-    RootCannotYield(VirtualReasonDesc<L>),
+    RootCannotYield(Option<VirtualReasonDesc<L>>),
 }
 
 pub type UnionEnumMap<L> = BTreeMap<UnionEnum, Vec1<L>>;
@@ -2489,7 +2489,7 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidSelfReferencingDefault(Box<MessageInvalidSelfReferencingDefaultData<L>>),
 
-    MessageInvalidTrivialRecursiveDefinition(VirtualReasonDesc<L>),
+    MessageInvalidTrivialRecursiveDefinition(Option<VirtualReasonDesc<L>>),
     MessageInvalidTrivialRecursiveTypeParameter(FlowSmolStr),
 
     MessageInvalidTupleRequiredAfterOptional {
@@ -2513,7 +2513,7 @@ pub enum Message<L: Dupe> {
     },
 
     MessageNegativeTypeGuardConsistency {
-        return_desc: VirtualReasonDesc<L>,
+        return_desc: Option<VirtualReasonDesc<L>>,
         type_: Box<MessageTypeReferenceData<L>>,
     },
 
@@ -2545,9 +2545,9 @@ pub enum Message<L: Dupe> {
 
     MessageLowerDoesNotHavePropertiesWithPrintedType(Box<MessageTypeReferenceData<L>>),
 
-    MessageMissingAnnotation(VirtualReasonDesc<L>),
-    MessageMissingAnnotationDueToContextualTypingFailure(VirtualReasonDesc<L>),
-    MessageMissingAnnotationForGenericFunction(VirtualReasonDesc<L>),
+    MessageMissingAnnotation(Option<VirtualReasonDesc<L>>),
+    MessageMissingAnnotationDueToContextualTypingFailure(Option<VirtualReasonDesc<L>>),
+    MessageMissingAnnotationForGenericFunction(Option<VirtualReasonDesc<L>>),
 
     MessageMissingPlatformSupportWithAvailablePlatforms(
         Box<MessageMissingPlatformSupportWithAvailablePlatformsData>,

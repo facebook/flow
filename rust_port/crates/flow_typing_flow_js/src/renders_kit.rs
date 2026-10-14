@@ -75,8 +75,18 @@ fn incompatible_renders_error(
             .annot_loc()
             .unwrap_or_else(|| reasonu.def_loc())
             .dupe(),
-        lower_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(reasonl.desc.clone())),
-        upper_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(reasonu.desc.clone())),
+        lower_desc: TypeOrTypeDescT::TypeDesc(
+            reasonl
+                .desc
+                .clone()
+                .map_or(ErrorTypeDesc::Unknown, ErrorTypeDesc::ReasonDesc),
+        ),
+        upper_desc: TypeOrTypeDescT::TypeDesc(
+            reasonu
+                .desc
+                .clone()
+                .map_or(ErrorTypeDesc::Unknown, ErrorTypeDesc::ReasonDesc),
+        ),
         use_op,
         explanation: None,
         example: None,

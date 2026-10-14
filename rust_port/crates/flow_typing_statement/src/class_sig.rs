@@ -85,7 +85,7 @@ pub fn empty<C: ConfigTypes>(
     let static_ = {
         let reason = reason
             .dupe()
-            .update_desc(|desc| VirtualReasonDesc::RStatics(Arc::new(desc)));
+            .update_desc(|desc| desc.map(|desc| VirtualReasonDesc::RStatics(Arc::new(desc))));
         empty_sig(reason)
     };
     let instance = empty_sig(reason);
@@ -418,11 +418,7 @@ pub fn has_indexer<C: ConfigTypes>(static_: bool, x: &class_types::Class<C>) -> 
 }
 
 pub fn add_name_field<C: ConfigTypes>(x: &mut class_types::Class<C>) {
-    let r = x
-        .instance
-        .reason
-        .dupe()
-        .update_desc(|desc| VirtualReasonDesc::RNameProperty(Arc::new(desc)));
+    let r = x.instance.reason.dupe().replace_desc(None);
     let t = str_module_t::why(r);
     add_field_inner(
         false,
@@ -828,7 +824,11 @@ fn elements<'a, C: crate::func_params_intf::Config>(
 ) {
     let receiver_this = || {
         type_util::mod_reason_of_t(
-            &|r: Reason| r.update_desc(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc))),
+            &|r: Reason| {
+                r.update_desc(|desc| {
+                    desc.map(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc)))
+                })
+            },
             &this,
         )
     };
@@ -1222,7 +1222,7 @@ fn supertype<'a, C: ConfigTypes>(cx: &Context<'a>, x: &class_types::Class<C>) ->
         .instance
         .reason
         .dupe()
-        .update_desc(|d| VirtualReasonDesc::RSuperOf(Arc::new(d)));
+        .update_desc(|d| d.map(|d| VirtualReasonDesc::RSuperOf(Arc::new(d))));
     let static_reason = x.static_.reason.dupe();
     match &x.super_ {
         class_types::Super::Interface(iface) => {
@@ -1997,8 +1997,8 @@ fn super_has_real_extends<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
 // to [None] if the reason isn't a recognized class-named shape.
 fn class_name_of_inst_reason(r: &Reason) -> Option<FlowSmolStr> {
     match &r.desc {
-        VirtualReasonDesc::RType(n) => Some(n.dupe()),
-        VirtualReasonDesc::RStatics(inner) => match inner.as_ref() {
+        Some(VirtualReasonDesc::RType(n)) => Some(n.dupe()),
+        Some(VirtualReasonDesc::RStatics(inner)) => match inner.as_ref() {
             VirtualReasonDesc::RType(n) => Some(n.dupe()),
             _ => None,
         },
@@ -2677,7 +2677,7 @@ pub fn make_thises<'a, C: ConfigTypes>(
         .instance
         .reason
         .dupe()
-        .update_desc(|d| VirtualReasonDesc::RSuperOf(Arc::new(d)));
+        .update_desc(|d| d.map(|d| VirtualReasonDesc::RSuperOf(Arc::new(d))));
     match &x.super_ {
         class_types::Super::Interface(_) => {
             panic!("tried to evaluate toplevel of interface")

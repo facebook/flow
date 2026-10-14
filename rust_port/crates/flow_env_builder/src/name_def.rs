@@ -3160,10 +3160,7 @@ impl<'a> DefFinder<'a> {
                 ast::expression::ExpressionInner::Member { .. } => vec![],
                 _ => {
                     vec![Hint::HintT(
-                        HintNode::AnyErrorHint(mk_reason(
-                            VirtualReasonDesc::RAnyImplicit,
-                            lhs_loc.dupe(),
-                        )),
+                        HintNode::AnyErrorHint(mk_reason(None, lhs_loc.dupe())),
                         HintKind::ExpectedTypeHint,
                     )]
                 }
@@ -3194,10 +3191,9 @@ impl<'a> DefFinder<'a> {
                     }
                 }
                 // Unsupported syntax like [foo.bar] = expr
-                Pattern::Expression { loc, .. } => Some(HintNode::AnyErrorHint(mk_reason(
-                    VirtualReasonDesc::RAnyImplicit,
-                    loc.dupe(),
-                ))),
+                Pattern::Expression { loc, .. } => {
+                    Some(HintNode::AnyErrorHint(mk_reason(None, loc.dupe())))
+                }
                 Pattern::Array { loc, inner } => {
                     let elements = &inner.elements;
                     let mut acc = Vec::new();

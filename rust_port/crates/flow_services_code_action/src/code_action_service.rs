@@ -1424,9 +1424,11 @@ pub fn ast_transforms_of_error(
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let obj_loc = upper.definition_loc.dupe();
                 let original = match &upper.type_desc {
-                    TypeOrTypeDescT::Type(t) => {
-                        flow_common::reason::string_of_desc(&reason_of_t(t).desc)
-                    }
+                    TypeOrTypeDescT::Type(t) => reason_of_t(t)
+                        .desc
+                        .as_ref()
+                        .map(flow_common::reason::string_of_desc)
+                        .unwrap_or_default(),
                     TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(desc)) => {
                         flow_common::reason::string_of_desc::<Loc>(desc)
                     }

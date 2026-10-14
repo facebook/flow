@@ -2547,9 +2547,9 @@ fn flow_obj_to_obj<'cx>(
             match &lflags.obj_kind {
                 ObjKind::Inexact => {
                     let r = flow_common::reason::mk_reason(
-                        VirtualReasonDesc::RUnknownUnspecifiedProperty(Arc::new(
-                            lreason.desc(true).clone(),
-                        )),
+                        lreason.desc(true).cloned().map(|desc| {
+                            VirtualReasonDesc::RUnknownUnspecifiedProperty(Arc::new(desc))
+                        }),
                         lreason.loc().dupe(),
                     );
                     let mixed = Type::new(TypeInner::DefT(
@@ -5619,7 +5619,7 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::ObjT(_))
                 && matches!(
                     lreason.desc(true),
-                    VirtualReasonDesc::RObjectLit | VirtualReasonDesc::RObjectLitUnsound
+                    Some(VirtualReasonDesc::RObjectLit | VirtualReasonDesc::RObjectLitUnsound)
                 )
                 && let DefTInner::InstanceT(inst) = ud.deref()
                 && matches!(inst.inst.inst_kind, InstanceKind::RecordKind { .. })
@@ -5728,15 +5728,19 @@ pub fn rec_sub_t<'cx>(
             );
             // These cases correspond to calls so the rest array can be considered "literal".
             let lit1 = match r1.desc(true) {
-                VirtualReasonDesc::RArrayLitUnsound | VirtualReasonDesc::RReactChildren => true,
-                VirtualReasonDesc::RRestArrayLit(desc) => matches!(
-                    desc.as_ref(),
-                    VirtualReasonDesc::RCode(_)
-                        | VirtualReasonDesc::RFunctionCall(_)
-                        | VirtualReasonDesc::RConstructorCall(_)
-                        | VirtualReasonDesc::RMethodCall(_)
-                        | VirtualReasonDesc::RJSXFunctionCall(_)
-                        | VirtualReasonDesc::RFunctionType
+                Some(VirtualReasonDesc::RArrayLitUnsound | VirtualReasonDesc::RReactChildren) => {
+                    true
+                }
+                Some(VirtualReasonDesc::RRestArrayLit(desc)) => matches!(
+                    desc.as_deref(),
+                    Some(
+                        VirtualReasonDesc::RCode(_)
+                            | VirtualReasonDesc::RFunctionCall(_)
+                            | VirtualReasonDesc::RConstructorCall(_)
+                            | VirtualReasonDesc::RMethodCall(_)
+                            | VirtualReasonDesc::RJSXFunctionCall(_)
+                            | VirtualReasonDesc::RFunctionType
+                    )
                 ),
                 _ => false,
             };
@@ -6892,9 +6896,11 @@ pub fn rec_sub_t<'cx>(
                 explanation,
                 vec![],
             );
-            error_data.lower_desc = type_or_type_desc::TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
-                enum_reason.desc(false).clone(),
-            ));
+            if let Some(desc) = enum_reason.desc(false) {
+                error_data.lower_desc = type_or_type_desc::TypeOrTypeDescT::TypeDesc(
+                    ErrorTypeDesc::ReasonDesc(desc.clone()),
+                );
+            }
             flow_js_utils::add_output_with_env(
                 cx,env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(Box::new(error_data))),
@@ -6968,11 +6974,9 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::ImplicitInstantiationTvar(data), _) => {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &env.frozen_tvar_bound(data), u)
         }
-        (_, TypeInner::GenericT(box GenericTData { reason, name, .. })) => {
+        (_, TypeInner::GenericT(box GenericTData { reason, .. })) => {
             let bot = Type::new(TypeInner::DefT(
-                reason
-                    .dupe()
-                    .replace_desc(VirtualReasonDesc::RIncompatibleInstantiation(name.dupe())),
+                reason.dupe().replace_desc(None),
                 DefT::new(DefTInner::EmptyT),
             ));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &bot)

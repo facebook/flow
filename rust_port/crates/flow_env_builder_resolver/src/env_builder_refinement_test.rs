@@ -105,17 +105,13 @@ where
             WriteLoc::Projection(l) => format!("projection at {}", l.debug_to_string(false)),
             WriteLoc::Write(reason) => {
                 let loc = reason.loc();
-                let desc = reason.desc(true);
-                format!("{}: ({})", loc.debug_to_string(false), string_of_desc(desc))
+                let desc = reason.desc(true).map(string_of_desc).unwrap_or_default();
+                format!("{}: ({})", loc.debug_to_string(false), desc)
             }
             WriteLoc::EmptyArray { reason, .. } => {
                 let loc = reason.loc();
-                let desc = reason.desc(true);
-                format!(
-                    "(empty array) {}: ({})",
-                    loc.debug_to_string(false),
-                    string_of_desc(desc)
-                )
+                let desc = reason.desc(true).map(string_of_desc).unwrap_or_default();
+                format!("(empty array) {}: ({})", loc.debug_to_string(false), desc)
             }
             WriteLoc::IllegalWrite(reason) => {
                 format!("illegal write at {}", reason.loc().debug_to_string(false))

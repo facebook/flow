@@ -1714,10 +1714,12 @@ pub mod special_cased_functions {
                         let reason_prop = lreason
                             .dupe()
                             .update_desc(|desc| {
-                                flow_common::reason::VirtualReasonDesc::RPropertyOf(
-                                    name.dupe(),
-                                    Arc::new(desc),
-                                )
+                                desc.map(|desc| {
+                                    flow_common::reason::VirtualReasonDesc::RPropertyOf(
+                                        name.dupe(),
+                                        Arc::new(desc),
+                                    )
+                                })
                             })
                             .reposition(reason_op.loc().dupe());
                         match type_::property::read_t(p) {

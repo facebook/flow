@@ -386,12 +386,12 @@ fn identifier<'a>(
         &|r: Reason| {
             let desc = r.desc(false);
             let new_desc = match desc {
-                VirtualReasonDesc::RDefaultValue
-                | VirtualReasonDesc::RArrayPatternRestProp
-                | VirtualReasonDesc::RObjectPatternRestProp => {
-                    VirtualReasonDesc::RIdentifier(name.dupe())
-                }
-                _ => desc.clone(),
+                Some(
+                    VirtualReasonDesc::RDefaultValue
+                    | VirtualReasonDesc::RArrayPatternRestProp
+                    | VirtualReasonDesc::RObjectPatternRestProp,
+                ) => Some(VirtualReasonDesc::RIdentifier(name.dupe())),
+                _ => desc.cloned(),
             };
             r.replace_desc(new_desc)
         },

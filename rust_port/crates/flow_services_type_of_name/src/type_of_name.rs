@@ -298,7 +298,7 @@ fn compute_ref_summary(genv: &Genv<'_, '_>, body_type: &Type) -> Option<String> 
     // instead of creating another Generic node
     let stripped = type_util::mod_reason_of_t(
         &|r| {
-            if matches!(r.desc(false), VirtualReasonDesc::RTypeAlias(_)) {
+            if matches!(r.desc(false), Some(VirtualReasonDesc::RTypeAlias(_))) {
                 r.replace_desc(VirtualReasonDesc::RCustom("ref_expansion".into()))
             } else {
                 r

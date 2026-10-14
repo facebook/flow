@@ -1811,17 +1811,17 @@ pub fn union_representative_use_op(
 pub fn type_or_type_desc_for_error(t: &Type) -> TypeOrTypeDescT<ALoc> {
     use flow_typing_type::type_util;
 
-    let desc = type_util::reason_of_t(t).desc(true);
-    if desc.is_explanatory()
-        || matches!(
-            t.deref(),
-            TypeInner::DefT(_, def_t)
-                if matches!(
-                    def_t.deref(),
-                    DefTInner::MixedT(MixedFlavor::MixedFunction)
-                        | DefTInner::UniqueSymbolT(_)
-                )
-        )
+    if let Some(desc) = type_util::reason_of_t(t).desc(true)
+        && (desc.is_explanatory()
+            || matches!(
+                t.deref(),
+                TypeInner::DefT(_, def_t)
+                    if matches!(
+                        def_t.deref(),
+                        DefTInner::MixedT(MixedFlavor::MixedFunction)
+                            | DefTInner::UniqueSymbolT(_)
+                    )
+            ))
     {
         TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(desc.clone()))
     } else {
@@ -1855,11 +1855,13 @@ pub fn type_reference_at_loc_for_error(t: &Type, loc: ALoc) -> ErrorTypeReferenc
 /// Extracts a user-written name for error messages without retaining its reason.
 pub fn description_name_for_error(reason: &Reason) -> Option<FlowSmolStr> {
     match reason.desc(false) {
-        VirtualReasonDesc::RIdentifier(name)
-        | VirtualReasonDesc::RType(name)
-        | VirtualReasonDesc::REnumMember {
-            member_name: name, ..
-        } => Some(name.dupe()),
+        Some(
+            VirtualReasonDesc::RIdentifier(name)
+            | VirtualReasonDesc::RType(name)
+            | VirtualReasonDesc::REnumMember {
+                member_name: name, ..
+            },
+        ) => Some(name.dupe()),
         _ => None,
     }
 }
@@ -1867,12 +1869,16 @@ pub fn description_name_for_error(reason: &Reason) -> Option<FlowSmolStr> {
 /// Captures the source-level construct used as a type without retaining its reason.
 pub fn value_as_type_reference_for_error(reason: &Reason) -> Option<ValueAsTypeReference> {
     match reason.desc(false) {
-        VirtualReasonDesc::RIdentifier(name)
-        | VirtualReasonDesc::RType(name)
-        | VirtualReasonDesc::REnumMember {
-            member_name: name, ..
-        } => Some(ValueAsTypeReference::Name(name.dupe())),
-        VirtualReasonDesc::RModule(module) => Some(ValueAsTypeReference::ImportType(module.dupe())),
+        Some(
+            VirtualReasonDesc::RIdentifier(name)
+            | VirtualReasonDesc::RType(name)
+            | VirtualReasonDesc::REnumMember {
+                member_name: name, ..
+            },
+        ) => Some(ValueAsTypeReference::Name(name.dupe())),
+        Some(VirtualReasonDesc::RModule(module)) => {
+            Some(ValueAsTypeReference::ImportType(module.dupe()))
+        }
         _ => None,
     }
 }
@@ -1880,14 +1886,14 @@ pub fn value_as_type_reference_for_error(reason: &Reason) -> Option<ValueAsTypeR
 /// Captures the semantic description and location of a type guard without retaining its reason.
 pub fn type_guard_reference_for_error(reason: &Reason) -> TypeGuardReferenceData<ALoc> {
     let kind = match reason.desc(false) {
-        VirtualReasonDesc::RParameter(name) => TypeGuardReferenceKind::Parameter(name.dupe()),
-        VirtualReasonDesc::RIdentifier(name) => {
+        Some(VirtualReasonDesc::RParameter(name)) => TypeGuardReferenceKind::Parameter(name.dupe()),
+        Some(VirtualReasonDesc::RIdentifier(name)) => {
             TypeGuardReferenceKind::Parameter(Some(name.dupe()))
         }
-        VirtualReasonDesc::RTypeGuardParam(name) => {
+        Some(VirtualReasonDesc::RTypeGuardParam(name)) => {
             TypeGuardReferenceKind::TypeGuardParameter(name.dupe())
         }
-        VirtualReasonDesc::RThis => TypeGuardReferenceKind::This,
+        Some(VirtualReasonDesc::RThis) => TypeGuardReferenceKind::This,
         _ => TypeGuardReferenceKind::TypeGuard,
     };
     TypeGuardReferenceData {
@@ -1946,9 +1952,11 @@ pub fn expression_reference_for_error<M: Dupe, T: Dupe>(
 /// Extracts a user-written type name for error messages without retaining its reason.
 pub fn type_name_for_error(reason: &Reason) -> Option<FlowSmolStr> {
     match reason.desc(false) {
-        VirtualReasonDesc::RType(name)
-        | VirtualReasonDesc::ROpaqueType(name)
-        | VirtualReasonDesc::RTypeAlias(box (name, _, _)) => Some(name.dupe()),
+        Some(
+            VirtualReasonDesc::RType(name)
+            | VirtualReasonDesc::ROpaqueType(name)
+            | VirtualReasonDesc::RTypeAlias(box (name, _, _)),
+        ) => Some(name.dupe()),
         _ => None,
     }
 }
@@ -1974,12 +1982,13 @@ pub fn instanceof_rhs_error(t: &Type) -> ErrorMessage<ALoc> {
     use flow_typing_type::type_util;
 
     let reason = type_util::reason_of_t(t);
-    let rhs_desc = if matches!(
-        t.deref(),
-        TypeInner::DefT(_, def_t)
-            if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT)
-    ) {
-        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(reason.desc(false).clone()))
+    let rhs_desc = if let Some(desc) = reason.desc(false)
+        && matches!(
+            t.deref(),
+            TypeInner::DefT(_, def_t)
+                if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT)
+        ) {
+        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(desc.clone()))
     } else {
         type_or_type_desc_for_error(t)
     };
@@ -2441,8 +2450,11 @@ where
 
     // This is required so that our caches don't treat different branches of unions as the same type
     let union_reason = |i: usize, r: Reason| -> Reason {
-        let desc = r.desc(true).clone();
-        r.replace_desc(VirtualReasonDesc::RUnionBranching(Arc::new(desc), i as i32))
+        let desc = r
+            .desc(true)
+            .cloned()
+            .map(|desc| VirtualReasonDesc::RUnionBranching(Arc::new(desc), i as i32));
+        r.replace_desc(desc)
     };
 
     let mut acc = init;
@@ -2573,7 +2585,7 @@ where
     let bound = mod_reason_of_t(
         &|bound_reason: Reason| {
             let annot_loc = bound_reason.annot_loc().map(|l| l.dupe());
-            let desc = bound_reason.desc(false).clone();
+            let desc = bound_reason.desc(false).cloned();
             let base_reason = Reason::new(desc, param_loc.dupe());
             base_reason.opt_annotate(annot_loc)
         },
@@ -2697,9 +2709,7 @@ fn default_this_type_with_env<'cx>(
 pub fn string_key(value: FlowSmolStr, reason: &Reason) -> Type {
     use flow_typing_type::type_::DefT;
 
-    let key_reason = reason
-        .dupe()
-        .update_desc(|_| VirtualReasonDesc::RPropertyIsAString(Name::Str(value.dupe())));
+    let key_reason = reason.dupe().replace_desc(None);
     Type::new(TypeInner::DefT(
         key_reason,
         DefT::new(DefTInner::SingletonStrT {
@@ -2886,7 +2896,7 @@ fn lookup_builtin_module_error_with_env<'cx>(
         })),
     )?;
 
-    let reason = Reason::new(VirtualReasonDesc::RAnyImplicit, loc);
+    let reason = Reason::new(None, loc);
     Ok(Type::new(TypeInner::AnyT(
         reason,
         AnySource::AnyError(Some(flow_typing_type::type_::AnyErrorKind::UnresolvedName)),
@@ -2917,7 +2927,7 @@ pub fn cannot_import_global_libdef_error<'cx>(
         })),
     )?;
 
-    let reason = Reason::new(VirtualReasonDesc::RAnyImplicit, loc);
+    let reason = Reason::new(None, loc);
     Ok(Type::new(TypeInner::AnyT(
         reason,
         AnySource::AnyError(Some(flow_typing_type::type_::AnyErrorKind::UnresolvedName)),
@@ -2937,7 +2947,7 @@ fn lookup_builtin_name_error(
     use flow_env_builder::env_api::CacheableEnvError;
     use flow_typing_type::type_::AnySource;
 
-    let reason = Reason::new(VirtualReasonDesc::RAnyImplicit, loc);
+    let reason = Reason::new(None, loc);
     let any_t = Type::new(TypeInner::AnyT(
         reason,
         AnySource::AnyError(Some(flow_typing_type::type_::AnyErrorKind::UnresolvedName)),
@@ -3267,14 +3277,14 @@ pub fn obj_key_mirror<'cx>(
             Name::Symbol(_) => {
                 let r = reason_op
                     .dupe()
-                    .update_desc(|_| VirtualReasonDesc::RUniqueSymbol);
+                    .update_desc(|_| Some(VirtualReasonDesc::RUniqueSymbol));
                 map_t(type_of_key_name_with_env(env, key.dupe(), &r), t)
             }
             Name::Str(key_str) => {
                 let key_str = key_str.dupe();
                 let reason = reason_op
                     .dupe()
-                    .update_desc(|_| VirtualReasonDesc::RStringLit(key_str.dupe()));
+                    .update_desc(|_| Some(VirtualReasonDesc::RStringLit(key_str.dupe())));
                 let singleton = Type::new(TypeInner::DefT(
                     reason,
                     DefT::new(DefTInner::SingletonStrT {
@@ -3327,7 +3337,7 @@ pub fn obj_key_mirror<'cx>(
     };
     let reason = reason_op
         .dupe()
-        .update_desc(|_| VirtualReasonDesc::RObjectType);
+        .update_desc(|_| Some(VirtualReasonDesc::RObjectType));
     Type::new(TypeInner::DefT(
         reason,
         DefT::new(DefTInner::ObjT(
@@ -4975,7 +4985,7 @@ pub mod import_module_ns_t_kit {
         let reason = module_reason
             .dupe()
             .reposition(reason_op.loc().dupe())
-            .replace_desc(reason_op.desc(true).clone());
+            .replace_desc(reason_op.desc(true).cloned());
 
         let value_exports_tmap = cx.find_exports(exports.value_exports_tmap);
         let type_exports_tmap = cx.find_exports(exports.type_exports_tmap);
@@ -7022,7 +7032,7 @@ pub fn type_of_key_name_with_env(env: &FlowJsEnv, name: Name, reason: &Reason) -
         Name::Symbol(sym) => {
             let key_reason = reason
                 .dupe()
-                .update_desc(|_| VirtualReasonDesc::RUniqueSymbol);
+                .update_desc(|_| Some(VirtualReasonDesc::RUniqueSymbol));
             return Type::new(TypeInner::DefT(
                 key_reason,
                 DefT::new(DefTInner::UniqueSymbolT(UniqueSymbolTData {
@@ -7035,9 +7045,7 @@ pub fn type_of_key_name_with_env(env: &FlowJsEnv, name: Name, reason: &Reason) -
     };
 
     let str_key = || {
-        let key_reason = reason
-            .dupe()
-            .update_desc(|_| VirtualReasonDesc::RPropertyIsAString(name.dupe()));
+        let key_reason = reason.dupe().replace_desc(None);
         Type::new(TypeInner::DefT(
             key_reason,
             DefT::new(DefTInner::SingletonStrT {
@@ -7061,7 +7069,7 @@ pub fn type_of_key_name_with_env(env: &FlowJsEnv, name: Name, reason: &Reason) -
     {
         let key_reason = reason
             .dupe()
-            .update_desc(|_| VirtualReasonDesc::RProperty(Some(name.dupe())));
+            .update_desc(|_| Some(VirtualReasonDesc::RProperty(Some(name.dupe()))));
         Type::new(TypeInner::DefT(
             key_reason,
             DefT::new(DefTInner::NumericStrKeyT(
@@ -8620,7 +8628,9 @@ pub fn objt_to_obj_rest<'cx>(
         props.remove(&Name::new(x.dupe()));
     }
     let use_op: UseOp = VirtualUseOp::Op(std::sync::Arc::new(VirtualRootUseOp::ObjectRest {
-        op: reason_op.dupe().replace_desc(reason_obj.desc(true).clone()),
+        op: reason_op
+            .dupe()
+            .replace_desc(reason_obj.desc(true).cloned()),
     }));
 
     let props = {
@@ -8764,7 +8774,7 @@ pub fn unary_negate_lit(
     let reason = reason.update_desc(|d| {
         use flow_common::reason::VirtualReasonDesc::*;
         match &d {
-            RNumberLit(_) => RNumberLit(raw.dupe()),
+            Some(RNumberLit(_)) => Some(RNumberLit(raw.dupe())),
             _ => d,
         }
     });
@@ -8783,7 +8793,7 @@ pub fn unary_negate_bigint_lit(
     let reason = reason.update_desc(|d| {
         use flow_common::reason::VirtualReasonDesc::*;
         match &d {
-            RBigIntLit(_) => RBigIntLit(raw.dupe()),
+            Some(RBigIntLit(_)) => Some(RBigIntLit(raw.dupe())),
             _ => d,
         }
     });
@@ -8800,7 +8810,7 @@ fn arithmetic_operand_data(t: &Type) -> EArithmeticOperandData<ALoc> {
 
 fn arithmetic_type_reference_for_error(t: &Type) -> ErrorTypeReferenceData<ALoc> {
     let reason = reason_of_t(t);
-    let type_desc = if matches!(reason.desc(true), VirtualReasonDesc::RNullOrVoid) {
+    let type_desc = if matches!(reason.desc(true), Some(VirtualReasonDesc::RNullOrVoid)) {
         TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(VirtualReasonDesc::RNullOrVoid))
     } else {
         type_or_type_desc_for_error(t)

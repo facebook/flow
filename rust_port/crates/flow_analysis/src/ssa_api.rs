@@ -61,7 +61,7 @@ pub fn print_values(values: &Values<Loc>) -> String {
                 format!(
                     "{}: ({})",
                     loc.debug_to_string(true),
-                    string_of_desc(&reason.desc)
+                    reason.desc.as_ref().map(string_of_desc).unwrap_or_default()
                 )
             }
         }

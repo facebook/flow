@@ -557,11 +557,17 @@ fn eval_arith<'cx>(
     op: flow_parser::ast::expression::BinaryOperator,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
-    let desc = RBinaryOperator(Box::new((
-        ast_utils::string_of_binary_operator(op).into(),
-        Arc::new(type_util::reason_of_t(&lhs_t).desc(true).clone()),
-        Arc::new(type_util::reason_of_t(&rhs_t).desc(true).clone()),
-    )));
+    let desc = type_util::reason_of_t(&lhs_t)
+        .desc(true)
+        .cloned()
+        .zip(type_util::reason_of_t(&rhs_t).desc(true).cloned())
+        .map(|(lhs_desc, rhs_desc)| {
+            RBinaryOperator(Box::new((
+                ast_utils::string_of_binary_operator(op).into(),
+                Arc::new(lhs_desc),
+                Arc::new(rhs_desc),
+            )))
+        });
     let reason = reason::mk_reason(desc, loc);
     let kind = type_::arith_kind::ArithKind::of_binary_operator(op);
     annotation_inference::arith(cx, reason, lhs_t, rhs_t, kind)
@@ -577,20 +583,22 @@ fn eval_unary<'cx>(
     use flow_parser::ast::expression::UnaryOperator;
     match op {
         UnaryOperator::Minus => {
-            let reason = reason::mk_reason(type_util::desc_of_t(&t).clone(), loc);
+            let reason = reason::mk_reason(type_util::desc_of_t(&t).cloned(), loc);
             annotation_inference::unary_arith(cx, reason, t, type_::UnaryArithKind::Minus)
         }
         UnaryOperator::Plus => {
-            let reason = reason::mk_reason(type_util::desc_of_t(&t).clone(), loc);
+            let reason = reason::mk_reason(type_util::desc_of_t(&t).cloned(), loc);
             annotation_inference::unary_arith(cx, reason, t, type_::UnaryArithKind::Plus)
         }
         UnaryOperator::BitNot => {
-            let reason = reason::mk_reason(type_util::desc_of_t(&t).clone(), loc);
+            let reason = reason::mk_reason(type_util::desc_of_t(&t).cloned(), loc);
             annotation_inference::unary_arith(cx, reason, t, type_::UnaryArithKind::BitNot)
         }
         UnaryOperator::Not => {
             let reason = reason::mk_reason(
-                RUnaryOperator("not".into(), Arc::new(type_util::desc_of_t(&t).clone())),
+                type_util::desc_of_t(&t)
+                    .cloned()
+                    .map(|desc| RUnaryOperator("not".into(), Arc::new(desc))),
                 loc,
             );
             annotation_inference::unary_not(cx, reason, t)
@@ -606,7 +614,7 @@ fn eval_unary<'cx>(
 }
 
 fn eval_update<'cx>(cx: &Context<'cx>, loc: ALoc, t: Type) -> Type {
-    let reason = reason::mk_reason(type_util::desc_of_t(&t).clone(), loc);
+    let reason = reason::mk_reason(type_util::desc_of_t(&t).cloned(), loc);
     annotation_inference::unary_arith(cx, reason, t, type_::UnaryArithKind::Update)
 }
 
@@ -633,8 +641,7 @@ fn eval<'cx>(cx: &Context<'cx>, loc: ALoc, t: Type, op: Op<Type>) -> Type {
 }
 
 fn async_void_return<'cx>(cx: &Context<'cx>, loc: ALoc) -> Type {
-    use flow_common::reason::VirtualReasonDesc::*;
-    let reason = reason::mk_reason(RAsyncReturn, loc.dupe());
+    let reason = reason::mk_reason(None, loc.dupe());
     let targs = vec![flow_typing_type::type_::void::at(loc)];
     flow_js_utils::lookup_builtin_typeapp(cx, reason, "Promise", targs)
 }
@@ -705,7 +712,7 @@ fn add_record_constructor<'cx>(
                     {
                         let r = type_util::reason_of_t(&fd.type_).dupe();
                         let optional_reason = r.dupe().update_desc_new(|desc| {
-                            reason::VirtualReasonDesc::ROptional(Arc::new(desc))
+                            desc.map(|desc| reason::VirtualReasonDesc::ROptional(Arc::new(desc)))
                         });
                         type_::Property::new(type_::PropertyInner::Field(Box::new(
                             type_::FieldData {
@@ -2042,8 +2049,9 @@ fn merge_annot<'cx>(
         }
         Annot::Maybe(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
-            let desc = type_util::desc_of_t(&t).clone();
-            let reason = reason::mk_annot_reason(RMaybe(Arc::new(desc)), loc.dupe());
+            let desc = type_util::desc_of_t(&t).cloned();
+            let reason =
+                reason::mk_annot_reason(desc.map(|desc| RMaybe(Arc::new(desc))), loc.dupe());
             Type::new(type_::TypeInner::MaybeT(reason, t))
         }
         Annot::Union(inner) => {
@@ -2529,7 +2537,9 @@ fn merge_annot<'cx>(
         Annot::Partial(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let reason = reason::mk_reason(
-                RPartialOf(Arc::new(type_util::desc_of_t(&t).clone())),
+                type_util::desc_of_t(&t)
+                    .cloned()
+                    .map(|desc| RPartialOf(Arc::new(desc))),
                 loc.dupe(),
             );
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
@@ -2549,7 +2559,9 @@ fn merge_annot<'cx>(
         Annot::Required(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let reason = reason::mk_reason(
-                RRequiredOf(Arc::new(type_util::desc_of_t(&t).clone())),
+                type_util::desc_of_t(&t)
+                    .cloned()
+                    .map(|desc| RRequiredOf(Arc::new(desc))),
                 loc.dupe(),
             );
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
@@ -2590,8 +2602,9 @@ fn merge_annot<'cx>(
         }
         Annot::Exact(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
-            let desc = type_util::desc_of_t(&t).clone();
-            let reason = reason::mk_annot_reason(RExactType(Arc::new(desc)), loc.dupe());
+            let desc = type_util::desc_of_t(&t).cloned();
+            let reason =
+                reason::mk_annot_reason(desc.map(|desc| RExactType(Arc::new(desc))), loc.dupe());
             let t = type_util::push_type_alias_reason(&reason, t);
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
@@ -2738,8 +2751,8 @@ fn merge_annot<'cx>(
         }
         Annot::ClassT(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
-            let desc = type_util::desc_of_t(&t).clone();
-            let reason = reason::mk_reason(RStatics(Arc::new(desc)), loc.dupe());
+            let desc = type_util::desc_of_t(&t).cloned();
+            let reason = reason::mk_reason(desc.map(|desc| RStatics(Arc::new(desc))), loc.dupe());
             Type::new(type_::TypeInner::DefT(
                 reason,
                 type_::DefT::new(type_::DefTInner::ClassT(t)),
@@ -2755,7 +2768,10 @@ fn merge_annot<'cx>(
             renders_env.in_renders_arg = true;
             let t = merge_impl(&renders_env, cx, file, arg, false, false);
             let reason = reason::mk_annot_reason(
-                RRenderType(Arc::new(type_util::reason_of_t(&t).desc(true).clone())),
+                type_util::reason_of_t(&t)
+                    .desc(true)
+                    .cloned()
+                    .map(|desc| RRenderType(Arc::new(desc))),
                 loc.dupe(),
             );
             match type_util::mk_possibly_generic_render_type(*variant, reason.dupe(), t.dupe()) {
@@ -3414,8 +3430,7 @@ fn merge_value<'cx>(
         ),
         Value::EmptyConstArrayLit(inner) => {
             let reason = reason::mk_reason(RConstArrayLit, inner.loc.dupe());
-            let elem_t =
-                type_::empty_t::make(reason::mk_reason(REmptyArrayElement, inner.loc.dupe()));
+            let elem_t = type_::empty_t::make(reason::mk_reason(None, inner.loc.dupe()));
             let arrtype = type_::ArrType::TupleAT(Box::new(TupleATData {
                 elem_t,
                 elements: vec![].into(),
@@ -3966,7 +3981,7 @@ fn merge_tparams_targs<'cx>(
     match tparams {
         TParams::Mono => t(cx, env, Vec::new()),
         TParams::Poly(poly) => {
-            let poly_reason = reason.update_desc(|d| RPolyType(Arc::new(d)));
+            let poly_reason = reason.update_desc(|d| d.map(|d| RPolyType(Arc::new(d))));
             let mut current_env = env.dupe();
             for tp in poly.tparams.iter() {
                 current_env.tps.remove(&tp.name);
@@ -4279,7 +4294,9 @@ fn merge_interface<'cx>(
         strictness_kind: _,
     } = def;
     let static_ = {
-        let static_reason = reason.dupe().update_desc(|d| RStatics(Arc::new(d)));
+        let static_reason = reason
+            .dupe()
+            .update_desc(|d| d.map(|d| RStatics(Arc::new(d))));
         // interfaces don't have a name field, or even statics
         let mut props_map = BTreeMap::new();
         add_name_field(reason.dupe(), &mut props_map);
@@ -4310,7 +4327,8 @@ fn merge_interface<'cx>(
         let reason_for_super = reason.dupe();
         let make_super: Box<dyn FnOnce(Option<Type>) -> Type + 'cx> =
             Box::new(move |this_opt: Option<Type>| {
-                let super_reason = reason_for_super.update_desc(|d| RSuperOf(Arc::new(d)));
+                let super_reason =
+                    reason_for_super.update_desc(|d| d.map(|d| RSuperOf(Arc::new(d))));
                 let mut ts: Vec<Type> = extends_resolved
                     .into_iter()
                     .map(
@@ -4528,7 +4546,9 @@ fn merge_class_extends<'cx>(
 ) -> (Type, Type) {
     use flow_common::reason::VirtualReasonDesc::*;
 
-    let super_reason = reason.dupe().update_desc(|d| RSuperOf(Arc::new(d)));
+    let super_reason = reason
+        .dupe()
+        .update_desc(|d| d.map(|d| RSuperOf(Arc::new(d))));
     let (super_, static_proto) = match extends {
         ClassExtends::ObjectPrototypeExtendsNull => (
             Type::new(type_::TypeInner::NullProtoT(super_reason.dupe())),
@@ -4700,7 +4720,9 @@ fn merge_this_class_t<'cx>(
         let mut env = env.dupe();
         env.tps.insert(FlowSmolStr::new_inline("this"), this.dupe());
         let static_ = {
-            let static_reason = reason.dupe().update_desc(|d| RStatics(Arc::new(d)));
+            let static_reason = reason
+                .dupe()
+                .update_desc(|d| d.map(|d| RStatics(Arc::new(d))));
             let mut props_map: BTreeMap<Name, type_::Property> = static_props
                 .iter()
                 .map(|(k, prop)| {
@@ -4949,7 +4971,8 @@ fn merge_fun_statics<'cx>(
             (Name::new(key.dupe()), prop)
         })
         .collect();
-    let reason = reason.update_desc(|d| reason::VirtualReasonDesc::RStatics(Arc::new(d)));
+    let reason =
+        reason.update_desc(|d| d.map(|d| reason::VirtualReasonDesc::RStatics(Arc::new(d))));
     obj_type::mk_with_proto(
         cx,
         reason.dupe(),
@@ -5050,7 +5073,9 @@ fn merge_fun<'cx>(
                         this.dupe()
                     };
                     type_util::mod_reason_of_t(
-                        &|r: Reason| r.update_desc(|desc| RImplicitThis(Arc::new(desc))),
+                        &|r: Reason| {
+                            r.update_desc(|desc| desc.map(|desc| RImplicitThis(Arc::new(desc))))
+                        },
                         &this,
                     )
                 } else {
@@ -5091,7 +5116,7 @@ fn merge_fun<'cx>(
                 {
                     None
                 } else {
-                    let tg_reason = reason::mk_reason(RTypeGuard, loc.dupe());
+                    let tg_reason = reason::mk_reason(None, loc.dupe());
                     Some(type_::TypeGuard::new(type_::TypeGuardInner {
                         reason: tg_reason,
                         kind: *kind,
@@ -5168,7 +5193,10 @@ fn merge_component<'cx>(
             })
             .collect();
         let config_reason = reason::mk_reason(
-            RPropsOfComponent(Arc::new(reason2.desc(true).clone())),
+            reason2
+                .desc(true)
+                .cloned()
+                .map(|desc| RPropsOfComponent(Arc::new(desc))),
             def.params_loc.dupe(),
         );
         let rest_t = match &def.rest_param {
@@ -5239,11 +5267,11 @@ fn merge_type_alias<'cx>(
                 let name_for_alias = name_owned.dupe();
                 let id_loc_for_alias = id_loc.dupe();
                 let nominal_reason = reason_clone.dupe().update_desc(move |desc| {
-                    RTypeAlias(Box::new((
+                    Some(RTypeAlias(Box::new((
                         name_for_alias.dupe(),
                         Some(id_loc_for_alias.dupe()),
-                        Arc::new(desc),
-                    )))
+                        desc.map(Arc::new),
+                    ))))
                 });
                 let id = type_::nominal::Id::UserDefinedOpaqueTypeId(Box::new(
                     type_::nominal::UserDefinedOpaqueTypeIdData(
@@ -5280,11 +5308,11 @@ fn merge_type_alias<'cx>(
                 let t = type_util::mod_reason_of_t(
                     &move |reason: Reason| {
                         reason.update_desc(|desc| {
-                            RTypeAlias(Box::new((
+                            Some(RTypeAlias(Box::new((
                                 name_for_alias.dupe(),
                                 Some(id_loc.dupe()),
-                                Arc::new(desc),
-                            )))
+                                desc.map(Arc::new),
+                            ))))
                         })
                     },
                     &t,
@@ -5428,7 +5456,9 @@ fn merge_declare_class<'cx>(
         let mut env = env.dupe();
         env.tps.insert(FlowSmolStr::new_inline("this"), this.dupe());
         let static_ = {
-            let static_reason = reason_c.dupe().update_desc(|d| RStatics(Arc::new(d)));
+            let static_reason = reason_c
+                .dupe()
+                .update_desc(|d| d.map(|d| RStatics(Arc::new(d))));
             let mut props_map: BTreeMap<Name, type_::Property> = BTreeMap::new();
             let mut prop_locs: BTreeMap<Name, ALoc> = BTreeMap::new();
             for (k, prop) in static_props {

@@ -24,12 +24,12 @@ use crate::reason::VirtualReasonDesc;
 )]
 pub struct ErrorReference<L: Dupe> {
     pub loc: L,
-    pub desc: VirtualReasonDesc<L>,
+    pub desc: Option<VirtualReasonDesc<L>>,
 }
 
 impl<L: Dupe> ErrorReference<L> {
     /// Creates a reference with an explicitly selected location and description.
-    pub fn new(loc: L, desc: VirtualReasonDesc<L>) -> Self {
+    pub fn new(loc: L, desc: Option<VirtualReasonDesc<L>>) -> Self {
         Self { loc, desc }
     }
 
@@ -38,7 +38,10 @@ impl<L: Dupe> ErrorReference<L> {
     where
         F: Fn(&L) -> M,
     {
-        ErrorReference::new(f(&self.loc), self.desc.map_locs(f))
+        ErrorReference::new(
+            f(&self.loc),
+            self.desc.as_ref().map(|desc| desc.map_locs(f)),
+        )
     }
 }
 

@@ -109,7 +109,9 @@ pub fn mk_object_type<'cx>(
     strictness_kind: TypeStrictnessKind,
 ) -> Type {
     let reason = if invalidate_aliases {
-        reason.dupe().update_desc(|d| d.invalidate_rtype_alias())
+        reason
+            .dupe()
+            .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias))
     } else {
         reason.dupe()
     };
@@ -247,7 +249,7 @@ pub fn type_optionality_and_missing_property(prop: &Property) -> (Type, bool, bo
         } => {
             let is_missing_property_desc = matches!(
                 reason.desc(true),
-                VirtualReasonDesc::RPossiblyMissingPropFromObj(..)
+                Some(VirtualReasonDesc::RPossiblyMissingPropFromObj(..))
             );
             (t.dupe(), true, *use_desc && is_missing_property_desc)
         }
@@ -261,7 +263,9 @@ pub fn type_optionality_and_missing_property(prop: &Property) -> (Type, bool, bo
 // missing the property in the reason desc.
 pub fn possibly_missing_prop(propname: &Name, obj_reason: &Reason, type_: Type) -> Type {
     let reason = obj_reason.dupe().update_desc_new(|desc| {
-        VirtualReasonDesc::RPossiblyMissingPropFromObj(propname.dupe(), Arc::new(desc))
+        desc.map(|desc| {
+            VirtualReasonDesc::RPossiblyMissingPropFromObj(propname.dupe(), Arc::new(desc))
+        })
     });
     Type::new(TypeInner::OptionalT {
         reason,
@@ -317,7 +321,7 @@ pub fn mk_slice_prop(
     }
 }
 
-pub fn read_prop(r: &Reason, _flags: &Flags, x: &Name, p: &Property) -> Property {
+pub fn read_prop(r: &Reason, _flags: &Flags, _x: &Name, p: &Property) -> Property {
     // Extract the read-side type (Mixed if absent — write-only Field, Set-only GetSet)
     // and project into a slice-shape Field/Method.
     match p.deref() {
@@ -332,9 +336,7 @@ pub fn read_prop(r: &Reason, _flags: &Flags, x: &Name, p: &Property) -> Property
         _ => {}
     }
     let t = property::read_t(p).unwrap_or_else(|| {
-        let reason = r
-            .dupe()
-            .replace_desc(VirtualReasonDesc::RUnknownProperty(Some(x.dupe())));
+        let reason = r.dupe().replace_desc(None);
         Type::new(TypeInner::DefT(
             reason,
             DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
@@ -352,9 +354,7 @@ pub fn read_dict(r: &Reason, dict: &DictType) -> Type {
     if Polarity::compat(dict.dict_polarity, Polarity::Positive) {
         dict.value.dupe()
     } else {
-        let reason = r
-            .dupe()
-            .replace_desc(VirtualReasonDesc::RUnknownProperty(None));
+        let reason = r.dupe().replace_desc(None);
         Type::new(TypeInner::DefT(
             reason,
             DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
@@ -998,7 +998,9 @@ pub fn object_spread_with_env<'cx, A>(
     reason: &Reason,
     x: Vec1<object::Slice>,
 ) -> Result<A, FlowJsException> {
-    let reason = reason.dupe().update_desc(|d| d.invalidate_rtype_alias());
+    let reason = reason
+        .dupe()
+        .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
     let todo_rev = state.todo_rev;
     let acc = state.acc;
     let spread_id = state.spread_id;
@@ -1627,27 +1629,28 @@ pub fn object_make_exact<'cx>(
                 // This case analysis aims at recovering a potential type alias associated
                 // with an $Exact<> constructor.
                 let reason_obj = match reason.desc(false) {
-                    VirtualReasonDesc::RTypeAlias(box (n, loc, _)) => {
+                    Some(VirtualReasonDesc::RTypeAlias(box (n, loc, _))) => {
                         let n = n.dupe();
                         let loc = loc.dupe();
                         r.dupe().update_desc(|d| match &d {
-                            VirtualReasonDesc::RTypeAlias(box (_, _, desc)) => {
-                                VirtualReasonDesc::RTypeAlias(Box::new((
+                            Some(VirtualReasonDesc::RTypeAlias(box (_, _, desc))) => {
+                                Some(VirtualReasonDesc::RTypeAlias(Box::new((
                                     n.dupe(),
                                     loc.dupe(),
                                     desc.clone(),
-                                )))
+                                ))))
                             }
-                            _ => VirtualReasonDesc::RTypeAlias(Box::new((
+                            _ => Some(VirtualReasonDesc::RTypeAlias(Box::new((
                                 n.dupe(),
                                 loc.dupe(),
-                                Arc::new(d),
-                            ))),
+                                d.map(Arc::new),
+                            )))),
                         })
                     }
                     _ => {
                         // If [r] is an RTypeAlias, then this alias is no longer valid.
-                        r.dupe().update_desc(|d| d.invalidate_rtype_alias())
+                        r.dupe()
+                            .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias))
                     }
                 };
                 let flags = Flags {
@@ -1725,7 +1728,7 @@ pub fn object_read_only<'cx>(cx: &Context<'cx>, reason: &Reason, x: Vec1<object:
         let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
         // Avoid referring directly to the $ReadOnly keyword
         let reason = match reason.desc(false) {
-            VirtualReasonDesc::RReadOnlyType => r.dupe(),
+            Some(VirtualReasonDesc::RReadOnlyType) => r.dupe(),
             _ => reason.dupe(),
         };
         mk_object_type(
@@ -1820,8 +1823,12 @@ pub fn object_update_optionality<'cx>(
         let id = cx.generate_property_map(props_map);
         let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
         let reason = match (reason.desc(false), kind) {
-            (VirtualReasonDesc::RPartialOf(_), ObjectUpdateOptionalityKind::Partial) => r.dupe(),
-            (VirtualReasonDesc::RRequiredOf(_), ObjectUpdateOptionalityKind::Required) => r.dupe(),
+            (Some(VirtualReasonDesc::RPartialOf(_)), ObjectUpdateOptionalityKind::Partial) => {
+                r.dupe()
+            }
+            (Some(VirtualReasonDesc::RRequiredOf(_)), ObjectUpdateOptionalityKind::Required) => {
+                r.dupe()
+            }
             _ => reason.dupe(),
         };
         let op_kind = match kind {
@@ -2545,7 +2552,7 @@ fn resolve_with_env<'cx, A>(
                         })
                         .collect();
                     let def_reason = match reason.desc(false) {
-                        VirtualReasonDesc::RReadOnlyType => r.dupe(),
+                        Some(VirtualReasonDesc::RReadOnlyType) => r.dupe(),
                         _ => reason.dupe(),
                     };
                     return return_(
@@ -2588,7 +2595,7 @@ fn resolve_with_env<'cx, A>(
                         })
                         .collect();
                     let def_reason = match reason.desc(false) {
-                        VirtualReasonDesc::RPartialOf(_) => r.dupe(),
+                        Some(VirtualReasonDesc::RPartialOf(_)) => r.dupe(),
                         _ => reason.dupe(),
                     };
                     let elem_t = type_util::union_of_ts(
@@ -2641,7 +2648,7 @@ fn resolve_with_env<'cx, A>(
                         })
                         .collect();
                     let def_reason = match reason.desc(false) {
-                        VirtualReasonDesc::RRequiredOf(_) => r.dupe(),
+                        Some(VirtualReasonDesc::RRequiredOf(_)) => r.dupe(),
                         _ => reason.dupe(),
                     };
                     let elem_t = type_util::union_of_ts(

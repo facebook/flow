@@ -9755,13 +9755,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                 return IncompatibleSubtyping(Box::new(
                                     IncompatibleSubtypingData {
                                         reason_lower: VirtualReason::new_with(
-                                            lower_desc.clone(),
+                                            Some(lower_desc.clone()),
                                             lower_loc,
                                             Some(lower_def_loc),
                                             None,
                                         ),
                                         reason_upper: VirtualReason::new_with(
-                                            upper_desc.clone(),
+                                            Some(upper_desc.clone()),
                                             upper_loc,
                                             Some(upper_def_loc),
                                             None,
@@ -12601,7 +12601,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EInvalidExtends { .. } => Some(InvalidExtends),
             ErrorMessage::ELintSetting { .. } => Some(LintSetting),
             ErrorMessage::EMissingLocalAnnotation { reason, .. } => match &reason.desc {
-                flow_common::reason::VirtualReasonDesc::RImplicitThis(_) => Some(MissingThisAnnot),
+                Some(flow_common::reason::VirtualReasonDesc::RImplicitThis(_)) => {
+                    Some(MissingThisAnnot)
+                }
                 _ => Some(MissingLocalAnnot),
             },
             ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData { .. }) => Some(MissingTypeArg),

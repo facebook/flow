@@ -271,7 +271,7 @@ impl FlowJs {
         env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         loc: ALoc,
-        desc: Option<&ReasonDesc>,
+        desc: Option<Option<&ReasonDesc>>,
         annot_loc: Option<ALoc>,
         t: Type,
     ) -> Result<Type, FlowJsException> {
@@ -1031,7 +1031,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         trace: Option<DepthTrace>,
         loc: ALoc,
-        desc: Option<&ReasonDesc>,
+        desc: Option<Option<&ReasonDesc>>,
         annot_loc: Option<ALoc>,
         t: Type,
     ) -> Result<Type, FlowJsException> {

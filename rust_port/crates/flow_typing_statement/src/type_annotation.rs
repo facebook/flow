@@ -1222,7 +1222,9 @@ fn convert_inner<'a>(
             let t_ast = convert_inner(cx, env, &inner.argument)?;
             let inner_t = t_ast.loc().1.dupe();
             let reason = reason::mk_annot_reason(
-                reason::VirtualReasonDesc::RMaybe(Arc::new(type_util::desc_of_t(&inner_t).clone())),
+                type_util::desc_of_t(&inner_t)
+                    .cloned()
+                    .map(|desc| reason::VirtualReasonDesc::RMaybe(Arc::new(desc))),
                 loc.dupe(),
             );
             let rt = Type::new(type_::TypeInner::MaybeT(reason, inner_t));
@@ -1669,10 +1671,7 @@ fn convert_inner<'a>(
                         &mut typed_ast_utils::ErrorMapper,
                         &inner.tparam,
                     );
-                    let t = type_::any_t::error(reason::mk_reason(
-                        reason::VirtualReasonDesc::RAnyImplicit,
-                        loc.dupe(),
-                    ));
+                    let t = type_::any_t::error(reason::mk_reason(None, loc.dupe()));
                     ast::types::Type::new(TypeInner::Infer {
                         loc: (loc.dupe(), t),
                         inner: (ast::types::Infer {
@@ -2280,9 +2279,9 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
                             let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RPartialOf(Arc::new(
-                                    type_util::desc_of_t(&tp).clone(),
-                                )),
+                                type_util::desc_of_t(&tp).cloned().map(|desc| {
+                                    reason::VirtualReasonDesc::RPartialOf(Arc::new(desc))
+                                }),
                                 type_util::loc_of_t(&tp).dupe(),
                             );
                             let result_t =
@@ -2305,9 +2304,9 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
                             let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RRequiredOf(Arc::new(
-                                    type_util::desc_of_t(&tp).clone(),
-                                )),
+                                type_util::desc_of_t(&tp).cloned().map(|desc| {
+                                    reason::VirtualReasonDesc::RRequiredOf(Arc::new(desc))
+                                }),
                                 type_util::loc_of_t(&tp).dupe(),
                             );
                             let result_t =
@@ -2579,9 +2578,9 @@ fn convert_inner<'a>(
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
-                            let desc = reason::VirtualReasonDesc::RExactType(Arc::new(
-                                type_util::desc_of_t(&tp).clone(),
-                            ));
+                            let desc = type_util::desc_of_t(&tp)
+                                .cloned()
+                                .map(|desc| reason::VirtualReasonDesc::RExactType(Arc::new(desc)));
                             let reason = reason::mk_annot_reason(desc, loc.dupe());
                             let tp = type_util::push_type_alias_reason(&reason, tp);
                             let result_t =
@@ -2707,9 +2706,9 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
                             let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RStatics(Arc::new(
-                                    type_util::desc_of_t(&tp).clone(),
-                                )),
+                                type_util::desc_of_t(&tp).cloned().map(|desc| {
+                                    reason::VirtualReasonDesc::RStatics(Arc::new(desc))
+                                }),
                                 loc.dupe(),
                             );
                             Ok(reconstruct_ast(
@@ -3139,7 +3138,7 @@ fn convert_inner<'a>(
             env.tparams_map = saved_tparams_map;
             let statics_reason = reason
                 .dupe()
-                .update_desc(|d| reason::VirtualReasonDesc::RStatics(Arc::new(d)));
+                .update_desc(|d| d.map(|d| reason::VirtualReasonDesc::RStatics(Arc::new(d))));
             let fun_proto_t = Type::new(type_::TypeInner::FunProtoT(statics_reason.dupe()));
             let statics_t = flow_typing_flow_common::obj_type::mk_with_proto(
                 cx,
@@ -4251,12 +4250,12 @@ fn convert_render_type_inner<'a>(
     env.in_renders_arg = old_in_renders_arg;
     let (_, t) = t_ast.loc();
     let t = t.dupe();
-    let arg_desc = Arc::new(type_util::reason_of_t(&t).desc(true).clone());
-    let reason_desc = match renders.variant {
+    let arg_desc = type_util::reason_of_t(&t).desc(true).cloned().map(Arc::new);
+    let reason_desc = arg_desc.map(|arg_desc| match renders.variant {
         ast::types::RendersVariant::Normal => reason::VirtualReasonDesc::RRenderType(arg_desc),
         ast::types::RendersVariant::Maybe => reason::VirtualReasonDesc::RRenderMaybeType(arg_desc),
         ast::types::RendersVariant::Star => reason::VirtualReasonDesc::RRenderStarType(arg_desc),
-    };
+    });
     let reason = reason::mk_reason(reason_desc.clone(), loc.dupe());
     Ok(
         match type_util::mk_possibly_generic_render_type(
@@ -5729,7 +5728,7 @@ fn convert_type_guard_inner<'a>(
         guard: (id_name_typed, t_prime),
         comments: comments.cloned(),
     };
-    let reason = reason::mk_reason(reason::VirtualReasonDesc::RTypeGuard, gloc);
+    let reason = reason::mk_reason(None, gloc);
     if let Some(type_guard_t) = &type_guard_t {
         check_guard_type(cx, fparams, name, type_guard_t);
     }
@@ -9011,10 +9010,7 @@ pub fn mk_declare_component_sig<'a>(
                 (t, ast::types::AnnotationOrHint::Available(annot_ast))
             }
             ast::types::AnnotationOrHint::Missing(hint_loc) => {
-                let t = type_::any_t::error(reason::mk_reason(
-                    reason::VirtualReasonDesc::RAnyImplicit,
-                    hint_loc.dupe(),
-                ));
+                let t = type_::any_t::error(reason::mk_reason(None, hint_loc.dupe()));
                 (
                     t.dupe(),
                     ast::types::AnnotationOrHint::Missing((hint_loc.dupe(), t)),
@@ -9126,10 +9122,7 @@ pub fn mk_declare_component_sig<'a>(
             _ => {
                 // Non-identifier patterns (e.g., object/array destructuring via `as`) are errors,
                 // but we still need to produce something for the typed AST
-                let t = type_::any_t::error(reason::mk_reason(
-                    reason::VirtualReasonDesc::RAnyImplicit,
-                    p_loc.dupe(),
-                ));
+                let t = type_::any_t::error(reason::mk_reason(None, p_loc.dupe()));
                 let typed_local = {
                     let Ok(v) = polymorphic_ast_mapper::pattern(
                         &mut typed_ast_utils::ErrorMapper,
@@ -9260,10 +9253,7 @@ pub fn mk_declare_component_sig<'a>(
             }
             _ => {
                 // Non-identifier patterns are errors, produce error typed AST
-                let t = type_::any_t::error(reason::mk_reason(
-                    reason::VirtualReasonDesc::RAnyImplicit,
-                    r_loc.dupe(),
-                ));
+                let t = type_::any_t::error(reason::mk_reason(None, r_loc.dupe()));
                 let Ok(typed_argument) = polymorphic_ast_mapper::pattern(
                     &mut typed_ast_utils::ErrorMapper,
                     None,

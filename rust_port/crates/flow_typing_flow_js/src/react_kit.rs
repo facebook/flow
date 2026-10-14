@@ -735,9 +735,9 @@ pub fn get_config<'cx>(
     }
     let reason_component = type_util::reason_of_t(component);
     let props = {
-        let reason = reason_component
-            .dupe()
-            .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));
+        let reason = reason_component.dupe().update_desc(|desc| {
+            desc.map(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)))
+        });
         let use_op_clone = use_op.dupe();
         flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tout_t| {
             props_to_tout(
@@ -829,9 +829,9 @@ pub(super) fn run_with_env<'cx>(
             // In the annotation expressions below, T is the intrinsic tag type, e.g. 'div'.
             // Anchor errors for the synthesized annotation to T's source location.
             let reason_component = type_util::reason_of_t(component);
-            let reason_props = reason_component
-                .dupe()
-                .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));
+            let reason_props = reason_component.dupe().update_desc(|desc| {
+                desc.map(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)))
+            });
             // Apply an annotation operation, such as A['props'] or $ReadOnly<A>.
             let eval = |type_: Type, destructor: Destructor| {
                 FlowJs::mk_type_destructor_with_env(

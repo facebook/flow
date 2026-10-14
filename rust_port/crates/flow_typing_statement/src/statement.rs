@@ -1423,7 +1423,7 @@ fn identifier_<'a>(
         // We want to make sure that the reason description for the type we return
         // is always `RIdentifier(name)`.
         Ok(match desc {
-            VirtualReasonDesc::RIdentifier(name_prime) if *name == *name_prime => t,
+            Some(VirtualReasonDesc::RIdentifier(name_prime)) if *name == *name_prime => t,
             _ if matches!(t.deref(), TypeInner::OpenT(_)) => mod_reason_of_t(
                 &|r| r.replace_desc_new(VirtualReasonDesc::RIdentifier(name.dupe())),
                 &t,
@@ -1435,7 +1435,7 @@ fn identifier_<'a>(
         })
     };
     if type_inference_hooks_js::dispatch_id_hook(cx, name, loc.dupe()) {
-        let reason = mk_reason(VirtualReasonDesc::RAutocompleteToken, loc.dupe());
+        let reason = mk_reason(None, loc.dupe());
         let lazy_hint = type_env::get_hint(cx, loc.dupe());
         let result = (lazy_hint.1)(cx, false, None, reason)?;
         Ok(type_hint::with_hint(
@@ -2290,10 +2290,7 @@ fn statement_<'a>(
                                 } else {
                                     any_t::why(
                                         type_::AnySource::CatchAny,
-                                        mk_reason(
-                                            VirtualReasonDesc::RAnyImplicit,
-                                            loc.dupe(),
-                                        ),
+                                        mk_reason(None, loc.dupe()),
                                     )
                                 };
                                 (
@@ -2331,10 +2328,7 @@ fn statement_<'a>(
                                     );
                                     let t = any_t::why(
                                         type_::AnySource::CatchAny,
-                                        mk_reason(
-                                            VirtualReasonDesc::RAnyImplicit,
-                                            annot_loc,
-                                        ),
+                                        mk_reason(None, annot_loc),
                                     );
                                     let Ok(ast_annot) =
                                         polymorphic_ast_mapper::type_annotation_hint(
@@ -3136,9 +3130,9 @@ fn statement_<'a>(
                             inner: id_inner, ..
                         } = &first_decl.id
                     {
-                        VirtualReasonDesc::RIdentifier(id_inner.name.name.dupe())
+                        Some(VirtualReasonDesc::RIdentifier(id_inner.name.name.dupe()))
                     } else {
-                        VirtualReasonDesc::RForOfElement
+                        None
                     }
                 }
                 statement::for_of::Left::LeftPattern(patt) => {
@@ -3146,9 +3140,9 @@ fn statement_<'a>(
                         inner: id_inner, ..
                     } = patt
                     {
-                        VirtualReasonDesc::RIdentifier(id_inner.name.name.dupe())
+                        Some(VirtualReasonDesc::RIdentifier(id_inner.name.name.dupe()))
                     } else {
-                        VirtualReasonDesc::RForOfElement
+                        None
                     }
                 }
             };
@@ -4562,11 +4556,11 @@ pub fn type_alias<'a>(
         let alias_t = mod_reason_of_t(
             &|reason: Reason| {
                 reason.update_desc(|desc| {
-                    VirtualReasonDesc::RTypeAlias(Box::new((
+                    Some(VirtualReasonDesc::RTypeAlias(Box::new((
                         name_clone.dupe(),
                         Some(name_loc_clone.dupe()),
-                        Arc::new(desc),
-                    )))
+                        desc.map(Arc::new),
+                    ))))
                 })
             },
             &t,
@@ -4622,11 +4616,11 @@ pub fn type_alias<'a>(
                 });
                 let nominal_t = Type::new(TypeInner::NominalT {
                     reason: r.dupe().update_desc(|desc| {
-                        VirtualReasonDesc::RTypeAlias(Box::new((
+                        Some(VirtualReasonDesc::RTypeAlias(Box::new((
                             name.dupe(),
                             Some(name_loc.dupe()),
-                            Arc::new(desc),
-                        )))
+                            desc.map(Arc::new),
+                        ))))
                     }),
                     nominal_type: Rc::new(nominal_type),
                 });
@@ -6358,7 +6352,7 @@ fn array_elements<'a>(
                     let (loc, t) = e_prime.loc();
                     let loc = loc.dupe();
                     let t = t.dupe();
-                    let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc);
+                    let reason = mk_reason(None, loc);
                     let elem = mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral);
                     (
                         type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
@@ -6369,7 +6363,7 @@ fn array_elements<'a>(
                 }
                 ArrayElement::Hole(loc) => {
                     let t = type_::void::make(mk_reason(VirtualReasonDesc::RArrayHole, loc.dupe()));
-                    let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc.dupe());
+                    let reason = mk_reason(None, loc.dupe());
                     let elem = mk_tuple_element(reason, t, None, false, Polarity::Neutral);
                     (
                         type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
@@ -6414,11 +6408,11 @@ fn array_elements<'a>(
 
 pub fn empty_array<'a>(cx: &Context<'a>, loc: ALoc) -> Result<(Reason, Type), JobError> {
     let reason = mk_reason(VirtualReasonDesc::REmptyArrayLit, loc.dupe());
-    let element_reason = mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe());
+    let element_reason = mk_reason(None, loc.dupe());
     let type_::LazyHintT(has_hint, lazy_hint) = type_env::get_hint(cx, loc.dupe());
     // empty array, analogous to object with implicit properties
     let elemt = if !has_hint {
-        empty_t::make(mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe()))
+        empty_t::make(mk_reason(None, loc.dupe()))
     } else {
         match lazy_hint(cx, false, None, element_reason)? {
             type_::HintEvalResult::HintAvailable(hint, _) => hint,
@@ -6427,7 +6421,7 @@ pub fn empty_array<'a>(cx: &Context<'a>, loc: ALoc) -> Result<(Reason, Type), Jo
                 // array element. In this case, the element type of the array is likely
                 // useless (does not escape the annotation), so we can use `empty` as
                 // its type.
-                empty_t::make(mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe()))
+                empty_t::make(mk_reason(None, loc.dupe()))
             }
             type_::HintEvalResult::NoHint | type_::HintEvalResult::EncounteredPlaceholder => {
                 // If there is no hint then raise an error. The EncounteredPlaceholder case
@@ -7136,8 +7130,7 @@ fn expression_<'a>(
             match inner.elements.as_ref() {
                 [] if as_const => {
                     let reason = mk_reason(VirtualReasonDesc::RConstArrayLit, loc.dupe());
-                    let elem_t =
-                        empty_t::make(mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe()));
+                    let elem_t = empty_t::make(mk_reason(None, loc.dupe()));
                     let arrtype = type_::ArrType::TupleAT(Box::new(TupleATData {
                         elem_t,
                         elements: vec![].into(),
@@ -7166,8 +7159,7 @@ fn expression_<'a>(
                 ) =>
                 {
                     let reason = mk_reason(VirtualReasonDesc::REmptyArrayLit, loc.dupe());
-                    let element_reason =
-                        mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe());
+                    let element_reason = mk_reason(None, loc.dupe());
                     let elem_t = cx.mk_placeholder(element_reason);
                     let arrtype = type_::ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t,
@@ -7425,7 +7417,7 @@ fn expression_<'a>(
             match result {
                 Ok((targ_t, arg_t)) => {
                     let reason = mk_reason(VirtualReasonDesc::RNewArray, loc.dupe());
-                    let length_reason = reason.dupe().replace_desc(VirtualReasonDesc::RArrayLength);
+                    let length_reason = reason.dupe().replace_desc(None);
                     flow_js::flow_t_non_speculating(
                         cx,
                         (
@@ -7449,7 +7441,9 @@ fn expression_<'a>(
                         callee_loc.dupe(),
                     )?;
                     let reason_call = mk_reason(
-                        VirtualReasonDesc::RConstructorCall(Arc::new(desc_of_t(&id_t).clone())),
+                        VirtualReasonDesc::RConstructorCall(
+                            desc_of_t(&id_t).cloned().map(Arc::new),
+                        ),
                         loc.dupe(),
                     );
                     let use_op =
@@ -7514,7 +7508,7 @@ fn expression_<'a>(
                 None => (vec![], vec![], None),
             };
             let reason = mk_reason(
-                VirtualReasonDesc::RConstructorCall(Arc::new(desc_of_t(&class_).clone())),
+                VirtualReasonDesc::RConstructorCall(desc_of_t(&class_).cloned().map(Arc::new)),
                 loc.dupe(),
             );
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
@@ -7849,7 +7843,7 @@ fn expression_<'a>(
                         cx,
                         ErrorMessage::EInvalidGraphQL(Box::new((loc.dupe(), err))),
                     );
-                    let reason = mk_reason(VirtualReasonDesc::RAnyImplicit, loc.dupe());
+                    let reason = mk_reason(None, loc.dupe());
                     any_t::error(reason)
                 }
             };
@@ -7905,7 +7899,10 @@ fn expression_<'a>(
             let tag_ast = expression(None, None, None, cx, &inner.tag)?;
             let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
             let t = tag_ast.loc().1.dupe();
-            let reason = mk_reason(RFunctionCall(Arc::new(desc_of_t(&t).clone())), loc.dupe());
+            let reason = mk_reason(
+                RFunctionCall(desc_of_t(&t).cloned().map(Arc::new)),
+                loc.dupe(),
+            );
             let reason_array = mk_reason(VirtualReasonDesc::RArray, reason.loc().dupe());
             let ret_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
             let ret_tvar = Tvar::new(reason.dupe(), ret_id as u32);
@@ -9118,7 +9115,7 @@ pub fn optional_chain<'a>(
             {
                 let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
                 let reason = mk_reason(
-                    VirtualReasonDesc::RFunctionCall(VirtualReasonDesc::RSuper.into()),
+                    VirtualReasonDesc::RFunctionCall(Some(VirtualReasonDesc::RSuper.into())),
                     loc.dupe(),
                 );
                 let super_t = super_(cx, super_loc.dupe())?;
@@ -9206,10 +9203,7 @@ pub fn optional_chain<'a>(
                 let args_comments = &inner.arguments.comments;
                 let value = num_lit.value;
                 fn any_t_with_loc(l: ALoc) -> (ALoc, Type) {
-                    (
-                        l.dupe(),
-                        any_t::untyped(mk_reason(VirtualReasonDesc::RAnyImplicit, l)),
-                    )
+                    (l.dupe(), any_t::untyped(mk_reason(None, l)))
                 }
                 flow_utils_concurrency::worker_cancel::interruptible_sleep(
                     std::time::Duration::from_secs_f64(value),
@@ -10768,7 +10762,7 @@ pub fn optional_chain<'a>(
                 let loc = loc.dupe();
                 Box::new(move |lhs_t: &Type| {
                     mk_reason(
-                        RFunctionCall(Arc::new(desc_of_t(lhs_t).clone())),
+                        RFunctionCall(desc_of_t(lhs_t).cloned().map(Arc::new)),
                         loc.dupe(),
                     )
                 })
@@ -10975,7 +10969,9 @@ fn unary<'a>(
                 type_::bool_module_t::at(loc.dupe())
             } else {
                 let reason = mk_reason(
-                    RUnaryOperator(FlowSmolStr::from("not"), Arc::new(desc_of_t(&arg).clone())),
+                    desc_of_t(&arg)
+                        .cloned()
+                        .map(|desc| RUnaryOperator(FlowSmolStr::from("not"), Arc::new(desc))),
                     loc.dupe(),
                 );
                 type_operation_utils::operators::unary_not(cx, &reason, &arg)?
@@ -11000,7 +10996,7 @@ fn unary<'a>(
                 &expr.argument,
             )?;
             let argt = argument.loc().1.dupe();
-            let reason = mk_reason(desc_of_t(&argt).clone(), loc.dupe());
+            let reason = mk_reason(desc_of_t(&argt).cloned(), loc.dupe());
             let tout = type_operation_utils::operators::unary_arith(
                 cx,
                 &reason,
@@ -11034,7 +11030,7 @@ fn unary<'a>(
                 &expr.argument,
             )?;
             let argt = argument.loc().1.dupe();
-            let reason = mk_reason(desc_of_t(&argt).clone(), loc.dupe());
+            let reason = mk_reason(desc_of_t(&argt).cloned(), loc.dupe());
             let tout = type_operation_utils::operators::unary_arith(
                 cx,
                 &reason,
@@ -11061,7 +11057,7 @@ fn unary<'a>(
                 &expr.argument,
             )?;
             let argt = argument.loc().1.dupe();
-            let reason = mk_reason(desc_of_t(&argt).clone(), loc.dupe());
+            let reason = mk_reason(desc_of_t(&argt).cloned(), loc.dupe());
             let tout = type_operation_utils::operators::unary_arith(
                 cx,
                 &reason,
@@ -11513,11 +11509,17 @@ fn binary<'a>(
                 &expr.right,
             )?;
             let t2 = right_ast.loc().1.dupe();
-            let desc = RBinaryOperator(Box::new((
-                FlowSmolStr::from("arithmetic operation"),
-                Arc::new(reason_of_t(&t1).desc(true).clone()),
-                Arc::new(reason_of_t(&t2).desc(true).clone()),
-            )));
+            let desc = reason_of_t(&t1)
+                .desc(true)
+                .cloned()
+                .zip(reason_of_t(&t2).desc(true).cloned())
+                .map(|(desc1, desc2)| {
+                    RBinaryOperator(Box::new((
+                        FlowSmolStr::from("arithmetic operation"),
+                        Arc::new(desc1),
+                        Arc::new(desc2),
+                    )))
+                });
             let reason = mk_reason(desc, loc.dupe());
             let arith_kind = type_::arith_kind::ArithKind::of_binary_operator(expr.operator);
             let tout = type_operation_utils::operators::arith(cx, &reason, &arith_kind, &t1, &t2)?;
@@ -11591,11 +11593,16 @@ fn logical<'a>(
                 t2_raw
             };
             let reason = mk_reason(
-                RLogical(Box::new((
-                    FlowSmolStr::from("||"),
-                    Arc::new(desc_of_t(&t1).clone()),
-                    Arc::new(desc_of_t(&t2).clone()),
-                ))),
+                desc_of_t(&t1)
+                    .cloned()
+                    .zip(desc_of_t(&t2).cloned())
+                    .map(|(desc1, desc2)| {
+                        RLogical(Box::new((
+                            FlowSmolStr::from("||"),
+                            Arc::new(desc1),
+                            Arc::new(desc2),
+                        )))
+                    }),
                 loc.dupe(),
             );
             let tout = type_operation_utils::operators::logical_or(cx, &reason, &t1, &t2)?;
@@ -11637,11 +11644,16 @@ fn logical<'a>(
                 t2_raw
             };
             let reason = mk_reason(
-                RLogical(Box::new((
-                    FlowSmolStr::from("&&"),
-                    Arc::new(desc_of_t(&t1).clone()),
-                    Arc::new(desc_of_t(&t2).clone()),
-                ))),
+                desc_of_t(&t1)
+                    .cloned()
+                    .zip(desc_of_t(&t2).cloned())
+                    .map(|(desc1, desc2)| {
+                        RLogical(Box::new((
+                            FlowSmolStr::from("&&"),
+                            Arc::new(desc1),
+                            Arc::new(desc2),
+                        )))
+                    }),
                 loc.dupe(),
             );
             let tout = type_operation_utils::operators::logical_and(cx, &reason, &t1, &t2)?;
@@ -11683,11 +11695,16 @@ fn logical<'a>(
                 t2_raw
             };
             let reason = mk_reason(
-                RLogical(Box::new((
-                    FlowSmolStr::from("??"),
-                    Arc::new(desc_of_t(&t1).clone()),
-                    Arc::new(desc_of_t(&t2).clone()),
-                ))),
+                desc_of_t(&t1)
+                    .cloned()
+                    .zip(desc_of_t(&t2).cloned())
+                    .map(|(desc1, desc2)| {
+                        RLogical(Box::new((
+                            FlowSmolStr::from("??"),
+                            Arc::new(desc1),
+                            Arc::new(desc2),
+                        )))
+                    }),
                 loc.dupe(),
             );
             let tout =
@@ -11961,7 +11978,7 @@ fn assign_member<'a>(
                 |cx, prop_t| {
                     let use_op = make_op(
                         reason.dupe(),
-                        mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
+                        mk_reason(lhs_prop_reason.desc(true).cloned(), prop_loc.dupe()),
                     );
                     flow_js::flow_non_speculating(
                         cx,
@@ -12033,7 +12050,7 @@ fn assign_member<'a>(
                     |_cx, prop_t| {
                         let use_op = make_op(
                             reason.dupe(),
-                            mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
+                            mk_reason(lhs_prop_reason.desc(true).cloned(), prop_loc.dupe()),
                         );
                         run_maybe_optional_chain(
                             &o,
@@ -12099,7 +12116,7 @@ fn assign_member<'a>(
                     |_cx, prop_t| {
                         let use_op = make_op(
                             reason.dupe(),
-                            mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
+                            mk_reason(lhs_prop_reason.desc(true).cloned(), prop_loc.dupe()),
                         );
                         run_maybe_optional_chain(
                             &o,
@@ -12191,7 +12208,7 @@ fn assign_member<'a>(
             let i = typed_index.loc().1.dupe();
             let use_op = make_op(
                 reason.dupe(),
-                mk_reason(lhs_prop_reason.desc(true).clone(), iloc.dupe()),
+                mk_reason(lhs_prop_reason.desc(true).cloned(), iloc.dupe()),
             );
             run_maybe_optional_chain(
                 &o,
@@ -13539,7 +13556,7 @@ pub fn jsx_mk_props<'a>(
                 ),
             },
         ))));
-        let elem_reason = mk_reason(VirtualReasonDesc::RArrayElement, attr_loc.dupe());
+        let elem_reason = mk_reason(None, attr_loc.dupe());
         let atype_clone = atype.dupe();
         let use_op_clone = use_op.dupe();
         let shorthand_arr_reason_clone = shorthand_arr_reason;
@@ -14067,7 +14084,7 @@ fn jsx_body<'a>(
     Ok(match _child {
         ast::jsx::Child::Element { inner: e, .. } => {
             let (t, typed_e) = jsx(_cx, loc.dupe(), e)?;
-            let reason = mk_reason(VirtualReasonDesc::RJSXChild, loc.dupe());
+            let reason = mk_reason(None, loc.dupe());
             (
                 Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
                     type_::UnresolvedArgData(
@@ -14083,7 +14100,7 @@ fn jsx_body<'a>(
         }
         ast::jsx::Child::Fragment { inner: f, .. } => {
             let (t, typed_f) = jsx_fragment(_cx, loc.dupe(), f)?;
-            let reason = mk_reason(VirtualReasonDesc::RJSXChild, loc.dupe());
+            let reason = mk_reason(None, loc.dupe());
             (
                 Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
                     type_::UnresolvedArgData(
@@ -14112,7 +14129,7 @@ fn jsx_body<'a>(
                     )?;
                     let e_loc = typed_e.loc().0.dupe();
                     let e_t = typed_e.loc().1.dupe();
-                    let reason = mk_reason(VirtualReasonDesc::RJSXChild, e_loc);
+                    let reason = mk_reason(None, e_loc);
                     (
                         Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
                             type_::UnresolvedArgData(
@@ -14168,7 +14185,7 @@ fn jsx_body<'a>(
         ast::jsx::Child::Text { inner: text, .. } => {
             let unresolved_param_opt = match jsx_trim_text(loc.dupe(), &text.value) {
                 Some(c) => {
-                    let reason = mk_reason(VirtualReasonDesc::RJSXChild, loc.dupe());
+                    let reason = mk_reason(None, loc.dupe());
                     Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
                         type_::UnresolvedArgData(
                             mk_tuple_element(reason, c, None, false, Polarity::Neutral),
@@ -14454,7 +14471,7 @@ fn static_method_call_object<'a>(
         let use_op_clone = use_op.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(cx, arr_reason, |cx, tvar| {
             let keys_reason = reason_clone.dupe().update_desc_new(|desc| {
-                RCustom(format!("element of {}", string_of_desc(&desc)).into())
+                desc.map(|desc| RCustom(format!("element of {}", string_of_desc(&desc)).into()))
             });
             flow_js::flow_non_speculating(
                 cx,
@@ -14511,12 +14528,18 @@ fn static_method_call_object<'a>(
                         lower_def_loc: reason.def_loc().dupe(),
                         upper_loc: reason.loc().dupe(),
                         upper_def_loc: reason.def_loc().dupe(),
-                        lower_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
-                            reason.desc(true).clone(),
-                        )),
-                        upper_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
-                            reason.desc(true).clone(),
-                        )),
+                        lower_desc: TypeOrTypeDescT::TypeDesc(
+                            reason
+                                .desc(true)
+                                .cloned()
+                                .map_or(ErrorTypeDesc::Unknown, ErrorTypeDesc::ReasonDesc),
+                        ),
+                        upper_desc: TypeOrTypeDescT::TypeDesc(
+                            reason
+                                .desc(true)
+                                .cloned()
+                                .map_or(ErrorTypeDesc::Unknown, ErrorTypeDesc::ReasonDesc),
+                        ),
                         use_op,
                         explanation: None,
                         example: None,
@@ -14691,7 +14714,9 @@ fn static_method_call_object<'a>(
                     }
                     Some(spec) => {
                         let prop_reason = reason.dupe().update_desc_new(|desc| {
-                            RCustom(format!(".{} of {}", x, string_of_desc(&desc)).into())
+                            desc.map(|desc| {
+                                RCustom(format!(".{} of {}", x, string_of_desc(&desc)).into())
+                            })
                         });
                         let propdesc_type_clone = propdesc_type.dupe();
                         let use_op_clone = use_op.dupe();
@@ -14994,7 +15019,9 @@ fn static_method_call_object<'a>(
                     }
                     Some(spec) => {
                         let prop_reason = reason.dupe().update_desc_new(|desc| {
-                            RCustom(format!(".{} of {}", x, string_of_desc(&desc)).into())
+                            desc.map(|desc| {
+                                RCustom(format!(".{} of {}", x, string_of_desc(&desc)).into())
+                            })
                         });
                         let tvar = flow_typing_tvar::mk(cx, prop_reason.dupe());
                         let annot_loc = prop_reason.loc().dupe();
@@ -15528,7 +15555,7 @@ pub fn mk_class_sig<'a>(
                             ErrorMessage::EMissingLocalAnnotation {
                                 reason: ErrorReference::new(
                                     annot_loc.dupe(),
-                                    reason.desc(false).clone(),
+                                    reason.desc(false).cloned(),
                                 ),
                                 hint_available: false,
                                 from_generic_function: false,
@@ -16187,9 +16214,13 @@ pub fn mk_class_sig<'a>(
                                                 );
                                                 Type::new(TypeInner::OptionalT {
                                                     reason: mk_reason(
-                                                        VirtualReasonDesc::ROptional(Arc::new(
-                                                            field_reason.desc(true).clone(),
-                                                        )),
+                                                        field_reason.desc(true).cloned().map(
+                                                            |desc| {
+                                                                VirtualReasonDesc::ROptional(
+                                                                    Arc::new(desc),
+                                                                )
+                                                            },
+                                                        ),
                                                         id_loc.dupe(),
                                                     ),
                                                     type_: field_t,
@@ -19020,9 +19051,9 @@ pub fn mk_record_sig<'a>(
                                             );
                                             Type::new(TypeInner::OptionalT {
                                                 reason: mk_reason(
-                                                    VirtualReasonDesc::ROptional(Arc::new(
-                                                        field_reason.desc(true).clone(),
-                                                    )),
+                                                    field_reason.desc(true).cloned().map(|desc| {
+                                                        VirtualReasonDesc::ROptional(Arc::new(desc))
+                                                    }),
                                                     key_loc.dupe(),
                                                 ),
                                                 type_: annot_t,
