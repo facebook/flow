@@ -13,6 +13,7 @@ pub mod layout;
 pub mod pretty_printer;
 pub mod replacement_printer;
 pub mod source;
+pub mod source_map;
 
 #[cfg(test)]
 mod indented_printer_test;
@@ -26,5 +27,7 @@ mod layout_test;
 mod layout_test_utils;
 #[cfg(test)]
 mod pretty_printer_test;
+#[cfg(test)]
+mod source_map_test;
 #[cfg(test)]
 mod source_test;

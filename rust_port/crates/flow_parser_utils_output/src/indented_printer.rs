@@ -13,14 +13,20 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
+use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use thiserror::Error;
 
 use crate::source::Source;
+use crate::source_map::SourceMap;
+use crate::source_map::SourceMapError;
+use crate::source_map::SourceMapTracker;
 
 /// The printer accepts JavaScript after runtime lowering and type erasure.
 #[derive(Debug, Error)]
 pub enum PrintError {
+    #[error(transparent)]
+    SourceMap(#[from] SourceMapError),
     #[error("Statement requires lowering before JavaScript emission at {0:?}")]
     UnloweredStatement(Loc),
     #[error("Expression requires lowering before JavaScript emission at {0:?}")]
@@ -50,10 +56,11 @@ struct Writer {
     empty: bool,
     location: Loc,
     comments: HashSet<Loc>,
+    tracker: Option<SourceMapTracker>,
 }
 
 impl Writer {
-    fn new() -> Self {
+    fn new(tracker: Option<SourceMapTracker>) -> Self {
         Self {
             source: Source::default(),
             indent: 0,
@@ -61,6 +68,7 @@ impl Writer {
             empty: true,
             location: Loc::default(),
             comments: HashSet::new(),
+            tracker,
         }
     }
 
@@ -76,14 +84,23 @@ impl Writer {
         self.write(text, None)
     }
 
-    fn write(&mut self, text: &str, _name: Option<&FlowSmolStr>) -> Printed {
+    fn write(&mut self, text: &str, name: Option<&FlowSmolStr>) -> Printed {
         if text.is_empty() {
             return Ok(());
         }
         if self.line_start {
             let spaces = self.indent * 2;
             self.source.add_space(spaces);
+            if let Some(tracker) = &mut self.tracker {
+                tracker.advance_indent(spaces);
+            }
             self.line_start = false;
+        }
+        if let Some(tracker) = &mut self.tracker {
+            if text.chars().any(|ch| !ch.is_whitespace()) {
+                tracker.record_loc(Some(&self.location), name)?;
+            }
+            tracker.advance(text);
         }
         self.source.add_string(text);
         self.empty = false;
@@ -93,6 +110,9 @@ impl Writer {
     fn newline(&mut self) {
         self.source.add_newline();
         self.empty = false;
+        if let Some(tracker) = &mut self.tracker {
+            tracker.advance("\n");
+        }
         self.line_start = true;
     }
 
@@ -232,7 +252,19 @@ impl Writer {
 
 /// Print the lowered JavaScript AST directly, with fixed indentation.
 pub fn print(program: &Program) -> Printed<Source> {
-    let mut writer = Writer::new();
+    let mut writer = Writer::new(None);
     writer.program(program)?;
     Ok(writer.source)
+}
+
+/// Print directly from AST locations and return the attached tracker's v3 map.
+pub fn print_with_source_map(
+    program: &Program,
+    source_file: &FileKey,
+    source_text: &str,
+) -> Printed<(Source, SourceMap)> {
+    let mut writer = Writer::new(Some(SourceMapTracker::new(source_file, source_text)));
+    writer.program(program)?;
+    let tracker = writer.tracker.expect("tracked writer retains its tracker");
+    Ok((writer.source, tracker.finish()))
 }
