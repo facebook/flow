@@ -1,0 +1,7 @@
+[libs]
+lib/
+
+[options]
+all=true
+builtin_lib=default
+experimental.builtin_ts_libdef_dynamic_discovery=true

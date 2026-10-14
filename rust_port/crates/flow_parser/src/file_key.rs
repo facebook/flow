@@ -10,9 +10,9 @@
 // at startup via global state. to_absolute/to_string returns the absolute
 // path on demand.
 //
-// LibFile paths under the flowlib root use a marker prefix internally to
-// distinguish them from project-root LibFiles. This marker is stripped in
-// to_string/to_absolute and replaced with the flowlib root.
+// LibFile and SourceFile paths under the flowlib root use a marker prefix
+// internally to distinguish them from project-root files. This marker is
+// stripped in to_string/to_absolute and replaced with the flowlib root.
 
 use std::hash::Hash;
 use std::hash::Hasher;
@@ -353,6 +353,18 @@ pub fn strip_project_root(path: &str) -> String {
     }
 }
 
+fn strip_flowlib_or_project_root(path: &str) -> String {
+    let guard = FLOWLIB_ROOT.read().unwrap();
+    match guard.as_deref() {
+        Some(fl) if !fl.is_empty() && path.starts_with(fl) => {
+            let stripped =
+                normalize_dir_sep_with(std::path::MAIN_SEPARATOR, strip_prefix(fl, path));
+            format!("{}{}", FLOWLIB_MARKER, stripped)
+        }
+        _ => strip_project_root(path),
+    }
+}
+
 impl FileKey {
     pub fn new(inner: FileKeyInner) -> Self {
         Self {
@@ -377,7 +389,7 @@ impl FileKey {
     // that don't need the absolute path (compare, Transaction hashing).
     pub fn to_absolute(&self) -> String {
         match self.inner.as_ref() {
-            FileKeyInner::LibFile(x) => {
+            FileKeyInner::LibFile(x) | FileKeyInner::SourceFile(x) => {
                 if let Some(rest) = x.strip_prefix(FLOWLIB_MARKER) {
                     resolve_root_with(
                         is_relative,
@@ -389,9 +401,7 @@ impl FileKey {
                     resolve_root_with(is_relative, std::path::MAIN_SEPARATOR, get_project_root, x)
                 }
             }
-            FileKeyInner::SourceFile(x)
-            | FileKeyInner::JsonFile(x)
-            | FileKeyInner::ResourceFile(x) => {
+            FileKeyInner::JsonFile(x) | FileKeyInner::ResourceFile(x) => {
                 resolve_root_with(is_relative, std::path::MAIN_SEPARATOR, get_project_root, x)
             }
         }
@@ -442,7 +452,9 @@ impl FileKey {
     }
 
     pub fn source_file_of_absolute(path: &str) -> FileKey {
-        FileKey::new(FileKeyInner::SourceFile(strip_project_root(path)))
+        FileKey::new(FileKeyInner::SourceFile(strip_flowlib_or_project_root(
+            path,
+        )))
     }
 
     pub fn json_file_of_absolute(path: &str) -> FileKey {
@@ -454,16 +466,7 @@ impl FileKey {
     }
 
     pub fn lib_file_of_absolute(path: &str) -> FileKey {
-        let guard = FLOWLIB_ROOT.read().unwrap();
-        let suffix = match guard.as_deref() {
-            Some(fl) if !fl.is_empty() && path.starts_with(fl) => {
-                let stripped =
-                    normalize_dir_sep_with(std::path::MAIN_SEPARATOR, strip_prefix(fl, path));
-                format!("{}{}", FLOWLIB_MARKER, stripped)
-            }
-            _ => strip_project_root(path),
-        };
-        FileKey::new(FileKeyInner::LibFile(suffix))
+        FileKey::new(FileKeyInner::LibFile(strip_flowlib_or_project_root(path)))
     }
 }
 
@@ -568,6 +571,26 @@ mod tests {
             let fk = FileKey::lib_file_of_absolute("/usr/lib/flowlib/core.js");
             assert_eq!(fk.suffix(), format!("{}core.js", FLOWLIB_MARKER));
             assert_eq!(fk.to_absolute(), "/usr/lib/flowlib/core.js");
+        });
+    }
+
+    #[test]
+    fn source_file_under_flowlib_root() {
+        default_roots(|| {
+            let fk = FileKey::source_file_of_absolute("/usr/lib/flowlib/lib.dom.d.ts");
+            assert_eq!(fk.suffix(), format!("{}lib.dom.d.ts", FLOWLIB_MARKER));
+            assert_eq!(fk.to_absolute(), "/usr/lib/flowlib/lib.dom.d.ts");
+        });
+        with_roots("/data/moved/project/", "/tmp/other/flowlib/", || {
+            let fk = FileKey::new(FileKeyInner::SourceFile(format!(
+                "{}lib.dom.d.ts",
+                FLOWLIB_MARKER
+            )));
+            assert_eq!(
+                fk.to_absolute(),
+                "/tmp/other/flowlib/lib.dom.d.ts",
+                "a saved key should resolve against the loading server's flowlib root"
+            );
         });
     }
 

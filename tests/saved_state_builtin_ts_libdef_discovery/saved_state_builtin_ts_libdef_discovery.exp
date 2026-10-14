@@ -1,0 +1,42 @@
+Generate saved-state
+Error ------------------------------------------------------------------------------------------------------ test.js:1:8
+
+Cannot call `listen` with `1` bound to `e` because `Number` [1] is incompatible with `Event` [2]. For example, property
+`AT_TARGET` is missing in `Number` [1] but exists in `Event` [2]. [incompatible-type]
+
+   test.js:1:8
+     1| listen(1);
+               ^
+
+References:
+   <BUILTINS>/lib.es5.js:291:11
+   291| interface Number {
+                  ^^^^^^ [1]
+   lib/legacy.js:1:28
+     1| declare function listen(e: Event): void;
+                                   ^^^^^ [2]
+
+
+
+Found 1 error
+Use saved state in a different root
+Error ------------------------------------------------------------------------------------------------------ test.js:1:8
+
+Cannot call `listen` with `1` bound to `e` because `Number` [1] is incompatible with `Event` [2]. For example, property
+`AT_TARGET` is missing in `Number` [1] but exists in `Event` [2]. [incompatible-type]
+
+   test.js:1:8
+     1| listen(1);
+               ^
+
+References:
+   <BUILTINS>/lib.es5.js:291:11
+   291| interface Number {
+                  ^^^^^^ [1]
+   lib/legacy.js:1:28
+     1| declare function listen(e: Event): void;
+                                   ^^^^^ [2]
+
+
+
+Found 1 error
