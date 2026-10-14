@@ -75,14 +75,13 @@ fn loc_and_range(
     fn offset(
         offset_table: &OffsetTable,
         offset_style: OffsetStyle,
-        js_position: Position,
+        flow_position: Position,
     ) -> Value {
-        let result = match offset_style {
-            OffsetStyle::Utf8Bytes => offset_table.offset_utf8(js_position),
-            OffsetStyle::JsIndices => offset_table.offset_js(js_position),
-        };
-        match result {
-            Ok(i) => Value::Number(Number::from_u128(i as u128).unwrap()),
+        match offset_table.offsets_of_flow_position(flow_position) {
+            Ok((utf8, utf16)) => Value::Number(Number::from(match offset_style {
+                OffsetStyle::Utf8Bytes => utf8,
+                OffsetStyle::JsIndices => utf16,
+            })),
             Err(e) => {
                 // To debug, do
                 // dbg!("{}", e.debug_to_string())
@@ -93,8 +92,8 @@ fn loc_and_range(
     }
 
     let range = Value::Array(vec![
-        offset(offset_table, offset_style, js_start_pos),
-        offset(offset_table, offset_style, js_end_pos),
+        offset(offset_table, offset_style, location.start),
+        offset(offset_table, offset_style, location.end),
     ]);
 
     (loc, range)

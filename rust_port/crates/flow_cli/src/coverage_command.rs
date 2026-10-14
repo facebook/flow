@@ -302,10 +302,10 @@ fn handle_response(
                 // OffsetTable is codepoint-indexed. See `flow_common::reason::json_of_loc_props`
                 // for a fuller explanation.
                 let start_pos = offset_table
-                    .convert_flow_position_to_js_position(loc.start)
+                    .convert_flow_position_to_codepoint_position(loc.start)
                     .unwrap();
                 let end_pos = offset_table
-                    .convert_flow_position_to_js_position(loc.end)
+                    .convert_flow_position_to_codepoint_position(loc.end)
                     .unwrap();
                 let start = offset_table.offset(start_pos).unwrap() as i64;
                 let end = offset_table.offset(end_pos).unwrap() as i64;

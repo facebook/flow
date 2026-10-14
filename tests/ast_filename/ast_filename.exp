@@ -134,7 +134,7 @@ Non-ASCII characters without specifying offset style:
         },
         {
           "loc":{
-            "end":{"column":4,"line":2},
+            "end":{"column":5,"line":2},
             "source":"nonascii.js",
             "start":{"column":0,"line":2}
           },
@@ -165,7 +165,7 @@ Non-ASCII characters without specifying offset style:
     },
     {
       "loc":{
-        "end":{"column":4,"line":2},
+        "end":{"column":5,"line":2},
         "source":"nonascii.js",
         "start":{"column":0,"line":2}
       },
@@ -238,7 +238,7 @@ Non-ASCII characters with utf8-bytes offset style:
         },
         {
           "loc":{
-            "end":{"column":4,"line":2},
+            "end":{"column":5,"line":2},
             "source":"nonascii.js",
             "start":{"column":0,"line":2}
           },
@@ -269,7 +269,7 @@ Non-ASCII characters with utf8-bytes offset style:
     },
     {
       "loc":{
-        "end":{"column":4,"line":2},
+        "end":{"column":5,"line":2},
         "source":"nonascii.js",
         "start":{"column":0,"line":2}
       },
@@ -342,7 +342,7 @@ Non-ASCII characters with js-indices offset style:
         },
         {
           "loc":{
-            "end":{"column":4,"line":2},
+            "end":{"column":5,"line":2},
             "source":"nonascii.js",
             "start":{"column":0,"line":2}
           },
@@ -373,7 +373,7 @@ Non-ASCII characters with js-indices offset style:
     },
     {
       "loc":{
-        "end":{"column":4,"line":2},
+        "end":{"column":5,"line":2},
         "source":"nonascii.js",
         "start":{"column":0,"line":2}
       },

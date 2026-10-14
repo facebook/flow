@@ -12,6 +12,18 @@
 
 import {parse} from '../__test_utils__/parse';
 
+test('Locations and ranges use UTF-16 columns after surrogate pairs', () => {
+  const ast = parse('const 𩸽 = "😀"; const value = 1;');
+  expect(ast.body[0].declarations[0].id).toMatchObject({
+    range: [6, 8],
+    loc: {start: {line: 1, column: 6}, end: {line: 1, column: 8}},
+  });
+  expect(ast.body[1].declarations[0].id).toMatchObject({
+    range: [23, 28],
+    loc: {start: {line: 1, column: 23}, end: {line: 1, column: 28}},
+  });
+});
+
 test('Unicode strings and identifiers', () => {
   const source = `
     // Null byte in middle of string

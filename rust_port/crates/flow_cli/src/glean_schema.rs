@@ -184,7 +184,7 @@ pub(crate) mod range {
             Some(table) => {
                 let offset = |position| {
                     table
-                        .convert_flow_position_to_js_position(position)
+                        .convert_flow_position_to_codepoint_position(position)
                         .and_then(|position| table.offset_utf8(position))
                         .unwrap_or(0) as i32
                 };

@@ -1342,7 +1342,7 @@ pub fn json_of_loc_props(
     let (start_pos, end_pos) = match offset_table {
         Some(table) => {
             let convert = |pos: flow_parser::loc::Position| match table
-                .convert_flow_position_to_js_position(pos)
+                .convert_flow_position_to_codepoint_position(pos)
             {
                 Ok(p) => p,
                 Err(exn) => {

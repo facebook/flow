@@ -206,6 +206,31 @@ impl OffsetTable {
         &self,
         position: Position,
     ) -> Result<Position, OffsetLookupFailed> {
+        let codepoint_position = self.convert_flow_position_to_codepoint_position(position)?;
+        if position.line == 0 && position.column == 0 {
+            return Ok(position);
+        }
+        let line = &self.js_table[(position.line - 1) as usize];
+        Ok(Position {
+            line: position.line,
+            column: (line[codepoint_position.column as usize] - line[0]) as i32,
+        })
+    }
+
+    /// Absolute UTF-8 and UTF-16 offsets for a parser position with a byte column.
+    pub fn offsets_of_flow_position(
+        &self,
+        position: Position,
+    ) -> Result<(u32, u32), OffsetLookupFailed> {
+        let position = self.convert_flow_position_to_codepoint_position(position)?;
+        Ok((self.offset_utf8(position)?, self.offset_js(position)?))
+    }
+
+    /// Convert a parser byte column to the code-point index used by offset lookups.
+    pub fn convert_flow_position_to_codepoint_position(
+        &self,
+        position: Position,
+    ) -> Result<Position, OffsetLookupFailed> {
         // Special-case `Loc.none` so we don't try to look up line -1.
         if position.line == 0 && position.column == 0 {
             // Loc.none sets the offset as 0, so that's what we'll return here.
@@ -494,6 +519,35 @@ mod tests {
     fn offset_after_multi_unit_utf16_char() {
         let text = str_with_utf16_edge_cases();
         run(&text, pos(1, 5), 6);
+    }
+
+    #[test]
+    fn parser_byte_columns_convert_to_utf16_columns_and_offsets() {
+        let table = OffsetTable::make("😀x\r\n𩸽y\u{2028}éz\u{2029}done");
+        for (flow_position, js_position, offsets) in [
+            (pos(1, 4), pos(1, 2), (4, 2)),
+            (pos(2, 4), pos(2, 2), (11, 7)),
+            (pos(3, 2), pos(3, 1), (17, 10)),
+            (pos(4, 4), pos(4, 4), (25, 16)),
+            (pos(0, 0), pos(0, 0), (0, 0)),
+        ] {
+            assert_eq!(
+                table
+                    .convert_flow_position_to_js_position(flow_position)
+                    .unwrap(),
+                js_position,
+            );
+            assert_eq!(
+                table.offsets_of_flow_position(flow_position).unwrap(),
+                offsets
+            );
+        }
+        assert!(
+            table
+                .convert_flow_position_to_js_position(pos(1, 1))
+                .is_err()
+        );
+        assert!(table.offsets_of_flow_position(pos(5, 0)).is_err());
     }
 
     #[test]
