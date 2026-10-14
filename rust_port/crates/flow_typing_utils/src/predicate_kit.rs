@@ -17,7 +17,6 @@ use flow_aloc::ALocId;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
-use flow_common::reason::ReasonDesc;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -35,7 +34,6 @@ use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::speculation_kit;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrType;
-use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::BinaryTest;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::DefT;
@@ -48,7 +46,6 @@ use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
-use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateConcretetizerVariant;
@@ -2516,22 +2513,6 @@ fn sentinel_prop_test_generic<'cx>(
     obj: &Type,
     t: &Type,
 ) -> Result<(), FlowJsException> {
-    fn desc_of_sentinel(sentinel: &UnionEnumStar) -> ReasonDesc {
-        match sentinel {
-            UnionEnumStar::One(UnionEnum::Str(s)) => VirtualReasonDesc::RStringLit(s.dupe()),
-            UnionEnumStar::One(UnionEnum::Num(NumberLiteral(_, n))) => {
-                VirtualReasonDesc::RNumberLit(n.dupe())
-            }
-            UnionEnumStar::One(UnionEnum::Bool(b)) => VirtualReasonDesc::RBooleanLit(*b),
-            UnionEnumStar::One(UnionEnum::BigInt(BigIntLiteral(_, n))) => {
-                VirtualReasonDesc::RBigIntLit(n.dupe())
-            }
-            UnionEnumStar::One(UnionEnum::Null) => VirtualReasonDesc::RNull,
-            UnionEnumStar::One(UnionEnum::Void) => VirtualReasonDesc::RVoid,
-            UnionEnumStar::Many(_) => VirtualReasonDesc::RUnionEnum,
-        }
-    }
-
     // Evaluate a refinement predicate of the form
     //
     // obj.key eq value
@@ -2571,11 +2552,7 @@ fn sentinel_prop_test_generic<'cx>(
         match cx.get_prop(props_tmap, &Name::new(key)) {
             Some(p) => match flow_typing_type::type_::property::read_t(&p) {
                 Some(t_prop) => {
-                    let desc = VirtualReasonDesc::RMatchingProp(
-                        FlowSmolStr::new(key),
-                        Arc::new(desc_of_sentinel(sentinel)),
-                    );
-                    let reason = reason_of_t(orig_obj).dupe().replace_desc(desc);
+                    let reason = reason_of_t(orig_obj).dupe().replace_desc(None);
                     concretize_and_run_sentinel_prop_test(
                         cx,
                         env,
@@ -2633,11 +2610,7 @@ fn sentinel_prop_test_generic<'cx>(
                 ..
             }) => {
                 if Polarity::compat(*polarity, Polarity::Positive) {
-                    let desc = VirtualReasonDesc::RMatchingProp(
-                        FlowSmolStr::new(key),
-                        Arc::new(desc_of_sentinel(sentinel)),
-                    );
-                    let reason = reason_of_t(orig_obj).dupe().replace_desc(desc);
+                    let reason = reason_of_t(orig_obj).dupe().replace_desc(None);
                     concretize_and_run_sentinel_prop_test(
                         cx,
                         env,

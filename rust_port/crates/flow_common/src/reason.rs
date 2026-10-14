@@ -309,7 +309,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RJSXText,
     RFbt,
     RTemplateString,
-    RUnionEnum,
     RThis,
     RThisType,
     RImplicitInstantiation,
@@ -367,7 +366,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RIndexedAccess {
         optional: bool,
     },
-    RMatchingProp(FlowSmolStr, Arc<VirtualReasonDesc<L>>),
     RArrayNthElement(i32),
     RInferredUnionElemArray {
         instantiable: bool,
@@ -537,7 +535,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 is_empty: *is_empty,
             },
             RTemplateString => RTemplateString,
-            RUnionEnum => RUnionEnum,
             REnum { name } => REnum { name: name.dupe() },
             RThis => RThis,
             RThisType => RThisType,
@@ -660,7 +657,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RRefined(d) => RRefined(Arc::new(d.map_locs(f))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
             RRequiredOf(d) => RRequiredOf(Arc::new(d.map_locs(f))),
-            RMatchingProp(s, d) => RMatchingProp(s.dupe(), Arc::new(d.map_locs(f))),
             RImplicitThis(d) => RImplicitThis(Arc::new(d.map_locs(f))),
             RPossiblyMissingPropFromObj(n, d) => {
                 RPossiblyMissingPropFromObj(n.dupe(), Arc::new(d.map_locs(f)))
@@ -701,7 +697,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
             Some(
                 RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
                 | RTemplateLiteralType | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RJSXText
-                | RFbt | RTemplateString | RUnionEnum | RKeySet | RRegExp,
+                | RFbt | RTemplateString | RKeySet | RRegExp,
             ) => Scalar,
 
             Some(
@@ -1410,11 +1406,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RConditionalType => "conditional type".to_string(),
         RMatch => "match".to_string(),
         RMatchPattern => "match pattern".to_string(),
-        RMatchingProp(k, v) => format!(
-            "object with property `{}` that matches {}",
-            k,
-            string_of_desc(v)
-        ),
 
         // Objects
         RObject => "object".to_string(),
@@ -1490,7 +1481,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Template strings and enums
         RTemplateString => "template string".to_string(),
-        RUnionEnum => "literal union".to_string(),
         REnum { name } => match name {
             Some(n) => format!("enum `{}`", n),
             None => "enum".to_string(),
