@@ -40,6 +40,22 @@ function generic_rest_after_first<T extends ReadonlyArray<number>>(
   args as T; // ok
 }
 
+// Trailing optional params are optional elements, which also accept `undefined`.
+type Params<F> = F extends (...args: infer A) => unknown ? A : empty;
+declare function optional_params(a: string, b?: number): void;
+[''] as Params<typeof optional_params>; // ok
+['', 1] as Params<typeof optional_params>; // ok
+['', undefined] as Params<typeof optional_params>; // ok
+[1] as Params<typeof optional_params>; // error: number ~> string
+declare function non_trailing_optional(a?: string, b: number): void;
+[undefined, 1] as Params<typeof non_trailing_optional>; // ok
+[1] as Params<typeof non_trailing_optional>; // error: arity
+declare function all_optional(a?: string): void;
+[] as Params<typeof all_optional>; // ok
+declare function optional_and_rest(a: string, b?: number, ...rest: Array<boolean>): void;
+[''] as Params<typeof optional_and_rest>; // ok
+['', 1, true] as Params<typeof optional_and_rest>; // ok
+
 // The same solution in a call, where it also flows to other uses of the type argument.
 declare function no_rest_two(a: string, b: number): void;
 declare function array_rest_one(a: string, ...rest: Array<number>): void;

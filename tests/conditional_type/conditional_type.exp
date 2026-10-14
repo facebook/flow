@@ -1461,39 +1461,69 @@ References:
                             ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ reversed_rest_params.js:51:31
+Error ------------------------------------------------------------------------------------- reversed_rest_params.js:49:2
+
+Cannot cast array literal to `Params` because in index `0`: `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   reversed_rest_params.js:49:2
+   49| [1] as Params<typeof optional_params>; // error: number ~> string
+        ^ [1]
+
+References:
+   reversed_rest_params.js:45:37
+   45| declare function optional_params(a: string, b?: number): void;
+                                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- reversed_rest_params.js:52:1
+
+Cannot cast array literal to `Params` because array literal [1] has 1 element but `[a: void | string, b: number]` [2]
+has 2 elements. [invalid-tuple-arity]
+
+   reversed_rest_params.js:52:1
+   52| [1] as Params<typeof non_trailing_optional>; // error: arity
+       ^^^ [1]
+
+References:
+   reversed_rest_params.js:52:8
+   52| [1] as Params<typeof non_trailing_optional>; // error: arity
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ reversed_rest_params.js:67:31
 
 Cannot call `after_first_call` with function bound to `g` because in the first argument: `number` [1] is incompatible
 with `string` [2]. [incompatible-type]
 
-   reversed_rest_params.js:51:31
-   51| after_first_call(no_rest_two, (b: string) => {}); // error: number ~> string
+   reversed_rest_params.js:67:31
+   67| after_first_call(no_rest_two, (b: string) => {}); // error: number ~> string
                                      ^^^^^^^^^^^^^^^^^
 
 References:
-   reversed_rest_params.js:44:44
-   44| declare function no_rest_two(a: string, b: number): void;
+   reversed_rest_params.js:60:44
+   60| declare function no_rest_two(a: string, b: number): void;
                                                   ^^^^^^ [1]
-   reversed_rest_params.js:51:35
-   51| after_first_call(no_rest_two, (b: string) => {}); // error: number ~> string
+   reversed_rest_params.js:67:35
+   67| after_first_call(no_rest_two, (b: string) => {}); // error: number ~> string
                                          ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ reversed_rest_params.js:53:34
+Error ------------------------------------------------------------------------------------ reversed_rest_params.js:69:34
 
 Cannot call `after_first_call` with function bound to `g` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   reversed_rest_params.js:53:34
-   53| after_first_call(array_rest_one, (b: string) => {}); // error: number ~> string
+   reversed_rest_params.js:69:34
+   69| after_first_call(array_rest_one, (b: string) => {}); // error: number ~> string
                                         ^^^^^^^^^^^^^^^^^
 
 References:
-   reversed_rest_params.js:45:59
-   45| declare function array_rest_one(a: string, ...rest: Array<number>): void;
+   reversed_rest_params.js:61:59
+   61| declare function array_rest_one(a: string, ...rest: Array<number>): void;
                                                                  ^^^^^^ [1]
-   reversed_rest_params.js:53:38
-   53| after_first_call(array_rest_one, (b: string) => {}); // error: number ~> string
+   reversed_rest_params.js:69:38
+   69| after_first_call(array_rest_one, (b: string) => {}); // error: number ~> string
                                             ^^^^^^ [2]
 
 
@@ -1638,4 +1668,4 @@ References:
 
 
 
-Found 104 errors
+Found 106 errors

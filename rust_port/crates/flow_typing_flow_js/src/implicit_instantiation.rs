@@ -129,6 +129,7 @@ use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_::unsoundness;
+use flow_typing_type::type_::void;
 use flow_typing_type::type_util;
 use flow_typing_visitors::type_mapper;
 use flow_typing_visitors::type_mapper::TypeMapper;
@@ -1093,20 +1094,36 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
     params: &[FunParam],
     rest_param: &Option<FunRestParam>,
 ) -> Result<Type, FlowJsException> {
+    // Trailing optional params become optional tuple elements.
+    let required_count = params
+        .iter()
+        .rposition(|FunParam(_, t)| !matches!(t.deref(), TypeInner::OptionalT { .. }))
+        .map_or(0, |index| index + 1);
     let mut tuple_elements = Vec::new();
     let mut tuple_ts = Vec::new();
-    for param in params.iter() {
+    for (index, param) in params.iter().enumerate() {
         let name = &param.0;
-        let t = &param.1;
+        let (t, optional) = match param.1.deref() {
+            // Unlike an optional tuple element, an optional param also accepts `undefined`.
+            TypeInner::OptionalT { reason, type_, .. } if index >= required_count => (
+                type_util::union_of_ts(
+                    reason.dupe(),
+                    vec![type_.dupe(), void::why(reason.dupe())],
+                    None,
+                ),
+                true,
+            ),
+            _ => (param.1.dupe(), false),
+        };
         let el = type_util::mk_tuple_element(
-            type_util::reason_of_t(t).dupe(),
+            type_util::reason_of_t(&t).dupe(),
             t.dupe(),
             name.as_ref().map(|s| s.dupe()),
-            false,
+            optional,
             Polarity::Neutral,
         );
         tuple_elements.push(el);
-        tuple_ts.push(t.dupe());
+        tuple_ts.push(t);
     }
     let (reason_out, arr_type) = match rest_param {
         None => {
@@ -1128,7 +1145,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
             let t = ArrType::TupleAT(Box::new(TupleATData {
                 elem_t,
                 elements: tuple_elements.into(),
-                arity: (len, len),
+                arity: (required_count as i32, len),
                 inexact: false,
                 rest: None,
                 react_dro: None,
