@@ -902,6 +902,7 @@ fn resolved_elements_count(
                     Some(TupleView {
                         elements,
                         inexact: false,
+                        rest: None,
                         ..
                     }),
                 ..

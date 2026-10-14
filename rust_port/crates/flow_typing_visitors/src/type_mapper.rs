@@ -1811,30 +1811,45 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             strictness_kind,
         }) => {
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
+            let same_tuple_view = |a: &TupleView, b: &TupleView| {
+                Rc::ptr_eq(&a.elements, &b.elements)
+                    && match (&a.rest, &b.rest) {
+                        (None, None) => true,
+                        (Some(a), Some(b)) => a.t.ptr_eq(&b.t),
+                        _ => false,
+                    }
+            };
             let tuple_view_prime = option_utils::ident_map(
                 |tv: &TupleView| {
                     let TupleView {
                         elements,
                         arity,
                         inexact,
+                        rest,
                     } = tv;
                     let elements_prime = list_utils::ident_map(
                         |el| mapper.tuple_element(cx, map_cx, el.clone()),
                         |a, b| a.t.ptr_eq(&b.t),
                         elements.dupe(),
                     );
+                    let rest_prime = option_utils::ident_map(
+                        |el: &TupleElement| mapper.tuple_element(cx, map_cx, el.clone()),
+                        |a, b| a.t.ptr_eq(&b.t),
+                        rest.clone(),
+                    );
                     TupleView {
                         elements: elements_prime,
                         arity: *arity,
                         inexact: *inexact,
+                        rest: rest_prime,
                     }
                 },
-                |a, b| Rc::ptr_eq(&a.elements, &b.elements),
+                same_tuple_view,
                 tuple_view.clone(),
             );
             let tuple_view_unchanged = match (tuple_view, &tuple_view_prime) {
                 (None, None) => true,
-                (Some(a), Some(b)) => Rc::ptr_eq(&a.elements, &b.elements),
+                (Some(a), Some(b)) => same_tuple_view(a, b),
                 _ => false,
             };
             if elem_t.ptr_eq(&elem_t_prime) && tuple_view_unchanged {

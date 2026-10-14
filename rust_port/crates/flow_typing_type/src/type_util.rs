@@ -2695,6 +2695,7 @@ pub fn normalize_jsx_children_prop(
                             elements: elements.into(),
                             arity: (arity, arity),
                             inexact: false,
+                            rest: None,
                         }),
                         react_dro: None,
                         strictness_kind: TypeStrictnessKind::Flow,

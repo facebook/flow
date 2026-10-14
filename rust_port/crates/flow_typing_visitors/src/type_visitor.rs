@@ -929,6 +929,7 @@ pub fn arr_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
             tuple_view
                 .elements
                 .iter()
+                .chain(&tuple_view.rest)
                 .fold(acc, |acc, el| visitor.tuple_element(cx, pole, acc, el))
         }
         ArrType::TupleAT(box TupleATData {

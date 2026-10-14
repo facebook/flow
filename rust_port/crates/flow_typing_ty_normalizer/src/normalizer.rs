@@ -2194,7 +2194,7 @@ mod type_converter {
                     ArrType::ArrayAT(box ArrayATData {
                         tuple_view: Some(tv),
                         ..
-                    }) => (&tv.elements, tv.inexact, None),
+                    }) => (&tv.elements, tv.inexact, tv.rest.as_ref()),
                     ArrType::TupleAT(box TupleATData {
                         elements,
                         inexact,

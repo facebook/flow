@@ -5125,6 +5125,8 @@ pub struct TupleView {
     pub elements: Rc<[TupleElement]>,
     pub arity: (i32, i32),
     pub inexact: bool,
+    /// A trailing rest element, as in `TupleATData`.
+    pub rest: Option<TupleElement>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -12551,6 +12553,7 @@ pub fn empty_tuple_view() -> TupleView {
         elements: Rc::from([]),
         arity: (0, 0),
         inexact: false,
+        rest: None,
     }
 }
 

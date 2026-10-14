@@ -114,7 +114,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:35:3
 
-Cannot call `f` because `Array<number | 42>` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot call `f` because `[42, 42, ...Array<number>]` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    arr_spread.js:35:3
    35|   f(42, 42, 42, ...x); // should be nope

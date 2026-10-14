@@ -7668,13 +7668,19 @@ fn __flow_impl<'cx>(
                         (num_req as i64 - i as i64).max(0) as i32,
                         (num_total as i64 - i as i64).max(0) as i32,
                     );
-                    ArrType::ArrayAT(Box::new(ArrayATData {
-                        elem_t: elem_t.dupe(),
-                        tuple_view: Some(TupleView {
+                    // An array with only a rest element has no tuple view.
+                    let tuple_view = match &tuple_view.rest {
+                        Some(_) if elements.is_empty() => None,
+                        _ => Some(TupleView {
                             elements: elements.into(),
                             arity,
                             inexact: tuple_view.inexact,
+                            rest: tuple_view.rest.dupe(),
                         }),
+                    };
+                    ArrType::ArrayAT(Box::new(ArrayATData {
+                        elem_t: elem_t.dupe(),
+                        tuple_view,
                         react_dro: react_dro.clone(),
                         strictness_kind: *strictness_kind,
                     }))
@@ -8054,10 +8060,21 @@ fn __flow_impl<'cx>(
                                 })
                                 .collect::<Result<Vec<_>, _>>()?
                                 .into();
+                            let rest = tv
+                                .rest
+                                .as_ref()
+                                .map(|elem| {
+                                    Ok::<TupleElement, FlowJsException>(TupleElement {
+                                        t: array_elem(f(&elem.t, None, false)?)?,
+                                        ..elem.clone()
+                                    })
+                                })
+                                .transpose()?;
                             Some(TupleView {
                                 elements,
                                 arity: new_arity(tv.arity),
                                 inexact: tv.inexact,
+                                rest,
                             })
                         }
                     };

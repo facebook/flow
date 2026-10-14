@@ -1614,6 +1614,10 @@ pub fn array_length(sense: bool, op: &ArrayLengthOp, n: i32, t: Type) -> FilterR
                     || matches!(
                         arr.deref(),
                         ArrType::TupleAT(box TupleATData { rest: Some(_), .. })
+                            | ArrType::ArrayAT(box ArrayATData {
+                                tuple_view: Some(TupleView { rest: Some(_), .. }),
+                                ..
+                            })
                     );
                 let matches = match op {
                     ArrayLengthOp::ArrLenEqual => {

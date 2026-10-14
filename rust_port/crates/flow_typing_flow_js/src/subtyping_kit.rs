@@ -2753,15 +2753,69 @@ fn array_flow<'cx>(
     l: &Type,
     u: &Type,
     ts1: &[Type],
+    inexact1: bool,
+    rest1: Option<&TupleElement>,
     e1: &Type,
     ts2: &[Type],
+    rest2: Option<&TupleElement>,
     e2: &Type,
 ) -> Result<(), FlowJsException> {
+    let lit = lit1 || strictness_kind.is_typescript_loose();
+    // Against an upper rest element, the unknown elements of an inexact lower view are like a
+    // rest element of its element type.
+    let lower_rest_t = rest1
+        .map(|rest| &rest.t)
+        .or_else(|| (inexact1 && rest2.is_some()).then_some(e1));
     let mut iter1 = ts1.iter();
     let mut iter2 = ts2.iter();
     let mut index = 0usize;
     loop {
         match (iter1.next(), iter2.next()) {
+            // The lower rest element fills the remaining upper elements.
+            (None, t2_elem) if let Some(rest1_t) = lower_rest_t => {
+                match rest2 {
+                    Some(TupleElement { t: rest2_t, .. }) => {
+                        for t2_elem in t2_elem.into_iter().chain(iter2).chain([rest2_t]) {
+                            let cause = UnifyCause::Uncategorized;
+                            flow_to_mutable_child(
+                                cx,
+                                env,
+                                trace,
+                                use_op.dupe(),
+                                cause,
+                                lit,
+                                rest1_t,
+                                t2_elem,
+                            )?;
+                        }
+                    }
+                    None => {
+                        let cause = UnifyCause::MutableArray {
+                            lower_array_t: l.dupe(),
+                            upper_array_t: u.dupe(),
+                        };
+                        flow_to_mutable_child(cx, env, trace, use_op, cause, lit, rest1_t, e2)?;
+                    }
+                }
+                break;
+            }
+            // The remaining lower elements go to the upper rest element.
+            (Some(t1_elem), None) if let Some(TupleElement { t: rest2_t, .. }) = rest2 => {
+                for t1_elem in std::iter::once(t1_elem).chain(iter1).chain(lower_rest_t) {
+                    let cause = UnifyCause::Uncategorized;
+                    flow_to_mutable_child(
+                        cx,
+                        env,
+                        trace,
+                        use_op.dupe(),
+                        cause,
+                        lit,
+                        t1_elem,
+                        rest2_t,
+                    )?;
+                }
+                break;
+            }
             (None, _) => {
                 if index == 0 {
                     flow_to_mutable_child(
@@ -5763,8 +5817,11 @@ pub fn rec_sub_t<'cx>(
                 l,
                 u,
                 &ts1,
+                tv1.as_ref().is_some_and(|tv| tv.inexact),
+                tv1.as_ref().and_then(|tv| tv.rest.as_ref()),
                 t1,
                 &ts2,
+                tv2.as_ref().and_then(|tv| tv.rest.as_ref()),
                 t2,
             )
         }
@@ -6048,7 +6105,7 @@ pub fn rec_sub_t<'cx>(
                                 elements: tv.elements.dupe(),
                                 arity: tv.arity,
                                 inexact: tv.inexact,
-                                rest: None,
+                                rest: tv.rest.dupe(),
                                 react_dro: react_dro.clone(),
                                 strictness_kind: *strictness_kind,
                             },

@@ -702,6 +702,11 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
                                     }
                                 })
                                 .collect();
+                            let rest = tv.rest.as_ref().map(|el| TupleElement {
+                                t: self.type_(cx, map_cx, el.t.dupe()),
+                                polarity: Polarity::Positive,
+                                ..el.clone()
+                            });
                             let r = r.dupe().replace_desc(VirtualReasonDesc::RConstArrayLit);
                             Type::new(TypeInner::DefT(
                                 r,
@@ -712,7 +717,7 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
                                         react_dro: None,
                                         arity: tv.arity,
                                         inexact: false,
-                                        rest: None,
+                                        rest,
                                         strictness_kind: cx.type_strictness_kind(),
                                     },
                                 ))))),

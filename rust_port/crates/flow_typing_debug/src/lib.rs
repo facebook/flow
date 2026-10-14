@@ -637,7 +637,8 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
                         tuple_view: Some(tv),
                         ..
                     }) => {
-                        let elems_str = tuple_elements(tvars, &tv.elements, None, tv.inexact);
+                        let elems_str =
+                            tuple_elements(tvars, &tv.elements, tv.rest.as_ref(), tv.inexact);
                         let extra = format!("Array {}, [{}]", kid(tvars, elem_t), elems_str);
                         p(cx, t, true, &extra)
                     }

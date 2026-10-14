@@ -764,7 +764,7 @@ mod tests {
     #[test]
     fn fun_decomp_rest_arguments_overlap_with_normal_parameters() {
         mk_eval_hint_test(
-            "Array<number | string>",
+            "[number, ...Array<string>]",
             "(string, number, ...Array<string>) => number",
             vec![DecompFuncRest(vec![None], None)],
         );

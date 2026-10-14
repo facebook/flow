@@ -320,6 +320,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                     elements: elements1,
                                     arity: arity1,
                                     inexact: inexact1,
+                                    rest: None,
                                 }),
                             react_dro: dro1,
                             strictness_kind: strictness_kind1,
@@ -331,6 +332,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                     elements: elements2,
                                     arity: arity2,
                                     inexact: inexact2,
+                                    rest: None,
                                 }),
                             react_dro: dro2,
                             strictness_kind: strictness_kind2,
@@ -374,6 +376,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                         elements: elements.into(),
                                         arity: *arity1,
                                         inexact: *inexact1,
+                                        rest: None,
                                     }),
                                     react_dro: if dro1.is_some() && dro2.is_some() {
                                         dro1.clone()

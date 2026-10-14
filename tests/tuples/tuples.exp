@@ -1880,6 +1880,132 @@ References:
                            ^ [1]
 
 
+Error -------------------------------------------------------------------------------- rest_element_array_literal.js:9:4
+
+Cannot cast array literal to `T` because in index `0`: `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_element_array_literal.js:9:4
+   9|   [1, ...arr] as T; // ERROR: number ~> string
+         ^ [1]
+
+References:
+   rest_element_array_literal.js:3:11
+   3| type T = [string, ...Array<number>];
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- rest_element_array_literal.js:22:5
+
+Cannot call `f` because in index `0`: `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_element_array_literal.js:22:5
+   22|   f(1, ...arr); // ERROR: number ~> string
+           ^ [1]
+
+References:
+   rest_element_array_literal.js:3:11
+    3| type T = [string, ...Array<number>];
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- rest_element_array_literal.js:24:3
+
+Cannot cast `f` to function type because in index `1`: `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   rest_element_array_literal.js:24:3
+   24|   f as (a: string, ...rest: Array<string>) => void; // ERROR: string ~> number
+         ^
+
+References:
+   rest_element_array_literal.js:3:28
+    3| type T = [string, ...Array<number>];
+                                  ^^^^^^ [1]
+   rest_element_array_literal.js:24:35
+   24|   f as (a: string, ...rest: Array<string>) => void; // ERROR: string ~> number
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ rest_element_array_literal.js:32:11
+
+Cannot assign array literal to `parts` because in array element: `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+All writes to `parts` must be compatible with the type of its initializer [3]. Add an annotation to `parts` [3] if a
+different type is desired.
+
+   rest_element_array_literal.js:32:11
+   32|   parts = [first, ...arr]; // ERROR: number ~> string
+                 ^^^^^^^^^^^^^^^
+
+References:
+   rest_element_array_literal.js:29:28
+   29|   declare const arr: Array<number>;
+                                  ^^^^^^ [1]
+   rest_element_array_literal.js:30:24
+   30|   declare const first: string;
+                              ^^^^^^ [2]
+   rest_element_array_literal.js:31:7
+   31|   let parts = [first];
+             ^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------ rest_element_array_literal.js:34:13
+
+Cannot assign array literal to `b` because in array element: `"c"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+All writes to `b` must be compatible with the type of its initializer [3]. Add an annotation to `b` [3] if a different
+type is desired.
+
+   rest_element_array_literal.js:34:13
+   34|   b = ['b', 'c']; // ERROR: string ~> number
+                   ^^^ [1]
+
+References:
+   rest_element_array_literal.js:29:28
+   29|   declare const arr: Array<number>;
+                                  ^^^^^^ [2]
+   rest_element_array_literal.js:33:7
+   33|   let b = ['a', ...arr];
+             ^ [3]
+
+
+Error ------------------------------------------------------------------------------- rest_element_array_literal.js:36:7
+
+Cannot assign array literal to `b` because in array element: an unknown element of an inexact tuple type [1] is
+incompatible with `number` [2]. [incompatible-type]
+
+All writes to `b` must be compatible with the type of its initializer [3]. Add an annotation to `b` [3] if a different
+type is desired.
+
+   rest_element_array_literal.js:36:7
+   36|   b = [...inexact]; // ERROR: unknown elements of an inexact tuple
+             ^^^^^^^^^^^^ [1]
+
+References:
+   rest_element_array_literal.js:29:28
+   29|   declare const arr: Array<number>;
+                                  ^^^^^^ [2]
+   rest_element_array_literal.js:33:7
+   33|   let b = ['a', ...arr];
+             ^ [3]
+
+
+Error ------------------------------------------------------------------------------- rest_element_array_literal.js:45:5
+
+Cannot call `g` because in array element: `"x"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   rest_element_array_literal.js:45:5
+   45|   g('x'); // ERROR: string ~> number
+           ^^^ [1]
+
+References:
+   rest_element_array_literal.js:3:28
+    3| type T = [string, ...Array<number>];
+                                  ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- spread.js:10:3
 
 Cannot cast array literal to `Same` because array literal [1] has 1 element but `[1, 2]` [2] has 2 elements.
@@ -2952,4 +3078,4 @@ References:
 
 
 
-Found 186 errors
+Found 193 errors

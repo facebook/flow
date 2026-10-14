@@ -1943,9 +1943,12 @@ pub mod special_cased_functions {
                             ..
                         }) => {
                             // Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z)
-                            let ts = flow_typing_type::type_util::tuple_ts_of_elements(
-                                &tuple_view.elements,
-                            );
+                            let ts: Vec<Type> = tuple_view
+                                .elements
+                                .iter()
+                                .chain(&tuple_view.rest)
+                                .map(|elem| elem.t.dupe())
+                                .collect();
                             let default_kind = type_::default_obj_assign_kind();
                             for from in &ts {
                                 assign_from(
