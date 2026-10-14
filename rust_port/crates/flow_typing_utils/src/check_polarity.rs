@@ -25,6 +25,7 @@ use flow_typing_type::type_;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorSpreadTupleTypeData;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::FunType;
 use flow_typing_type::type_::GenericTData;
@@ -35,12 +36,16 @@ use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ReactAbstractComponentTData;
+use flow_typing_type::type_::ResolvedArgData;
+use flow_typing_type::type_::ResolvedParam;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::TypeParamInner;
+use flow_typing_type::type_::UnresolvedArgData;
+use flow_typing_type::type_::UnresolvedParam;
 use flow_typing_type::type_::eval;
 use flow_typing_type::type_util::reason_of_t;
 
@@ -263,6 +268,40 @@ fn check_polarity_impl<'cx>(
                 for ct in &concrete_types {
                     check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Positive, ct)?;
                 }
+            }
+        }
+        // A tuple type spread copies elements into a tuple whose elements are writable.
+        TypeInner::EvalT {
+            type_: first_spread,
+            defer_use_t,
+            ..
+        } if let type_::TypeDestructorTInner(_, _, d) = defer_use_t.deref()
+            && let Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData {
+                resolved,
+                unresolved,
+                ..
+            }) = d.deref() =>
+        {
+            check_polarity_impl(
+                cx,
+                env,
+                trace,
+                seen,
+                tparams,
+                Polarity::Neutral,
+                first_spread,
+            )?;
+            for param in resolved.iter() {
+                if let ResolvedParam::ResolvedArg(box ResolvedArgData(elem, _)) = param {
+                    check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Neutral, &elem.t)?;
+                }
+            }
+            for param in unresolved.iter() {
+                let t = match param {
+                    UnresolvedParam::UnresolvedArg(box UnresolvedArgData(elem, _)) => &elem.t,
+                    UnresolvedParam::UnresolvedSpreadArg(t) => t,
+                };
+                check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Neutral, t)?;
             }
         }
         TypeInner::NominalT { nominal_type, .. } => {
