@@ -14,6 +14,7 @@ use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc::Loc;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::ExplanationWithLazyParts;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 
 use crate::utils::codemod_context;
@@ -177,20 +178,20 @@ impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
                     let extracted: Option<(&flow_aloc::ALoc, &VirtualReasonDesc<flow_aloc::ALoc>, ALocTy)> = match explanation {
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
                             lower_array_loc,
-                            lower_array_desc: TypeOrTypeDescT::TypeDesc(Err(lower_desc)),
-                            upper_array_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                            lower_array_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(lower_desc)),
+                            upper_array_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(upper_ty))),
                             ..
                         } => Some((lower_array_loc, lower_desc, upper_ty.dupe())),
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
                             lower_obj_loc,
-                            lower_obj_desc: TypeOrTypeDescT::TypeDesc(Err(lower_desc)),
-                            upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                            lower_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(lower_desc)),
+                            upper_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(upper_ty))),
                             ..
                         } => Some((lower_obj_loc, lower_desc, upper_ty.dupe())),
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperties {
                             lower_obj_loc,
-                            lower_obj_desc: TypeOrTypeDescT::TypeDesc(Err(lower_desc)),
-                            upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                            lower_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(lower_desc)),
+                            upper_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(upper_ty))),
                             ..
                         } => Some((lower_obj_loc, lower_desc, upper_ty.dupe())),
                         _ => None,

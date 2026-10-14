@@ -20,7 +20,6 @@ use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::ErrorKind;
 use flow_common_errors::error_utils::PrintableError;
-use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::Decl;
 use flow_common_ty::ty::Elt;
 use flow_common_ty::ty::Ty;
@@ -63,6 +62,7 @@ use flow_typing_type::type_::VirtualUseOp;
 use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_::fold_virtual_use_op;
 use flow_typing_type::type_::root_of_use_op;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use vec1::Vec1;
 
@@ -312,21 +312,27 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
                 },
                 _ => TypeCategory::Other,
             },
-            TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(t))) => match t.as_ref() {
-                Ty::Null | Ty::Void => TypeCategory::Nullish,
-                Ty::Symbol
-                | Ty::Num
-                | Ty::Str
-                | Ty::Bool
-                | Ty::BigInt
-                | Ty::NumLit(_)
-                | Ty::StrLit(_)
-                | Ty::BoolLit(_)
-                | Ty::BigIntLit(_) => TypeCategory::Scalar,
-                Ty::Arr(_) | Ty::Tup { .. } => TypeCategory::Array,
-                _ => TypeCategory::Other,
-            },
-            TypeOrTypeDescT::TypeDesc(Ok(Elt::Decl(_)) | Err(_)) => TypeCategory::Other,
+            TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(t))) => {
+                match t.as_ref() {
+                    Ty::Null | Ty::Void => TypeCategory::Nullish,
+                    Ty::Symbol
+                    | Ty::Num
+                    | Ty::Str
+                    | Ty::Bool
+                    | Ty::BigInt
+                    | Ty::NumLit(_)
+                    | Ty::StrLit(_)
+                    | Ty::BoolLit(_)
+                    | Ty::BigIntLit(_) => TypeCategory::Scalar,
+                    Ty::Arr(_) | Ty::Tup { .. } => TypeCategory::Array,
+                    _ => TypeCategory::Other,
+                }
+            }
+            TypeOrTypeDescT::TypeDesc(
+                ErrorTypeDesc::Normalized(Elt::Decl(_))
+                | ErrorTypeDesc::ReasonDesc(_)
+                | ErrorTypeDesc::Unknown,
+            ) => TypeCategory::Other,
         }
     }
 
@@ -2853,11 +2859,11 @@ where
                             },
                         ) => {
                             let lower_desc = match lower_t {
-                                TypeOrTypeDescT::Type(_) => Err(lower.desc.clone()),
+                                TypeOrTypeDescT::Type(_) => ErrorTypeDesc::Unknown,
                                 TypeOrTypeDescT::TypeDesc(d) => d.clone(),
                             };
                             let upper_desc = match upper_t {
-                                TypeOrTypeDescT::Type(_) => Err(upper.desc.clone()),
+                                TypeOrTypeDescT::Type(_) => ErrorTypeDesc::Unknown,
                                 TypeOrTypeDescT::TypeDesc(d) => d.clone(),
                             };
 
@@ -3147,8 +3153,8 @@ where
          sub_component: Option<SubComponentOfInvariantSubtypingError>,
          lower_loc: L,
          upper_loc: L,
-         lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-         upper_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+         lower_desc: ErrorTypeDesc<L>,
+         upper_desc: ErrorTypeDesc<L>,
          use_op: VirtualUseOp<L>|
          -> IntermediateError<L> {
             mk_use_op_error(
@@ -3403,7 +3409,7 @@ where
                                      use_kind: super::error_message::UpperKind<L>,
                                      lower_loc: L,
                                      lower_kind: Option<super::error_message::LowerKind>,
-                                     lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+                                     lower_desc: ErrorTypeDesc<L>,
                                      use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
         use super::error_message::LowerKind;
@@ -4028,14 +4034,14 @@ where
         }
     }
 
-    let ref_of_ty_or_desc = |loc: &L,
-                             ty_or_desc: &Result<ALocElt, VirtualReasonDesc<L>>|
+    let ref_of_type_desc = |loc: &L,
+                            type_desc: &ErrorTypeDesc<L>|
      -> friendly::MessageFeature<Loc> {
-        match ty_or_desc {
-            Ok(Elt::Decl(decl)) => {
+        match type_desc {
+            ErrorTypeDesc::Normalized(Elt::Decl(decl)) => {
                 friendly::hardcoded_string_desc_ref(&decl_description(decl), loc_of_aloc(loc))
             }
-            Ok(Elt::Type(ty)) => {
+            ErrorTypeDesc::Normalized(Elt::Type(ty)) => {
                 let ty = flow_common_ty::ty_utils::simplify_type(true, None, ty.dupe());
                 let ty_str = flow_common_ty::ty_printer::string_of_t_single_line(
                     &ty,
@@ -4049,19 +4055,20 @@ where
                 let desc = format!("`{}`", ty_str);
                 friendly::hardcoded_string_desc_ref(&desc, loc_of_aloc(loc))
             }
-            Err(desc) => {
+            ErrorTypeDesc::ReasonDesc(desc) => {
                 use flow_common::reason::mk_reason;
                 let reason = mk_reason(desc.clone(), loc.dupe());
                 friendly::ref_map(&loc_of_aloc, &reason)
             }
+            ErrorTypeDesc::Unknown => friendly::hardcoded_string_desc_ref("`?`", loc_of_aloc(loc)),
         }
     };
 
-    let desc_of_ty_or_desc = |ty_or_desc: &Result<ALocElt, VirtualReasonDesc<L>>| match ty_or_desc {
-        Ok(Elt::Decl(decl)) => friendly::MessageFeature::Inline(
+    let desc_of_type_desc = |type_desc: &ErrorTypeDesc<L>| match type_desc {
+        ErrorTypeDesc::Normalized(Elt::Decl(decl)) => friendly::MessageFeature::Inline(
             friendly::message_inlines_of_string(&decl_description(decl)),
         ),
-        Ok(Elt::Type(ty)) => {
+        ErrorTypeDesc::Normalized(Elt::Type(ty)) => {
             let ty = flow_common_ty::ty_utils::simplify_type(true, None, ty.dupe());
             let ty_str = flow_common_ty::ty_printer::string_of_t_single_line(
                 &ty,
@@ -4069,7 +4076,10 @@ where
             );
             code(&ty_str)
         }
-        Err(desc) => friendly::desc_of_reason_desc(&desc.map_locs(&loc_of_aloc)),
+        ErrorTypeDesc::ReasonDesc(desc) => {
+            friendly::desc_of_reason_desc(&desc.map_locs(&loc_of_aloc))
+        }
+        ErrorTypeDesc::Unknown => code("?"),
     };
 
     let desc_of_value_as_type_reference =
@@ -4079,7 +4089,7 @@ where
                 Some(ValueAsTypeReference::ImportType(module)) => {
                     code(&format!("import(\"{}\")", module.as_str()))
                 }
-                None => desc_of_ty_or_desc(&value.desc),
+                None => desc_of_type_desc(&value.desc),
             }
         };
 
@@ -4317,7 +4327,7 @@ where
                 } = data.as_ref();
                 let mut features = vec![
                     text("Type "),
-                    ref_of_ty_or_desc(left_loc, &expect_type_desc(left_desc.clone())),
+                    ref_of_type_desc(left_loc, &expect_type_desc(left_desc.clone())),
                     text(" includes members "),
                 ];
                 for (i, member) in members.iter().enumerate() {
@@ -4330,7 +4340,7 @@ where
                     features.push(text(&format!(" and {} more", extra_number)));
                 }
                 features.push(text(" that are not included in type "));
-                features.push(ref_of_ty_or_desc(
+                features.push(ref_of_type_desc(
                     right_loc,
                     &expect_type_desc(right_desc.clone()),
                 ));
@@ -4366,13 +4376,13 @@ where
                 let prefix = if *props_plural {
                     vec![
                         text("These optional properties of "),
-                        ref_of_ty_or_desc(upper_object_loc, upper_obj_desc),
+                        ref_of_type_desc(upper_object_loc, upper_obj_desc),
                         text(" are"),
                     ]
                 } else {
                     vec![
                         text("This optional property of "),
-                        ref_of_ty_or_desc(upper_object_loc, upper_obj_desc),
+                        ref_of_type_desc(upper_object_loc, upper_obj_desc),
                         text(" is"),
                     ]
                 };
@@ -4380,11 +4390,13 @@ where
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
                     match (lower_obj_desc, upper_obj_desc) {
                         // lower is literal, upper is type
-                        (Err(lower_desc), Ok(Elt::Type(_)))
-                            if matches!(
-                                lower_desc,
-                                RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                            ) =>
+                        (
+                            ErrorTypeDesc::ReasonDesc(lower_desc),
+                            ErrorTypeDesc::Normalized(Elt::Type(_)),
+                        ) if matches!(
+                            lower_desc,
+                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
+                        ) =>
                         {
                             vec![
                                 text("annotate "),
@@ -4393,15 +4405,17 @@ where
                                     &mk_reason(lower_desc.clone(), lower_obj_loc.dupe()),
                                 ),
                                 text(" with "),
-                                ref_of_ty_or_desc(upper_obj_loc, upper_obj_desc),
+                                ref_of_type_desc(upper_obj_loc, upper_obj_desc),
                             ]
                         }
                         // upper is literal, lower is type
-                        (Ok(Elt::Type(_)), Err(upper_desc))
-                            if matches!(
-                                upper_desc,
-                                RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                            ) =>
+                        (
+                            ErrorTypeDesc::Normalized(Elt::Type(_)),
+                            ErrorTypeDesc::ReasonDesc(upper_desc),
+                        ) if matches!(
+                            upper_desc,
+                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
+                        ) =>
                         {
                             vec![
                                 text("annotate "),
@@ -4410,14 +4424,14 @@ where
                                     &mk_reason(upper_desc.clone(), upper_obj_loc.dupe()),
                                 ),
                                 text(" with "),
-                                ref_of_ty_or_desc(lower_obj_loc, lower_obj_desc),
+                                ref_of_type_desc(lower_obj_loc, lower_obj_desc),
                             ]
                         }
                         _ => vec![
                             text("make "),
-                            ref_of_ty_or_desc(lower_obj_loc, lower_obj_desc),
+                            ref_of_type_desc(lower_obj_loc, lower_obj_desc),
                             text(" and "),
-                            ref_of_ty_or_desc(upper_obj_loc, upper_obj_desc),
+                            ref_of_type_desc(upper_obj_loc, upper_obj_desc),
                             text(" exactly the same"),
                         ],
                     };
@@ -4426,7 +4440,7 @@ where
                 features.push(text(" invariantly typed. To fix,\n- Either "));
                 features.extend(fix_suggestion);
                 features.push(text("\n- Or make "));
-                features.push(ref_of_ty_or_desc(upper_object_loc, upper_obj_desc));
+                features.push(ref_of_type_desc(upper_object_loc, upper_obj_desc));
                 features.push(text(" readonly. See "));
                 features.push(text(
                     "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number",
@@ -4445,11 +4459,13 @@ where
 
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
                     match (lower_array_desc, upper_array_desc) {
-                        (Err(lower_desc), Ok(Elt::Type(_)))
-                            if matches!(
-                                lower_desc,
-                                RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                            ) =>
+                        (
+                            ErrorTypeDesc::ReasonDesc(lower_desc),
+                            ErrorTypeDesc::Normalized(Elt::Type(_)),
+                        ) if matches!(
+                            lower_desc,
+                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
+                        ) =>
                         {
                             vec![
                                 text("annotate "),
@@ -4458,14 +4474,16 @@ where
                                     &mk_reason(lower_desc.clone(), lower_array_loc.dupe()),
                                 ),
                                 text(" with "),
-                                ref_of_ty_or_desc(upper_array_loc, upper_array_desc),
+                                ref_of_type_desc(upper_array_loc, upper_array_desc),
                             ]
                         }
-                        (Ok(Elt::Type(_)), Err(upper_desc))
-                            if matches!(
-                                upper_desc,
-                                RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                            ) =>
+                        (
+                            ErrorTypeDesc::Normalized(Elt::Type(_)),
+                            ErrorTypeDesc::ReasonDesc(upper_desc),
+                        ) if matches!(
+                            upper_desc,
+                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
+                        ) =>
                         {
                             vec![
                                 text("annotate "),
@@ -4474,14 +4492,14 @@ where
                                     &mk_reason(upper_desc.clone(), upper_array_loc.dupe()),
                                 ),
                                 text(" with "),
-                                ref_of_ty_or_desc(lower_array_loc, lower_array_desc),
+                                ref_of_type_desc(lower_array_loc, lower_array_desc),
                             ]
                         }
                         _ => vec![
                             text("make "),
-                            ref_of_ty_or_desc(lower_array_loc, lower_array_desc),
+                            ref_of_type_desc(lower_array_loc, lower_array_desc),
                             text(" and "),
-                            ref_of_ty_or_desc(upper_array_loc, upper_array_desc),
+                            ref_of_type_desc(upper_array_loc, upper_array_desc),
                             text(" exactly the same"),
                         ],
                     };
@@ -4494,7 +4512,7 @@ where
                 ];
                 features.extend(fix_suggestion);
                 features.push(text("\n- Or make "));
-                features.push(ref_of_ty_or_desc(
+                features.push(ref_of_type_desc(
                     upper_array_reference_loc,
                     upper_array_desc,
                 ));
@@ -4524,11 +4542,13 @@ where
 
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
                     match (lower_obj_desc, upper_obj_desc) {
-                        (Err(lower_desc), Ok(Elt::Type(_)))
-                            if matches!(
-                                lower_desc,
-                                RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                            ) =>
+                        (
+                            ErrorTypeDesc::ReasonDesc(lower_desc),
+                            ErrorTypeDesc::Normalized(Elt::Type(_)),
+                        ) if matches!(
+                            lower_desc,
+                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
+                        ) =>
                         {
                             vec![
                                 text("annotate "),
@@ -4537,14 +4557,16 @@ where
                                     &mk_reason(lower_desc.clone(), lower_obj_loc.dupe()),
                                 ),
                                 text(" with "),
-                                ref_of_ty_or_desc(upper_obj_loc, upper_obj_desc),
+                                ref_of_type_desc(upper_obj_loc, upper_obj_desc),
                             ]
                         }
-                        (Ok(Elt::Type(_)), Err(upper_desc))
-                            if matches!(
-                                upper_desc,
-                                RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                            ) =>
+                        (
+                            ErrorTypeDesc::Normalized(Elt::Type(_)),
+                            ErrorTypeDesc::ReasonDesc(upper_desc),
+                        ) if matches!(
+                            upper_desc,
+                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
+                        ) =>
                         {
                             vec![
                                 text("annotate "),
@@ -4553,14 +4575,14 @@ where
                                     &mk_reason(upper_desc.clone(), upper_obj_loc.dupe()),
                                 ),
                                 text(" with "),
-                                ref_of_ty_or_desc(lower_obj_loc, lower_obj_desc),
+                                ref_of_type_desc(lower_obj_loc, lower_obj_desc),
                             ]
                         }
                         _ => vec![
                             text("make "),
-                            ref_of_ty_or_desc(lower_obj_loc, lower_obj_desc),
+                            ref_of_type_desc(lower_obj_loc, lower_obj_desc),
                             text(" and "),
-                            ref_of_ty_or_desc(upper_obj_loc, upper_obj_desc),
+                            ref_of_type_desc(upper_obj_loc, upper_obj_desc),
                             text(" exactly the same"),
                         ],
                     };
@@ -4574,7 +4596,7 @@ where
                 features.push(text("\n- Or make "));
                 features.extend(prop);
                 features.push(text(" in "));
-                features.push(ref_of_ty_or_desc(upper_object_loc, upper_obj_desc));
+                features.push(ref_of_type_desc(upper_object_loc, upper_obj_desc));
                 features.push(text(" readonly. See "));
                 features.push(text(
                     "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number",
@@ -4601,11 +4623,13 @@ where
 
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
                     match (lower_obj_desc, upper_obj_desc) {
-                        (Err(lower_desc), Ok(Elt::Type(_)))
-                            if matches!(
-                                lower_desc,
-                                RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                            ) =>
+                        (
+                            ErrorTypeDesc::ReasonDesc(lower_desc),
+                            ErrorTypeDesc::Normalized(Elt::Type(_)),
+                        ) if matches!(
+                            lower_desc,
+                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
+                        ) =>
                         {
                             vec![
                                 text("annotate "),
@@ -4614,14 +4638,16 @@ where
                                     &mk_reason(lower_desc.clone(), lower_obj_loc.dupe()),
                                 ),
                                 text(" with "),
-                                ref_of_ty_or_desc(upper_obj_loc, upper_obj_desc),
+                                ref_of_type_desc(upper_obj_loc, upper_obj_desc),
                             ]
                         }
-                        (Ok(Elt::Type(_)), Err(upper_desc))
-                            if matches!(
-                                upper_desc,
-                                RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                            ) =>
+                        (
+                            ErrorTypeDesc::Normalized(Elt::Type(_)),
+                            ErrorTypeDesc::ReasonDesc(upper_desc),
+                        ) if matches!(
+                            upper_desc,
+                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
+                        ) =>
                         {
                             vec![
                                 text("annotate "),
@@ -4630,14 +4656,14 @@ where
                                     &mk_reason(upper_desc.clone(), upper_obj_loc.dupe()),
                                 ),
                                 text(" with "),
-                                ref_of_ty_or_desc(lower_obj_loc, lower_obj_desc),
+                                ref_of_type_desc(lower_obj_loc, lower_obj_desc),
                             ]
                         }
                         _ => vec![
                             text("make "),
-                            ref_of_ty_or_desc(lower_obj_loc, lower_obj_desc),
+                            ref_of_type_desc(lower_obj_loc, lower_obj_desc),
                             text(" and "),
-                            ref_of_ty_or_desc(upper_obj_loc, upper_obj_desc),
+                            ref_of_type_desc(upper_obj_loc, upper_obj_desc),
                             text(" exactly the same"),
                         ],
                     };
@@ -4651,7 +4677,7 @@ where
                 features.push(text("\n- Or make "));
                 features.extend(props_msg);
                 features.push(text(" in "));
-                features.push(ref_of_ty_or_desc(upper_object_loc, upper_obj_desc));
+                features.push(ref_of_type_desc(upper_object_loc, upper_obj_desc));
                 features.push(text(" readonly. See "));
                 features.push(text(
                     "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number",
@@ -5412,7 +5438,7 @@ where
             MessageCannotAccessEnumWithComputedProp { description, enum_ } => {
                 let mut features = vec![text("Cannot access ")];
                 match description {
-                    Ok(Elt::Type(ty)) => match ty.as_ref() {
+                    ErrorTypeDesc::Normalized(Elt::Type(ty)) => match ty.as_ref() {
                         Ty::StrLit(value) => {
                             features.extend(vec![text("string literal "), code(value.as_str())])
                         }
@@ -5433,9 +5459,9 @@ where
                         Ty::Symbol => features.push(text("symbol")),
                         Ty::Void => features.push(text("undefined")),
                         Ty::Null => features.push(text("null")),
-                        _ => features.push(desc_of_ty_or_desc(description)),
+                        _ => features.push(desc_of_type_desc(description)),
                     },
-                    _ => features.push(desc_of_ty_or_desc(description)),
+                    _ => features.push(desc_of_type_desc(description)),
                 }
                 features.extend(vec![
                     text(" on "),
@@ -5470,7 +5496,7 @@ where
             }
             MessageCannotAssignToObjectWithComputedProp(property) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_of_ty_or_desc(&property.loc, &property.desc),
+                ref_of_type_desc(&property.loc, &property.desc),
                 text(" to assign a computed property."),
                 text(" Computed properties may only be numeric or string literal values."),
                 text(
@@ -5488,9 +5514,9 @@ where
                 };
                 friendly::Message(vec![
                     text(object_kind),
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" is incompatible with exact "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                 ])
             }
             MessageIncompatibleGeneral { lower, upper } => friendly::Message(vec![
@@ -5533,23 +5559,23 @@ where
                 let (lower_parts, upper_parts) = if *lower_is_hook {
                     (
                         vec![
-                            ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                            ref_of_type_desc(&lower.loc, &lower.desc),
                             text(" is a React "),
                             hook_wording,
                         ],
                         vec![
-                            ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                            ref_of_type_desc(&upper.loc, &upper.desc),
                             text(" is not a hook"),
                         ],
                     )
                 } else {
                     (
                         vec![
-                            ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                            ref_of_type_desc(&lower.loc, &lower.desc),
                             text(" is not a React hook"),
                         ],
                         vec![
-                            ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                            ref_of_type_desc(&upper.loc, &upper.desc),
                             text(" is a "),
                             hook_wording,
                         ],
@@ -5563,7 +5589,7 @@ where
             MessageInvalidKeyMirrorArgument(
                 box MessageInvalidKeyMirrorArgumentData { lower },
             ) => friendly::Message(vec![
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                ref_of_type_desc(&lower.loc, &lower.desc),
                 text(" is not a valid argument of "),
                 code("$KeyMirror"),
             ]),
@@ -5594,13 +5620,13 @@ where
                 };
                 let mut features = vec![
                     text("Cannot access "),
-                    ref_of_ty_or_desc(&object.loc, &object.desc),
+                    ref_of_type_desc(&object.loc, &object.desc),
                     text(" with computed property using "),
                     match kind {
                         InvalidObjKey::NullOrVoid => {
                             hardcoded_string_desc_ref("null or undefined", &property.loc)
                         }
-                        _ => ref_of_ty_or_desc(&property.loc, &property.desc),
+                        _ => ref_of_type_desc(&property.loc, &property.desc),
                     },
                     text("."),
                 ];
@@ -5743,7 +5769,7 @@ where
             }
             MessageCannotCallReactComponent(component) => friendly::Message(vec![
                 text("Cannot call "),
-                ref_of_ty_or_desc(&component.loc, &component.desc),
+                ref_of_type_desc(&component.loc, &component.desc),
                 text(" because React components cannot be called. Use JSX instead. "),
                 text("(https://react.dev/reference/rules/react-calls-components-and-hooks)"),
             ]),
@@ -5814,9 +5840,9 @@ where
             }) => {
                 let mut features = vec![
                     text("Cannot compare "),
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" to "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                 ];
                 match strict_comparison_opt {
                     None => features.push(text(".")),
@@ -5825,13 +5851,13 @@ where
                             StrictComparisonInfo::General { left, right } => {
                                 features.extend(vec![
                                     text(", because "),
-                                    ref_of_ty_or_desc(&left.loc, &left.desc),
+                                    ref_of_type_desc(&left.loc, &left.desc),
                                     text(" is not a subtype of "),
-                                    ref_of_ty_or_desc(&right.loc, &right.desc),
+                                    ref_of_type_desc(&right.loc, &right.desc),
                                     text(" and "),
-                                    ref_of_ty_or_desc(&right.loc, &right.desc),
+                                    ref_of_type_desc(&right.loc, &right.desc),
                                     text(" is not a subtype of "),
-                                    ref_of_ty_or_desc(&left.loc, &left.desc),
+                                    ref_of_type_desc(&left.loc, &left.desc),
                                     text(". In **rare** cases, these types may have overlapping values but lack a subtyping relationship. "),
                                     text("If that happens, you can cast one side to the union of both types to pass the flow check. "),
                                 ]);
@@ -5841,7 +5867,7 @@ where
                                     text(", because"),
                                     friendly::no_desc_ref(&loc_of_aloc(null_loc)),
                                     text(" is null and "),
-                                    ref_of_ty_or_desc(&other.loc, &other.desc),
+                                    ref_of_type_desc(&other.loc, &other.desc),
                                     text(" does not contain null. "),
                                     text("Perhaps you meant to use "),
                                     code("=="),
@@ -5855,7 +5881,7 @@ where
                             StrictComparisonInfo::Empty { empty } => {
                                 features.extend(vec![
                                     text(", because "),
-                                    ref_of_ty_or_desc(&empty.loc, &empty.desc),
+                                    ref_of_type_desc(&empty.loc, &empty.desc),
                                     text(" is empty. "),
                                 ]);
                             }
@@ -5866,9 +5892,9 @@ where
             }
             MessageCannotCompareNonStrict { lower, upper } => friendly::Message(vec![
                 text("Cannot compare "),
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                ref_of_type_desc(&lower.loc, &lower.desc),
                 text(" to "),
-                ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                ref_of_type_desc(&upper.loc, &upper.desc),
                 text(" with a non-strict equality check. "),
                 text("Make sure the arguments are valid, "),
                 text("or try using strict equality ("),
@@ -5879,7 +5905,7 @@ where
             ]),
             MessageCannotCreateExactType(value) => friendly::Message(vec![
                 text("Cannot create exact type from "),
-                ref_of_ty_or_desc(&value.loc, &value.desc),
+                ref_of_type_desc(&value.loc, &value.desc),
                 text("."),
             ]),
             MessageCannotDeclareAlreadyBoundName(x) => friendly::Message(vec![
@@ -5916,7 +5942,7 @@ where
             ]),
             MessageCannotDelete(expr) => friendly::Message(vec![
                 text("Cannot delete "),
-                ref_of_ty_or_desc(&expr.loc, &expr.desc),
+                ref_of_type_desc(&expr.loc, &expr.desc),
                 text(" because only member expressions and variables can be deleted."),
             ]),
             MessageCannotDetermineEmptyArrayLiteralType => friendly::Message(vec![text(
@@ -6014,7 +6040,7 @@ where
             ]),
             MessageCannotImplementNonInterface(type_) => friendly::Message(vec![
                 text("Cannot implement "),
-                ref_of_ty_or_desc(&type_.loc, &type_.desc),
+                ref_of_type_desc(&type_.loc, &type_.desc),
                 text(" because it is not an interface."),
             ]),
             MessageCannotInstantiateObjectUtilTypeWithEnum(
@@ -6084,7 +6110,7 @@ where
                 code("for...in"),
                 text(" statement "),
                 text("because "),
-                ref_of_ty_or_desc(&rhs.loc, &rhs.desc),
+                ref_of_type_desc(&rhs.loc, &rhs.desc),
                 text(" is not an object, null, or undefined."),
             ]),
             MessageCannotMutateThisPrototype => {
@@ -6143,7 +6169,7 @@ where
                 let features = match kind {
                     OptimizedError::ContainsUnresolved { loc, desc } => vec![
                         text("Flow cannot resolve "),
-                        ref_of_ty_or_desc(loc, &expect_type_desc(desc.clone())),
+                        ref_of_type_desc(loc, &expect_type_desc(desc.clone())),
                         text(" well enough to quickly check this union. "),
                         text("Try inlining or simplifying this type."),
                     ],
@@ -6196,19 +6222,19 @@ where
             MessageCannotPerformArithOnNonNumbersOrBigInt(operand) => {
                 friendly::Message(vec![
                     text("Cannot perform arithmetic operation because "),
-                    ref_of_ty_or_desc(&operand.loc, &operand.desc),
+                    ref_of_type_desc(&operand.loc, &operand.desc),
                     text(" is not a number or bigint."),
                 ])
             }
             MessageCannotPerformBigIntRShift3(operand) => friendly::Message(vec![
                 text("Cannot perform unsigned right shift because "),
-                ref_of_ty_or_desc(&operand.loc, &operand.desc),
+                ref_of_type_desc(&operand.loc, &operand.desc),
                 text(" "),
                 text("is a bigint, and all bigints are signed."),
             ]),
             MessageCannotPerformBigIntUnaryPlus(operand) => friendly::Message(vec![
                 text("Cannot perform unary plus because a "),
-                ref_of_ty_or_desc(&operand.loc, &operand.desc),
+                ref_of_type_desc(&operand.loc, &operand.desc),
                 text(" "),
                 text("cannot be coerced to number."),
             ]),
@@ -6222,9 +6248,9 @@ where
                     text("Cannot use operator `"),
                     text(kind_str),
                     text("` with operands "),
-                    ref_of_ty_or_desc(&left.loc, &left.desc),
+                    ref_of_type_desc(&left.loc, &left.desc),
                     text(" and "),
-                    ref_of_ty_or_desc(&right.loc, &right.desc),
+                    ref_of_type_desc(&right.loc, &right.desc),
                 ])
             }
             MessageCannotReassignConstant(x) => friendly::Message(vec![
@@ -6366,14 +6392,14 @@ where
                 text("Flow cannot determine a type for the "),
                 hardcoded_string_desc_ref("spread", spread_loc),
                 text(". "),
-                ref_of_ty_or_desc(&object.loc, &object.desc),
+                ref_of_type_desc(&object.loc, &object.desc),
                 text(" cannot be spread because the indexer "),
-                ref_of_ty_or_desc(&key.loc, &key.desc),
+                ref_of_type_desc(&key.loc, &key.desc),
                 text(
                     " may overwrite properties with explicit keys in a way that Flow cannot track. ",
                 ),
                 text("Try spreading "),
-                ref_of_ty_or_desc(&object.loc, &object.desc),
+                ref_of_type_desc(&object.loc, &object.desc),
                 text(" first or remove the indexer"),
             ]),
             MessageCannotSpreadGeneral(box MessageCannotSpreadGeneralData {
@@ -6389,7 +6415,7 @@ where
                         "is inexact",
                         vec![
                             text(" Try making "),
-                            ref_of_ty_or_desc(&object2.loc, &object2.desc),
+                            ref_of_type_desc(&object2.loc, &object2.desc),
                             text(" exact"),
                         ],
                     ),
@@ -6397,7 +6423,7 @@ where
                         "has an indexer",
                         vec![
                             text(" Try removing the indexer in "),
-                            ref_of_ty_or_desc(&object2.loc, &object2.desc),
+                            ref_of_type_desc(&object2.loc, &object2.desc),
                             text(" or make "),
                             code(&propname.display_smol_str()),
                             text(" a required property"),
@@ -6408,7 +6434,7 @@ where
                     text("Flow cannot determine a type for the "),
                     hardcoded_string_desc_ref("spread", spread_loc),
                     text(". "),
-                    ref_of_ty_or_desc(&object2.loc, &object2.desc),
+                    ref_of_type_desc(&object2.loc, &object2.desc),
                     text(" "),
                     text(error_reason),
                     text(", so it may contain "),
@@ -6416,7 +6442,7 @@ where
                     text(" with a type that conflicts with "),
                     code(&propname.display_smol_str()),
                     text("'s definition in "),
-                    ref_of_ty_or_desc(&object1.loc, &object1.desc),
+                    ref_of_type_desc(&object1.loc, &object1.desc),
                     text("."),
                 ];
                 features.extend(fix_suggestion);
@@ -6433,14 +6459,14 @@ where
                 text("Flow cannot determine a type for the "),
                 hardcoded_string_desc_ref("spread", spread_loc),
                 text(". "),
-                ref_of_ty_or_desc(&object2.loc, &object2.desc),
+                ref_of_type_desc(&object2.loc, &object2.desc),
                 text(" is inexact and may "),
                 text("have a property key that conflicts with "),
-                ref_of_ty_or_desc(&key.loc, &key.desc),
+                ref_of_type_desc(&key.loc, &key.desc),
                 text(" or a property value that conflicts with "),
-                ref_of_ty_or_desc(&value.loc, &value.desc),
+                ref_of_type_desc(&value.loc, &value.desc),
                 text(". Try making "),
-                ref_of_ty_or_desc(&object2.loc, &object2.desc),
+                ref_of_type_desc(&object2.loc, &object2.desc),
                 text(" exact"),
             ]),
             MessageCannotSpreadInterface {
@@ -6450,7 +6476,7 @@ where
                 text("Flow cannot determine a type for the "),
                 hardcoded_string_desc_ref("spread", spread_loc),
                 text(". "),
-                ref_of_ty_or_desc(&interface.loc, &interface.desc),
+                ref_of_type_desc(&interface.loc, &interface.desc),
                 text(" cannot be spread because interfaces do not "),
                 text("track the own-ness of their properties. Try using an object type instead"),
             ]),
@@ -6458,14 +6484,14 @@ where
                 text("Cannot use "),
                 code("new"),
                 text(" on "),
-                ref_of_ty_or_desc(&value.loc, &value.desc),
+                ref_of_type_desc(&value.loc, &value.desc),
                 text(
                     ". Only classes and interfaces with a construct signature can be constructed.",
                 ),
             ]),
             MessageCannotUseAsPrototype(prototype) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_of_ty_or_desc(&prototype.loc, &prototype.desc),
+                ref_of_type_desc(&prototype.loc, &prototype.desc),
                 text(" as a prototype. Expected an object or null."),
             ]),
             MessageCannotUseAsSuperClass(expression) => friendly::Message(vec![
@@ -6521,21 +6547,21 @@ where
                 text("Cannot use "),
                 code("in"),
                 text(" because on the left-hand side, "),
-                ref_of_ty_or_desc(&lhs.loc, &lhs.desc),
+                ref_of_type_desc(&lhs.loc, &lhs.desc),
                 text(" must be a string or number."),
             ]),
             MessageCannotUseInOperatorDueToBadRHS(rhs) => friendly::Message(vec![
                 text("Cannot use "),
                 code("in"),
                 text(" because on the right-hand side, "),
-                ref_of_ty_or_desc(&rhs.loc, &rhs.desc),
+                ref_of_type_desc(&rhs.loc, &rhs.desc),
                 text(" must be an object or array."),
             ]),
             MessageCannotUseInstanceOfOperatorDueToBadRHS(rhs) => friendly::Message(vec![
                 text("The right-hand side of an "),
                 code("instanceof"),
                 text(" expression must be an object, but got "),
-                ref_of_ty_or_desc(&rhs.loc, &rhs.desc),
+                ref_of_type_desc(&rhs.loc, &rhs.desc),
                 text("."),
             ]),
             MessageCannotUseMixedImportAndRequire(import_loc) => friendly::Message(vec![
@@ -6552,7 +6578,7 @@ where
             } => {
                 let use_word = if *is_new { "construct " } else { "call " };
                 let callee = match callee.as_ref() {
-                    CallTypeArityCallee::Type(callee) => ref_of_ty_or_desc(&callee.loc, &callee.desc),
+                    CallTypeArityCallee::Type(callee) => ref_of_type_desc(&callee.loc, &callee.desc),
                     CallTypeArityCallee::Builtin(name) => code(name),
                     CallTypeArityCallee::Function => text("function"),
                 };
@@ -6586,9 +6612,9 @@ where
                     super::intermediate_error_types::PrimitiveKind::String => "String",
                 };
                 friendly::Message(vec![
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(", a primitive, cannot be used as a subtype of "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                     text(". "),
                     text("You can wrap it in "),
                     code(&format!("new {}(...))", kind_str)),
@@ -6634,7 +6660,7 @@ where
                 features.extend(friendly::message_of_string::<Loc>(&operation_desc).0);
                 features.extend(vec![
                     text(" on "),
-                    ref_of_ty_or_desc(target_loc, target_desc),
+                    ref_of_type_desc(target_loc, target_desc),
                     text(" in an export position. "),
                     text("Please provide an (alternative) annotation for "),
                     friendly::hardcoded_string_desc_ref(
@@ -6737,7 +6763,7 @@ where
                 };
                 friendly::Message(vec![
                     text("Cannot use "),
-                    ref_of_ty_or_desc(&type_.loc, &type_.desc),
+                    ref_of_type_desc(&type_.loc, &type_.desc),
                     text(&format!(" without {} type {}.", arity, args)),
                 ])
             }
@@ -7400,12 +7426,12 @@ where
                     >|
                      -> Vec<friendly::MessageFeature<Loc>> {
                         match second {
-                            None => vec![ref_of_ty_or_desc(&first.loc, &first.desc)],
+                            None => vec![ref_of_type_desc(&first.loc, &first.desc)],
                             Some(second) => vec![
                                 text("inferred union from "),
-                                ref_of_ty_or_desc(&first.loc, &first.desc),
+                                ref_of_type_desc(&first.loc, &first.desc),
                                 text(" | "),
-                                ref_of_ty_or_desc(&second.loc, &second.desc),
+                                ref_of_type_desc(&second.loc, &second.desc),
                             ],
                         }
                     };
@@ -7482,9 +7508,9 @@ where
                     upper_desc,
                 },
             ) => friendly::Message(vec![
-                ref_of_ty_or_desc(lower_loc, lower_desc),
+                ref_of_type_desc(lower_loc, lower_desc),
                 text(" is incompatible with "),
-                ref_of_ty_or_desc(upper_loc, upper_desc),
+                ref_of_type_desc(upper_loc, upper_desc),
             ]),
             MessageIncompatibleMappedTypeKey {
                 source_type,
@@ -7522,11 +7548,11 @@ where
                     }
                 };
                 friendly::Message(vec![
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" has "),
                     text(&str_of_arity(*lower_inexact, lower_arity)),
                     text(" but "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                     text(" has "),
                     text(&str_of_arity(*upper_inexact, upper_arity)),
                 ])
@@ -7541,21 +7567,21 @@ where
                     super::intermediate_error_types::ClassKind::Record => "Records",
                 };
                 friendly::Message(vec![
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" is not a subtype of "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                     text(". "),
                     text(kind_str),
                     text(" are not subtypes of object types; consider rewriting "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                     text(" as an interface"),
                 ])
             }
             MessageIncompatibleNonLiteralArrayToTuple { lower, upper } => friendly::Message(vec![
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                ref_of_type_desc(&lower.loc, &lower.desc),
                 text(" has an unknown number of elements, so is "),
                 text("incompatible with "),
-                ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                ref_of_type_desc(&upper.loc, &upper.desc),
             ]),
             MessageIncompatibleNonTypeGuardToTypeGuard { lower, upper } => {
                 let reference = |reference: &TypeGuardFuncReference<
@@ -7563,7 +7589,7 @@ where
                     MessageTypeReferenceData<L>,
                 >| match reference {
                     TypeGuardFuncReference::Type(reference) => {
-                        ref_of_ty_or_desc(&reference.loc, &reference.desc)
+                        ref_of_type_desc(&reference.loc, &reference.desc)
                     }
                     TypeGuardFuncReference::TypeGuard(reference) => type_guard_reference(reference),
                 };
@@ -7576,16 +7602,16 @@ where
             }
             MessageIncompatibleReactHooksDueToUniqueness { lower, upper } => {
                 friendly::Message(vec![
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" and "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                     text(" are different React hooks"),
                 ])
             }
             MessageIncompatibleWithIndexed { lower, upper } => friendly::Message(vec![
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                ref_of_type_desc(&lower.loc, &lower.desc),
                 text(" is incompatible with indexed "),
-                ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                ref_of_type_desc(&upper.loc, &upper.desc),
             ]),
             MessageIncompleteExhausiveCheckEnum(box MessageIncompleteExhausiveCheckEnumData {
                 description_name,
@@ -7968,7 +7994,7 @@ where
             }
             MessageInvalidTupleTypeSpread(reason_arg) => friendly::Message(vec![
                 text("Cannot spread non-tuple ("),
-                ref_of_ty_or_desc(&reason_arg.loc, &reason_arg.desc),
+                ref_of_type_desc(&reason_arg.loc, &reason_arg.desc),
                 text(") into tuple type."),
             ]),
             MessageTupleElementAfterInexactSpread => friendly::Message(vec![text(
@@ -7990,14 +8016,14 @@ where
                         text(" You can only use an element of "),
                         code("AbstractComponent"),
                         text(" when the third type argument is a render type and "),
-                        ref_of_ty_or_desc(&r.loc, &r.desc),
+                        ref_of_type_desc(&r.loc, &r.desc),
                         text(" is not a render type."),
                     ],
                     (InvalidRenderTypeKind::InvalidRendersNonNominalElement(r), _) => vec![
                         text(
                             " Only elements of a component-syntax components can appear in renders but ",
                         ),
-                        ref_of_ty_or_desc(&r.loc, &r.desc),
+                        ref_of_type_desc(&r.loc, &r.desc),
                         text(" is not a component-syntax component."),
                     ],
                     (InvalidRenderTypeKind::InvalidRendersNullVoidFalse, RendersVariant::Maybe) => {
@@ -8075,7 +8101,7 @@ where
                                 result.push(text(", "));
                             }
                         }
-                        result.push(ref_of_ty_or_desc(&type_.loc, &type_.desc));
+                        result.push(ref_of_type_desc(&type_.loc, &type_.desc));
                     }
                     result
                 };
@@ -8142,7 +8168,7 @@ where
             ]),
             MessageInvalidUseOfFlowEnforceOptimized(arg) => friendly::Message(vec![
                 text("Invalid use of $Flow$EnforceOptimized on non-union type "),
-                ref_of_ty_or_desc(&arg.loc, &arg.desc),
+                ref_of_type_desc(&arg.loc, &arg.desc),
                 text("."),
             ]),
             MessageMissingAnnotation(d) => friendly::Message(vec![
@@ -8162,7 +8188,7 @@ where
             ]),
             MessageLowerIsNotReactComponent(lower) => {
                 friendly::Message(vec![
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" is not a React component"),
                 ])
             }
@@ -8185,19 +8211,19 @@ where
                     LowerRequirement::PolymorphicType => " is not a polymorphic type",
                 };
                 friendly::Message(vec![
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(suffix),
                 ])
             }
             MessageLowerIsNotSupportedByUnclassifiedUseWithPrintedType { lower, ctor } => {
                 friendly::Message(vec![
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" is not supported by unclassified use "),
                     text(ctor),
                 ])
             }
             MessageLowerDoesNotHavePropertiesWithPrintedType(lower) => friendly::Message(vec![
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                ref_of_type_desc(&lower.loc, &lower.desc),
                 text(" does not have properties"),
             ]),
             MessageNoDefaultExport(box MessageNoDefaultExportData {
@@ -8307,12 +8333,12 @@ where
                 }
                 features.extend(vec![
                     text(" is missing in "),
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                 ]);
                 if let Some(upper) = upper {
                     features.extend(vec![
                         text(" but exists in "),
-                        ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                        ref_of_type_desc(&upper.loc, &upper.desc),
                     ]);
                 }
                 friendly::Message(features)
@@ -8322,7 +8348,7 @@ where
                 let mut features = mk_prop_message(Some(prop.as_str()));
                 features.extend(vec![
                     text(" is missing in "),
-                    ref_of_ty_or_desc(&object.loc, &object.desc),
+                    ref_of_type_desc(&object.loc, &object.desc),
                 ]);
                 friendly::Message(features)
             }
@@ -8336,13 +8362,13 @@ where
                 let mut features = mk_prop_message(Some(prop.as_str()));
                 features.extend(vec![
                     text(" is missing in "),
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" but exists in "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                     text(". Any property that does not exist in "),
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" must be compatible with its indexer "),
-                    ref_of_ty_or_desc(&indexer.loc, &indexer.desc),
+                    ref_of_type_desc(&indexer.loc, &indexer.desc),
                 ]);
                 friendly::Message(features)
             }
@@ -8353,17 +8379,17 @@ where
                 text(
                     "a construct signature declaring the expected parameter / return type is missing in ",
                 ),
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                ref_of_type_desc(&lower.loc, &lower.desc),
                 text(" but exists in "),
-                ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                ref_of_type_desc(&upper.loc, &upper.desc),
             ]),
             MessagePropsMissingWithPrintedType(box MessagePropsMissingWithPrintedTypeData {
                 lower,
                 upper,
                 props,
             }) => {
-                let lower = ref_of_ty_or_desc(&lower.loc, &lower.desc);
-                let upper = ref_of_ty_or_desc(&upper.loc, &upper.desc);
+                let lower = ref_of_type_desc(&lower.loc, &lower.desc);
+                let upper = ref_of_type_desc(&upper.loc, &upper.desc);
                 let (first_prop, rest_props) = props.clone().split_off_first();
                 if rest_props.is_empty() {
                     friendly::Message(vec![
@@ -8415,7 +8441,7 @@ where
                     L,
                 >| match object {
                     PropPolarityMismatchObject::Type(reference) => {
-                        ref_of_ty_or_desc(&reference.loc, &reference.desc)
+                        ref_of_type_desc(&reference.loc, &reference.desc)
                     }
                     PropPolarityMismatchObject::Class(class) => render_named_reference(class),
                 };
@@ -8629,7 +8655,7 @@ where
                 text("Avoid using "),
                 code("&&"),
                 text(" to check the value of "),
-                ref_of_ty_or_desc(&value.loc, &value.desc),
+                ref_of_type_desc(&value.loc, &value.desc),
                 text(". "),
                 text(
                     "Consider handling falsy values (0 and NaN) by using a conditional to choose an ",
@@ -9080,7 +9106,7 @@ where
                     "out of bounds"
                 };
                 friendly::Message(vec![
-                    ref_of_ty_or_desc(&tuple.loc, &tuple.desc),
+                    ref_of_type_desc(&tuple.loc, &tuple.desc),
                     text(&format!(
                         " only has {} element{}{}, so index {} is {}",
                         length, plural, explicit, index, bounds_msg
@@ -9117,11 +9143,11 @@ where
                     text(" is "),
                     text(expected),
                     text(" in "),
-                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" but "),
                     text(actual),
                     text(" in "),
-                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ref_of_type_desc(&upper.loc, &upper.desc),
                 ])
             }
             MessageTypeGuardIndexMismatch { lower, upper } => friendly::Message(vec![
@@ -9143,7 +9169,7 @@ where
                 friendly::desc_of_reason_desc(return_desc),
                 text(" because the negation of the predicate encoded in this expression"),
                 text(" needs to completely refine away the guard type "),
-                ref_of_ty_or_desc(&type_.loc, &type_.desc),
+                ref_of_type_desc(&type_.loc, &type_.desc),
                 text(". "),
                 text("Consider using a one-sided type-guard (`implies x is T`). "),
                 text("See 2. in "),
@@ -9163,7 +9189,7 @@ where
                 }),
                 hardcoded_string_desc_ref(&format!("`{}`", param.name), &param.loc),
                 text(" may still be falsy here: it may be "),
-                ref_of_ty_or_desc(&falsy.loc, &falsy.desc),
+                ref_of_type_desc(&falsy.loc, &falsy.desc),
                 text(". Throw an error or call another assertion function on every path "),
                 text("where it is falsy."),
             ]),
@@ -9250,7 +9276,7 @@ where
             } => {
                 let condition = match condition_kind {
                     UnnecessaryInvariantConditionKind::Type => {
-                        ref_of_ty_or_desc(&condition.loc, &condition.desc)
+                        ref_of_type_desc(&condition.loc, &condition.desc)
                     }
                     UnnecessaryInvariantConditionKind::IntersectionType => {
                         hardcoded_string_desc_ref("intersection type", &condition.loc)
@@ -9807,7 +9833,7 @@ where
                             .map(|reference| {
                                 friendly::Message(vec![match reference {
                                     MatchExampleReference::Type(reference) => {
-                                        ref_of_ty_or_desc(&reference.loc, &reference.desc)
+                                        ref_of_type_desc(&reference.loc, &reference.desc)
                                     }
                                     MatchExampleReference::EnumMember {
                                         loc,
@@ -9949,7 +9975,7 @@ where
                     Some(rest) => {
                         let base_msg = vec![
                             text("could be additional properties due to "),
-                            ref_of_ty_or_desc(&rest.loc, &rest.desc),
+                            ref_of_type_desc(&rest.loc, &rest.desc),
                             text(". To fix, add "),
                         ];
                         if has_missing_props {
@@ -10024,7 +10050,7 @@ where
             ]),
             MessageMatchInvalidIdentOrMemberPattern { type_ } => friendly::Message(vec![
                 text("Cannot have "),
-                ref_of_ty_or_desc(&type_.loc, &type_.desc),
+                ref_of_type_desc(&type_.loc, &type_.desc),
                 text(" in a match pattern position. "),
                 text("Valid types for match patterns include string literals, number literals, "),
                 text("bigint literals, boolean literals, enum members, null, or undefined."),
@@ -10208,7 +10234,7 @@ where
                 text("Operation "),
                 hardcoded_string_desc_ref(op.to_string(), op_loc),
                 text(" is not allowed on record "),
-                ref_of_ty_or_desc(&record.loc, &record.desc),
+                ref_of_type_desc(&record.loc, &record.desc),
                 text(". "),
                 text("To fix, turn the record type into an object type first using "),
                 code("{...MyRecord}"),
@@ -10429,7 +10455,7 @@ where
                             InvalidObjKey::NullOrVoid => {
                                 hardcoded_string_desc_ref("null or undefined", &property.loc)
                             }
-                            _ => ref_of_ty_or_desc(&property.loc, &property.desc),
+                            _ => ref_of_type_desc(&property.loc, &property.desc),
                         },
                         text(". Can you add an appropriate type annotation to "),
                         render_expression_reference(key),
@@ -10575,9 +10601,9 @@ where
                 },
             ) => match sub_component {
                 None => friendly::Message(vec![
-                    ref_of_ty_or_desc(lower_loc, lower_desc),
+                    ref_of_type_desc(lower_loc, lower_desc),
                     text(" is not exactly the same as "),
-                    ref_of_ty_or_desc(upper_loc, upper_desc),
+                    ref_of_type_desc(upper_loc, upper_desc),
                 ]),
                 Some(SubComponentOfInvariantSubtypingError::ObjectProps(props)) => {
                     let prop_codes: Vec<friendly::Message<Loc>> = props
@@ -10587,9 +10613,9 @@ where
                     let mut features = vec![text("properties ")];
                     features.extend(friendly::conjunction_concat(prop_codes, "and", None).0);
                     features.push(text(" of "));
-                    features.push(ref_of_ty_or_desc(lower_loc, lower_desc));
+                    features.push(ref_of_type_desc(lower_loc, lower_desc));
                     features.push(text(" are not exactly the same as those of "));
-                    features.push(ref_of_ty_or_desc(upper_loc, upper_desc));
+                    features.push(ref_of_type_desc(upper_loc, upper_desc));
                     friendly::Message(features)
                 }
             },
@@ -10629,9 +10655,9 @@ where
                 result.push(text(" "));
                 result.push(text(if plural { "are" } else { "is" }));
                 result.push(text(" extra in "));
-                result.push(ref_of_ty_or_desc(&lower.loc, &lower.desc));
+                result.push(ref_of_type_desc(&lower.loc, &lower.desc));
                 result.push(text(" but missing in "));
-                result.push(ref_of_ty_or_desc(&upper.loc, &upper.desc));
+                result.push(ref_of_type_desc(&upper.loc, &upper.desc));
                 result.push(text(". "));
                 result.push(text(upper_kind));
                 result.push(text(" do not accept extra props"));

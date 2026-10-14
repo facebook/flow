@@ -38,6 +38,7 @@ use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualUseOp;
 use flow_typing_type::type_::type_collector;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
@@ -74,8 +75,8 @@ fn incompatible_renders_error(
             .annot_loc()
             .unwrap_or_else(|| reasonu.def_loc())
             .dupe(),
-        lower_desc: TypeOrTypeDescT::TypeDesc(Err(reasonl.desc.clone())),
-        upper_desc: TypeOrTypeDescT::TypeDesc(Err(reasonu.desc.clone())),
+        lower_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(reasonl.desc.clone())),
+        upper_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(reasonu.desc.clone())),
         use_op,
         explanation: None,
         example: None,

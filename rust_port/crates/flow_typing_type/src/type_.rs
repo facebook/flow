@@ -9372,10 +9372,37 @@ pub mod type_or_type_desc {
 
     use super::*;
 
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+        serde::Serialize,
+        serde::Deserialize
+    )]
+    pub enum ErrorTypeDesc<L: Dupe> {
+        Normalized(ALocElt),
+        ReasonDesc(VirtualReasonDesc<L>),
+        Unknown,
+    }
+
+    impl<L: Dupe> ErrorTypeDesc<L> {
+        pub fn map_locs<M: Dupe>(self, f: impl Fn(&L) -> M) -> ErrorTypeDesc<M> {
+            match self {
+                Self::Normalized(ty) => ErrorTypeDesc::Normalized(ty),
+                Self::ReasonDesc(desc) => ErrorTypeDesc::ReasonDesc(desc.map_locs(&f)),
+                Self::Unknown => ErrorTypeDesc::Unknown,
+            }
+        }
+    }
+
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub enum TypeOrTypeDescT<L: Dupe> {
         Type(Type),
-        TypeDesc(Result<ALocElt, VirtualReasonDesc<L>>),
+        TypeDesc(ErrorTypeDesc<L>),
     }
 
     impl<L> serde::Serialize for TypeOrTypeDescT<L>
@@ -9388,15 +9415,12 @@ pub mod type_or_type_desc {
         {
             #[derive(serde::Serialize)]
             enum TypeOrTypeDescSerde<'a, L: Dupe> {
-                Type(&'a VirtualReasonDesc<L>),
-                TypeDesc(&'a Result<ALocElt, VirtualReasonDesc<L>>),
+                Type,
+                TypeDesc(&'a ErrorTypeDesc<L>),
             }
 
             match self {
-                TypeOrTypeDescT::Type(ty) => {
-                    TypeOrTypeDescSerde::Type(&crate::type_util::reason_of_t(ty).desc)
-                        .serialize(serializer)
-                }
+                TypeOrTypeDescT::Type(_) => TypeOrTypeDescSerde::<L>::Type.serialize(serializer),
                 TypeOrTypeDescT::TypeDesc(desc) => {
                     TypeOrTypeDescSerde::TypeDesc(desc).serialize(serializer)
                 }
@@ -9414,12 +9438,12 @@ pub mod type_or_type_desc {
         {
             #[derive(serde::Deserialize)]
             enum TypeOrTypeDescSerde<L: Dupe> {
-                Type(VirtualReasonDesc<L>),
-                TypeDesc(Result<ALocElt, VirtualReasonDesc<L>>),
+                Type,
+                TypeDesc(ErrorTypeDesc<L>),
             }
 
             Ok(match TypeOrTypeDescSerde::deserialize(deserializer)? {
-                TypeOrTypeDescSerde::Type(desc) => TypeOrTypeDescT::TypeDesc(Err(desc)),
+                TypeOrTypeDescSerde::Type => TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown),
                 TypeOrTypeDescSerde::TypeDesc(desc) => TypeOrTypeDescT::TypeDesc(desc),
             })
         }
@@ -9440,10 +9464,7 @@ pub mod type_or_type_desc {
     {
         match t {
             TypeOrTypeDescT::Type(ty) => TypeOrTypeDescT::Type(ty),
-            TypeOrTypeDescT::TypeDesc(Ok(ty)) => TypeOrTypeDescT::TypeDesc(Ok(ty)),
-            TypeOrTypeDescT::TypeDesc(Err(desc)) => {
-                TypeOrTypeDescT::TypeDesc(Err(desc.map_locs(&f)))
-            }
+            TypeOrTypeDescT::TypeDesc(desc) => TypeOrTypeDescT::TypeDesc(desc.map_locs(f)),
         }
     }
 }

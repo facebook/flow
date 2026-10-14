@@ -19,7 +19,6 @@ use flow_common::flow_import_specifier::Userland;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
-use flow_common::reason::VirtualReasonDesc;
 use flow_common::refinement_invalidation;
 use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils::ErrorKind;
@@ -27,7 +26,6 @@ use flow_common_errors::error_utils::InferWarningKind;
 use flow_common_errors::error_utils::friendly::MessageFeature;
 use flow_common_errors::error_utils::friendly::code;
 use flow_common_errors::error_utils::friendly::text;
-use flow_common_ty::ty::ALocElt;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api::AnnotLoc;
 use flow_env_builder::env_api::DefLocType;
@@ -56,6 +54,7 @@ use flow_typing_type::type_::VirtualUseOp;
 use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_::fold_virtual_use_op;
 use flow_typing_type::type_::type_or_type_desc;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 pub use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT as TypeOrTypeDesc;
 use flow_typing_type::type_::union_rep::OptimizedError;
 use flow_typing_type::type_util::mod_loc_of_virtual_use_op;
@@ -1057,7 +1056,7 @@ pub struct EAnnotationInferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
     pub operation: AnnotationInferenceOperation,
     pub operation_loc: L,
     pub target_loc: L,
-    pub target_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub target_desc: ErrorTypeDesc<L>,
 }
 
 // The normalized target type is presentation-only, so it does not affect error identity.
@@ -4327,7 +4326,6 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
     explanation: Explanation<L>,
 ) -> Explanation<M> {
     let map_reason = |r: VirtualReason<L>| -> VirtualReason<M> { r.map_locs(f) };
-    let map_desc = |d: VirtualReasonDesc<L>| -> VirtualReasonDesc<M> { d.map_locs(f) };
 
     match explanation {
         Explanation::ExplanationAbstractEnumCasting => Explanation::ExplanationAbstractEnumCasting,
@@ -4376,8 +4374,8 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
                 ExplanationInvariantSubtypingDueToMutableArrayData {
                     lower_array_loc: f(&lower_array_loc),
                     upper_array_loc: f(&upper_array_loc),
-                    lower_array_desc: lower_array_desc.map_err(map_desc),
-                    upper_array_desc: upper_array_desc.map_err(map_desc),
+                    lower_array_desc: lower_array_desc.map_locs(f),
+                    upper_array_desc: upper_array_desc.map_locs(f),
                     upper_array_reference_loc: f(&upper_array_reference_loc),
                 },
             ))
@@ -4395,8 +4393,8 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
                 ExplanationInvariantSubtypingDueToMutablePropertyData {
                     lower_obj_loc: f(&lower_obj_loc),
                     upper_obj_loc: f(&upper_obj_loc),
-                    lower_obj_desc: lower_obj_desc.map_err(map_desc),
-                    upper_obj_desc: upper_obj_desc.map_err(map_desc),
+                    lower_obj_desc: lower_obj_desc.map_locs(f),
+                    upper_obj_desc: upper_obj_desc.map_locs(f),
                     upper_object_loc: f(&upper_object_loc),
                     property_name,
                 },
@@ -4415,8 +4413,8 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
                 ExplanationInvariantSubtypingDueToMutablePropertiesData {
                     lower_obj_loc: f(&lower_obj_loc),
                     upper_obj_loc: f(&upper_obj_loc),
-                    lower_obj_desc: lower_obj_desc.map_err(map_desc),
-                    upper_obj_desc: upper_obj_desc.map_err(map_desc),
+                    lower_obj_desc: lower_obj_desc.map_locs(f),
+                    upper_obj_desc: upper_obj_desc.map_locs(f),
                     upper_object_loc: f(&upper_object_loc),
                     properties,
                 },
@@ -4440,8 +4438,8 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
                     props_plural,
                     lower_obj_loc: f(&lower_obj_loc),
                     upper_obj_loc: f(&upper_obj_loc),
-                    lower_obj_desc: lower_obj_desc.map_err(map_desc),
-                    upper_obj_desc: upper_obj_desc.map_err(map_desc),
+                    lower_obj_desc: lower_obj_desc.map_locs(f),
+                    upper_obj_desc: upper_obj_desc.map_locs(f),
                     upper_object_loc: f(&upper_object_loc),
                 },
             ))
@@ -4522,8 +4520,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
         let map_use_op =
             |use_op: VirtualUseOp<L>| -> VirtualUseOp<M> { mod_loc_of_virtual_use_op(&f, use_op) };
-        let map_desc =
-            |d: VirtualReasonDesc<L>| -> VirtualReasonDesc<M> { d.map_locs(&|l: &L| f(l.dupe())) };
         let map_error_ref =
             |r: ErrorReference<L>| -> ErrorReference<M> { r.map_locs(&|l: &L| f(l.dupe())) };
         let map_enum_ref = |r: EnumReferenceData<L>| -> EnumReferenceData<M> {
@@ -6252,7 +6248,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 operation,
                 operation_loc: f(operation_loc),
                 target_loc: f(target_loc),
-                target_desc: target_desc.map_err(map_desc),
+                target_desc: target_desc.map_locs(|l: &L| f(l.dupe())),
             })),
 
             ETrivialRecursiveDefinition(reason) => {
@@ -9060,7 +9056,7 @@ pub struct IncompatibleTypeUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub upper_kind: UpperKind<L>,
     pub lower_loc: L,
     pub lower_kind: Option<LowerKind>,
-    pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_desc: ErrorTypeDesc<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -9114,8 +9110,8 @@ pub struct IncompatibleInvariantSubtypingData<L: Dupe + PartialOrd + Ord + Parti
     pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
     pub lower_loc: L,
     pub upper_loc: L,
-    pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_desc: ErrorTypeDesc<L>,
+    pub upper_desc: ErrorTypeDesc<L>,
     pub use_op: VirtualUseOp<L>,
     pub explanation: Option<Explanation<L>>,
 }
@@ -9210,8 +9206,8 @@ pub struct IncompatibleTypesWithExampleData<L: Dupe + PartialOrd + Ord + Partial
     pub loc: L,
     pub lower_loc: L,
     pub upper_loc: L,
-    pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_desc: ErrorTypeDesc<L>,
+    pub upper_desc: ErrorTypeDesc<L>,
     pub use_op: VirtualUseOp<L>,
     pub explanation: Option<Explanation<L>>,
     pub example: Box<ErrorMessage<L>>,
@@ -9254,9 +9250,7 @@ pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     PropPolarityMismatch(Box<PropPolarityMismatchData<L>>),
 }
 
-pub(crate) fn expect_type_desc<L: Dupe>(
-    type_or_desc: TypeOrTypeDesc<L>,
-) -> Result<ALocElt, VirtualReasonDesc<L>> {
+pub(crate) fn expect_type_desc<L: Dupe>(type_or_desc: TypeOrTypeDesc<L>) -> ErrorTypeDesc<L> {
     match type_or_desc {
         TypeOrTypeDesc::Type(_) => {
             panic!("At this point, we should no longer have TypeOrTypeDesc::Type")
@@ -9752,7 +9746,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         None => {
                             let lower_desc = expect_type_desc(lower_desc);
                             let upper_desc = expect_type_desc(upper_desc);
-                            if let (Err(lower_desc), Err(upper_desc)) = (&lower_desc, &upper_desc)
+                            if let (
+                                ErrorTypeDesc::ReasonDesc(lower_desc),
+                                ErrorTypeDesc::ReasonDesc(upper_desc),
+                            ) = (&lower_desc, &upper_desc)
                                 && (lower_desc.is_explanatory() || upper_desc.is_explanatory())
                             {
                                 return IncompatibleSubtyping(Box::new(

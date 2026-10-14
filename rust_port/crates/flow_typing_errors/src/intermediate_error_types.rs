@@ -24,7 +24,6 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_common::refinement_invalidation;
 use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils::ErrorKind;
-use flow_common_ty::ty::ALocElt;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api::AnnotLoc;
 use flow_env_builder::name_def_types::DefinitionReferenceKind;
@@ -44,6 +43,7 @@ use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
 use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT as TypeOrTypeDesc;
 use flow_typing_type::type_::union_rep::OptimizedError;
 use vec1::Vec1;
@@ -1008,8 +1008,8 @@ pub struct ExplanationCustomErrorData<L: Dupe> {
 pub struct ExplanationInvariantSubtypingDueToMutableArrayData<L: Dupe> {
     pub lower_array_loc: L,
     pub upper_array_loc: L,
-    pub lower_array_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_array_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_array_desc: ErrorTypeDesc<L>,
+    pub upper_array_desc: ErrorTypeDesc<L>,
     pub upper_array_reference_loc: L,
 }
 
@@ -1027,8 +1027,8 @@ pub struct ExplanationInvariantSubtypingDueToMutableArrayData<L: Dupe> {
 pub struct ExplanationInvariantSubtypingDueToMutablePropertyData<L: Dupe> {
     pub lower_obj_loc: L,
     pub upper_obj_loc: L,
-    pub lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_obj_desc: ErrorTypeDesc<L>,
+    pub upper_obj_desc: ErrorTypeDesc<L>,
     pub upper_object_loc: L,
     pub property_name: Option<FlowSmolStr>,
 }
@@ -1047,8 +1047,8 @@ pub struct ExplanationInvariantSubtypingDueToMutablePropertyData<L: Dupe> {
 pub struct ExplanationInvariantSubtypingDueToMutablePropertiesData<L: Dupe> {
     pub lower_obj_loc: L,
     pub upper_obj_loc: L,
-    pub lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_obj_desc: ErrorTypeDesc<L>,
+    pub upper_obj_desc: ErrorTypeDesc<L>,
     pub upper_object_loc: L,
     pub properties: Vec<Name>,
 }
@@ -1068,8 +1068,8 @@ pub struct ExplanationPropertyMissingDueToNeutralOptionalPropertyData<L: Dupe> {
     pub props_plural: bool,
     pub lower_obj_loc: L,
     pub upper_obj_loc: L,
-    pub lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_obj_desc: ErrorTypeDesc<L>,
+    pub upper_obj_desc: ErrorTypeDesc<L>,
     pub upper_object_loc: L,
 }
 
@@ -1481,7 +1481,7 @@ pub struct MessageCannotUseTypeForAnnotationInferenceData<L: Dupe> {
     pub operation: AnnotationInferenceOperation,
     pub operation_loc: L,
     pub target_loc: L,
-    pub target_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub target_desc: ErrorTypeDesc<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1548,8 +1548,8 @@ pub struct MessageIncompatibleTupleArityData<L: Dupe> {
 pub struct MessageIncompatibleGeneralWithPrintedTypesData<L: Dupe> {
     pub lower_loc: L,
     pub upper_loc: L,
-    pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_desc: ErrorTypeDesc<L>,
+    pub upper_desc: ErrorTypeDesc<L>,
 }
 
 #[derive(
@@ -1565,7 +1565,7 @@ pub struct MessageIncompatibleGeneralWithPrintedTypesData<L: Dupe> {
 )]
 pub struct MessageTypeReferenceData<L: Dupe> {
     pub loc: L,
-    pub desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub desc: ErrorTypeDesc<L>,
 }
 
 #[derive(
@@ -1789,8 +1789,8 @@ pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
     pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
     pub lower_loc: L,
     pub upper_loc: L,
-    pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower_desc: ErrorTypeDesc<L>,
+    pub upper_desc: ErrorTypeDesc<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2032,7 +2032,7 @@ pub enum Message<L: Dupe> {
     MessageCannotAccessEnumMember(Box<MessageCannotAccessEnumMemberData<L>>),
 
     MessageCannotAccessEnumWithComputedProp {
-        description: Result<ALocElt, VirtualReasonDesc<L>>,
+        description: ErrorTypeDesc<L>,
         enum_: EnumReferenceData<L>,
     },
 

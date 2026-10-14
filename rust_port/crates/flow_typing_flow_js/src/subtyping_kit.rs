@@ -135,6 +135,7 @@ use flow_typing_type::type_::property;
 use flow_typing_type::type_::react;
 use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::type_or_type_desc;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::void;
 use flow_typing_type::type_util;
@@ -6891,7 +6892,7 @@ pub fn rec_sub_t<'cx>(
                 explanation,
                 vec![],
             );
-            error_data.lower_desc = type_or_type_desc::TypeOrTypeDescT::TypeDesc(Err(
+            error_data.lower_desc = type_or_type_desc::TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
                 enum_reason.desc(false).clone(),
             ));
             flow_js_utils::add_output_with_env(

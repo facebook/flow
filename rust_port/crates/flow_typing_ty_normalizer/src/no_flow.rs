@@ -31,6 +31,7 @@ use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::eval;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 
 use crate::env::Env;
 use crate::env::Genv;
@@ -199,17 +200,14 @@ pub fn debug_string_of_t<'a, 'cx: 'a>(cx: &'a Context<'cx>, t: &Type) -> String 
     }
 }
 
-pub fn type_to_desc_for_errors(
-    genv: &Genv<'_, '_>,
-    t: &Type,
-) -> Result<ALocElt, flow_common::reason::ReasonDesc> {
+pub fn type_to_desc_for_errors(genv: &Genv<'_, '_>, t: &Type) -> ErrorTypeDesc<ALoc> {
     use flow_common::reason::VirtualReasonDesc;
     let desc = flow_typing_type::type_util::desc_of_t(t);
     match desc {
         VirtualReasonDesc::RArrayLit
         | VirtualReasonDesc::RArrayLitUnsound
         | VirtualReasonDesc::RObjectLit
-        | VirtualReasonDesc::RObjectLitUnsound => Err(desc.clone()),
+        | VirtualReasonDesc::RObjectLitUnsound => ErrorTypeDesc::ReasonDesc(desc.clone()),
         // Why do we try to use the printed types? For these non-leaf-node types, it's
         // reference locations can be spread across multiple locations, but the reason infra
         // can only point code reference to one place, instead of multiple places that
@@ -227,9 +225,11 @@ pub fn type_to_desc_for_errors(
         // is not well supported by the reason infra. So we use the printed types instead.
         // The location might still be non-ideal, but at least the description makes sense.
         _ => match from_type(genv, t) {
-            Err(_) => Err(desc.clone()),
-            Ok(Elt::Type(t)) => Ok(Elt::Type(flow_common_ty::ty_utils::patch_up_react_types(t))),
-            Ok(decl @ Elt::Decl(_)) => Ok(decl),
+            Err(_) => ErrorTypeDesc::Unknown,
+            Ok(Elt::Type(t)) => ErrorTypeDesc::Normalized(Elt::Type(
+                flow_common_ty::ty_utils::patch_up_react_types(t),
+            )),
+            Ok(decl @ Elt::Decl(_)) => ErrorTypeDesc::Normalized(decl),
         },
     }
 }

@@ -78,6 +78,7 @@ use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::WriteElemData;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 
 use super::any_helpers::*;
@@ -10253,7 +10254,7 @@ fn __flow_impl<'cx>(
                         let type_or_explanatory_desc = |t: &Type| {
                             let desc = reason_of_t(t).desc(true);
                             if desc.is_explanatory() {
-                                TypeOrTypeDescT::TypeDesc(Err(desc.clone()))
+                                TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(desc.clone()))
                             } else {
                                 TypeOrTypeDescT::Type(t.dupe())
                             }

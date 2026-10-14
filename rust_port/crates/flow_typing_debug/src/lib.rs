@@ -251,6 +251,7 @@ use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::string_of_ctor;
 use flow_typing_type::type_::string_of_use_ctor;
 use flow_typing_type::type_::string_of_use_op;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_util::reason_of_t;
 
@@ -344,10 +345,15 @@ fn dump_loc_type_desc(cx: &Context, loc: &ALoc, type_desc: &TypeOrTypeDescT<ALoc
         TypeOrTypeDescT::Type(t) => {
             dump_reason(cx, &Reason::new(reason_of_t(t).desc.clone(), loc.clone()))
         }
-        TypeOrTypeDescT::TypeDesc(Err(desc)) => {
+        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(desc)) => {
             format!("{} {desc:?}", string_of_aloc(None, loc))
         }
-        TypeOrTypeDescT::TypeDesc(Ok(desc)) => format!("{desc:?} at {loc:?}"),
+        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(desc)) => {
+            format!("{desc:?} at {loc:?}")
+        }
+        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown) => {
+            format!("? at {loc:?}")
+        }
     }
 }
 

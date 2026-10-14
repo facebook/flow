@@ -94,6 +94,7 @@ use flow_typing_errors::intermediate_error_types::InternalType;
 use flow_typing_errors::intermediate_error_types::InvalidRenderTypeKind;
 use flow_typing_errors::intermediate_error_types::VarianceSigilParent;
 use flow_typing_type::type_::Type;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_util::reason_of_t;
 use lsp_types::CodeAction;
@@ -1426,18 +1427,19 @@ pub fn ast_transforms_of_error(
                     TypeOrTypeDescT::Type(t) => {
                         flow_common::reason::string_of_desc(&reason_of_t(t).desc)
                     }
-                    TypeOrTypeDescT::TypeDesc(Err(desc)) => {
+                    TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(desc)) => {
                         flow_common::reason::string_of_desc::<Loc>(desc)
                     }
-                    TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(ty)))
+                    TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(ty)))
                         if matches!(ty.as_ref(), Ty::Obj(_)) =>
                     {
                         "object type".to_string()
                     }
-                    TypeOrTypeDescT::TypeDesc(Ok(elt)) => format!(
+                    TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(elt)) => format!(
                         "`{}`",
                         ty_printer::string_of_elt_single_line(elt, &PrinterOptions::default())
                     ),
+                    TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown) => "`?`".to_string(),
                 };
                 let title = format!("Rewrite {} as an interface", original);
                 vec![AstTransformOfError {
@@ -2225,33 +2227,33 @@ pub fn ast_transforms_of_error(
                 explanation,
                 Some(
                     ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
-                        lower_array_desc: TypeOrTypeDescT::TypeDesc(Err(
+                        lower_array_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
                             VirtualReasonDesc::RObjectLit
                             | VirtualReasonDesc::RObjectLitUnsound
                             | VirtualReasonDesc::RArrayLit
                             | VirtualReasonDesc::RArrayLitUnsound,
                         )),
-                        upper_array_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(_))),
+                        upper_array_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(_))),
                         ..
                     }
                     | ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
-                        lower_obj_desc: TypeOrTypeDescT::TypeDesc(Err(
+                        lower_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
                             VirtualReasonDesc::RObjectLit
                             | VirtualReasonDesc::RObjectLitUnsound
                             | VirtualReasonDesc::RArrayLit
                             | VirtualReasonDesc::RArrayLitUnsound,
                         )),
-                        upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(_))),
+                        upper_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(_))),
                         ..
                     }
                     | ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperties {
-                        lower_obj_desc: TypeOrTypeDescT::TypeDesc(Err(
+                        lower_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
                             VirtualReasonDesc::RObjectLit
                             | VirtualReasonDesc::RObjectLitUnsound
                             | VirtualReasonDesc::RArrayLit
                             | VirtualReasonDesc::RArrayLitUnsound,
                         )),
-                        upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(_))),
+                        upper_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(_))),
                         ..
                     }
                 )
@@ -2262,7 +2264,8 @@ pub fn ast_transforms_of_error(
                 ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
                     lower_array_loc,
                     upper_array_loc,
-                    upper_array_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                    upper_array_desc:
+                        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(upper_ty))),
                     ..
                 },
             ) = explanation.as_ref()
@@ -2276,7 +2279,8 @@ pub fn ast_transforms_of_error(
                 ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
                     lower_obj_loc,
                     upper_obj_loc,
-                    upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                    upper_obj_desc:
+                        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(upper_ty))),
                     ..
                 },
             ) = explanation.as_ref()
@@ -2286,7 +2290,8 @@ pub fn ast_transforms_of_error(
                 ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperties {
                     lower_obj_loc,
                     upper_obj_loc,
-                    upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                    upper_obj_desc:
+                        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(upper_ty))),
                     ..
                 },
             ) = explanation.as_ref()
@@ -2303,7 +2308,7 @@ pub fn ast_transforms_of_error(
                     ErrorTypeReferenceWithLocData {
                         definition_loc: lower_obj_loc,
                         type_desc:
-                            TypeOrTypeDescT::TypeDesc(Err(
+                            TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
                                 VirtualReasonDesc::RObjectLit
                                 | VirtualReasonDesc::RObjectLitUnsound
                                 | VirtualReasonDesc::RArrayLit
@@ -2314,7 +2319,8 @@ pub fn ast_transforms_of_error(
                 upper:
                     ErrorTypeReferenceWithLocData {
                         definition_loc: upper_obj_loc,
-                        type_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                        type_desc:
+                            TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(upper_ty))),
                         ..
                     },
                 ..
@@ -2356,13 +2362,13 @@ pub fn ast_transforms_of_error(
             FriendlyMessageRecipe::IncompatibleTypeUse(box IncompatibleTypeUseData {
                 loc: error_loc,
                 upper_kind: UpperKind::IncompatibleGetPropT(..),
-                lower_desc: Err(reason_desc),
+                lower_desc: ErrorTypeDesc::ReasonDesc(reason_desc),
                 ..
             }) => optional_chaining_actions(error_loc, &reason_desc),
             FriendlyMessageRecipe::IncompatibleTypeUse(box IncompatibleTypeUseData {
                 loc: error_loc,
                 upper_kind: UpperKind::IncompatibleGetPropT(..),
-                lower_desc: Ok(Elt::Type(lower_ty)),
+                lower_desc: ErrorTypeDesc::Normalized(Elt::Type(lower_ty)),
                 ..
             }) => match lower_ty.as_ref() {
                 Ty::Void => optional_chaining_actions(error_loc, &VirtualReasonDesc::RVoid),

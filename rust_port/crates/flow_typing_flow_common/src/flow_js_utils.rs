@@ -89,6 +89,7 @@ use flow_typing_type::type_::arith_kind::ArithKind;
 use flow_typing_type::type_::constraint::Constraints;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::properties;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::UnionKind;
@@ -1822,7 +1823,7 @@ pub fn type_or_type_desc_for_error(t: &Type) -> TypeOrTypeDescT<ALoc> {
                 )
         )
     {
-        TypeOrTypeDescT::TypeDesc(Err(desc.clone()))
+        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(desc.clone()))
     } else {
         TypeOrTypeDescT::Type(t.dupe())
     }
@@ -1978,7 +1979,7 @@ pub fn instanceof_rhs_error(t: &Type) -> ErrorMessage<ALoc> {
         TypeInner::DefT(_, def_t)
             if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT)
     ) {
-        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
+        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(reason.desc(false).clone()))
     } else {
         type_or_type_desc_for_error(t)
     };
@@ -8800,7 +8801,7 @@ fn arithmetic_operand_data(t: &Type) -> EArithmeticOperandData<ALoc> {
 fn arithmetic_type_reference_for_error(t: &Type) -> ErrorTypeReferenceData<ALoc> {
     let reason = reason_of_t(t);
     let type_desc = if matches!(reason.desc(true), VirtualReasonDesc::RNullOrVoid) {
-        TypeOrTypeDescT::TypeDesc(Err(VirtualReasonDesc::RNullOrVoid))
+        TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(VirtualReasonDesc::RNullOrVoid))
     } else {
         type_or_type_desc_for_error(t)
     };

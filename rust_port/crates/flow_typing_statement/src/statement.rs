@@ -115,6 +115,7 @@ use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::type_collector::TypeCollector;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::*;
 use flow_typing_type::type_util::*;
@@ -14510,8 +14511,12 @@ fn static_method_call_object<'a>(
                         lower_def_loc: reason.def_loc().dupe(),
                         upper_loc: reason.loc().dupe(),
                         upper_def_loc: reason.def_loc().dupe(),
-                        lower_desc: TypeOrTypeDescT::TypeDesc(Err(reason.desc(true).clone())),
-                        upper_desc: TypeOrTypeDescT::TypeDesc(Err(reason.desc(true).clone())),
+                        lower_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
+                            reason.desc(true).clone(),
+                        )),
+                        upper_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
+                            reason.desc(true).clone(),
+                        )),
                         use_op,
                         explanation: None,
                         example: None,
