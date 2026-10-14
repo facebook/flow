@@ -324,7 +324,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RDestructuring,
     RDefaultValue,
     RConstructor,
-    RRecordProperties,
     RReturn,
     RRegExp,
     RSuper,
@@ -559,7 +558,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RDestructuring => RDestructuring,
             RDefaultValue => RDefaultValue,
             RConstructor => RConstructor,
-            RRecordProperties => RRecordProperties,
             RRecordType(s) => RRecordType(s.dupe()),
             RReturn => RReturn,
             RRegExp => RRegExp,
@@ -1560,7 +1558,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         },
 
         // Records
-        RRecordProperties => "record properties".to_string(),
         RRecordType(name) => format!("record `{}`", name),
 
         // Misc

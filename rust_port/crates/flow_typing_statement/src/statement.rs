@@ -7095,10 +7095,7 @@ fn expression_<'a>(
                     props_loc.dupe(),
                     &props_obj.properties,
                 )?;
-                let props_t = mod_reason_of_t(
-                    &|r: Reason| r.replace_desc(VirtualReasonDesc::RRecordProperties),
-                    &props_t,
-                );
+                let props_t = mod_reason_of_t(&|r: Reason| r.replace_desc(None), &props_t);
                 let use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::RecordCreate(Box::new(
                     RecordCreateData {
                         op: mk_expression_reason(e),

@@ -4539,7 +4539,7 @@ impl<'a> DefFinder<'a> {
             arguments: vec![arg].into(),
             comments: None,
         };
-        let call_reason = mk_reason(VirtualReasonDesc::RRecordProperties, constructor_loc.dupe());
+        let call_reason = mk_reason(None, constructor_loc.dupe());
 
         self.visit_call_arguments(
             &call_reason,
