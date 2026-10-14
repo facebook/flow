@@ -444,7 +444,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RExtends(Arc<VirtualReasonDesc<L>>),
     RClass(Arc<VirtualReasonDesc<L>>),
     RStatics(Arc<VirtualReasonDesc<L>>),
-    RFrozen(Arc<VirtualReasonDesc<L>>),
     RRefined(Arc<VirtualReasonDesc<L>>),
     RPartialOf(Arc<VirtualReasonDesc<L>>),
     RRequiredOf(Arc<VirtualReasonDesc<L>>),
@@ -653,7 +652,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RExtends(d) => RExtends(Arc::new(d.map_locs(f))),
             RClass(d) => RClass(Arc::new(d.map_locs(f))),
             RStatics(d) => RStatics(Arc::new(d.map_locs(f))),
-            RFrozen(d) => RFrozen(Arc::new(d.map_locs(f))),
             RRefined(d) => RRefined(Arc::new(d.map_locs(f))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
             RRequiredOf(d) => RRequiredOf(Arc::new(d.map_locs(f))),
@@ -1345,7 +1343,7 @@ pub fn mk_obj_lit_reason(
     loc: ALoc,
 ) -> Reason {
     let desc = if frozen {
-        VirtualReasonDesc::RFrozen(Arc::new(VirtualReasonDesc::RObjectLit))
+        VirtualReasonDesc::RObject
     } else if as_const {
         VirtualReasonDesc::RConstObjectLit
     } else if use_unsound_fallback() {
@@ -1656,7 +1654,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RExtends(d) => format!("extends {}", string_of_desc(d)),
         RClass(d) => format!("class {}", string_of_desc(d)),
         RStatics(d) => format!("statics of {}", string_of_desc(d)),
-        RFrozen(d) => format!("frozen {}", string_of_desc(d)),
         RRefined(d) => format!("refined {}", string_of_desc(d)),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),
         RRequiredOf(d) => format!("required of {}", string_of_desc(d)),
