@@ -98,6 +98,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2018.asyncgenerator.js", LIB_ES2018_ASYNCGENERATOR_JS),
     ("lib.es2018.asynciterable.js", LIB_ES2018_ASYNCITERABLE_JS),
+    ("lib.es2018.intl.js", tslib_contents::LIB_ES2018_INTL_D_TS),
     (
         "lib.es2018.promise.js",
         tslib_contents::LIB_ES2018_PROMISE_D_TS,
