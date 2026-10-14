@@ -7671,17 +7671,32 @@ fn __flow_impl<'cx>(
                     inexact,
                     react_dro,
                     strictness_kind,
-                }) => ArrType::TupleAT(Box::new(TupleATData {
-                    elem_t: elem_t.dupe(),
-                    elements: elements[i.min(elements.len())..].to_vec().into(),
-                    arity: (
-                        (*num_req as i64 - i as i64).max(0) as i32,
-                        (*num_total as i64 - i as i64).max(0) as i32,
-                    ),
-                    inexact: *inexact,
-                    react_dro: react_dro.clone(),
-                    strictness_kind: *strictness_kind,
-                })),
+                }) => {
+                    let elements = &elements[i.min(elements.len())..];
+                    // The element type of an exact tuple is the union of its elements.
+                    let elem_t = if *inexact {
+                        elem_t.dupe()
+                    } else {
+                        type_util::union_of_ts(
+                            reason
+                                .dupe()
+                                .replace_desc(VirtualReasonDesc::RTupleElement { name: None }),
+                            type_util::tuple_ts_of_elements(elements),
+                            None,
+                        )
+                    };
+                    ArrType::TupleAT(Box::new(TupleATData {
+                        elem_t,
+                        elements: elements.to_vec().into(),
+                        arity: (
+                            (*num_req as i64 - i as i64).max(0) as i32,
+                            (*num_total as i64 - i as i64).max(0) as i32,
+                        ),
+                        inexact: *inexact,
+                        react_dro: react_dro.clone(),
+                        strictness_kind: *strictness_kind,
+                    }))
+                }
             };
             let a = Type::new(TypeInner::DefT(
                 reason.dupe(),

@@ -1601,6 +1601,42 @@ References:
                         ^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- rest_elem_type.js:7:1
+
+Cannot cast `rest` to read-only array type because in array element: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   rest_elem_type.js:7:1
+   7| rest as ReadonlyArray<number>; // error: string ~> number
+      ^^^^
+
+References:
+   rest_elem_type.js:3:27
+   3| declare const t: [number, string];
+                                ^^^^^^ [1]
+   rest_elem_type.js:7:23
+   7| rest as ReadonlyArray<number>; // error: string ~> number
+                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- rest_elem_type.js:17:1
+
+Cannot cast `inexact_rest` to read-only array type because in array element: an unknown element of an inexact tuple
+type [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_elem_type.js:17:1
+   17| inexact_rest as ReadonlyArray<string>; // error: unknown element ~> string
+       ^^^^^^^^^^^^
+
+References:
+   rest_elem_type.js:15:24
+   15| declare const inexact: [number, string, ...];
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   rest_elem_type.js:17:31
+   17| inexact_rest as ReadonlyArray<string>; // error: unknown element ~> string
+                                     ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- spread.js:10:3
 
 Cannot cast array literal to `Same` because array literal [1] has 1 element but `[1, 2]` [2] has 2 elements.
@@ -2612,4 +2648,4 @@ References:
 
 
 
-Found 163 errors
+Found 165 errors
