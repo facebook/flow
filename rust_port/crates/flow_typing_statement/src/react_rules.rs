@@ -40,6 +40,7 @@ use flow_parser::ast_utils;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message;
 use flow_typing_errors::error_message::EHookRuleViolationData;
 use flow_typing_errors::error_message::ErrorMessage;
@@ -65,7 +66,7 @@ use flow_typing_utils::typed_ast_utils;
 use crate::type_annotation;
 
 pub fn check_ref_use<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     rrid: Option<&type_::nominal::Id>,
     in_hook: bool,
     usage: ExpressionReferenceData<ALoc>,
@@ -73,7 +74,7 @@ pub fn check_ref_use<'a>(
     t: Type,
 ) -> Vec<ErrorMessage<ALoc>> {
     fn recur_id<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         rrid: Option<&nominal::Id>,
         in_hook: bool,
         usage: &ExpressionReferenceData<ALoc>,
@@ -197,7 +198,7 @@ enum HookResult {
     AnyCallee,
 }
 
-fn hook_callee<'a>(cx: &Context<'a>, t: Type) -> HookResult {
+fn hook_callee<'a>(cx: &mut Context<'a>, t: Type) -> HookResult {
     fn merge(l: HookResult, r: HookResult) -> HookResult {
         match (l, r) {
             (HookResult::AnyCallee, other) | (other, HookResult::AnyCallee) => other,
@@ -268,7 +269,7 @@ fn hook_callee<'a>(cx: &Context<'a>, t: Type) -> HookResult {
         [ALocFuzzy::new(r.def_loc().dupe())].into_iter().collect()
     }
 
-    fn recur_id<'a>(cx: &Context<'a>, seen: &mut TvarSeenSet<u32>, t: &Type) -> HookResult {
+    fn recur_id<'a>(cx: &mut Context<'a>, seen: &mut TvarSeenSet<u32>, t: &Type) -> HookResult {
         match t.deref() {
             TypeInner::DefT(r, def_t)
                 if matches!(
@@ -380,7 +381,7 @@ fn hook_callee<'a>(cx: &Context<'a>, t: Type) -> HookResult {
 }
 
 fn hook_error<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     call_loc: ALoc,
     callee_loc: ALoc,
     kind: error_message::HookRule<ALoc>,
@@ -638,8 +639,9 @@ fn strip_use_callback<'a, M: dupe::Dupe, T: dupe::Dupe>(
     }
 }
 
-fn downstream_effects<'ev, 'b, 'cx>(
-    ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
+fn downstream_effects<'cx>(
+    ev_cx: &EffectVisitorContext,
+    cx: &mut Context<'cx>,
     seen: &mut ALocSet,
     loc: ALoc,
 ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
@@ -651,8 +653,9 @@ fn downstream_effects<'ev, 'b, 'cx>(
     let providers = &ev_cx.var_info.providers;
     let name_defs = &ev_cx.name_defs;
 
-    fn visit_func<'ev, 'b, 'cx>(
-        ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
+    fn visit_func<'cx>(
+        ev_cx: &EffectVisitorContext,
+        cx: &mut Context<'cx>,
         seen: &mut ALocSet,
         loc: &ALoc,
         func: &ast::function::Function<ALoc, ALoc>,
@@ -662,7 +665,7 @@ fn downstream_effects<'ev, 'b, 'cx>(
         }
         let inserted = seen.insert(loc.dupe());
         let result = {
-            let mut visitor = EffectVisitor::new(ev_cx, false, seen);
+            let mut visitor = EffectVisitor::new(ev_cx, cx, false, seen);
             visitor.function_entry(&func.body)
         };
         if inserted {
@@ -671,15 +674,16 @@ fn downstream_effects<'ev, 'b, 'cx>(
         result
     }
 
-    fn visit_class<'ev, 'b, 'cx>(
-        ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
+    fn visit_class<'cx>(
+        ev_cx: &EffectVisitorContext,
+        cx: &mut Context<'cx>,
         seen: &mut ALocSet,
         loc: &ALoc,
         cls: &ast::class::Class<ALoc, ALoc>,
     ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
         let inserted = seen.insert(loc.dupe());
         let result = {
-            let mut visitor = EffectVisitor::new(ev_cx, false, seen);
+            let mut visitor = EffectVisitor::new(ev_cx, cx, false, seen);
             visitor.class_entry(&cls.body)
         };
         if inserted {
@@ -701,7 +705,7 @@ fn downstream_effects<'ev, 'b, 'cx>(
                     Some(d) => Some(d),
                     None => {
                         flow_js_utils::add_output_non_speculating(
-                            ev_cx.cx,
+                            cx,
                             ErrorMessage::EInternal(Box::new((
                                 x.loc.dupe(),
                                 error_message::InternalError::EnvInvariant(
@@ -723,10 +727,10 @@ fn downstream_effects<'ev, 'b, 'cx>(
                         match stripped.deref() {
                             ExpressionInner::ArrowFunction { inner: func, .. }
                             | ExpressionInner::Function { inner: func, .. } => {
-                                acc.extend(visit_func(ev_cx, seen, &loc, func)?);
+                                acc.extend(visit_func(ev_cx, cx, seen, &loc, func)?);
                             }
                             ExpressionInner::Class { inner: cls, .. } => {
-                                acc.extend(visit_class(ev_cx, seen, &loc, cls)?);
+                                acc.extend(visit_class(ev_cx, cx, seen, &loc, cls)?);
                             }
                             _ => {}
                         }
@@ -734,18 +738,19 @@ fn downstream_effects<'ev, 'b, 'cx>(
                     Def::Function(box FunctionDefData {
                         function_: func, ..
                     }) => {
-                        acc.extend(visit_func(ev_cx, seen, &loc, func)?);
+                        acc.extend(visit_func(ev_cx, cx, seen, &loc, func)?);
                     }
                     Def::Component(_) => {}
                     Def::Class(box ClassDefData { class_: cls, .. }) => {
-                        acc.extend(visit_class(ev_cx, seen, &loc, cls)?);
+                        acc.extend(visit_class(ev_cx, cx, seen, &loc, cls)?);
                     }
                     // Records don't contain React hooks/rules violation
                     Def::Record(_) => {}
                     Def::Binding(bind) => {
-                        fn handle_binding<'ev, 'b, 'cx>(
+                        fn handle_binding<'cx>(
                             bind: &Binding,
-                            ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
+                            ev_cx: &EffectVisitorContext,
+                            cx: &mut Context<'cx>,
                             seen: &mut ALocSet,
                             loc: &ALoc,
                         ) -> Result<
@@ -756,13 +761,15 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                 Binding::Select {
                                     parent: (_, bind), ..
                                 }
-                                | Binding::Hooklike(bind) => handle_binding(bind, ev_cx, seen, loc),
+                                | Binding::Hooklike(bind) => {
+                                    handle_binding(bind, ev_cx, cx, seen, loc)
+                                }
                                 Binding::Root(Root::Annotation(box AnnotationData {
                                     concrete: Some(root),
                                     ..
                                 })) => {
                                     let root_bind = Binding::Root(*root.clone());
-                                    handle_binding(&root_bind, ev_cx, seen, loc)
+                                    handle_binding(&root_bind, ev_cx, cx, seen, loc)
                                 }
                                 Binding::Root(Root::Value(box name_def_types::Value {
                                     expr,
@@ -772,10 +779,10 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                     match stripped.deref() {
                                         ExpressionInner::ArrowFunction { inner: func, .. }
                                         | ExpressionInner::Function { inner: func, .. } => {
-                                            visit_func(ev_cx, seen, loc, func)
+                                            visit_func(ev_cx, cx, seen, loc, func)
                                         }
                                         ExpressionInner::Class { inner: cls, .. } => {
-                                            visit_class(ev_cx, seen, loc, cls)
+                                            visit_class(ev_cx, cx, seen, loc, cls)
                                         }
                                         _ => Ok(vec![]),
                                     }
@@ -788,10 +795,10 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                     match stripped.deref() {
                                         ExpressionInner::ArrowFunction { inner: func, .. }
                                         | ExpressionInner::Function { inner: func, .. } => {
-                                            visit_func(ev_cx, seen, loc, func)
+                                            visit_func(ev_cx, cx, seen, loc, func)
                                         }
                                         ExpressionInner::Class { inner: cls, .. } => {
-                                            visit_class(ev_cx, seen, loc, cls)
+                                            visit_class(ev_cx, cx, seen, loc, cls)
                                         }
                                         _ => Ok(vec![]),
                                     }
@@ -799,11 +806,11 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                 Binding::Root(Root::FunctionValue(box FunctionValueData {
                                     function_: func,
                                     ..
-                                })) => visit_func(ev_cx, seen, loc, func),
+                                })) => visit_func(ev_cx, cx, seen, loc, func),
                                 _ => Ok(vec![]),
                             }
                         }
-                        acc.extend(handle_binding(bind, ev_cx, seen, &loc)?);
+                        acc.extend(handle_binding(bind, ev_cx, cx, seen, &loc)?);
                     }
                     _ => {}
                 }
@@ -814,7 +821,7 @@ fn downstream_effects<'ev, 'b, 'cx>(
     }
 }
 
-fn is_initializing(ev_cx: &EffectVisitorContext<'_, '_>, loc: &ALoc) -> bool {
+fn is_initializing(ev_cx: &EffectVisitorContext, cx: &mut Context<'_>, loc: &ALoc) -> bool {
     let env_values = &ev_cx.var_info.env_values;
     let refinement_of_id = &ev_cx.var_info.refinement_of_id;
 
@@ -827,7 +834,7 @@ fn is_initializing(ev_cx: &EffectVisitorContext<'_, '_>, loc: &ALoc) -> bool {
         return false;
     }
 
-    fn is_nullish<'a>(cx: &Context<'a>, seen: &mut TvarSeenSet<u32>, t: &Type) -> bool {
+    fn is_nullish<'a>(cx: &mut Context<'a>, seen: &mut TvarSeenSet<u32>, t: &Type) -> bool {
         match t.deref() {
             TypeInner::OpenT(tvar) if seen.contains(&tvar.id()) => false,
             TypeInner::OpenT(tvar) => seen.with_added(tvar.id(), |seen| {
@@ -844,7 +851,7 @@ fn is_initializing(ev_cx: &EffectVisitorContext<'_, '_>, loc: &ALoc) -> bool {
         }
     }
 
-    fn refines_safe<'a>(cx: &Context<'a>, refi: &RefinementKind<ALoc>) -> bool {
+    fn refines_safe<'a>(cx: &mut Context<'a>, refi: &RefinementKind<ALoc>) -> bool {
         match refi {
             RefinementKind::AndR(l, r) => refines_safe(cx, l) || refines_safe(cx, r),
             RefinementKind::OrR(l, r) => refines_safe(cx, l) && refines_safe(cx, r),
@@ -866,7 +873,7 @@ fn is_initializing(ev_cx: &EffectVisitorContext<'_, '_>, loc: &ALoc) -> bool {
         }
     }
 
-    fn not_refines_safe<'a>(cx: &Context<'a>, refi: &RefinementKind<ALoc>) -> bool {
+    fn not_refines_safe<'a>(cx: &mut Context<'a>, refi: &RefinementKind<ALoc>) -> bool {
         match refi {
             RefinementKind::AndR(l, r) => not_refines_safe(cx, l) && not_refines_safe(cx, r),
             RefinementKind::OrR(l, r) => not_refines_safe(cx, l) || not_refines_safe(cx, r),
@@ -878,12 +885,11 @@ fn is_initializing(ev_cx: &EffectVisitorContext<'_, '_>, loc: &ALoc) -> bool {
 
     write_locs.iter().all(|write| {
         let refis = env_api::refinements_of_write_loc(refinement_of_id, write);
-        refis.iter().any(|refi| refines_safe(ev_cx.cx, refi))
+        refis.iter().any(|refi| refines_safe(cx, refi))
     })
 }
 
-struct EffectVisitorContext<'b, 'cx> {
-    cx: &'b Context<'cx>,
+struct EffectVisitorContext {
     is_hook: bool,
     rrid: Option<type_::nominal::Id>,
     type_map: ALocMap<Type>,
@@ -892,7 +898,8 @@ struct EffectVisitorContext<'b, 'cx> {
 }
 
 struct EffectVisitor<'ev, 'b, 'cx, 'seen> {
-    ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
+    ev_cx: &'ev EffectVisitorContext,
+    cx: &'b mut Context<'cx>,
     effects: Vec<ErrorMessage<ALoc>>,
     in_target: bool,
     seen: &'seen mut ALocSet,
@@ -901,12 +908,14 @@ struct EffectVisitor<'ev, 'b, 'cx, 'seen> {
 
 impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
     fn new(
-        ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
+        ev_cx: &'ev EffectVisitorContext,
+        cx: &'b mut Context<'cx>,
         toplevel: bool,
         seen: &'seen mut ALocSet,
     ) -> Self {
         Self {
             ev_cx,
+            cx,
             effects: vec![],
             in_target: false,
             seen,
@@ -953,7 +962,8 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
         if self.in_target {
             match e.deref() {
                 ExpressionInner::Identifier { loc, .. } => {
-                    let new_effects = downstream_effects(self.ev_cx, &mut *self.seen, loc.dupe())?;
+                    let new_effects =
+                        downstream_effects(self.ev_cx, self.cx, &mut *self.seen, loc.dupe())?;
                     self.effects.extend(new_effects);
                 }
                 ExpressionInner::ArrowFunction { loc, inner: func }
@@ -962,7 +972,8 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                 {
                     self.seen.insert(loc.dupe());
                     let new_effects = {
-                        let mut visitor = EffectVisitor::new(self.ev_cx, false, &mut *self.seen);
+                        let mut visitor =
+                            EffectVisitor::new(self.ev_cx, self.cx, false, &mut *self.seen);
                         visitor.function_entry(&func.body)?
                     };
                     self.effects.extend(new_effects);
@@ -1024,13 +1035,12 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
             kind: flow_js_utils::expression_reference_kind_for_error(expr),
         };
         if self
-            .ev_cx
             .cx
             .react_rule_enabled(flow_common::options::ReactRule::ValidateRefAccessDuringRender)
         {
             if let Some(ty) = self.ev_cx.type_map.get(&loc) {
                 let new_effects = check_ref_use(
-                    self.ev_cx.cx,
+                    self.cx,
                     self.ev_cx.rrid.as_ref(),
                     self.ev_cx.is_hook,
                     usage,
@@ -1098,7 +1108,7 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                 if prop_ident.name.as_str() == "current"
                     && (permissive == Permissiveness::Strict
                         || (permissive == Permissiveness::Pattern
-                            && !is_initializing(self.ev_cx, &loc))) =>
+                            && !is_initializing(self.ev_cx, self.cx, &loc))) =>
             {
                 self.target_expression(_object, RefInRenderKind::Access)?;
             }
@@ -1107,7 +1117,7 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
             }
         }
         if self.in_target {
-            let new_effects = downstream_effects(self.ev_cx, &mut *self.seen, loc)?;
+            let new_effects = downstream_effects(self.ev_cx, self.cx, &mut *self.seen, loc)?;
             self.effects.extend(new_effects);
         }
         Ok(())
@@ -1208,28 +1218,30 @@ impl<'ast>
         let targs = &expr.targs;
         let arguments = &expr.arguments;
 
-        let callee_ty = || -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-            match callee.deref() {
-                ExpressionInner::Identifier { inner: ident, .. }
-                    if self.ev_cx.cx.hook_compatibility() && ident.name.as_str() != "require" =>
-                {
-                    //  If we're in compatibility mode, we want to bail on intersections. But
-                    // the typed AST records the type of the overload we've selected, so we
-                    // never see the intersection to realize we need to bail! Instead in this
-                    // case we read from the environment.
-                    type_env::var_ref(None, self.ev_cx.cx, None, &ident.name, callee_loc.dupe())
+        let ev_cx = self.ev_cx;
+        let callee_ty =
+            |cx: &mut Context<'_>| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                match callee.deref() {
+                    ExpressionInner::Identifier { inner: ident, .. }
+                        if cx.hook_compatibility() && ident.name.as_str() != "require" =>
+                    {
+                        //  If we're in compatibility mode, we want to bail on intersections. But
+                        // the typed AST records the type of the overload we've selected, so we
+                        // never see the intersection to realize we need to bail! Instead in this
+                        // case we read from the environment.
+                        type_env::var_ref(None, cx, None, &ident.name, callee_loc.dupe())
+                    }
+                    _ => Ok(ev_cx
+                        .type_map
+                        .get(&callee_loc)
+                        .cloned()
+                        .expect("callee_loc not found in type_map")),
                 }
-                _ => Ok(self
-                    .ev_cx
-                    .type_map
-                    .get(&callee_loc)
-                    .cloned()
-                    .expect("callee_loc not found in type_map")),
-            }
-        };
+            };
         let callee_is_nonhook = {
             !self.toplevel || {
-                match hook_callee(self.ev_cx.cx, callee_ty()?) {
+                let callee_t = callee_ty(self.cx)?;
+                match hook_callee(self.cx, callee_t) {
                     HookResult::HookCallee(_) => false,
                     HookResult::MaybeHookCallee { .. } => true,
                     HookResult::NotHookCallee(_) => true,
@@ -1291,12 +1303,13 @@ impl<'ast>
 }
 
 struct EffectVisitorFactory<'b, 'cx> {
-    ev_cx: EffectVisitorContext<'b, 'cx>,
+    cx: &'b mut Context<'cx>,
+    ev_cx: EffectVisitorContext,
 }
 
 impl<'b, 'cx> EffectVisitorFactory<'b, 'cx> {
     fn new(
-        cx: &'b Context<'cx>,
+        cx: &'b mut Context<'cx>,
         is_hook: bool,
         rrid: Option<type_::nominal::Id>,
         tast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -1304,11 +1317,10 @@ impl<'b, 'cx> EffectVisitorFactory<'b, 'cx> {
         let env = cx.environment();
         let var_info = env.var_info.dupe();
         let name_defs = env.name_defs.dupe();
-        drop(env);
         let type_map = typed_ast_utils::typed_ast_to_map(tast);
         Self {
+            cx,
             ev_cx: EffectVisitorContext {
-                cx,
                 is_hook,
                 rrid,
                 type_map,
@@ -1319,25 +1331,25 @@ impl<'b, 'cx> EffectVisitorFactory<'b, 'cx> {
     }
 
     fn run_function_entry(
-        &self,
+        &mut self,
         body: &ast::function::Body<ALoc, ALoc>,
     ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
         let mut seen = ALocSet::new();
-        let mut visitor = EffectVisitor::new(&self.ev_cx, true, &mut seen);
+        let mut visitor = EffectVisitor::new(&self.ev_cx, self.cx, true, &mut seen);
         visitor.function_entry(body)
     }
 
     fn run_component_entry(
-        &self,
+        &mut self,
         body: &(ALoc, ast::statement::Block<ALoc, ALoc>),
     ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
         let mut seen = ALocSet::new();
-        let mut visitor = EffectVisitor::new(&self.ev_cx, true, &mut seen);
+        let mut visitor = EffectVisitor::new(&self.ev_cx, self.cx, true, &mut seen);
         visitor.component_entry(body)
     }
 }
 
-fn emit_effect_errors<'a>(cx: &Context<'a>, errors: Vec<ErrorMessage<ALoc>>) {
+fn emit_effect_errors<'a>(cx: &mut Context<'a>, errors: Vec<ErrorMessage<ALoc>>) {
     for error in errors {
         flow_js_utils::add_output_non_speculating(cx, error);
     }
@@ -1364,20 +1376,10 @@ enum HookCallContext {
 struct WholeAstVisitor<'b, 'cx, 't> {
     tast: &'t ast::Program<ALoc, (ALoc, Type)>,
     under_function_or_class_body: bool,
-    cx: &'b Context<'cx>,
+    cx: &'b mut Context<'cx>,
     rrid: Option<type_::nominal::Id>,
     hook_call_context: Rc<
-        flow_lazy::Lazy<
-            Context<'cx>,
-            Result<HookCallContext, flow_utils_concurrency::job_error::JobError>,
-            Box<
-                dyn FnOnce(
-                        &Context<'cx>,
-                    )
-                        -> Result<HookCallContext, flow_utils_concurrency::job_error::JobError>
-                    + 'cx,
-            >,
-        >,
+        flow_lazy::Lazy<Cx, Result<HookCallContext, flow_utils_concurrency::job_error::JobError>>,
     >,
     in_context_possibly_expecting_fn_component_or_hook: bool,
 }
@@ -1387,7 +1389,7 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
         tast: &'t ast::Program<ALoc, (ALoc, Type)>,
         under_function_or_class_body: bool,
         initial_hook_call_context: HookCallContext,
-        cx: &'b Context<'cx>,
+        cx: &'b mut Context<'cx>,
         rrid: Option<type_::nominal::Id>,
     ) -> Self {
         Self {
@@ -1431,7 +1433,7 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
                     &mut typed_ast_utils::UntypedAstMapper,
                     body,
                 );
-                let factory =
+                let mut factory =
                     EffectVisitorFactory::new(self.cx, true, self.rrid.clone(), self.tast);
                 factory.run_function_entry(&untyped_body)?
             };
@@ -1498,58 +1500,56 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
                 _ => None,
             };
 
-            self.hook_call_context = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
-                let is_definitely_non_component_due_to_typing =
-                    || -> Result<bool, flow_utils_concurrency::job_error::JobError> {
-                        // Not returning `React.Node`
-                        let ret_check = match &return_t {
-                            Some(t) => {
-                                let reason = flow_typing_type::type_util::reason_of_t(t);
-                                let react_node_t = flow_js::get_builtin_react_type_non_speculating(
+            self.hook_call_context = Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
+                let is_definitely_non_component_due_to_typing = |cx: &mut Context<'_>| -> Result<
+                    bool,
+                    flow_utils_concurrency::job_error::JobError,
+                > {
+                    // Not returning `React.Node`
+                    let ret_check = match &return_t {
+                        Some(t) => {
+                            let reason = flow_typing_type::type_util::reason_of_t(t);
+                            let react_node_t = flow_js::get_builtin_react_type_non_speculating(
                                     cx,
                                     reason,
                                     None,
                                     intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
                                 )?;
+                            !flow_js::FlowJs::speculative_subtyping_succeeds(cx, t, &react_node_t)?
+                        }
+                        None => true, // TypeGuard
+                    };
+                    Ok(ret_check
+                        || params_definitely_not_component
+                        || match &props_data {
+                            // function Component(props: {...})
+                            // forwardRef(props: {...}, ref: ...)
+                            Some((props_loc, props_t)) => {
+                                let empty_iface =
+                                    type_annotation::mk_empty_interface_type(cx, props_loc.dupe())?;
                                 !flow_js::FlowJs::speculative_subtyping_succeeds(
                                     cx,
-                                    t,
-                                    &react_node_t,
+                                    props_t,
+                                    &empty_iface,
                                 )?
                             }
-                            None => true, // TypeGuard
-                        };
-                        Ok(ret_check
-                            || params_definitely_not_component
-                            || match &props_data {
-                                // function Component(props: {...})
-                                // forwardRef(props: {...}, ref: ...)
-                                Some((props_loc, props_t)) => {
-                                    let empty_iface = type_annotation::mk_empty_interface_type(
-                                        cx,
-                                        props_loc.dupe(),
-                                    )?;
-                                    !flow_js::FlowJs::speculative_subtyping_succeeds(
-                                        cx,
-                                        props_t,
-                                        &empty_iface,
-                                    )?
-                                }
-                                None => false,
-                            })
-                    };
-
-                let is_definitely_component_due_to_hint =
-                    || -> Result<bool, flow_utils_concurrency::job_error::JobError> {
-                        Ok(match &loc_for_hint {
                             None => false,
-                            Some(hint_loc) => {
-                                let lazy_hint = type_env::get_hint(cx, hint_loc.dupe());
-                                let reason = flow_common::reason::mk_reason(
-                                    VirtualReasonDesc::RFunctionType,
-                                    hint_loc.dupe(),
-                                );
-                                match (lazy_hint.1)(cx, true, Some(true), reason.dupe())? {
+                        })
+                };
+
+                let is_definitely_component_due_to_hint = |cx: &mut Context<'_>| -> Result<
+                    bool,
+                    flow_utils_concurrency::job_error::JobError,
+                > {
+                    Ok(match &loc_for_hint {
+                        None => false,
+                        Some(hint_loc) => {
+                            let lazy_hint = type_env::get_hint(cx, hint_loc.dupe());
+                            let reason = flow_common::reason::mk_reason(
+                                VirtualReasonDesc::RFunctionType,
+                                hint_loc.dupe(),
+                            );
+                            match (lazy_hint.1)(cx, true, Some(true), reason.dupe())? {
                                     type_::HintEvalResult::NoHint
                                     | type_::HintEvalResult::EncounteredPlaceholder
                                     | type_::HintEvalResult::DecompositionError => false,
@@ -1570,18 +1570,18 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
                                         }
                                     }
                                 }
-                            }
-                        })
-                    };
+                        }
+                    })
+                };
 
                 Ok(if possibly_in_context_allow_hook_call {
-                    if cx.hook_compatibility() || is_definitely_component_due_to_hint()? {
+                    if cx.hook_compatibility() || is_definitely_component_due_to_hint(cx)? {
                         HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode
                     } else if match id_name.as_ref() {
                         Some(name) => {
                             !is_hook_function
                                 && componentlike_name(name.as_str())
-                                && is_definitely_non_component_due_to_typing()?
+                                && is_definitely_non_component_due_to_typing(cx)?
                         }
                         None => false,
                     } {
@@ -1594,7 +1594,7 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
                         !saved_in_context
                             && !is_hook_function
                             && (!componentlike_name(name.as_str())
-                                || is_definitely_non_component_due_to_typing()?)
+                                || is_definitely_non_component_due_to_typing(cx)?)
                     }
                     None => false,
                 } {
@@ -1602,7 +1602,7 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
                 } else {
                     HookCallContext::HookCallNotAllowedUnderUnknownContext
                 })
-            })));
+            }));
             ast_visitor::function_default(self, &fn_.sig_loc, fn_)?;
             self.hook_call_context = cur_hook_call_context;
         }
@@ -1639,7 +1639,7 @@ impl<'b, 'cx, 't>
                     &mut typed_ast_utils::UntypedAstMapper,
                     body,
                 );
-                let factory =
+                let mut factory =
                     EffectVisitorFactory::new(self.cx, false, self.rrid.clone(), self.tast);
                 factory.run_component_entry(&untyped_body)?
             }
@@ -1938,7 +1938,7 @@ impl<'b, 'cx, 't>
 
 struct ComponentAstVisitor<'b, 'cx, 't> {
     tast: &'t ast::Program<ALoc, (ALoc, Type)>,
-    cx: &'b Context<'cx>,
+    cx: &'b mut Context<'cx>,
     rrid: Option<type_::nominal::Id>,
     conditional_state: conditional_state::ConditionalState,
 }
@@ -1946,7 +1946,7 @@ struct ComponentAstVisitor<'b, 'cx, 't> {
 impl<'b, 'cx, 't> ComponentAstVisitor<'b, 'cx, 't> {
     fn new(
         tast: &'t ast::Program<ALoc, (ALoc, Type)>,
-        cx: &'b Context<'cx>,
+        cx: &'b mut Context<'cx>,
         rrid: Option<type_::nominal::Id>,
     ) -> Self {
         Self {
@@ -2054,30 +2054,33 @@ impl<'b, 'cx, 't>
             }
             _ => callee_ty.dupe(),
         };
-        let do_hook_error = |kind: error_message::HookRule<ALoc>| {
-            hook_error(self.cx, call_loc.dupe(), callee_loc.dupe(), kind);
+        let do_hook_error = |cx: &mut Context<'cx>, kind: error_message::HookRule<ALoc>| {
+            hook_error(cx, call_loc.dupe(), callee_loc.dupe(), kind);
         };
         match hook_callee(self.cx, callee_ty) {
             HookResult::HookCallee(_) => {
                 if matches!(callee.deref(), ExpressionInner::OptionalMember { .. }) {
-                    do_hook_error(error_message::HookRule::ConditionalHook);
+                    do_hook_error(self.cx, error_message::HookRule::ConditionalHook);
                 } else if ast_utils::hook_call(expr) {
                     if self.conditional_state.conditional() && !bare_use(expr) {
-                        do_hook_error(error_message::HookRule::ConditionalHook);
+                        do_hook_error(self.cx, error_message::HookRule::ConditionalHook);
                     }
                 } else {
-                    do_hook_error(error_message::HookRule::HookHasIllegalName);
+                    do_hook_error(self.cx, error_message::HookRule::HookHasIllegalName);
                 }
             }
             HookResult::MaybeHookCallee { hooks, non_hooks } => {
-                do_hook_error(error_message::HookRule::MaybeHook {
-                    hooks: hooks.into_iter().map(|hook| hook.0).collect(),
-                    non_hooks: non_hooks.into_iter().map(|non_hook| non_hook.0).collect(),
-                });
+                do_hook_error(
+                    self.cx,
+                    error_message::HookRule::MaybeHook {
+                        hooks: hooks.into_iter().map(|hook| hook.0).collect(),
+                        non_hooks: non_hooks.into_iter().map(|non_hook| non_hook.0).collect(),
+                    },
+                );
             }
             HookResult::NotHookCallee(_) => {
                 if ast_utils::hook_call(expr) {
-                    do_hook_error(error_message::HookRule::NotHookSyntaxHook);
+                    do_hook_error(self.cx, error_message::HookRule::NotHookSyntaxHook);
                 }
             }
             HookResult::AnyCallee => {}
@@ -2331,7 +2334,7 @@ impl<'b, 'cx, 't>
 }
 
 pub fn check_react_rules<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let rrid = {

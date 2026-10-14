@@ -10,7 +10,6 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::path::Path;
 use std::path::PathBuf;
-use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -18,7 +17,6 @@ use crossbeam::channel;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
-use flow_check_cache::CheckCache;
 use flow_common::files;
 use flow_common::files::FileOptions;
 use flow_common::flow_version;
@@ -1012,8 +1010,7 @@ mod check_files {
                 num_workers,
                 files.iter().map(|f| f.dupe()).collect(),
             );
-            type CheckFn = Box<dyn FnMut(FileKey) -> merge_service::CheckJobOutcome>;
-            type WorkerState = (CheckFn, Rc<std::cell::RefCell<CheckCache<'static>>>);
+            type WorkerState = merge_service::Checker;
             thread_local! {
                 static WORKER_CHECK: RefCell<Option<WorkerState>> = const { RefCell::new(None) };
             }
@@ -1079,8 +1076,8 @@ mod check_files {
                         if opt.is_none() {
                             *opt = Some(mk_check());
                         }
-                        let (check, cache) = opt.as_mut().unwrap();
-                        cache.borrow_mut().clear();
+                        let checker = opt.as_mut().unwrap();
+                        checker.clear_cache();
 
                         WORKER_DEQUE.with(|deque_cell| {
                             let mut deque_opt = deque_cell.borrow_mut();
@@ -1095,8 +1092,7 @@ mod check_files {
                             }
 
                             match job_utils::mk_job_stealing(
-                                &mut **check,
-                                move |result| merge_service::finish_check_file(result, |_, r| r),
+                                &mut |file| checker.check(file, |_, r| r),
                                 &options_for_job,
                                 deque,
                             ) {
@@ -1109,7 +1105,7 @@ mod check_files {
                                 }
                             }
                         });
-                        cache.borrow_mut().clear();
+                        checker.clear_cache();
                     });
                 },
                 |a: &mut StealAcc, b: StealAcc| match (&mut a.0, b.0) {
@@ -1132,14 +1128,10 @@ mod check_files {
                                 if opt.is_none() {
                                     *opt = Some(mk_check_for_steal());
                                 }
-                                let (check, _cache) = opt.as_mut().unwrap();
-                                match check(file.dupe()) {
-                                    merge_service::CheckJobOutcome::Ok(Some(result)) => {
-                                        let r = merge_service::finish_check_file(result, |_, r| r);
-                                        acc.0.as_mut().unwrap().push((file, Ok(Some(r))));
-                                    }
-                                    merge_service::CheckJobOutcome::Ok(None) => {
-                                        acc.0.as_mut().unwrap().push((file, Ok(None)));
+                                let checker = opt.as_mut().unwrap();
+                                match checker.check(file.dupe(), |_, r| r) {
+                                    merge_service::CheckJobOutcome::Ok(r) => {
+                                        acc.0.as_mut().unwrap().push((file, Ok(r)));
                                     }
                                     merge_service::CheckJobOutcome::PerFileError(e) => {
                                         acc.0.as_mut().unwrap().push((file, Err(e)));
@@ -1158,11 +1150,7 @@ mod check_files {
             );
             pool.broadcast(move |_| {
                 WORKER_CHECK.with(|cell| {
-                    let mut worker = cell.borrow_mut();
-                    if let Some((_, cache)) = worker.as_mut() {
-                        cache.borrow_mut().clear();
-                    }
-                    *worker = None;
+                    *cell.borrow_mut() = None;
                 });
                 WORKER_DEQUE.with(|cell| {
                     *cell.borrow_mut() = None;

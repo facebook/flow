@@ -17,8 +17,8 @@ use flow_typing_statement::statement;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeParam;
 
-pub fn mk_bound_t<'a>(cx: &Context<'a>, tparam: &TypeParam) -> Type {
-    flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), tparam)
+pub fn mk_bound_t<'a>(cx: &mut Context<'a>, tparam: &TypeParam) -> Type {
+    flow_js_utils::generic_of_tparam(cx, |_, x: &Type| x.dupe(), tparam)
 }
 
 #[derive(Clone)]
@@ -29,7 +29,7 @@ pub enum EnclosingNode<M: Dupe, T: Dupe> {
 }
 
 pub fn infer_node<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     node: EnclosingNode<ALoc, ALoc>,
 ) -> Result<EnclosingNode<ALoc, (ALoc, Type)>, flow_typing_utils::abnormal::CheckExprError> {
     match node {
@@ -323,7 +323,7 @@ pub mod type_at_pos {
     type TypeParameterDeclaration<'a> = &'a ast::Identifier<ALoc, (ALoc, Type)>;
 
     struct TypeAtPosSearcher<'a, 'cx> {
-        cx: &'a Context<'cx>,
+        cx: &'a mut Context<'cx>,
         target_loc: Loc,
         /// Type parameters in scope at the current visit position, each paired
         /// with the declaration that introduced it. Entries live only for the
@@ -1856,7 +1856,7 @@ pub mod type_at_pos {
     }
 
     pub fn find(
-        cx: &Context<'_>,
+        cx: &mut Context<'_>,
         typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
         loc: Loc,
     ) -> Result<TypeAtPosResult, flow_utils_concurrency::job_error::JobError> {
@@ -1894,7 +1894,7 @@ pub mod type_at_pos {
 }
 
 pub fn find_type_at_pos_annotation(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
 ) -> Result<type_at_pos::TypeAtPosResult, flow_utils_concurrency::job_error::JobError> {

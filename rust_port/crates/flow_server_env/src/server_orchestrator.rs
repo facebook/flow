@@ -478,15 +478,15 @@ impl State {
             Control::ConnectionChanged { change } => self.apply_connection_change(change),
             Control::CollectHeapSlice { work, reply } => {
                 let heap = self.heap.dupe();
-                let compaction = std::cell::Cell::new(None);
-                let before_compact = || {
+                let mut compaction = None;
+                let mut before_compact = || {
                     crate::monitor_rpc::status_update(server_status::Event::GCStart);
-                    compaction.set(Some((heap.heap_size(), std::time::Instant::now())));
+                    compaction = Some((heap.heap_size(), std::time::Instant::now()));
                     self.cache.clear();
                     persistent_connection::clear_type_parse_artifacts_caches();
                 };
-                let done = heap.collect_slice(work, &before_compact);
-                if let Some((old_size, start)) = compaction.get() {
+                let done = heap.collect_slice(work, &mut before_compact);
+                if let Some((old_size, start)) = compaction {
                     let new_size = heap.heap_size();
                     let time_taken = start.elapsed().as_secs_f64();
                     if old_size != new_size {
@@ -516,12 +516,21 @@ impl State {
         }
     }
 
+    /// Bounds the contexts the cache keeps between commands. The artifacts cached for clients
+    /// hold contexts made with the dependencies the cache drops, so they go with them.
+    fn trim_cache(&mut self) {
+        if self.cache.trim() {
+            persistent_connection::clear_type_parse_artifacts_caches();
+        }
+    }
+
     fn run_workload(&mut self, workload: &mut Workload) -> WorkloadOutcome {
         if (workload.workload_should_be_cancelled)() {
             return WorkloadOutcome::Completed;
         }
+        self.trim_cache();
         let transaction = ActiveTransaction::new(self.heap.dupe());
-        (workload.workload_handler)(&self.env, &transaction.handle(), &self.cache)
+        (workload.workload_handler)(&self.env, &transaction.handle(), &mut self.cache)
     }
 
     fn publish_recheck(&mut self, completed_recheck_epoch: u64, still_rechecking: bool) {
@@ -549,8 +558,13 @@ impl State {
         if (workload.parallelizable_workload_should_be_cancelled)() {
             return WorkloadOutcome::Completed;
         }
+        self.trim_cache();
         let transaction = ActiveTransaction::new(self.heap.dupe());
-        (workload.parallelizable_workload_handler)(&self.env, &transaction.handle(), &self.cache)
+        (workload.parallelizable_workload_handler)(
+            &self.env,
+            &transaction.handle(),
+            &mut self.cache,
+        )
     }
 
     fn run_next(&mut self) -> bool {

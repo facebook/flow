@@ -10,21 +10,22 @@
 use flow_common::reason::Reason;
 use flow_common::reason::mk_id;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_type::type_::aconstraint::AConstraint;
 use flow_typing_type::type_::aconstraint::AConstraintInner;
 use flow_typing_type::type_::aconstraint::Op;
 
-pub fn init_avar_with_id<'cx>(cx: &Context<'cx>, id: i32, constraint_: AConstraint<'cx>) {
+pub fn init_avar_with_id<'cx>(cx: &mut Context<'cx>, id: i32, constraint_: AConstraint<Cx>) {
     cx.add_avar(id, constraint_);
 }
 
-pub fn init_avar<'cx>(cx: &Context<'cx>, constraint_: AConstraint<'cx>) -> i32 {
+pub fn init_avar<'cx>(cx: &mut Context<'cx>, constraint_: AConstraint<Cx>) -> i32 {
     let id = mk_id() as i32;
     init_avar_with_id(cx, id, constraint_);
     id
 }
 
-pub fn unresolved_with_id<'cx>(cx: &Context<'cx>, id: i32, reason: Reason) {
+pub fn unresolved_with_id<'cx>(cx: &mut Context<'cx>, id: i32, reason: Reason) {
     init_avar_with_id(
         cx,
         id,
@@ -35,7 +36,7 @@ pub fn unresolved_with_id<'cx>(cx: &Context<'cx>, id: i32, reason: Reason) {
     );
 }
 
-pub fn constrained<'cx>(cx: &Context<'cx>, op: Op<'cx>, id: i32) -> i32 {
+pub fn constrained<'cx>(cx: &mut Context<'cx>, op: Op<Cx>, id: i32) -> i32 {
     let id_ = init_avar(
         cx,
         AConstraint::new(AConstraintInner::AnnotOp {

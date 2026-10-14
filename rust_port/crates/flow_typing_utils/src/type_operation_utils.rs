@@ -21,6 +21,7 @@ use flow_common::reason::Reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::expression;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message::EBinaryInLHSData;
 use flow_typing_errors::error_message::EBinaryInRHSData;
 use flow_typing_errors::error_message::EComparisonData;
@@ -84,15 +85,15 @@ pub mod distribute_union_intersection {
     use super::*;
 
     pub fn distribute<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         use_op: Option<UseOp>,
         break_up_union: &dyn Fn(
-            &Context<'cx>,
+            &mut Context<'cx>,
             &Reason,
             &Type,
         ) -> Result<Vec<Type>, FlowJsException>,
-        get_no_match_error_loc: &dyn Fn(&Reason) -> ALoc,
-        check_base: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Type) -> Result<(), FlowJsException>,
+        get_no_match_error_loc: &dyn Fn(&Context<'cx>, &Reason) -> ALoc,
+        check_base: &dyn Fn(&mut Context<'cx>, &FlowJsEnv, &Type) -> Result<(), FlowJsException>,
         t: &Type,
     ) -> Result<(), FlowJsException> {
         distribute_with_env(
@@ -110,16 +111,16 @@ pub mod distribute_union_intersection {
     /// This function will break down the unions in t. When it encounters an intersection,
     /// the check can pass as long as the check can pass on one member of intersection
     pub(crate) fn distribute_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: Option<UseOp>,
         break_up_union: &dyn Fn(
-            &Context<'cx>,
+            &mut Context<'cx>,
             &Reason,
             &Type,
         ) -> Result<Vec<Type>, FlowJsException>,
-        get_no_match_error_loc: &dyn Fn(&Reason) -> ALoc,
-        check_base: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Type) -> Result<(), FlowJsException>,
+        get_no_match_error_loc: &dyn Fn(&Context<'cx>, &Reason) -> ALoc,
+        check_base: &dyn Fn(&mut Context<'cx>, &FlowJsEnv, &Type) -> Result<(), FlowJsException>,
         t: &Type,
     ) -> Result<(), FlowJsException> {
         let ts = break_up_union(cx, reason_of_t(t), t)?;
@@ -131,7 +132,7 @@ pub mod distribute_union_intersection {
                         .map(|t| {
                             let t = t.clone();
                             let use_op = use_op.clone();
-                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                            Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                 distribute_with_env(
                                     cx,
                                     env,
@@ -144,7 +145,7 @@ pub mod distribute_union_intersection {
                             })
                                 as Box<
                                     dyn FnOnce(
-                                            &Context<'cx>,
+                                            &mut Context<'cx>,
                                             &FlowJsEnv,
                                         )
                                             -> Result<(), FlowJsException>
@@ -152,13 +153,14 @@ pub mod distribute_union_intersection {
                                 >
                         })
                         .collect();
+                    let no_match_error_loc = get_no_match_error_loc(cx, r);
                     speculation_flow::try_custom(
                         cx,
                         env,
                         use_op.clone(),
                         None,
                         None,
-                        get_no_match_error_loc(r),
+                        no_match_error_loc,
                         cases,
                     )?;
                 }
@@ -174,17 +176,17 @@ pub mod distribute_union_intersection {
     /// This function will break down the unions in t1 and t2. When it encounters an intersection,
     /// the check can pass as long as the check can pass on one member of intersection
     pub fn distribute_2<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: Option<UseOp>,
         break_up_union: &dyn Fn(
-            &Context<'cx>,
+            &mut Context<'cx>,
             &Reason,
             &Type,
         ) -> Result<Vec<Type>, FlowJsException>,
-        get_no_match_error_loc: &dyn Fn(&Reason, &Reason) -> ALoc,
+        get_no_match_error_loc: &dyn Fn(&Context<'cx>, &Reason, &Reason) -> ALoc,
         check_base: &dyn Fn(
-            &Context<'cx>,
+            &mut Context<'cx>,
             &FlowJsEnv,
             (&Type, &Type),
         ) -> Result<(), FlowJsException>,
@@ -207,7 +209,7 @@ pub mod distribute_union_intersection {
                                     let m1 = m1.dupe();
                                     let m2 = m2.dupe();
                                     let use_op = use_op.dupe();
-                                    Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                    Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                         distribute_2(
                                             cx,
                                             env,
@@ -220,7 +222,7 @@ pub mod distribute_union_intersection {
                                     })
                                         as Box<
                                             dyn FnOnce(
-                                                    &Context<'cx>,
+                                                    &mut Context<'cx>,
                                                     &FlowJsEnv,
                                                 )
                                                     -> Result<(), FlowJsException>
@@ -229,13 +231,14 @@ pub mod distribute_union_intersection {
                                 })
                             })
                             .collect();
+                        let no_match_error_loc = get_no_match_error_loc(cx, r1, r2);
                         speculation_flow::try_custom(
                             cx,
                             env,
                             use_op.dupe(),
                             None,
                             None,
-                            get_no_match_error_loc(r1, r2),
+                            no_match_error_loc,
                             cases,
                         )?;
                     }
@@ -243,7 +246,11 @@ pub mod distribute_union_intersection {
                         let t2_clone = t2i.dupe();
                         let cases: Vec<
                             Box<
-                                dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>
+                                dyn FnOnce(
+                                        &mut Context<'cx>,
+                                        &FlowJsEnv,
+                                    )
+                                        -> Result<(), FlowJsException>
                                     + '_,
                             >,
                         > = rep1
@@ -252,7 +259,7 @@ pub mod distribute_union_intersection {
                                 let t1 = t1.dupe();
                                 let t2 = t2_clone.dupe();
                                 let use_op = use_op.clone();
-                                Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                     distribute_2(
                                         cx,
                                         env,
@@ -265,7 +272,7 @@ pub mod distribute_union_intersection {
                                 })
                                     as Box<
                                         dyn FnOnce(
-                                                &Context<'cx>,
+                                                &mut Context<'cx>,
                                                 &FlowJsEnv,
                                             )
                                                 -> Result<(), FlowJsException>
@@ -273,13 +280,14 @@ pub mod distribute_union_intersection {
                                     >
                             })
                             .collect();
+                        let no_match_error_loc = get_no_match_error_loc(cx, r1, reason_of_t(t2i));
                         speculation_flow::try_custom(
                             cx,
                             env,
                             use_op.clone(),
                             None,
                             None,
-                            get_no_match_error_loc(r1, reason_of_t(t2i)),
+                            no_match_error_loc,
                             cases,
                         )?;
                     }
@@ -291,7 +299,7 @@ pub mod distribute_union_intersection {
                                 let t2 = t2.dupe();
                                 let t1 = t1_clone.dupe();
                                 let use_op = use_op.dupe();
-                                Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                     distribute_2(
                                         cx,
                                         env,
@@ -304,7 +312,7 @@ pub mod distribute_union_intersection {
                                 })
                                     as Box<
                                         dyn FnOnce(
-                                                &Context<'cx>,
+                                                &mut Context<'cx>,
                                                 &FlowJsEnv,
                                             )
                                                 -> Result<(), FlowJsException>
@@ -312,13 +320,14 @@ pub mod distribute_union_intersection {
                                     >
                             })
                             .collect();
+                        let no_match_error_loc = get_no_match_error_loc(cx, reason_of_t(t1i), r2);
                         speculation_flow::try_custom(
                             cx,
                             env,
                             use_op.clone(),
                             None,
                             None,
-                            get_no_match_error_loc(reason_of_t(t1i), r2),
+                            no_match_error_loc,
                             cases,
                         )?;
                     }
@@ -349,7 +358,7 @@ pub mod operators {
     }
 
     pub fn arith<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         reason: &Reason,
         kind: &ArithKind,
         t1: &Type,
@@ -359,7 +368,7 @@ pub mod operators {
     }
 
     fn arith_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         kind: &ArithKind,
@@ -374,7 +383,7 @@ pub mod operators {
             &|cx, reason, t| {
                 FlowJs::possible_concrete_types_for_operators_checking_with_env(cx, env, reason, t)
             },
-            &|_, _| reason.loc().dupe(),
+            &|_, _, _| reason.loc().dupe(),
             &|cx, env, (t1, t2)| {
                 let result =
                     flow_js_utils::flow_arith(cx, env, reason.dupe(), t1, t2, kind.clone())?;
@@ -388,18 +397,22 @@ pub mod operators {
             .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason)))
     }
 
-    pub fn check_comparator<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), JobError> {
+    pub fn check_comparator<'cx>(
+        cx: &mut Context<'cx>,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<(), JobError> {
         check_comparator_with_env(cx, &FlowJsEnv::entry(), t1, t2)
     }
 
     fn check_comparator_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t1: &Type,
         t2: &Type,
     ) -> Result<(), JobError> {
         fn check_base<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             (l, r): (&Type, &Type),
         ) -> Result<(), FlowJsException> {
@@ -463,7 +476,7 @@ pub mod operators {
             &|cx, reason, t| {
                 FlowJs::possible_concrete_types_for_operators_checking_with_env(cx, env, reason, t)
             },
-            &|r1, r2| {
+            &|cx, r1, r2| {
                 flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                     .0
                     .loc()
@@ -490,12 +503,12 @@ pub mod operators {
         }
     }
 
-    pub fn check_eq<'cx>(cx: &Context<'cx>, pair: (&Type, &Type)) -> Result<(), JobError> {
+    pub fn check_eq<'cx>(cx: &mut Context<'cx>, pair: (&Type, &Type)) -> Result<(), JobError> {
         check_eq_with_env(cx, &FlowJsEnv::entry(), pair)
     }
 
     fn check_eq_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         pair: (&Type, &Type),
     ) -> Result<(), JobError> {
@@ -584,7 +597,7 @@ pub mod operators {
         }
 
         fn distribute<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             t1: &Type,
             t2: &Type,
@@ -600,12 +613,12 @@ pub mod operators {
                         .map(|t1| {
                             let t1 = t1.dupe();
                             let t2 = t2_clone.dupe();
-                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                            Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                 distribute(cx, env, &t1, &t2)
                             })
                                 as Box<
                                     dyn FnOnce(
-                                            &Context<'cx>,
+                                            &mut Context<'cx>,
                                             &FlowJsEnv,
                                         )
                                             -> Result<(), FlowJsException>
@@ -630,12 +643,12 @@ pub mod operators {
                         .map(|t2| {
                             let t2 = t2.dupe();
                             let t1 = t1_clone.dupe();
-                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                            Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                 distribute(cx, env, &t1, &t2)
                             })
                                 as Box<
                                     dyn FnOnce(
-                                            &Context<'cx>,
+                                            &mut Context<'cx>,
                                             &FlowJsEnv,
                                         )
                                             -> Result<(), FlowJsException>
@@ -714,7 +727,7 @@ pub mod operators {
 
     pub fn check_strict_eq<'cx>(
         encl_ctx: &EnclosingContext,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         pair: (&Type, &Type),
     ) -> Result<(), JobError> {
         check_strict_eq_with_env(encl_ctx, cx, &FlowJsEnv::entry(), pair)
@@ -722,7 +735,7 @@ pub mod operators {
 
     fn check_strict_eq_with_env<'cx>(
         encl_ctx: &EnclosingContext,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         pair: (&Type, &Type),
     ) -> Result<(), JobError> {
@@ -745,7 +758,7 @@ pub mod operators {
         }
 
         fn strict_equatable_error<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             encl_ctx: &EnclosingContext,
             l: &Type,
             r: &Type,
@@ -883,7 +896,7 @@ pub mod operators {
         }
 
         fn distribute_strict<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             encl_ctx: &EnclosingContext,
             t1: &Type,
@@ -904,12 +917,12 @@ pub mod operators {
                         .map(|t1| {
                             let t1 = t1.dupe();
                             let t2 = t2_clone.dupe();
-                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                            Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                 distribute_strict(cx, env, encl_ctx, &t1, &t2)
                             })
                                 as Box<
                                     dyn FnOnce(
-                                            &Context<'cx>,
+                                            &mut Context<'cx>,
                                             &FlowJsEnv,
                                         )
                                             -> Result<(), FlowJsException>
@@ -934,12 +947,12 @@ pub mod operators {
                         .map(|t2| {
                             let t2 = t2.dupe();
                             let t1 = t1_clone.dupe();
-                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                            Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                 distribute_strict(cx, env, encl_ctx, &t1, &t2)
                             })
                                 as Box<
                                     dyn FnOnce(
-                                            &Context<'cx>,
+                                            &mut Context<'cx>,
                                             &FlowJsEnv,
                                         )
                                             -> Result<(), FlowJsException>
@@ -1011,7 +1024,7 @@ pub mod operators {
     }
 
     pub fn unary_arith<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         reason: &Reason,
         kind: &UnaryArithKind,
         t: &Type,
@@ -1020,7 +1033,7 @@ pub mod operators {
     }
 
     fn unary_arith_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         kind: &UnaryArithKind,
@@ -1037,7 +1050,7 @@ pub mod operators {
                         cx, env, reason, t,
                     )
                 },
-                &|r| r.loc().dupe(),
+                &|_, r| r.loc().dupe(),
                 &|cx, env, t| {
                     let result = flow_js_utils::flow_unary_arith(cx, env, t, reason.dupe(), *kind)?;
                     collector.add(result);
@@ -1052,9 +1065,9 @@ pub mod operators {
     }
 
     fn collect_logical_union<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         reason: &Reason,
-        f: impl FnOnce(&Context<'cx>, &UseT<Context<'cx>>) -> Result<(), FlowJsException>,
+        f: impl FnOnce(&mut Context<'cx>, &UseT<Cx>) -> Result<(), FlowJsException>,
     ) -> Result<Type, FlowJsException> {
         use std::collections::BTreeSet;
 
@@ -1088,7 +1101,7 @@ pub mod operators {
     }
 
     pub fn logical_and<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         reason: &Reason,
         left: &Type,
         right: &Type,
@@ -1097,7 +1110,7 @@ pub mod operators {
     }
 
     fn logical_and_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         left: &Type,
@@ -1174,7 +1187,7 @@ pub mod operators {
     }
 
     pub fn logical_or<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         reason: &Reason,
         left: &Type,
         right: &Type,
@@ -1183,7 +1196,7 @@ pub mod operators {
     }
 
     fn logical_or_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         left: &Type,
@@ -1238,7 +1251,7 @@ pub mod operators {
     }
 
     pub fn logical_nullish_coalesce<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         reason: &Reason,
         left: &Type,
         right: &Type,
@@ -1247,7 +1260,7 @@ pub mod operators {
     }
 
     fn logical_nullish_coalesce_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         left: &Type,
@@ -1317,12 +1330,16 @@ pub mod operators {
         }))
     }
 
-    pub fn unary_not<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
+    pub fn unary_not<'cx>(
+        cx: &mut Context<'cx>,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, JobError> {
         unary_not_with_env(cx, &FlowJsEnv::entry(), reason, t)
     }
 
     fn unary_not_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         t: &Type,
@@ -1426,7 +1443,7 @@ pub mod operators {
                     &|cx, r, t| {
                         FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)
                     },
-                    &|r| r.loc().dupe(),
+                    &|_, r| r.loc().dupe(),
                     &|cx, env, t| {
                         let result = f(&reason, t);
                         flow_js::flow_t_with_env(cx, env, (&result, tout))?;
@@ -1438,12 +1455,16 @@ pub mod operators {
         ))
     }
 
-    pub fn non_maybe<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
+    pub fn non_maybe<'cx>(
+        cx: &mut Context<'cx>,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, JobError> {
         non_maybe_with_env(cx, &FlowJsEnv::entry(), reason, t)
     }
 
     fn non_maybe_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         t: &Type,
@@ -1481,7 +1502,7 @@ pub mod operators {
                 env,
                 None,
                 &|cx, r, t| FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t),
-                &|r| r.loc().dupe(),
+                &|_, r| r.loc().dupe(),
                 &|_, _, t| {
                     collector.add(f(t));
                     Ok(())
@@ -1499,12 +1520,12 @@ pub mod promise {
 
     use super::*;
 
-    pub fn await_<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
+    pub fn await_<'cx>(cx: &mut Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
         await_with_env(cx, &FlowJsEnv::entry(), reason, t)
     }
 
     fn await_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         t: &Type,
@@ -1540,7 +1561,7 @@ pub mod special_cased_functions {
     use super::*;
 
     pub fn object_assign<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         reason: &Reason,
         target_t: &Type,
         rest_arg_ts: &[CallArg],
@@ -1555,7 +1576,7 @@ pub mod special_cased_functions {
     }
 
     fn object_assign_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason: &Reason,
         target_t: &Type,
@@ -1628,7 +1649,7 @@ pub mod special_cased_functions {
         let fix_cache: Rc<RefCell<HashMap<Type, Type>>> = Rc::new(RefCell::new(HashMap::new()));
 
         fn assign_from<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             reason: &Reason,
             fix_cache: &Rc<RefCell<HashMap<Type, Type>>>,
@@ -1664,7 +1685,7 @@ pub mod special_cased_functions {
         }
 
         fn assign_from_after_concretization<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             reason: &Reason,
             fix_cache: &Rc<RefCell<HashMap<Type, Type>>>,
@@ -1710,7 +1731,7 @@ pub mod special_cased_functions {
                 {
                     let mapr = obj.props_tmap.dupe();
                     let flags = &obj.flags;
-                    cx.try_iter_props(mapr.dupe(), |name, p| -> Result<(), FlowJsException> {
+                    cx.try_iter_props(mapr.dupe(), |cx, name, p| -> Result<(), FlowJsException> {
                         let reason_prop = lreason
                             .dupe()
                             .update_desc(|desc| {
@@ -2050,7 +2071,7 @@ pub mod special_cased_functions {
                                         let inner_t = inner_t_clone.dupe();
                                         let fix_cache = fix_cache.dupe();
                                         let outer_reason = outer_reason_clone.dupe();
-                                        Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                        Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                                             assign_from(
                                                 cx,
                                                 env,
@@ -2066,7 +2087,7 @@ pub mod special_cased_functions {
                                         })
                                             as Box<
                                                 dyn FnOnce(
-                                                        &Context<'cx>,
+                                                        &mut Context<'cx>,
                                                         &FlowJsEnv,
                                                     )
                                                         -> Result<(), FlowJsException>
@@ -2109,7 +2130,7 @@ pub mod special_cased_functions {
 }
 
 pub fn perform_type_cast<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: UseOp,
     l: &Type,
     cast_to_t: &Type,
@@ -2118,13 +2139,13 @@ pub fn perform_type_cast<'cx>(
 }
 
 fn perform_type_cast_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     l: &Type,
     cast_to_t: &Type,
 ) -> Result<(), FlowJsException> {
-    let flow = |source_t: &Type| -> Result<(), FlowJsException> {
+    let flow = |cx: &mut Context<'cx>, source_t: &Type| -> Result<(), FlowJsException> {
         FlowJs::flow_with_env(
             cx,
             env,
@@ -2172,7 +2193,7 @@ fn perform_type_cast_with_env<'cx>(
         _ => false,
     };
     if should_short_circuit_empty_cast {
-        return flow(l);
+        return flow(cx, l);
     }
     let concrete_l = FlowJs::singleton_concrete_type_for_type_cast(cx, env, reason_of_t(l), l)?;
     match concrete_l.deref() {
@@ -2181,24 +2202,31 @@ fn perform_type_cast_with_env<'cx>(
                 EnumInfoInner::ConcreteEnum(concrete) => &concrete.representation_t,
                 EnumInfoInner::AbstractEnum { representation_t } => representation_t,
             };
-            if type_util::quick_subtype(None::<&fn(&Type)>, representation_t, cast_to_t)
-                || type_util::quick_subtype(None::<&fn(&Type)>, representation_t, &resolved_cast_to)
+            if type_util::quick_subtype(None::<&mut fn(&Type)>, representation_t, cast_to_t)
+                || type_util::quick_subtype(
+                    None::<&mut fn(&Type)>,
+                    representation_t,
+                    &resolved_cast_to,
+                )
             {
-                flow(representation_t)
+                flow(cx, representation_t)
             } else {
-                flow(&Type::new(TypeInner::DefT(
-                    reason.dupe(),
-                    DefT::new(DefTInner::EnumValueT(enum_info.dupe())),
-                )))
+                flow(
+                    cx,
+                    &Type::new(TypeInner::DefT(
+                        reason.dupe(),
+                        DefT::new(DefTInner::EnumValueT(enum_info.dupe())),
+                    )),
+                )
             }
         }
         TypeInner::UnionT(_, rep) => {
             if matches!(resolved_cast_to.deref(), TypeInner::UnionT(_, _)) {
-                flow(&concrete_l)
+                flow(cx, &concrete_l)
             } else {
                 let flowed_single = {
                     if !rep.is_optimized_finally() {
-                        rep.optimize_enum_only(|ts| {
+                        rep.optimize_enum_only(cx, |cx, ts| {
                             flow_typing_visitors::type_mapper::union_flatten(cx, ts.duped())
                         });
                     }
@@ -2226,11 +2254,11 @@ fn perform_type_cast_with_env<'cx>(
                                             }
                                         };
                                         type_util::quick_subtype(
-                                            None::<&fn(&Type)>,
+                                            None::<&mut fn(&Type)>,
                                             repr_t,
                                             cast_to_t,
                                         ) || type_util::quick_subtype(
-                                            None::<&fn(&Type)>,
+                                            None::<&mut fn(&Type)>,
                                             repr_t,
                                             &resolved_cast_to,
                                         )
@@ -2289,22 +2317,25 @@ fn perform_type_cast_with_env<'cx>(
                         EnumInfoInner::ConcreteEnum(concrete) => &concrete.representation_t,
                         EnumInfoInner::AbstractEnum { representation_t } => representation_t,
                     };
-                    if type_util::quick_subtype(None::<&fn(&Type)>, representation_t, cast_to_t)
+                    if type_util::quick_subtype(None::<&mut fn(&Type)>, representation_t, cast_to_t)
                         || type_util::quick_subtype(
-                            None::<&fn(&Type)>,
+                            None::<&mut fn(&Type)>,
                             representation_t,
                             &resolved_cast_to,
                         )
                     {
-                        flow(representation_t)
+                        flow(cx, representation_t)
                     } else {
-                        flow(&Type::new(TypeInner::DefT(
-                            reason.dupe(),
-                            DefT::new(DefTInner::EnumValueT(enum_info.dupe())),
-                        )))
+                        flow(
+                            cx,
+                            &Type::new(TypeInner::DefT(
+                                reason.dupe(),
+                                DefT::new(DefTInner::EnumValueT(enum_info.dupe())),
+                            )),
+                        )
                     }
                 }
-                _ => flow(l),
+                _ => flow(cx, l),
             }
         }
     }
@@ -2313,7 +2344,7 @@ fn perform_type_cast_with_env<'cx>(
 pub mod type_assertions {
     use super::*;
 
-    fn has_nontrivial_this_param<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
+    fn has_nontrivial_this_param<'cx>(cx: &mut Context<'cx>, t: &Type) -> Result<bool, JobError> {
         fn collect_this_params(t: &Type, out: &mut Vec<Type>) {
             match t.deref() {
                 TypeInner::DefT(_, def_t) => match def_t.deref() {
@@ -2362,7 +2393,7 @@ pub mod type_assertions {
     }
 
     pub fn check_function_proto_this_arg<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         name: &FlowSmolStr,
         prop_loc: &ALoc,
         callee_object: &expression::Expression<ALoc, ALoc>,
@@ -2427,12 +2458,12 @@ pub mod type_assertions {
         Ok(())
     }
 
-    pub fn assert_binary_in_lhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
+    pub fn assert_binary_in_lhs<'cx>(cx: &mut Context<'cx>, t: &Type) -> Result<(), JobError> {
         assert_binary_in_lhs_with_env(cx, &FlowJsEnv::entry(), t)
     }
 
     fn assert_binary_in_lhs_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t: &Type,
     ) -> Result<(), JobError> {
@@ -2446,7 +2477,7 @@ pub mod type_assertions {
                         cx, env, reason, t,
                     )
                 },
-                &|r| r.loc().dupe(),
+                &|_, r| r.loc().dupe(),
                 &|cx, env, t| {
                     match t.deref() {
                         TypeInner::AnyT(_, _) => Ok(()),
@@ -2481,12 +2512,12 @@ pub mod type_assertions {
         )
     }
 
-    pub fn assert_binary_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
+    pub fn assert_binary_in_rhs<'cx>(cx: &mut Context<'cx>, t: &Type) -> Result<(), JobError> {
         assert_binary_in_rhs_with_env(cx, &FlowJsEnv::entry(), t)
     }
 
     fn assert_binary_in_rhs_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t: &Type,
     ) -> Result<(), JobError> {
@@ -2500,7 +2531,7 @@ pub mod type_assertions {
                         cx, env, reason, t,
                     )
                 },
-                &|r| r.loc().dupe(),
+                &|_, r| r.loc().dupe(),
                 &|cx, env, t| {
                     match t.deref() {
                         TypeInner::AnyT(_, _) => Ok(()),
@@ -2528,7 +2559,7 @@ pub mod type_assertions {
     }
 
     pub fn assert_export_is_type<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         name: &Name,
         t: &Type,
     ) -> Result<Type, JobError> {
@@ -2536,7 +2567,7 @@ pub mod type_assertions {
     }
 
     fn assert_export_is_type_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         name: &Name,
         t: &Type,
@@ -2559,12 +2590,12 @@ pub mod type_assertions {
         )
     }
 
-    pub fn assert_for_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
+    pub fn assert_for_in_rhs<'cx>(cx: &mut Context<'cx>, t: &Type) -> Result<(), JobError> {
         assert_for_in_rhs_with_env(cx, &FlowJsEnv::entry(), t)
     }
 
     fn assert_for_in_rhs_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t: &Type,
     ) -> Result<(), JobError> {
@@ -2578,7 +2609,7 @@ pub mod type_assertions {
                         cx, env, reason, t,
                     )
                 },
-                &|r| r.loc().dupe(),
+                &|_, r| r.loc().dupe(),
                 &|cx, env, t| {
                     match t.deref() {
                         _ if flow_js_utils::object_like(t) => Ok(()),
@@ -2624,7 +2655,7 @@ pub mod type_assertions {
     }
 
     pub fn assert_non_component_like_base<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         def_loc: ALoc,
         use_: NamedReferenceData<ALoc>,
         t: &Type,
@@ -2633,7 +2664,7 @@ pub mod type_assertions {
     }
 
     fn assert_non_component_like_base_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         def_loc: ALoc,
         use_: NamedReferenceData<ALoc>,
@@ -2642,7 +2673,7 @@ pub mod type_assertions {
         fn check_base<'cx>(
             def_loc: &ALoc,
             use_: &NamedReferenceData<ALoc>,
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             t: &Type,
         ) -> Result<(), FlowJsException> {
@@ -2702,19 +2733,19 @@ pub mod type_assertions {
                         cx, env, reason, t,
                     )
                 },
-                &|_| use_.loc.dupe(),
+                &|_, _| use_.loc.dupe(),
                 &|cx, env, t| check_base(&def_loc, &use_, cx, env, t),
                 t,
             ),
         )
     }
 
-    pub fn assert_instanceof_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
+    pub fn assert_instanceof_rhs<'cx>(cx: &mut Context<'cx>, t: &Type) -> Result<(), JobError> {
         assert_instanceof_rhs_with_env(cx, &FlowJsEnv::entry(), t)
     }
 
     fn assert_instanceof_rhs_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t: &Type,
     ) -> Result<(), JobError> {
@@ -2728,7 +2759,7 @@ pub mod type_assertions {
                         cx, env, reason, t,
                     )
                 },
-                &|r| r.loc().dupe(),
+                &|_, r| r.loc().dupe(),
                 &|cx, env, t| {
                     match t.deref() {
                         // `instanceof` RHS
@@ -2754,14 +2785,14 @@ pub mod type_assertions {
     }
 
     pub(crate) fn assert_match_instance_pattern_constructor<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         t: &Type,
     ) -> Result<(), JobError> {
         assert_match_instance_pattern_constructor_with_env(cx, &FlowJsEnv::entry(), t)
     }
 
     fn assert_match_instance_pattern_constructor_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t: &Type,
     ) -> Result<(), JobError> {
@@ -2778,7 +2809,7 @@ pub mod type_assertions {
     }
 
     pub fn assert_iterable<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         loc: ALoc,
         is_async: bool,
         use_op: &UseOp,
@@ -2797,7 +2828,7 @@ pub mod type_assertions {
     }
 
     fn assert_iterable_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         loc: ALoc,
         is_async: bool,
@@ -2908,12 +2939,12 @@ pub mod type_assertions {
         Ok(())
     }
 
-    pub fn non_exhaustive<'cx>(cx: &Context<'cx>, ts: &[Type]) -> Result<bool, JobError> {
+    pub fn non_exhaustive<'cx>(cx: &mut Context<'cx>, ts: &[Type]) -> Result<bool, JobError> {
         non_exhaustive_with_env(cx, &FlowJsEnv::entry(), ts)
     }
 
     fn non_exhaustive_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         ts: &[Type],
     ) -> Result<bool, JobError> {
@@ -2929,7 +2960,7 @@ pub mod type_assertions {
     }
 
     fn assert_operator_receiver_base<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         op_reason: &Reason,
         obj_expression: &ExpressionReferenceData<ALoc>,
@@ -2998,7 +3029,7 @@ pub mod type_assertions {
     }
 
     pub fn check_specialized_assert_operator_property<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         op_reason: &Reason,
         obj_expression: &ExpressionReferenceData<ALoc>,
         t: &Type,
@@ -3015,7 +3046,7 @@ pub mod type_assertions {
     }
 
     fn check_specialized_assert_operator_property_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         op_reason: &Reason,
         obj_expression: &ExpressionReferenceData<ALoc>,
@@ -3029,7 +3060,7 @@ pub mod type_assertions {
             &|cx, reason, t| {
                 FlowJs::possible_concrete_types_for_operators_checking_with_env(cx, env, reason, t)
             },
-            &|r| r.loc().dupe(),
+            &|_, r| r.loc().dupe(),
             &|cx, env, t| {
                 assert_operator_receiver_base(
                     cx,
@@ -3046,7 +3077,7 @@ pub mod type_assertions {
     }
 
     pub fn check_specialized_assert_operator_lookup<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         op_reason: &Reason,
         obj_expression: &ExpressionReferenceData<ALoc>,
         t1: &Type,
@@ -3063,7 +3094,7 @@ pub mod type_assertions {
     }
 
     fn check_specialized_assert_operator_lookup_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         op_reason: &Reason,
         obj_expression: &ExpressionReferenceData<ALoc>,
@@ -3071,7 +3102,7 @@ pub mod type_assertions {
         t2: &Type,
     ) {
         fn check_base<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             op_reason: &Reason,
             obj_expression: &ExpressionReferenceData<ALoc>,
@@ -3102,7 +3133,7 @@ pub mod type_assertions {
             &|cx, reason, t| {
                 FlowJs::possible_concrete_types_for_operators_checking_with_env(cx, env, reason, t)
             },
-            &|r1, r2| {
+            &|cx, r1, r2| {
                 flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                     .0
                     .loc()
@@ -3115,14 +3146,14 @@ pub mod type_assertions {
     }
 
     pub fn check_assert_operator_implicitly_nullable<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         t: &Type,
     ) -> Result<bool, JobError> {
         check_assert_operator_implicitly_nullable_with_env(cx, &FlowJsEnv::entry(), t)
     }
 
     fn check_assert_operator_implicitly_nullable_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t: &Type,
     ) -> Result<bool, JobError> {
@@ -3155,14 +3186,14 @@ pub mod type_assertions {
     }
 
     pub fn check_assert_operator_nullable<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         t: &Type,
     ) -> Result<bool, JobError> {
         check_assert_operator_nullable_with_env(cx, &FlowJsEnv::entry(), t)
     }
 
     fn check_assert_operator_nullable_with_env<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t: &Type,
     ) -> Result<bool, JobError> {

@@ -14,7 +14,6 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::reason::VirtualReasonDesc;
 use flow_parser::loc::Loc;
-use flow_typing_context::Context;
 use flow_typing_flow_js::type_inference_hooks_js;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Type;
@@ -38,7 +37,7 @@ fn get_object_literal_loc(ty: &Type) -> Option<ALoc> {
     }
 }
 
-fn obj_to_obj_hook_fn(_cx: &Context, obj1: &Type, obj2: &Type) {
+fn obj_to_obj_hook_fn(obj1: &Type, obj2: &Type) {
     match get_object_literal_loc(obj1) {
         Some(obj1_aloc) => match (obj1.deref(), obj2.deref()) {
             (TypeInner::DefT(_, d1), TypeInner::DefT(_, d2))

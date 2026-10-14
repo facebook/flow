@@ -8,7 +8,6 @@
 #![feature(never_type)]
 
 use std::cell::LazyCell;
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -16,8 +15,9 @@ use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::rc::Rc;
-use std::rc::Weak;
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering as AtomicOrdering;
 
 use dupe::Dupe;
 use dupe::OptionDupedExt;
@@ -62,10 +62,12 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
 use flow_env_builder::env_api::CacheableEnvError;
 use flow_env_builder::name_def_types::ScopeKind;
+use flow_lazy::ContextFamily;
 use flow_lint_settings::lint_severity_cover::LintSeverityCover;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_type_sig::compact_table;
+use flow_type_sig::compact_table::Table;
 use flow_typing_builtins::Builtins;
 use flow_typing_builtins::LazyModuleType;
 use flow_typing_errors::error_message::ErrorMessage;
@@ -367,17 +369,17 @@ impl MasterContext {
     }
 }
 
-pub struct ComponentT<'cx> {
-    sig_cx: RefCell<TypeContext<'cx, Context<'cx>>>,
+pub struct ComponentT {
+    sig_cx: TypeContext<Cx>,
     // mapping from keyed alocs to concrete locations
-    aloc_tables: RefCell<HashMap<FileKey, LazyALocTable>>,
-    synthesis_produced_uncacheable_result: RefCell<bool>,
-    errors: RefCell<ErrorSet>,
-    error_suppressions: RefCell<ErrorSuppressions>,
-    severity_cover: RefCell<FlowOrdMap<FileKey, LintSeverityCover>>,
+    aloc_tables: HashMap<FileKey, LazyALocTable>,
+    synthesis_produced_uncacheable_result: bool,
+    errors: ErrorSet,
+    error_suppressions: ErrorSuppressions,
+    severity_cover: FlowOrdMap<FileKey, LintSeverityCover>,
 
     // map from exists proposition locations to the types of values running through them
-    exists_checks: RefCell<ALocMap<BTreeSet<Type>>>,
+    exists_checks: ALocMap<BTreeSet<Type>>,
     // map from exists proposition locations to the types of excuses for them
     // If a variable appears in something like `x || ''`, the existence check
     // is excused and not considered sketchy. (The program behaves identically to how it would
@@ -385,7 +387,7 @@ pub struct ComponentT<'cx> {
     // common pattern. Excusing it eliminates a lot of noise from the lint rule.)
     // The above example assumes that x is a string. If it were a different type
     // it wouldn't be excused.
-    exists_excuses: RefCell<ALocMap<ExistsCheck>>,
+    exists_excuses: ALocMap<ExistsCheck>,
     // For the definite instance property assignment analysis, we should only
     // emit errors for a given property if VoidT flows to the type of that
     // property. Ideally, we would create a VoidT ~> property type flow when we
@@ -397,51 +399,45 @@ pub struct ComponentT<'cx> {
     // nearly all properties will have a concrete type that we can safely pattern
     // match on without affecting other constraints. For the unresolved tvars, we
     // conservatively emit errors.
-    voidable_checks: RefCell<Vec<VoidableCheck>>,
-    test_prop_hits_and_misses: RefCell<IntHashMap<i32, TestPropHitOrMiss>>,
-    optional_chains_useful: RefCell<ALocMap<(ExpressionReferenceData<ALoc>, bool)>>,
-    conditions: RefCell<FlowVector<flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>>>,
-    strict_comparisons: RefCell<
-        FlowVector<(
-            ALoc,
-            (
-                flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>,
-                flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>,
-            ),
-        )>,
-    >,
-    maybe_unused_promises: RefCell<FlowVector<(ALoc, Type, bool)>>,
+    voidable_checks: Vec<VoidableCheck>,
+    test_prop_hits_and_misses: IntHashMap<i32, TestPropHitOrMiss>,
+    optional_chains_useful: ALocMap<(ExpressionReferenceData<ALoc>, bool)>,
+    conditions: FlowVector<flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>>,
+    strict_comparisons: FlowVector<(
+        ALoc,
+        (
+            flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>,
+            flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>,
+        ),
+    )>,
+    maybe_unused_promises: FlowVector<(ALoc, Type, bool)>,
 
-    inference_nodes:
-        RefCell<IntHashMap<i32, Node<type_::constraint::Constraints<'cx, Context<'cx>>>>>,
+    inference_nodes: IntHashMap<i32, Node<type_::constraint::Constraints<Cx>>>,
 
-    constraint_cache: RefCell<type_::FlowSet<Context<'cx>>>,
-    subst_cache: RefCell<type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>>,
-    eval_id_cache: RefCell<EvalIdCacheMap>,
-    id_cache: RefCell<IdCacheMap>,
-    eval_repos_cache: RefCell<EvalReposCacheMap>,
-    fix_cache: RefCell<FixCacheMap>,
-    spread_cache: RefCell<SpreadCache>,
-    const_fold_cache: RefCell<ConstFoldMap>,
+    constraint_cache: type_::FlowSet<Cx>,
+    subst_cache: type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>,
+    eval_id_cache: EvalIdCacheMap,
+    id_cache: IdCacheMap,
+    eval_repos_cache: EvalReposCacheMap,
+    fix_cache: FixCacheMap,
+    spread_cache: SpreadCache,
+    const_fold_cache: ConstFoldMap,
 
     // Post-inference checks
-    delayed_forcing_tvars: RefCell<FlowOrdSet<i32>>,
-    post_component_tvar_forcing_states: RefCell<FlowVector<ForcingState<'cx, Context<'cx>>>>,
-    active_tvar_forcing_states: RefCell<Vec<ForcingState<'cx, Context<'cx>>>>,
-    post_inference_polarity_checks: RefCell<
-        Vec<(
-            BTreeMap<SubstName, type_::TypeParam>,
-            flow_common::polarity::Polarity,
-            Type,
-        )>,
-    >,
-    post_inference_validation_flows: RefCell<VecDeque<(Type, type_::UseT<Context<'cx>>)>>,
+    delayed_forcing_tvars: FlowOrdSet<i32>,
+    post_component_tvar_forcing_states: FlowVector<ForcingState<Cx>>,
+    active_tvar_forcing_states: Vec<ForcingState<Cx>>,
+    post_inference_polarity_checks: Vec<(
+        BTreeMap<SubstName, type_::TypeParam>,
+        flow_common::polarity::Polarity,
+        Type,
+    )>,
+    post_inference_validation_flows: VecDeque<(Type, type_::UseT<Cx>)>,
     /// Arbitrary deferred validation thunks. Run after main inference (when
     /// Flow_js is fully available), so a thunk can concretize types and emit
     /// context-specific errors that don't fit a simple subtyping flow. The
-    /// thunk is expected to close over the [Context] it needs.
-    post_inference_validation_callbacks:
-        RefCell<Vec<Box<dyn for<'a> Fn(&'a Context<'cx>) -> Result<(), JobError> + 'cx>>>,
+    /// thunk is run with the [Context] being checked.
+    post_inference_validation_callbacks: Vec<PostInferenceValidationCallback>,
     /// Supports interface declaration merging. When two or more
     /// `interface Foo { ... }` declarations share a name in one scope,
     /// TS-style merging folds them into a single Foo. A consequence is that
@@ -454,7 +450,7 @@ pub struct ComponentT<'cx> {
     /// appear on both sides of a merge. Interfaces not involved in any merge
     /// are absent from this table — their loc never gets a slot, so
     /// recording is a no-op for them.
-    merging_interface_field_types: RefCell<HashMap<ALoc, HashMap<Name, Type>>>,
+    merging_interface_field_types: HashMap<ALoc, HashMap<Name, Type>>,
     /// Declaration merging compares and copies member types across
     /// declaration boundaries. Type parameter names are local to each
     /// declaration, so an absorbed declaration's member types need a
@@ -462,7 +458,7 @@ pub struct ComponentT<'cx> {
     /// namespace before we replay those types during checking. This table
     /// stores each merging declaration's declared type parameters, paired with
     /// the `GenericT` created for that parameter, in source order.
-    merging_interface_typeparams: RefCell<HashMap<ALoc, Vec<(type_::TypeParam, Type)>>>,
+    merging_interface_typeparams: HashMap<ALoc, Vec<(type_::TypeParam, Type)>>,
     /// Also supports interface declaration merging, but for a different step:
     /// actually combining the property maps. Each interface InstanceT stores
     /// its own/proto properties in two heap-allocated maps identified by
@@ -473,41 +469,41 @@ pub struct ComponentT<'cx> {
     /// the right maps for each side of a merge. Populated for all interfaces,
     /// not only the merging ones, since at registration time we don't gate on
     /// participation.
-    interface_prop_ids: RefCell<BTreeMap<ALoc, (type_::properties::Id, type_::properties::Id)>>,
-    env_value_cache: RefCell<IntHashMap<i32, PossiblyRefinedWriteState>>,
-    env_type_cache: RefCell<IntHashMap<i32, PossiblyRefinedWriteState>>,
+    interface_prop_ids: BTreeMap<ALoc, (type_::properties::Id, type_::properties::Id)>,
+    env_value_cache: IntHashMap<i32, PossiblyRefinedWriteState>,
+    env_type_cache: IntHashMap<i32, PossiblyRefinedWriteState>,
     // map from annot tvar ids to nodes used during annotation processing
-    annot_graph: RefCell<IntHashMap<i32, AConstraint<'cx>>>,
+    annot_graph: IntHashMap<i32, AConstraint<Cx>>,
     // Shares one lazy indirection per `elab_open` demand so that repeated
     // demands tie the knot instead of expanding forever.
-    elab_open_memo: RefCell<MultiLevelMap<ElabOpenMemoKey, Type>>,
+    elab_open_memo: MultiLevelMap<ElabOpenMemoKey, Type>,
     // Used to power an autofix that takes the lower bounds of types where we emit missing-local-annot
     // and turn them into annotations. This has to exist outside of the tvar graph because we will
     // eventually not use unresolved tvars to represent unannotated parameters. We use an ALocFuzzyMap
     // because we may compare keyed and concrete locations
-    missing_local_annot_lower_bounds: RefCell<ALocFuzzyMap<Vec<Type>>>,
+    missing_local_annot_lower_bounds: ALocFuzzyMap<Vec<Type>>,
     // Used to power an autofix that takes the upper bounds of array & object literal declarations,
     // and turn them into annotations.
-    array_or_object_literal_declaration_upper_bounds: RefCell<IntHashMap<i32, (ALoc, Vec<Type>)>>,
-    array_or_object_literal_declaration_reposition_tracking: RefCell<IntHashMap<i32, i32>>,
+    array_or_object_literal_declaration_upper_bounds: IntHashMap<i32, (ALoc, Vec<Type>)>,
+    array_or_object_literal_declaration_reposition_tracking: IntHashMap<i32, i32>,
     // Used to power a code action to automatically insert appropriate render type.
     // It is key-ed by the body_loc of components.
-    inferred_component_return: RefCell<ALocFuzzyMap<Vec1<Type>>>,
-    exhaustive_checks: RefCell<ALocMap<(Vec<ALoc>, bool)>>,
+    inferred_component_return: ALocFuzzyMap<Vec1<Type>>,
+    exhaustive_checks: ALocMap<(Vec<ALoc>, bool)>,
     // Signature help
-    signature_help_callee: RefCell<ALocMap<Type>>,
+    signature_help_callee: ALocMap<Type>,
     // Hover type
-    ctor_callee: RefCell<ALocMap<Type>>,
+    ctor_callee: ALocMap<Type>,
     // Union optimization checks
-    union_opt: RefCell<ALocMap<Type>>,
+    union_opt: ALocMap<Type>,
     // Natural inference (records checks on primitive literal types during
     // implicit instantiation)
-    primitive_literal_checks: RefCell<ALocSet>,
+    primitive_literal_checks: ALocSet,
     // `call`/`apply`/`bind` accesses that resolved on `Function.prototype`
     // rather than on a property of the receiver. Keyed by the location of the
     // property identifier.
-    fun_proto_method_lookups: RefCell<ALocSet>,
-    enclosing_context_for_call: RefCell<ALocMap<EnclosingContext>>,
+    fun_proto_method_lookups: ALocSet,
+    enclosing_context_for_call: ALocMap<EnclosingContext>,
 }
 
 #[derive(Debug, Clone, Dupe)]
@@ -540,11 +536,14 @@ impl TypingMode {
     }
 }
 
+/// The exports of a typed module. The closure runs in the context the module belongs to and
+/// reports errors to the destination context it is given.
+pub type ModuleTypeThunk =
+    Rc<dyn for<'a> Fn(&mut Context<'a>, ContextId) -> Result<ModuleType, Type>>;
+
 #[derive(Clone, Dupe)]
-pub enum ResolvedRequire<'cx> {
-    /// The closure takes (cx, dst_cx) where cx is the source context and
-    /// dst_cx is the destination context for error reporting.
-    TypedModule(Rc<dyn Fn(&Context<'cx>, &Context<'cx>) -> Result<ModuleType, Type> + 'cx>),
+pub enum ResolvedRequire {
+    TypedModule(ModuleTypeThunk),
     UncheckedModule(ALoc),
     MissingModule,
     /// The specifier resolved to a global libdef (a `[libs]` file), which is not
@@ -554,56 +553,319 @@ pub enum ResolvedRequire<'cx> {
     GlobalLibdefModule(FileKey),
 }
 
-struct ContextInner<'cx> {
-    ccx: Rc<ComponentT<'cx>>,
+struct ContextInner {
+    ccx: ComponentId,
     file: FileKey,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     aloc_table: LazyALocTable,
     metadata: Metadata,
     budget: CheckBudget,
     /// During cross-file merge (copy_into), annotation inference errors must be
-    /// reported on the destination context, not the source. This field stores a
-    /// weak reference to the destination context, set only during merge and None
-    /// otherwise. When None, callers should use cx itself as dst_cx.
-    merge_dst_cx: RefCell<Option<Weak<ContextInner<'cx>>>>,
-    resolve_require: RefCell<Option<ResolveRequire<'cx>>>,
-    builtins: flow_lazy::Lazy<
-        Context<'cx>,
-        Builtins<'cx, Context<'cx>>,
-        Box<dyn FnOnce(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx>,
-    >,
-    hint_map_arglist_cache: RefCell<HashMap<(ALoc, Option<ALoc>), Vec<(ALoc, type_::CallArg)>>>,
-    hint_map_jsx_cache: RefCell<
-        HashMap<
-            (Reason, String, Vec<ALoc>, ALoc),
-            Rc<
-                flow_lazy::Lazy<
-                    Context<'cx>,
-                    Result<Type, JobError>,
-                    Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx>,
-                >,
-            >,
-        >,
-    >,
-    hint_eval_cache: RefCell<IntHashMap<i32, Option<Type>>>,
-    environment: RefCell<LocEnv<'cx, Context<'cx>>>,
-    typing_mode: RefCell<TypingMode>,
+    /// reported on the destination context, not the source. This field names the
+    /// destination context, set only during merge and None otherwise. It resolves
+    /// to None once the destination is gone. When None, callers should use cx
+    /// itself as dst_cx.
+    merge_dst_cx: Option<ContextId>,
+    resolve_require: ResolveRequire,
+    builtins: Rc<flow_lazy::Lazy<Cx, Rc<Builtins<Cx>>>>,
+    // The builtins read into this context so far.
+    builtin_values: HashMap<FlowSmolStr, (ALoc, Type)>,
+    builtin_types: HashMap<FlowSmolStr, (ALoc, Type)>,
+    builtin_modules: HashMap<FlowSmolStr, (Reason, LazyModuleType<Cx>)>,
+    hint_map_arglist_cache: HashMap<(ALoc, Option<ALoc>), Vec<(ALoc, type_::CallArg)>>,
+    hint_map_jsx_cache: HashMap<(Reason, String, Vec<ALoc>, ALoc), LazyHintMapJsx>,
+    hint_eval_cache: IntHashMap<i32, Option<Type>>,
+    environment: LocEnv<Cx>,
+    typing_mode: TypingMode,
     //  A subset of all transitive dependencies of the current file as determined by import/require.
     // This set will only be populated with type sig files that are actually forced.
-    reachable_deps: RefCell<BTreeSet<FileKey>>,
-    refined_locations: RefCell<ALocMap<FlowOrdSet<ALoc>>>,
-    aggressively_invalidated_locations: RefCell<ALocMap<RefinementInvalidation>>,
-    switch_to_match_eligible_locations: RefCell<ALocSet>,
-    assertion_call_candidates: RefCell<HashSet<ALoc>>,
-    node_cache: NodeCache<'cx, Context<'cx>>,
-    ts_import_provenance: RefCell<ALocMap<(FlowImportSpecifier, FlowSmolStr)>>,
+    reachable_deps: BTreeSet<FileKey>,
+    refined_locations: ALocMap<FlowOrdSet<ALoc>>,
+    aggressively_invalidated_locations: ALocMap<RefinementInvalidation>,
+    switch_to_match_eligible_locations: ALocSet,
+    assertion_call_candidates: HashSet<ALoc>,
+    node_cache: NodeCache<Cx>,
+    ts_import_provenance: ALocMap<(FlowImportSpecifier, FlowSmolStr)>,
 }
 
-#[derive(Clone, Dupe)]
-pub struct Context<'cx>(Rc<ContextInner<'cx>>);
+pub type LazyHintMapJsx = Rc<flow_lazy::Lazy<Cx, Result<Type, JobError>>>;
 
-pub type ResolveRequire<'cx> =
-    Rc<dyn Fn(&Context<'cx>, &FlowImportSpecifier) -> ResolvedRequire<'cx> + 'cx>;
+pub type ResolveRequire =
+    Rc<dyn for<'a> Fn(&mut Context<'a>, &FlowImportSpecifier) -> ResolvedRequire>;
+
+pub type MkBuiltins = Rc<dyn for<'a> Fn(&mut Context<'a>) -> Builtins<Cx>>;
+
+pub type PostInferenceValidationCallback =
+    Box<dyn for<'a> Fn(&mut Context<'a>) -> Result<(), JobError>>;
+
+/// The family of [Context], for the generic type structures of the crates below this one.
+#[derive(Debug, Clone, Copy, Dupe)]
+pub enum Cx {}
+
+impl ContextFamily for Cx {
+    type Context<'cx> = Context<'cx>;
+}
+
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, Hash)]
+pub struct ArenaId(u64);
+
+impl ArenaId {
+    fn fresh() -> Self {
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        ArenaId(NEXT.fetch_add(1, AtomicOrdering::Relaxed))
+    }
+}
+
+/// A context: the arena that owns it and its index there.
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, Hash)]
+pub struct ContextId {
+    arena: ArenaId,
+    index: usize,
+}
+
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, Hash)]
+pub struct ComponentId {
+    arena: ArenaId,
+    index: usize,
+}
+
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, Hash)]
+pub struct SigFileId {
+    arena: ArenaId,
+    index: usize,
+}
+
+pub type LazyType = Rc<flow_lazy::Lazy<Cx, Type>>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LocalDefBindingKind {
+    DefBindingClassLikeMono,
+    DefBindingClassLikePoly,
+    DefBindingOther,
+}
+
+pub type LocalDefEntry = (ALoc, FlowSmolStr, LocalDefBindingKind, LazyType, LazyType);
+
+pub type RemoteRefEntry = (ALoc, FlowSmolStr, Type, LazyType);
+
+/// The tables of a packed type signature, each entry merged into types when it is first forced.
+/// Entries find the file they belong to again through its [SigFileId].
+pub struct SigFile {
+    pub dependencies: Table<(Userland, Rc<flow_lazy::Lazy<Cx, ResolvedRequire>>)>,
+    pub exports: ModuleTypeThunk,
+    pub local_defs: Table<Rc<flow_lazy::Lazy<Cx, LocalDefEntry>>>,
+    pub remote_refs: Table<Rc<flow_lazy::Lazy<Cx, RemoteRefEntry>>>,
+    pub pattern_defs: Table<LazyType>,
+    pub patterns: Table<LazyType>,
+}
+
+/// Owns contexts, the components they share, and the signature files they merge. Everything
+/// that refers to one of these from elsewhere holds its id, which a [ContextStore] containing
+/// this arena resolves.
+pub struct ContextArena {
+    id: ArenaId,
+    contexts: Vec<ContextInner>,
+    components: Vec<ComponentT>,
+    sig_files: Vec<Rc<SigFile>>,
+    /// The contexts made for dependency files, with the signature file each one merges.
+    dependencies: HashMap<FileKey, (ContextId, SigFileId)>,
+    /// The component shared by the dependency contexts of a cycle, by the cycle's leader.
+    dependency_components: HashMap<FileKey, ComponentId>,
+}
+
+impl ContextArena {
+    pub fn new() -> Self {
+        ContextArena {
+            id: ArenaId::fresh(),
+            contexts: Vec::new(),
+            components: Vec::new(),
+            sig_files: Vec::new(),
+            dependencies: HashMap::new(),
+            dependency_components: HashMap::new(),
+        }
+    }
+
+    pub fn id(&self) -> ArenaId {
+        self.id
+    }
+
+    pub fn add_component(&mut self) -> ComponentId {
+        self.components.push(make_ccx());
+        ComponentId {
+            arena: self.id,
+            index: self.components.len() - 1,
+        }
+    }
+
+    pub fn add_context(
+        &mut self,
+        ccx: ComponentId,
+        metadata: Metadata,
+        file: FileKey,
+        all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
+        aloc_table: LazyALocTable,
+        resolve_require: ResolveRequire,
+        mk_builtins: MkBuiltins,
+        budget: CheckBudget,
+    ) -> ContextId {
+        assert_eq!(
+            ccx.arena, self.id,
+            "a context shares a component of its own arena"
+        );
+        self.components
+            .get_mut(ccx.index)
+            .expect("a component id names a component of its arena")
+            .aloc_tables
+            .insert(file.dupe(), aloc_table.dupe());
+        self.contexts.push(ContextInner {
+            ccx,
+            file,
+            all_unordered_libs,
+            aloc_table,
+            metadata,
+            budget,
+            merge_dst_cx: None,
+            resolve_require,
+            builtins: Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
+                Rc::new(mk_builtins(cx))
+            })),
+            builtin_values: HashMap::new(),
+            builtin_types: HashMap::new(),
+            builtin_modules: HashMap::new(),
+            hint_map_arglist_cache: HashMap::new(),
+            hint_map_jsx_cache: HashMap::new(),
+            hint_eval_cache: IntHashMap::default(),
+            environment: LocEnv::empty(ScopeKind::Global),
+            typing_mode: TypingMode::CheckingMode,
+            reachable_deps: BTreeSet::new(),
+            node_cache: NodeCache::mk_empty(),
+            refined_locations: ALocMap::new(),
+            aggressively_invalidated_locations: ALocMap::new(),
+            switch_to_match_eligible_locations: ALocSet::new(),
+            assertion_call_candidates: HashSet::new(),
+            ts_import_provenance: ALocMap::new(),
+        });
+        ContextId {
+            arena: self.id,
+            index: self.contexts.len() - 1,
+        }
+    }
+
+    /// Adds the signature file `mk_sig_file` builds. Its thunks may name the file by the id they
+    /// are given.
+    pub fn add_sig_file(&mut self, mk_sig_file: impl FnOnce(SigFileId) -> SigFile) -> SigFileId {
+        let id = SigFileId {
+            arena: self.id,
+            index: self.sig_files.len(),
+        };
+        self.sig_files.push(Rc::new(mk_sig_file(id)));
+        id
+    }
+
+    pub fn dependency(&self, file: &FileKey) -> Option<(ContextId, SigFileId)> {
+        self.dependencies.get(file).copied()
+    }
+
+    pub fn add_dependency(&mut self, file: FileKey, dependency: (ContextId, SigFileId)) {
+        self.dependencies.insert(file, dependency);
+    }
+
+    pub fn dependency_count(&self) -> usize {
+        self.dependencies.len()
+    }
+
+    /// The component shared by the dependency contexts of the cycle `leader` leads.
+    pub fn dependency_component(&mut self, leader: FileKey) -> ComponentId {
+        if let Some(ccx) = self.dependency_components.get(&leader) {
+            return *ccx;
+        }
+        let ccx = self.add_component();
+        self.dependency_components.insert(leader, ccx);
+        ccx
+    }
+
+    /// Drops everything this arena owns. Ids it handed out resolve to nothing afterwards.
+    pub fn clear(&mut self) {
+        *self = ContextArena::new();
+    }
+}
+
+impl Default for ContextArena {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// The arenas a [Context] works on, borrowed exclusively for as long as it works on them.
+pub struct ContextStore<'a> {
+    arenas: Vec<&'a mut ContextArena>,
+}
+
+impl<'a> ContextStore<'a> {
+    pub fn new(arenas: Vec<&'a mut ContextArena>) -> Self {
+        ContextStore { arenas }
+    }
+
+    fn position(&self, id: ArenaId) -> Option<usize> {
+        self.arenas.iter().position(|arena| arena.id == id)
+    }
+
+    pub fn arena(&self, id: ArenaId) -> Option<&ContextArena> {
+        Some(&*self.arenas[self.position(id)?])
+    }
+
+    pub fn arena_mut(&mut self, id: ArenaId) -> Option<&mut ContextArena> {
+        let position = self.position(id)?;
+        Some(&mut *self.arenas[position])
+    }
+
+    pub fn has_context(&self, id: ContextId) -> bool {
+        self.arena(id.arena)
+            .is_some_and(|arena| id.index < arena.contexts.len())
+    }
+
+    pub fn sig_file(&self, id: SigFileId) -> Rc<SigFile> {
+        self.arena(id.arena)
+            .and_then(|arena| arena.sig_files.get(id.index))
+            .unwrap_or_else(|| panic!("{id:?} is not a signature file of this store"))
+            .dupe()
+    }
+}
+
+/// The context a check is working on, with exclusive access to the arenas of the other contexts
+/// it can reach. Code that needs another context switches to it with [Context::switch_to].
+pub struct Context<'a> {
+    store: ContextStore<'a>,
+    id: ContextId,
+    /// The position in `store` of the arena that owns the current context.
+    position: usize,
+}
+
+/// A [Context] switched to another context until this is dropped.
+pub struct ContextSwitch<'s, 'a> {
+    cx: &'s mut Context<'a>,
+    previous: (ContextId, usize),
+}
+
+impl<'a> std::ops::Deref for ContextSwitch<'_, 'a> {
+    type Target = Context<'a>;
+
+    fn deref(&self) -> &Context<'a> {
+        self.cx
+    }
+}
+
+impl<'a> std::ops::DerefMut for ContextSwitch<'_, 'a> {
+    fn deref_mut(&mut self) -> &mut Context<'a> {
+        self.cx
+    }
+}
+
+impl Drop for ContextSwitch<'_, '_> {
+    fn drop(&mut self) {
+        (self.cx.id, self.cx.position) = self.previous;
+    }
+}
 
 pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileKey>>) -> Metadata {
     Metadata {
@@ -763,14 +1025,12 @@ pub fn docblock_overrides(
     metadata
 }
 
-pub fn empty_sig_cx<'cx>() -> TypeContext<'cx, Context<'cx>> {
+fn empty_sig_cx() -> TypeContext<Cx> {
     thread_local! {
         static CACHED_EVALUATED: type_::eval::Map<Type> = Default::default();
     }
     TypeContext {
-        graph: Rc::new(RefCell::new(flow_utils_union_find::Graph::with_capacity(
-            16,
-        ))),
+        graph: flow_utils_union_find::Graph::with_capacity(16),
         property_maps: BTreeMap::new(),
         call_props: IntHashMap::with_capacity_and_hasher(128, Default::default()),
         export_maps: HashMap::with_capacity(4),
@@ -778,229 +1038,192 @@ pub fn empty_sig_cx<'cx>() -> TypeContext<'cx, Context<'cx>> {
     }
 }
 
-pub fn make_ccx<'cx>() -> ComponentT<'cx> {
+fn make_ccx() -> ComponentT {
     thread_local! {
         static CACHED_ORD_SET: FlowOrdSet<i32> = FlowOrdSet::new();
         static CACHED_SEVERITY_COVER: FlowOrdMap<FileKey, LintSeverityCover> = FlowOrdMap::new();
     }
     ComponentT {
-        sig_cx: RefCell::new(empty_sig_cx()),
-        aloc_tables: RefCell::new(HashMap::new()),
-        synthesis_produced_uncacheable_result: RefCell::new(false),
-        delayed_forcing_tvars: RefCell::new(CACHED_ORD_SET.with(|c| c.clone())),
-        post_component_tvar_forcing_states: RefCell::new(FlowVector::new()),
-        active_tvar_forcing_states: RefCell::new(Vec::new()),
-        post_inference_polarity_checks: RefCell::new(Vec::new()),
-        post_inference_validation_flows: RefCell::new(VecDeque::new()),
-        post_inference_validation_callbacks: RefCell::new(Vec::new()),
-        merging_interface_field_types: RefCell::new(HashMap::new()),
-        merging_interface_typeparams: RefCell::new(HashMap::new()),
-        interface_prop_ids: RefCell::new(BTreeMap::new()),
-        env_value_cache: RefCell::new(IntHashMap::default()),
-        env_type_cache: RefCell::new(IntHashMap::default()),
-        missing_local_annot_lower_bounds: RefCell::new(BTreeMap::new()),
-        array_or_object_literal_declaration_upper_bounds: RefCell::new(IntHashMap::default()),
-        array_or_object_literal_declaration_reposition_tracking: RefCell::new(IntHashMap::default()),
-        inferred_component_return: RefCell::new(BTreeMap::new()),
-        errors: RefCell::new(ErrorSet::empty()),
-        error_suppressions: RefCell::new(ErrorSuppressions::empty()),
-        severity_cover: RefCell::new(CACHED_SEVERITY_COVER.with(|c| c.clone())),
-        exists_checks: RefCell::new(ALocMap::new()),
-        exists_excuses: RefCell::new(ALocMap::new()),
-        voidable_checks: RefCell::new(Vec::new()),
-        test_prop_hits_and_misses: RefCell::new(IntHashMap::default()),
-        optional_chains_useful: RefCell::new(ALocMap::new()),
-        conditions: RefCell::new(FlowVector::new()),
-        strict_comparisons: RefCell::new(FlowVector::new()),
-        maybe_unused_promises: RefCell::new(FlowVector::new()),
-        inference_nodes: RefCell::new(IntHashMap::default()),
-        constraint_cache: RefCell::new(type_::FlowSet::default()),
-        subst_cache: RefCell::new(Default::default()),
-        eval_id_cache: RefCell::new(Default::default()),
-        id_cache: RefCell::new(Default::default()),
-        eval_repos_cache: RefCell::new(Default::default()),
-        fix_cache: RefCell::new(Default::default()),
-        spread_cache: RefCell::new(SpreadCache::new()),
-        const_fold_cache: RefCell::new(Default::default()),
-        annot_graph: RefCell::new(IntHashMap::default()),
-        elab_open_memo: RefCell::new(MultiLevelMap::new()),
-        exhaustive_checks: RefCell::new(ALocMap::new()),
-        signature_help_callee: RefCell::new(ALocMap::new()),
-        ctor_callee: RefCell::new(ALocMap::new()),
-        union_opt: RefCell::new(ALocMap::new()),
-        primitive_literal_checks: RefCell::new(ALocSet::new()),
-        fun_proto_method_lookups: RefCell::new(ALocSet::new()),
-        enclosing_context_for_call: RefCell::new(ALocMap::new()),
+        sig_cx: empty_sig_cx(),
+        aloc_tables: HashMap::new(),
+        synthesis_produced_uncacheable_result: false,
+        delayed_forcing_tvars: CACHED_ORD_SET.with(|c| c.clone()),
+        post_component_tvar_forcing_states: FlowVector::new(),
+        active_tvar_forcing_states: Vec::new(),
+        post_inference_polarity_checks: Vec::new(),
+        post_inference_validation_flows: VecDeque::new(),
+        post_inference_validation_callbacks: Vec::new(),
+        merging_interface_field_types: HashMap::new(),
+        merging_interface_typeparams: HashMap::new(),
+        interface_prop_ids: BTreeMap::new(),
+        env_value_cache: IntHashMap::default(),
+        env_type_cache: IntHashMap::default(),
+        missing_local_annot_lower_bounds: BTreeMap::new(),
+        array_or_object_literal_declaration_upper_bounds: IntHashMap::default(),
+        array_or_object_literal_declaration_reposition_tracking: IntHashMap::default(),
+        inferred_component_return: BTreeMap::new(),
+        errors: ErrorSet::empty(),
+        error_suppressions: ErrorSuppressions::empty(),
+        severity_cover: CACHED_SEVERITY_COVER.with(|c| c.clone()),
+        exists_checks: ALocMap::new(),
+        exists_excuses: ALocMap::new(),
+        voidable_checks: Vec::new(),
+        test_prop_hits_and_misses: IntHashMap::default(),
+        optional_chains_useful: ALocMap::new(),
+        conditions: FlowVector::new(),
+        strict_comparisons: FlowVector::new(),
+        maybe_unused_promises: FlowVector::new(),
+        inference_nodes: IntHashMap::default(),
+        constraint_cache: type_::FlowSet::default(),
+        subst_cache: Default::default(),
+        eval_id_cache: Default::default(),
+        id_cache: Default::default(),
+        eval_repos_cache: Default::default(),
+        fix_cache: Default::default(),
+        spread_cache: SpreadCache::new(),
+        const_fold_cache: Default::default(),
+        annot_graph: IntHashMap::default(),
+        elab_open_memo: MultiLevelMap::new(),
+        exhaustive_checks: ALocMap::new(),
+        signature_help_callee: ALocMap::new(),
+        ctor_callee: ALocMap::new(),
+        union_opt: ALocMap::new(),
+        primitive_literal_checks: ALocSet::new(),
+        fun_proto_method_lookups: ALocSet::new(),
+        enclosing_context_for_call: ALocMap::new(),
     }
 }
 
-impl<'cx> Context<'cx> {
-    pub fn make(
-        ccx: Rc<ComponentT<'cx>>,
-        metadata: Metadata,
-        file: FileKey,
-        all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
-        aloc_table: LazyALocTable,
-        resolve_require: ResolveRequire<'cx>,
-        mk_builtins: Rc<dyn Fn(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx>,
-        budget: CheckBudget,
-    ) -> Self {
-        ccx.aloc_tables
-            .borrow_mut()
-            .insert(file.dupe(), aloc_table.dupe());
-        let inner = Rc::new(ContextInner {
-            ccx,
-            file,
-            all_unordered_libs,
-            aloc_table,
-            metadata,
-            budget,
-            merge_dst_cx: RefCell::new(None),
-            resolve_require: RefCell::new(Some(resolve_require)),
-            builtins: flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| mk_builtins(cx))),
-            hint_map_arglist_cache: RefCell::new(HashMap::new()),
-            hint_map_jsx_cache: RefCell::new(HashMap::new()),
-            hint_eval_cache: RefCell::new(IntHashMap::default()),
-            environment: RefCell::new(LocEnv::empty(ScopeKind::Global)),
-            typing_mode: RefCell::new(TypingMode::CheckingMode),
-            reachable_deps: RefCell::new(BTreeSet::new()),
-            node_cache: NodeCache::mk_empty(),
-            refined_locations: RefCell::new(ALocMap::new()),
-            aggressively_invalidated_locations: RefCell::new(ALocMap::new()),
-            switch_to_match_eligible_locations: RefCell::new(ALocSet::new()),
-            assertion_call_candidates: RefCell::new(HashSet::new()),
-            ts_import_provenance: RefCell::new(ALocMap::new()),
-        });
-        Self(inner)
+impl<'a> Context<'a> {
+    /// The context `id` of `store`.
+    pub fn new(store: ContextStore<'a>, id: ContextId) -> Self {
+        assert!(
+            store.has_context(id),
+            "{id:?} is not a context of this store"
+        );
+        let position = store
+            .position(id.arena)
+            .expect("the store has the arena of its context");
+        Context {
+            store,
+            id,
+            position,
+        }
+    }
+
+    /// Gives the arenas back.
+    pub fn into_store(self) -> ContextStore<'a> {
+        self.store
+    }
+
+    pub fn id(&self) -> ContextId {
+        self.id
+    }
+
+    pub fn store(&self) -> &ContextStore<'a> {
+        &self.store
+    }
+
+    pub fn store_mut(&mut self) -> &mut ContextStore<'a> {
+        &mut self.store
+    }
+
+    /// Whether `id` is a context this one can switch to. A context whose arena is gone is not.
+    pub fn has_context(&self, id: ContextId) -> bool {
+        self.store.has_context(id)
+    }
+
+    /// Works on the context `id` until the returned switch is dropped.
+    pub fn switch_to(&mut self, id: ContextId) -> ContextSwitch<'_, 'a> {
+        assert!(
+            self.store.has_context(id),
+            "{id:?} is not a context of this store"
+        );
+        let position = self
+            .store
+            .position(id.arena)
+            .expect("the store has the arena of the context");
+        let previous = (
+            std::mem::replace(&mut self.id, id),
+            std::mem::replace(&mut self.position, position),
+        );
+        ContextSwitch { cx: self, previous }
+    }
+
+    fn inner(&self) -> &ContextInner {
+        &self.store.arenas[self.position].contexts[self.id.index]
+    }
+
+    fn inner_mut(&mut self) -> &mut ContextInner {
+        &mut self.store.arenas[self.position].contexts[self.id.index]
+    }
+
+    fn ccx(&self) -> &ComponentT {
+        let arena = &self.store.arenas[self.position];
+        &arena.components[arena.contexts[self.id.index].ccx.index]
+    }
+
+    fn ccx_mut(&mut self) -> &mut ComponentT {
+        let arena = &mut *self.store.arenas[self.position];
+        let ccx = arena.contexts[self.id.index].ccx.index;
+        &mut arena.components[ccx]
+    }
+
+    pub fn sig_file(&self, id: SigFileId) -> Rc<SigFile> {
+        self.store.sig_file(id)
+    }
+
+    /// Adds a signature file to the arena that owns this context.
+    pub fn add_sig_file(&mut self, mk_sig_file: impl FnOnce(SigFileId) -> SigFile) -> SigFileId {
+        self.store.arenas[self.position].add_sig_file(mk_sig_file)
     }
 
     /// Returns the merge-phase destination context if set, otherwise None.
     /// During cross-file merge, errors should be reported on the destination
     /// context. Outside of merge, callers should use cx itself as dst_cx.
-    pub fn merge_dst_cx(&self) -> Option<Context<'cx>> {
-        self.0
+    pub fn merge_dst_cx(&self) -> Option<ContextId> {
+        self.inner()
             .merge_dst_cx
-            .borrow()
-            .as_ref()
-            .and_then(|w| w.upgrade().map(Context))
+            .filter(|id| self.store.has_context(*id))
     }
 
     /// Set the merge-phase destination context.
-    pub fn set_merge_dst_cx(&self, dst_cx: &Context<'cx>) {
-        *self.0.merge_dst_cx.borrow_mut() = Some(Rc::downgrade(&dst_cx.0));
+    pub fn set_merge_dst_cx(&mut self, dst_cx: ContextId) {
+        self.inner_mut().merge_dst_cx = Some(dst_cx);
     }
 
-    pub fn strong_count(&self) -> usize {
-        Rc::strong_count(&self.0)
+    /// Replaces how this context resolves its requires, for a context whose requires can only be
+    /// resolved once it exists.
+    pub fn set_resolve_require(&mut self, resolve_require: ResolveRequire) {
+        self.inner_mut().resolve_require = resolve_require;
     }
 
-    /// Break per-file Rc reference cycles in this Context.
-    /// Safe to call even when other files sharing the same ComponentT are still
-    /// in use, because this only clears per-file data (not shared component data).
-    pub fn post_inference_cleanup_per_file(&self) {
-        // resolve_require closures capture cx
-        *self.0.resolve_require.borrow_mut() = None;
-
-        // TypeEntry.state lazy closures in environment capture cx.
-        // Replace each Lazy (which may hold a closure capturing cx) with one
-        // that is already forced to entry.t, releasing the closure.
-        {
-            let entries = {
-                let env = self.0.environment.borrow();
-                env.types
-                    .iter()
-                    .map(|(_, entry)| (entry.state.dupe(), entry.t.dupe()))
-                    .collect::<Vec<_>>()
-            };
-            for (state, t) in entries {
-                *state.borrow_mut() = flow_lazy::Lazy::new_forced(t);
-            }
-        }
-
-        // hint_map LazyHintCompute closures (Rc<dyn Fn>),
-        // pred_func_map Lazy closures, and hint_map_jsx_cache — all capture cx
-        {
-            let mut env = self.0.environment.borrow_mut();
-            env.hint_map = flow_env_builder::env_api::EnvMap::empty();
-            env.pred_func_map = Default::default();
-        }
-        self.0.hint_map_jsx_cache.borrow_mut().clear();
-
-        // node_cache contains Rc<dyn Fn> closures (function_sigs Reconstruct,
-        // class_sigs, record_sigs, component_sigs) that may capture cx.dupe(),
-        // creating cycles: Context → node_cache → Rc<dyn Fn> → cx → Context
-        self.0.node_cache.clear();
-    }
-
-    /// Break all Rc reference cycles in this Context, including shared
-    /// component data. Only call when the Context is being fully discarded
-    /// (not when other files sharing the same ComponentT may still be in use).
-    pub fn post_inference_cleanup(&self) {
-        self.post_inference_cleanup_per_file();
-
-        // ForcingState closures in the shared type graph capture cx.
-        // Also clears Unresolved bounds that may contain UseT values with
-        // LazyHintT closures capturing cx.
-        self.0.ccx.sig_cx.borrow().drop_lazy_forcing_states();
-
-        // post_component_tvar_forcing_states closures capture cx
-        self.0
-            .ccx
-            .post_component_tvar_forcing_states
-            .borrow_mut()
-            .clear();
-
-        self.0.ccx.elab_open_memo.borrow_mut().clear();
-
-        // constraint_cache contains (Type, UseT) pairs. UseT variants like
-        // CallT, GetPropT, ConstructorT embed LazyHintT(Rc<dyn Fn>) closures
-        // that capture cx, forming:
-        // Context → ccx → constraint_cache → UseT → LazyHintT → cx → Context
-        *self.0.ccx.constraint_cache.borrow_mut() = Default::default();
-
-        // post_inference_validation_flows also contains UseT values with
-        // LazyHintT closures that capture cx.
-        self.0
-            .ccx
-            .post_inference_validation_flows
-            .borrow_mut()
-            .clear();
-
-        // post_inference_validation_callbacks are user-supplied closures that
-        // may capture cx (e.g. via Type references holding back-pointers).
-        self.0
-            .ccx
-            .post_inference_validation_callbacks
-            .borrow_mut()
-            .clear();
-    }
-
-    pub fn sig_cx(&self) -> std::cell::Ref<'_, TypeContext<'cx, Context<'cx>>> {
-        self.0.ccx.sig_cx.borrow()
+    pub fn sig_cx(&self) -> &TypeContext<Cx> {
+        &self.ccx().sig_cx
     }
 
     // modules
 
     pub fn in_declare_module(&self) -> bool {
-        self.0.environment.borrow().scope_kind == ScopeKind::DeclareModule
+        self.inner().environment.scope_kind == ScopeKind::DeclareModule
     }
 
     pub fn in_declare_namespace(&self) -> bool {
-        self.0.environment.borrow().scope_kind == ScopeKind::DeclareNamespace
+        self.inner().environment.scope_kind == ScopeKind::DeclareNamespace
     }
 
     // accessors
 
     pub fn metadata(&self) -> &Metadata {
-        &self.0.metadata
+        &self.inner().metadata
     }
 
     pub fn babel_loose_array_spread(&self) -> bool {
-        self.0.metadata.frozen.babel_loose_array_spread
+        self.inner().metadata.frozen.babel_loose_array_spread
     }
 
     pub fn file(&self) -> &FileKey {
-        &self.0.file
+        &self.inner().file
     }
 
     pub fn type_strictness_kind(&self) -> TypeStrictnessKind {
@@ -1008,19 +1231,19 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn check_budget(&self) -> Result<(), JobError> {
-        self.0.budget.check()
+        self.inner().budget.check()
     }
 
     /// Returns the per-file budget so dependency contexts (e.g., those built
     /// inside `dep_file`) can inherit the parent file's cancel + timeout
     /// budget rather than starting a fresh one.
     pub fn budget(&self) -> CheckBudget {
-        self.0.budget
+        self.inner().budget
     }
 
     pub fn is_global_libdef(&self, file: &FileKey) -> bool {
-        files::is_lib_file(&self.0.all_unordered_libs, file)
-            || self.0.metadata.frozen.global_libdefs.contains(file)
+        files::is_lib_file(&self.inner().all_unordered_libs, file)
+            || self.inner().metadata.frozen.global_libdefs.contains(file)
     }
 
     pub fn is_lib_reason(&self, reason: &Reason) -> bool {
@@ -1038,13 +1261,13 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_global_lib_context(&self) -> bool {
-        self.is_global_libdef(&self.0.file)
+        self.is_global_libdef(&self.inner().file)
     }
 
     pub fn under_declaration_context(&self) -> bool {
         self.is_global_lib_context()
-            || self.0.file.check_suffix(".flow")
-            || flow_parser::file_key::has_dts_ext(self.0.file.as_str())
+            || self.inner().file.check_suffix(".flow")
+            || flow_parser::file_key::has_dts_ext(self.inner().file.as_str())
             || self.in_declare_module()
             || self.in_declare_namespace()
     }
@@ -1053,7 +1276,7 @@ impl<'cx> Context<'cx> {
         match dirs {
             [] => false,
             _ => {
-                let filename = self.0.file.to_absolute();
+                let filename = self.inner().file.to_absolute();
                 let normalized_filename =
                     flow_common::sys_utils::normalize_filename_dir_sep(&filename);
                 dirs.iter().any(|r| r.is_match(&normalized_filename))
@@ -1061,108 +1284,135 @@ impl<'cx> Context<'cx> {
         }
     }
 
-    pub fn builtins(&self) -> &Builtins<'cx, Context<'cx>> {
-        self.0.builtins.get_forced(self)
+    pub fn builtins(&mut self) -> Rc<Builtins<Cx>> {
+        let builtins = self.inner().builtins.dupe();
+        builtins.get_forced(self).dupe()
     }
 
-    pub fn builtin_value_opt(&self, name: &str) -> Option<(ALoc, Type)> {
-        self.builtins().get_builtin_value_opt(self, name)
+    pub fn builtin_value_opt(&mut self, name: &str) -> Option<(ALoc, Type)> {
+        if let Some((l, t)) = self.inner().builtin_values.get(name) {
+            return Some((l.dupe(), t.dupe()));
+        }
+        let (l, t) = self.builtins().read_value_opt(self, name)?;
+        self.inner_mut()
+            .builtin_values
+            .insert(FlowSmolStr::from(name), (l.dupe(), t.dupe()));
+        Some((l, t))
     }
 
-    pub fn builtin_type_opt(&self, name: &str) -> Option<(ALoc, Type)> {
-        self.builtins().get_builtin_type_opt(self, name)
+    pub fn builtin_type_opt(&mut self, name: &str) -> Option<(ALoc, Type)> {
+        if let Some((l, t)) = self.inner().builtin_types.get(name) {
+            return Some((l.dupe(), t.dupe()));
+        }
+        match self.builtins().read_type_opt(self, name) {
+            Some((l, t)) => {
+                self.inner_mut()
+                    .builtin_types
+                    .insert(FlowSmolStr::from(name), (l.dupe(), t.dupe()));
+                Some((l, t))
+            }
+            None => self.builtin_value_opt(name),
+        }
     }
 
-    pub fn builtin_module_opt(
-        &self,
-        name: &Userland,
-    ) -> Option<(Reason, LazyModuleType<'cx, Context<'cx>>)> {
-        self.builtins().get_builtin_module_opt(self, name)
+    pub fn builtin_module_opt(&mut self, name: &Userland) -> Option<(Reason, LazyModuleType<Cx>)> {
+        if let Some((r, module)) = self.inner().builtin_modules.get(name.as_str()) {
+            return Some((r.dupe(), module.dupe()));
+        }
+        let (r, module) = self.builtins().read_module_opt(self, name)?;
+        let module: LazyModuleType<Cx> = Rc::new(flow_lazy::Lazy::new_forced(module));
+        self.inner_mut()
+            .builtin_modules
+            .insert(FlowSmolStr::from(name.as_str()), (r.dupe(), module.dupe()));
+        Some((r, module))
     }
 
     pub fn component_syntax(&self) -> bool {
-        self.0.metadata.frozen.component_syntax || self.is_global_lib_context()
+        self.inner().metadata.frozen.component_syntax || self.is_global_lib_context()
     }
 
     pub fn async_component_syntax(&self) -> bool {
-        self.in_dirlist(&self.0.metadata.frozen.async_component_syntax_includes)
-            || self.0.metadata.frozen.async_component_syntax
+        self.in_dirlist(&self.inner().metadata.frozen.async_component_syntax_includes)
+            || self.inner().metadata.frozen.async_component_syntax
     }
 
     pub fn hook_compatibility(&self) -> bool {
-        self.in_dirlist(&self.0.metadata.frozen.hook_compatibility_includes)
-            || (self.0.metadata.frozen.hook_compatibility
-                && !self.in_dirlist(&self.0.metadata.frozen.hook_compatibility_excludes))
+        self.in_dirlist(&self.inner().metadata.frozen.hook_compatibility_includes)
+            || (self.inner().metadata.frozen.hook_compatibility
+                && !self.in_dirlist(&self.inner().metadata.frozen.hook_compatibility_excludes))
     }
 
     pub fn disallow_dynamic_import(&self) -> bool {
-        self.0.metadata.frozen.haste_disallow_dynamic_import
+        self.inner().metadata.frozen.haste_disallow_dynamic_import
             && flow_common::files::haste_name_opt(
-                &self.0.metadata.frozen.file_options,
-                &self.0.file,
+                &self.inner().metadata.frozen.file_options,
+                &self.inner().file,
             )
             .is_some()
     }
 
     pub fn react_rule_enabled(&self, rule: ReactRule) -> bool {
-        self.0.metadata.frozen.react_rules.contains(&rule)
+        self.inner().metadata.frozen.react_rules.contains(&rule)
     }
 
     pub fn dev_only_refinement_info_as_errors(&self) -> bool {
-        self.0.metadata.frozen.dev_only_refinement_info_as_errors
+        self.inner()
+            .metadata
+            .frozen
+            .dev_only_refinement_info_as_errors
     }
 
     pub fn enable_const_params(&self) -> bool {
-        self.0.metadata.frozen.enable_const_params
-            || self.0.metadata.overridable.strict
-            || self.0.metadata.overridable.strict_local
+        self.inner().metadata.frozen.enable_const_params
+            || self.inner().metadata.overridable.strict
+            || self.inner().metadata.overridable.strict_local
     }
 
     pub fn enable_custom_error(&self) -> bool {
-        self.0.metadata.frozen.enable_custom_error
+        self.inner().metadata.frozen.enable_custom_error
     }
 
     pub fn enable_enums(&self) -> bool {
-        self.0.metadata.frozen.enable_enums
+        self.inner().metadata.frozen.enable_enums
     }
 
     pub fn enable_jest_integration(&self) -> bool {
-        self.0.metadata.frozen.enable_jest_integration
+        self.inner().metadata.frozen.enable_jest_integration
     }
 
     pub fn enable_pattern_matching(&self) -> bool {
-        self.0.metadata.frozen.enable_pattern_matching
+        self.inner().metadata.frozen.enable_pattern_matching
     }
 
     pub fn enable_records(&self) -> bool {
-        self.0.metadata.frozen.enable_records
-            && match &self.0.metadata.frozen.records_includes[..] {
+        self.inner().metadata.frozen.enable_records
+            && match &self.inner().metadata.frozen.records_includes[..] {
                 [] => true,
                 dirs => self.in_dirlist(dirs),
             }
     }
 
     pub fn enable_relay_integration(&self) -> bool {
-        self.0.metadata.frozen.enable_relay_integration
+        self.inner().metadata.frozen.enable_relay_integration
             && flow_common::relay_options::enabled_for_file(
-                &self.0.metadata.frozen.relay_integration_excludes,
-                &self.0.file,
+                &self.inner().metadata.frozen.relay_integration_excludes,
+                &self.inner().file,
             )
     }
 
     pub fn relay_integration_esmodules(&self) -> bool {
-        self.0.metadata.frozen.relay_integration_esmodules
+        self.inner().metadata.frozen.relay_integration_esmodules
     }
 
     pub fn relay_integration_module_prefix(&self) -> Option<String> {
         flow_common::relay_options::module_prefix_for_file(
             &self
-                .0
+                .inner()
                 .metadata
                 .frozen
                 .relay_integration_module_prefix_includes,
-            &self.0.file,
-            self.0
+            &self.inner().file,
+            self.inner()
                 .metadata
                 .frozen
                 .relay_integration_module_prefix
@@ -1171,34 +1421,32 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn errors(&self) -> ErrorSet {
-        self.0.ccx.errors.borrow().dupe()
+        self.ccx().errors.dupe()
     }
 
-    pub fn error_suppressions(&self) -> std::cell::Ref<'_, ErrorSuppressions> {
-        self.0.ccx.error_suppressions.borrow()
+    pub fn error_suppressions(&self) -> &ErrorSuppressions {
+        &self.ccx().error_suppressions
     }
 
-    pub fn take_error_suppressions(&self) -> ErrorSuppressions {
-        std::mem::take(&mut *self.0.ccx.error_suppressions.borrow_mut())
+    pub fn take_error_suppressions(&mut self) -> ErrorSuppressions {
+        std::mem::take(&mut self.ccx_mut().error_suppressions)
     }
 
     pub fn evaluated(&self) -> type_::eval::Map<Type> {
-        self.0.ccx.sig_cx.borrow().evaluated.dupe()
+        self.ccx().sig_cx.evaluated.dupe()
     }
 
     pub fn file_options(&self) -> Arc<FileOptions> {
-        self.0.metadata.frozen.file_options.dupe()
+        self.inner().metadata.frozen.file_options.dupe()
     }
 
-    pub fn aloc_tables(&self) -> std::cell::Ref<'_, HashMap<FileKey, LazyALocTable>> {
-        self.0.ccx.aloc_tables.borrow()
+    pub fn aloc_tables(&self) -> &HashMap<FileKey, LazyALocTable> {
+        &self.ccx().aloc_tables
     }
 
     pub fn find_props(&self, id: type_::properties::Id) -> type_::properties::PropertiesMap {
-        self.0
-            .ccx
+        self.ccx()
             .sig_cx
-            .borrow()
             .property_maps
             .get(&id)
             .cloned()
@@ -1210,14 +1458,12 @@ impl<'cx> Context<'cx> {
         &self,
         id: type_::properties::Id,
     ) -> Option<type_::properties::PropertiesMap> {
-        self.0.ccx.sig_cx.borrow().property_maps.get(&id).cloned()
+        self.ccx().sig_cx.property_maps.get(&id).cloned()
     }
 
     pub fn find_call(&self, id: i32) -> Type {
-        self.0
-            .ccx
+        self.ccx()
             .sig_cx
-            .borrow()
             .call_props
             .get(&id)
             .cloned()
@@ -1226,10 +1472,8 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn find_exports(&self, id: type_::exports::Id) -> type_::exports::T {
-        self.0
-            .ccx
+        self.ccx()
             .sig_cx
-            .borrow()
             .export_maps
             .get(&id)
             .cloned()
@@ -1237,52 +1481,46 @@ impl<'cx> Context<'cx> {
             .unwrap()
     }
 
-    pub fn find_require(&self, mref: &FlowImportSpecifier) -> ResolvedRequire<'cx> {
-        let rr = self
-            .0
-            .resolve_require
-            .borrow()
-            .as_ref()
-            .expect("resolve_require already cleaned up")
-            .dupe();
-        (rr)(self, mref)
+    pub fn find_require(&mut self, mref: &FlowImportSpecifier) -> ResolvedRequire {
+        let resolve_require = self.inner().resolve_require.dupe();
+        resolve_require(self, mref)
     }
 
     pub fn find_tvar(
         &self,
         id: i32,
-    ) -> flow_utils_union_find::Node<type_::constraint::Constraints<'cx, Context<'cx>>> {
-        self.0
-            .ccx
+    ) -> flow_utils_union_find::Node<type_::constraint::Constraints<Cx>> {
+        self.ccx()
             .sig_cx
-            .borrow()
             .graph
-            .borrow()
             .get(&id)
             .cloned()
             .ok_or(TvarNotFound(id))
             .unwrap()
     }
 
-    pub fn graph(
-        &self,
-    ) -> Rc<RefCell<flow_utils_union_find::Graph<type_::constraint::Constraints<'cx, Context<'cx>>>>>
-    {
-        self.0.ccx.sig_cx.borrow().graph.dupe()
+    pub fn graph(&self) -> &flow_utils_union_find::Graph<type_::constraint::Constraints<Cx>> {
+        &self.ccx().sig_cx.graph
+    }
+
+    pub fn graph_mut(
+        &mut self,
+    ) -> &mut flow_utils_union_find::Graph<type_::constraint::Constraints<Cx>> {
+        &mut self.ccx_mut().sig_cx.graph
     }
 
     pub fn is_checked(&self) -> bool {
-        self.0.metadata.overridable.checked
+        self.inner().metadata.overridable.checked
     }
 
     pub fn is_verbose(&self) -> bool {
-        match &self.0.metadata.frozen.verbose {
+        match &self.inner().metadata.frozen.verbose {
             None => false,
             Some(v) if v.focused_files.is_none() => {
                 v.enabled_during_flowlib || !self.is_global_lib_context()
             }
             Some(v) => {
-                let file = &self.0.file;
+                let file = &self.inner().file;
                 if self.is_global_lib_context() {
                     v.enabled_during_flowlib
                 } else {
@@ -1296,165 +1534,175 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_strict(&self) -> bool {
-        self.in_declare_module() || self.0.metadata.overridable.strict
+        self.in_declare_module() || self.inner().metadata.overridable.strict
     }
 
     pub fn is_strict_local(&self) -> bool {
-        self.0.metadata.overridable.strict_local
+        self.inner().metadata.overridable.strict_local
     }
 
     pub fn available_platforms(&self) -> Option<&PlatformSet> {
-        self.0.metadata.overridable.available_platforms.as_ref()
+        self.inner()
+            .metadata
+            .overridable
+            .available_platforms
+            .as_ref()
     }
 
     pub fn has_explicit_supports_platform(&self) -> bool {
-        self.0.metadata.overridable.has_explicit_supports_platform
+        self.inner()
+            .metadata
+            .overridable
+            .has_explicit_supports_platform
     }
 
     pub fn include_suppressions(&self) -> bool {
-        self.0.metadata.frozen.include_suppressions
+        self.inner().metadata.frozen.include_suppressions
     }
 
-    pub fn severity_cover(&self) -> std::cell::Ref<'_, FlowOrdMap<FileKey, LintSeverityCover>> {
-        self.0.ccx.severity_cover.borrow()
+    pub fn severity_cover(&self) -> &FlowOrdMap<FileKey, LintSeverityCover> {
+        &self.ccx().severity_cover
     }
 
     pub fn has_property_map(&self, id: &type_::properties::Id) -> bool {
-        self.0.ccx.sig_cx.borrow().property_maps.contains_key(id)
+        self.ccx().sig_cx.property_maps.contains_key(id)
     }
 
     pub fn has_call_prop(&self, id: &i32) -> bool {
-        self.0.ccx.sig_cx.borrow().call_props.contains_key(id)
+        self.ccx().sig_cx.call_props.contains_key(id)
     }
 
     pub fn has_export_map(&self, id: &type_::exports::Id) -> bool {
-        self.0.ccx.sig_cx.borrow().export_maps.contains_key(id)
+        self.ccx().sig_cx.export_maps.contains_key(id)
     }
 
     pub fn projects_options(&self) -> &ProjectsOptions {
-        &self.0.metadata.frozen.projects_options
+        &self.inner().metadata.frozen.projects_options
     }
 
     pub fn react_custom_jsx_typing(&self) -> bool {
-        self.0.metadata.frozen.react_custom_jsx_typing
+        self.inner().metadata.frozen.react_custom_jsx_typing
     }
 
     pub fn react_runtime(&self) -> ReactRuntime {
-        self.0.metadata.overridable.react_runtime
+        self.inner().metadata.overridable.react_runtime
     }
 
     pub fn recursion_limit(&self) -> i32 {
-        self.0.metadata.frozen.recursion_limit
+        self.inner().metadata.frozen.recursion_limit
     }
 
     pub fn root(&self) -> &PathBuf {
-        &self.0.metadata.frozen.root
+        &self.inner().metadata.frozen.root
     }
 
     pub fn facebook_fbs(&self) -> Option<&str> {
-        self.0.metadata.frozen.facebook_fbs.as_deref()
+        self.inner().metadata.frozen.facebook_fbs.as_deref()
     }
 
     pub fn facebook_fbt(&self) -> Option<&str> {
-        self.0.metadata.frozen.facebook_fbt.as_deref()
+        self.inner().metadata.frozen.facebook_fbt.as_deref()
     }
 
     pub fn facebook_module_interop(&self) -> bool {
-        self.0.metadata.frozen.facebook_module_interop
+        self.inner().metadata.frozen.facebook_module_interop
     }
 
     pub fn function_and_object_type_is_no_longer_any(&self) -> bool {
-        self.0
+        self.inner()
             .metadata
             .frozen
             .function_and_object_type_is_no_longer_any
     }
 
     pub fn should_ignore_non_literal_requires(&self) -> bool {
-        self.0.metadata.frozen.ignore_non_literal_requires
+        self.inner().metadata.frozen.ignore_non_literal_requires
     }
 
     pub fn should_munge_underscores(&self) -> bool {
-        self.0.metadata.overridable.munge_underscores
+        self.inner().metadata.overridable.munge_underscores
     }
 
     pub fn should_strip_root(&self) -> bool {
-        self.0.metadata.frozen.strip_root
+        self.inner().metadata.frozen.strip_root
     }
 
     pub fn stylex_shorthand_prop(&self) -> Option<&str> {
-        self.0.metadata.frozen.stylex_shorthand_prop.as_deref()
+        self.inner()
+            .metadata
+            .frozen
+            .stylex_shorthand_prop
+            .as_deref()
     }
 
     pub fn export_star_excludes_default(&self) -> bool {
-        self.0.metadata.frozen.export_star_excludes_default
+        self.inner().metadata.frozen.export_star_excludes_default
     }
 
     pub fn ts_syntax(&self) -> bool {
-        self.0.metadata.frozen.ts_syntax
+        self.inner().metadata.frozen.ts_syntax
     }
 
     pub fn ts_utility_syntax(&self) -> bool {
-        self.0.metadata.frozen.ts_utility_syntax
+        self.inner().metadata.frozen.ts_utility_syntax
     }
 
     pub fn tslib_syntax(&self) -> bool {
-        self.0.metadata.frozen.tslib_syntax || self.is_global_lib_context()
+        self.inner().metadata.frozen.tslib_syntax || self.is_global_lib_context()
     }
 
     pub fn typescript_library_definition_support(&self) -> bool {
-        self.0.metadata.frozen.typescript_library_definition_support
+        self.inner()
+            .metadata
+            .frozen
+            .typescript_library_definition_support
     }
 
     pub fn declare_global_support(&self) -> bool {
-        self.0.metadata.frozen.declare_global_support
+        self.inner().metadata.frozen.declare_global_support
     }
 
     /// Whether the current source module contributes a supported `declare global` block.
     pub fn is_ts_global_augmentation(&self) -> bool {
-        self.0.metadata.overridable.is_ts_global_augmentation
+        self.inner().metadata.overridable.is_ts_global_augmentation
     }
 
     pub fn assert_operator_enabled(&self) -> bool {
-        self.0.metadata.frozen.assert_operator.usable()
+        self.inner().metadata.frozen.assert_operator.usable()
     }
 
     pub fn assert_operator_specialized(&self) -> bool {
-        self.0.metadata.frozen.assert_operator.specialized()
+        self.inner().metadata.frozen.assert_operator.specialized()
     }
 
     pub fn assertion_functions_enabled(&self) -> bool {
-        self.0.metadata.frozen.assertion_functions
+        self.inner().metadata.frozen.assertion_functions
     }
 
     pub fn invariant_special_casing_disabled(&self) -> bool {
-        self.0.metadata.frozen.disable_invariant_special_casing
+        self.inner()
+            .metadata
+            .frozen
+            .disable_invariant_special_casing
     }
 
     pub fn type_expansion_recursion_limit(&self) -> i32 {
-        self.0.metadata.frozen.type_expansion_recursion_limit
+        self.inner().metadata.frozen.type_expansion_recursion_limit
     }
 
-    pub fn delayed_forcing_tvars(&self) -> std::cell::Ref<'_, FlowOrdSet<i32>> {
-        self.0.ccx.delayed_forcing_tvars.borrow()
+    pub fn delayed_forcing_tvars(&self) -> &FlowOrdSet<i32> {
+        &self.ccx().delayed_forcing_tvars
     }
 
-    pub fn post_component_tvar_forcing_states(
-        &self,
-    ) -> FlowVector<ForcingState<'cx, Context<'cx>>> {
-        self.0
-            .ccx
-            .post_component_tvar_forcing_states
-            .replace(FlowVector::new())
+    pub fn post_component_tvar_forcing_states(&mut self) -> FlowVector<ForcingState<Cx>> {
+        std::mem::take(&mut self.ccx_mut().post_component_tvar_forcing_states)
     }
 
-    pub fn force_post_component_tvars(&self) {
+    pub fn force_post_component_tvars(&mut self) {
         for state in self.post_component_tvar_forcing_states().iter() {
             if self.is_active_tvar_forcing_state(state) {
-                self.0
-                    .ccx
+                self.ccx_mut()
                     .post_component_tvar_forcing_states
-                    .borrow_mut()
                     .push_back(state.clone());
             } else {
                 self.force_fully_resolved_tvar(state);
@@ -1462,39 +1710,33 @@ impl<'cx> Context<'cx> {
         }
     }
 
-    pub fn is_active_tvar_forcing_state(&self, state: &ForcingState<'cx, Context<'cx>>) -> bool {
-        self.0
-            .ccx
+    pub fn is_active_tvar_forcing_state(&self, state: &ForcingState<Cx>) -> bool {
+        self.ccx()
             .active_tvar_forcing_states
-            .borrow()
             .iter()
             .any(|active| active.ptr_eq(state))
     }
 
     pub fn post_inference_polarity_checks(
         &self,
-    ) -> std::cell::Ref<
-        '_,
-        Vec<(
-            BTreeMap<SubstName, type_::TypeParam>,
-            flow_common::polarity::Polarity,
-            Type,
-        )>,
-    > {
-        self.0.ccx.post_inference_polarity_checks.borrow()
+    ) -> &Vec<(
+        BTreeMap<SubstName, type_::TypeParam>,
+        flow_common::polarity::Polarity,
+        Type,
+    )> {
+        &self.ccx().post_inference_polarity_checks
     }
 
-    pub fn post_inference_validation_flows(
-        &self,
-    ) -> std::cell::Ref<'_, VecDeque<(Type, type_::UseT<Context<'cx>>)>> {
-        self.0.ccx.post_inference_validation_flows.borrow()
+    /// The flows queued for the post-inference validation, which runs them once.
+    pub fn take_post_inference_validation_flows(&mut self) -> VecDeque<(Type, type_::UseT<Cx>)> {
+        std::mem::take(&mut self.ccx_mut().post_inference_validation_flows)
     }
 
-    pub fn post_inference_validation_callbacks(
-        &self,
-    ) -> std::cell::Ref<'_, Vec<Box<dyn for<'a> Fn(&'a Context<'cx>) -> Result<(), JobError> + 'cx>>>
-    {
-        self.0.ccx.post_inference_validation_callbacks.borrow()
+    /// The callbacks queued for the post-inference validation, which runs them once.
+    pub fn take_post_inference_validation_callbacks(
+        &mut self,
+    ) -> Vec<PostInferenceValidationCallback> {
+        std::mem::take(&mut self.ccx_mut().post_inference_validation_callbacks)
     }
 
     /// Reserve a slot in `merging_interface_field_types` for every interface
@@ -1502,43 +1744,41 @@ impl<'cx> Context<'cx> {
     /// know who to record for in O(1). The set of participating interfaces is
     /// whatever env_builder reported in `interface_merge_conflicts`; we don't
     /// compute it ourselves.
-    pub fn init_interface_merge_field_index(&self) {
-        let mut table = self.0.ccx.merging_interface_field_types.borrow_mut();
-        let mut typeparams = self.0.ccx.merging_interface_typeparams.borrow_mut();
+    pub fn init_interface_merge_field_index(&mut self) {
+        let interface_merge_conflicts =
+            self.environment().var_info.interface_merge_conflicts.dupe();
+        let declare_class_interface_merge_conflicts = self
+            .environment()
+            .var_info
+            .declare_class_interface_merge_conflicts
+            .dupe();
+        let ccx = self.ccx_mut();
+        ccx.merging_interface_typeparams.clear();
+        let table = &mut ccx.merging_interface_field_types;
         table.clear();
-        typeparams.clear();
         let mut install = |good_loc: &ALoc, bad_locs: &Vec<ALoc>| {
             table.entry(good_loc.dupe()).or_insert_with(HashMap::new);
             for bad_loc in bad_locs {
                 table.entry(bad_loc.dupe()).or_insert_with(HashMap::new);
             }
         };
-        let interface_merge_conflicts =
-            self.environment().var_info.interface_merge_conflicts.dupe();
         for (good_loc, bad_locs) in interface_merge_conflicts.iter() {
             install(good_loc, bad_locs);
         }
-        let declare_class_interface_merge_conflicts = self
-            .environment()
-            .var_info
-            .declare_class_interface_merge_conflicts
-            .dupe();
         for (good_loc, bad_locs) in declare_class_interface_merge_conflicts.iter() {
             install(good_loc, bad_locs);
         }
     }
 
     pub fn record_interface_tparams(
-        &self,
+        &mut self,
         id_loc: ALoc,
         tparams: &type_::TypeParams,
         tparams_map: &FlowOrdMap<SubstName, Type>,
     ) {
         if !self
-            .0
-            .ccx
+            .ccx()
             .merging_interface_field_types
-            .borrow()
             .contains_key(&id_loc)
         {
             return;
@@ -1555,10 +1795,8 @@ impl<'cx> Context<'cx> {
                 })
                 .collect(),
         };
-        self.0
-            .ccx
+        self.ccx_mut()
             .merging_interface_typeparams
-            .borrow_mut()
             .insert(id_loc, tparams);
     }
 
@@ -1574,7 +1812,7 @@ impl<'cx> Context<'cx> {
         source_loc: &ALoc,
         target_loc: &ALoc,
     ) -> FlowOrdMap<SubstName, Type> {
-        let typeparams = self.0.ccx.merging_interface_typeparams.borrow();
+        let typeparams = &self.ccx().merging_interface_typeparams;
         let (Some(source_tparams), Some(target_tparams)) =
             (typeparams.get(source_loc), typeparams.get(target_loc))
         else {
@@ -1597,9 +1835,12 @@ impl<'cx> Context<'cx> {
     /// syntax-level oddity that the rest of the diff treats as "first
     /// wins"), we keep the first type so the post-inference check sees the
     /// same type the merger sees.
-    pub fn record_interface_field(&self, id_loc: ALoc, name: Name, t: Type) {
-        let mut table = self.0.ccx.merging_interface_field_types.borrow_mut();
-        if let Some(inner) = table.get_mut(&id_loc) {
+    pub fn record_interface_field(&mut self, id_loc: ALoc, name: Name, t: Type) {
+        if let Some(inner) = self
+            .ccx_mut()
+            .merging_interface_field_types
+            .get_mut(&id_loc)
+        {
             inner.entry(name).or_insert(t);
         }
     }
@@ -1618,8 +1859,8 @@ impl<'cx> Context<'cx> {
             .var_info
             .declare_class_interface_merge_conflicts
             .dupe();
-        let fields = self.0.ccx.merging_interface_field_types.borrow();
-        let typeparams = self.0.ccx.merging_interface_typeparams.borrow();
+        let fields = &self.ccx().merging_interface_field_types;
+        let typeparams = &self.ccx().merging_interface_typeparams;
         let walk =
             |good_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
              bad_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
@@ -1734,8 +1975,8 @@ impl<'cx> Context<'cx> {
 
     pub fn interface_prop_ids(
         &self,
-    ) -> std::cell::Ref<'_, BTreeMap<ALoc, (type_::properties::Id, type_::properties::Id)>> {
-        self.0.ccx.interface_prop_ids.borrow()
+    ) -> &BTreeMap<ALoc, (type_::properties::Id, type_::properties::Id)> {
+        &self.ccx().interface_prop_ids
     }
 
     /// Hand the merger a way to find this declaration's property maps later.
@@ -1743,15 +1984,13 @@ impl<'cx> Context<'cx> {
     /// merger takes those ids and copies properties between them when
     /// several decls of the same interface need to be folded together.
     pub fn add_interface_prop_ids(
-        &self,
+        &mut self,
         loc: ALoc,
         own_props: type_::properties::Id,
         proto_props: type_::properties::Id,
     ) {
-        self.0
-            .ccx
+        self.ccx_mut()
             .interface_prop_ids
-            .borrow_mut()
             .insert(loc, (own_props, proto_props));
     }
 
@@ -1761,126 +2000,125 @@ impl<'cx> Context<'cx> {
         id: i32,
     ) -> Option<PossiblyRefinedWriteState> {
         let cache = if for_value {
-            self.0.ccx.env_value_cache.borrow()
+            &self.ccx().env_value_cache
         } else {
-            self.0.ccx.env_type_cache.borrow()
+            &self.ccx().env_type_cache
         };
         cache.get(&id).cloned()
     }
 
-    pub fn missing_local_annot_lower_bounds(&self) -> std::cell::Ref<'_, ALocFuzzyMap<Vec<Type>>> {
-        self.0.ccx.missing_local_annot_lower_bounds.borrow()
+    pub fn missing_local_annot_lower_bounds(&self) -> &ALocFuzzyMap<Vec<Type>> {
+        &self.ccx().missing_local_annot_lower_bounds
     }
 
     pub fn array_or_object_literal_declaration_upper_bounds(&self) -> Vec<(ALoc, Vec<Type>)> {
-        self.0
-            .ccx
+        self.ccx()
             .array_or_object_literal_declaration_upper_bounds
-            .borrow()
             .values()
             .cloned()
             .collect()
     }
 
-    pub fn inferred_component_return(&self) -> std::cell::Ref<'_, ALocFuzzyMap<Vec1<Type>>> {
-        self.0.ccx.inferred_component_return.borrow()
+    pub fn inferred_component_return(&self) -> &ALocFuzzyMap<Vec1<Type>> {
+        &self.ccx().inferred_component_return
     }
 
     pub fn use_unknown_in_catch_variables(&self) -> bool {
-        self.0.metadata.frozen.use_unknown_in_catch_variables
+        self.inner().metadata.frozen.use_unknown_in_catch_variables
     }
 
     pub fn ban_spread_key_props(&self) -> bool {
-        self.0.metadata.frozen.ban_spread_key_props
+        self.inner().metadata.frozen.ban_spread_key_props
     }
 
     pub fn verbose(&self) -> Option<&Verbose> {
-        self.0.metadata.frozen.verbose.as_deref()
+        self.inner().metadata.frozen.verbose.as_deref()
     }
 
     pub fn slow_to_check_logging(&self) -> &SlowToCheckLogging {
-        &self.0.metadata.frozen.slow_to_check_logging
+        &self.inner().metadata.frozen.slow_to_check_logging
     }
 
     pub fn max_workers(&self) -> i32 {
-        self.0.metadata.frozen.max_workers
+        self.inner().metadata.frozen.max_workers
     }
 
     pub fn missing_module_generators(&self) -> &[(Regex, String)] {
-        &self.0.metadata.frozen.missing_module_generators
+        &self.inner().metadata.frozen.missing_module_generators
     }
 
     pub fn no_implicit_override(&self) -> bool {
-        self.0.metadata.frozen.no_implicit_override
+        self.inner().metadata.frozen.no_implicit_override
     }
 
     pub fn no_unchecked_indexed_access(&self) -> bool {
-        self.0.metadata.frozen.no_unchecked_indexed_access
+        self.inner().metadata.frozen.no_unchecked_indexed_access
     }
 
     pub fn jsx(&self) -> &JsxMode {
-        &self.0.metadata.overridable.jsx
+        &self.inner().metadata.overridable.jsx
     }
 
-    pub fn exists_checks(&self) -> std::cell::Ref<'_, ALocMap<BTreeSet<Type>>> {
-        self.0.ccx.exists_checks.borrow()
+    pub fn exists_checks(&self) -> &ALocMap<BTreeSet<Type>> {
+        &self.ccx().exists_checks
     }
 
-    pub fn exists_excuses(&self) -> std::cell::Ref<'_, ALocMap<ExistsCheck>> {
-        self.0.ccx.exists_excuses.borrow()
+    pub fn exists_excuses(&self) -> &ALocMap<ExistsCheck> {
+        &self.ccx().exists_excuses
     }
 
-    pub fn exists_excuses_mut(&self) -> std::cell::RefMut<'_, ALocMap<ExistsCheck>> {
-        self.0.ccx.exists_excuses.borrow_mut()
+    pub fn exists_excuses_mut(&mut self) -> &mut ALocMap<ExistsCheck> {
+        &mut self.ccx_mut().exists_excuses
     }
 
-    pub fn voidable_checks(&self) -> std::cell::Ref<'_, Vec<VoidableCheck>> {
-        self.0.ccx.voidable_checks.borrow()
+    pub fn voidable_checks(&self) -> &Vec<VoidableCheck> {
+        &self.ccx().voidable_checks
     }
 
-    pub fn reachable_deps(&self) -> std::cell::Ref<'_, BTreeSet<FileKey>> {
-        self.0.reachable_deps.borrow()
+    pub fn reachable_deps(&self) -> &BTreeSet<FileKey> {
+        &self.inner().reachable_deps
     }
 
-    pub fn environment(&self) -> std::cell::Ref<'_, LocEnv<'cx, Context<'cx>>> {
-        self.0.environment.borrow()
+    pub fn environment(&self) -> &LocEnv<Cx> {
+        &self.inner().environment
     }
 
-    pub fn environment_mut(&self) -> std::cell::RefMut<'_, LocEnv<'cx, Context<'cx>>> {
-        self.0.environment.borrow_mut()
+    pub fn environment_mut(&mut self) -> &mut LocEnv<Cx> {
+        &mut self.inner_mut().environment
     }
 
-    pub fn typing_mode(&self) -> std::cell::Ref<'_, TypingMode> {
-        self.0.typing_mode.borrow()
+    pub fn typing_mode(&self) -> &TypingMode {
+        &self.inner().typing_mode
     }
 
-    pub fn node_cache(&self) -> &NodeCache<'cx, Context<'cx>> {
-        &self.0.node_cache
+    pub fn node_cache(&self) -> &NodeCache<Cx> {
+        &self.inner().node_cache
     }
 
-    pub fn refined_locations(&self) -> std::cell::Ref<'_, ALocMap<FlowOrdSet<ALoc>>> {
-        self.0.refined_locations.borrow()
+    pub fn node_cache_mut(&mut self) -> &mut NodeCache<Cx> {
+        &mut self.inner_mut().node_cache
     }
 
-    pub fn aggressively_invalidated_locations(
-        &self,
-    ) -> std::cell::Ref<'_, ALocMap<RefinementInvalidation>> {
-        self.0.aggressively_invalidated_locations.borrow()
+    pub fn refined_locations(&self) -> &ALocMap<FlowOrdSet<ALoc>> {
+        &self.inner().refined_locations
     }
 
-    pub fn switch_to_match_eligible_locations(&self) -> std::cell::Ref<'_, ALocSet> {
-        self.0.switch_to_match_eligible_locations.borrow()
+    pub fn aggressively_invalidated_locations(&self) -> &ALocMap<RefinementInvalidation> {
+        &self.inner().aggressively_invalidated_locations
+    }
+
+    pub fn switch_to_match_eligible_locations(&self) -> &ALocSet {
+        &self.inner().switch_to_match_eligible_locations
     }
 
     pub fn add_ts_import_provenance(
-        &self,
+        &mut self,
         def_loc: ALoc,
         source: FlowImportSpecifier,
         remote_name: FlowSmolStr,
     ) {
-        self.0
+        self.inner_mut()
             .ts_import_provenance
-            .borrow_mut()
             .insert(def_loc, (source, remote_name));
     }
 
@@ -1888,67 +2126,42 @@ impl<'cx> Context<'cx> {
         &self,
         def_loc: &ALoc,
     ) -> Option<(FlowImportSpecifier, FlowSmolStr)> {
-        self.0
+        self.inner()
             .ts_import_provenance
-            .borrow()
             .get(def_loc)
             .map(|(s, r)| (s.dupe(), r.dupe()))
     }
 
     pub fn hint_map_arglist_cache(
         &self,
-    ) -> std::cell::Ref<'_, HashMap<(ALoc, Option<ALoc>), Vec<(ALoc, type_::CallArg)>>> {
-        self.0.hint_map_arglist_cache.borrow()
+    ) -> &HashMap<(ALoc, Option<ALoc>), Vec<(ALoc, type_::CallArg)>> {
+        &self.inner().hint_map_arglist_cache
     }
 
     pub fn hint_map_jsx_cache(
         &self,
-    ) -> std::cell::Ref<
-        '_,
-        HashMap<
-            (Reason, String, Vec<ALoc>, ALoc),
-            Rc<
-                flow_lazy::Lazy<
-                    Context<'cx>,
-                    Result<Type, JobError>,
-                    Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx>,
-                >,
-            >,
-        >,
-    > {
-        self.0.hint_map_jsx_cache.borrow()
+    ) -> &HashMap<(Reason, String, Vec<ALoc>, ALoc), LazyHintMapJsx> {
+        &self.inner().hint_map_jsx_cache
     }
 
     pub fn hint_map_jsx_cache_mut(
-        &self,
-    ) -> std::cell::RefMut<
-        '_,
-        HashMap<
-            (Reason, String, Vec<ALoc>, ALoc),
-            Rc<
-                flow_lazy::Lazy<
-                    Context<'cx>,
-                    Result<Type, JobError>,
-                    Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx>,
-                >,
-            >,
-        >,
-    > {
-        self.0.hint_map_jsx_cache.borrow_mut()
+        &mut self,
+    ) -> &mut HashMap<(Reason, String, Vec<ALoc>, ALoc), LazyHintMapJsx> {
+        &mut self.inner_mut().hint_map_jsx_cache
     }
 
     pub fn hint_map_arglist_cache_mut(
-        &self,
-    ) -> std::cell::RefMut<'_, HashMap<(ALoc, Option<ALoc>), Vec<(ALoc, type_::CallArg)>>> {
-        self.0.hint_map_arglist_cache.borrow_mut()
+        &mut self,
+    ) -> &mut HashMap<(ALoc, Option<ALoc>), Vec<(ALoc, type_::CallArg)>> {
+        &mut self.inner_mut().hint_map_arglist_cache
     }
 
     pub fn hint_eval_cache_find_opt(&self, id: i32) -> Option<Option<Type>> {
-        self.0.hint_eval_cache.borrow().get(&id).duped()
+        self.inner().hint_eval_cache.get(&id).duped()
     }
 
     pub fn automatic_require_default(&self) -> bool {
-        self.0.metadata.frozen.automatic_require_default
+        self.inner().metadata.frozen.automatic_require_default
     }
 
     pub fn pid_prefix(&self) -> String {
@@ -1961,100 +2174,78 @@ impl<'cx> Context<'cx> {
 
     // Mutators
 
-    pub fn add_exhaustive_check(&self, loc: ALoc, x: (Vec<ALoc>, bool)) {
-        self.0.ccx.exhaustive_checks.borrow_mut().insert(loc, x);
+    pub fn add_exhaustive_check(&mut self, loc: ALoc, x: (Vec<ALoc>, bool)) {
+        self.ccx_mut().exhaustive_checks.insert(loc, x);
     }
 
-    pub fn add_error(&self, error: FlowError<ALoc>) {
-        self.0.ccx.errors.borrow_mut().add(error);
+    pub fn add_error(&mut self, error: FlowError<ALoc>) {
+        self.ccx_mut().errors.add(error);
     }
 
-    pub fn reset_errors(&self, errors: ErrorSet) {
-        *self.0.ccx.errors.borrow_mut() = errors;
+    pub fn reset_errors(&mut self, errors: ErrorSet) {
+        self.ccx_mut().errors = errors;
     }
 
     /// Run [f] with the current error set snapshotted, then restore it.
     /// Useful when a probe must call into machinery that can emit unrelated
     /// errors as a side effect (e.g. concretization). The snapshot is
     /// restored even if [f] returns an [Err].
-    pub fn with_suppressed_errors<T, E>(&self, f: impl FnOnce() -> Result<T, E>) -> Result<T, E> {
+    pub fn with_suppressed_errors<T, E>(
+        &mut self,
+        f: impl FnOnce(&mut Self) -> Result<T, E>,
+    ) -> Result<T, E> {
         let saved = self.errors();
-        let r = f();
+        let r = f(self);
         self.reset_errors(saved);
         r
     }
 
-    pub fn add_error_suppressions(&self, suppressions: ErrorSuppressions) {
-        self.0
-            .ccx
-            .error_suppressions
-            .borrow_mut()
-            .union(suppressions);
+    pub fn add_error_suppressions(&mut self, suppressions: ErrorSuppressions) {
+        self.ccx_mut().error_suppressions.union(suppressions);
     }
 
-    pub fn add_severity_covers(&self, severity_covers: FlowOrdMap<FileKey, LintSeverityCover>) {
-        self.0
-            .ccx
-            .severity_cover
-            .borrow_mut()
-            .extend(severity_covers);
+    pub fn add_severity_covers(&mut self, severity_covers: FlowOrdMap<FileKey, LintSeverityCover>) {
+        self.ccx_mut().severity_cover.extend(severity_covers);
     }
 
     pub fn add_property_map(
-        &self,
+        &mut self,
         id: type_::properties::Id,
         pmap: type_::properties::PropertiesMap,
     ) {
-        self.0
-            .ccx
-            .sig_cx
-            .borrow_mut()
-            .property_maps
-            .insert(id, pmap);
+        self.ccx_mut().sig_cx.property_maps.insert(id, pmap);
     }
 
-    pub fn add_call_prop(&self, id: i32, t: Type) {
-        self.0.ccx.sig_cx.borrow_mut().call_props.insert(id, t);
+    pub fn add_call_prop(&mut self, id: i32, t: Type) {
+        self.ccx_mut().sig_cx.call_props.insert(id, t);
     }
 
-    pub fn add_export_map(&self, id: type_::exports::Id, tmap: type_::exports::T) {
-        self.0.ccx.sig_cx.borrow_mut().export_maps.insert(id, tmap);
+    pub fn add_export_map(&mut self, id: type_::exports::Id, tmap: type_::exports::T) {
+        self.ccx_mut().sig_cx.export_maps.insert(id, tmap);
     }
 
     pub fn add_tvar(
-        &self,
+        &mut self,
         id: i32,
-        bounds: flow_utils_union_find::Node<type_::constraint::Constraints<'cx, Context<'cx>>>,
+        bounds: flow_utils_union_find::Node<type_::constraint::Constraints<Cx>>,
     ) {
-        self.0
-            .ccx
-            .sig_cx
-            .borrow()
-            .graph
-            .borrow_mut()
-            .insert(id, bounds);
+        self.graph_mut().insert(id, bounds);
     }
 
     pub fn add_fresh_tvar(
-        &self,
+        &mut self,
         id: i32,
-        bounds: flow_utils_union_find::Node<type_::constraint::Constraints<'cx, Context<'cx>>>,
+        bounds: flow_utils_union_find::Node<type_::constraint::Constraints<Cx>>,
     ) {
-        self.0
-            .ccx
-            .sig_cx
-            .borrow()
-            .graph
-            .borrow_mut()
-            .insert_fresh(id, bounds);
+        self.graph_mut().insert_fresh(id, bounds);
     }
 
-    pub fn add_inference_node(&self, id: i32) {
+    pub fn add_inference_node(&mut self, id: i32) {
         assert!(
-            self.graph().borrow().get(&id).is_none(),
+            self.graph().get(&id).is_none(),
             "inference node id collides with a production node"
         );
-        let previous = self.0.ccx.inference_nodes.borrow_mut().insert(
+        let previous = self.ccx_mut().inference_nodes.insert(
             id,
             Node::create_root(type_::constraint::Constraints::default()),
         );
@@ -2062,20 +2253,20 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_inference_node(&self, id: i32) -> bool {
-        self.0.ccx.inference_nodes.borrow().contains_key(&id)
+        self.ccx().inference_nodes.contains_key(&id)
     }
 
     pub fn find_inference_root(
-        &self,
+        &mut self,
         id: i32,
-    ) -> (i32, Root<type_::constraint::Constraints<'cx, Context<'cx>>>) {
+    ) -> (i32, Root<type_::constraint::Constraints<Cx>>) {
         assert!(self.is_inference_node(id), "inference node not found");
         let mut current = id;
         let mut path = Vec::new();
         let mut seen = BTreeSet::new();
         let (root_id, root) = loop {
             assert!(seen.insert(current), "cyclic inference node aliases");
-            let node = self.0.ccx.inference_nodes.borrow().get(&current).cloned();
+            let node = self.ccx().inference_nodes.get(&current).cloned();
             match node {
                 Some(Node::Root(root)) => break (current, root),
                 Some(Node::Goto { parent }) => {
@@ -2085,7 +2276,7 @@ impl<'cx> Context<'cx> {
                 None => break self.find_root(current),
             }
         };
-        let mut inference_nodes = self.0.ccx.inference_nodes.borrow_mut();
+        let inference_nodes = &mut self.ccx_mut().inference_nodes;
         for id in path {
             inference_nodes.insert(id, Node::create_goto(root_id));
         }
@@ -2093,12 +2284,13 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn set_inference_root_constraints(
-        &self,
+        &mut self,
         id: i32,
-        constraints: type_::constraint::Constraints<'cx, Context<'cx>>,
+        constraints: type_::constraint::Constraints<Cx>,
     ) {
-        let mut inference_nodes = self.0.ccx.inference_nodes.borrow_mut();
-        let node = inference_nodes
+        let node = self
+            .ccx_mut()
+            .inference_nodes
             .get_mut(&id)
             .expect("inference root not found");
         let Node::Root(root) = node else {
@@ -2107,9 +2299,10 @@ impl<'cx> Context<'cx> {
         root.constraints = constraints;
     }
 
-    pub fn set_inference_root_rank(&self, id: i32, rank: i32) {
-        let mut inference_nodes = self.0.ccx.inference_nodes.borrow_mut();
-        let node = inference_nodes
+    pub fn set_inference_root_rank(&mut self, id: i32, rank: i32) {
+        let node = self
+            .ccx_mut()
+            .inference_nodes
             .get_mut(&id)
             .expect("inference root not found");
         let Node::Root(root) = node else {
@@ -2118,197 +2311,159 @@ impl<'cx> Context<'cx> {
         root.rank = rank;
     }
 
-    pub fn set_inference_goto(&self, id: i32, parent: i32) {
+    pub fn set_inference_goto(&mut self, id: i32, parent: i32) {
         let previous = self
-            .0
-            .ccx
+            .ccx_mut()
             .inference_nodes
-            .borrow_mut()
             .insert(id, Node::create_goto(parent));
         assert!(previous.is_some(), "inference node not found");
     }
 
-    pub fn set_synthesis_produced_uncacheable_result(&self) {
-        match *self.0.typing_mode.borrow() {
+    pub fn set_synthesis_produced_uncacheable_result(&mut self) {
+        match self.inner().typing_mode {
             TypingMode::SynthesisMode { .. } => {
-                *self
-                    .0
-                    .ccx
-                    .synthesis_produced_uncacheable_result
-                    .borrow_mut() = true;
+                self.ccx_mut().synthesis_produced_uncacheable_result = true;
             }
             _ => {}
         }
     }
 
-    pub fn mk_placeholder(&self, reason: Reason) -> Type {
+    pub fn mk_placeholder(&mut self, reason: Reason) -> Type {
         self.set_synthesis_produced_uncacheable_result();
         any_t::placeholder(reason)
     }
 
-    pub fn add_post_component_tvar_forcing_state(
-        &self,
-        id: i32,
-        state: ForcingState<'cx, Context<'cx>>,
-    ) {
-        self.0.ccx.delayed_forcing_tvars.borrow_mut().insert(id);
-        self.0
-            .ccx
-            .post_component_tvar_forcing_states
-            .borrow_mut()
-            .push_front(state);
+    pub fn add_post_component_tvar_forcing_state(&mut self, id: i32, state: ForcingState<Cx>) {
+        let ccx = self.ccx_mut();
+        ccx.delayed_forcing_tvars.insert(id);
+        ccx.post_component_tvar_forcing_states.push_front(state);
     }
 
     pub fn add_post_inference_polarity_check(
-        &self,
+        &mut self,
         tparams: BTreeMap<SubstName, type_::TypeParam>,
         polarity: flow_common::polarity::Polarity,
         t: Type,
     ) {
-        self.0
-            .ccx
+        self.ccx_mut()
             .post_inference_polarity_checks
-            .borrow_mut()
             .push((tparams, polarity, t));
     }
 
-    pub fn add_post_inference_validation_flow(&self, t: Type, use_t: type_::UseT<Context<'cx>>) {
-        self.0
-            .ccx
+    pub fn add_post_inference_validation_flow(&mut self, t: Type, use_t: type_::UseT<Cx>) {
+        self.ccx_mut()
             .post_inference_validation_flows
-            .borrow_mut()
             .push_front((t, use_t));
     }
 
-    pub fn add_post_inference_subtyping_check(&self, l: Type, use_op: UseOp, u: Type) {
+    pub fn add_post_inference_subtyping_check(&mut self, l: Type, use_op: UseOp, u: Type) {
         self.add_post_inference_validation_flow(
             l,
             type_::UseT::new(type_::UseTInner::UseT(use_op, u)),
         );
     }
 
-    pub fn add_post_inference_validation_callback(
-        &self,
-        f: Box<dyn for<'a> Fn(&'a Context<'cx>) -> Result<(), JobError> + 'cx>,
-    ) {
-        self.0
-            .ccx
-            .post_inference_validation_callbacks
-            .borrow_mut()
-            .push(f);
+    pub fn add_post_inference_validation_callback(&mut self, f: PostInferenceValidationCallback) {
+        self.ccx_mut().post_inference_validation_callbacks.push(f);
     }
 
-    pub fn add_env_cache_entry(&self, for_value: bool, id: i32, t: PossiblyRefinedWriteState) {
+    pub fn add_env_cache_entry(&mut self, for_value: bool, id: i32, t: PossiblyRefinedWriteState) {
         if for_value {
-            self.0.ccx.env_value_cache.borrow_mut().insert(id, t);
+            self.ccx_mut().env_value_cache.insert(id, t);
         } else {
-            self.0.ccx.env_type_cache.borrow_mut().insert(id, t);
+            self.ccx_mut().env_type_cache.insert(id, t);
         }
     }
 
-    pub fn add_voidable_check(&self, voidable_check: VoidableCheck) {
-        self.0.ccx.voidable_checks.borrow_mut().push(voidable_check);
+    pub fn add_voidable_check(&mut self, voidable_check: VoidableCheck) {
+        self.ccx_mut().voidable_checks.push(voidable_check);
     }
 
-    pub fn add_reachable_dep(&self, file_key: FileKey) {
-        self.0.reachable_deps.borrow_mut().insert(file_key);
+    pub fn add_reachable_dep(&mut self, file_key: FileKey) {
+        self.inner_mut().reachable_deps.insert(file_key);
     }
 
-    pub fn add_refined_location(&self, read_loc: ALoc, refining_locs: FlowOrdSet<ALoc>) {
-        self.0
+    pub fn add_refined_location(&mut self, read_loc: ALoc, refining_locs: FlowOrdSet<ALoc>) {
+        self.inner_mut()
             .refined_locations
-            .borrow_mut()
             .insert(read_loc, refining_locs);
     }
 
-    pub fn add_aggressively_invalidated_location(&self, loc: ALoc, info: RefinementInvalidation) {
-        self.0
+    pub fn add_aggressively_invalidated_location(
+        &mut self,
+        loc: ALoc,
+        info: RefinementInvalidation,
+    ) {
+        self.inner_mut()
             .aggressively_invalidated_locations
-            .borrow_mut()
             .insert(loc, info);
     }
 
-    pub fn add_switch_to_match_eligible_location(&self, loc: ALoc) {
-        self.0
+    pub fn add_switch_to_match_eligible_location(&mut self, loc: ALoc) {
+        self.inner_mut()
             .switch_to_match_eligible_locations
-            .borrow_mut()
             .insert(loc);
     }
 
     /// Records a call whose finalized callee is a single assertion function.
-    pub fn add_assertion_call_candidate(&self, callee_loc: ALoc) {
-        self.0
+    pub fn add_assertion_call_candidate(&mut self, callee_loc: ALoc) {
+        self.inner_mut()
             .assertion_call_candidates
-            .borrow_mut()
             .insert(callee_loc);
     }
 
     /// Whether call checking recorded an assertion function at this callee.
     pub fn is_assertion_call_candidate(&self, callee_loc: &ALoc) -> bool {
-        self.0
-            .assertion_call_candidates
-            .borrow()
-            .contains(callee_loc)
+        self.inner().assertion_call_candidates.contains(callee_loc)
     }
 
-    pub fn add_missing_local_annot_lower_bound(&self, loc: ALoc, t: Type) {
-        let mut bounds_map = self.0.ccx.missing_local_annot_lower_bounds.borrow_mut();
-        bounds_map
+    pub fn add_missing_local_annot_lower_bound(&mut self, loc: ALoc, t: Type) {
+        self.ccx_mut()
+            .missing_local_annot_lower_bounds
             .entry(ALocFuzzy(loc))
             .or_insert_with(Vec::new)
             .push(t);
     }
 
-    pub fn add_array_or_object_literal_declaration_tracking(&self, tvar_id: i32, loc: ALoc) {
-        self.0
-            .ccx
+    pub fn add_array_or_object_literal_declaration_tracking(&mut self, tvar_id: i32, loc: ALoc) {
+        self.ccx_mut()
             .array_or_object_literal_declaration_upper_bounds
-            .borrow_mut()
             .insert(tvar_id, (loc, Vec::new()));
     }
 
     pub fn report_array_or_object_literal_declaration_reposition(
-        &self,
+        &mut self,
         repositioned_tvar_id: i32,
         tvar_id: i32,
     ) {
-        if self
-            .0
-            .ccx
+        let ccx = self.ccx_mut();
+        if ccx
             .array_or_object_literal_declaration_upper_bounds
-            .borrow()
             .contains_key(&tvar_id)
         {
-            self.0
-                .ccx
-                .array_or_object_literal_declaration_reposition_tracking
-                .borrow_mut()
+            ccx.array_or_object_literal_declaration_reposition_tracking
                 .insert(repositioned_tvar_id, tvar_id);
         }
     }
 
-    pub fn add_array_or_object_literal_declaration_upper_bound(&self, tvar_id: i32, t: Type) {
-        let tvar_id = self
-            .0
-            .ccx
+    pub fn add_array_or_object_literal_declaration_upper_bound(&mut self, tvar_id: i32, t: Type) {
+        let ccx = self.ccx_mut();
+        let tvar_id = ccx
             .array_or_object_literal_declaration_reposition_tracking
-            .borrow()
             .get(&tvar_id)
             .copied()
             .unwrap_or(tvar_id);
-        let mut bounds_map = self
-            .0
-            .ccx
+        if let Some((_, bounds)) = ccx
             .array_or_object_literal_declaration_upper_bounds
-            .borrow_mut();
-        if let Some((_, bounds)) = bounds_map.get_mut(&tvar_id) {
+            .get_mut(&tvar_id)
+        {
             bounds.push(t);
         }
     }
 
-    pub fn add_inferred_component_return(&self, loc: ALoc, t: Type) {
+    pub fn add_inferred_component_return(&mut self, loc: ALoc, t: Type) {
         let aloc_fuzzy = ALocFuzzy(loc);
-        let mut return_map = self.0.ccx.inferred_component_return.borrow_mut();
+        let return_map = &mut self.ccx_mut().inferred_component_return;
         match return_map.get_mut(&aloc_fuzzy) {
             None => {
                 return_map.insert(aloc_fuzzy, Vec1::new(t));
@@ -2319,80 +2474,70 @@ impl<'cx> Context<'cx> {
         }
     }
 
-    pub fn set_evaluated(&self, evaluated: type_::eval::Map<Type>) {
-        self.0.ccx.sig_cx.borrow_mut().evaluated = evaluated;
+    pub fn set_evaluated(&mut self, evaluated: type_::eval::Map<Type>) {
+        self.ccx_mut().sig_cx.evaluated = evaluated;
     }
 
-    pub fn set_exists_checks(&self, exists_checks: ALocMap<BTreeSet<Type>>) {
-        *self.0.ccx.exists_checks.borrow_mut() = exists_checks;
+    pub fn set_exists_checks(&mut self, exists_checks: ALocMap<BTreeSet<Type>>) {
+        self.ccx_mut().exists_checks = exists_checks;
     }
 
-    pub fn set_signature_help_callee(&self, loc: ALoc, t: Type) {
-        self.0.ccx.signature_help_callee.borrow_mut().insert(loc, t);
+    pub fn set_signature_help_callee(&mut self, loc: ALoc, t: Type) {
+        self.ccx_mut().signature_help_callee.insert(loc, t);
     }
 
     pub fn get_signature_help_callee(&self, loc: &ALoc) -> Option<Type> {
-        self.0.ccx.signature_help_callee.borrow().get(loc).duped()
+        self.ccx().signature_help_callee.get(loc).duped()
     }
 
-    pub fn set_ctor_callee(&self, loc: ALoc, t: Type) {
-        self.0.ccx.ctor_callee.borrow_mut().insert(loc, t);
+    pub fn set_ctor_callee(&mut self, loc: ALoc, t: Type) {
+        self.ccx_mut().ctor_callee.insert(loc, t);
     }
 
     pub fn get_ctor_callee(&self, loc: &ALoc) -> Option<Type> {
-        self.0.ccx.ctor_callee.borrow().get(loc).duped()
+        self.ccx().ctor_callee.get(loc).duped()
     }
 
-    pub fn record_primitive_literal_check(&self, loc: ALoc) {
-        self.0.ccx.primitive_literal_checks.borrow_mut().insert(loc);
+    pub fn record_primitive_literal_check(&mut self, loc: ALoc) {
+        self.ccx_mut().primitive_literal_checks.insert(loc);
     }
 
     pub fn is_primitive_literal_checked(&self, loc: &ALoc) -> bool {
-        self.0.ccx.primitive_literal_checks.borrow().contains(loc)
+        self.ccx().primitive_literal_checks.contains(loc)
     }
 
-    pub fn record_fun_proto_method_lookup(&self, loc: ALoc) {
-        self.0.ccx.fun_proto_method_lookups.borrow_mut().insert(loc);
+    pub fn record_fun_proto_method_lookup(&mut self, loc: ALoc) {
+        self.ccx_mut().fun_proto_method_lookups.insert(loc);
     }
 
     pub fn is_fun_proto_method_lookup(&self, loc: &ALoc) -> bool {
-        self.0.ccx.fun_proto_method_lookups.borrow().contains(loc)
+        self.ccx().fun_proto_method_lookups.contains(loc)
     }
 
-    pub fn set_enclosing_context_for_call(&self, loc: ALoc, t: EnclosingContext) {
-        self.0
-            .ccx
-            .enclosing_context_for_call
-            .borrow_mut()
-            .insert(loc, t);
+    pub fn set_enclosing_context_for_call(&mut self, loc: ALoc, t: EnclosingContext) {
+        self.ccx_mut().enclosing_context_for_call.insert(loc, t);
     }
 
     pub fn get_enclosing_context_for_call(&self, loc: &ALoc) -> Option<EnclosingContext> {
-        self.0
-            .ccx
-            .enclosing_context_for_call
-            .borrow()
-            .get(loc)
-            .cloned()
+        self.ccx().enclosing_context_for_call.get(loc).cloned()
     }
 
-    pub fn set_union_opt(&self, loc: ALoc, t: Type) {
-        self.0.ccx.union_opt.borrow_mut().insert(loc, t);
+    pub fn set_union_opt(&mut self, loc: ALoc, t: Type) {
+        self.ccx_mut().union_opt.insert(loc, t);
     }
 
-    pub fn iter_union_opt<F>(&self, f: F)
+    pub fn iter_union_opt<F>(&mut self, f: F)
     where
-        F: FnMut(&ALoc, &Type),
+        F: FnMut(&mut Self, &ALoc, &Type),
     {
-        let union_opt = self.0.ccx.union_opt.borrow();
         let mut f = f;
-        for (loc, t) in union_opt.iter() {
-            f(loc, t);
+        for (loc, t) in self.ccx().union_opt.clone().iter() {
+            f(self, loc, t);
         }
     }
 
-    pub fn add_exists_check(&self, loc: ALoc, t: Type) {
-        let mut checks = self.0.ccx.exists_checks.borrow_mut();
+    pub fn add_exists_check(&mut self, loc: ALoc, t: Type) {
+        let checks = &mut self.ccx_mut().exists_checks;
         match checks.get_mut(&loc) {
             Some(tset) => {
                 tset.insert(t);
@@ -2405,8 +2550,8 @@ impl<'cx> Context<'cx> {
         }
     }
 
-    pub fn set_exists_excuses(&self, exists_excuses: ALocMap<ExistsCheck>) {
-        *self.0.ccx.exists_excuses.borrow_mut() = exists_excuses;
+    pub fn set_exists_excuses(&mut self, exists_excuses: ALocMap<ExistsCheck>) {
+        self.ccx_mut().exists_excuses = exists_excuses;
     }
 }
 
@@ -2515,7 +2660,7 @@ pub struct ElabOpenMemoKey {
 /// (unkeyable), while the others write to collectors (memoizing would skip
 /// collection on re-demands). The match is exhaustive so new op kinds fail to
 /// compile until classified.
-pub fn elab_open_memo_key<'cx>(op: &Op<'cx>, id: i32) -> Option<ElabOpenMemoKey> {
+pub fn elab_open_memo_key(op: &Op<Cx>, id: i32) -> Option<ElabOpenMemoKey> {
     let tag = match &**op {
         OpInner::AnnotGetPropT(data) => ElabOpenMemoTag::GetProp {
             prop_ref: data.prop_ref.clone(),
@@ -2589,124 +2734,110 @@ pub fn elab_open_memo_key<'cx>(op: &Op<'cx>, id: i32) -> Option<ElabOpenMemoKey>
     Some(ElabOpenMemoKey { tag, id })
 }
 
-impl<'cx> Context<'cx> {
-    pub fn take_cache_snapshot(&self) -> CacheSnapshot {
-        let snapshot_subst_cache = self.0.ccx.subst_cache.borrow().dupe();
-        self.0.ccx.eval_id_cache.borrow_mut().push_level();
-        self.0.ccx.id_cache.borrow_mut().push_level();
-        self.0.ccx.eval_repos_cache.borrow_mut().push_level();
-        self.0.ccx.fix_cache.borrow_mut().push_level();
-        self.0.ccx.const_fold_cache.borrow_mut().push_level();
-        self.0.ccx.elab_open_memo.borrow_mut().push_level();
-        let mut cc = self.0.ccx.constraint_cache.borrow_mut();
-        let constraint_cache_level_count = cc.level_count();
-        cc.push_level();
-        drop(cc);
+impl<'a> Context<'a> {
+    pub fn take_cache_snapshot(&mut self) -> CacheSnapshot {
+        let ccx = self.ccx_mut();
+        let snapshot_subst_cache = ccx.subst_cache.dupe();
+        ccx.eval_id_cache.push_level();
+        ccx.id_cache.push_level();
+        ccx.eval_repos_cache.push_level();
+        ccx.fix_cache.push_level();
+        ccx.const_fold_cache.push_level();
+        ccx.elab_open_memo.push_level();
+        let constraint_cache_level_count = ccx.constraint_cache.level_count();
+        ccx.constraint_cache.push_level();
         CacheSnapshot {
             constraint_cache_level_count,
             snapshot_subst_cache,
-            snapshot_spread_cache: self.0.ccx.spread_cache.borrow().dupe(),
-            snapshot_evaluated: self.0.ccx.sig_cx.borrow().evaluated.dupe(),
+            snapshot_spread_cache: ccx.spread_cache.dupe(),
+            snapshot_evaluated: ccx.sig_cx.evaluated.dupe(),
         }
     }
 
-    pub fn restore_cache_snapshot(&self, snapshot: CacheSnapshot) {
+    pub fn restore_cache_snapshot(&mut self, snapshot: CacheSnapshot) {
         let CacheSnapshot {
             constraint_cache_level_count,
             snapshot_subst_cache,
             snapshot_spread_cache,
             snapshot_evaluated,
         } = snapshot;
-        self.0
-            .ccx
-            .constraint_cache
-            .borrow_mut()
+        let ccx = self.ccx_mut();
+        ccx.constraint_cache
             .truncate_to(constraint_cache_level_count);
-        *self.0.ccx.subst_cache.borrow_mut() = snapshot_subst_cache;
-        self.0.ccx.eval_id_cache.borrow_mut().pop_level();
-        self.0.ccx.id_cache.borrow_mut().pop_level();
-        self.0.ccx.eval_repos_cache.borrow_mut().pop_level();
-        self.0.ccx.fix_cache.borrow_mut().pop_level();
-        self.0.ccx.const_fold_cache.borrow_mut().pop_level();
-        self.0.ccx.elab_open_memo.borrow_mut().pop_level();
-        *self.0.ccx.spread_cache.borrow_mut() = snapshot_spread_cache;
+        ccx.subst_cache = snapshot_subst_cache;
+        ccx.eval_id_cache.pop_level();
+        ccx.id_cache.pop_level();
+        ccx.eval_repos_cache.pop_level();
+        ccx.fix_cache.pop_level();
+        ccx.const_fold_cache.pop_level();
+        ccx.elab_open_memo.pop_level();
+        ccx.spread_cache = snapshot_spread_cache;
         self.set_evaluated(snapshot_evaluated);
     }
 
-    pub fn run_and_rolled_back_cache<F, R>(&self, f: F) -> R
+    pub fn run_and_rolled_back_cache<F, R>(&mut self, f: F) -> R
     where
-        F: FnOnce() -> R,
+        F: FnOnce(&mut Self) -> R,
     {
         let cache_snapshot = self.take_cache_snapshot();
-        let result = f();
+        let result = f(self);
         self.restore_cache_snapshot(cache_snapshot);
         result
     }
 
     pub fn run_in_synthesis_mode<F, R>(
-        &self,
+        &mut self,
         reset_forcing_state: bool,
         target_loc: Option<ALoc>,
         f: F,
     ) -> (bool, R)
     where
-        F: FnOnce() -> R,
+        F: FnOnce(&mut Self) -> R,
     {
-        let old_typing_mode = self.0.typing_mode.borrow().dupe();
+        let old_typing_mode = self.inner().typing_mode.dupe();
         let old_synthesis_produced_uncacheable_result =
-            *self.0.ccx.synthesis_produced_uncacheable_result.borrow();
-        let old_delayed_forcing_tvars = self.0.ccx.delayed_forcing_tvars.borrow().dupe();
-        let old_post_component_tvar_forcing_states = self
-            .0
-            .ccx
-            .post_component_tvar_forcing_states
-            .borrow()
-            .dupe();
-        *self
-            .0
-            .ccx
-            .synthesis_produced_uncacheable_result
-            .borrow_mut() = false;
-        *self.0.typing_mode.borrow_mut() = TypingMode::SynthesisMode { target_loc };
+            self.ccx().synthesis_produced_uncacheable_result;
+        let old_delayed_forcing_tvars = self.ccx().delayed_forcing_tvars.dupe();
+        let old_post_component_tvar_forcing_states =
+            self.ccx().post_component_tvar_forcing_states.dupe();
+        self.ccx_mut().synthesis_produced_uncacheable_result = false;
+        self.inner_mut().typing_mode = TypingMode::SynthesisMode { target_loc };
         let cache_snapshot = self.take_cache_snapshot();
 
-        let result = f();
+        let result = f(self);
 
         let synthesis_produced_uncacheable_result =
-            *self.0.ccx.synthesis_produced_uncacheable_result.borrow();
+            self.ccx().synthesis_produced_uncacheable_result;
 
         self.restore_cache_snapshot(cache_snapshot);
-        *self.0.typing_mode.borrow_mut() = old_typing_mode;
-        *self
-            .0
-            .ccx
-            .synthesis_produced_uncacheable_result
-            .borrow_mut() = old_synthesis_produced_uncacheable_result;
+        self.inner_mut().typing_mode = old_typing_mode;
+        self.ccx_mut().synthesis_produced_uncacheable_result =
+            old_synthesis_produced_uncacheable_result;
         if reset_forcing_state {
-            *self.0.ccx.delayed_forcing_tvars.borrow_mut() = old_delayed_forcing_tvars;
-            *self.0.ccx.post_component_tvar_forcing_states.borrow_mut() =
-                old_post_component_tvar_forcing_states;
+            let ccx = self.ccx_mut();
+            ccx.delayed_forcing_tvars = old_delayed_forcing_tvars;
+            ccx.post_component_tvar_forcing_states = old_post_component_tvar_forcing_states;
         }
 
         (synthesis_produced_uncacheable_result, result)
     }
 
     pub fn run_in_synthesis_mode_with_errors<F, R>(
-        &self,
+        &mut self,
         target_loc: Option<ALoc>,
         f: F,
     ) -> (bool, (R, ErrorSet))
     where
-        F: FnOnce() -> R,
+        F: FnOnce(&mut Self) -> R,
     {
         // Since this mode resets errors, we make sure to reset_forcing_state so that
         // we don't raise errors in a post-inference pass.
-        self.run_in_synthesis_mode(true, target_loc, || {
-            let original_errors = self.0.ccx.errors.borrow().dupe();
-            self.reset_errors(ErrorSet::new());
-            let t = f();
-            let new_errors = self.0.ccx.errors.borrow().dupe();
-            self.reset_errors(original_errors);
+        self.run_in_synthesis_mode(true, target_loc, |cx| {
+            let original_errors = cx.ccx().errors.dupe();
+            cx.reset_errors(ErrorSet::new());
+            let t = f(cx);
+            let new_errors = cx.ccx().errors.dupe();
+            cx.reset_errors(original_errors);
             (t, new_errors)
         })
     }
@@ -2714,16 +2845,16 @@ impl<'cx> Context<'cx> {
     /// Run a signature tvar's thunk as a normal check. The `flow_js` half of
     /// this — dropping the enclosing speculation and type-application
     /// expansion — is `FlowJsEnv::signature_tvar_env`.
-    pub fn run_in_signature_tvar_env<F, R>(&self, f: F) -> R
+    pub fn run_in_signature_tvar_env<F, R>(&mut self, f: F) -> R
     where
-        F: FnOnce() -> R,
+        F: FnOnce(&mut Self) -> R,
     {
-        let saved_typing_mode = self.0.typing_mode.borrow().dupe();
-        *self.0.typing_mode.borrow_mut() = TypingMode::CheckingMode;
+        let saved_typing_mode = self.inner().typing_mode.dupe();
+        self.inner_mut().typing_mode = TypingMode::CheckingMode;
 
-        let result = f();
+        let result = f(self);
 
-        *self.0.typing_mode.borrow_mut() = saved_typing_mode;
+        self.inner_mut().typing_mode = saved_typing_mode;
 
         result
     }
@@ -2732,46 +2863,38 @@ impl<'cx> Context<'cx> {
     /// with the caches rolled back afterwards. Its `flow_js` half — dropping
     /// the enclosing speculation and expansion — is
     /// `FlowJsEnv::signature_tvar_env` applied at the call site.
-    pub fn run_in_hint_eval_mode<F, R>(&self, f: F) -> R
+    pub fn run_in_hint_eval_mode<F, R>(&mut self, f: F) -> R
     where
-        F: FnOnce() -> R,
+        F: FnOnce(&mut Self) -> R,
     {
-        let old_typing_mode = self.0.typing_mode.borrow().dupe();
-        *self.0.typing_mode.borrow_mut() = TypingMode::HintEvaluationMode;
+        let old_typing_mode = self.inner().typing_mode.dupe();
+        self.inner_mut().typing_mode = TypingMode::HintEvaluationMode;
         let cache_snapshot = self.take_cache_snapshot();
 
-        let result = f();
+        let result = f(self);
 
         self.restore_cache_snapshot(cache_snapshot);
-        *self.0.typing_mode.borrow_mut() = old_typing_mode;
+        self.inner_mut().typing_mode = old_typing_mode;
 
         result
     }
 
-    pub fn test_prop_hit(&self, id: i32) {
-        self.0
-            .ccx
+    pub fn test_prop_hit(&mut self, id: i32) {
+        self.ccx_mut()
             .test_prop_hits_and_misses
-            .borrow_mut()
             .insert(id, TestPropHitOrMiss::Hit);
     }
 
     pub fn test_prop_miss(
-        &self,
+        &mut self,
         id: i32,
         name: Option<Name>,
         prop_reason_and_object: (Reason, Type),
         use_op: UseOp,
         suggestion: Option<FlowSmolStr>,
     ) {
-        if !self
-            .0
-            .ccx
-            .test_prop_hits_and_misses
-            .borrow()
-            .contains_key(&id)
-        {
-            self.0.ccx.test_prop_hits_and_misses.borrow_mut().insert(
+        if !self.ccx().test_prop_hits_and_misses.contains_key(&id) {
+            self.ccx_mut().test_prop_hits_and_misses.insert(
                 id,
                 TestPropHitOrMiss::Miss {
                     name,
@@ -2786,10 +2909,8 @@ impl<'cx> Context<'cx> {
     pub fn test_prop_get_never_hit(
         &self,
     ) -> Vec<(Option<Name>, (Reason, Type), UseOp, Option<FlowSmolStr>)> {
-        self.0
-            .ccx
+        self.ccx()
             .test_prop_hits_and_misses
-            .borrow()
             .values()
             .filter_map(|hit_or_miss| match hit_or_miss {
                 TestPropHitOrMiss::Hit => None,
@@ -2808,18 +2929,21 @@ impl<'cx> Context<'cx> {
             .collect()
     }
 
-    pub fn add_condition(&self, e: flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>) {
-        self.0.ccx.conditions.borrow_mut().push(e);
+    pub fn add_condition(
+        &mut self,
+        e: flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>,
+    ) {
+        self.ccx_mut().conditions.push(e);
     }
 
     pub fn get_all_conditions(
         &self,
     ) -> FlowVector<flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>> {
-        self.0.ccx.conditions.borrow().dupe()
+        self.ccx().conditions.dupe()
     }
 
     pub fn add_strict_comparison(
-        &self,
+        &mut self,
         comp: (
             ALoc,
             (
@@ -2828,7 +2952,7 @@ impl<'cx> Context<'cx> {
             ),
         ),
     ) {
-        self.0.ccx.strict_comparisons.borrow_mut().push(comp);
+        self.ccx_mut().strict_comparisons.push(comp);
     }
 
     pub fn get_all_strict_comparisons(
@@ -2840,17 +2964,17 @@ impl<'cx> Context<'cx> {
             flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>,
         ),
     )> {
-        self.0.ccx.strict_comparisons.borrow().dupe()
+        self.ccx().strict_comparisons.dupe()
     }
 
     pub fn mark_optional_chain(
-        &self,
+        &mut self,
         loc: ALoc,
         lhs_expression: ExpressionReferenceData<ALoc>,
         useful: bool,
     ) {
-        let mut chains = self.0.ccx.optional_chains_useful.borrow_mut();
-        chains
+        self.ccx_mut()
+            .optional_chains_useful
             .entry(loc)
             .and_modify(|(_, u)| {
                 *u = *u || useful;
@@ -2859,9 +2983,8 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn unnecessary_optional_chains(&self) -> Vec<(ALoc, ExpressionReferenceData<ALoc>)> {
-        let chains = self.0.ccx.optional_chains_useful.borrow();
         let mut result = Vec::new();
-        for (loc, (lhs_expression, useful)) in chains.iter() {
+        for (loc, (lhs_expression, useful)) in self.ccx().optional_chains_useful.iter() {
             if !useful {
                 result.push((loc.dupe(), lhs_expression.dupe()));
             }
@@ -2869,20 +2992,16 @@ impl<'cx> Context<'cx> {
         result
     }
 
-    pub fn mark_maybe_unused_promise(&self, loc: ALoc, t: Type, async_: bool) {
-        self.0
-            .ccx
-            .maybe_unused_promises
-            .borrow_mut()
-            .push((loc, t, async_));
+    pub fn mark_maybe_unused_promise(&mut self, loc: ALoc, t: Type, async_: bool) {
+        self.ccx_mut().maybe_unused_promises.push((loc, t, async_));
     }
 
     pub fn maybe_unused_promises(&self) -> FlowVector<(ALoc, Type, bool)> {
-        self.0.ccx.maybe_unused_promises.borrow().dupe()
+        self.ccx().maybe_unused_promises.dupe()
     }
 
-    pub fn add_hint_eval_cache_entry(&self, id: i32, result: Option<Type>) {
-        self.0.hint_eval_cache.borrow_mut().insert(id, result);
+    pub fn add_hint_eval_cache_entry(&mut self, id: i32, result: Option<Type>) {
+        self.inner_mut().hint_eval_cache.insert(id, result);
     }
 
     // utils
@@ -2894,12 +3013,12 @@ impl<'cx> Context<'cx> {
         self.find_props(id).iter().for_each(|(k, v)| f(k, v))
     }
 
-    pub fn try_iter_props<F, E>(&self, id: type_::properties::Id, f: F) -> Result<(), E>
+    pub fn try_iter_props<F, E>(&mut self, id: type_::properties::Id, mut f: F) -> Result<(), E>
     where
-        F: Fn(&flow_common::reason::Name, &type_::Property) -> Result<(), E>,
+        F: FnMut(&mut Self, &flow_common::reason::Name, &type_::Property) -> Result<(), E>,
     {
         for (k, v) in self.find_props(id).iter() {
-            f(k, v)?;
+            f(self, k, v)?;
         }
         Ok(())
     }
@@ -2914,10 +3033,8 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn has_prop(&self, id: type_::properties::Id, x: &flow_common::reason::Name) -> bool {
-        self.0
-            .ccx
+        self.ccx()
             .sig_cx
-            .borrow()
             .property_maps
             .get(&id)
             .ok_or(PropsNotFound(id))
@@ -2930,10 +3047,8 @@ impl<'cx> Context<'cx> {
         id: type_::properties::Id,
         x: &flow_common::reason::Name,
     ) -> Option<type_::Property> {
-        self.0
-            .ccx
+        self.ccx()
             .sig_cx
-            .borrow()
             .property_maps
             .get(&id)
             .ok_or(PropsNotFound(id))
@@ -2945,7 +3060,7 @@ impl<'cx> Context<'cx> {
     // constructors
 
     pub fn make_aloc_id(&self, aloc: &ALoc) -> ALocId {
-        let table = self.0.aloc_table.dupe();
+        let table = self.inner().aloc_table.dupe();
         ALocId::of_aloc(aloc, move || LazyCell::force(&*table).dupe())
     }
 
@@ -2954,7 +3069,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn generate_property_map(
-        &self,
+        &mut self,
         pmap: type_::properties::PropertiesMap,
     ) -> type_::properties::Id {
         let id = type_::properties::Id::generate_id();
@@ -2963,7 +3078,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn make_source_property_map(
-        &self,
+        &mut self,
         pmap: type_::properties::PropertiesMap,
         type_sig: bool,
         aloc: &ALoc,
@@ -2978,13 +3093,13 @@ impl<'cx> Context<'cx> {
         id
     }
 
-    pub fn make_call_prop(&self, t: Type) -> i32 {
+    pub fn make_call_prop(&mut self, t: Type) -> i32 {
         let id = flow_common::reason::mk_id() as i32;
         self.add_call_prop(id, t);
         id
     }
 
-    pub fn make_export_map(&self, tmap: type_::exports::T) -> type_::exports::Id {
+    pub fn make_export_map(&mut self, tmap: type_::exports::T) -> type_::exports::Id {
         let id = type_::exports::Id::mk_id();
         self.add_export_map(id.dupe(), tmap);
         id
@@ -2995,34 +3110,46 @@ impl<'cx> Context<'cx> {
         type_::poly::Id::of_aloc_id(type_sig, aloc_id)
     }
 
-    pub fn find_graph(&self, id: i32) -> type_::constraint::Constraints<'cx, Context<'cx>> {
-        let graph = self.graph();
-        graph.borrow_mut().find_graph(id).unwrap().clone()
+    pub fn find_graph(&mut self, id: i32) -> type_::constraint::Constraints<Cx> {
+        self.graph_mut().find_graph(id).unwrap().clone()
     }
 
-    pub fn find_constraints(
-        &self,
-        id: i32,
-    ) -> (i32, type_::constraint::Constraints<'cx, Context<'cx>>) {
+    pub fn find_constraints(&mut self, id: i32) -> (i32, type_::constraint::Constraints<Cx>) {
         if self.is_inference_node(id) {
             let (root_id, root) = self.find_inference_root(id);
             return (root_id, root.constraints);
         }
 
-        let graph = self.graph();
-        let mut graph = graph.borrow_mut();
-        let file = self.file();
-        let (id, c) = graph.find_constraints(id).unwrap_or_else(|e| {
+        let file = self.file().dupe();
+        let (id, c) = self.graph_mut().find_constraints(id).unwrap_or_else(|e| {
             panic!("find_constraints: TvarNotFound({}) in file {:?}", e.0, file,)
         });
         (id, c.clone())
     }
 
-    pub fn set_constraints(
-        &self,
-        id: i32,
-        constraints: type_::constraint::Constraints<'cx, Context<'cx>>,
-    ) {
+    /// The root of `id` and its constraints, like [Context::find_constraints] but without the
+    /// path compression that needs a mutable context.
+    pub fn constraints_of(&self, id: i32) -> (i32, type_::constraint::Constraints<Cx>) {
+        let mut current = id;
+        loop {
+            let node = match self.ccx().inference_nodes.get(&current) {
+                Some(node) => node,
+                None => self.graph().get(&current).unwrap_or_else(|| {
+                    panic!(
+                        "constraints_of: TvarNotFound({}) in file {:?}",
+                        current,
+                        self.file()
+                    )
+                }),
+            };
+            match node {
+                Node::Root(root) => return (current, root.constraints.clone()),
+                Node::Goto { parent } => current = *parent,
+            }
+        }
+    }
+
+    pub fn set_constraints(&mut self, id: i32, constraints: type_::constraint::Constraints<Cx>) {
         let (root_id, _) = self.find_constraints(id);
         if self.is_inference_node(root_id) {
             self.set_inference_root_constraints(root_id, constraints);
@@ -3032,20 +3159,19 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn find_constraints_pair(
-        &self,
+        &mut self,
         id1: i32,
         id2: i32,
     ) -> (
-        (i32, type_::constraint::Constraints<'cx, Context<'cx>>),
-        (i32, type_::constraint::Constraints<'cx, Context<'cx>>),
+        (i32, type_::constraint::Constraints<Cx>),
+        (i32, type_::constraint::Constraints<Cx>),
     ) {
         if self.is_inference_node(id1) || self.is_inference_node(id2) {
             return (self.find_constraints(id1), self.find_constraints(id2));
         }
 
-        let graph = self.graph();
-        let mut graph = graph.borrow_mut();
-        let file = self.file();
+        let file = self.file().dupe();
+        let graph = self.graph_mut();
         let (root_id1, c1) = graph.find_constraints(id1).unwrap_or_else(|e| {
             panic!(
                 "find_constraints_pair: TvarNotFound({}) in file {:?}",
@@ -3066,90 +3192,74 @@ impl<'cx> Context<'cx> {
     /// clone-modify-writeback overhead of find_constraints + set_root_constraints.
     /// The closure receives (root_id, &mut Constraints).
     pub fn modify_constraints<R>(
-        &self,
+        &mut self,
         id: i32,
-        f: impl FnOnce(i32, &mut type_::constraint::Constraints<'cx, Context<'cx>>) -> R,
+        f: impl FnOnce(i32, &mut type_::constraint::Constraints<Cx>) -> R,
     ) -> R {
-        let graph = self.graph();
-        let mut graph = graph.borrow_mut();
-        let (root_id, c) = graph.find_constraints(id).unwrap_or_else(|e| {
+        let file = self.file().dupe();
+        let (root_id, c) = self.graph_mut().find_constraints(id).unwrap_or_else(|e| {
             panic!(
                 "modify_constraints: TvarNotFound({}) in file {:?}",
-                e.0,
-                self.file(),
+                e.0, file,
             )
         });
         f(root_id, c)
     }
 
     /// Read-only inspection of constraints without cloning.
-    /// The closure receives (root_id, &Constraints) and must not call
-    /// other graph operations (the graph borrow is held).
+    /// The closure receives (root_id, &Constraints).
     pub fn inspect_constraints<R>(
-        &self,
+        &mut self,
         id: i32,
-        f: impl FnOnce(i32, &type_::constraint::Constraints<'cx, Context<'cx>>) -> R,
+        f: impl FnOnce(i32, &type_::constraint::Constraints<Cx>) -> R,
     ) -> R {
-        let graph = self.graph();
-        let mut graph = graph.borrow_mut();
-        let (root_id, c) = graph.find_constraints(id).unwrap_or_else(|e| {
+        let file = self.file().dupe();
+        let (root_id, c) = self.graph_mut().find_constraints(id).unwrap_or_else(|e| {
             panic!(
                 "inspect_constraints: TvarNotFound({}) in file {:?}",
-                e.0,
-                self.file(),
+                e.0, file,
             )
         });
         f(root_id, c)
     }
 
     pub fn find_root(
-        &self,
+        &mut self,
         id: i32,
     ) -> (
         i32,
-        flow_utils_union_find::Root<type_::constraint::Constraints<'cx, Context<'cx>>>,
+        flow_utils_union_find::Root<type_::constraint::Constraints<Cx>>,
     ) {
-        let graph = self.graph();
-        let mut graph = graph.borrow_mut();
-        let file = self.file();
-        let (id, root) = graph
+        let file = self.file().dupe();
+        let (id, root) = self
+            .graph_mut()
             .find_root(id)
             .unwrap_or_else(|e| panic!("find_root: TvarNotFound({}) in file {:?}", e.0, file,));
         (id, root.clone())
     }
 
     pub fn set_root_constraints(
-        &self,
+        &mut self,
         id: i32,
-        constraints: type_::constraint::Constraints<'cx, Context<'cx>>,
+        constraints: type_::constraint::Constraints<Cx>,
     ) {
-        let graph = self.graph();
-        let mut graph = graph.borrow_mut();
-        let (_root_id, root) = graph.find_root(id).unwrap();
+        let (_root_id, root) = self.graph_mut().find_root(id).unwrap();
         root.constraints = constraints;
     }
 
-    pub fn set_root_rank(&self, id: i32, rank: i32) {
-        let graph = self.graph();
-        let mut graph = graph.borrow_mut();
-        let (_root_id, root) = graph.find_root(id).unwrap();
+    pub fn set_root_rank(&mut self, id: i32, rank: i32) {
+        let (_root_id, root) = self.graph_mut().find_root(id).unwrap();
         root.rank = rank;
     }
 
-    pub fn find_root_id(&self, id: i32) -> i32 {
-        self.graph()
-            .borrow_mut()
+    pub fn find_root_id(&mut self, id: i32) -> i32 {
+        let file = self.file().dupe();
+        self.graph_mut()
             .find_root_id(id)
-            .unwrap_or_else(|e| {
-                panic!(
-                    "find_root_id: TvarNotFound({}) in file {:?}",
-                    e.0,
-                    self.file(),
-                )
-            })
+            .unwrap_or_else(|e| panic!("find_root_id: TvarNotFound({}) in file {:?}", e.0, file,))
     }
 
-    pub fn on_cyclic_tvar_error(&self, reason: Reason) -> Type {
+    pub fn on_cyclic_tvar_error(&mut self, reason: Reason) -> Type {
         let msg = ErrorMessage::ETrivialRecursiveDefinition(reason.to_error_reference());
         let error = error_of_msg(self.file().dupe(), msg);
         if self.is_verbose() {
@@ -3159,30 +3269,17 @@ impl<'cx> Context<'cx> {
         any_t::error(reason)
     }
 
-    pub fn force_fully_resolved_tvar(&self, s: &ForcingState<'cx, Context<'cx>>) -> Type {
-        struct ForcingGuard<'a, 'cx> {
-            states: &'a RefCell<Vec<ForcingState<'cx, Context<'cx>>>>,
-            len: usize,
-        }
-
-        impl Drop for ForcingGuard<'_, '_> {
-            fn drop(&mut self) {
-                self.states.borrow_mut().truncate(self.len);
-            }
-        }
-
-        let states = &self.0.ccx.active_tvar_forcing_states;
-        let _guard = ForcingGuard {
-            states,
-            len: states.borrow().len(),
-        };
-        states.borrow_mut().push(s.clone());
-        s.force(self, |reason| self.on_cyclic_tvar_error(reason.dupe()))
+    pub fn force_fully_resolved_tvar(&mut self, s: &ForcingState<Cx>) -> Type {
+        let len = self.ccx().active_tvar_forcing_states.len();
+        self.ccx_mut().active_tvar_forcing_states.push(s.clone());
+        let t = s.force(self, |cx, reason| cx.on_cyclic_tvar_error(reason.dupe()));
+        self.ccx_mut().active_tvar_forcing_states.truncate(len);
+        t
     }
 
-    pub fn find_resolved(&self, t_in: &Type) -> Option<Type> {
+    pub fn find_resolved(&mut self, t_in: &Type) -> Option<Type> {
         fn find_resolved_inner<'a>(
-            cx: &Context<'a>,
+            cx: &mut Context<'a>,
             seen: &mut BTreeSet<i32>,
             t_in: &Type,
         ) -> Option<Type> {
@@ -3217,116 +3314,110 @@ impl<'cx> Context<'cx> {
         find_resolved_inner(self, &mut seen, t_in)
     }
 
-    pub fn constraint_cache(&self) -> std::cell::Ref<'_, type_::FlowSet<Context<'cx>>> {
-        self.0.ccx.constraint_cache.borrow()
+    pub fn constraint_cache(&self) -> &type_::FlowSet<Cx> {
+        &self.ccx().constraint_cache
     }
 
-    pub fn constraint_cache_mut(&self) -> std::cell::RefMut<'_, type_::FlowSet<Context<'cx>>> {
-        self.0.ccx.constraint_cache.borrow_mut()
+    pub fn constraint_cache_mut(&mut self) -> &mut type_::FlowSet<Cx> {
+        &mut self.ccx_mut().constraint_cache
     }
 
-    pub fn subst_cache(
-        &self,
-    ) -> std::cell::Ref<'_, type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>> {
-        self.0.ccx.subst_cache.borrow()
+    pub fn subst_cache(&self) -> &type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)> {
+        &self.ccx().subst_cache
     }
 
-    pub fn subst_cache_mut(
-        &self,
-    ) -> std::cell::RefMut<'_, type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>> {
-        self.0.ccx.subst_cache.borrow_mut()
+    pub fn subst_cache_mut(&mut self) -> &mut type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)> {
+        &mut self.ccx_mut().subst_cache
     }
 
-    pub fn eval_id_cache(&self) -> std::cell::Ref<'_, EvalIdCacheMap> {
-        self.0.ccx.eval_id_cache.borrow()
+    pub fn eval_id_cache(&self) -> &EvalIdCacheMap {
+        &self.ccx().eval_id_cache
     }
 
-    pub fn eval_id_cache_mut(&self) -> std::cell::RefMut<'_, EvalIdCacheMap> {
-        self.0.ccx.eval_id_cache.borrow_mut()
+    pub fn eval_id_cache_mut(&mut self) -> &mut EvalIdCacheMap {
+        &mut self.ccx_mut().eval_id_cache
     }
 
-    pub fn id_cache(&self) -> std::cell::Ref<'_, IdCacheMap> {
-        self.0.ccx.id_cache.borrow()
+    pub fn id_cache(&self) -> &IdCacheMap {
+        &self.ccx().id_cache
     }
 
-    pub fn id_cache_mut(&self) -> std::cell::RefMut<'_, IdCacheMap> {
-        self.0.ccx.id_cache.borrow_mut()
+    pub fn id_cache_mut(&mut self) -> &mut IdCacheMap {
+        &mut self.ccx_mut().id_cache
     }
 
-    pub fn eval_repos_cache(&self) -> std::cell::Ref<'_, EvalReposCacheMap> {
-        self.0.ccx.eval_repos_cache.borrow()
+    pub fn eval_repos_cache(&self) -> &EvalReposCacheMap {
+        &self.ccx().eval_repos_cache
     }
 
-    pub fn eval_repos_cache_mut(&self) -> std::cell::RefMut<'_, EvalReposCacheMap> {
-        self.0.ccx.eval_repos_cache.borrow_mut()
+    pub fn eval_repos_cache_mut(&mut self) -> &mut EvalReposCacheMap {
+        &mut self.ccx_mut().eval_repos_cache
     }
 
-    pub fn fix_cache(&self) -> std::cell::Ref<'_, FixCacheMap> {
-        self.0.ccx.fix_cache.borrow()
+    pub fn fix_cache(&self) -> &FixCacheMap {
+        &self.ccx().fix_cache
     }
 
-    pub fn fix_cache_mut(&self) -> std::cell::RefMut<'_, FixCacheMap> {
-        self.0.ccx.fix_cache.borrow_mut()
+    pub fn fix_cache_mut(&mut self) -> &mut FixCacheMap {
+        &mut self.ccx_mut().fix_cache
     }
 
-    pub fn spread_cache(&self) -> std::cell::Ref<'_, SpreadCache> {
-        self.0.ccx.spread_cache.borrow()
+    pub fn spread_cache(&self) -> &SpreadCache {
+        &self.ccx().spread_cache
     }
 
-    pub fn spread_cache_cell(&self) -> &std::cell::RefCell<SpreadCache> {
-        &self.0.ccx.spread_cache
+    pub fn spread_cache_mut(&mut self) -> &mut SpreadCache {
+        &mut self.ccx_mut().spread_cache
     }
 
-    pub fn const_fold_cache(&self) -> std::cell::Ref<'_, ConstFoldMap> {
-        self.0.ccx.const_fold_cache.borrow()
+    pub fn const_fold_cache(&self) -> &ConstFoldMap {
+        &self.ccx().const_fold_cache
     }
 
-    pub fn const_fold_cache_mut(&self) -> std::cell::RefMut<'_, ConstFoldMap> {
-        self.0.ccx.const_fold_cache.borrow_mut()
+    pub fn const_fold_cache_mut(&mut self) -> &mut ConstFoldMap {
+        &mut self.ccx_mut().const_fold_cache
     }
 
     pub fn exhaustive_check(&self, loc: &ALoc) -> Option<(Vec<ALoc>, bool)> {
-        self.0.ccx.exhaustive_checks.borrow().get(loc).cloned()
+        self.ccx().exhaustive_checks.get(loc).cloned()
     }
 
-    pub fn add_avar(&self, id: i32, constraint_: AConstraint<'cx>) {
-        self.0.ccx.annot_graph.borrow_mut().insert(id, constraint_);
+    pub fn add_avar(&mut self, id: i32, constraint_: AConstraint<Cx>) {
+        self.ccx_mut().annot_graph.insert(id, constraint_);
     }
 
-    pub fn find_avar(&self, id: i32) -> AConstraint<'cx> {
-        self.0
-            .ccx
+    pub fn find_avar(&self, id: i32) -> AConstraint<Cx> {
+        self.ccx()
             .annot_graph
-            .borrow()
             .get(&id)
             .expect("find_avar: id not found in annot_graph")
             .dupe()
     }
 
-    pub fn find_avar_opt(&self, id: i32) -> Option<AConstraint<'cx>> {
-        self.0.ccx.annot_graph.borrow().get(&id).duped()
+    pub fn find_avar_opt(&self, id: i32) -> Option<AConstraint<Cx>> {
+        self.ccx().annot_graph.get(&id).duped()
     }
 
     pub fn elab_open_memo_get(&self, key: &ElabOpenMemoKey) -> Option<Type> {
-        self.0.ccx.elab_open_memo.borrow().get(key).duped()
+        self.ccx().elab_open_memo.get(key).duped()
     }
 
-    pub fn elab_open_memo_insert(&self, key: ElabOpenMemoKey, t: Type) {
-        self.0.ccx.elab_open_memo.borrow_mut().insert(key, t);
+    pub fn elab_open_memo_insert(&mut self, key: ElabOpenMemoKey, t: Type) {
+        self.ccx_mut().elab_open_memo.insert(key, t);
     }
 
-    pub fn remove_avar(&self, id: i32) {
-        self.0.ccx.annot_graph.borrow_mut().remove(&id);
+    pub fn remove_avar(&mut self, id: i32) {
+        self.ccx_mut().annot_graph.remove(&id);
     }
 
-    pub fn iter_annot_dependent_set<F>(&self, mut f: F, set: &FlowOrdSet<i32>)
+    pub fn iter_annot_dependent_set<F>(&mut self, mut f: F, set: &FlowOrdSet<i32>)
     where
-        F: FnMut(i32, &type_::aconstraint::Op<'cx>),
+        F: FnMut(&mut Self, i32, &type_::aconstraint::Op<Cx>),
     {
         for &i in set {
             let constraints = self.find_avar(i);
             let op = constraints.to_annot_op_exn();
-            f(i, op);
+            f(self, i, op);
         }
     }
 
@@ -3346,47 +3437,109 @@ impl<'cx> Context<'cx> {
 }
 
 #[cfg(test)]
-mod forcing_tests {
-    use std::cell::OnceCell;
-
+mod tests {
     use flow_aloc::ALocTable;
     use flow_common::reason::locationless_reason;
+    use flow_typing_type::type_::constraint::Constraints;
 
     use super::*;
 
-    fn context() -> Context<'static> {
-        let file = FileKey::source_file_of_absolute("/forcing_test.js");
+    fn add_context(arena: &mut ContextArena, path: &str) -> ContextId {
+        let file = FileKey::source_file_of_absolute(path);
         let aloc_table: LazyALocTable = Rc::new(LazyCell::new(Box::new({
             let file = file.dupe();
             move || Rc::new(ALocTable::empty(file))
         })));
-        Context::make(
-            Rc::new(make_ccx()),
+        let ccx = arena.add_component();
+        arena.add_context(
+            ccx,
             Metadata::default(),
             file,
             Arc::default(),
             aloc_table,
-            Rc::new(|_, _| ResolvedRequire::MissingModule),
-            Rc::new(|_| Builtins::empty()),
+            Rc::new(|_: &mut Context<'_>, _: &FlowImportSpecifier| ResolvedRequire::MissingModule),
+            Rc::new(|_: &mut Context<'_>| Builtins::empty()),
             CheckBudget::new(None),
         )
     }
 
     #[test]
     fn direct_recursive_forcing_still_reports_a_cycle() {
-        let cx = context();
+        let mut arena = ContextArena::new();
+        let cx_id = add_context(&mut arena, "/forcing_test.js");
+        let mut cx = Context::new(ContextStore::new(vec![&mut arena]), cx_id);
         let reason = locationless_reason(VirtualReasonDesc::RNumber);
-        let state = Rc::new(OnceCell::new());
-        let active = ForcingState::of_lazy_t(reason, {
-            let state = state.dupe();
-            move |cx: &Context| {
-                cx.force_fully_resolved_tvar(state.get().expect("initialized state"))
-            }
+        let id = flow_common::reason::mk_id() as i32;
+        // The state forces itself through the graph, which owns it.
+        let active = ForcingState::of_lazy_t(reason, move |cx: &mut Context<'_>| {
+            let Constraints::FullyResolved(state) = cx.find_graph(id) else {
+                panic!("the tvar was added as fully resolved");
+            };
+            cx.force_fully_resolved_tvar(&state)
         });
-        state.set(active.clone()).expect("uninitialized state");
+        cx.add_tvar(
+            id,
+            Node::create_root(Constraints::FullyResolved(active.clone())),
+        );
 
         cx.force_fully_resolved_tvar(&active);
         assert!(active.already_forced_with_cyclic_error());
         assert_eq!(cx.errors().len(), 1);
+    }
+
+    #[test]
+    fn a_context_switches_to_the_contexts_of_its_store() {
+        let mut dependencies = ContextArena::new();
+        let dependency = add_context(&mut dependencies, "/dependency.js");
+        let mut checked = ContextArena::new();
+        let checked_id = add_context(&mut checked, "/checked.js");
+        {
+            let mut cx = Context::new(
+                ContextStore::new(vec![&mut checked, &mut dependencies]),
+                checked_id,
+            );
+            assert_eq!(cx.switch_to(dependency).file().as_str(), "/dependency.js");
+            assert_eq!(cx.id(), checked_id, "dropping the switch switches back");
+        }
+        let cx = Context::new(ContextStore::new(vec![&mut dependencies]), dependency);
+        assert!(
+            !cx.has_context(checked_id),
+            "a store does not see the contexts of arenas it does not have"
+        );
+    }
+
+    #[test]
+    fn merge_destination_resolves_only_while_its_arena_lives() {
+        let mut dependencies = ContextArena::new();
+        let dependency = add_context(&mut dependencies, "/dependency.js");
+        let mut checked = ContextArena::new();
+        let checked_id = add_context(&mut checked, "/checked.js");
+        {
+            let mut cx = Context::new(
+                ContextStore::new(vec![&mut checked, &mut dependencies]),
+                checked_id,
+            );
+            let mut dependency_cx = cx.switch_to(dependency);
+            dependency_cx.set_merge_dst_cx(checked_id);
+            assert_eq!(dependency_cx.merge_dst_cx(), Some(checked_id));
+        }
+        checked.clear();
+        let cx = Context::new(
+            ContextStore::new(vec![&mut checked, &mut dependencies]),
+            dependency,
+        );
+        assert!(
+            cx.merge_dst_cx().is_none(),
+            "the checked context is gone with its arena"
+        );
+    }
+
+    #[test]
+    fn clearing_an_arena_invalidates_its_ids() {
+        let mut arena = ContextArena::new();
+        let id = add_context(&mut arena, "/a.js");
+        arena.clear();
+        let store = ContextStore::new(vec![&mut arena]);
+        assert!(!store.has_context(id));
     }
 }

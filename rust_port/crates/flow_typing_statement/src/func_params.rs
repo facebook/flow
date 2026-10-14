@@ -51,7 +51,7 @@ impl Config for FuncStmtConfig {
     }
 
     fn subst_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         param: &Self::Param,
     ) -> Self::Param {
@@ -59,7 +59,7 @@ impl Config for FuncStmtConfig {
     }
 
     fn subst_rest<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         rest: &Self::Rest,
     ) -> Self::Rest {
@@ -67,7 +67,7 @@ impl Config for FuncStmtConfig {
     }
 
     fn subst_this<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         this: &Self::ThisParam,
     ) -> Self::ThisParam {
@@ -75,17 +75,17 @@ impl Config for FuncStmtConfig {
     }
 
     fn eval_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, CheckExprError> {
         func_stmt_config::eval_param(cx, param)
     }
 
-    fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Self::RestAst {
+    fn eval_rest<'a>(cx: &mut Context<'a>, rest: &Self::Rest) -> Self::RestAst {
         func_stmt_config::eval_rest(cx, rest)
     }
 
-    fn eval_this<'a>(cx: &Context<'a>, this: &Self::ThisParam) -> Self::ThisAst {
+    fn eval_this<'a>(cx: &mut Context<'a>, this: &Self::ThisParam) -> Self::ThisAst {
         func_stmt_config::eval_this(cx, this)
     }
 }
@@ -128,7 +128,7 @@ pub fn this<C: Config>(this: Option<&C::ThisParam>) -> Option<Type> {
 }
 
 pub fn eval<'a, C: Config, R>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     params: &[C::Param],
     rest: Option<&C::Rest>,
     this: Option<&C::ThisParam>,

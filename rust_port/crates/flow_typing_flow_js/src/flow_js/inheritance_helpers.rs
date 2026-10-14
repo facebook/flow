@@ -28,7 +28,7 @@ use super::*;
 // inheritance utils
 
 pub(super) fn flow_type_args<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -94,7 +94,7 @@ pub(super) fn flow_type_args<'cx>(
 }
 
 pub(super) fn inst_type_to_obj_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason_struct: Reason,
     own_props_id: properties::Id,
     proto_props_id: properties::Id,
@@ -140,7 +140,7 @@ pub(super) fn inst_type_to_obj_type<'cx>(
 // TODO: own_props/proto_props is misleading, since they come from interfaces,
 // which don't have an own/proto distinction.
 pub(super) fn structural_subtype<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -217,7 +217,7 @@ pub(super) fn structural_subtype<'cx>(
 }
 
 pub(super) fn inst_structural_subtype<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -257,7 +257,6 @@ pub(super) fn inst_structural_subtype<'cx>(
         let uvalue = &dict.value;
         let upolarity = &dict.dict_polarity;
         let indexer_subtyping = subtyping_kit::PropsToIndexerContext {
-            cx,
             env,
             trace,
             use_op: use_op.dupe(),
@@ -358,6 +357,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                     )?;
                     let lower_props = properties::PropertiesMap::from_btree_map(matching_props);
                     indexer_subtyping.flow_props_to_indexer(
+                        cx,
                         &lower_props,
                         &[&own_props, &proto_props],
                         dict,
@@ -557,7 +557,7 @@ pub(super) fn inst_structural_subtype<'cx>(
         // — confusing when the failure is actually structural subtyping)
         // and rather than reusing [EPropNotFoundInSubtyping] with a
         // synthetic prop name (which can't be made collision-proof).
-        let not_a_constructor = |cx: &Context<'cx>| -> Result<(), FlowJsException> {
+        let not_a_constructor = |cx: &mut Context<'cx>| -> Result<(), FlowJsException> {
             let error_message = ErrorMessage::EConstructSignatureMissingInSubtyping(Box::new(
                 EConstructSignatureMissingInSubtypingData {
                     lower: flow_js_utils::type_reference_with_reason_for_error(
@@ -580,10 +580,10 @@ pub(super) fn inst_structural_subtype<'cx>(
         // Detect abstract-vs-non-abstract assignment: lower carries an
         // abstract bit (either an abstract class via [ClassT] or an
         // [abstract new () => T] interface) and upper does not.
-        let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+        let concretize = |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
             helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
         };
-        if !upper_inst_abstract && flow_js_utils::is_class_abstract(&concretize, lower)? {
+        if !upper_inst_abstract && flow_js_utils::is_class_abstract(cx, &concretize, lower)? {
             add_output_with_env(
                 cx, env,
                 ErrorMessage::EAbstractClass(Box::new(
@@ -594,7 +594,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                 )),
             )?;
         }
-        for lower in concretize(lower)? {
+        for lower in concretize(cx, lower)? {
             match lower.deref() {
                 // Interface: own + inherited via [super], in derived-first
                 // order.
@@ -640,7 +640,7 @@ pub(super) fn inst_structural_subtype<'cx>(
 }
 
 pub(super) fn check_super<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,

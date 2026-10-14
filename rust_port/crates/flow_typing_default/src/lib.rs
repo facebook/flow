@@ -78,13 +78,14 @@ pub fn fold<A, R>(
     d: &Default<A>,
     expr_fn: &impl Fn(&A) -> R,
     cons_fn: &impl Fn(R, R) -> R,
-    selector_fn: &impl Fn(Reason, R, Selector) -> R,
+    selector_fn: &mut impl FnMut(Reason, R, Selector) -> R,
 ) -> R {
     match d {
         Default::Expr(e) => expr_fn(e),
         Default::Cons(e, d) => cons_fn(expr_fn(e), fold(d, expr_fn, cons_fn, selector_fn)),
         Default::Selector(r, d, s) => {
-            selector_fn(r.clone(), fold(d, expr_fn, cons_fn, selector_fn), s.clone())
+            let folded = fold(d, expr_fn, cons_fn, selector_fn);
+            selector_fn(r.clone(), folded, s.clone())
         }
     }
 }

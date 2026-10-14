@@ -1664,7 +1664,7 @@ use flow_parser::ast::Program;
 
 struct NameResolver<'a, Cx: Context, Fl: Flow<Cx = Cx>> {
     has_imports: bool,
-    cx: &'a Cx,
+    cx: &'a mut Cx,
     class_stack: FlowVector<ALoc>,
     env_state: NameResolverState,
     cache: Rc<RefCell<ValCache<ALoc>>>,
@@ -1736,7 +1736,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> WithBindings<ALoc, AbruptCompletion>
 
 impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     fn new(
-        cx: &'a Cx,
+        cx: &'a mut Cx,
         is_lib: bool,
         exclude_syms: FlowOrdSet<FlowSmolStr>,
         prepass: (
@@ -1782,11 +1782,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         }
     }
 
-    fn valid_declaration_check(&self, name: &FlowSmolStr, loc: &ALoc) {
+    fn valid_declaration_check(&mut self, name: &FlowSmolStr, loc: &ALoc) {
         use invalidation_api::InitializationValid;
         use invalidation_api::declaration_validity;
 
-        let error =
+        let mut error =
             |null_write: Option<ALoc>,
              possible_generic_escape_locs: &flow_data_structure_wrapper::ord_set::FlowOrdSet<
                 ALoc,
@@ -11322,7 +11322,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         self.add_sentinel_check_writes(checks);
         // Record a phantom read of "stylex" when the configured shorthand prop is used on
         // lowercase elements, but only if stylex is actually in scope (i.e. imported).
-        if let Some(shorthand_prop_name) = self.cx.stylex_shorthand_prop() {
+        if let Some(shorthand_prop_name) = self.cx.stylex_shorthand_prop().map(FlowSmolStr::new) {
             match name {
                 flow_parser::ast::jsx::Name::Identifier(ident)
                     if ident
@@ -11338,7 +11338,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                                 flow_parser::ast::jsx::OpeningAttribute::Attribute(attr_inner) => {
                                     match &attr_inner.name {
                                         flow_parser::ast::jsx::attribute::Name::Identifier(id)
-                                            if id.name.as_str() == shorthand_prop_name =>
+                                            if id.name.as_str() == shorthand_prop_name.as_str() =>
                                         {
                                             self.any_identifier(id.loc.dupe(), &stylex_name);
                                         }
@@ -11490,7 +11490,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
 // between real dead code and issues with the EnvBuilder, which seems far better than
 // the alternative.
 struct DeadCodeMarker<'a, Cx: Context> {
-    cx: &'a Cx,
+    cx: &'a mut Cx,
     values: Values<ALoc>,
     write_entries: EnvMap<ALoc, EnvEntry<ALoc>>,
     jsx_base_name: Option<FlowSmolStr>,
@@ -11498,7 +11498,7 @@ struct DeadCodeMarker<'a, Cx: Context> {
 
 impl<'a, Cx: Context> DeadCodeMarker<'a, Cx> {
     fn new(
-        cx: &'a Cx,
+        cx: &'a mut Cx,
         jsx_base_name: Option<FlowSmolStr>,
         values: Values<ALoc>,
         write_entries: EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -12344,7 +12344,7 @@ pub fn prepass<Cx: Context>(
 }
 
 pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
-    cx: &Cx,
+    cx: &mut Cx,
     is_lib: bool,
     exclude_syms: FlowOrdSet<FlowSmolStr>,
     file_sig: &FileSig,
@@ -12369,7 +12369,7 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
 /// Used when the targeted callee analysis must run between the prepass and this walk.
 #[allow(clippy::too_many_arguments)]
 pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
-    cx: &Cx,
+    cx: &mut Cx,
     is_lib: bool,
     exclude_syms: FlowOrdSet<FlowSmolStr>,
     program_loc: ALoc,
@@ -12396,12 +12396,11 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
     let completion_state = env_walk.visit_program(program);
     env_walk.cache.borrow_mut().clear();
     // Fill in dead code reads
-    let mut dead_code_marker = DeadCodeMarker::new(
-        cx,
-        env_walk.jsx_base_name(),
-        env_walk.values(),
-        env_walk.take_write_entries(),
-    );
+    let jsx_base_name = env_walk.jsx_base_name();
+    let values = env_walk.values();
+    let write_entries = env_walk.take_write_entries();
+    let mut dead_code_marker =
+        DeadCodeMarker::new(env_walk.cx, jsx_base_name, values, write_entries);
     dead_code_marker.run(program);
     let (env_values, env_entries) = dead_code_marker.into_values_and_entries();
     let env_refinement_invalidation_info = env_walk.refinement_invalidation_info();
@@ -12443,7 +12442,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
 }
 
 pub fn program<Cx: Context, Fl: Flow<Cx = Cx>>(
-    cx: &Cx,
+    cx: &mut Cx,
     is_lib: bool,
     exclude_syms: FlowOrdSet<FlowSmolStr>,
     file_sig: &FileSig,

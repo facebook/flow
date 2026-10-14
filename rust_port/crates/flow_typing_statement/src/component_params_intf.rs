@@ -22,10 +22,13 @@ pub trait Config {
     type RestAst;
 
     fn eval_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, CheckExprError>;
-    fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Result<Self::RestAst, CheckExprError>;
+    fn eval_rest<'a>(
+        cx: &mut Context<'a>,
+        rest: &Self::Rest,
+    ) -> Result<Self::RestAst, CheckExprError>;
     fn param_type_with_name(param: &Self::Param) -> (ALoc, FlowSmolStr, Type);
     fn rest_type(rest: &Self::Rest) -> Type;
 }

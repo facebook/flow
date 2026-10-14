@@ -13,6 +13,7 @@ use std::time::Instant;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_check_cache::CheckContentsCache;
+use flow_check_cache::CheckedContext;
 use flow_common::files;
 use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
@@ -179,15 +180,37 @@ pub fn parse_contents(
 fn errors_of_file_artifacts(
     options: &Options,
     env: &Env,
+    cache: &mut CheckContentsCache,
     loc_of_aloc: impl Fn(&ALoc) -> Loc,
     get_ast: impl Fn(&FileKey) -> Option<Arc<ast::Program<Loc, Loc>>>,
     filename: &FileKey,
     file_artifacts: &FileArtifacts,
 ) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
     let (parse_artifacts, typecheck_artifacts) = file_artifacts;
+    typecheck_artifacts.cx.with_cx(cache, |cx| {
+        errors_of_typecheck_artifacts(
+            options,
+            env,
+            loc_of_aloc,
+            get_ast,
+            filename,
+            parse_artifacts,
+            cx,
+        )
+    })
+}
+
+fn errors_of_typecheck_artifacts(
+    options: &Options,
+    env: &Env,
+    loc_of_aloc: impl Fn(&ALoc) -> Loc,
+    get_ast: impl Fn(&FileKey) -> Option<Arc<ast::Program<Loc, Loc>>>,
+    filename: &FileKey,
+    parse_artifacts: &ParseArtifacts,
+    cx: &Context<'_>,
+) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
     let docblock_errors = &parse_artifacts.docblock_errors;
     let tolerable_errors = &parse_artifacts.tolerable_errors;
-    let cx = &typecheck_artifacts.cx;
     let mut errors = cx.errors();
     let tolerable_error_set =
         inference_utils::set_of_file_sig_tolerable_errors(filename.dupe(), tolerable_errors);
@@ -203,7 +226,7 @@ fn errors_of_file_artifacts(
     let include_suppressions = cx.include_suppressions();
     let aloc_tables = cx.aloc_tables();
     let (errors, warnings) =
-        suppressions.filter_lints(errors, &aloc_tables, include_suppressions, &severity_cover);
+        suppressions.filter_lints(errors, aloc_tables, include_suppressions, severity_cover);
     let root = &*options.root;
     let file_options = Some(&*options.file_options);
     let node_modules_errors = options.node_modules_errors;
@@ -247,6 +270,7 @@ fn errors_of_file_artifacts(
 pub fn printable_errors_of_file_artifacts_result(
     options: &Options,
     env: &Env,
+    cache: &mut CheckContentsCache,
     transaction: &Transaction,
     filename: &FileKey,
     result: Result<&FileArtifacts, &TypeContentsError>,
@@ -260,6 +284,7 @@ pub fn printable_errors_of_file_artifacts_result(
             let (errors, warnings) = errors_of_file_artifacts(
                 options,
                 env,
+                cache,
                 loc_of_aloc,
                 get_ast,
                 filename,
@@ -407,7 +432,7 @@ fn ensure_checked_dependencies(
 // file+contents may not agree with file system state
 pub fn check_contents(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     transaction: Arc<Transaction>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -419,7 +444,7 @@ pub fn check_contents(
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<
-    Result<(Context<'static>, ast::Program<ALoc, (ALoc, Type)>), CheckedDependenciesCanceled>,
+    Result<(CheckedContext, ast::Program<ALoc, (ALoc, Type)>), CheckedDependenciesCanceled>,
     flow_utils_concurrency::job_error::JobError,
 > {
     with_timer(options, "MergeContents", || {
@@ -446,7 +471,7 @@ pub fn check_contents(
 // IDE service: enable for_ide flag to ensure declaration files are fully checked
 pub fn compute_env_of_contents(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     transaction: Arc<Transaction>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -458,7 +483,7 @@ pub fn compute_env_of_contents(
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<
-    Result<Context<'static>, CheckedDependenciesCanceled>,
+    Result<CheckedContext, CheckedDependenciesCanceled>,
     flow_utils_concurrency::job_error::JobError,
 > {
     type_inference_hooks_js::with_for_ide(true, || {
@@ -491,14 +516,14 @@ pub fn compute_env_of_contents(
 // We assume that callers have already inspected the parse errors, so we discard them here.
 pub fn type_parse_artifacts(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     transaction: Arc<Transaction>,
     master_cx: Arc<MasterContext>,
     filename: FileKey,
     intermediate_result: (Option<ParseArtifacts>, ErrorSet),
-) -> Result<FileArtifacts<'static>, TypeContentsError> {
+) -> Result<FileArtifacts, TypeContentsError> {
     match intermediate_result {
         (Some(parse_artifacts), _errs) => {
             let ParseArtifacts {

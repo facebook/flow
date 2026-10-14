@@ -73,7 +73,7 @@ pub type Members = GenericT<
     BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)>,
 >;
 
-fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
+fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
     fn create_union(rep: union_rep::UnionRep) -> Type {
         Type::new(TypeInner::UnionT(
             locationless_reason(VirtualReasonDesc::RUnionType),
@@ -592,7 +592,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
     }
 }
 
-fn instantiate_poly_t<'cx>(cx: &Context<'cx>, t: Type, args: Option<&[Type]>) -> Type {
+fn instantiate_poly_t<'cx>(cx: &mut Context<'cx>, t: Type, args: Option<&[Type]>) -> Type {
     match t.deref() {
         TypeInner::DefT(_, def_t) => match def_t.deref() {
             DefTInner::PolyT(box PolyTData {
@@ -660,7 +660,7 @@ fn instantiate_poly_t<'cx>(cx: &Context<'cx>, t: Type, args: Option<&[Type]>) ->
 }
 
 pub fn intersect_members<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     members: Vec<BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)>>,
 ) -> BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)> {
     if members.is_empty() {
@@ -754,7 +754,7 @@ pub fn to_command_result(
     }
 }
 
-fn find_props<'cx>(cx: &Context<'cx>, id: properties::Id) -> BTreeMap<FlowSmolStr, Property> {
+fn find_props<'cx>(cx: &mut Context<'cx>, id: properties::Id) -> BTreeMap<FlowSmolStr, Property> {
     let props = cx.find_props(id);
     // Filter out keys starting with "$" and convert Name -> String. Symbol-typed
     // keys are skipped: they have no identifier spelling to autocomplete/hover on,
@@ -772,7 +772,7 @@ fn find_props<'cx>(cx: &Context<'cx>, id: properties::Id) -> BTreeMap<FlowSmolSt
     result
 }
 
-fn resolve_tvar<'cx>(cx: &Context<'cx>, id: i32) -> Type {
+fn resolve_tvar<'cx>(cx: &mut Context<'cx>, id: i32) -> Type {
     let ts = flow_js_utils::possible_types(cx, id);
     // The list of types returned by possible_types is often empty, and the
     // most common reason is that we don't have enough type coverage to
@@ -789,7 +789,7 @@ fn resolve_tvar<'cx>(cx: &Context<'cx>, id: i32) -> Type {
     ts.into_iter().fold(init, |u, t| merge_type(cx, (t, u)))
 }
 
-pub fn resolve_type<'cx>(cx: &Context<'cx>, t: Type) -> Type {
+pub fn resolve_type<'cx>(cx: &mut Context<'cx>, t: Type) -> Type {
     match t.deref() {
         TypeInner::OpenT(tvar) => {
             let resolved = resolve_tvar(cx, tvar.id() as i32);
@@ -804,7 +804,7 @@ pub fn resolve_type<'cx>(cx: &Context<'cx>, t: Type) -> Type {
     }
 }
 
-pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type> {
+pub fn extract_type<'cx>(cx: &mut Context<'cx>, this_t: Type) -> GenericT<Type, Type> {
     match this_t.deref() {
         TypeInner::OpenT(_)
         | TypeInner::ImplicitInstantiationTvar(_)
@@ -982,7 +982,7 @@ pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type
 
 pub fn extract_members<'cx>(
     exclude_proto_members: bool,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     extracted: GenericT<Type, Type>,
 ) -> Members {
     match extracted {
@@ -1013,7 +1013,7 @@ pub fn extract_members<'cx>(
             _ => GenericT::FailureUnhandledMembers(t.dupe()),
         },
         GenericT::Success(ref t) => {
-            let handle_instance = |super_t, own_props, proto_props| {
+            let mut handle_instance = |super_t, own_props, proto_props| {
                 let own_props_map = find_props(cx, own_props);
                 let mut members: BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)> =
                     BTreeMap::new();
@@ -1172,14 +1172,14 @@ pub fn extract_members<'cx>(
     }
 }
 
-pub fn extract<'cx>(exclude_proto_members: bool, cx: &Context<'cx>, t: Type) -> Members {
+pub fn extract<'cx>(exclude_proto_members: bool, cx: &mut Context<'cx>, t: Type) -> Members {
     let extracted = extract_type(cx, t);
     extract_members(exclude_proto_members, cx, extracted)
 }
 
 fn extract_members_as_map<'cx>(
     exclude_proto_members: bool,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     this_t: Type,
 ) -> BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)> {
     to_command_result(extract(exclude_proto_members, cx, this_t)).unwrap_or_default()

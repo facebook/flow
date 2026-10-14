@@ -35,7 +35,7 @@ pub fn mk_seal(frozen: bool, as_const: bool) -> SealType {
 }
 
 pub fn mk_with_proto(
-    cx: &Context,
+    cx: &mut Context,
     reason: Reason,
     obj_kind: ObjKind,
     reachable_targs: Option<Rc<[(Type, Polarity)]>>,
@@ -58,7 +58,7 @@ pub fn mk_with_proto(
 }
 
 pub fn mk_with_proto_and_strictness(
-    cx: &Context,
+    cx: &mut Context,
     reason: Reason,
     obj_kind: ObjKind,
     reachable_targs: Option<Rc<[(Type, Polarity)]>>,
@@ -97,7 +97,7 @@ pub fn mk_with_proto_and_strictness(
     ))
 }
 
-pub fn mk(obj_kind: ObjKind, cx: &Context, reason: Reason) -> Type {
+pub fn mk(obj_kind: ObjKind, cx: &mut Context, reason: Reason) -> Type {
     mk_with_proto(
         cx,
         reason.dupe(),

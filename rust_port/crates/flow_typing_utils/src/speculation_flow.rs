@@ -9,6 +9,7 @@
 use dupe::Dupe;
 use flow_common::reason::Reason;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
@@ -24,15 +25,15 @@ use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::unknown_use;
 
 pub fn try_custom<'cx, 'a>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: Option<flow_typing_type::type_::UseOp>,
-    use_t: Option<UseT<Context<'cx>>>,
+    use_t: Option<UseT<Cx>>,
     default_resolve: Option<
-        Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
+        Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
     >,
     no_match_error_loc: flow_aloc::ALoc,
-    cases: Vec<Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
+    cases: Vec<Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
 ) -> Result<(), FlowJsException> {
     flow_typing_flow_js::speculation_kit::try_custom(
         cx,
@@ -46,11 +47,11 @@ pub fn try_custom<'cx, 'a>(
 }
 
 pub fn flow_t_unsafe<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     (l, u): (Type, Type),
 ) -> Result<(), FlowJsException> {
-    let use_t: UseT<Context<'cx>> = UseT::new(UseTInner::UseT(unknown_use(), u));
+    let use_t: UseT<Cx> = UseT::new(UseTInner::UseT(unknown_use(), u));
     flow_typing_flow_js::speculation_kit::try_singleton_throw_on_failure(
         cx,
         env,
@@ -61,18 +62,18 @@ pub fn flow_t_unsafe<'cx>(
 }
 
 pub fn is_flow_successful<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     t: Type,
-    u: UseT<Context<'cx>>,
+    u: UseT<Cx>,
 ) -> Result<bool, FlowJsException> {
     is_flow_successful_with_env(cx, &FlowJsEnv::entry(), t, u)
 }
 
 fn is_flow_successful_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t: Type,
-    u: UseT<Context<'cx>>,
+    u: UseT<Cx>,
 ) -> Result<bool, FlowJsException> {
     match flow_typing_flow_js::speculation_kit::try_singleton_throw_on_failure(
         cx,
@@ -88,7 +89,7 @@ fn is_flow_successful_with_env<'cx>(
 }
 
 pub fn is_subtyping_successful<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     l: Type,
     u: Type,
 ) -> Result<bool, FlowJsException> {
@@ -96,20 +97,20 @@ pub fn is_subtyping_successful<'cx>(
 }
 
 fn is_subtyping_successful_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     l: Type,
     u: Type,
 ) -> Result<bool, FlowJsException> {
-    let use_t: UseT<Context<'cx>> = UseT::new(UseTInner::UseT(unknown_use(), u));
+    let use_t: UseT<Cx> = UseT::new(UseTInner::UseT(unknown_use(), u));
     is_flow_successful_with_env(cx, env, l, use_t)
 }
 
 pub fn resolved_lower_flow_unsafe<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     r: &Reason,
-    (l, u): (&Type, &UseT<Context<'cx>>),
+    (l, u): (&Type, &UseT<Cx>),
 ) -> Result<(), FlowJsException> {
     let concrete_types = FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, l)?;
     match concrete_types.as_slice() {
@@ -135,7 +136,7 @@ pub fn resolved_lower_flow_unsafe<'cx>(
 }
 
 pub fn resolved_lower_flow_t_unsafe<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     r: &Reason,
     (l, u): (&Type, &Type),
@@ -145,7 +146,7 @@ pub fn resolved_lower_flow_t_unsafe<'cx>(
 }
 
 pub fn resolved_upper_flow_t_unsafe<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     r: &Reason,
     (l, u): (&Type, &Type),
@@ -184,7 +185,7 @@ pub fn resolved_upper_flow_t_unsafe<'cx>(
 }
 
 pub fn get_method_type_unsafe<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t: &Type,
     reason: Reason,
@@ -205,7 +206,7 @@ pub fn get_method_type_unsafe<'cx>(
 }
 
 pub fn get_method_type_opt<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t: &Type,
     reason: Reason,

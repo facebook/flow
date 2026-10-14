@@ -74,7 +74,7 @@ use crate::tvar_resolver;
 // these bugs in 100% of cases we'd need to make our EvalT machinery only operate over resolved
 // types.
 fn partition_keys_and_indexer<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -135,7 +135,7 @@ fn partition_keys_and_indexer<'cx>(
 }
 
 fn dispatch_substituted_name<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     name_t: &Type,
@@ -178,7 +178,7 @@ fn dispatch_substituted_name<'cx>(
 
 #[allow(clippy::too_many_arguments)]
 fn compute_name_remap<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
@@ -211,7 +211,7 @@ fn compute_name_remap<'cx>(
             }),
         ))
     };
-    let substitute_name_for_t = |key_t: Type| -> Type {
+    let substitute_name_for_t = |cx: &mut Context<'cx>, key_t: Type| -> Type {
         match name_type.deref() {
             TypeInner::DefT(_, def_t)
                 if let flow_typing_type::type_::DefTInner::PolyT(
@@ -244,12 +244,11 @@ fn compute_name_remap<'cx>(
             ),
         }
     };
-    let substitute_name = |k: &Name| -> Type { substitute_name_for_t(key_t_for(k)) };
     let mut per_source: std::collections::BTreeMap<Name, slice_utils::PerSourceDispatch> =
         std::collections::BTreeMap::new();
     let mut all_substituted: Vec<Type> = Vec::new();
     for k in &source_keys {
-        let substituted = substitute_name(k);
+        let substituted = substitute_name_for_t(cx, key_t_for(k));
         let (dests, idx_keys) = dispatch_substituted_name(cx, env, reason, &substituted)?;
         per_source.insert(
             k.dupe(),
@@ -262,7 +261,7 @@ fn compute_name_remap<'cx>(
     }
     let (source_indexer, indexer_substituted_opt) = match (selected_keys, &flags.obj_kind) {
         (None, ObjKind::Indexed(dict_t)) => {
-            let substituted = substitute_name_for_t(dict_t.key.dupe());
+            let substituted = substitute_name_for_t(cx, dict_t.key.dupe());
             let possible = FlowJs::possible_concrete_types_for_inspection_with_env(
                 cx,
                 env,
@@ -297,7 +296,7 @@ fn compute_name_remap<'cx>(
             let mut keys: Vec<Type> = Vec::new();
             let mut all: Vec<Type> = Vec::new();
             for xs_t in xs {
-                let substituted = substitute_name_for_t(xs_t.dupe());
+                let substituted = substitute_name_for_t(cx, xs_t.dupe());
                 let possible = FlowJs::possible_concrete_types_for_inspection_with_env(
                     cx,
                     env,
@@ -355,7 +354,7 @@ fn compute_name_remap<'cx>(
 }
 
 pub fn mapped_type_of_keys<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -425,7 +424,7 @@ pub fn mapped_type_of_keys<'cx>(
         interface,
         reachable_targs: Rc::from([]),
     };
-    let filter_optional = |t: Type| -> Result<Type, FlowJsException> {
+    let filter_optional = |cx: &mut Context<'cx>, t: Type| -> Result<Type, FlowJsException> {
         let filter_id = crate::flow_js::filter_optional_with_env(cx, env, reason, &t)?;
         Ok(Type::new(TypeInner::OpenT(Tvar::new(
             reason.dupe(),
@@ -454,7 +453,7 @@ pub fn mapped_type_of_keys<'cx>(
 
 pub fn run<'cx>(
     trace: DepthTrace,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: &object::ResolveTool,
@@ -477,7 +476,7 @@ pub fn run<'cx>(
 
 pub(super) fn run_with_env<'cx>(
     trace: DepthTrace,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
@@ -488,12 +487,12 @@ pub(super) fn run_with_env<'cx>(
 ) -> Result<(), FlowJsException> {
     let object_spread = |options: &object::spread::Target,
                          state: &object::spread::State,
-                         cx: &Context<'cx>,
+                         cx: &mut Context<'cx>,
                          use_op: UseOp,
                          reason: &Reason,
                          x: Vec1<object::Slice>,
                          tout: &Type| {
-        let dict_check = |cx: &Context<'cx>,
+        let dict_check = |cx: &mut Context<'cx>,
                           use_op: UseOp,
                           d1: &DictType,
                           d2: &DictType|
@@ -502,11 +501,11 @@ pub(super) fn run_with_env<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &d2.value, &d1.value)?;
             Ok(())
         };
-        let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| {
+        let return_ = |cx: &mut Context<'cx>, use_op: UseOp, t: Type| {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, tout)?;
             Ok(())
         };
-        let recurse = |cx: &Context<'cx>,
+        let recurse = |cx: &mut Context<'cx>,
                        env: &FlowJsEnv,
                        use_op: UseOp,
                        reason: &Reason,
@@ -546,13 +545,13 @@ pub(super) fn run_with_env<'cx>(
 
     // Check component config
     let check_component_config = |pmap: &properties::PropertiesMap,
-                                  cx: &Context<'cx>,
+                                  cx: &mut Context<'cx>,
                                   use_op: UseOp,
                                   reason: &Reason,
                                   x: Vec1<object::Slice>,
                                   tout: &Type|
      -> Result<(), FlowJsException> {
-        let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| {
+        let return_ = |cx: &mut Context<'cx>, use_op: UseOp, t: Type| {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, tout)?;
             Ok(())
         };
@@ -571,12 +570,12 @@ pub(super) fn run_with_env<'cx>(
     // Object Rest
     let object_rest = |options: &object::rest::MergeMode,
                        state: &object::rest::State,
-                       cx: &Context<'cx>,
+                       cx: &mut Context<'cx>,
                        use_op: UseOp,
                        reason: &Reason,
                        x: Vec1<object::Slice>,
                        tout: &Type| {
-        let return_ = |cx: &Context<'cx>,
+        let return_ = |cx: &mut Context<'cx>,
                        use_op: Box<dyn Fn(Polarity) -> UseOp>,
                        options: object::rest::MergeMode,
                        t: Type| {
@@ -620,7 +619,7 @@ pub(super) fn run_with_env<'cx>(
             }
             Ok(())
         };
-        let recurse = |cx: &Context<'cx>,
+        let recurse = |cx: &mut Context<'cx>,
                        env: &FlowJsEnv,
                        use_op: UseOp,
                        reason: &Reason,
@@ -643,7 +642,7 @@ pub(super) fn run_with_env<'cx>(
             Ok(())
         };
         let subt_check = |use_op: UseOp,
-                          cx: &Context<'cx>,
+                          cx: &mut Context<'cx>,
                           (t1, t2): (&Type, &Type)|
          -> Result<(), FlowJsException> {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t1, t2)?;
@@ -665,7 +664,7 @@ pub(super) fn run_with_env<'cx>(
     };
 
     // Object Make Exact
-    let object_make_exact = |cx: &Context<'cx>,
+    let object_make_exact = |cx: &mut Context<'cx>,
                              _use_op: UseOp,
                              reason: &Reason,
                              x: Vec1<object::Slice>,
@@ -679,7 +678,7 @@ pub(super) fn run_with_env<'cx>(
         Ok(())
     };
 
-    let object_read_only = |cx: &Context<'cx>,
+    let object_read_only = |cx: &mut Context<'cx>,
                             _use_op: UseOp,
                             reason: &Reason,
                             x: Vec1<object::Slice>,
@@ -688,19 +687,13 @@ pub(super) fn run_with_env<'cx>(
         // We always use an unknown_use intentionally when flowing to the tout. The use_op associated
         // with the tvar is more relevant with the use of the ReadOnly type than the use_op associated
         // with the ReadOnly instantiation
-        FlowJs::rec_flow_t_with_env(
-            cx,
-            env,
-            trace,
-            unknown_use(),
-            &slice_utils::object_read_only(cx, reason, x),
-            tout,
-        )?;
+        let read_only = slice_utils::object_read_only(cx, reason, x);
+        FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &read_only, tout)?;
         Ok(())
     };
 
     // Object Partial
-    let object_partial = |cx: &Context<'cx>,
+    let object_partial = |cx: &mut Context<'cx>,
                           _use_op: UseOp,
                           reason: &Reason,
                           x: Vec1<object::Slice>,
@@ -709,24 +702,18 @@ pub(super) fn run_with_env<'cx>(
         // We always use an unknown_use intentionally when flowing to the tout. The use_op associated
         // with the tvar is more relevant with the use of the Partial type than the use_op associated
         // with the Partial instantiation
-        FlowJs::rec_flow_t_with_env(
+        let partial = slice_utils::object_update_optionality(
+            slice_utils::ObjectUpdateOptionalityKind::Partial,
             cx,
-            env,
-            trace,
-            unknown_use(),
-            &slice_utils::object_update_optionality(
-                slice_utils::ObjectUpdateOptionalityKind::Partial,
-                cx,
-                reason,
-                x,
-            ),
-            tout,
-        )?;
+            reason,
+            x,
+        );
+        FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &partial, tout)?;
         Ok(())
     };
 
     // Object Required
-    let object_required = |cx: &Context<'cx>,
+    let object_required = |cx: &mut Context<'cx>,
                            _use_op: UseOp,
                            reason: &Reason,
                            x: Vec1<object::Slice>,
@@ -735,24 +722,18 @@ pub(super) fn run_with_env<'cx>(
         // We always use an unknown_use intentionally when flowing to the tout. The use_op associated
         // with the tvar is more relevant with the use of the Required type than the use_op associated
         // with the Required instantiation
-        FlowJs::rec_flow_t_with_env(
+        let required = slice_utils::object_update_optionality(
+            slice_utils::ObjectUpdateOptionalityKind::Required,
             cx,
-            env,
-            trace,
-            unknown_use(),
-            &slice_utils::object_update_optionality(
-                slice_utils::ObjectUpdateOptionalityKind::Required,
-                cx,
-                reason,
-                x,
-            ),
-            tout,
-        )?;
+            reason,
+            x,
+        );
+        FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &required, tout)?;
         Ok(())
     };
 
     // Object Rep
-    let object_rep = |cx: &Context<'cx>,
+    let object_rep = |cx: &mut Context<'cx>,
                       use_op: UseOp,
                       reason: &Reason,
                       x: Vec1<object::Slice>,
@@ -820,7 +801,7 @@ pub(super) fn run_with_env<'cx>(
 
     let react_config = |ref_manipulation: &object::react_config::RefManipulation,
                         state: &object::react_config::State,
-                        cx: &Context<'cx>,
+                        cx: &mut Context<'cx>,
                         use_op: UseOp,
                         reason: &Reason,
                         x: Vec1<object::Slice>,
@@ -834,7 +815,8 @@ pub(super) fn run_with_env<'cx>(
         // constant in the future as well.
         let prop_polarity = Polarity::Neutral;
 
-        let finish = |config: &object::Slice,
+        let finish = |cx: &mut Context<'cx>,
+                      config: &object::Slice,
                       defaults: Option<&object::Slice>|
          -> Result<Type, FlowJsException> {
             let object::Slice {
@@ -1137,7 +1119,7 @@ pub(super) fn run_with_env<'cx>(
             } => {
                 let mut ts = Vec::new();
                 for c in x.iter() {
-                    ts.push(finish(c, None)?);
+                    ts.push(finish(cx, c, None)?);
                 }
                 let mut iter = ts.into_iter();
                 let t0 = iter.next().unwrap();
@@ -1165,7 +1147,7 @@ pub(super) fn run_with_env<'cx>(
                 let mut all_results: Vec<Type> = Vec::new();
                 for c in config.0.iter() {
                     for d in x.iter() {
-                        all_results.push(finish(c, Some(d))?);
+                        all_results.push(finish(cx, c, Some(d))?);
                     }
                 }
                 let t = if all_results.len() == 1 {
@@ -1197,7 +1179,7 @@ pub(super) fn run_with_env<'cx>(
                       name_type: &Option<Type>,
                       mapped_type_flags: &MappedTypeFlags,
                       selected_keys_opt: &Option<Type>,
-                      cx: &Context<'cx>,
+                      cx: &mut Context<'cx>,
                       use_op: UseOp,
                       reason: &Reason,
                       x: Vec1<object::Slice>,
@@ -1207,48 +1189,51 @@ pub(super) fn run_with_env<'cx>(
             .as_ref()
             .map(|keys| partition_keys_and_indexer(cx, env, trace, use_op.dupe(), reason, keys))
             .transpose()?;
-        let filter_optional = |t: Type| -> Result<Type, FlowJsException> {
+        let filter_optional = |cx: &mut Context<'cx>, t: Type| -> Result<Type, FlowJsException> {
             let filter_id = crate::flow_js::filter_optional_with_env(cx, env, reason, &t)?;
             Ok(Type::new(TypeInner::OpenT(Tvar::new(
                 reason.dupe(),
                 filter_id,
             ))))
         };
-        let map_one = |slice: &object::Slice| -> Result<Type, FlowJsException> {
-            let name_remap = match name_type {
-                None => None,
-                Some(nt) => Some(compute_name_remap(
+        let map_one =
+            |cx: &mut Context<'cx>, slice: &object::Slice| -> Result<Type, FlowJsException> {
+                let name_remap = match name_type {
+                    None => None,
+                    Some(nt) => Some(compute_name_remap(
+                        cx,
+                        env,
+                        trace,
+                        &use_op,
+                        reason,
+                        nt,
+                        selected_keys.as_ref(),
+                        slice,
+                    )?),
+                };
+                slice_utils::map_object(
+                    &filter_optional,
+                    name_remap.as_ref(),
+                    prop_type,
+                    mapped_type_flags,
                     cx,
                     env,
-                    trace,
-                    &use_op,
                     reason,
-                    nt,
+                    &use_op,
                     selected_keys.as_ref(),
                     slice,
-                )?),
+                )
             };
-            slice_utils::map_object(
-                &filter_optional,
-                name_remap.as_ref(),
-                prop_type,
-                mapped_type_flags,
-                cx,
-                env,
-                reason,
-                &use_op,
-                selected_keys.as_ref(),
-                slice,
-            )
-        };
         let mut slices = x.iter();
-        let t0 = map_one(slices.next().expect("Vec1 has at least one element"))?;
+        let t0 = map_one(cx, slices.next().expect("Vec1 has at least one element"))?;
         let t = match slices.next() {
             None => t0,
             Some(slice) => {
-                let t1 = map_one(slice)?;
-                let remaining: Rc<[Type]> =
-                    slices.map(map_one).collect::<Result<Vec<_>, _>>()?.into();
+                let t1 = map_one(cx, slice)?;
+                let remaining: Rc<[Type]> = slices
+                    .map(|slice| map_one(cx, slice))
+                    .collect::<Result<Vec<_>, _>>()?
+                    .into();
                 Type::new(TypeInner::UnionT(
                     reason.dupe(),
                     union_rep::make(None, union_rep::UnionKind::UnknownKind, t0, t1, remaining),
@@ -1261,7 +1246,7 @@ pub(super) fn run_with_env<'cx>(
     };
 
     // Object Resolution
-    let next = |cx: &Context<'cx>,
+    let next = |cx: &mut Context<'cx>,
                 use_op: UseOp,
                 tool: &object::Tool,
                 reason: &Reason,
@@ -1309,7 +1294,7 @@ pub(super) fn run_with_env<'cx>(
 
     // Resolution returns directly (e.g. for an `any` input) without running the tool, so the
     // result must reach `tout` in the same direction the tool's own return would use.
-    let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| -> Result<(), FlowJsException> {
+    let return_ = |cx: &mut Context<'cx>, use_op: UseOp, t: Type| -> Result<(), FlowJsException> {
         match tool {
             object::Tool::Rest(box (
                 object::rest::MergeMode::ReactConfigMerge(Polarity::Neutral),
@@ -1338,7 +1323,7 @@ pub(super) fn run_with_env<'cx>(
         }
         Ok(())
     };
-    let recurse = |cx: &Context<'cx>,
+    let recurse = |cx: &mut Context<'cx>,
                    env: &FlowJsEnv,
                    use_op: UseOp,
                    reason: &Reason,
@@ -1361,7 +1346,7 @@ pub(super) fn run_with_env<'cx>(
         )?;
         Ok(())
     };
-    let statics = |cx: &Context<'cx>,
+    let statics = |cx: &mut Context<'cx>,
                    env: &FlowJsEnv,
                    r: &Reason,
                    i: &Type|

@@ -655,7 +655,7 @@ pub fn scan_for_suppressions(
 
 // Driver
 
-struct DepSigsContext<'a, 'cx>(&'a Context<'cx>);
+struct DepSigsContext<'a, 'cx>(&'a mut Context<'cx>);
 
 impl<'a, 'cx> dependency_sigs::Context for DepSigsContext<'a, 'cx> {
     fn enable_enums(&self) -> bool {
@@ -686,7 +686,7 @@ impl<'a, 'cx> dependency_sigs::Context for DepSigsContext<'a, 'cx> {
         self.0.stylex_shorthand_prop()
     }
 
-    fn add_exhaustive_check(&self, loc: ALoc, cases: (Vec<ALoc>, bool)) {
+    fn add_exhaustive_check(&mut self, loc: ALoc, cases: (Vec<ALoc>, bool)) {
         self.0.add_exhaustive_check(loc, cases);
     }
 
@@ -700,7 +700,7 @@ struct FlowJsUtilsFlow<'a, 'cx>(std::marker::PhantomData<(&'a (), &'cx ())>);
 impl<'a, 'cx: 'a> dependency_sigs::Flow for FlowJsUtilsFlow<'a, 'cx> {
     type Cx = DepSigsContext<'a, 'cx>;
 
-    fn add_output(cx: &Self::Cx, error: ErrorMessage<ALoc>) {
+    fn add_output(cx: &mut Self::Cx, error: ErrorMessage<ALoc>) {
         flow_js_utils::add_output_non_speculating(cx.0, error);
     }
 }
@@ -716,7 +716,7 @@ enum DeclaredTypesMode<'a> {
 }
 
 fn initialize_env_with_mode<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     exclude_syms: Option<BTreeSet<FlowSmolStr>>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
     declared_types_mode: DeclaredTypesMode<'_>,
@@ -732,14 +732,13 @@ fn initialize_env_with_mode<'cx>(
         Result<Option<declared_types::ResolvedAnalysis>, env_api::EnvInvariant<ALoc>>,
         flow_utils_concurrency::job_error::JobError,
     > = (|| {
-        let dep_cx = DepSigsContext(cx);
         let empty_file_sig = FileSig::empty();
         let file_sig = match &declared_types_mode {
             DeclaredTypesMode::Skip => &empty_file_sig,
             DeclaredTypesMode::Compute { file_sig, .. } => *file_sig,
         };
         let (program_loc, scopes, ssa_values, unbound_names, providers) =
-            name_resolver::prepass(&dep_cx, file_sig, aloc_ast);
+            name_resolver::prepass(&DepSigsContext(cx), file_sig, aloc_ast);
         // The targeted callee analysis runs between the prepass and the
         // resolver walk; files without candidates return early from packing.
         let resolved_declared_types = if cx.assertion_functions_enabled() {
@@ -771,7 +770,7 @@ fn initialize_env_with_mode<'cx>(
             .unwrap_or_default();
         let (_abrupt_completion, info) =
             name_resolver::walk_with_prepass::<DepSigsContext<'_, '_>, FlowJsUtilsFlow<'_, '_>>(
-                &dep_cx,
+                &mut DepSigsContext(cx),
                 lib,
                 exclude_syms.into_iter().collect(),
                 program_loc,
@@ -786,13 +785,13 @@ fn initialize_env_with_mode<'cx>(
         let info = info.to_env_info();
         let autocomplete_hooks = AutocompleteHooks {
             id_hook: Box::new(|name: &str, loc: &ALoc| {
-                type_inference_hooks_js::dispatch_id_hook(cx, name, loc.dupe())
+                type_inference_hooks_js::dispatch_id_hook(name, loc.dupe())
             }),
             literal_hook: Box::new(|loc: &ALoc| {
-                type_inference_hooks_js::dispatch_literal_hook(cx, loc.dupe())
+                type_inference_hooks_js::dispatch_literal_hook(loc.dupe())
             }),
             obj_prop_decl_hook: Box::new(|name: &str, loc: &ALoc| {
-                type_inference_hooks_js::dispatch_obj_prop_decl_hook(cx, name, loc.dupe())
+                type_inference_hooks_js::dispatch_obj_prop_decl_hook(name, loc.dupe())
             }),
         };
         let react_jsx = matches!(cx.jsx(), JsxMode::JsxReact);
@@ -841,8 +840,12 @@ fn initialize_env_with_mode<'cx>(
             _,
             DepSigsContext<'_, '_>,
             FlowJsUtilsFlow<'_, '_>,
-        >(&dep_cx, &autocomplete_hooks, &info, &name_def_graph)
-        {
+        >(
+            &mut DepSigsContext(cx),
+            &autocomplete_hooks,
+            &info,
+            &name_def_graph,
+        ) {
             Ok(c) => c,
             Err(msg) => {
                 flow_js_utils::add_output_non_speculating(cx, *msg);
@@ -867,7 +870,7 @@ fn initialize_env_with_mode<'cx>(
             vec!["Finished all components".to_string()]
         });
         {
-            let mut env = cx.environment_mut();
+            let env = cx.environment_mut();
             env.scope_kind = scope_kind;
             env.class_stack = class_stack;
         }
@@ -888,7 +891,7 @@ fn initialize_env_with_mode<'cx>(
 }
 
 pub fn initialize_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     type_sig_options: &TypeSigOptions,
     exclude_syms: Option<BTreeSet<FlowSmolStr>>,
     ast: &ast::Program<Loc, Loc>,
@@ -916,7 +919,7 @@ pub fn initialize_env<'cx>(
 /// no such signature exists; the required roots are then repacked from `ast`.
 pub fn infer_ast<'a>(
     lint_severities: &LintSettings<Severity>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     filename: &FileKey,
     file_sig: Arc<FileSig>,
     metadata: &Metadata,
@@ -980,11 +983,11 @@ pub fn infer_ast<'a>(
 }
 
 struct LibDefLocMapperAndValidator<'a, 'cx> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
 }
 
 fn stmt_validator(
-    cx: &Context,
+    cx: &mut Context,
     in_toplevel_scope: bool,
     stmt: &statement::Statement<ALoc, ALoc>,
 ) -> bool {
@@ -1110,8 +1113,7 @@ fn stmt_validator(
     match error_opt {
         None => true,
         Some(err) => {
-            let node_cache = cx.node_cache();
-            node_cache.set_statement({
+            cx.node_cache_mut().set_statement({
                 let Ok(v) = polymorphic_ast_mapper::statement(&mut ErrorMapper, stmt);
                 v
             });
@@ -1174,7 +1176,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LibDefLocMapperAndVal
 }
 
 fn lib_def_loc_mapper_and_validator<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
 ) -> ast::Program<ALoc, ALoc> {
     let mut visitor = LibDefLocMapperAndValidator { cx };
@@ -1187,7 +1189,7 @@ fn lib_def_loc_mapper_and_validator<'a>(
 // b) bindings are added as properties to the builtin object
 fn infer_lib_file<'a>(
     lint_severities: &LintSettings<Severity>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_key: &FileKey,
     file_sig: Arc<FileSig>,
     metadata: &Metadata,
@@ -1232,7 +1234,7 @@ fn infer_lib_file<'a>(
 
 pub fn infer_file<'a>(
     lint_severities: &LintSettings<Severity>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_key: &FileKey,
     file_sig: Arc<FileSig>,
     metadata: &Metadata,

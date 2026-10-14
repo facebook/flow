@@ -45,12 +45,14 @@ mod tests {
     use flow_parser::loc_sig::LocSig;
     use flow_parser_utils::file_sig::FileSig;
     use flow_type_sig::type_sig_options::TypeSigOptions;
-    use flow_typing_builtins::builtins::Builtins;
     use flow_typing_context::Context;
+    use flow_typing_context::ContextArena;
+    use flow_typing_context::ContextId;
+    use flow_typing_context::ContextStore;
     use flow_typing_context::MasterContext;
     use flow_typing_context::Metadata;
+    use flow_typing_context::ResolveRequire;
     use flow_typing_context::ResolvedRequire;
-    use flow_typing_context::make_ccx;
     use flow_typing_loc_env::loc_env::LocEnv;
     use flow_typing_statement::type_annotation;
     use flow_typing_type::type_::ClassBinding;
@@ -83,7 +85,7 @@ mod tests {
     use crate::type_inference;
 
     // Local DepSigsContext and FlowJsUtilsFlow (mirrors type_inference.rs private types)
-    struct DepSigsContext<'a, 'cx>(&'a Context<'cx>);
+    struct DepSigsContext<'a, 'cx>(&'a mut Context<'cx>);
 
     impl flow_env_builder_resolver::dependency_sigs::Context for DepSigsContext<'_, '_> {
         fn enable_enums(&self) -> bool {
@@ -108,7 +110,7 @@ mod tests {
         fn stylex_shorthand_prop(&self) -> Option<&str> {
             self.0.stylex_shorthand_prop()
         }
-        fn add_exhaustive_check(&self, loc: ALoc, cases: (Vec<ALoc>, bool)) {
+        fn add_exhaustive_check(&mut self, loc: ALoc, cases: (Vec<ALoc>, bool)) {
             self.0.add_exhaustive_check(loc, cases);
         }
         fn exhaustive_check(&self, loc: &ALoc) -> Option<(Vec<ALoc>, bool)> {
@@ -120,7 +122,10 @@ mod tests {
 
     impl<'a, 'cx: 'a> flow_env_builder_resolver::dependency_sigs::Flow for FlowJsUtilsFlow<'a, 'cx> {
         type Cx = DepSigsContext<'a, 'cx>;
-        fn add_output(cx: &Self::Cx, error: flow_typing_errors::error_message::ErrorMessage<ALoc>) {
+        fn add_output(
+            cx: &mut Self::Cx,
+            error: flow_typing_errors::error_message::ErrorMessage<ALoc>,
+        ) {
             flow_typing_flow_common::flow_js_utils::add_output_non_speculating(cx.0, error);
         }
     }
@@ -198,7 +203,7 @@ mod tests {
             flow_aloc::loc_to_aloc_type_annotation_owned(t)
         }
 
-        pub fn parse<'cx>(cx: &Context<'cx>, content: &str) -> Type {
+        pub fn parse<'cx>(cx: &mut Context<'cx>, content: &str) -> Type {
             let ast::types::Annotation {
                 loc: program_loc,
                 annotation: t_ast,
@@ -225,9 +230,8 @@ mod tests {
                 comments: None,
                 all_comments: Arc::from([]),
             };
-            let dep_cx = DepSigsContext(cx);
             let (_, info) = name_resolver::program_with_scope::<DepSigsContext, FlowJsUtilsFlow>(
-                &dep_cx,
+                &mut DepSigsContext(cx),
                 false,
                 FlowOrdSet::new(),
                 &FileSig::empty(),
@@ -340,7 +344,7 @@ mod tests {
             })
         }
 
-        fn get_typed_ast(cx: &Context, content: &str) -> ast::Program<ALoc, (ALoc, Type)> {
+        fn get_typed_ast(cx: &mut Context, content: &str) -> ast::Program<ALoc, (ALoc, Type)> {
             let metadata = loader_metadata();
             let ast = parse_content(&dummy_filename(), content);
             let aloc_ast = flow_aloc::loc_to_aloc_ast(&ast);
@@ -364,7 +368,7 @@ mod tests {
             .expect("infer_ast should not be canceled in test")
         }
 
-        pub fn get_type_of_last_expression(cx: &Context, content: &str) -> Type {
+        pub fn get_type_of_last_expression(cx: &mut Context, content: &str) -> Type {
             let typed_ast = get_typed_ast(cx, content);
             match typed_ast.statements.last() {
                 Some(stmt) => match stmt.deref() {
@@ -403,13 +407,12 @@ mod tests {
         ))
     }
 
-    fn mk_cx(verbose: bool) -> Context<'static> {
+    fn mk_cx<'cx>(arena: &'cx mut ContextArena, verbose: bool) -> Context<'cx> {
         let aloc_table: LazyALocTable = Rc::new(LazyCell::new(Box::new({
             let file = dummy_filename();
             move || Rc::new(ALocTable::empty(file))
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>));
-        let ccx = Rc::new(make_ccx());
         let md = if verbose {
             metadata()
         } else {
@@ -419,50 +422,38 @@ mod tests {
             m.frozen = Rc::new(frozen);
             m
         };
-        let builtins_ref: Rc<RefCell<Builtins<'static, Context<'static>>>> =
-            Rc::new(RefCell::new(Builtins::empty()));
-        let builtins_ref_for_resolve = builtins_ref.dupe();
-        let resolve_require: Rc<
-            dyn Fn(&Context<'static>, &FlowImportSpecifier) -> ResolvedRequire<'static>,
-        > = Rc::new(move |cx, spec| match spec {
-            FlowImportSpecifier::Userland(mref) => {
-                match builtins_ref_for_resolve
-                    .borrow()
-                    .get_builtin_module_opt(cx, mref)
-                {
-                    Some((_reason, m)) => {
-                        let m = m.dupe();
-                        ResolvedRequire::TypedModule(Rc::new(move |_cx, _dst_cx| {
+        let resolve_require: ResolveRequire = Rc::new(
+            |cx: &mut Context<'_>, spec: &FlowImportSpecifier| match spec {
+                FlowImportSpecifier::Userland(mref) => match cx.builtin_module_opt(mref) {
+                    Some((_reason, m)) => ResolvedRequire::TypedModule(Rc::new(
+                        move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
                             Ok(m.as_already_forced().dupe())
-                        }))
-                    }
+                        },
+                    )),
                     None => ResolvedRequire::MissingModule,
-                }
-            }
-        });
-        let builtins_ref_for_mk = builtins_ref.dupe();
-        let cx = Context::make(
+                },
+            },
+        );
+        let master_cx = type_loader::get_master_cx();
+        let ccx = arena.add_component();
+        let mk_builtins = merge::mk_builtins(&md, &master_cx, arena);
+        let cx_id = arena.add_context(
             ccx,
             md.clone(),
             dummy_filename(),
             Arc::default(),
             aloc_table,
             resolve_require,
-            Rc::new(move |_cx: &Context<'static>| {
-                std::mem::replace(&mut *builtins_ref_for_mk.borrow_mut(), Builtins::empty())
-            }),
+            mk_builtins,
             flow_utils_concurrency::check_budget::CheckBudget::new(None),
         );
-        let master_cx = type_loader::get_master_cx();
-        let mk_builtins_fn = merge::mk_builtins(&md, &master_cx);
-        *builtins_ref.borrow_mut() = mk_builtins_fn(&cx);
-        cx
+        Context::new(ContextStore::new(vec![arena]), cx_id)
     }
 
-    fn mk_hint(base_t: Type, ops: Vec<ConcrHintDecompositionInner<'static>>) -> ConcrHint<'static> {
+    fn mk_hint(base_t: Type, ops: Vec<ConcrHintDecompositionInner>) -> ConcrHint {
         use flow_common::hint::HintDecomposition;
 
-        let indexed_ops: Vec<(usize, HintDecomposition<_, _, _, _>)> = ops
+        let indexed_ops: Vec<(usize, HintDecomposition<_, _, _, _, _>)> = ops
             .into_iter()
             .enumerate()
             .map(|(i, op)| (i, HintDecomposition::new(op)))
@@ -473,7 +464,7 @@ mod tests {
         }
     }
 
-    fn string_of_hint_eval_result(cx: &Context, result: &HintEvalResult) -> String {
+    fn string_of_hint_eval_result(cx: &mut Context, result: &HintEvalResult) -> String {
         match result {
             HintEvalResult::HintAvailable(t, _) => ty_normalizer_flow::debug_string_of_t(cx, t),
             HintEvalResult::NoHint => "NoHint".to_string(),
@@ -482,17 +473,14 @@ mod tests {
         }
     }
 
-    fn mk_eval_hint_test(
-        expected: &str,
-        base: &str,
-        ops: Vec<ConcrHintDecompositionInner<'static>>,
-    ) {
-        let cx = mk_cx(false);
+    fn mk_eval_hint_test(expected: &str, base: &str, ops: Vec<ConcrHintDecompositionInner>) {
+        let mut arena = ContextArena::new();
+        let mut cx = mk_cx(&mut arena, false);
         let actual = {
-            let hint = mk_hint(type_parser::parse(&cx, base), ops);
-            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint)
+            let hint = mk_hint(type_parser::parse(&mut cx, base), ops);
+            let result = type_hint::evaluate_hint(&mut cx, false, None, &dummy_reason(), hint)
                 .expect("evaluate_hint should not be canceled in test");
-            string_of_hint_eval_result(&cx, &result)
+            string_of_hint_eval_result(&mut cx, &result)
         };
         // DEBUGGING TIP: set verbose:true above to print traces
         assert_eq!(expected, actual);
@@ -506,8 +494,11 @@ mod tests {
         private_method: Option<Property>,
         private_static_method: Option<Property>,
     ) {
-        let cx = mk_cx(false);
-        let mk_properties = |prop: Option<Property>| -> flow_typing_type::type_::properties::Id {
+        let mut arena = ContextArena::new();
+        let mut cx = mk_cx(&mut arena, false);
+        let mk_properties = |cx: &mut Context<'_>,
+                             prop: Option<Property>|
+         -> flow_typing_type::type_::properties::Id {
             match prop {
                 None => cx.generate_property_map(
                     flow_typing_type::type_::properties::PropertiesMap::new(),
@@ -524,7 +515,7 @@ mod tests {
         };
         let class_stack_loc = ALoc::none();
         {
-            let mut env = cx.environment_mut();
+            let env = cx.environment_mut();
             let mut bindings = EnvMap::empty();
             bindings.insert(
                 flow_env_builder::env_api::EnvKey::ordinary(class_stack_loc.dupe()),
@@ -550,10 +541,10 @@ mod tests {
                         initialized_static_fields: FlowOrdSet::new(),
                         inst_kind: InstanceKind::ClassKind,
                         inst_dict: None,
-                        class_private_fields: mk_properties(private_field),
-                        class_private_static_fields: mk_properties(private_static_field),
-                        class_private_methods: mk_properties(private_method),
-                        class_private_static_methods: mk_properties(private_static_method),
+                        class_private_fields: mk_properties(&mut cx, private_field),
+                        class_private_static_fields: mk_properties(&mut cx, private_static_field),
+                        class_private_methods: mk_properties(&mut cx, private_method),
+                        class_private_static_methods: mk_properties(&mut cx, private_static_method),
                         inst_react_dro: None,
                         inst_abstract: false,
                         inst_abstract_props: FlowOrdSet::new(),
@@ -581,9 +572,9 @@ mod tests {
                     FlowVector::unit(class_stack_loc),
                 )],
             );
-            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint)
+            let result = type_hint::evaluate_hint(&mut cx, false, None, &dummy_reason(), hint)
                 .expect("evaluate_hint should not be canceled in test");
-            string_of_hint_eval_result(&cx, &result)
+            string_of_hint_eval_result(&mut cx, &result)
         };
         assert_eq!(expected, actual);
     }
@@ -591,15 +582,16 @@ mod tests {
     fn mk_eval_hint_test_with_type_setup(
         expected: &str,
         type_setup_code: &str,
-        ops: Vec<ConcrHintDecompositionInner<'static>>,
+        ops: Vec<ConcrHintDecompositionInner>,
     ) {
-        let cx = mk_cx(false);
-        let base_t = type_loader::get_type_of_last_expression(&cx, type_setup_code);
+        let mut arena = ContextArena::new();
+        let mut cx = mk_cx(&mut arena, false);
+        let base_t = type_loader::get_type_of_last_expression(&mut cx, type_setup_code);
         let actual = {
             let hint = mk_hint(base_t, ops);
-            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint)
+            let result = type_hint::evaluate_hint(&mut cx, false, None, &dummy_reason(), hint)
                 .expect("evaluate_hint should not be canceled in test");
-            string_of_hint_eval_result(&cx, &result)
+            string_of_hint_eval_result(&mut cx, &result)
         };
         // DEBUGGING TIP: set verbose:true above to print traces
         assert_eq!(expected, actual);

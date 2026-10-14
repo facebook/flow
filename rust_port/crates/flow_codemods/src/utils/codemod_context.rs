@@ -55,7 +55,7 @@ pub mod typed {
 
     pub fn ty_at_loc<'a, 'cx>(
         norm_opts: flow_typing_ty_normalizer::env::Options,
-        ccx: &'a TypedCodemodContext<'cx>,
+        ccx: &'a mut TypedCodemodContext<'cx>,
         loc: Loc,
     ) -> Result<ALocElt, Error> {
         let TypedCodemodContext {
@@ -69,8 +69,8 @@ pub mod typed {
             None => Err(Error::MissingTypeAnnotation),
             Some(t) => {
                 let genv =
-                    ty_normalizer_flow::mk_genv(norm_opts, cx, Some(typed_ast), file_sig.clone());
-                match ty_normalizer_flow::from_type(&genv, &t) {
+                    ty_normalizer_flow::mk_genv(norm_opts, Some(typed_ast), file_sig.clone());
+                match ty_normalizer_flow::from_type(cx, &genv, &t) {
                     Ok(ty) => Ok(ty),
                     Err(e) => Err(Error::NormalizationError(e)),
                 }
@@ -86,8 +86,8 @@ pub mod typed {
         &ccx.metadata
     }
 
-    pub fn context<'a, 'cx>(ccx: &'a TypedCodemodContext<'cx>) -> &'a Context<'cx> {
-        &ccx.cx
+    pub fn context<'a, 'cx>(ccx: &'a mut TypedCodemodContext<'cx>) -> &'a mut Context<'cx> {
+        &mut ccx.cx
     }
 
     pub fn error_suppressions<'a>(ccx: &'a TypedCodemodContext<'_>) -> &'a ErrorSuppressions {

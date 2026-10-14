@@ -11,6 +11,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use dupe::Dupe;
+use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
 use flow_check_cache::CheckContentsCache;
 use flow_common::options::Options;
@@ -45,6 +46,7 @@ use flow_services_inference_types::ParseArtifacts;
 use flow_services_inference_types::TypecheckArtifacts;
 use flow_typing::ty_members;
 use flow_typing::ty_normalizer_flow;
+use flow_typing_context::Context;
 use flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode;
 use flow_typing_ty_normalizer::env::Genv;
 use flow_typing_type::type_::Destructor;
@@ -293,7 +295,11 @@ fn summarize_ty_elt<L: Dupe>(ty_elt: &Elt<L>) -> Option<String> {
 }
 
 // Compute a type summary for a ref's body Type.t
-fn compute_ref_summary(genv: &Genv<'_, '_>, body_type: &Type) -> Option<String> {
+fn compute_ref_summary<'cx>(
+    cx: &mut Context<'cx>,
+    genv: &Genv<'_, 'cx>,
+    body_type: &Type,
+) -> Option<String> {
     // Strip the RTypeAlias reason to force the normalizer to expand the body
     // instead of creating another Generic node
     let stripped = type_util::mod_reason_of_t(
@@ -311,30 +317,31 @@ fn compute_ref_summary(genv: &Genv<'_, '_>, body_type: &Type) -> Option<String> 
     let mut compact_options = genv.options.dupe();
     compact_options.max_depth = Some(3);
     let compact_genv = Genv {
-        cx: genv.cx,
         typed_ast_opt: genv.typed_ast_opt,
         file_sig: genv.file_sig.dupe(),
         imported_names: genv.imported_names.dupe(),
         options: compact_options,
         ref_type_bodies: None,
     };
-    match ty_normalizer_flow::from_type(&compact_genv, &stripped) {
+    match ty_normalizer_flow::from_type(cx, &compact_genv, &stripped) {
         Err(_) => None,
         Ok(ty_elt) => summarize_ty_elt(&ty_elt),
     }
 }
 
 // Augment refs with type summaries from collected ref type bodies
-fn augment_refs_with_summaries(
-    genv: &Genv<'_, '_>,
+fn augment_refs_with_summaries<'cx>(
+    cx: &mut Context<'cx>,
+    genv: &Genv<'_, 'cx>,
     ref_type_bodies_tbl: &Rc<RefCell<BTreeMap<String, Type>>>,
     refs: &Option<Vec<(String, Loc)>>,
 ) -> Option<Vec<(String, Loc, Option<String>)>> {
     refs.as_ref().map(|refs| {
         refs.iter()
             .map(|(name, loc)| {
-                let summary = match ref_type_bodies_tbl.borrow().get(name) {
-                    Some(body_type) => compute_ref_summary(genv, body_type),
+                let body_type = ref_type_bodies_tbl.borrow().get(name).duped();
+                let summary = match body_type {
+                    Some(body_type) => compute_ref_summary(cx, genv, &body_type),
                     None => None,
                 };
                 (name.clone(), loc.dupe(), summary)
@@ -345,11 +352,11 @@ fn augment_refs_with_summaries(
 
 fn mk_normalizer_genv<'a, 'cx: 'a>(
     expand_component_props: bool,
-    check_result: &'a FileArtifacts<'cx>,
+    check_result: &'a FileArtifacts,
 ) -> (Genv<'a, 'cx>, Rc<RefCell<BTreeMap<String, Type>>>) {
     let (parse_artifacts, typecheck_artifacts) = check_result;
     let ParseArtifacts { file_sig, .. } = parse_artifacts.as_ref();
-    let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts.as_ref();
+    let TypecheckArtifacts { typed_ast, .. } = typecheck_artifacts.as_ref();
     let options = flow_typing_ty_normalizer::env::Options {
         expand_internal_types: false,
         expand_enum_members: true,
@@ -368,7 +375,7 @@ fn mk_normalizer_genv<'a, 'cx: 'a>(
         toplevel_is_type_identifier_reference: false,
     };
     let ref_type_bodies_tbl = Rc::new(RefCell::new(BTreeMap::new()));
-    let base_genv = ty_normalizer_flow::mk_genv(options, cx, Some(typed_ast), file_sig.dupe());
+    let base_genv = ty_normalizer_flow::mk_genv(options, Some(typed_ast), file_sig.dupe());
     let genv = Genv {
         ref_type_bodies: Some(ref_type_bodies_tbl.dupe()),
         ..base_genv
@@ -376,9 +383,10 @@ fn mk_normalizer_genv<'a, 'cx: 'a>(
     (genv, ref_type_bodies_tbl)
 }
 
-fn format_ty_elt_response(
+fn format_ty_elt_response<'cx>(
+    cx: &mut Context<'cx>,
     reader: &Transaction,
-    genv: &Genv<'_, '_>,
+    genv: &Genv<'_, 'cx>,
     ref_type_bodies_tbl: &Rc<RefCell<BTreeMap<String, Type>>>,
     loc: Loc,
     documentation: Option<String>,
@@ -399,7 +407,7 @@ fn format_ty_elt_response(
         &|aloc| reader.loc_of_aloc(aloc),
         &opts,
     );
-    let refs = augment_refs_with_summaries(genv, ref_type_bodies_tbl, &refs);
+    let refs = augment_refs_with_summaries(cx, genv, ref_type_bodies_tbl, &refs);
     let prop_docs = extract_prop_docs(reader, ast, &ty_elt);
     response::infer_type_of_name::T {
         loc,
@@ -412,8 +420,9 @@ fn format_ty_elt_response(
     }
 }
 
-fn type_of_name_from_artifacts<'a, 'cx: 'a>(
+fn type_of_name_from_artifacts(
     doc_at_loc: &dyn Fn(
+        &mut CheckContentsCache,
         &Transaction,
         &FileArtifacts,
         &ast::Program<Loc, Loc>,
@@ -421,8 +430,9 @@ fn type_of_name_from_artifacts<'a, 'cx: 'a>(
         i32,
         i32,
     ) -> Option<String>,
+    cache: &mut CheckContentsCache,
     reader: &Transaction,
-    check_result: &'a FileArtifacts<'cx>,
+    check_result: &FileArtifacts,
     expand_component_props: bool,
     actual_name: &str,
     source: export_index::Source,
@@ -431,28 +441,31 @@ fn type_of_name_from_artifacts<'a, 'cx: 'a>(
 ) -> Result<response::infer_type_of_name::T, String> {
     let (parse_artifacts, typecheck_artifacts) = check_result;
     let ParseArtifacts { ast, .. } = parse_artifacts.as_ref();
-    let TypecheckArtifacts { cx, .. } = typecheck_artifacts.as_ref();
     let loc = reader.loc_of_aloc(aloc);
     let documentation = {
+        let file = typecheck_artifacts.cx.with_cx(cache, |cx| cx.file().dupe());
         let line = loc.start.line;
         let column = loc.start.column;
-        doc_at_loc(reader, check_result, ast, cx.file(), line, column)
+        doc_at_loc(cache, reader, check_result, ast, &file, line, column)
     };
-    let (genv, ref_type_bodies_tbl) = mk_normalizer_genv(expand_component_props, check_result);
-    match ty_normalizer_flow::from_type(&genv, type_) {
-        Ok(ty_elt) => Ok(format_ty_elt_response(
-            reader,
-            &genv,
-            &ref_type_bodies_tbl,
-            loc,
-            documentation,
-            ast,
-            actual_name,
-            source,
-            ty_elt,
-        )),
-        Err(e) => Err(format!("normalizer error {}", e)),
-    }
+    typecheck_artifacts.cx.with_cx(cache, |cx| {
+        let (genv, ref_type_bodies_tbl) = mk_normalizer_genv(expand_component_props, check_result);
+        match ty_normalizer_flow::from_type(cx, &genv, type_) {
+            Ok(ty_elt) => Ok(format_ty_elt_response(
+                cx,
+                reader,
+                &genv,
+                &ref_type_bodies_tbl,
+                loc,
+                documentation,
+                ast,
+                actual_name,
+                source,
+                ty_elt,
+            )),
+            Err(e) => Err(format!("normalizer error {}", e)),
+        }
+    })
 }
 
 fn member_doc_from_def_locs(
@@ -480,9 +493,33 @@ fn member_doc_from_def_locs(
     }
 }
 
-fn type_of_name_member<'a, 'cx: 'a>(
+fn type_of_name_member(
+    cache: &mut CheckContentsCache,
     reader: &Transaction,
-    check_result: &'a FileArtifacts<'cx>,
+    check_result: &FileArtifacts,
+    full_name: &str,
+    member_name: &str,
+    source: export_index::Source,
+    type_: &Type,
+) -> Result<response::infer_type_of_name::T, String> {
+    let (_, typecheck_artifacts) = check_result;
+    typecheck_artifacts.cx.with_cx(cache, |cx| {
+        type_of_name_member_in_cx(
+            cx,
+            reader,
+            check_result,
+            full_name,
+            member_name,
+            source,
+            type_,
+        )
+    })
+}
+
+fn type_of_name_member_in_cx<'cx>(
+    cx: &mut Context<'cx>,
+    reader: &Transaction,
+    check_result: &FileArtifacts,
     full_name: &str,
     member_name: &str,
     source: export_index::Source,
@@ -490,12 +527,13 @@ fn type_of_name_member<'a, 'cx: 'a>(
 ) -> Result<response::infer_type_of_name::T, String> {
     let (parse_artifacts, typecheck_artifacts) = check_result;
     let ParseArtifacts { file_sig, ast, .. } = parse_artifacts.as_ref();
-    let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts.as_ref();
+    let TypecheckArtifacts { typed_ast, .. } = typecheck_artifacts.as_ref();
     let (genv, ref_type_bodies_tbl) = mk_normalizer_genv(true, check_result);
-    match ty_normalizer_flow::from_type(&genv, type_) {
+    match ty_normalizer_flow::from_type(cx, &genv, type_) {
         Err(e) => Err(format!("normalizer error {}", e)),
         Ok(ty_elt) => {
-            let format_member_ty = |member_ty: Arc<Ty<ALoc>>,
+            let format_member_ty = |cx: &mut Context<'cx>,
+                                    member_ty: Arc<Ty<ALoc>>,
                                     def_locs: Vec<ALoc>|
              -> Result<response::infer_type_of_name::T, String> {
                 let (loc, documentation) = match def_locs.as_slice() {
@@ -507,6 +545,7 @@ fn type_of_name_member<'a, 'cx: 'a>(
                     [] => (Loc::none(), None),
                 };
                 Ok(format_ty_elt_response(
+                    cx,
                     reader,
                     &genv,
                     &ref_type_bodies_tbl,
@@ -520,7 +559,7 @@ fn type_of_name_member<'a, 'cx: 'a>(
             };
             //   First try Ty-layer lookup (components, objects, type aliases)
             match lookup_member_in_elt(member_name, &ty_elt) {
-                Some((member_ty, def_locs)) => format_member_ty(member_ty, def_locs),
+                Some((member_ty, def_locs)) => format_member_ty(cx, member_ty, def_locs),
                 None => {
                     // Fall back to Ty_members.extract for classes/interfaces
                     match ty_members::extract(
@@ -536,6 +575,7 @@ fn type_of_name_member<'a, 'cx: 'a>(
                             let key = reason::Name::new(member_name);
                             match members.get(&key) {
                                 Some(member_info) => format_member_ty(
+                                    cx,
                                     member_info.ty.dupe(),
                                     member_info.def_locs.clone(),
                                 ),
@@ -581,23 +621,14 @@ fn find_first_match<'a>(
 
 fn resolve_name_from_index(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
     exact_match_only: bool,
     target_name: &str,
     file_key: FileKey,
-) -> Result<
-    (
-        String,
-        export_index::Source,
-        FileArtifacts<'static>,
-        ALoc,
-        Type,
-    ),
-    String,
-> {
+) -> Result<(String, export_index::Source, FileArtifacts, ALoc, Type), String> {
     let exports = get_server_exports(env)?;
     let mut search_options = export_search::default_options();
     search_options.max_results = 100;
@@ -682,8 +713,9 @@ fn resolve_name_from_index(
 
 fn type_of_name_from_index(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     doc_at_loc: &dyn Fn(
+        &mut CheckContentsCache,
         &Transaction,
         &FileArtifacts,
         &ast::Program<Loc, Loc>,
@@ -711,6 +743,7 @@ fn type_of_name_from_index(
     )?;
     let result = type_of_name_from_artifacts(
         doc_at_loc,
+        cache,
         &reader,
         &check_result,
         expand_component_props,
@@ -728,13 +761,14 @@ fn type_of_name_from_index(
     })
 }
 
-fn type_of_name_single<'a, 'cx: 'a>(
+fn type_of_name_single(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
     doc_at_loc: &dyn Fn(
+        &mut CheckContentsCache,
         &Transaction,
         &FileArtifacts,
         &ast::Program<Loc, Loc>,
@@ -746,7 +780,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
     exact_match_only: bool,
     target_name: &str,
     file_key: FileKey,
-    check_result: &'a FileArtifacts<'cx>,
+    check_result: &FileArtifacts,
 ) -> response::InferTypeOfNameResponse {
     let parts: Vec<&str> = target_name.split('.').collect();
     match parts.as_slice() {
@@ -758,6 +792,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
             match find_identifier_and_type(target_name, typed_ast) {
                 Some((aloc, type_)) => type_of_name_from_artifacts(
                     doc_at_loc,
+                    cache,
                     &reader,
                     check_result,
                     expand_component_props,
@@ -783,11 +818,12 @@ fn type_of_name_single<'a, 'cx: 'a>(
         [base_name, member_parts @ ..] => {
             let member_name = member_parts.join(".");
             let full_name = target_name;
-            let resolve_member_from_check_result =
+            let mut resolve_member_from_check_result =
                 |base_check_result: &FileArtifacts,
                  base_source: export_index::Source,
                  type_: &Type| {
                     type_of_name_member(
+                        cache,
                         &reader,
                         base_check_result,
                         full_name,
@@ -818,6 +854,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
                         )?;
                     let actual_full_name = format!("{}.{}", actual_base_name, member_name);
                     type_of_name_member(
+                        cache,
                         &reader,
                         &index_check_result,
                         &actual_full_name,
@@ -831,13 +868,14 @@ fn type_of_name_single<'a, 'cx: 'a>(
     }
 }
 
-pub fn type_of_name<'a, 'cx: 'a>(
+pub fn type_of_name(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
     doc_at_loc: &dyn Fn(
+        &mut CheckContentsCache,
         &Transaction,
         &FileArtifacts,
         &ast::Program<Loc, Loc>,
@@ -847,7 +885,7 @@ pub fn type_of_name<'a, 'cx: 'a>(
     ) -> Option<String>,
     file_key: FileKey,
     input: &type_of_name_options::T,
-    check_result: &'a FileArtifacts<'cx>,
+    check_result: &FileArtifacts,
 ) -> Vec<response::InferTypeOfNameResponse> {
     let type_of_name_options::T {
         input: _file_input,

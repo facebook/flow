@@ -116,29 +116,30 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
     panic!("no any expansion defined for this case")
 }
 
-pub(super) fn any_prop_to_function(
+pub(super) fn any_prop_to_function<'cx>(
+    cx: &mut Context<'cx>,
     use_op: &UseOp,
     funtype: &FunType,
-    covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
-    contravariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
+    covariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
+    contravariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
 ) -> Result<(), FlowJsException> {
     for FunParam(_, param_t) in funtype.params.iter() {
-        contravariant_flow(use_op, param_t)?;
+        contravariant_flow(cx, use_op, param_t)?;
     }
     if let Some(FunRestParam(_, _, rest_t)) = &funtype.rest_param {
-        contravariant_flow(use_op, rest_t)?;
+        contravariant_flow(cx, use_op, rest_t)?;
     }
-    contravariant_flow(use_op, &funtype.this_t.0)?;
+    contravariant_flow(cx, use_op, &funtype.this_t.0)?;
     if let Some(tg) = &funtype.type_guard {
         if let Some(type_guard) = &tg.type_guard {
-            covariant_flow(use_op, type_guard)?;
+            covariant_flow(cx, use_op, type_guard)?;
         }
     }
-    covariant_flow(use_op, &funtype.return_t)
+    covariant_flow(cx, use_op, &funtype.return_t)
 }
 
 pub(super) fn invariant_any_propagation_flow<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -158,28 +159,28 @@ pub(super) fn invariant_any_propagation_flow<'cx>(
 }
 
 pub(super) fn any_prop_call_prop<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: &UseOp,
-    covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
+    covariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
     call_t: &Option<i32>,
 ) -> Result<(), FlowJsException> {
     match call_t {
         None => {}
         Some(id) => {
             let call_type = cx.find_call(*id);
-            covariant_flow(use_op, &call_type)?;
+            covariant_flow(cx, use_op, &call_type)?;
         }
     }
     Ok(())
 }
 
 pub(super) fn any_prop_properties<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
-    covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
-    contravariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
+    covariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
+    contravariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
     any: &Type,
     properties: &flow_typing_type::type_::properties::PropertiesMap,
 ) -> Result<(), FlowJsException> {
@@ -192,8 +193,8 @@ pub(super) fn any_prop_properties<'cx>(
                     return;
                 }
                 err = match polarity {
-                    Polarity::Positive => covariant_flow(use_op, t),
-                    Polarity::Negative => contravariant_flow(use_op, t),
+                    Polarity::Positive => covariant_flow(cx, use_op, t),
+                    Polarity::Negative => contravariant_flow(cx, use_op, t),
                     Polarity::Neutral => {
                         invariant_any_propagation_flow(cx, env, trace, use_op.dupe(), any, t)
                     }
@@ -207,12 +208,12 @@ pub(super) fn any_prop_properties<'cx>(
 }
 
 pub(super) fn any_prop_obj<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
-    covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
-    contravariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
+    covariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
+    contravariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
     any: &Type,
     obj: &ObjType,
 ) -> Result<(), FlowJsException> {
@@ -224,8 +225,8 @@ pub(super) fn any_prop_obj<'cx>(
     if env.in_implicit_instantiation() {
         for (t, p) in obj.reachable_targs.iter() {
             match p {
-                Polarity::Positive => covariant_flow(use_op, t)?,
-                Polarity::Negative => contravariant_flow(use_op, t)?,
+                Polarity::Positive => covariant_flow(cx, use_op, t)?,
+                Polarity::Negative => contravariant_flow(cx, use_op, t)?,
                 Polarity::Neutral => {
                     invariant_any_propagation_flow(cx, env, trace, use_op.dupe(), any, t)?
                 }
@@ -237,25 +238,25 @@ pub(super) fn any_prop_obj<'cx>(
 
 // FullyResolved tvars cannot contain non-FullyResolved parts, so there's no need to
 // deeply traverse them!
-pub(super) fn any_prop_tvar<'cx>(cx: &Context<'cx>, tvar: i32) -> bool {
+pub(super) fn any_prop_tvar<'cx>(cx: &mut Context<'cx>, tvar: i32) -> bool {
     let (_, constraints) = cx.find_constraints(tvar);
     matches!(constraints, constraint::Constraints::FullyResolved(_))
 }
 
 pub(super) fn any_prop_to_type_args<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,
-    covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
-    contravariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
+    covariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
+    contravariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
     targs: &[(SubstName, Reason, Type, Polarity)],
 ) -> Result<(), FlowJsException> {
     for (_, _, t, polarity) in targs {
         match polarity {
-            Polarity::Positive => covariant_flow(use_op, t)?,
-            Polarity::Negative => contravariant_flow(use_op, t)?,
+            Polarity::Positive => covariant_flow(cx, use_op, t)?,
+            Polarity::Negative => contravariant_flow(cx, use_op, t)?,
             Polarity::Neutral => {
                 invariant_any_propagation_flow(cx, env, trace, use_op.dupe(), any, t)?
             }
@@ -274,13 +275,13 @@ pub(super) fn any_prop_to_type_args<'cx>(
 // in the more general way, since they are used so rarely that non-termination is not
 // an issue (for now!)
 pub(super) fn any_prop_inst<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,
-    covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
-    contravariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
+    covariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
+    contravariant_flow: &dyn Fn(&mut Context<'cx>, &UseOp, &Type) -> Result<(), FlowJsException>,
     static_: &Type,
     super_: &Type,
     implements: &[Type],
@@ -320,10 +321,10 @@ pub(super) fn any_prop_inst<'cx>(
     )?;
     match inst_kind {
         InstanceKind::InterfaceKind { inline: true, .. } => {
-            covariant_flow(use_op, static_)?;
-            covariant_flow(use_op, super_)?;
+            covariant_flow(cx, use_op, static_)?;
+            covariant_flow(cx, use_op, super_)?;
             for impl_t in implements.iter() {
-                covariant_flow(use_op, impl_t)?;
+                covariant_flow(cx, use_op, impl_t)?;
             }
             any_prop_properties(
                 cx,
@@ -356,18 +357,20 @@ pub(super) fn any_prop_inst<'cx>(
 // by propagating or by doing the trivial case. False if the usetype needs to be handled
 // separately.
 pub(super) fn any_propagated<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     any: &Type,
-    u: &UseT<Context<'cx>>,
+    u: &UseT<Cx>,
 ) -> Result<bool, FlowJsException> {
-    let covariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
-        rec_flow_t(cx, env, trace, use_op.dupe(), (any, t))
-    };
-    let contravariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
-        rec_flow_t(cx, env, trace, use_op.dupe(), (t, any))
-    };
+    let covariant_flow =
+        |cx: &mut Context<'cx>, use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
+            rec_flow_t(cx, env, trace, use_op.dupe(), (any, t))
+        };
+    let contravariant_flow =
+        |cx: &mut Context<'cx>, use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
+            rec_flow_t(cx, env, trace, use_op.dupe(), (t, any))
+        };
 
     match u.deref() {
         UseTInner::ExitRendersT {
@@ -382,7 +385,7 @@ pub(super) fn any_propagated<'cx>(
                 DefTInner::ArrT(arr_t) => {
                     // read-only arrays are covariant
                     if let ArrType::ROArrayAT(box (elem_t, _)) = arr_t.deref() {
-                        covariant_flow(use_op, elem_t)?;
+                        covariant_flow(cx, use_op, elem_t)?;
                         Ok(true)
                     } else {
                         // Some types just need to be expanded and filled with any types
@@ -391,7 +394,7 @@ pub(super) fn any_propagated<'cx>(
                     }
                 }
                 DefTInner::ClassT(class_t) => {
-                    covariant_flow(use_op, class_t)?;
+                    covariant_flow(cx, use_op, class_t)?;
                     Ok(true)
                 }
                 DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
@@ -399,8 +402,8 @@ pub(super) fn any_propagated<'cx>(
                     renders,
                     component_kind: _,
                 }) => {
-                    contravariant_flow(use_op, config)?;
-                    covariant_flow(use_op, renders)?;
+                    contravariant_flow(cx, use_op, config)?;
+                    covariant_flow(cx, use_op, renders)?;
                     Ok(true)
                 }
                 DefTInner::RendersT(renders_form) => match renders_form.deref() {
@@ -408,7 +411,7 @@ pub(super) fn any_propagated<'cx>(
                         renders_structural_type,
                         renders_variant: _,
                     } => {
-                        covariant_flow(use_op, renders_structural_type)?;
+                        covariant_flow(cx, use_op, renders_structural_type)?;
                         Ok(true)
                     }
                     CanonicalRendersForm::IntrinsicRenders(_)
@@ -416,7 +419,13 @@ pub(super) fn any_propagated<'cx>(
                     | CanonicalRendersForm::DefaultRenders => Ok(false),
                 },
                 DefTInner::FunT(_, funtype) => {
-                    any_prop_to_function(use_op, funtype, &covariant_flow, &contravariant_flow)?;
+                    any_prop_to_function(
+                        cx,
+                        use_op,
+                        funtype,
+                        &covariant_flow,
+                        &contravariant_flow,
+                    )?;
                     Ok(true)
                 }
                 DefTInner::ObjT(obj) => {
@@ -542,19 +551,21 @@ pub(super) fn any_propagated<'cx>(
 /// Propagates any flows in case of contravariant/invariant subtypes: the any must pollute
 /// all types in contravariant positions when t <: any.
 pub(super) fn any_propagated_use<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,
     l: &Type,
 ) -> Result<bool, FlowJsException> {
-    let covariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
-        rec_flow_t(cx, env, trace, use_op.dupe(), (t, any))
-    };
-    let contravariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
-        rec_flow_t(cx, env, trace, use_op.dupe(), (any, t))
-    };
+    let covariant_flow =
+        |cx: &mut Context<'cx>, use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
+            rec_flow_t(cx, env, trace, use_op.dupe(), (t, any))
+        };
+    let contravariant_flow =
+        |cx: &mut Context<'cx>, use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
+            rec_flow_t(cx, env, trace, use_op.dupe(), (any, t))
+        };
 
     match l.deref() {
         TypeInner::OpenT(tvar) => Ok(any_prop_tvar(cx, tvar.id() as i32)),
@@ -562,12 +573,12 @@ pub(super) fn any_propagated_use<'cx>(
         TypeInner::DefT(_, def_t) => match def_t.deref() {
             DefTInner::FunT(_, funtype) => {
                 // function types are contravariant in the arguments
-                any_prop_to_function(use_op, funtype, &covariant_flow, &contravariant_flow)?;
+                any_prop_to_function(cx, use_op, funtype, &covariant_flow, &contravariant_flow)?;
                 Ok(true)
             }
 
             DefTInner::ArrT(arr_t) if let ArrType::ROArrayAT(box (elem_t, _)) = arr_t.deref() => {
-                covariant_flow(use_op, elem_t)?;
+                covariant_flow(cx, use_op, elem_t)?;
                 Ok(true)
             }
             DefTInner::ArrT(_) => {
@@ -575,7 +586,7 @@ pub(super) fn any_propagated_use<'cx>(
                 Ok(true)
             }
             DefTInner::ClassT(class_t) => {
-                covariant_flow(use_op, class_t)?;
+                covariant_flow(cx, use_op, class_t)?;
                 Ok(true)
             }
             DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
@@ -583,8 +594,8 @@ pub(super) fn any_propagated_use<'cx>(
                 renders,
                 component_kind: _,
             }) => {
-                contravariant_flow(use_op, config)?;
-                covariant_flow(use_op, renders)?;
+                contravariant_flow(cx, use_op, config)?;
+                covariant_flow(cx, use_op, renders)?;
                 Ok(true)
             }
             DefTInner::ObjT(obj) => {
@@ -634,7 +645,7 @@ pub(super) fn any_propagated_use<'cx>(
         // Keys cannot be tainted by any
         TypeInner::KeysT(..) => Ok(true),
         TypeInner::GenericT(box GenericTData { bound, .. }) => {
-            covariant_flow(use_op, bound)?;
+            covariant_flow(cx, use_op, bound)?;
             Ok(true)
         }
         // These types have no negative positions in their lower bounds

@@ -90,7 +90,7 @@ use flow_typing_type::type_util;
 
 /// NOTE: While union flattening could be performed at any time, it is most effective when we know
 /// that all tvars have been resolved.
-pub fn union_flatten<'cx>(cx: &Context<'cx>, ts: impl IntoIterator<Item = Type>) -> Vec<Type> {
+pub fn union_flatten<'cx>(cx: &mut Context<'cx>, ts: impl IntoIterator<Item = Type>) -> Vec<Type> {
     // Push results into a single accumulator instead of returning a fresh
     // `Vec<Type>` per call. The OCaml original returns lists (cons-cell
     // allocation is cheap); the Rust port was returning `Vec` per call,
@@ -105,7 +105,7 @@ pub fn union_flatten<'cx>(cx: &Context<'cx>, ts: impl IntoIterator<Item = Type>)
     // memory layout.
     #[inline]
     fn flatten_into<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         seen: &mut std::collections::HashSet<i32>,
         t: Type,
         out: &mut Vec<Type>,
@@ -189,48 +189,54 @@ pub fn union_flatten<'cx>(cx: &Context<'cx>, ts: impl IntoIterator<Item = Type>)
 ///
 /// Generic parameter `A` is the "map context" passed through all methods.
 pub trait TypeMapper<'cx, A> {
-    fn tvar(&mut self, cx: &Context<'cx>, map_cx: &A, r: &Reason, id: u32) -> u32;
-    fn exports(&mut self, cx: &Context<'cx>, map_cx: &A, id: exports::Id) -> exports::Id;
-    fn call_prop(&mut self, cx: &Context<'cx>, map_cx: &A, id: i32) -> i32;
-    fn props(&mut self, cx: &Context<'cx>, map_cx: &A, id: properties::Id) -> properties::Id;
-    fn eval_id(&mut self, cx: &Context<'cx>, map_cx: &A, id: eval::Id) -> eval::Id;
+    fn tvar(&mut self, cx: &mut Context<'cx>, map_cx: &A, r: &Reason, id: u32) -> u32;
+    fn exports(&mut self, cx: &mut Context<'cx>, map_cx: &A, id: exports::Id) -> exports::Id;
+    fn call_prop(&mut self, cx: &mut Context<'cx>, map_cx: &A, id: i32) -> i32;
+    fn props(&mut self, cx: &mut Context<'cx>, map_cx: &A, id: properties::Id) -> properties::Id;
+    fn eval_id(&mut self, cx: &mut Context<'cx>, map_cx: &A, id: eval::Id) -> eval::Id;
 
-    fn type_(&mut self, cx: &Context<'cx>, map_cx: &A, t: Type) -> Type {
+    fn type_(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: Type) -> Type {
         type_default(self, cx, map_cx, t)
     }
 
-    fn tout(&mut self, cx: &Context<'cx>, map_cx: &A, r: Reason, tvar_id: u32) -> (Reason, u32) {
+    fn tout(
+        &mut self,
+        cx: &mut Context<'cx>,
+        map_cx: &A,
+        r: Reason,
+        tvar_id: u32,
+    ) -> (Reason, u32) {
         tout_default(self, cx, map_cx, r, tvar_id)
     }
 
-    fn targ(&mut self, cx: &Context<'cx>, map_cx: &A, t: Targ) -> Targ {
+    fn targ(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: Targ) -> Targ {
         targ_default(self, cx, map_cx, t)
     }
 
-    fn call_arg(&mut self, cx: &Context<'cx>, map_cx: &A, a: CallArg) -> CallArg {
+    fn call_arg(&mut self, cx: &mut Context<'cx>, map_cx: &A, a: CallArg) -> CallArg {
         call_arg_default(self, cx, map_cx, a)
     }
 
     fn enum_concrete_info(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &A,
         e: EnumConcreteInfo,
     ) -> EnumConcreteInfo {
         enum_concrete_info_default(self, cx, map_cx, e)
     }
 
-    fn enum_info(&mut self, cx: &Context<'cx>, map_cx: &A, e: &EnumInfo) -> EnumInfo {
+    fn enum_info(&mut self, cx: &mut Context<'cx>, map_cx: &A, e: &EnumInfo) -> EnumInfo {
         enum_info_default(self, cx, map_cx, e)
     }
 
-    fn def_type(&mut self, cx: &Context<'cx>, map_cx: &A, r: &Reason, t: &DefT) -> DefT {
+    fn def_type(&mut self, cx: &mut Context<'cx>, map_cx: &A, r: &Reason, t: &DefT) -> DefT {
         def_type_default(self, cx, map_cx, r, t)
     }
 
     fn canonical_renders_form(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &A,
         form: Rc<CanonicalRendersForm>,
     ) -> Rc<CanonicalRendersForm> {
@@ -239,44 +245,49 @@ pub trait TypeMapper<'cx, A> {
 
     fn defer_use_type(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &A,
         t: TypeDestructorT,
     ) -> TypeDestructorT {
         defer_use_type_default(self, cx, map_cx, t)
     }
 
-    fn export_types(&mut self, cx: &Context<'cx>, map_cx: &A, t: ExportTypes) -> ExportTypes {
+    fn export_types(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: ExportTypes) -> ExportTypes {
         export_types_default(self, cx, map_cx, t)
     }
 
-    fn fun_type(&mut self, cx: &Context<'cx>, map_cx: &A, t: Rc<FunType>) -> Rc<FunType> {
+    fn fun_type(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: Rc<FunType>) -> Rc<FunType> {
         fun_type_default(self, cx, map_cx, t)
     }
 
-    fn inst_type(&mut self, cx: &Context<'cx>, map_cx: &A, i: InstType) -> InstType {
+    fn inst_type(&mut self, cx: &mut Context<'cx>, map_cx: &A, i: InstType) -> InstType {
         inst_type_default(self, cx, map_cx, i)
     }
 
-    fn instance_type(&mut self, cx: &Context<'cx>, map_cx: &A, t: &InstanceT) -> InstanceT {
+    fn instance_type(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: &InstanceT) -> InstanceT {
         instance_type_default(self, cx, map_cx, t)
     }
 
-    fn type_param(&mut self, cx: &Context<'cx>, map_cx: &A, t: &TypeParam) -> TypeParam {
+    fn type_param(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: &TypeParam) -> TypeParam {
         type_param_default(self, cx, map_cx, t)
     }
 
-    fn selector(&mut self, cx: &Context<'cx>, map_cx: &A, t: Selector) -> Selector {
+    fn selector(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: Selector) -> Selector {
         selector_default(self, cx, map_cx, t)
     }
 
-    fn destructor(&mut self, cx: &Context<'cx>, map_cx: &A, t: Rc<Destructor>) -> Rc<Destructor> {
+    fn destructor(
+        &mut self,
+        cx: &mut Context<'cx>,
+        map_cx: &A,
+        t: Rc<Destructor>,
+    ) -> Rc<Destructor> {
         destructor_default(self, cx, map_cx, t)
     }
 
     fn object_kit_spread_operand_slice(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &A,
         slice: object::spread::OperandSlice,
     ) -> object::spread::OperandSlice {
@@ -285,7 +296,7 @@ pub trait TypeMapper<'cx, A> {
 
     fn object_kit_spread_operand(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &A,
         operand: object::spread::Operand,
     ) -> object::spread::Operand {
@@ -294,52 +305,52 @@ pub trait TypeMapper<'cx, A> {
 
     fn func_type_guard(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &A,
         type_guard: &TypeGuard,
     ) -> TypeGuard {
         func_type_guard_default(self, cx, map_cx, type_guard)
     }
 
-    fn obj_flags(&mut self, cx: &Context<'cx>, map_cx: &A, flags: Flags) -> Flags {
+    fn obj_flags(&mut self, cx: &mut Context<'cx>, map_cx: &A, flags: Flags) -> Flags {
         obj_flags_default(self, cx, map_cx, flags)
     }
 
-    fn obj_type(&mut self, cx: &Context<'cx>, map_cx: &A, t: Rc<ObjType>) -> Rc<ObjType> {
+    fn obj_type(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: Rc<ObjType>) -> Rc<ObjType> {
         obj_type_default(self, cx, map_cx, t)
     }
 
     fn namespace_type(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &A,
         t: Rc<NamespaceType>,
     ) -> Rc<NamespaceType> {
         namespace_type_default(self, cx, map_cx, t)
     }
 
-    fn dict_type(&mut self, cx: &Context<'cx>, map_cx: &A, t: DictType) -> DictType {
+    fn dict_type(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: DictType) -> DictType {
         dict_type_default(self, cx, map_cx, t)
     }
 
-    fn arr_type(&mut self, cx: &Context<'cx>, map_cx: &A, t: Rc<ArrType>) -> Rc<ArrType> {
+    fn arr_type(&mut self, cx: &mut Context<'cx>, map_cx: &A, t: Rc<ArrType>) -> Rc<ArrType> {
         arr_type_default(self, cx, map_cx, t)
     }
 
     fn tuple_element(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &A,
         element: TupleElement,
     ) -> TupleElement {
         tuple_element_default(self, cx, map_cx, element)
     }
 
-    fn predicate(&mut self, cx: &Context<'cx>, map_cx: &A, p: &Predicate) -> Predicate {
+    fn predicate(&mut self, cx: &mut Context<'cx>, map_cx: &A, p: &Predicate) -> Predicate {
         predicate_default(self, cx, map_cx, p)
     }
 
-    fn prop(&mut self, cx: &Context<'cx>, map_cx: &A, prop: Property) -> Property {
+    fn prop(&mut self, cx: &mut Context<'cx>, map_cx: &A, prop: Property) -> Property {
         prop_default(self, cx, map_cx, prop)
     }
 }
@@ -350,7 +361,7 @@ pub trait TypeMapper<'cx, A> {
 
 pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: Type,
 ) -> Type {
@@ -708,7 +719,7 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn tout_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     r: Reason,
     tvar_id: u32,
@@ -723,7 +734,7 @@ pub fn tout_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn targ_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: Targ,
 ) -> Targ {
@@ -742,7 +753,7 @@ pub fn targ_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn call_arg_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     a: CallArg,
 ) -> CallArg {
@@ -768,7 +779,7 @@ pub fn call_arg_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn enum_concrete_info_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     e: EnumConcreteInfo,
 ) -> EnumConcreteInfo {
@@ -788,7 +799,7 @@ pub fn enum_concrete_info_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn enum_info_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     e: &EnumInfo,
 ) -> EnumInfo {
@@ -816,7 +827,7 @@ pub fn enum_info_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     _r: &Reason,
     t: &DefT,
@@ -1006,7 +1017,7 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn canonical_renders_form_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     form: Rc<CanonicalRendersForm>,
 ) -> Rc<CanonicalRendersForm> {
@@ -1049,7 +1060,7 @@ pub fn canonical_renders_form_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn defer_use_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: TypeDestructorT,
 ) -> TypeDestructorT {
@@ -1063,7 +1074,7 @@ pub fn defer_use_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn export_types_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: ExportTypes,
 ) -> ExportTypes {
@@ -1104,7 +1115,7 @@ pub fn export_types_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn fun_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: Rc<FunType>,
 ) -> Rc<FunType> {
@@ -1168,7 +1179,7 @@ pub fn fun_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     i: InstType,
 ) -> InstType {
@@ -1248,7 +1259,7 @@ pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn instance_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: &InstanceT,
 ) -> InstanceT {
@@ -1278,7 +1289,7 @@ pub fn instance_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn type_param_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: &TypeParam,
 ) -> TypeParam {
@@ -1310,7 +1321,7 @@ pub fn type_param_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn selector_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: Selector,
 ) -> Selector {
@@ -1330,7 +1341,7 @@ pub fn selector_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: Rc<Destructor>,
 ) -> Rc<Destructor> {
@@ -1595,7 +1606,7 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn object_kit_spread_operand_slice_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     slice: object::spread::OperandSlice,
 ) -> object::spread::OperandSlice {
@@ -1638,7 +1649,7 @@ pub fn object_kit_spread_operand_slice_default<'cx, A, M: TypeMapper<'cx, A> + ?
 
 pub fn object_kit_spread_operand_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     operand: object::spread::Operand,
 ) -> object::spread::Operand {
@@ -1664,7 +1675,7 @@ pub fn object_kit_spread_operand_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>
 
 pub fn func_type_guard_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     type_guard: &TypeGuard,
 ) -> TypeGuard {
@@ -1692,7 +1703,7 @@ pub fn func_type_guard_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn obj_flags_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     flags: Flags,
 ) -> Flags {
@@ -1714,7 +1725,7 @@ pub fn obj_flags_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn obj_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: Rc<ObjType>,
 ) -> Rc<ObjType> {
@@ -1760,7 +1771,7 @@ pub fn obj_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn namespace_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: Rc<NamespaceType>,
 ) -> Rc<NamespaceType> {
@@ -1779,7 +1790,7 @@ pub fn namespace_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn dict_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: DictType,
 ) -> DictType {
@@ -1799,7 +1810,7 @@ pub fn dict_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     t: Rc<ArrType>,
 ) -> Rc<ArrType> {
@@ -1918,7 +1929,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn tuple_element_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     element: TupleElement,
 ) -> TupleElement {
@@ -1938,7 +1949,7 @@ pub fn tuple_element_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn predicate_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     p: &Predicate,
 ) -> Predicate {
@@ -2082,7 +2093,7 @@ pub fn predicate_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 
 pub fn prop_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &A,
     prop: Property,
 ) -> Property {

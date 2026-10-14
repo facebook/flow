@@ -46,6 +46,7 @@ use flow_env_builder::assertion_call_target::bare_asserted_argument;
 use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
 use flow_env_builder::assertion_call_target::callee_root_has_declared_type;
 use flow_env_builder::env_api::EnvKey;
+use flow_lazy::ContextFamily;
 use flow_parser::ast;
 use flow_parser::ast::expression;
 use flow_parser::ast::statement;
@@ -55,6 +56,7 @@ use flow_parser::polymorphic_ast_mapper;
 use flow_parser_utils::graphql;
 use flow_parser_utils::symbol_call;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message::CallTypeArityCallee;
 use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::ECallTypeArityData;
@@ -126,8 +128,7 @@ use flow_typing_utils::type_hint;
 use flow_typing_utils::type_operation_utils;
 use flow_typing_utils::typed_ast_utils;
 use flow_utils_concurrency::job_error::JobError;
-type LazyBool<'cx> =
-    Rc<flow_lazy::Lazy<Context<'cx>, bool, Box<dyn FnOnce(&Context<'cx>) -> bool + 'cx>>>;
+type LazyBool = Rc<flow_lazy::Lazy<Cx, bool>>;
 
 use crate::class_sig;
 use crate::refinement;
@@ -176,6 +177,7 @@ fn try_filter_map_btree_map<T, K: Ord, V, E>(
 mod optional_chain {
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
+    use flow_typing_context::Cx;
     use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
     use flow_typing_flow_common::flow_js_utils::FlowJsException;
     use flow_typing_type::type_::DepthTrace;
@@ -184,12 +186,12 @@ mod optional_chain {
     use flow_typing_type::type_::type_collector::TypeCollector;
 
     pub fn run<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         lhs: &Type,
         reason: &Reason,
         lhs_reason: &Reason,
         lhs_expression: &ExpressionReferenceData<flow_aloc::ALoc>,
-        upper: &UseT<Context<'a>>,
+        upper: &UseT<Cx>,
         voided_out_collector: &Option<TypeCollector>,
     ) -> Result<(), FlowJsException> {
         flow_typing_flow_js::optional_chain_kit::run(
@@ -207,11 +209,11 @@ mod optional_chain {
 
 struct ChainingConf<'a, 'b, A, B> {
     refinement_action:
-        Option<Box<dyn Fn(&Context<'a>, &A, &Type, Type) -> Result<Type, JobError> + 'b>>,
-    refine: Box<dyn Fn(&Context<'a>) -> Result<Option<Type>, JobError> + 'b>,
-    subexpressions: Box<dyn FnOnce(&Context<'a>) -> Result<(A, B), CheckExprError> + 'b>,
-    get_result: Box<dyn Fn(&Context<'a>, &A, Reason, &Type) -> Result<Type, JobError> + 'b>,
-    get_opt_use: Rc<dyn Fn(&Context<'a>, &A, Reason) -> type_::OptUseT<Context<'a>> + 'b>,
+        Option<Box<dyn Fn(&mut Context<'a>, &A, &Type, Type) -> Result<Type, JobError> + 'b>>,
+    refine: Box<dyn Fn(&mut Context<'a>) -> Result<Option<Type>, JobError> + 'b>,
+    subexpressions: Box<dyn FnOnce(&mut Context<'a>) -> Result<(A, B), CheckExprError> + 'b>,
+    get_result: Box<dyn Fn(&mut Context<'a>, &A, Reason, &Type) -> Result<Type, JobError> + 'b>,
+    get_opt_use: Rc<dyn Fn(&mut Context<'a>, &A, Reason) -> type_::OptUseT<Cx> + 'b>,
     get_reason: Box<dyn Fn(&Type) -> Reason + 'b>,
 }
 
@@ -340,7 +342,7 @@ pub mod object_expression_acc {
 
         pub(super) fn add_computed<'a>(
             self,
-            cx: &Context<'a>,
+            cx: &mut Context<'a>,
             computed: ComputedProp,
         ) -> Result<Self, JobError> {
             match computed {
@@ -446,7 +448,7 @@ pub mod object_expression_acc {
                                     },
                                 ));
                                 if matches!(
-                                    &*cx.typing_mode(),
+                                    cx.typing_mode(),
                                     flow_typing_context::TypingMode::CheckingMode
                                 ) {
                                     // These checks should not affect synthesis results
@@ -459,7 +461,7 @@ pub mod object_expression_acc {
                                         .unwrap_or(true);
                                     let widened_key =
                                         type_::str_module_t::why(reason_of_t(existing_key).dupe());
-                                    let is_string_key = |key: &Type| {
+                                    let mut is_string_key = |key: &Type| {
                                         speculation_flow::is_subtyping_successful(
                                             cx,
                                             key.dupe(),
@@ -571,7 +573,7 @@ pub mod object_expression_acc {
 
         pub fn mk_object_from_spread_acc<'a>(
             self,
-            cx: &Context<'a>,
+            cx: &mut Context<'a>,
             reason: Reason,
             as_const: bool,
             frozen: bool,
@@ -813,7 +815,7 @@ fn name_of_identifier_or_literal_key(
 }
 
 fn convert_call_targs<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: &FlowOrdMap<SubstName, Type>,
     call_targs: &expression::CallTypeArgs<ALoc, ALoc>,
 ) -> Result<(Vec<Targ>, expression::CallTypeArgs<ALoc, (ALoc, Type)>), JobError> {
@@ -859,7 +861,7 @@ fn convert_call_targs<'a>(
 }
 
 fn convert_call_targs_opt<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     targs: Option<&expression::CallTypeArgs<ALoc, ALoc>>,
 ) -> Result<
     (
@@ -878,7 +880,7 @@ fn convert_call_targs_opt<'a>(
 }
 
 pub fn convert_call_targs_opt_prime<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     targs: Option<&expression::CallTypeArgs<ALoc, ALoc>>,
 ) -> Result<Option<Vec<Targ>>, JobError> {
     Ok(match targs {
@@ -893,7 +895,7 @@ pub fn convert_call_targs_opt_prime<'a>(
 type ALocThisFinder = flow_parser_utils::this_finder::Finder<ALoc>;
 
 fn error_on_this_uses_in_object_methods<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     properties: &[expression::object::Property<ALoc, ALoc>],
 ) {
     use flow_parser::ast_visitor::AstVisitor;
@@ -956,7 +958,7 @@ fn error_on_this_uses_in_object_methods<'a>(
 }
 
 fn error_on_this_uses_in_components<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     component: &statement::ComponentDeclaration<ALoc, ALoc>,
 ) {
     use flow_parser::ast_visitor::AstVisitor;
@@ -1101,7 +1103,7 @@ fn mk_inference_target_with_annots(
 // If construction functions return non-void values (e.g., functions),
 // then those values are returned by constructions.
 fn new_call<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     reason: Reason,
     use_op: UseOp,
@@ -1133,7 +1135,7 @@ fn new_call<'a>(
 }
 
 fn func_call_opt_use<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     reason: Reason,
     use_op: UseOp,
@@ -1141,7 +1143,7 @@ fn func_call_opt_use<'a>(
     targts: Option<Vec<Targ>>,
     argts: Vec<CallArg>,
     specialized_callee: Option<type_::SpecializedCallee>,
-) -> type_::OptUseT<Context<'a>> {
+) -> type_::OptUseT<Cx> {
     let opt_app = type_::mk_opt_functioncalltype(
         reason.dupe(),
         targts.map(|v| v.into()),
@@ -1159,7 +1161,7 @@ fn func_call_opt_use<'a>(
 }
 
 fn func_call<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     reason: Reason,
     use_op: UseOp,
@@ -1191,7 +1193,7 @@ fn func_call<'a>(
 }
 
 fn method_call_opt_use<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     opt_state: OptState,
     voided_out_collector: TypeCollector,
     reason: Reason,
@@ -1205,7 +1207,7 @@ fn method_call_opt_use<'a>(
     targts: Option<Vec<Targ>>,
     argts: Vec<CallArg>,
     specialized_callee: Option<type_::SpecializedCallee>,
-) -> type_::OptUseT<Context<'a>> {
+) -> type_::OptUseT<Cx> {
     let expr_loc = expr.loc().dupe();
     let prop_name = Name::new(name.dupe());
     let reason_prop = mk_reason(
@@ -1270,7 +1272,7 @@ fn method_call_opt_use<'a>(
 
 // returns (type of method itself, type returned from method)
 fn method_call<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     reason: Reason,
     use_op: UseOp,
     call_strict_arity: bool,
@@ -1357,7 +1359,7 @@ fn method_call<'a>(
     }
 }
 
-fn elem_call_opt_use<CX>(
+fn elem_call_opt_use<CX: ContextFamily>(
     opt_state: OptState,
     voided_out_collector: TypeCollector,
     use_op: UseOp,
@@ -1404,12 +1406,12 @@ fn elem_call_opt_use<CX>(
 // **********
 
 fn identifier_<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     name: &FlowSmolStr,
     loc: ALoc,
 ) -> Result<Type, JobError> {
-    let get_checking_mode_type = || {
+    let get_checking_mode_type = |cx: &mut Context<'a>| {
         let t = type_env::var_ref(
             Some(type_env::LookupMode::ForValue),
             cx,
@@ -1433,7 +1435,7 @@ fn identifier_<'a>(
             }
         })
     };
-    if type_inference_hooks_js::dispatch_id_hook(cx, name, loc.dupe()) {
+    if type_inference_hooks_js::dispatch_id_hook(name, loc.dupe()) {
         let reason = mk_reason(None, loc.dupe());
         let lazy_hint = type_env::get_hint(cx, loc.dupe());
         let result = (lazy_hint.1)(cx, false, None, reason)?;
@@ -1443,13 +1445,13 @@ fn identifier_<'a>(
             result,
         ))
     } else {
-        get_checking_mode_type()
+        get_checking_mode_type(cx)
     }
 }
 
 fn identifier_inner<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     id: &ast::Identifier<ALoc, ALoc>,
     loc: ALoc,
 ) -> Result<Type, JobError> {
@@ -1457,8 +1459,8 @@ fn identifier_inner<'a>(
 }
 
 fn string_literal_value<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     loc: ALoc,
     value: &FlowSmolStr,
 ) -> Result<Type, JobError> {
@@ -1468,7 +1470,7 @@ fn string_literal_value<'a>(
     let as_const = *as_const;
     let frozen = *frozen;
     Ok(
-        if type_inference_hooks_js::dispatch_literal_hook(cx, loc.dupe()) {
+        if type_inference_hooks_js::dispatch_literal_hook(loc.dupe()) {
             let lazy_hint = type_env::get_hint(cx, loc.dupe());
             let reason = mk_reason(VirtualReasonDesc::RString, loc.dupe());
             let hint = (lazy_hint.1)(cx, false, None, reason)?;
@@ -1483,7 +1485,7 @@ fn string_literal_value<'a>(
                 }),
             ))
         } else {
-            let precise = || {
+            let precise = |_: &mut Context<'_>| {
                 let reason = mk_reason(VirtualReasonDesc::RStringLit(value.dupe()), loc.dupe());
                 Type::new(TypeInner::DefT(
                     reason,
@@ -1493,7 +1495,7 @@ fn string_literal_value<'a>(
                     }),
                 ))
             };
-            let general = || {
+            let general = |_: &mut Context<'_>| {
                 let reason = mk_annot_reason(VirtualReasonDesc::RString, loc.dupe());
                 Type::new(TypeInner::DefT(
                     reason,
@@ -1506,8 +1508,8 @@ fn string_literal_value<'a>(
 }
 
 fn string_literal_inner<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     loc: ALoc,
     lit: &ast::StringLiteral<ALoc>,
 ) -> Result<Type, JobError> {
@@ -1515,8 +1517,8 @@ fn string_literal_inner<'a>(
 }
 
 fn boolean_literal_inner<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     loc: ALoc,
     lit: &ast::BooleanLiteral<ALoc>,
 ) -> Type {
@@ -1536,7 +1538,7 @@ fn boolean_literal_inner<'a>(
             }),
         ))
     } else {
-        let precise = || {
+        let precise = |_: &mut Context<'_>| {
             let reason = mk_reason(VirtualReasonDesc::RBooleanLit(value), loc.dupe());
             Type::new(TypeInner::DefT(
                 reason,
@@ -1546,7 +1548,7 @@ fn boolean_literal_inner<'a>(
                 }),
             ))
         };
-        let general = || {
+        let general = |_: &mut Context<'_>| {
             let reason = mk_annot_reason(VirtualReasonDesc::RBoolean, loc.dupe());
             Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::BoolGeneralT)))
         };
@@ -1559,8 +1561,8 @@ pub fn null_literal(loc: ALoc) -> Type {
 }
 
 fn number_literal_inner<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     loc: ALoc,
     lit: &ast::NumberLiteral<ALoc>,
 ) -> Type {
@@ -1583,7 +1585,7 @@ fn number_literal_inner<'a>(
     } else {
         let raw_c = raw.dupe();
         let loc_c = loc.dupe();
-        let precise = move || {
+        let precise = move |_: &mut Context<'_>| {
             let reason = mk_reason(VirtualReasonDesc::RNumberLit(raw_c.dupe()), loc_c.dupe());
             Type::new(TypeInner::DefT(
                 reason,
@@ -1594,7 +1596,7 @@ fn number_literal_inner<'a>(
             ))
         };
         let loc_c2 = loc.dupe();
-        let general = move || {
+        let general = move |_: &mut Context<'_>| {
             let reason = mk_annot_reason(VirtualReasonDesc::RNumber, loc_c2.dupe());
             Type::new(TypeInner::DefT(
                 reason,
@@ -1606,8 +1608,8 @@ fn number_literal_inner<'a>(
 }
 
 fn bigint_literal_inner<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     loc: ALoc,
     lit: &ast::BigIntLiteral<ALoc>,
 ) -> Type {
@@ -1630,7 +1632,7 @@ fn bigint_literal_inner<'a>(
     } else {
         let raw_c = raw.dupe();
         let loc_c = loc.dupe();
-        let precise = move || {
+        let precise = move |_: &mut Context<'_>| {
             let reason = mk_reason(VirtualReasonDesc::RBigIntLit(raw_c.dupe()), loc_c.dupe());
             Type::new(TypeInner::DefT(
                 reason,
@@ -1641,7 +1643,7 @@ fn bigint_literal_inner<'a>(
             ))
         };
         let loc_c2 = loc.dupe();
-        let general = move || {
+        let general = move |_: &mut Context<'_>| {
             let reason = mk_annot_reason(VirtualReasonDesc::RBigInt, loc_c2.dupe());
             Type::new(TypeInner::DefT(
                 reason,
@@ -1652,13 +1654,13 @@ fn bigint_literal_inner<'a>(
     }
 }
 
-pub fn regexp_literal<'a>(cx: &Context<'a>, loc: ALoc) -> Result<Type, JobError> {
+pub fn regexp_literal<'a>(cx: &mut Context<'a>, loc: ALoc) -> Result<Type, JobError> {
     let reason = mk_annot_reason(VirtualReasonDesc::RRegExp, loc);
     flow_js::get_builtin_type_non_speculating(cx, &reason, None, "RegExp")
 }
 
 pub fn module_ref_literal<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     lit: &ast::ModuleRefLiteral<ALoc>,
 ) -> Result<(Type, ast::ModuleRefLiteral<ALoc>), JobError> {
@@ -1714,7 +1716,10 @@ pub fn module_ref_literal<'a>(
     ))
 }
 
-fn check_const_assertion<'a>(cx: &Context<'a>, expr: &expression::Expression<ALoc, (ALoc, Type)>) {
+fn check_const_assertion<'a>(
+    cx: &mut Context<'a>,
+    expr: &expression::Expression<ALoc, (ALoc, Type)>,
+) {
     use ast::expression::ExpressionInner;
 
     let should_error = match expr.deref() {
@@ -1764,7 +1769,7 @@ fn check_const_assertion<'a>(cx: &Context<'a>, expr: &expression::Expression<ALo
 // *********
 
 pub fn opaque_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     otype: &statement::OpaqueType<ALoc, ALoc>,
 ) -> Result<(Type, statement::OpaqueType<ALoc, (ALoc, Type)>), JobError> {
@@ -1906,7 +1911,7 @@ pub fn opaque_type<'a>(
 // *****************
 
 fn export_specifiers<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     source: Option<(
         &Result<type_::ModuleType, Type>,
         ALoc,
@@ -1919,7 +1924,8 @@ fn export_specifiers<'a>(
         flow_parser::ast_utils::effective_export_kind(export_kind, specifier_export_kind)
     };
     // [declare] export [type] {[type] foo [as bar]};
-    let export_ref = |kind: statement::ExportKind,
+    let export_ref = |cx: &mut Context<'a>,
+                      kind: statement::ExportKind,
                       loc: ALoc,
                       local_name: &FlowSmolStr|
      -> Result<(Option<ALoc>, Type), JobError> {
@@ -2014,7 +2020,8 @@ fn export_specifiers<'a>(
         })
     };
     // [declare] export [type] {[type] foo [as bar]} from 'module'
-    let export_from = |kind: statement::ExportKind,
+    let export_from = |cx: &mut Context<'a>,
+                       kind: statement::ExportKind,
                        module_name: flow_import_specifier::Userland,
                        source_module: &Result<type_::ModuleType, Type>,
                        loc: ALoc,
@@ -2042,7 +2049,9 @@ fn export_specifiers<'a>(
         }
     };
     let export_specifier =
-        |make_export: &dyn Fn(
+        |cx: &mut Context<'a>,
+         make_export: &dyn Fn(
+            &mut Context<'a>,
             statement::ExportKind,
             ALoc,
             &FlowSmolStr,
@@ -2066,7 +2075,7 @@ fn export_specifiers<'a>(
                     })
                 })
             };
-            let (imported_name_def_loc, t) = make_export(kind, local_loc.dupe(), &local_name)?;
+            let (imported_name_def_loc, t) = make_export(cx, kind, local_loc.dupe(), &local_name)?;
             Ok(statement::export_named_declaration::ExportSpecifier {
                 loc: spec.loc.dupe(),
                 local: ast::Identifier::new(ast::IdentifierInner {
@@ -2089,8 +2098,10 @@ fn export_specifiers<'a>(
                         flow_import_specifier::Userland::from_smol_str(source_literal.value.dupe());
                     try_map_vec(specifiers, |spec| {
                         export_specifier(
-                            &|kind, loc, local_name| {
+                            cx,
+                            &|cx, kind, loc, local_name| {
                                 export_from(
+                                    cx,
                                     kind,
                                     module_name.dupe(),
                                     source_module,
@@ -2102,7 +2113,7 @@ fn export_specifiers<'a>(
                         )
                     })?
                 }
-                None => try_map_vec(specifiers, |spec| export_specifier(&export_ref, spec))?,
+                None => try_map_vec(specifiers, |spec| export_specifier(cx, &export_ref, spec))?,
             };
             Ok(statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers))
         }
@@ -2162,7 +2173,7 @@ fn export_specifiers<'a>(
 }
 
 fn hook_check<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     effect: ast::function::Effect,
     id: &ast::Identifier<ALoc, ALoc>,
 ) {
@@ -2181,7 +2192,7 @@ fn hook_check<'a>(
 // ***************************************************************
 
 pub fn statement<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     stmt: &statement::Statement<ALoc, ALoc>,
 ) -> Result<statement::Statement<ALoc, (ALoc, Type)>, CheckExprError> {
     let node_cache = cx.node_cache();
@@ -2204,7 +2215,7 @@ pub fn statement<'a>(
 /// identifier pattern can carry the whole annotation, since a nested occurrence
 /// under a destructuring pattern is already rejected as a position error.
 fn check_unique_symbol_const_binding(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     kind: ast::VariableKind,
     id: &ast::pattern::Pattern<ALoc, ALoc>,
 ) {
@@ -2221,12 +2232,12 @@ fn check_unique_symbol_const_binding(
 
 #[rustfmt::skip]
 fn statement_<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     stmt: &statement::Statement<ALoc, ALoc>,
 ) -> Result<statement::Statement<ALoc, (ALoc, Type)>, CheckExprError> {
     use ast::statement::StatementInner;
 
-    let variables = |cx: &Context<'a>,
+    let variables = |cx: &mut Context<'a>,
                      decls: &statement::VariableDeclaration<ALoc, ALoc>|
      -> Result<
         statement::VariableDeclaration<ALoc, (ALoc, Type)>,
@@ -2261,7 +2272,7 @@ fn statement_<'a>(
         })
     };
 
-    let catch_clause = |cx: &Context<'a>,
+    let catch_clause = |cx: &mut Context<'a>,
                         cc: &statement::try_::CatchClause<ALoc, ALoc>|
      -> Result<
         statement::try_::CatchClause<ALoc, (ALoc, Type)>,
@@ -2415,7 +2426,7 @@ fn statement_<'a>(
         }
     };
 
-    let function_ = |cx: &Context<'a>,
+    let function_ = |cx: &mut Context<'a>,
                      is_declared_function: bool,
                      loc: ALoc,
                      func: &ast::function::Function<ALoc, ALoc>|
@@ -2457,7 +2468,7 @@ fn statement_<'a>(
         ))
     };
 
-    let declare_function_inner = |cx: &Context<'a>,
+    let declare_function_inner = |cx: &mut Context<'a>,
                                   loc: ALoc,
                                   f: &statement::DeclareFunction<ALoc, ALoc>|
      -> Result<
@@ -3010,12 +3021,12 @@ fn statement_<'a>(
             })
         }
         StatementInner::ForIn { inner, .. } => {
-            let eval_right = || expression(None, None, None, cx, &inner.right);
+            let eval_right = |cx: &mut Context<'a>| expression(None, None, None, cx, &inner.right);
             let (left_ast, right_ast) = match &inner.left {
                 statement::for_in::Left::LeftDeclaration((decl_loc, decl))
                     if decl.declarations.len() == 1 && decl.declarations[0].init.is_none() =>
                 {
-                    let right_ast = eval_right()?;
+                    let right_ast = eval_right(cx)?;
                     let vdecl_loc = decl.declarations[0].loc.dupe();
                     let id = &decl.declarations[0].id;
                     type_annotation::check_unique_symbol_loop_binding(cx, id);
@@ -3047,7 +3058,7 @@ fn statement_<'a>(
                     loc: pat_loc,
                     inner: id_inner,
                 }) => {
-                    let right_ast = eval_right()?;
+                    let right_ast = eval_right(cx)?;
                     let pat_loc = pat_loc.dupe();
                     let name_loc = id_inner.name.loc.dupe();
                     let name_str = &id_inner.name.name;
@@ -3090,7 +3101,7 @@ fn statement_<'a>(
                     )
                 }
                 _ => {
-                    let right_ast = eval_right()?;
+                    let right_ast = eval_right(cx)?;
                     flow_js::add_output_non_speculating(
                         cx,
                         ErrorMessage::EInternal(Box::new((loc.dupe(), InternalError::ForInLHS))),
@@ -3143,7 +3154,7 @@ fn statement_<'a>(
                 }
             };
             let reason = mk_reason(reason_desc, loc.dupe());
-            let eval_right = || -> Result<_, CheckExprError> {
+            let eval_right = |cx: &mut Context<'a>| -> Result<_, CheckExprError> {
                 let right_ast = expression(None, None, None, cx, &inner.right)?;
                 let (_, t) = right_ast.loc();
                 let elem_t = for_of_elemt(cx, t.dupe(), reason.dupe(), inner.await_)?;
@@ -3155,7 +3166,7 @@ fn statement_<'a>(
                 statement::for_of::Left::LeftDeclaration((decl_loc, decl))
                     if decl.declarations.len() == 1 && decl.declarations[0].init.is_none() =>
                 {
-                    let (elem_t, right_ast) = eval_right()?;
+                    let (elem_t, right_ast) = eval_right(cx)?;
                     let vdecl_loc = decl.declarations[0].loc.dupe();
                     let id = &decl.declarations[0].id;
                     type_annotation::check_unique_symbol_loop_binding(cx, id);
@@ -3188,7 +3199,7 @@ fn statement_<'a>(
                     loc: pat_loc,
                     inner: id_inner,
                 }) => {
-                    let (elem_t, right_ast) = eval_right()?;
+                    let (elem_t, right_ast) = eval_right(cx)?;
                     let pat_loc = pat_loc.dupe();
                     let name_loc = id_inner.name.loc.dupe();
                     let name_str = &id_inner.name.name;
@@ -3230,7 +3241,7 @@ fn statement_<'a>(
                     )
                 }
                 _ => {
-                    let (_, right_ast) = eval_right()?;
+                    let (_, right_ast) = eval_right(cx)?;
                     flow_js::add_output_non_speculating(
                         cx,
                         ErrorMessage::EInternal(Box::new((loc.dupe(), InternalError::ForOfLHS))),
@@ -4469,7 +4480,7 @@ fn statement_<'a>(
 }
 
 fn statement_list_from_iter<'a, 'b>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     stmts: impl Iterator<Item = &'b statement::Statement<ALoc, ALoc>>,
 ) -> Result<Vec<statement::Statement<ALoc, (ALoc, Type)>>, JobError> {
     stmts
@@ -4484,14 +4495,14 @@ fn statement_list_from_iter<'a, 'b>(
 }
 
 pub fn statement_list<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     stmts: &[statement::Statement<ALoc, ALoc>],
 ) -> Result<Vec<statement::Statement<ALoc, (ALoc, Type)>>, JobError> {
     statement_list_from_iter(cx, stmts.iter())
 }
 
 pub fn for_of_elemt<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     right_t: Type,
     reason: Reason,
     await_: bool,
@@ -4518,7 +4529,7 @@ pub fn for_of_elemt<'a>(
 }
 
 pub fn type_alias<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     alias: &statement::TypeAlias<ALoc, ALoc>,
 ) -> Result<(Type, statement::TypeAlias<ALoc, (ALoc, Type)>), JobError> {
@@ -4663,7 +4674,7 @@ pub fn type_alias<'a>(
 }
 
 pub fn interface<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     decl: &statement::Interface<ALoc, ALoc>,
 ) -> Result<(Type, statement::Interface<ALoc, (ALoc, Type)>), JobError> {
@@ -4688,7 +4699,7 @@ pub fn interface<'a>(
 }
 
 fn declare_variable<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     decl: &statement::DeclareVariable<ALoc, ALoc>,
 ) -> Result<statement::DeclareVariable<ALoc, (ALoc, Type)>, CheckExprError> {
@@ -4875,7 +4886,7 @@ fn declare_variable<'a>(
 }
 
 pub fn declare_class<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     decl: &statement::DeclareClass<ALoc, ALoc>,
 ) -> Result<(Type, statement::DeclareClass<ALoc, (ALoc, Type)>), JobError> {
@@ -4911,7 +4922,7 @@ pub fn declare_class<'a>(
 }
 
 fn validate_declare_component_params<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     params: &statement::component_params::Params<ALoc, ALoc>,
 ) {
     let param_list = &params.params;
@@ -4990,7 +5001,7 @@ fn validate_declare_component_params<'a>(
 }
 
 pub fn declare_component<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     decl: &statement::DeclareComponent<ALoc, ALoc>,
 ) -> Result<(Type, statement::DeclareComponent<ALoc, (ALoc, Type)>), JobError> {
@@ -5009,7 +5020,7 @@ pub fn declare_component<'a>(
 }
 
 fn declare_module<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     decl: &statement::DeclareModule<ALoc, ALoc>,
 ) -> Result<statement::DeclareModule<ALoc, (ALoc, Type)>, JobError> {
     let id_loc = match &decl.id {
@@ -5089,7 +5100,7 @@ fn declare_module<'a>(
 }
 
 pub fn declare_namespace<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     decl: &statement::DeclareNamespace<ALoc, ALoc>,
 ) -> Result<(Type, statement::DeclareNamespace<ALoc, (ALoc, Type)>), JobError> {
@@ -5123,9 +5134,10 @@ pub fn declare_namespace<'a>(
         flow_env_builder::name_def_types::ScopeKind::DeclareModule,
     );
     let body_statements = if is_supported_global {
-        statement_list_from_iter(
-            cx,
-            body_block.body.iter().filter(|stmt| {
+        let supported_statements: Vec<_> = body_block
+            .body
+            .iter()
+            .filter(|stmt| {
                 match flow_parser::ast_utils::acceptable_statement_in_declaration_context(
                     flow_parser::ast_utils::DeclarationContext::DeclareGlobal,
                     stmt,
@@ -5146,8 +5158,9 @@ pub fn declare_namespace<'a>(
                         false
                     }
                 }
-            }),
-        )?
+            })
+            .collect();
+        statement_list_from_iter(cx, supported_statements.into_iter())?
     } else {
         statement_list(cx, &body_block.body)?
     };
@@ -5235,10 +5248,10 @@ pub fn declare_namespace<'a>(
 }
 
 fn object_prop<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     as_const: bool,
     frozen: bool,
-    has_hint: LazyBool<'a>,
+    has_hint: LazyBool,
     acc: ObjectExpressionAcc,
     prop: &expression::object::Property<ALoc, ALoc>,
 ) -> Result<
@@ -5292,11 +5305,7 @@ fn object_prop<'a>(
                         } else {
                             FrozenKind::NotFrozen
                         };
-                        if type_inference_hooks_js::dispatch_obj_prop_decl_hook(
-                            cx,
-                            &name,
-                            loc.dupe(),
-                        ) {
+                        if type_inference_hooks_js::dispatch_obj_prop_decl_hook(&name, loc.dupe()) {
                             let t = type_::unsoundness::at(
                                 type_::UnsoundnessKind::InferenceHooks,
                                 loc.dupe(),
@@ -5596,7 +5605,7 @@ fn object_prop<'a>(
 }
 
 fn prop_map_of_object<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     props: &[expression::object::Property<ALoc, ALoc>],
 ) -> Result<
     (
@@ -5627,7 +5636,7 @@ fn prop_map_of_object<'a>(
 }
 
 fn create_computed_prop<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     key_loc: ALoc,
     unconcretized_key: Type,
     concretized_keys: Vec<Type>,
@@ -5675,7 +5684,7 @@ fn create_computed_prop<'a>(
             intermediate_error_types::InvalidObjKey::Other
         }
     };
-    let single_key = |key: Type| -> object_expression_acc::ComputedProp {
+    let mut single_key = |key: Type| -> object_expression_acc::ComputedProp {
         match flow_js_utils::propref_for_elem_t(cx, &key) {
             PropRef::Computed(key) => {
                 if valid_computed_key(&key) {
@@ -5855,10 +5864,10 @@ fn create_computed_prop<'a>(
 }
 
 fn object_<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     frozen: bool,
     as_const: bool,
-    has_hint: LazyBool<'a>,
+    has_hint: LazyBool,
     loc: ALoc,
     props: &[expression::object::Property<ALoc, ALoc>],
 ) -> Result<(Type, Vec<expression::object::Property<ALoc, (ALoc, Type)>>), CheckExprError> {
@@ -5868,18 +5877,19 @@ fn object_<'a>(
     use ast::expression::object::SpreadProperty;
 
     error_on_this_uses_in_object_methods(cx, props);
-    let has_hint: LazyBool<'a> = {
+    let has_hint: LazyBool = {
         let has_hint = has_hint.dupe();
         let loc = loc.dupe();
-        Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
+        Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
             *has_hint.get_forced(cx) || natural_inference::loc_has_hint(cx, &loc)
-        })))
+        }))
     };
     let reason = mk_obj_lit_reason(as_const, frozen, || *has_hint.get_forced(cx), loc.dupe());
     // Use the same reason for proto and the ObjT so we can walk the proto chain
     // and use the root proto reason to build an error.
     let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
-    let mk_computed = |k_expr: &expression::Expression<ALoc, (ALoc, Type)>,
+    let mk_computed = |cx: &mut Context<'a>,
+                       k_expr: &expression::Expression<ALoc, (ALoc, Type)>,
                        key: Type,
                        value: (ALoc, Type)|
      -> Result<_, CheckExprError> {
@@ -5966,7 +5976,7 @@ fn object_<'a>(
                         v,
                     )?;
                     let vt = v_typed.loc().clone();
-                    let computed = mk_computed(&k_typed, kt.dupe(), vt)?;
+                    let computed = mk_computed(cx, &k_typed, kt.dupe(), vt)?;
                     let acc = acc.add_computed(cx, computed)?;
                     prop_asts.push(Property::NormalProperty(NormalProperty::Init {
                         loc: prop_loc.dupe(),
@@ -6004,7 +6014,7 @@ fn object_<'a>(
                         expression::ExpressionInner::Function { inner, .. } => (**inner).clone(),
                         _ => panic!("Expected Function expression"),
                     };
-                    let computed = mk_computed(&k_typed, kt.dupe(), vt)?;
+                    let computed = mk_computed(cx, &k_typed, kt.dupe(), vt)?;
                     let acc = acc.add_computed(cx, computed)?;
                     prop_asts.push(Property::NormalProperty(NormalProperty::Method {
                         loc: prop_loc.dupe(),
@@ -6071,7 +6081,7 @@ fn object_<'a>(
 
 fn init_var(
     kind: ast::VariableKind,
-) -> for<'cx> fn(&Context<'cx>, &UseOp, &Type, ALoc) -> Result<(), JobError> {
+) -> for<'cx> fn(&mut Context<'cx>, &UseOp, &Type, ALoc) -> Result<(), JobError> {
     match kind {
         ast::VariableKind::Const => type_env::init_const,
         ast::VariableKind::Let => type_env::init_let,
@@ -6080,7 +6090,7 @@ fn init_var(
 }
 
 fn variable<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     kind: ast::VariableKind,
     if_uninitialized: Option<&dyn Fn(ALoc) -> Type>,
     id: &ast::pattern::Pattern<ALoc, ALoc>,
@@ -6241,7 +6251,8 @@ fn variable<'a>(
             let mut dest_init = crate::destructuring::empty(init.cloned(), None);
             crate::destructuring::pattern(
                 cx,
-                &|use_op: &UseOp,
+                &|cx: &mut Context<'_>,
+                  use_op: &UseOp,
                   name_loc: ALoc,
                   name: &FlowSmolStr,
                   default: Option<&flow_typing_default::Default<Type>>,
@@ -6284,7 +6295,7 @@ fn variable<'a>(
 }
 
 pub fn expression_or_spread<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     expr: &expression::ExpressionOrSpread<ALoc, ALoc>,
 ) -> Result<(CallArg, expression::ExpressionOrSpread<ALoc, (ALoc, Type)>), CheckExprError> {
     use ast::expression::ExpressionOrSpread;
@@ -6316,9 +6327,9 @@ pub fn expression_or_spread<'a>(
 }
 
 fn array_elements<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     as_const: bool,
-    has_hint: LazyBool<'a>,
+    has_hint: LazyBool,
     elements: &[expression::ArrayElement<ALoc, ALoc>],
 ) -> Result<
     (
@@ -6402,7 +6413,7 @@ fn array_elements<'a>(
     Ok((unresolved_vec.into_iter().collect(), elements_vec))
 }
 
-pub fn empty_array<'a>(cx: &Context<'a>, loc: ALoc) -> Result<(Reason, Type), JobError> {
+pub fn empty_array<'a>(cx: &mut Context<'a>, loc: ALoc) -> Result<(Reason, Type), JobError> {
     let reason = mk_reason(VirtualReasonDesc::REmptyArrayLit, loc.dupe());
     let element_reason = mk_reason(None, loc.dupe());
     let type_::LazyHintT(has_hint, lazy_hint) = type_env::get_hint(cx, loc.dupe());
@@ -6442,8 +6453,8 @@ fn expression_inner<'a>(
     decl: Option<ast::VariableKind>,
     as_const: Option<bool>,
     frozen: FrozenKind,
-    has_hint: Option<LazyBool<'a>>,
-    cx: &Context<'a>,
+    has_hint: Option<LazyBool>,
+    cx: &mut Context<'a>,
     expr: &expression::Expression<ALoc, ALoc>,
 ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let loc = expr.loc().dupe();
@@ -6451,8 +6462,7 @@ fn expression_inner<'a>(
         .slow_to_check_logging()
         .slow_expressions_logging_threshold;
     let start_time = threshold.map(|_| std::time::Instant::now());
-    let node_cache = cx.node_cache();
-    let res = match node_cache.get_expression(&loc) {
+    let res = match cx.node_cache().get_expression(&loc) {
         Some(node) => {
             flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
                 vec![format!(
@@ -6472,12 +6482,12 @@ fn expression_inner<'a>(
             );
             let res = expression_(cx, syntactic_flags, loc.dupe(), expr)?;
             if matches!(
-                &*cx.typing_mode(),
+                cx.typing_mode(),
                 flow_typing_context::TypingMode::CheckingMode
             ) {
                 cx.constraint_cache_mut().clear();
                 cx.eval_repos_cache_mut().clear();
-                node_cache.set_expression(res.dupe());
+                cx.node_cache_mut().set_expression(res.dupe());
             }
             res
         }
@@ -6516,7 +6526,11 @@ fn expression_inner<'a>(
     Ok(res)
 }
 
-fn this_<'a>(cx: &Context<'a>, loc: ALoc, this: &expression::This<ALoc>) -> Result<Type, JobError> {
+fn this_<'a>(
+    cx: &mut Context<'a>,
+    loc: ALoc,
+    this: &expression::This<ALoc>,
+) -> Result<Type, JobError> {
     let expr = expression::Expression::new(expression::ExpressionInner::This {
         loc: loc.dupe(),
         inner: std::sync::Arc::new(this.clone()),
@@ -6527,7 +6541,7 @@ fn this_<'a>(cx: &Context<'a>, loc: ALoc, this: &expression::This<ALoc>) -> Resu
     }
 }
 
-fn super_<'a>(cx: &Context<'a>, loc: ALoc) -> Result<Type, JobError> {
+fn super_<'a>(cx: &mut Context<'a>, loc: ALoc) -> Result<Type, JobError> {
     type_env::var_ref(None, cx, None, &FlowSmolStr::new_inline("super"), loc)
 }
 
@@ -6542,7 +6556,7 @@ fn super_<'a>(cx: &Context<'a>, loc: ALoc) -> Result<Type, JobError> {
 // would run on every super-access in every Flow root and always find
 // nothing.
 fn check_super_abstract<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     super_t: &Type,
     name: &Name,
     super_loc: ALoc,
@@ -6561,12 +6575,12 @@ fn check_super_abstract<'a>(
         NotFound,
     }
     fn walk<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         seen: &std::cell::RefCell<std::collections::BTreeSet<type_::properties::Id>>,
         name: &Name,
         t: &Type,
     ) -> Result<FoundKind, JobError> {
-        let concretes = cx.with_suppressed_errors(|| {
+        let concretes = cx.with_suppressed_errors(|cx| {
             FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
         });
         let concretes = match concretes {
@@ -6584,7 +6598,7 @@ fn check_super_abstract<'a>(
         Ok(FoundKind::NotFound)
     }
     fn walk_one<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         seen: &std::cell::RefCell<std::collections::BTreeSet<type_::properties::Id>>,
         name: &Name,
         t: &Type,
@@ -6656,7 +6670,7 @@ fn check_super_abstract<'a>(
 /// that the file does not bind the name, so a library definition that writes its
 /// own `Symbol` mints too. See [`symbol_call::symbol_constructor_call`].
 pub(crate) fn is_symbol_constructor_call<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     e: &expression::Expression<ALoc, ALoc>,
 ) -> bool {
     symbol_call::symbol_constructor_call(e)
@@ -6664,8 +6678,8 @@ pub(crate) fn is_symbol_constructor_call<'a>(
 }
 
 fn expression_<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: SyntacticFlags,
     loc: ALoc,
     e: &expression::Expression<ALoc, ALoc>,
 ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
@@ -6936,12 +6950,12 @@ fn expression_<'a>(
             } else {
                 let reason = mk_reason(VirtualReasonDesc::RMatch, loc.dupe());
                 let arg = expression(None, None, Some(true), cx, &inner.arg)?;
-                let has_hint: LazyBool<'a> = {
+                let has_hint: LazyBool = {
                     let old_has_hint = has_hint.dupe();
                     let loc = loc.dupe();
-                    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
+                    Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                         *old_has_hint.get_forced(cx) || natural_inference::loc_has_hint(cx, &loc)
-                    })))
+                    }))
                 };
                 let arg_t = arg.loc().1.dupe();
                 type_env::init_const(
@@ -7151,7 +7165,7 @@ fn expression_<'a>(
                     })
                 }
                 [] if !matches!(
-                    &*cx.typing_mode(),
+                    cx.typing_mode(),
                     flow_typing_context::TypingMode::CheckingMode
                 ) =>
                 {
@@ -7201,13 +7215,13 @@ fn expression_<'a>(
                     })
                 }
                 _elems => {
-                    let has_hint: LazyBool<'a> = {
+                    let has_hint: LazyBool = {
                         let old_has_hint = has_hint.dupe();
                         let loc = loc.dupe();
-                        Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
+                        Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                             *old_has_hint.get_forced(cx)
                                 || natural_inference::loc_has_hint(cx, &loc)
-                        })))
+                        }))
                     };
                     let reason = if as_const {
                         mk_reason(VirtualReasonDesc::RConstArrayLit, loc.dupe())
@@ -7603,14 +7617,14 @@ fn expression_<'a>(
                     let t = natural_inference::adjust_unique_symbol_precision(
                         cx,
                         &syntactic_flags,
-                        || {
+                        |cx| {
                             type_::unique_symbol_t::inferred_at(
                                 cx.make_aloc_id(&loc),
                                 loc.dupe(),
                                 None,
                             )
                         },
-                        || call_t.dupe(),
+                        |_| call_t.dupe(),
                         &loc,
                     );
                     expression::Expression::new(ExpressionInner::Call {
@@ -7623,12 +7637,12 @@ fn expression_<'a>(
         }
         ExpressionInner::OptionalCall { .. } => subscript(encl_ctx, cx, e)?,
         ExpressionInner::Conditional { inner, .. } => {
-            let has_hint: LazyBool<'a> = {
+            let has_hint: LazyBool = {
                 let old_has_hint = has_hint.dupe();
                 let loc = loc.dupe();
-                Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
+                Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                     *old_has_hint.get_forced(cx) || natural_inference::loc_has_hint(cx, &loc)
-                })))
+                }))
             };
             let decl = *decl;
             let reason = mk_reason(VirtualReasonDesc::RConditional, loc.dupe());
@@ -8032,7 +8046,7 @@ fn expression_<'a>(
                     let t = natural_inference::adjust_precision(
                         cx,
                         &syntactic_flags,
-                        || {
+                        |cx| {
                             let quasis = inner
                                 .quasis
                                 .iter()
@@ -8055,7 +8069,7 @@ fn expression_<'a>(
                                 from_annot,
                             )
                         },
-                        || t_out.dupe(),
+                        |_| t_out.dupe(),
                         &loc,
                     );
                     (t, expressions)
@@ -8251,7 +8265,9 @@ fn expression_<'a>(
             }
             let source_loc = inner.argument.loc().dupe();
             let argument = &*inner.argument;
-            let t = |module_name: flow_import_specifier::Userland| -> Result<Type, JobError> {
+            let t = |cx: &mut Context<'a>,
+                     module_name: flow_import_specifier::Userland|
+             -> Result<Type, JobError> {
                 let ns_t = {
                     let reason =
                         mk_reason(VirtualReasonDesc::RModule(module_name.dupe()), loc.dupe());
@@ -8303,7 +8319,7 @@ fn expression_<'a>(
                 ExpressionInner::StringLiteral { inner: lit, .. } => {
                     let module_name =
                         flow_import_specifier::Userland::from_smol_str(lit.value.dupe());
-                    let t = t(module_name)?;
+                    let t = t(cx, module_name)?;
                     expression::Expression::new(ExpressionInner::Import {
                         loc: (loc, t.dupe()),
                         inner: expression::Import {
@@ -8325,7 +8341,7 @@ fn expression_<'a>(
                     let module_name = &quasi.value.cooked;
                     let module_name_userland =
                         flow_import_specifier::Userland::from_smol_str(module_name.dupe());
-                    let t = t(module_name_userland)?;
+                    let t = t(cx, module_name_userland)?;
                     expression::Expression::new(ExpressionInner::Import {
                         loc: (loc, t.dupe()),
                         inner: (expression::Import {
@@ -8382,7 +8398,7 @@ fn expression_<'a>(
 /// Reports an assertion call (builtin `invariant` or a proven bare `asserts x`
 /// callee) whose asserted condition is always truthy.
 fn check_unnecessary_assertion(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     loc: ALoc,
     callee: FlowSmolStr,
     cond_t: &Type,
@@ -8437,7 +8453,7 @@ fn check_unnecessary_assertion(
 /// references. This is the userland equivalent of the old `invariant`
 /// special case.
 fn proven_bare_assertion_throw(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     callee_loc: &ALoc,
     arguments: &[expression::ExpressionOrSpread<ALoc, ALoc>],
 ) -> bool {
@@ -8475,7 +8491,7 @@ fn is_single_assertion_function(finalized: &VecDeque<Type>) -> bool {
 /// of a comma expression) whose callee is an assertion function that the
 /// targeted callee analysis did not prove, so the call does not narrow.
 fn check_unrecognized_assertion_calls(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     expr: &expression::Expression<ALoc, (ALoc, Type)>,
 ) {
     match expr.deref() {
@@ -8492,7 +8508,7 @@ fn check_unrecognized_assertion_calls(
 }
 
 fn check_unrecognized_assertion_call(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     callee: &expression::Expression<ALoc, (ALoc, Type)>,
 ) {
     use ast::expression::member;
@@ -8558,7 +8574,7 @@ fn check_unrecognized_assertion_call(
 ///   range of possible types of the expression)
 pub fn optional_chain<'a>(
     encl_ctx: EnclosingContext,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     expr: &expression::Expression<ALoc, ALoc>,
 ) -> Result<(Type, Vec<Type>, expression::Expression<ALoc, (ALoc, Type)>), CheckExprError> {
     use ast::expression::ExpressionInner;
@@ -8566,7 +8582,7 @@ pub fn optional_chain<'a>(
     let e: &ExpressionInner<ALoc, ALoc> = expr.deref();
     let ex = expr;
 
-    let normalize_voided_out = |t: Type| -> Result<Vec<Type>, JobError> {
+    let normalize_voided_out = |cx: &mut Context<'a>, t: Type| -> Result<Vec<Type>, JobError> {
         let ts = flow_js_utils::flow_js_result_to_job_error(
             FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(&t), &t),
         )?;
@@ -8576,13 +8592,15 @@ pub fn optional_chain<'a>(
         Ok(ts)
     };
 
-    let factor_out_optional = |factored_loc: ALoc,
+    let factor_out_optional = |cx: &mut Context<'a>,
+                               factored_loc: ALoc,
                                e: &ExpressionInner<ALoc, ALoc>|
      -> (
         ExpressionInner<ALoc, ALoc>,
         OptState,
         Box<
             dyn Fn(
+                    &mut Context<'a>,
                     Type,
                     Type,
                     expression::Call<ALoc, (ALoc, Type)>,
@@ -8662,7 +8680,8 @@ pub fn optional_chain<'a>(
             let filtered_out_loc = filtered_out_loc.dupe();
             let opt_state = opt_state.clone();
             Box::new(
-                move |ty: Type,
+                move |cx: &mut Context<'a>,
+                      ty: Type,
                       sig_help: Type,
                       call: expression::Call<ALoc, (ALoc, Type)>|
                       -> ExpressionInner<ALoc, (ALoc, Type)> {
@@ -8751,10 +8770,11 @@ pub fn optional_chain<'a>(
         (e_prime, opt_state, call_ast, member_ast)
     };
 
-    let try_non_chain = |cx: &Context<'a>,
+    let try_non_chain = |cx: &mut Context<'a>,
                          loc: ALoc,
                          e: &ExpressionInner<ALoc, ALoc>,
                          call_ast: &dyn Fn(
+        &mut Context<'a>,
         Type,
         Type,
         expression::Call<ALoc, (ALoc, Type)>,
@@ -8914,6 +8934,7 @@ pub fn optional_chain<'a>(
                 Some((
                     (loc.dupe(), lhs_t.dupe()),
                     call_ast(
+                        cx,
                         lhs_t,
                         id_t.dupe(),
                         expression::Call {
@@ -8966,6 +8987,7 @@ pub fn optional_chain<'a>(
                 Some((
                     (loc.dupe(), lhs_t.dupe()),
                     call_ast(
+                        cx,
                         lhs_t,
                         t.dupe(),
                         expression::Call {
@@ -9070,6 +9092,7 @@ pub fn optional_chain<'a>(
                 Some((
                     (loc.dupe(), lhs_t.dupe()),
                     call_ast(
+                        cx,
                         lhs_t,
                         prop_t.dupe(),
                         expression::Call {
@@ -9158,6 +9181,7 @@ pub fn optional_chain<'a>(
                 Some((
                     (loc.dupe(), lhs_t.dupe()),
                     call_ast(
+                        cx,
                         lhs_t,
                         super_t.dupe(),
                         expression::Call {
@@ -9397,6 +9421,7 @@ pub fn optional_chain<'a>(
                 Some((
                     (loc.dupe(), t.dupe()),
                     call_ast(
+                        cx,
                         t.dupe(),
                         callee_t,
                         expression::Call {
@@ -9493,7 +9518,7 @@ pub fn optional_chain<'a>(
         })
     };
 
-    let (e_prime, opt_state, call_ast, member_ast) = factor_out_optional(loc.dupe(), e);
+    let (e_prime, opt_state, call_ast, member_ast) = factor_out_optional(cx, loc.dupe(), e);
     let bare_assertion_always_throws = match (&opt_state, &e_prime) {
         // Explicit type arguments are fine: assertion functions can be generic.
         (OptState::NonOptional, ExpressionInner::Call { inner, .. }) => {
@@ -9545,7 +9570,7 @@ pub fn optional_chain<'a>(
     }
 
     fn handle_new_chain<'a, A, B>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         assertion: bool,
         conf: ChainingConf<'a, '_, A, B>,
         lhs_reason: Reason,
@@ -9650,7 +9675,7 @@ pub fn optional_chain<'a>(
         ))
     }
     fn handle_continue_chain<'a, A, B>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         conf: ChainingConf<'a, '_, A, B>,
         chain_t: Type,
         voided_t: Vec<Type>,
@@ -9701,7 +9726,7 @@ pub fn optional_chain<'a>(
     }
 
     fn handle_chaining<'a, A, B>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         conf: ChainingConf<'a, '_, A, B>,
         opt: OptState,
         obj_: &expression::Expression<ALoc, ALoc>,
@@ -9801,7 +9826,7 @@ pub fn optional_chain<'a>(
     }
 
     fn specialize_callee(
-        cx: &Context<'_>,
+        cx: &mut Context<'_>,
         callee: expression::Expression<ALoc, (ALoc, Type)>,
         specialized_callee: &type_::SpecializedCallee,
     ) -> expression::Expression<ALoc, (ALoc, Type)> {
@@ -9994,12 +10019,10 @@ pub fn optional_chain<'a>(
                 }
                 _ => None,
             };
-            let get_opt_use: Rc<
-                dyn Fn(&Context<'a>, &Type, Reason) -> type_::OptUseT<Context<'a>>,
-            > = {
+            let get_opt_use: Rc<dyn Fn(&mut Context<'a>, &Type, Reason) -> type_::OptUseT<Cx>> = {
                 let use_op = use_op.dupe();
                 let reason = reason.dupe();
-                Rc::new(move |_cx: &Context<'a>, tind: &Type, _: Reason| {
+                Rc::new(move |_cx: &mut Context<'a>, tind: &Type, _: Reason| {
                     type_::OptUseT::OptGetElemT(
                         use_op.dupe(),
                         reason.dupe(),
@@ -10010,11 +10033,11 @@ pub fn optional_chain<'a>(
                 })
             };
             let get_mem_t: Box<
-                dyn Fn(&Context<'a>, &Type, Reason, &Type) -> Result<Type, JobError>,
+                dyn Fn(&mut Context<'a>, &Type, Reason, &Type) -> Result<Type, JobError>,
             > = {
                 let get_opt_use = get_opt_use.dupe();
                 Box::new(
-                    move |cx: &Context<'a>, tind: &Type, reason: Reason, obj_t: &Type| {
+                    move |cx: &mut Context<'a>, tind: &Type, reason: Reason, obj_t: &Type| {
                         let opt_use = get_opt_use(cx, tind, reason.dupe());
                         let obj_t = obj_t.dupe();
                         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<JobError>(
@@ -10032,13 +10055,13 @@ pub fn optional_chain<'a>(
             };
             let eval_index: Box<
                 dyn FnOnce(
-                    &Context<'a>,
+                    &mut Context<'a>,
                 ) -> Result<
                     (Type, expression::Expression<ALoc, (ALoc, Type)>),
                     CheckExprError,
                 >,
             > = {
-                Box::new(move |cx: &Context<'a>| {
+                Box::new(move |cx: &mut Context<'a>| {
                     let typed_index = expression_inner(
                         Some(EnclosingContext::IndexContext),
                         None,
@@ -10057,7 +10080,7 @@ pub fn optional_chain<'a>(
                 refine: {
                     let loc = loc.dupe();
                     let ex = ex.dupe();
-                    Box::new(move |cx: &Context<'a>| refinement::get(true, cx, &ex, loc.dupe()))
+                    Box::new(move |cx: &mut Context<'a>| refinement::get(true, cx, &ex, loc.dupe()))
                 },
                 subexpressions: eval_index,
                 get_result: get_mem_t,
@@ -10104,23 +10127,27 @@ pub fn optional_chain<'a>(
                 prop_reason,
                 name,
             );
-            let get_mem_t: Box<dyn Fn(&Context<'a>, &(), Reason, &Type) -> Result<Type, JobError>> = {
+            let get_mem_t: Box<
+                dyn Fn(&mut Context<'a>, &(), Reason, &Type) -> Result<Type, JobError>,
+            > = {
                 let expr_reason = expr_reason.dupe();
                 let opt_use = opt_use.clone();
-                Box::new(move |cx: &Context<'a>, _: &(), _: Reason, obj_t: &Type| {
-                    let opt_use = opt_use.clone();
-                    let obj_t = obj_t.dupe();
-                    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<JobError>(
-                        cx,
-                        expr_reason.dupe(),
-                        |cx, t_reason, t_id| {
-                            let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-                            let use_t = apply_opt_use(opt_use.clone(), tvar);
-                            flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
-                            Ok(())
-                        },
-                    )
-                })
+                Box::new(
+                    move |cx: &mut Context<'a>, _: &(), _: Reason, obj_t: &Type| {
+                        let opt_use = opt_use.clone();
+                        let obj_t = obj_t.dupe();
+                        tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<JobError>(
+                            cx,
+                            expr_reason.dupe(),
+                            |cx, t_reason, t_id| {
+                                let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
+                                let use_t = apply_opt_use(opt_use.clone(), tvar);
+                                flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                                Ok(())
+                            },
+                        )
+                    },
+                )
             };
             let conf = ChainingConf {
                 refinement_action: None,
@@ -10129,11 +10156,11 @@ pub fn optional_chain<'a>(
                 refine: {
                     let loc = loc.dupe();
                     let ex = ex.dupe();
-                    Box::new(move |cx: &Context<'a>| refinement::get(true, cx, &ex, loc.dupe()))
+                    Box::new(move |cx: &mut Context<'a>| refinement::get(true, cx, &ex, loc.dupe()))
                 },
                 get_opt_use: {
                     let opt_use = opt_use.clone();
-                    Rc::new(move |_cx: &Context<'a>, _: &(), _: Reason| opt_use.clone())
+                    Rc::new(move |_cx: &mut Context<'a>, _: &(), _: Reason| opt_use.clone())
                 },
                 get_reason: {
                     let expr_reason = expr_reason.dupe();
@@ -10176,23 +10203,27 @@ pub fn optional_chain<'a>(
                 mk_expression_reason(ex),
             )));
             let opt_use = get_private_field_opt_use(cx, expr_reason.dupe(), use_op, name);
-            let get_mem_t: Box<dyn Fn(&Context<'a>, &(), Reason, &Type) -> Result<Type, JobError>> = {
+            let get_mem_t: Box<
+                dyn Fn(&mut Context<'a>, &(), Reason, &Type) -> Result<Type, JobError>,
+            > = {
                 let expr_reason = expr_reason.dupe();
                 let opt_use = opt_use.clone();
-                Box::new(move |cx: &Context<'a>, _: &(), _: Reason, obj_t: &Type| {
-                    let opt_use = opt_use.clone();
-                    let obj_t = obj_t.dupe();
-                    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<JobError>(
-                        cx,
-                        expr_reason.dupe(),
-                        |cx, t_reason, t_id| {
-                            let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-                            let use_t = apply_opt_use(opt_use.clone(), tvar);
-                            flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
-                            Ok(())
-                        },
-                    )
-                })
+                Box::new(
+                    move |cx: &mut Context<'a>, _: &(), _: Reason, obj_t: &Type| {
+                        let opt_use = opt_use.clone();
+                        let obj_t = obj_t.dupe();
+                        tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<JobError>(
+                            cx,
+                            expr_reason.dupe(),
+                            |cx, t_reason, t_id| {
+                                let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
+                                let use_t = apply_opt_use(opt_use.clone(), tvar);
+                                flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                                Ok(())
+                            },
+                        )
+                    },
+                )
             };
             let conf = ChainingConf {
                 refinement_action: None,
@@ -10201,11 +10232,11 @@ pub fn optional_chain<'a>(
                 refine: {
                     let loc = loc.dupe();
                     let ex = ex.dupe();
-                    Box::new(move |cx: &Context<'a>| refinement::get(true, cx, &ex, loc.dupe()))
+                    Box::new(move |cx: &mut Context<'a>| refinement::get(true, cx, &ex, loc.dupe()))
                 },
                 get_opt_use: {
                     let opt_use = opt_use.clone();
-                    Rc::new(move |_cx: &Context<'a>, _: &(), _: Reason| opt_use.clone())
+                    Rc::new(move |_cx: &mut Context<'a>, _: &(), _: Reason| opt_use.clone())
                 },
                 get_reason: {
                     let expr_reason = expr_reason.dupe();
@@ -10293,7 +10324,7 @@ pub fn optional_chain<'a>(
                     let prop_collector = TypeCollector::create();
                     let call_voided_out_collector = TypeCollector::create();
                     let get_opt_use: Rc<
-                        dyn Fn(&Context<'a>, &Vec<CallArg>, Reason) -> type_::OptUseT<Context<'a>>,
+                        dyn Fn(&mut Context<'a>, &Vec<CallArg>, Reason) -> type_::OptUseT<Cx>,
                     > = {
                         let opt_state = opt_state.clone();
                         let call_voided_out_collector = call_voided_out_collector.dupe();
@@ -10305,7 +10336,7 @@ pub fn optional_chain<'a>(
                         let specialized_callee = specialized_callee.clone();
                         let name_str = name_str.dupe();
                         Rc::new(
-                            move |cx: &Context<'a>, argts: &Vec<CallArg>, _reason: Reason| {
+                            move |cx: &mut Context<'a>, argts: &Vec<CallArg>, _reason: Reason| {
                                 method_call_opt_use(
                                     cx,
                                     opt_state.clone(),
@@ -10334,7 +10365,7 @@ pub fn optional_chain<'a>(
                         let use_op = use_op.dupe();
                         let loc = loc.dupe();
                         let opt_state = opt_state.clone();
-                        move |cx: &Context<'a>, argts: &Vec<CallArg>, obj_t: &Type, f: Type| {
+                        move |cx: &mut Context<'a>, argts: &Vec<CallArg>, obj_t: &Type, f: Type| {
                             let reason_call = reason_call.dupe();
                             let targts = targts.clone();
                             let prop_collector = prop_collector.dupe();
@@ -10407,7 +10438,7 @@ pub fn optional_chain<'a>(
                     let refinement_action: Option<
                         Box<
                             dyn Fn(
-                                &Context<'a>,
+                                &mut Context<'a>,
                                 &Vec<CallArg>,
                                 &Type,
                                 Type,
@@ -10416,7 +10447,7 @@ pub fn optional_chain<'a>(
                     > = Some(Box::new(handle_refined_callee));
                     let get_mem_t: Box<
                         dyn Fn(
-                            &Context<'a>,
+                            &mut Context<'a>,
                             &Vec<CallArg>,
                             Reason,
                             &Type,
@@ -10425,7 +10456,7 @@ pub fn optional_chain<'a>(
                         let reason_call = reason_call.dupe();
                         let get_opt_use = get_opt_use.dupe();
                         Box::new(
-                            move |cx: &Context<'a>,
+                            move |cx: &mut Context<'a>,
                                   argts: &Vec<CallArg>,
                                   reason: Reason,
                                   obj_t: &Type| {
@@ -10446,14 +10477,16 @@ pub fn optional_chain<'a>(
                     };
                     let eval_args: Box<
                         dyn FnOnce(
-                            &Context<'a>,
+                            &mut Context<'a>,
                         ) -> Result<
                             (Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>),
                             CheckExprError,
                         >,
                     > = {
                         let loc = loc.dupe();
-                        Box::new(move |cx: &Context<'a>| call_arg_list(cx, loc, callee, arguments))
+                        Box::new(move |cx: &mut Context<'a>| {
+                            call_arg_list(cx, loc, callee, arguments)
+                        })
                     };
                     let conf = ChainingConf {
                         subexpressions: eval_args,
@@ -10461,7 +10494,7 @@ pub fn optional_chain<'a>(
                         get_opt_use,
                         refine: {
                             let lookup_loc = lookup_loc.dupe();
-                            Box::new(move |cx: &Context<'a>| {
+                            Box::new(move |cx: &mut Context<'a>| {
                                 refinement::get(true, cx, callee, lookup_loc.dupe())
                             })
                         },
@@ -10546,10 +10579,10 @@ pub fn optional_chain<'a>(
                     let lhs_expression = flow_js_utils::expression_reference_for_error(callee);
                     let get_opt_use: Rc<
                         dyn Fn(
-                            &Context<'a>,
+                            &mut Context<'a>,
                             &(Vec<CallArg>, Type),
                             Reason,
-                        ) -> type_::OptUseT<Context<'a>>,
+                        ) -> type_::OptUseT<Cx>,
                     > = {
                         let opt_state = opt_state.clone();
                         let lhs_expression = lhs_expression.dupe();
@@ -10562,7 +10595,7 @@ pub fn optional_chain<'a>(
                         let targts = targts.clone();
                         let specialized_callee = specialized_callee.clone();
                         Rc::new(
-                            move |_cx: &Context<'a>,
+                            move |_cx: &mut Context<'a>,
                                   arg_and_elem: &(Vec<CallArg>, Type),
                                   _reason: Reason| {
                                 let (argts, elem_t) = arg_and_elem;
@@ -10585,7 +10618,7 @@ pub fn optional_chain<'a>(
                     };
                     let get_mem_t: Box<
                         dyn Fn(
-                            &Context<'a>,
+                            &mut Context<'a>,
                             &(Vec<CallArg>, Type),
                             Reason,
                             &Type,
@@ -10594,7 +10627,7 @@ pub fn optional_chain<'a>(
                         let reason_call = reason_call.dupe();
                         let get_opt_use = get_opt_use.dupe();
                         Box::new(
-                            move |cx: &Context<'a>,
+                            move |cx: &mut Context<'a>,
                                   arg_and_elem: &(Vec<CallArg>, Type),
                                   reason: Reason,
                                   obj_t: &Type| {
@@ -10615,7 +10648,7 @@ pub fn optional_chain<'a>(
                     };
                     let eval_args_and_expr: Box<
                         dyn FnOnce(
-                                &Context<'a>,
+                                &mut Context<'a>,
                             ) -> Result<
                                 (
                                     (Vec<CallArg>, Type),
@@ -10628,7 +10661,7 @@ pub fn optional_chain<'a>(
                             > + '_,
                     > = {
                         let loc = loc.dupe();
-                        Box::new(move |cx: &Context<'a>| {
+                        Box::new(move |cx: &mut Context<'a>| {
                             let typed_prop_expr = expression_inner(
                                 Some(EnclosingContext::IndexContext),
                                 None,
@@ -10648,7 +10681,7 @@ pub fn optional_chain<'a>(
                         subexpressions: eval_args_and_expr,
                         get_result: get_mem_t,
                         get_opt_use,
-                        refine: Box::new(|_cx: &Context<'a>| Ok(noop())),
+                        refine: Box::new(|_cx: &mut Context<'a>| Ok(noop())),
                         get_reason: {
                             let expr_reason = expr_reason.dupe();
                             Box::new(move |_: &Type| expr_reason.dupe())
@@ -10679,7 +10712,7 @@ pub fn optional_chain<'a>(
             let call_voided_ts: Vec<Type> = call_voided_out_collector.collect_to_vec();
             let call_voided_union = union_of_ts(expr_reason.dupe(), call_voided_ts, None);
             let joined = join_optional_branches(&lookup_voided_out, &call_voided_union);
-            let voided_out = normalize_voided_out(joined)?;
+            let voided_out = normalize_voided_out(cx, joined)?;
             let lhs_t = join_optional_branches(&voided_out, &member_lhs_t);
             let member_for_callee = expression::Member {
                 object: object_ast,
@@ -10695,6 +10728,7 @@ pub fn optional_chain<'a>(
                 &specialized_callee,
             );
             let ast_inner = call_ast(
+                cx,
                 filtered_out.dupe(),
                 sig_help,
                 expression::Call {
@@ -10728,14 +10762,14 @@ pub fn optional_chain<'a>(
             }))));
             let spec_callee = cx.new_specialized_callee();
             let get_opt_use: Rc<
-                dyn Fn(&Context<'a>, &Vec<CallArg>, Reason) -> type_::OptUseT<Context<'a>>,
+                dyn Fn(&mut Context<'a>, &Vec<CallArg>, Reason) -> type_::OptUseT<Cx>,
             > = {
                 let loc = loc.dupe();
                 let use_op = use_op.dupe();
                 let targts = targts.clone();
                 let spec_callee = spec_callee.clone();
                 Rc::new(
-                    move |cx: &Context<'a>, argts: &Vec<CallArg>, reason: Reason| {
+                    move |cx: &mut Context<'a>, argts: &Vec<CallArg>, reason: Reason| {
                         func_call_opt_use(
                             cx,
                             loc.dupe(),
@@ -10759,11 +10793,14 @@ pub fn optional_chain<'a>(
                 })
             };
             let get_result: Box<
-                dyn Fn(&Context<'a>, &Vec<CallArg>, Reason, &Type) -> Result<Type, JobError>,
+                dyn Fn(&mut Context<'a>, &Vec<CallArg>, Reason, &Type) -> Result<Type, JobError>,
             > = {
                 let get_opt_use = get_opt_use.dupe();
                 Box::new(
-                    move |cx: &Context<'a>, argts: &Vec<CallArg>, reason: Reason, obj_t: &Type| {
+                    move |cx: &mut Context<'a>,
+                          argts: &Vec<CallArg>,
+                          reason: Reason,
+                          obj_t: &Type| {
                         let opt_use = get_opt_use(cx, argts, reason.dupe());
                         let obj_t = obj_t.dupe();
                         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<JobError>(
@@ -10781,19 +10818,19 @@ pub fn optional_chain<'a>(
             };
             let eval_args: Box<
                 dyn FnOnce(
-                    &Context<'a>,
+                    &mut Context<'a>,
                 ) -> Result<
                     (Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>),
                     CheckExprError,
                 >,
             > = {
                 let loc = loc.dupe();
-                Box::new(move |cx: &Context<'a>| call_arg_list(cx, loc, callee, arguments))
+                Box::new(move |cx: &mut Context<'a>| call_arg_list(cx, loc, callee, arguments))
             };
             let conf = ChainingConf {
                 refinement_action: None,
                 subexpressions: eval_args,
-                refine: Box::new(|_cx: &Context<'a>| Ok(noop())),
+                refine: Box::new(|_cx: &mut Context<'a>| Ok(noop())),
                 get_result,
                 get_opt_use,
                 get_reason,
@@ -10808,6 +10845,7 @@ pub fn optional_chain<'a>(
                      -> ExpressionInner<ALoc, (ALoc, Type)> {
                         let callee_arg = specialize_callee(cx, callee_arg, &spec_callee);
                         call_ast(
+                            cx,
                             filtered_out.dupe(),
                             sig_help,
                             expression::Call {
@@ -10846,7 +10884,7 @@ pub fn optional_chain<'a>(
 }
 
 fn arg_list<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     args: &expression::ArgList<ALoc, ALoc>,
 ) -> Result<(Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>), CheckExprError> {
     let arg_list = args;
@@ -10870,7 +10908,7 @@ fn arg_list<'a>(
 /// `invariant` handling, and reports the assertion when that argument is
 /// always truthy.
 fn call_arg_list<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     callee: &expression::Expression<ALoc, ALoc>,
     args: &expression::ArgList<ALoc, ALoc>,
@@ -10922,7 +10960,7 @@ fn call_arg_list<'a>(
 
 fn subscript<'a>(
     encl_ctx: EnclosingContext,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     ex: &expression::Expression<ALoc, ALoc>,
 ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let (_, _, ast) = optional_chain(encl_ctx, cx, ex)?;
@@ -10930,8 +10968,8 @@ fn subscript<'a>(
 }
 
 fn unary<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     loc: ALoc,
     expr: &expression::Unary<ALoc, ALoc>,
 ) -> Result<(Type, expression::Unary<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -11004,12 +11042,12 @@ fn unary<'a>(
             )
         }
         UnaryOperator::Minus => {
-            let has_hint: LazyBool<'a> = {
+            let has_hint: LazyBool = {
                 let old_has_hint = has_hint.dupe();
                 let loc = loc.dupe();
-                Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
+                Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                     *old_has_hint.get_forced(cx) || natural_inference::loc_has_hint(cx, &loc)
-                })))
+                }))
             };
             let argument = expression_inner(
                 Some(encl_ctx.dupe()),
@@ -11171,7 +11209,7 @@ fn unary<'a>(
 
 // numeric pre/post inc/dec
 fn update<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     expr: &expression::Update<ALoc, ALoc>,
 ) -> Result<(Type, expression::Update<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -11263,14 +11301,14 @@ fn visit_eq_test<'a>(
     right: &expression::Expression<ALoc, ALoc>,
 ) -> Box<
     dyn Fn(
-        &Context<'a>,
+        &mut Context<'a>,
         &expression::Expression<ALoc, ALoc>,
     ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError>,
 > {
     if encl_ctx.is_conditional_test_context() {
         let mk = move |encl: EnclosingContext| -> Box<
             dyn Fn(
-                &Context<'a>,
+                &mut Context<'a>,
                 &expression::Expression<ALoc, ALoc>,
             )
                 -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError>,
@@ -11323,7 +11361,7 @@ fn visit_eq_test<'a>(
 
 // traverse a binary expression, return result type
 fn binary<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     encl_ctx: EnclosingContext,
     expr: &expression::Binary<ALoc, ALoc>,
@@ -11528,8 +11566,8 @@ fn binary<'a>(
 }
 
 fn logical<'a>(
-    cx: &Context<'a>,
-    syntactic_flags: &SyntacticFlags<'a>,
+    cx: &mut Context<'a>,
+    syntactic_flags: &SyntacticFlags,
     loc: ALoc,
     expr: &expression::Logical<ALoc, ALoc>,
 ) -> Result<(Type, expression::Logical<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -11541,12 +11579,12 @@ fn logical<'a>(
         decl,
         ..
     } = syntactic_flags;
-    let has_hint: LazyBool<'a> = {
+    let has_hint: LazyBool = {
         let old_has_hint = has_hint.dupe();
         let loc = loc.dupe();
-        Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
+        Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
             *old_has_hint.get_forced(cx) || natural_inference::loc_has_hint(cx, &loc)
-        })))
+        }))
     };
     // With logical operators the LHS is always evaluated. So if the LHS throws, the whole
     // expression throws. To model this we do not catch abnormal exceptions on the LHS.
@@ -11716,7 +11754,7 @@ fn logical<'a>(
 }
 
 pub fn assignment_lhs<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     patt: &ast::pattern::Pattern<ALoc, ALoc>,
 ) -> Result<ast::pattern::Pattern<ALoc, (ALoc, Type)>, CheckExprError> {
     match patt {
@@ -11801,7 +11839,7 @@ pub fn assignment_lhs<'a>(
                                 comments: name.comments.dupe(),
                             }),
                         }),
-                        &|loc: ALoc| -> (ALoc, Type) {
+                        &mut |loc: ALoc| -> (ALoc, Type) {
                             let reason = mk_reason(RNonnullAssert, loc.dupe());
                             let t = type_operation_utils::operators::non_maybe(cx, &reason, &t)
                                 .unwrap();
@@ -11819,7 +11857,7 @@ pub fn assignment_lhs<'a>(
                         expression_inner(None, None, None, FrozenKind::NotFrozen, None, cx, expr)?;
                     let t = typed_expr.loc().1.dupe();
                     let typed_expr =
-                        reconstruct_ast.call(typed_expr, &|loc: ALoc| -> (ALoc, Type) {
+                        reconstruct_ast.call(typed_expr, &mut |loc: ALoc| -> (ALoc, Type) {
                             let reason = mk_reason(RNonnullAssert, loc.dupe());
                             let t = type_operation_utils::operators::non_maybe(cx, &reason, &t)
                                 .unwrap();
@@ -11863,7 +11901,7 @@ pub fn assignment_lhs<'a>(
 //   is optional (a?.b) and should be ContinueChain when it is not itself
 //   optional but is part of an optional chain (a?.b.c).
 fn assign_member<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     optional: OptState,
     make_op: &dyn Fn(/* lhs */ Reason, /* prop */ Reason) -> UseOp,
     t: Type,
@@ -11882,10 +11920,11 @@ fn assign_member<'a>(
     ),
     CheckExprError,
 > {
-    let run_maybe_optional_chain = |lhs_type: &Type,
+    let run_maybe_optional_chain = |cx: &mut Context<'a>,
+                                    lhs_type: &Type,
                                     lhs_reason: &Reason,
                                     lhs_expression: &ExpressionReferenceData<ALoc>,
-                                    use_t: UseT<Context<'a>>|
+                                    use_t: UseT<Cx>|
      -> Result<(), JobError> {
         match (&optional, &mode) {
             (OptState::NewChain | OptState::AssertChain, SetMode::Delete) => {
@@ -11920,33 +11959,33 @@ fn assign_member<'a>(
         }
         Ok(())
     };
-    let typecheck_object = |obj: &expression::Expression<ALoc, ALoc>| -> Result<
-        (Type, expression::Expression<ALoc, (ALoc, Type)>),
-        CheckExprError,
-    > {
-        // If we're deleting a member expression, it's allowed to be an optional chain, and we
-        // need to respect short-circuiting, which means the type that's flowed into the
-        // SetPropT (or similar) upper bound must be the "filtered," non-nullish type.
-        // However, syntactically `a?.x = e` is banned, so if this is an assignment expression,
-        // we should just use `expression` to evaluate the object. It still might contain
-        // an optional chain, but if so the chain is in parentheses (like `(a?.b).x = e`),
-        // which means that the type that flows into SetPropT should include the nullish case.
-        Ok(match (&optional, &mode) {
-            (
-                OptState::NewChain | OptState::ContinueChain | OptState::AssertChain,
-                SetMode::Delete,
-            ) => {
-                let (o, _, _object) = optional_chain(EnclosingContext::NoContext, cx, obj)?;
-                (o, _object)
-            }
-            _ => {
-                let _object =
-                    expression_inner(None, None, None, FrozenKind::NotFrozen, None, cx, obj)?;
-                let o = _object.loc().1.dupe();
-                (o, _object)
-            }
-        })
-    };
+    let typecheck_object =
+        |cx: &mut Context<'a>,
+         obj: &expression::Expression<ALoc, ALoc>|
+         -> Result<(Type, expression::Expression<ALoc, (ALoc, Type)>), CheckExprError> {
+            // If we're deleting a member expression, it's allowed to be an optional chain, and we
+            // need to respect short-circuiting, which means the type that's flowed into the
+            // SetPropT (or similar) upper bound must be the "filtered," non-nullish type.
+            // However, syntactically `a?.x = e` is banned, so if this is an assignment expression,
+            // we should just use `expression` to evaluate the object. It still might contain
+            // an optional chain, but if so the chain is in parentheses (like `(a?.b).x = e`),
+            // which means that the type that flows into SetPropT should include the nullish case.
+            Ok(match (&optional, &mode) {
+                (
+                    OptState::NewChain | OptState::ContinueChain | OptState::AssertChain,
+                    SetMode::Delete,
+                ) => {
+                    let (o, _, _object) = optional_chain(EnclosingContext::NoContext, cx, obj)?;
+                    (o, _object)
+                }
+                _ => {
+                    let _object =
+                        expression_inner(None, None, None, FrozenKind::NotFrozen, None, cx, obj)?;
+                    let o = _object.loc().1.dupe();
+                    (o, _object)
+                }
+            })
+        };
     Ok(match &lhs.property {
         // super.name = e
         expression::member::Property::PropertyIdentifier(id)
@@ -12022,7 +12061,7 @@ fn assign_member<'a>(
             let comments = &lhs.comments;
             let lhs_reason = mk_expression_reason(&lhs.object);
             let lhs_expression = flow_js_utils::expression_reference_for_error(&lhs.object);
-            let (o, _object) = typecheck_object(&lhs.object)?;
+            let (o, _object) = typecheck_object(cx, &lhs.object)?;
             let wr_ctx = match (_object.deref(), type_env::var_scope_kind(cx)) {
                 (
                     expression::ExpressionInner::This { .. },
@@ -12038,12 +12077,13 @@ fn assign_member<'a>(
                 tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
                     cx,
                     prop_reason,
-                    |_cx, prop_t| {
+                    |cx, prop_t| {
                         let use_op = make_op(
                             reason.dupe(),
                             mk_reason(lhs_prop_reason.desc(true).cloned(), prop_loc.dupe()),
                         );
                         run_maybe_optional_chain(
+                            cx,
                             &o,
                             &lhs_reason,
                             &lhs_expression,
@@ -12095,7 +12135,7 @@ fn assign_member<'a>(
             };
             let lhs_reason = mk_expression_reason(&lhs.object);
             let lhs_expression = flow_js_utils::expression_reference_for_error(&lhs.object);
-            let (o, _object) = typecheck_object(&lhs.object)?;
+            let (o, _object) = typecheck_object(cx, &lhs.object)?;
             let prop_t = {
                 let reason = mk_reason(RPropertyAssignment(Some(name.dupe())), lhs_loc.dupe());
                 let prop_name = Name::new(name.dupe());
@@ -12104,12 +12144,13 @@ fn assign_member<'a>(
                 tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
                     cx,
                     prop_reason.dupe(),
-                    |_cx, prop_t| {
+                    |cx, prop_t| {
                         let use_op = make_op(
                             reason.dupe(),
                             mk_reason(lhs_prop_reason.desc(true).cloned(), prop_loc.dupe()),
                         );
                         run_maybe_optional_chain(
+                            cx,
                             &o,
                             &lhs_reason,
                             &lhs_expression,
@@ -12186,7 +12227,7 @@ fn assign_member<'a>(
             let reason = mk_reason(RPropertyAssignment(None), lhs_loc.dupe());
             let lhs_reason = mk_expression_reason(&lhs.object);
             let lhs_expression = flow_js_utils::expression_reference_for_error(&lhs.object);
-            let (o, _object) = typecheck_object(&lhs.object)?;
+            let (o, _object) = typecheck_object(cx, &lhs.object)?;
             let typed_index = expression_inner(
                 Some(EnclosingContext::IndexContext),
                 None,
@@ -12202,6 +12243,7 @@ fn assign_member<'a>(
                 mk_reason(lhs_prop_reason.desc(true).cloned(), iloc.dupe()),
             );
             run_maybe_optional_chain(
+                cx,
                 &o,
                 &lhs_reason,
                 &lhs_expression,
@@ -12234,7 +12276,7 @@ fn assign_member<'a>(
 
 // traverse simple assignment expressions (`lhs = rhs`)
 fn simple_assignment<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     _loc: ALoc,
     lhs: &ast::pattern::Pattern<ALoc, ALoc>,
     rhs: &expression::Expression<ALoc, ALoc>,
@@ -12323,7 +12365,7 @@ fn simple_assignment<'a>(
                     let t = assign_t.dupe();
                     let typed_expr = reconstruct_ast.call(
                         expression::Expression::new(lhs_inner),
-                        &|loc: ALoc| -> (ALoc, Type) { (loc, t.dupe()) },
+                        &mut |loc: ALoc| -> (ALoc, Type) { (loc, t.dupe()) },
                     );
                     let t = assign_t;
                     ast::pattern::Pattern::Expression {
@@ -12355,7 +12397,7 @@ fn simple_assignment<'a>(
                             loc: (pat_loc, t.dupe()),
                             inner: typed_name,
                         }),
-                        &|loc: ALoc| -> (ALoc, Type) { (loc, t.dupe()) },
+                        &mut |loc: ALoc| -> (ALoc, Type) { (loc, t.dupe()) },
                     );
                     let t = typed_expr.loc().1.dupe();
                     ast::pattern::Pattern::Expression {
@@ -12373,7 +12415,7 @@ fn simple_assignment<'a>(
 
 // traverse assignment expressions with operators (`lhs += rhs`, `lhs *= rhs`, etc)
 fn op_assignment<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     lhs: &ast::pattern::Pattern<ALoc, ALoc>,
     op: expression::AssignmentOperator,
@@ -12388,7 +12430,7 @@ fn op_assignment<'a>(
 > {
     let reason = mk_reason(None, loc.dupe());
     let rhs_reason = mk_expression_reason(rhs);
-    let update_env = |result_t: &Type| -> Result<(), CheckExprError> {
+    let update_env = |cx: &mut Context<'a>, result_t: &Type| -> Result<(), CheckExprError> {
         let (lhs, _) = flow_parser::ast_utils::unwrap_nonnull_lhs(lhs);
         match lhs.as_ref() {
             ast::pattern::Pattern::Identifier { inner, .. } => {
@@ -12466,7 +12508,7 @@ fn op_assignment<'a>(
             let result_t =
                 type_operation_utils::operators::arith(cx, &reason, &arith_kind, &lhs_t, &rhs_t)?;
             // enforce state-based guards for binding update, e.g., const
-            update_env(&result_t)?;
+            update_env(cx, &result_t)?;
             (lhs_t, lhs_ast, rhs_ast)
         }
         expression::AssignmentOperator::NullishAssign
@@ -12538,7 +12580,7 @@ fn op_assignment<'a>(
                         let result_t = type_operation_utils::operators::logical_nullish_coalesce(
                             cx, &reason, &lhs_t, &rhs_t,
                         )?;
-                        update_env(&result_t)?;
+                        update_env(cx, &result_t)?;
                         (lhs_t, lhs_pattern_ast, rhs_ast)
                     }
                     expression::AssignmentOperator::AndAssign => {
@@ -12570,7 +12612,7 @@ fn op_assignment<'a>(
                         let result_t = type_operation_utils::operators::logical_and(
                             cx, &reason, &lhs_t, &rhs_t,
                         )?;
-                        update_env(&result_t)?;
+                        update_env(cx, &result_t)?;
                         (lhs_t, lhs_pattern_ast, rhs_ast)
                     }
                     expression::AssignmentOperator::OrAssign => {
@@ -12603,7 +12645,7 @@ fn op_assignment<'a>(
                         let result_t = type_operation_utils::operators::logical_or(
                             cx, &reason, &lhs_t, &rhs_t,
                         )?;
-                        update_env(&result_t)?;
+                        update_env(cx, &result_t)?;
                         (lhs_t, lhs_pattern_ast, rhs_ast)
                     }
                     _ => panic!("Unexpected operator"),
@@ -12615,7 +12657,7 @@ fn op_assignment<'a>(
 
 // traverse assignment expressions
 fn assignment<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     lhs: &ast::pattern::Pattern<ALoc, ALoc>,
     op: Option<expression::AssignmentOperator>,
@@ -12636,7 +12678,7 @@ fn assignment<'a>(
 
 // delete variables and properties
 fn delete<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     target: &expression::Expression<ALoc, ALoc>,
 ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
@@ -12762,7 +12804,7 @@ fn delete<'a>(
 }
 
 pub fn collapse_children<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     children: &(ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
 ) -> Result<
     (
@@ -12790,7 +12832,7 @@ pub fn collapse_children<'a>(
 }
 
 fn jsx<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     expr_loc: ALoc,
     e: &ast::jsx::Element<ALoc, ALoc>,
 ) -> Result<(Type, ast::jsx::Element<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -12818,7 +12860,7 @@ fn jsx<'a>(
 }
 
 fn jsx_fragment<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     expr_loc: ALoc,
     fragment: &ast::jsx::Fragment<ALoc, ALoc>,
 ) -> Result<(Type, ast::jsx::Fragment<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -12928,7 +12970,7 @@ fn jsx_fragment<'a>(
 }
 
 fn jsx_title<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     opening_element: &ast::jsx::Opening<ALoc, ALoc>,
     children: &(ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
     closing_element: Option<&ast::jsx::Closing<ALoc, ALoc>>,
@@ -12963,9 +13005,10 @@ fn jsx_title<'a>(
             .transpose()?;
     let targs_opt = targs_with_tast_opt.as_ref().map(|(t, _)| t.clone());
     let targs_tast_opt = targs_with_tast_opt.map(|(_, tast)| tast);
-    let facebook_fbs = cx.facebook_fbs();
-    let facebook_fbt = cx.facebook_fbt();
-    let jsx_mode = cx.jsx();
+    let frozen_metadata = cx.metadata().frozen.dupe();
+    let facebook_fbs = frozen_metadata.facebook_fbs.as_deref();
+    let facebook_fbt = frozen_metadata.facebook_fbt.as_deref();
+    let jsx_mode = cx.jsx().clone();
 
     let (t, typed_name, typed_attributes, typed_children, inferred_props): (
         Type,
@@ -13013,7 +13056,7 @@ fn jsx_title<'a>(
             let id_name = id.name.dupe();
             let id_name_str: &str = &id_name;
             let id_comments = id.comments.dupe();
-            if type_inference_hooks_js::dispatch_id_hook(cx, id_name_str, id_loc.dupe()) {
+            if type_inference_hooks_js::dispatch_id_hook(id_name_str, id_loc.dupe()) {
                 let t = type_::unsoundness::at(
                     type_::UnsoundnessKind::InferenceHooks,
                     loc_element.dupe(),
@@ -13100,7 +13143,7 @@ fn jsx_title<'a>(
                     attributes,
                     children,
                 )?;
-                let (t, c_opt, inferred_props) = match cx.jsx() {
+                let (t, c_opt, inferred_props) = match &jsx_mode {
                     flow_common::options::JsxMode::JsxReact => react_jsx_desugar(
                         cx,
                         id_name.dupe(),
@@ -13354,16 +13397,16 @@ fn jsx_match_closing_element(
 }
 
 pub fn jsx_mk_props<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     reason: Reason,
     check_expression: &dyn Fn(
-        Option<LazyBool<'a>>,
-        &Context<'a>,
+        Option<LazyBool>,
+        &mut Context<'a>,
         &expression::Expression<ALoc, ALoc>,
     )
         -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError>,
     collapse_children: &dyn Fn(
-        &Context<'a>,
+        &mut Context<'a>,
         &(ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
     ) -> Result<
         (
@@ -13407,7 +13450,8 @@ pub fn jsx_mk_props<'a>(
         None
     };
     // Helper to type an attribute's value expression
-    let jsx_attr_value_type = |attr_loc: ALoc,
+    let jsx_attr_value_type = |cx: &mut Context<'a>,
+                               attr_loc: ALoc,
                                value: &Option<ast::jsx::attribute::Value<ALoc, ALoc>>|
      -> Result<
         (Type, Option<ast::jsx::attribute::Value<ALoc, (ALoc, Type)>>),
@@ -13491,7 +13535,8 @@ pub fn jsx_mk_props<'a>(
     // confusing errors about "Iterable" and "spread" when sx is not an array),
     // we first check that the sx value is an array, extracting the element type,
     // then call stylex.props(elem) with a regular Arg.
-    let desugar_shorthand_prop = |prop_name: &FlowSmolStr,
+    let desugar_shorthand_prop = |cx: &mut Context<'a>,
+                                  prop_name: &FlowSmolStr,
                                   attr_loc: ALoc,
                                   id_loc: ALoc,
                                   acomments: Option<ast::Syntax<ALoc, ()>>,
@@ -13500,7 +13545,7 @@ pub fn jsx_mk_props<'a>(
         (Type, ast::jsx::OpeningAttribute<ALoc, (ALoc, Type)>),
         CheckExprError,
     > {
-        let (atype, value) = jsx_attr_value_type(attr_loc.dupe(), value)?;
+        let (atype, value) = jsx_attr_value_type(cx, attr_loc.dupe(), value)?;
         // Look up stylex from the environment
         let stylex_t = type_env::var_ref(
             Some(type_env::LookupMode::ForValue),
@@ -13625,7 +13670,7 @@ pub fn jsx_mk_props<'a>(
                     let attr_loc = attr.loc.dupe();
                     let value = &attr.value;
                     let (spread_t, att) =
-                        desugar_shorthand_prop(&aname, attr_loc, id_loc, acomments, value)?;
+                        desugar_shorthand_prop(cx, &aname, attr_loc, id_loc, acomments, value)?;
                     let acc = acc.add_spread(spread_t);
                     atts.push(att);
                     Ok((acc, atts))
@@ -13638,29 +13683,28 @@ pub fn jsx_mk_props<'a>(
                         (id.loc.dupe(), id.name.dupe(), id.comments.dupe());
                     let attr_loc = attr.loc.dupe();
                     let value = &attr.value;
-                    let (atype, typed_value) = jsx_attr_value_type(attr_loc.dupe(), value)?;
-                    let acc =
-                        if type_inference_hooks_js::dispatch_jsx_hook(cx, &aname, id_loc.dupe()) {
-                            // don't add `aname` to the prop map because it is the autocomplete token
-                            acc
-                        } else {
-                            let atype_clone = atype.dupe();
-                            let id_loc_clone = id_loc.dupe();
-                            let aname_clone = aname.dupe();
-                            acc.add_prop(|pmap| {
-                                pmap.insert(
-                                    Name::new(aname_clone),
-                                    type_::Property::new(type_::PropertyInner::Field(Box::new(
-                                        FieldData {
-                                            preferred_def_locs: None,
-                                            key_loc: Some(id_loc_clone),
-                                            type_: atype_clone,
-                                            polarity: Polarity::Neutral,
-                                        },
-                                    ))),
-                                );
-                            })
-                        };
+                    let (atype, typed_value) = jsx_attr_value_type(cx, attr_loc.dupe(), value)?;
+                    let acc = if type_inference_hooks_js::dispatch_jsx_hook(&aname, id_loc.dupe()) {
+                        // don't add `aname` to the prop map because it is the autocomplete token
+                        acc
+                    } else {
+                        let atype_clone = atype.dupe();
+                        let id_loc_clone = id_loc.dupe();
+                        let aname_clone = aname.dupe();
+                        acc.add_prop(|pmap| {
+                            pmap.insert(
+                                Name::new(aname_clone),
+                                type_::Property::new(type_::PropertyInner::Field(Box::new(
+                                    FieldData {
+                                        preferred_def_locs: None,
+                                        key_loc: Some(id_loc_clone),
+                                        type_: atype_clone,
+                                        polarity: Polarity::Neutral,
+                                    },
+                                ))),
+                            );
+                        })
+                    };
                     let typed_att = ast::jsx::OpeningAttribute::Attribute(ast::jsx::Attribute {
                         loc: attr_loc,
                         name: ast::jsx::attribute::Name::Identifier(ast::jsx::Identifier {
@@ -13732,7 +13776,7 @@ pub fn jsx_mk_props<'a>(
 }
 
 fn jsx_normalize_children_prop<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc_children: ALoc,
     children: Vec<type_::UnresolvedParam>,
 ) -> Vec<Type> {
@@ -13755,7 +13799,7 @@ fn jsx_normalize_children_prop<'a>(
 }
 
 fn react_jsx_normalize_children_prop<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc_children: ALoc,
     children: Vec<type_::UnresolvedParam>,
 ) -> Option<Type> {
@@ -13766,7 +13810,7 @@ fn react_jsx_normalize_children_prop<'a>(
 }
 
 fn react_jsx_desugar<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     name: FlowSmolStr,
     loc_element: ALoc,
     loc_children: ALoc,
@@ -13787,7 +13831,7 @@ fn react_jsx_desugar<'a>(
         VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal),
         loc_element.dupe(),
     );
-    let get_custom_jsx_factory_type = || {
+    let get_custom_jsx_factory_type = |cx: &mut Context<'a>| {
         flow_js::get_builtin_type_non_speculating(
             cx,
             &reason_jsx,
@@ -13829,7 +13873,7 @@ fn react_jsx_desugar<'a>(
             true,
             tout_tvar,
         );
-        let custom_jsx_factory_type = get_custom_jsx_factory_type()?;
+        let custom_jsx_factory_type = get_custom_jsx_factory_type(cx)?;
         flow_js::flow_non_speculating(
             cx,
             (
@@ -13915,7 +13959,7 @@ fn react_jsx_desugar<'a>(
                 &FlowSmolStr::new("createElement"),
             )?;
             let expected = if cx.react_custom_jsx_typing() {
-                get_custom_jsx_factory_type()?
+                get_custom_jsx_factory_type(cx)?
             } else {
                 flow_js::get_builtin_type_non_speculating(
                     cx,
@@ -13946,7 +13990,7 @@ fn react_jsx_desugar<'a>(
 }
 
 fn non_react_jsx_desugar<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     raw_jsx_expr: &str,
     jsx_expr: &expression::Expression<ALoc, ALoc>,
     loc_element: ALoc,
@@ -14032,7 +14076,7 @@ fn non_react_jsx_desugar<'a>(
 // We can cover almost all the cases by just explicitly handling identifiers,
 // since the common error is that the identifier is not in scope.
 fn jsx_pragma_expression<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     raw_jsx_expr: &str,
     loc: ALoc,
     expr: &expression::Expression<ALoc, ALoc>,
@@ -14059,7 +14103,7 @@ fn jsx_pragma_expression<'a>(
 }
 
 fn jsx_body<'a>(
-    _cx: &Context<'a>,
+    _cx: &mut Context<'a>,
     _child: &ast::jsx::Child<ALoc, ALoc>,
 ) -> Result<
     (
@@ -14340,10 +14384,10 @@ fn expression_to_jsx_title_member(
 // This accommodates the common JavaScript idiom of testing for the existence
 // of a property before using that property.
 fn condition<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     encl_ctx: EnclosingContext,
     decl: Option<ast::VariableKind>,
-    has_hint: Option<LazyBool<'a>>,
+    has_hint: Option<LazyBool>,
     e: &expression::Expression<ALoc, ALoc>,
 ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let result = expression_inner(
@@ -14360,11 +14404,11 @@ fn condition<'a>(
 }
 
 fn get_private_field_opt_use<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     reason: Reason,
     use_op: UseOp,
     name: &FlowSmolStr,
-) -> type_::OptUseT<Context<'a>> {
+) -> type_::OptUseT<Cx> {
     let class_entries = type_env::get_class_entries(cx);
     type_::OptUseT::OptGetPrivatePropT(use_op, reason, name.dupe(), class_entries.into(), false)
 }
@@ -14375,7 +14419,7 @@ fn get_private_field_opt_use<'a>(
 // TODO: It should be possible to factor the processing of LHS / reference
 // expressions out of `expression`, somewhat like what assignment_lhs does. That
 // would make everything involving Refinement be in the same place.
-fn get_prop_opt_use<CX>(
+fn get_prop_opt_use<CX: ContextFamily>(
     encl_ctx: EnclosingContext,
     reason: Reason,
     use_op: UseOp,
@@ -14406,10 +14450,10 @@ fn get_prop_opt_use<CX>(
 
 pub fn get_prop<'a>(
     encl_ctx: EnclosingContext,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     reason: Reason,
     use_op: UseOp,
-    hint: type_::LazyHintT<Context<'a>>,
+    hint: type_::LazyHintT<Cx>,
     tobj: Type,
     prop_reason: Reason,
     name: &FlowSmolStr,
@@ -14423,7 +14467,7 @@ pub fn get_prop<'a>(
 }
 
 fn static_method_call_object<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     callee_loc: ALoc,
     prop_loc: ALoc,
@@ -14454,7 +14498,10 @@ fn static_method_call_object<'a>(
             local: true,
         },
     ))));
-    let get_keys = |arr_reason: Reason, obj_t: &Type| -> Result<Type, JobError> {
+    let get_keys = |cx: &mut Context<'a>,
+                    arr_reason: Reason,
+                    obj_t: &Type|
+     -> Result<Type, JobError> {
         let reason_clone = reason.dupe();
         let use_op_clone = use_op.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(cx, arr_reason, |cx, tvar| {
@@ -14476,7 +14523,10 @@ fn static_method_call_object<'a>(
             Ok(())
         })
     };
-    let get_values = |arr_reason: Reason, obj_t: &Type| -> Result<Type, JobError> {
+    let get_values = |cx: &mut Context<'a>,
+                      arr_reason: Reason,
+                      obj_t: &Type|
+     -> Result<Type, JobError> {
         let reason_clone = reason.dupe();
         let use_op_clone = use_op.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(cx, arr_reason, |cx, tvar| {
@@ -14771,7 +14821,7 @@ fn static_method_call_object<'a>(
             let arr_reason = mk_reason(RArrayType, loc.dupe());
             let e_ast = expression(None, None, None, cx, e)?;
             let o = e_ast.loc().1.dupe();
-            let keys_t = get_keys(arr_reason.dupe(), &o)?;
+            let keys_t = get_keys(cx, arr_reason.dupe(), &o)?;
             let t = Type::new(TypeInner::DefT(
                 arr_reason,
                 DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
@@ -14797,7 +14847,7 @@ fn static_method_call_object<'a>(
             let arr_reason = mk_reason(RArrayType, loc.dupe());
             let e_ast = expression(None, None, None, cx, e)?;
             let o = e_ast.loc().1.dupe();
-            let values_t = get_values(arr_reason.dupe(), &o)?;
+            let values_t = get_values(cx, arr_reason.dupe(), &o)?;
             let t = Type::new(TypeInner::DefT(
                 arr_reason,
                 DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
@@ -14823,8 +14873,8 @@ fn static_method_call_object<'a>(
             let arr_reason = mk_reason(RArrayType, loc.dupe());
             let e_ast = expression(None, None, None, cx, e)?;
             let o = e_ast.loc().1.dupe();
-            let keys_t = get_keys(arr_reason.dupe(), &o)?;
-            let values_t = get_values(arr_reason.dupe(), &o)?;
+            let keys_t = get_keys(cx, arr_reason.dupe(), &o)?;
+            let values_t = get_values(cx, arr_reason.dupe(), &o)?;
             let elem_reason = mk_reason(RTupleElement { name: None }, loc.dupe());
             let elem_t = Type::new(TypeInner::UnionT(
                 elem_reason.dupe(),
@@ -15182,7 +15232,7 @@ fn static_method_call_object<'a>(
 }
 
 fn mk_class<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     class_loc: ALoc,
     name_loc: ALoc,
     tast_class_type: Option<Type>,
@@ -15211,7 +15261,7 @@ fn mk_class<'a>(
 }
 
 fn check_duplicate_class_member<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     seen_names: &mut SeenNames,
     static_: bool,
     private_: bool,
@@ -15263,7 +15313,7 @@ fn check_duplicate_class_member<'a>(
 /// static members. The static members can be thought of as instance members of a
 /// "metaclass": thus, the static type is itself implemented as an instance type.
 pub fn mk_class_sig<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     name_loc: ALoc,
     class_loc: ALoc,
     inst_kind: InstanceKind,
@@ -15275,12 +15325,15 @@ pub fn mk_class_sig<'a>(
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
         Rc<
-            dyn Fn(&Context<'a>, Type) -> Result<ast::class::Class<ALoc, (ALoc, Type)>, JobError>
-                + 'a,
+            dyn Fn(
+                &mut Context<'_>,
+                Type,
+            ) -> Result<ast::class::Class<ALoc, (ALoc, Type)>, JobError>,
         >,
     ),
     CheckExprError,
 > {
+    use std::cell::OnceCell;
     use std::cell::RefCell;
     use std::rc::Rc;
 
@@ -15299,7 +15352,7 @@ pub fn mk_class_sig<'a>(
     // an instance field is one per instance, and a writable field could be
     // handed a different symbol. [static_] and [polarity] decide that, and
     // [name_hint] renders the symbol after the field it is declared on.
-    let mk_field = |cx: &Context<'a>,
+    let mk_field = |cx: &mut Context<'a>,
                     suppress_missing_annot: bool,
                     static_: bool,
                     polarity: Polarity,
@@ -15321,7 +15374,7 @@ pub fn mk_class_sig<'a>(
             type_annotation::check_unique_symbol_class_field(cx, &a.annotation, static_, polarity);
         }
         let binds_single_value = BindsSingleValue::Yes(name_hint);
-        let unconditionally_required_annot = |cx: &Context<'a>,
+        let unconditionally_required_annot = |cx: &mut Context<'a>,
                                               tparams_map: &FlowOrdMap<SubstName, Type>,
                                               reason: &Reason,
                                               annot: &ast::types::AnnotationOrHint<ALoc, ALoc>|
@@ -15473,7 +15526,6 @@ pub fn mk_class_sig<'a>(
                         ast::types::AnnotationOrHint::Missing(annot_loc),
                     ) => {
                         let sig_loc = function_.sig_loc.dupe();
-                        let cache = cx.node_cache();
                         let (this_t, arrow, function_loc_opt) = match expr.deref() {
                             expression::ExpressionInner::ArrowFunction { .. } => {
                                 let r_loc = reason.loc().dupe();
@@ -15508,10 +15560,10 @@ pub fn mk_class_sig<'a>(
                         )?;
                         let func_sig = func_sig_data.clone();
                         if matches!(
-                            &*cx.typing_mode(),
+                            cx.typing_mode(),
                             flow_typing_context::TypingMode::CheckingMode
                         ) {
-                            cache.set_function_sig(
+                            cx.node_cache_mut().set_function_sig(
                                 sig_loc,
                                 (func_sig_data, reconstruct_data, deferred_tg_check),
                             );
@@ -15615,7 +15667,7 @@ pub fn mk_class_sig<'a>(
     };
 
     fn mk_method<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         meth_kind: type_annotation::MethodKind,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         reason: Reason,
@@ -15624,7 +15676,7 @@ pub fn mk_class_sig<'a>(
         (
             func_class_sig_types::func::Func<func_class_sig_types::StmtConfigTypes>,
             func_class_sig_types::func::Reconstruct,
-            DeferredTypeGuardCheck<'a>,
+            DeferredTypeGuardCheck,
         ),
         CheckExprError,
     > {
@@ -15639,7 +15691,7 @@ pub fn mk_class_sig<'a>(
         )
     }
 
-    let mk_extends = move |cx: &Context<'a>,
+    let mk_extends = move |cx: &mut Context<'a>,
                            tparams_map: &FlowOrdMap<SubstName, Type>,
                            extends: &Option<ast::class::Extends<ALoc, ALoc>>|
           -> Result<
@@ -15647,11 +15699,11 @@ pub fn mk_class_sig<'a>(
             class_types::Extends,
             Box<
                 dyn FnOnce(
-                        &Context<'a>,
-                    ) -> Result<
-                        Option<ast::class::Extends<ALoc, (ALoc, Type)>>,
-                        CheckExprError,
-                    > + 'a,
+                    &mut Context<'_>,
+                ) -> Result<
+                    Option<ast::class::Extends<ALoc, (ALoc, Type)>>,
+                    CheckExprError,
+                >,
             >,
         ),
         JobError,
@@ -15659,7 +15711,7 @@ pub fn mk_class_sig<'a>(
         Ok(match extends {
             None => (
                 class_types::Extends::Implicit { null: false },
-                Box::new(|_cx| Ok(None)),
+                Box::new(|_cx: &mut Context<'_>| Ok(None)),
             ),
             Some(ext) => {
                 let loc = ext.loc.dupe();
@@ -15669,18 +15721,18 @@ pub fn mk_class_sig<'a>(
 
                 use ast::expression::ExpressionInner;
                 fn super_expr<'a>(
-                    cx: &Context<'a>,
+                    cx: &mut Context<'a>,
                     expr: &expression::Expression<ALoc, ALoc>,
                 ) -> Result<
                     (
                         Type,
                         Box<
                             dyn FnOnce(
-                                    &Context<'a>,
-                                ) -> Result<
-                                    expression::Expression<ALoc, (ALoc, Type)>,
-                                    CheckExprError,
-                                > + 'a,
+                                &mut Context<'_>,
+                            ) -> Result<
+                                expression::Expression<ALoc, (ALoc, Type)>,
+                                CheckExprError,
+                            >,
                         >,
                     ),
                     JobError,
@@ -15695,7 +15747,7 @@ pub fn mk_class_sig<'a>(
                             let t_c = t.dupe();
                             (
                                 t,
-                                Box::new(move |_cx| {
+                                Box::new(move |_cx: &mut Context<'_>| {
                                     Ok(expression::Expression::new(ExpressionInner::Identifier {
                                         loc: (loc, t_c.dupe()),
                                         inner: ast::Identifier::new(ast::IdentifierInner {
@@ -15736,7 +15788,7 @@ pub fn mk_class_sig<'a>(
                             let tout_c = tout.dupe();
                             (
                                 tout,
-                                Box::new(move |cx| {
+                                Box::new(move |cx: &mut Context<'_>| {
                                     let property = expression::member::Property::PropertyIdentifier(
                                         ast::Identifier::new(ast::IdentifierInner {
                                             loc: (ploc, tout_c.dupe()),
@@ -15769,7 +15821,7 @@ pub fn mk_class_sig<'a>(
                             let sub_expr_c = as_expr.expression.clone();
                             (
                                 t,
-                                Box::new(move |cx| {
+                                Box::new(move |cx: &mut Context<'_>| {
                                     let e_prime = expression(None, None, None, cx, &sub_expr_c)?;
                                     let infer_t = e_prime.loc().1.dupe();
                                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
@@ -15810,7 +15862,7 @@ pub fn mk_class_sig<'a>(
                             let cast_c = cast.clone();
                             (
                                 t,
-                                Box::new(move |_cx| {
+                                Box::new(move |_cx: &mut Context<'_>| {
                                     let Ok(mapped_cast) = polymorphic_ast_mapper::type_cast(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &cast_c,
@@ -15838,7 +15890,7 @@ pub fn mk_class_sig<'a>(
                                 let cast_c = cast.clone();
                                 (
                                     t,
-                                    Box::new(move |_cx| {
+                                    Box::new(move |_cx: &mut Context<'_>| {
                                         let Ok(mapped_cast) = polymorphic_ast_mapper::ts_satisfies(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &cast_c,
@@ -15880,7 +15932,7 @@ pub fn mk_class_sig<'a>(
                                         let infer_t_c = infer_t.dupe();
                                         (
                                             infer_t,
-                                            Box::new(move |_cx| {
+                                            Box::new(move |_cx: &mut Context<'_>| {
                                                 Ok(expression::Expression::new(
                                                     ExpressionInner::TSSatisfies {
                                                         loc: (loc, infer_t_c),
@@ -15908,7 +15960,12 @@ pub fn mk_class_sig<'a>(
                                         let t =
                                             any_t::at(type_::AnySource::AnyError(None), loc.dupe());
                                         let err_cell = std::cell::Cell::new(Some(err));
-                                        (t, Box::new(move |_cx| Err(err_cell.take().unwrap())))
+                                        (
+                                            t,
+                                            Box::new(move |_cx: &mut Context<'_>| {
+                                                Err(err_cell.take().unwrap())
+                                            }),
+                                        )
                                     }
                                 }
                             }
@@ -15925,7 +15982,9 @@ pub fn mk_class_sig<'a>(
                             let expr_c = expr.clone();
                             (
                                 t,
-                                Box::new(move |cx| expression(None, None, None, cx, &expr_c)),
+                                Box::new(move |cx: &mut Context<'_>| {
+                                    expression(None, None, None, cx, &expr_c)
+                                }),
                             )
                         }
                     })
@@ -15943,7 +16002,7 @@ pub fn mk_class_sig<'a>(
                 )?;
                 (
                     class_types::Extends::Explicit(t),
-                    Box::new(move |cx| {
+                    Box::new(move |cx: &mut Context<'_>| {
                         Ok(Some(ast::class::Extends {
                             loc,
                             expr: expr_f(cx)?,
@@ -15956,14 +16015,14 @@ pub fn mk_class_sig<'a>(
         })
     };
 
-    let mk_class_sig_with_self = move |cx: &Context<'a>,
+    let mk_class_sig_with_self = move |cx: &mut Context<'a>,
                                        name_loc: ALoc,
                                        class_loc: ALoc,
                                        inst_kind: &InstanceKind,
                                        reason: Reason,
                                        self_: Type,
                                        cls: &ast::class::Class<ALoc, ALoc>|
-          -> SigResult<'a> {
+          -> SigResult {
         let node_cache = cx.node_cache();
         match node_cache.get_class_sig(&class_loc) {
             Some((class_t, class_t_internal, class_sig, class_ast_f)) => {
@@ -16131,7 +16190,7 @@ pub fn mk_class_sig<'a>(
                 };
 
                 let mk_record_constructor =
-                    |cx,
+                    |cx: &mut Context<'a>,
                      tparams_map_with_this: &FlowOrdMap<SubstName, Type>,
                      elements: &[ast::class::BodyElement<ALoc, ALoc>],
                      defaulted_props: &flow_data_structure_wrapper::ord_set::FlowOrdSet<
@@ -16312,7 +16371,8 @@ pub fn mk_class_sig<'a>(
                 };
 
                 let check_duplicate_name =
-                    |public_seen_names: &mut SeenNames,
+                    |cx: &mut Context<'a>,
+                     public_seen_names: &mut SeenNames,
                      member_loc: ALoc,
                      name: &Name,
                      static_: bool,
@@ -16330,7 +16390,7 @@ pub fn mk_class_sig<'a>(
                         );
                     };
 
-                let check_ts_accessibility = |cx: &Context<'a>,
+                let check_ts_accessibility = |cx: &mut Context<'a>,
                                               ts_accessibility: &Option<
                     ast::class::ts_accessibility::TSAccessibility<ALoc>,
                 >| {
@@ -16397,26 +16457,25 @@ pub fn mk_class_sig<'a>(
                 let mut rev_elements: Vec<
                     Box<
                         dyn FnOnce(
-                                &Context<'a>,
-                            )
-                                -> Result<ast::class::BodyElement<ALoc, (ALoc, Type)>, JobError>
-                            + 'a,
+                            &mut Context<'_>,
+                        )
+                            -> Result<ast::class::BodyElement<ALoc, (ALoc, Type)>, JobError>,
                     >,
                 > = Vec::new();
 
                 #[allow(clippy::too_many_arguments)]
                 fn add_method_sig_and_element<'a>(
-                    cx: &Context<'a>,
+                    cx: &mut Context<'a>,
                     tparams_map_with_this: &FlowOrdMap<SubstName, Type>,
                     c: &mut class_types::Class<StmtConfigTypes>,
                     rev_elements: &mut Vec<
                         Box<
                             dyn FnOnce(
-                                    &Context<'a>,
-                                ) -> Result<
-                                    ast::class::BodyElement<ALoc, (ALoc, Type)>,
-                                    JobError,
-                                > + 'a,
+                                &mut Context<'_>,
+                            ) -> Result<
+                                ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                JobError,
+                            >,
                         >,
                     >,
                     public_seen_names: &mut SeenNames,
@@ -16437,11 +16496,10 @@ pub fn mk_class_sig<'a>(
                     comments: Option<ast::Syntax<ALoc, ()>>,
                     get_typed_method_key: Box<
                         dyn FnOnce(
-                                &Context<'a>,
-                                Type,
-                            )
-                                -> ast::expression::object::Key<ALoc, (ALoc, Type)>
-                            + 'a,
+                            &mut Context<'_>,
+                            Type,
+                        )
+                            -> ast::expression::object::Key<ALoc, (ALoc, Type)>,
                     >,
                 ) -> Result<(), CheckExprError> {
                     use std::cell::RefCell;
@@ -16515,7 +16573,7 @@ pub fn mk_class_sig<'a>(
                     let func_params_c = func.params.clone();
                     let func_body_c = func.body.clone();
                     let reconstruct_func_c = reconstruct_func.dupe();
-                    let get_element = Box::new(move |cx: &Context<'a>| {
+                    let get_element = Box::new(move |cx: &mut Context<'_>| {
                         // Invoke deferred type guard check (must run after toplevels)
                         if let Some(check) = deferred_tg_check {
                             check(cx)?;
@@ -16657,7 +16715,7 @@ pub fn mk_class_sig<'a>(
 
                 #[allow(clippy::too_many_arguments)]
                 fn mk_declare_method_func_sig<'a>(
-                    cx: &Context<'a>,
+                    cx: &mut Context<'a>,
                     tparams_map_with_this: &FlowOrdMap<SubstName, Type>,
                     meth_kind: type_annotation::MethodKind,
                     loc: ALoc,
@@ -16704,8 +16762,8 @@ pub fn mk_class_sig<'a>(
                     Returns the resolved type, the typed function param AST, the typed
                     identifier for the pattern, the annotation or hint, the optional
                     flag, and the param name (if any) for the [FunParam]. */
-                    let convert_param = |param_loc: ALoc,
-                                         p: &ast::types::function::ParamKind<ALoc, ALoc>|
+                    let mut convert_param = |param_loc: ALoc,
+                                             p: &ast::types::function::ParamKind<ALoc, ALoc>|
                      -> Result<
                         (
                             Type,
@@ -16955,13 +17013,15 @@ pub fn mk_class_sig<'a>(
                                             ))),
                                         );
                                         let elem_c = elem.clone();
-                                        rev_elements.push(Box::new(move |_cx| {
-                                            let Ok(v) = polymorphic_ast_mapper::class_element(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                &elem_c,
-                                            );
-                                            Ok(v)
-                                        }));
+                                        rev_elements.push(Box::new(
+                                            move |_cx: &mut Context<'_>| {
+                                                let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    &elem_c,
+                                                );
+                                                Ok(v)
+                                            },
+                                        ));
                                         continue;
                                     }
                                     let id_loc_c = id_loc.dupe();
@@ -17018,13 +17078,15 @@ pub fn mk_class_sig<'a>(
                                             ))),
                                         );
                                         let elem_c = elem.clone();
-                                        rev_elements.push(Box::new(move |_cx| {
-                                            let Ok(v) = polymorphic_ast_mapper::class_element(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                &elem_c,
-                                            );
-                                            Ok(v)
-                                        }));
+                                        rev_elements.push(Box::new(
+                                            move |_cx: &mut Context<'_>| {
+                                                let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    &elem_c,
+                                                );
+                                                Ok(v)
+                                            },
+                                        ));
                                         continue;
                                     }
 
@@ -17072,7 +17134,7 @@ pub fn mk_class_sig<'a>(
                                         ))),
                                     );
                                     let elem_c = elem.clone();
-                                    rev_elements.push(Box::new(move |_cx| {
+                                    rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                         let Ok(v) = polymorphic_ast_mapper::class_element(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
@@ -17104,13 +17166,15 @@ pub fn mk_class_sig<'a>(
                                             ))),
                                         );
                                         let elem_c = elem.clone();
-                                        rev_elements.push(Box::new(move |_cx| {
-                                            let Ok(v) = polymorphic_ast_mapper::class_element(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                &elem_c,
-                                            );
-                                            Ok(v)
-                                        }));
+                                        rev_elements.push(Box::new(
+                                            move |_cx: &mut Context<'_>| {
+                                                let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    &elem_c,
+                                                );
+                                                Ok(v)
+                                            },
+                                        ));
                                         continue;
                                     }
 
@@ -17171,13 +17235,15 @@ pub fn mk_class_sig<'a>(
                                             ),
                                         );
                                         let elem_c = elem.clone();
-                                        rev_elements.push(Box::new(move |_cx| {
-                                            let Ok(v) = polymorphic_ast_mapper::class_element(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                &elem_c,
-                                            );
-                                            Ok(v)
-                                        }));
+                                        rev_elements.push(Box::new(
+                                            move |_cx: &mut Context<'_>| {
+                                                let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    &elem_c,
+                                                );
+                                                Ok(v)
+                                            },
+                                        ));
                                         continue;
                                     };
 
@@ -17262,7 +17328,7 @@ pub fn mk_class_sig<'a>(
                                         ))),
                                     );
                                     let elem_c = elem.clone();
-                                    rev_elements.push(Box::new(move |_cx| {
+                                    rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                         let Ok(v) = polymorphic_ast_mapper::class_element(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
@@ -17329,7 +17395,7 @@ pub fn mk_class_sig<'a>(
                                 let ts_accessibility_c = ts_accessibility.clone();
                                 let prop_comments_c = prop_comments.clone();
                                 let get_element = Box::new(
-                                    move |_cx: &Context<'_>| -> Result<
+                                    move |_cx: &mut Context<'_>| -> Result<
                                         ast::class::BodyElement<ALoc, (ALoc, Type)>,
                                         JobError,
                                     > {
@@ -17355,6 +17421,7 @@ pub fn mk_class_sig<'a>(
                                     },
                                 );
                                 check_duplicate_name(
+                                    cx,
                                     &mut public_seen_names,
                                     id_loc.dupe(),
                                     &Name::new(name.dupe()),
@@ -17386,7 +17453,7 @@ pub fn mk_class_sig<'a>(
                                     ))),
                                 );
                                 let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
+                                rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                     let Ok(v) = polymorphic_ast_mapper::class_element(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &elem_c,
@@ -17418,7 +17485,7 @@ pub fn mk_class_sig<'a>(
                                         ))),
                                     );
                                     let elem_c = elem.clone();
-                                    rev_elements.push(Box::new(move |_cx| {
+                                    rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                         let Ok(v) = polymorphic_ast_mapper::class_element(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
@@ -17478,7 +17545,7 @@ pub fn mk_class_sig<'a>(
                                         ),
                                     );
                                     let elem_c = elem.clone();
-                                    rev_elements.push(Box::new(move |_cx| {
+                                    rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                         let Ok(v) = polymorphic_ast_mapper::class_element(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
@@ -17538,7 +17605,7 @@ pub fn mk_class_sig<'a>(
                                 let ts_accessibility_c = ts_accessibility.clone();
                                 let prop_comments_c = prop_comments.clone();
                                 let get_element = Box::new(
-                                    move |_cx: &Context<'_>| -> Result<
+                                    move |_cx: &mut Context<'_>| -> Result<
                                         ast::class::BodyElement<ALoc, (ALoc, Type)>,
                                         JobError,
                                     > {
@@ -17564,6 +17631,7 @@ pub fn mk_class_sig<'a>(
                                     },
                                 );
                                 check_duplicate_name(
+                                    cx,
                                     &mut public_seen_names,
                                     id_loc.dupe(),
                                     &name,
@@ -17612,7 +17680,7 @@ pub fn mk_class_sig<'a>(
                                     ))),
                                 );
                                 let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
+                                rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                     let Ok(v) = polymorphic_ast_mapper::class_element(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &elem_c,
@@ -17690,13 +17758,14 @@ pub fn mk_class_sig<'a>(
                             };
                             let get_element: Box<
                                 dyn FnOnce(
-                                        &Context<'a>,
-                                    ) -> Result<
-                                        ast::class::BodyElement<ALoc, (ALoc, Type)>,
-                                        JobError,
-                                    > + 'a,
-                            > = Box::new(move |_cx| get_element_inner());
+                                    &mut Context<'_>,
+                                ) -> Result<
+                                    ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                    JobError,
+                                >,
+                            > = Box::new(move |_cx: &mut Context<'_>| get_element_inner());
                             check_duplicate_name(
+                                cx,
                                 &mut public_seen_names,
                                 id_loc.dupe(),
                                 &Name::new(name.dupe()),
@@ -17725,7 +17794,7 @@ pub fn mk_class_sig<'a>(
                                 ))),
                             );
                             let elem_c = elem.clone();
-                            rev_elements.push(Box::new(move |_cx| {
+                            rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                 let Ok(v) = polymorphic_ast_mapper::class_element(
                                     &mut typed_ast_utils::ErrorMapper,
                                     &elem_c,
@@ -17769,13 +17838,15 @@ pub fn mk_class_sig<'a>(
                                             ))),
                                         );
                                         let elem_c = elem.clone();
-                                        rev_elements.push(Box::new(move |_cx| {
-                                            let Ok(v) = polymorphic_ast_mapper::class_element(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                &elem_c,
-                                            );
-                                            Ok(v)
-                                        }));
+                                        rev_elements.push(Box::new(
+                                            move |_cx: &mut Context<'_>| {
+                                                let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    &elem_c,
+                                                );
+                                                Ok(v)
+                                            },
+                                        ));
                                         continue;
                                     }
                                     let meth_kind =
@@ -17810,6 +17881,7 @@ pub fn mk_class_sig<'a>(
                                             &mut class_sig,
                                         );
                                         check_duplicate_name(
+                                            cx,
                                             &mut public_seen_names,
                                             id_loc.dupe(),
                                             &Name::new(name.dupe()),
@@ -17828,7 +17900,7 @@ pub fn mk_class_sig<'a>(
                                         let comments_c = comments.clone();
                                         #[allow(clippy::arc_with_non_send_sync)]
                                         let get_element = Box::new(
-                                            move |_cx: &Context<'a>| -> Result<
+                                            move |_cx: &mut Context<'_>| -> Result<
                                                 ast::class::BodyElement<ALoc, (ALoc, Type)>,
                                                 JobError,
                                             > {
@@ -17892,7 +17964,7 @@ pub fn mk_class_sig<'a>(
                                         let comments_c = comments.clone();
                                         #[allow(clippy::arc_with_non_send_sync)]
                                         let get_element = Box::new(
-                                            move |_cx: &Context<'a>| -> Result<
+                                            move |_cx: &mut Context<'_>| -> Result<
                                                 ast::class::BodyElement<ALoc, (ALoc, Type)>,
                                                 JobError,
                                             > {
@@ -18037,6 +18109,7 @@ pub fn mk_class_sig<'a>(
                                                 } => {}
                                             Some(k) => {
                                                 check_duplicate_name(
+                                                    cx,
                                                     &mut public_seen_names,
                                                     id_loc.dupe(),
                                                     &Name::new(name.dupe()),
@@ -18058,7 +18131,7 @@ pub fn mk_class_sig<'a>(
                                         ))),
                                     );
                                     let elem_c = elem.clone();
-                                    rev_elements.push(Box::new(move |_cx| {
+                                    rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                         let Ok(v) = polymorphic_ast_mapper::class_element(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
@@ -18078,7 +18151,7 @@ pub fn mk_class_sig<'a>(
                                 ))),
                             );
                             let elem_c = elem.clone();
-                            rev_elements.push(Box::new(move |_cx| {
+                            rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                 let Ok(v) = polymorphic_ast_mapper::class_element(
                                     &mut typed_ast_utils::ErrorMapper,
                                     &elem_c,
@@ -18097,7 +18170,7 @@ pub fn mk_class_sig<'a>(
                                     })),
                                 );
                                 let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
+                                rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                     let Ok(v) = polymorphic_ast_mapper::class_element(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &elem_c,
@@ -18125,7 +18198,7 @@ pub fn mk_class_sig<'a>(
                                     })),
                                 );
                                 let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
+                                rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                     let Ok(v) = polymorphic_ast_mapper::class_element(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &elem_c,
@@ -18190,6 +18263,7 @@ pub fn mk_class_sig<'a>(
                                             &mut class_sig,
                                         );
                                         check_duplicate_name(
+                                            cx,
                                             &mut public_seen_names,
                                             id_loc.dupe(),
                                             &Name::new(name.dupe()),
@@ -18207,7 +18281,7 @@ pub fn mk_class_sig<'a>(
                                         let ts_accessibility_c = ts_accessibility.clone();
                                         let comments_c = comments.clone();
                                         let get_element = Box::new(
-                                            move |_cx: &Context<'a>| -> Result<
+                                            move |_cx: &mut Context<'_>| -> Result<
                                                 ast::class::BodyElement<ALoc, (ALoc, Type)>,
                                                 JobError,
                                             > {
@@ -18248,13 +18322,15 @@ pub fn mk_class_sig<'a>(
                                             ))),
                                         );
                                         let elem_c = elem.clone();
-                                        rev_elements.push(Box::new(move |_cx| {
-                                            let Ok(v) = polymorphic_ast_mapper::class_element(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                &elem_c,
-                                            );
-                                            Ok(v)
-                                        }));
+                                        rev_elements.push(Box::new(
+                                            move |_cx: &mut Context<'_>| {
+                                                let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    &elem_c,
+                                                );
+                                                Ok(v)
+                                            },
+                                        ));
                                     }
                                 }
                             }
@@ -18270,7 +18346,7 @@ pub fn mk_class_sig<'a>(
                                     })),
                                 );
                                 let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
+                                rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                     let Ok(v) = polymorphic_ast_mapper::class_element(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &elem_c,
@@ -18295,7 +18371,7 @@ pub fn mk_class_sig<'a>(
                                     })),
                                 );
                                 let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
+                                rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                     let Ok(v) = polymorphic_ast_mapper::class_element(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &elem_c,
@@ -18363,6 +18439,7 @@ pub fn mk_class_sig<'a>(
                                             &mut class_sig,
                                         );
                                         check_duplicate_name(
+                                            cx,
                                             &mut public_seen_names,
                                             id_loc.dupe(),
                                             &Name::new(name.dupe()),
@@ -18379,7 +18456,7 @@ pub fn mk_class_sig<'a>(
                                         let variance_c = variance.clone();
                                         let comments_c = comments.clone();
                                         let get_element = Box::new(
-                                            move |_cx: &Context<'a>| -> Result<
+                                            move |_cx: &mut Context<'_>| -> Result<
                                                 ast::class::BodyElement<ALoc, (ALoc, Type)>,
                                                 JobError,
                                             > {
@@ -18421,13 +18498,15 @@ pub fn mk_class_sig<'a>(
                                             ))),
                                         );
                                         let elem_c = elem.clone();
-                                        rev_elements.push(Box::new(move |_cx| {
-                                            let Ok(v) = polymorphic_ast_mapper::class_element(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                &elem_c,
-                                            );
-                                            Ok(v)
-                                        }));
+                                        rev_elements.push(Box::new(
+                                            move |_cx: &mut Context<'_>| {
+                                                let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    &elem_c,
+                                                );
+                                                Ok(v)
+                                            },
+                                        ));
                                     }
                                 }
                             }
@@ -18443,7 +18522,7 @@ pub fn mk_class_sig<'a>(
                                     ))),
                                 );
                                 let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
+                                rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                     let Ok(v) = polymorphic_ast_mapper::class_element(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &elem_c,
@@ -18461,7 +18540,7 @@ pub fn mk_class_sig<'a>(
                                         ))),
                                     );
                                     let elem_c = elem.clone();
-                                    rev_elements.push(Box::new(move |_cx| {
+                                    rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                         let Ok(v) = polymorphic_ast_mapper::class_element(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
@@ -18475,7 +18554,7 @@ pub fn mk_class_sig<'a>(
                                         indexer,
                                     )?;
                                     class_sig::add_indexer(static_, dict, &mut class_sig);
-                                    rev_elements.push(Box::new(move |_cx| {
+                                    rev_elements.push(Box::new(move |_cx: &mut Context<'_>| {
                                         Ok(BodyElement::IndexSignature(indexer_ast))
                                     }));
                                 }
@@ -18494,7 +18573,7 @@ pub fn mk_class_sig<'a>(
                     );
                 }
                 let (instance_this_default, static_this_default, super_t, static_super) =
-                    type_env::in_class_scope(cx, class_loc.dupe(), || {
+                    type_env::in_class_scope(cx, class_loc.dupe(), |cx| {
                         class_sig::make_thises(cx, &class_sig)
                     });
                 type_env::bind_class_instance_this(cx, instance_this_default, class_loc.dupe());
@@ -18517,11 +18596,11 @@ pub fn mk_class_sig<'a>(
                             Vec<
                                 Box<
                                     dyn FnOnce(
-                                            &Context<'a>,
-                                        ) -> Result<
-                                            ast::class::BodyElement<ALoc, (ALoc, Type)>,
-                                            JobError,
-                                        > + 'a,
+                                        &mut Context<'_>,
+                                    ) -> Result<
+                                        ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                        JobError,
+                                    >,
                                 >,
                             >,
                         >,
@@ -18532,11 +18611,11 @@ pub fn mk_class_sig<'a>(
                         Option<
                             Box<
                                 dyn FnOnce(
-                                        &Context<'a>,
-                                    ) -> Result<
-                                        Option<ast::class::Extends<ALoc, (ALoc, Type)>>,
-                                        CheckExprError,
-                                    > + 'a,
+                                    &mut Context<'_>,
+                                ) -> Result<
+                                    Option<ast::class::Extends<ALoc, (ALoc, Type)>>,
+                                    CheckExprError,
+                                >,
                             >,
                         >,
                     >,
@@ -18550,12 +18629,11 @@ pub fn mk_class_sig<'a>(
                     Rc::new(RefCell::new(None));
                 let reconstruct: Rc<
                     dyn Fn(
-                            &Context<'a>,
-                            Type,
-                        )
-                            -> Result<ast::class::Class<ALoc, (ALoc, Type)>, JobError>
-                        + 'a,
-                > = Rc::new(move |cx, class_t: Type| {
+                        &mut Context<'_>,
+                        Type,
+                    )
+                        -> Result<ast::class::Class<ALoc, (ALoc, Type)>, JobError>,
+                > = Rc::new(move |cx: &mut Context<'_>, class_t: Type| {
                     if let Some(ref cached) = *cached_class_ast.borrow() {
                         return Ok(cached.clone());
                     }
@@ -18601,106 +18679,61 @@ pub fn mk_class_sig<'a>(
         }
     };
 
-    // Note: SigTuple/SigResult inlined because they contain lifetime-dependent types.
-    // The reconstruct closure only works for the specific 'a lifetime, not for<'b>.
-
-    type SigTuple<'a> = (
+    type SigTuple = (
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
         Rc<
-            dyn Fn(&Context<'a>, Type) -> Result<ast::class::Class<ALoc, (ALoc, Type)>, JobError>
-                + 'a,
+            dyn Fn(
+                &mut Context<'_>,
+                Type,
+            ) -> Result<ast::class::Class<ALoc, (ALoc, Type)>, JobError>,
         >,
     );
 
-    type SigResult<'a> = Result<SigTuple<'a>, CheckExprError>;
+    type SigResult = Result<SigTuple, CheckExprError>;
 
-    let lazy_cell: Rc<
-        RefCell<
-            Option<
-                Rc<
-                    flow_lazy::Lazy<
-                        Context<'a>,
-                        SigResult<'a>,
-                        Box<dyn FnOnce(&Context<'a>) -> SigResult<'a> + 'a>,
-                    >,
-                >,
-            >,
-        >,
-    > = Rc::new(RefCell::new(None));
-    let lazy_cell_c = lazy_cell.dupe();
-
-    let name_loc_c = name_loc.dupe();
-    let class_loc_c = class_loc.dupe();
-    let inst_kind_c = inst_kind.clone();
-    let reason_c = reason.dupe();
-    let cls_clone = cls.clone();
-
-    let lazy_val: Rc<
-        flow_lazy::Lazy<
-            Context<'a>,
-            SigResult<'a>,
-            Box<dyn FnOnce(&Context<'a>) -> SigResult<'a> + 'a>,
-        >,
-    > = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
-        let lazy_ref = lazy_cell_c.borrow().as_ref().unwrap().dupe();
-        let self_ = flow_typing_tvar::mk_fully_resolved_lazy(
-            cx,
-            reason_c.dupe(),
-            true,
-            Box::new(move |cx| {
-                let val = lazy_ref.get_forced(cx).as_ref().unwrap();
-                Ok(val.1.dupe())
-            }),
-        );
-
-        mk_class_sig_with_self(
-            cx,
-            name_loc_c,
-            class_loc_c,
-            &inst_kind_c,
-            reason_c,
-            self_,
-            &cls_clone,
-        )
-    })));
-
-    *lazy_cell.borrow_mut() = Some(lazy_val.dupe());
-
-    let result = lazy_val.get_forced(cx);
-    let result_ref = result.as_ref().map_err(|e| e.clone())?;
-
-    Ok((
-        result_ref.0.dupe(),
-        result_ref.1.dupe(),
-        result_ref.2.clone(),
-        result_ref.3.dupe(),
-    ))
+    // The self type of the class is the internal class type of its signature, which is only
+    // made once the self type is in place.
+    let class_t_internal: Rc<OnceCell<Type>> = Rc::new(OnceCell::new());
+    let self_ = flow_typing_tvar::mk_fully_resolved_lazy(cx, reason.dupe(), true, {
+        let class_t_internal = class_t_internal.dupe();
+        move |_cx: &mut Context<'_>| {
+            Ok(class_t_internal
+                .get()
+                .expect("the class signature is made before its self type is forced")
+                .dupe())
+        }
+    });
+    let result = mk_class_sig_with_self(cx, name_loc, class_loc, &inst_kind, reason, self_, cls)?;
+    class_t_internal
+        .set(result.1.dupe())
+        .expect("the class signature is made once");
+    Ok(result)
 }
 
-type RecordSigTuple<'a> = (
+type RecordSigTuple = (
     Type,
     Type,
     func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
     Rc<
         dyn Fn(
-                &Context<'a>,
-                Type,
-            ) -> Result<statement::RecordDeclaration<ALoc, (ALoc, Type)>, JobError>
-            + 'a,
+            &mut Context<'_>,
+            Type,
+        ) -> Result<statement::RecordDeclaration<ALoc, (ALoc, Type)>, JobError>,
     >,
 );
-type RecordSigResult<'a> = Result<RecordSigTuple<'a>, CheckExprError>;
+type RecordSigResult = Result<RecordSigTuple, CheckExprError>;
 
 pub fn mk_record_sig<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     name_loc: ALoc,
     record_loc: ALoc,
     defaulted_props: &BTreeSet<FlowSmolStr>,
     reason: Reason,
     record: &statement::RecordDeclaration<ALoc, ALoc>,
-) -> RecordSigResult<'a> {
+) -> RecordSigResult {
+    use std::cell::OnceCell;
     use std::cell::RefCell;
     use std::rc::Rc;
 
@@ -18710,7 +18743,7 @@ pub fn mk_record_sig<'a>(
     use flow_typing_loc_env::func_class_sig_types::class as class_types;
     use flow_typing_loc_env::func_class_sig_types::func;
 
-    let mk_record_field = |cx: &Context<'a>,
+    let mk_record_field = |cx: &mut Context<'a>,
                            tparams_map: &FlowOrdMap<SubstName, Type>,
                            reason: Reason,
                            annot: &ast::types::Annotation<ALoc, ALoc>,
@@ -18774,7 +18807,7 @@ pub fn mk_record_sig<'a>(
         })
     };
 
-    let mk_record_static_field = |cx: &Context<'a>,
+    let mk_record_static_field = |cx: &mut Context<'a>,
                                   tparams_map: &FlowOrdMap<SubstName, Type>,
                                   reason: Reason,
                                   annot: &ast::types::Annotation<ALoc, ALoc>,
@@ -18825,14 +18858,14 @@ pub fn mk_record_sig<'a>(
         ))
     };
 
-    let mk_record_sig_with_self = move |cx: &Context<'a>,
+    let mk_record_sig_with_self = move |cx: &mut Context<'a>,
                                         name_loc: ALoc,
                                         record_loc: ALoc,
                                         defaulted_props: &BTreeSet<FlowSmolStr>,
                                         reason: Reason,
                                         self_: Type,
                                         record: &statement::RecordDeclaration<ALoc, ALoc>|
-          -> RecordSigResult<'a> {
+          -> RecordSigResult {
         let node_cache = cx.node_cache();
         match node_cache.get_record_sig(&record_loc) {
             Some((class_t, class_t_internal, class_sig, record_ast_f)) => {
@@ -18989,7 +19022,7 @@ pub fn mk_record_sig<'a>(
                 };
 
                 let mk_record_constructor =
-                    |cx,
+                    |cx: &mut Context<'a>,
                      tparams_map_with_this: &FlowOrdMap<SubstName, Type>,
                      elements: &[statement::record_declaration::BodyElement<ALoc, ALoc>],
                      defaulted_props: &BTreeSet<FlowSmolStr>,
@@ -19117,7 +19150,8 @@ pub fn mk_record_sig<'a>(
                 class_sig::add_name_field(&mut class_sig);
 
                 let check_duplicate_name =
-                    |public_seen_names: &mut SeenNames,
+                    |cx: &mut Context<'a>,
+                     public_seen_names: &mut SeenNames,
                      member_loc: ALoc,
                      name: &Name,
                      static_: bool,
@@ -19139,11 +19173,11 @@ pub fn mk_record_sig<'a>(
                 let mut rev_elements: Vec<
                     Box<
                         dyn FnOnce(
-                                &Context<'a>,
-                            ) -> Result<
-                                statement::record_declaration::BodyElement<ALoc, (ALoc, Type)>,
-                                JobError,
-                            > + 'a,
+                            &mut Context<'_>,
+                        ) -> Result<
+                            statement::record_declaration::BodyElement<ALoc, (ALoc, Type)>,
+                            JobError,
+                        >,
                     >,
                 > = Vec::new();
 
@@ -19223,7 +19257,7 @@ pub fn mk_record_sig<'a>(
                                 let method_comments_c = method_comments.clone();
                                 let kind_c = kind;
                                 let static_c = static_;
-                                let get_element = move |cx: &Context<'a>| {
+                                let get_element = move |cx: &mut Context<'_>| {
                                     if let Some(check) = deferred_tg_check {
                                         check(cx)?;
                                     }
@@ -19280,6 +19314,7 @@ pub fn mk_record_sig<'a>(
                                     }
                                     ast::class::MethodKind::Method => {
                                         check_duplicate_name(
+                                            cx,
                                             &mut public_seen_names,
                                             method_id_loc.dupe(),
                                             &Name::new(name.dupe()),
@@ -19347,7 +19382,7 @@ pub fn mk_record_sig<'a>(
                                 default_value,
                             )?;
                             let key_clone = key.clone();
-                            let get_element = move |_cx: &Context<'a>| {
+                            let get_element = move |_cx: &mut Context<'_>| {
                                 Ok(statement::record_declaration::BodyElement::Property(
                                     statement::record_declaration::Property {
                                         loc: (prop_loc, annot_t.dupe()),
@@ -19362,6 +19397,7 @@ pub fn mk_record_sig<'a>(
                                 ))
                             };
                             check_duplicate_name(
+                                cx,
                                 &mut public_seen_names,
                                 key_loc.dupe(),
                                 &Name::new(name.dupe()),
@@ -19409,7 +19445,7 @@ pub fn mk_record_sig<'a>(
                                 value_expr,
                             )?;
                             let key_clone = key.clone();
-                            let get_element = move |_cx: &Context<'a>| {
+                            let get_element = move |_cx: &mut Context<'_>| {
                                 Ok(statement::record_declaration::BodyElement::StaticProperty(
                                     statement::record_declaration::StaticProperty {
                                         loc: (prop_loc, annot_t.dupe()),
@@ -19424,6 +19460,7 @@ pub fn mk_record_sig<'a>(
                                 ))
                             };
                             check_duplicate_name(
+                                cx,
                                 &mut public_seen_names,
                                 key_loc.dupe(),
                                 &Name::new(name.dupe()),
@@ -19454,7 +19491,7 @@ pub fn mk_record_sig<'a>(
                 }
 
                 let (instance_this_default, static_this_default, super_t, static_super) =
-                    type_env::in_class_scope(cx, record_loc.dupe(), || {
+                    type_env::in_class_scope(cx, record_loc.dupe(), |cx| {
                         class_sig::make_thises(cx, &class_sig)
                     });
                 type_env::bind_class_instance_this(cx, instance_this_default, record_loc.dupe());
@@ -19476,7 +19513,7 @@ pub fn mk_record_sig<'a>(
                 let record_invalid_syntax = record.invalid_syntax.clone();
                 let body_comments_c = body_comments.clone();
                 Ok((class_t, class_t_internal, class_sig, {
-                    let inner = RefCell::new(Some(move |cx: &Context<'a>, record_t: Type| {
+                    let inner = RefCell::new(Some(move |cx: &mut Context<'_>, record_t: Type| {
                         Ok(statement::RecordDeclaration {
                             id: ast::Identifier::new(ast::IdentifierInner {
                                 loc: (id_loc_c, record_t),
@@ -19497,7 +19534,7 @@ pub fn mk_record_sig<'a>(
                             invalid_syntax: record_invalid_syntax,
                         })
                     }));
-                    Rc::new(move |cx, t: Type| {
+                    Rc::new(move |cx: &mut Context<'_>, t: Type| {
                         inner
                             .borrow_mut()
                             .take()
@@ -19510,70 +19547,35 @@ pub fn mk_record_sig<'a>(
         }
     };
 
-    let lazy_cell: Rc<
-        RefCell<
-            Option<
-                Rc<
-                    flow_lazy::Lazy<
-                        Context<'a>,
-                        RecordSigResult<'a>,
-                        Box<dyn FnOnce(&Context<'a>) -> RecordSigResult<'a> + 'a>,
-                    >,
-                >,
-            >,
-        >,
-    > = Rc::new(RefCell::new(None));
-    let lazy_cell_c = lazy_cell.dupe();
-
-    let name_loc_c = name_loc.dupe();
-    let record_loc_c = record_loc.dupe();
-    let defaulted_props_c = defaulted_props.clone();
-    let reason_c = reason.dupe();
-    let record_clone = record.clone();
-
-    let lazy_val: Rc<
-        flow_lazy::Lazy<
-            Context<'a>,
-            RecordSigResult<'a>,
-            Box<dyn FnOnce(&Context<'a>) -> RecordSigResult<'a> + 'a>,
-        >,
-    > = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
-        let lazy_ref = lazy_cell_c.borrow().as_ref().unwrap().dupe();
-        let self_ = flow_typing_tvar::mk_fully_resolved_lazy(
-            cx,
-            reason_c.dupe(),
-            true,
-            Box::new(move |cx| {
-                let val = lazy_ref.get_forced(cx).as_ref().unwrap();
-                Ok(val.1.dupe())
-            }),
-        );
-
-        mk_record_sig_with_self(
-            cx,
-            name_loc_c,
-            record_loc_c,
-            &defaulted_props_c,
-            reason_c,
-            self_,
-            &record_clone,
-        )
-    })));
-
-    *lazy_cell.borrow_mut() = Some(lazy_val.dupe());
-
-    let result = lazy_val.get_forced(cx);
-    let result_ref = result.as_ref().map_err(|e| e.clone())?;
-    Ok((
-        result_ref.0.dupe(),
-        result_ref.1.dupe(),
-        result_ref.2.clone(),
-        result_ref.3.dupe(),
-    ))
+    // The self type of the record is the internal record type of its signature, which is only
+    // made once the self type is in place.
+    let record_t_internal: Rc<OnceCell<Type>> = Rc::new(OnceCell::new());
+    let self_ = flow_typing_tvar::mk_fully_resolved_lazy(cx, reason.dupe(), true, {
+        let record_t_internal = record_t_internal.dupe();
+        move |_cx: &mut Context<'_>| {
+            Ok(record_t_internal
+                .get()
+                .expect("the record signature is made before its self type is forced")
+                .dupe())
+        }
+    });
+    let result = mk_record_sig_with_self(
+        cx,
+        name_loc,
+        record_loc,
+        defaulted_props,
+        reason,
+        self_,
+        record,
+    )?;
+    record_t_internal
+        .set(result.1.dupe())
+        .expect("the record signature is made once");
+    Ok(result)
 }
 
 fn mk_record<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     record_loc: ALoc,
     name_loc: ALoc,
     tast_record_type: Option<Type>,
@@ -19597,7 +19599,7 @@ fn mk_record<'a>(
 }
 
 pub fn mk_component_sig<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: &BTreeMap<SubstName, Type>,
     reason: Reason,
     component: &statement::ComponentDeclaration<ALoc, ALoc>,
@@ -19612,7 +19614,7 @@ pub fn mk_component_sig<'a>(
     use flow_typing_loc_env::component_sig_types::param_types;
 
     fn mk_param_annot<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         reason: Reason,
         annot: &ast::types::AnnotationOrHint<ALoc, ALoc>,
@@ -19620,7 +19622,7 @@ pub fn mk_component_sig<'a>(
         Ok(match annot {
             ast::types::AnnotationOrHint::Missing(loc)
                 if !matches!(
-                    &*cx.typing_mode(),
+                    cx.typing_mode(),
                     flow_typing_context::TypingMode::CheckingMode
                 ) =>
             {
@@ -19654,7 +19656,7 @@ pub fn mk_component_sig<'a>(
     }
 
     fn id_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         id: &ast::pattern::Identifier<ALoc, ALoc>,
         mk_reason_fn: impl FnOnce(FlowSmolStr) -> Reason,
@@ -19684,7 +19686,7 @@ pub fn mk_component_sig<'a>(
     }
 
     fn mk_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         param: &statement::component_params::Param<ALoc, ALoc>,
     ) -> Result<declaration_param_config::Param, JobError> {
@@ -19752,7 +19754,7 @@ pub fn mk_component_sig<'a>(
     }
 
     fn mk_rest<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         rest: &statement::component_params::RestParam<ALoc, ALoc>,
     ) -> Result<Result<declaration_param_config::Rest, Box<ErrorMessage<ALoc>>>, JobError> {
@@ -19829,7 +19831,7 @@ pub fn mk_component_sig<'a>(
     }
 
     fn mk_params<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         params: &statement::component_params::Params<ALoc, ALoc>,
     ) -> Result<param_types::Params, JobError> {
@@ -19871,7 +19873,6 @@ pub fn mk_component_sig<'a>(
         Ok(cparams)
     }
 
-    let cache = cx.node_cache();
     let statement::ComponentDeclaration {
         tparams: tparams_ast,
         renders,
@@ -19883,7 +19884,7 @@ pub fn mk_component_sig<'a>(
         async_: _,
     } = component;
     let sig_loc = sig_loc.dupe();
-    if let Some(x) = cache.get_component_sig(&sig_loc) {
+    if let Some(x) = cx.node_cache().get_component_sig(&sig_loc) {
         return Ok(x);
     }
     let (tparams, tparams_map, tparams_ast_typed) = type_annotation::mk_type_param_declarations(
@@ -19976,18 +19977,18 @@ pub fn mk_component_sig<'a>(
                 async_: component_clone.async_,
             },
         );
-    cache.set_component_sig(sig_loc, (component_sig.clone(), reconstruct.dupe()));
+    cx.node_cache_mut()
+        .set_component_sig(sig_loc, (component_sig.clone(), reconstruct.dupe()));
     Ok((component_sig, reconstruct))
 }
 
 /// A deferred type guard check that must be invoked after `toplevels` has
 /// checked the function body. In OCaml this runs inside `reconstruct_ast`, but
 /// in Rust `Reconstruct` is `'static` and cannot capture `Context<'a>`.
-pub type DeferredTypeGuardCheck<'a> =
-    flow_typing_loc_env::node_cache::DeferredTypeGuardCheck<'a, Context<'a>>;
+pub type DeferredTypeGuardCheck = flow_typing_loc_env::node_cache::DeferredTypeGuardCheck<Cx>;
 
 pub fn mk_func_sig<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     require_return_annot: bool,
     meth_kind: type_annotation::MethodKind,
     statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
@@ -19998,7 +19999,7 @@ pub fn mk_func_sig<'a>(
     (
         func_class_sig_types::func::Func<func_class_sig_types::StmtConfigTypes>,
         func_class_sig_types::func::Reconstruct,
-        DeferredTypeGuardCheck<'a>,
+        DeferredTypeGuardCheck,
     ),
     CheckExprError,
 > {
@@ -20032,7 +20033,7 @@ pub fn mk_func_sig<'a>(
     }
 
     fn mk_param_annot<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         reason: Reason,
         annot: &ast::types::AnnotationOrHint<ALoc, ALoc>,
@@ -20040,7 +20041,7 @@ pub fn mk_func_sig<'a>(
         Ok(match annot {
             ast::types::AnnotationOrHint::Missing(loc)
                 if !matches!(
-                    &*cx.typing_mode(),
+                    cx.typing_mode(),
                     flow_typing_context::TypingMode::CheckingMode
                 ) =>
             {
@@ -20074,7 +20075,7 @@ pub fn mk_func_sig<'a>(
     }
 
     fn id_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         id: &ast::pattern::Identifier<ALoc, ALoc>,
         mk_reason_fn: impl FnOnce(FlowSmolStr) -> Reason,
@@ -20104,7 +20105,7 @@ pub fn mk_func_sig<'a>(
     }
 
     fn mk_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         param: &ast::function::Param<ALoc, ALoc>,
     ) -> Result<func_stmt_config_types::Param, JobError> {
@@ -20203,7 +20204,7 @@ pub fn mk_func_sig<'a>(
     }
 
     fn mk_rest<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         rest: &ast::function::RestParam<ALoc, ALoc>,
     ) -> Result<Result<func_stmt_config_types::Rest, Box<ErrorMessage<ALoc>>>, JobError> {
@@ -20245,7 +20246,7 @@ pub fn mk_func_sig<'a>(
     }
 
     fn mk_this<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         this: &ast::function::ThisParam<ALoc, ALoc>,
     ) -> Result<func_stmt_config_types::ThisParam, JobError> {
@@ -20270,7 +20271,7 @@ pub fn mk_func_sig<'a>(
     }
 
     fn mk_params<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         params: &ast::function::Params<ALoc, ALoc>,
     ) -> Result<func_class_sig_types::func::FuncParams, JobError> {
@@ -20456,7 +20457,7 @@ pub fn mk_func_sig<'a>(
         // and no explicit returns
         (ast::function::ReturnAnnot::Missing(loc), _) => {
             let t = if !matches!(
-                &*cx.typing_mode(),
+                cx.typing_mode(),
                 flow_typing_context::TypingMode::CheckingMode
             ) {
                 cx.mk_placeholder(ret_reason.dupe())
@@ -20653,15 +20654,15 @@ pub fn mk_func_sig<'a>(
     // callers invoke after toplevels, preserving the OCaml ordering where
     // check_type_guard runs inside reconstruct_ast (which is called after toplevels).
     let cx_typing_mode_is_checking = matches!(
-        &*cx.typing_mode(),
+        cx.typing_mode(),
         flow_typing_context::TypingMode::CheckingMode
     );
-    let deferred_type_guard_check: DeferredTypeGuardCheck<'a> = if cx_typing_mode_is_checking {
+    let deferred_type_guard_check: DeferredTypeGuardCheck = if cx_typing_mode_is_checking {
         match &kind {
             func::Kind::TypeGuard(tg) => {
                 let params_clone = params.clone();
                 let tg_clone = tg.clone();
-                Some(Rc::new(move |cx: &Context<'a>| {
+                Some(Rc::new(move |cx: &mut Context<'_>| {
                     flow_typing_utils::type_guard::check_type_guard(
                         cx,
                         &params_clone,
@@ -20705,7 +20706,7 @@ pub fn mk_func_sig<'a>(
 /// and return type, check the body against that signature by adding `this`
 /// and super` to the environment, and return the signature.
 fn function_decl<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     fun_loc: Option<ALoc>,
     arrow: bool,
     statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
@@ -20734,7 +20735,7 @@ fn function_decl<'a>(
     };
     let fun_type = crate::func_sig::functiontype(cx, arrow, fun_loc, default_this, &func_sig);
     if !matches!(
-        &*cx.typing_mode(),
+        cx.typing_mode(),
         flow_typing_context::TypingMode::CheckingMode
     ) {
         let mut mapper = typed_ast_utils::PlaceholderMapper::new(cx);
@@ -20767,7 +20768,7 @@ fn function_decl<'a>(
 
 /// Process a function declaration, returning a (polymorphic) function type
 fn mk_function_declaration<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tast_fun_type: Option<Type>,
     reason: Reason,
     fun_loc: ALoc,
@@ -20786,7 +20787,7 @@ fn mk_function_declaration<'a>(
 
 /// Process a function expression, returning a (polymorphic) function type.
 fn mk_function_expression<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     needs_this_param: bool,
     reason: Reason,
     fun_loc: ALoc,
@@ -20805,7 +20806,7 @@ fn mk_function_expression<'a>(
 
 /// Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead.
 pub fn mk_function<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     needs_this_param: bool,
     tast_fun_type: Option<Type>,
     statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
@@ -20867,7 +20868,7 @@ pub fn mk_function<'a>(
 
 /// Process an arrow function, returning a (polymorphic) function type.
 pub fn mk_arrow<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
     reason: Reason,
     func: &ast::function::Function<ALoc, ALoc>,
@@ -20883,14 +20884,14 @@ pub fn mk_arrow<'a>(
 }
 
 fn check_default_pattern<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     left_loc: ALoc,
     right: &expression::Expression<ALoc, ALoc>,
 ) {
     let right_loc = right.loc().dupe();
-    let update_excuses =
+    let mut update_excuses =
         |update_fun: Box<dyn FnOnce(&mut flow_typing_exists_check::ExistsCheck)>| {
-            let mut exists_excuses = cx.exists_excuses_mut();
+            let exists_excuses = cx.exists_excuses_mut();
             let exists_excuse = exists_excuses
                 .entry(left_loc.dupe())
                 .or_insert_with(Default::default);
@@ -20937,7 +20938,7 @@ fn flow_enum_exhaustive_check_incomplete(
 }
 
 fn check_possible_enum_exhaustive_check<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     check_reason: &Reason,
     possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
     checks: &Rc<[EnumCheck]>,
@@ -20960,7 +20961,7 @@ fn check_possible_enum_exhaustive_check<'cx>(
 }
 
 fn check_possible_enum_exhaustive_check_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     check_reason: &Reason,
     possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
@@ -20990,7 +20991,7 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
                         let default_case_loc = default_case_loc.dupe();
                         let incomplete_out = incomplete_out.dupe();
                         let discriminant_after_check = discriminant_after_check.map(|t| t.dupe());
-                        Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                        Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                             check_possible_enum_exhaustive_check_with_env(
                                 cx,
                                 env,
@@ -21004,7 +21005,11 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
                             )
                         })
                             as Box<
-                                dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>
+                                dyn FnOnce(
+                                        &mut Context<'cx>,
+                                        &FlowJsEnv,
+                                    )
+                                        -> Result<(), FlowJsException>
                                     + '_,
                             >
                     })
@@ -21066,7 +21071,7 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
 }
 
 fn check_invalid_enum_exhaustive_check<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     check_reason: &Reason,
     reasons: &Rc<[ALoc]>,
     incomplete_out: &TypeCollector,
@@ -21085,7 +21090,7 @@ fn check_invalid_enum_exhaustive_check<'cx>(
 }
 
 fn check_invalid_enum_exhaustive_check_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     check_reason: &Reason,
     reasons: &Rc<[ALoc]>,
@@ -21111,7 +21116,7 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
                         let reasons = reasons.clone();
                         let incomplete_out = incomplete_out.dupe();
                         let discriminant_after_check = discriminant_after_check.map(|t| t.dupe());
-                        Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                        Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                             check_invalid_enum_exhaustive_check_with_env(
                                 cx,
                                 env,
@@ -21123,7 +21128,11 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
                             )
                         })
                             as Box<
-                                dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>
+                                dyn FnOnce(
+                                        &mut Context<'cx>,
+                                        &FlowJsEnv,
+                                    )
+                                        -> Result<(), FlowJsException>
                                     + '_,
                             >
                     })
@@ -21178,14 +21187,14 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
 }
 
 fn enum_case_test_matches_discriminant<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     enum_id_discriminant: &flow_aloc::ALocId,
     members: &FlowOrdMap<FlowSmolStr, ALoc>,
     member_name: &FlowSmolStr,
     obj_t: &Type,
 ) -> bool {
     fn matches_single<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         enum_id_discriminant: &flow_aloc::ALocId,
         members: &FlowOrdMap<FlowSmolStr, ALoc>,
         member_name: &FlowSmolStr,
@@ -21207,7 +21216,7 @@ fn enum_case_test_matches_discriminant<'cx>(
         }
     }
     fn matches<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         enum_id_discriminant: &flow_aloc::ALocId,
         members: &FlowOrdMap<FlowSmolStr, ALoc>,
         member_name: &FlowSmolStr,
@@ -21228,7 +21237,7 @@ fn enum_case_test_matches_discriminant<'cx>(
 }
 
 fn perform_enum_exhaustive_check<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     check_reason: &Reason,
     enum_t: &Type,
@@ -21454,7 +21463,7 @@ fn enum_exhaustive_check_of_switch_cases(
 }
 
 fn enum_declaration<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     declared: bool,
     loc: ALoc,
     enum_decl: &statement::EnumDeclaration<ALoc, ALoc>,
@@ -21531,7 +21540,7 @@ fn enum_declaration<'a>(
 }
 
 pub fn mk_enum<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     enum_reason: Reason,
     name_loc: ALoc,
     enum_name: &FlowSmolStr,
@@ -21726,13 +21735,12 @@ pub fn mk_enum<'a>(
 }
 
 pub fn match_pattern<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     case_match_root_loc: ALoc,
     has_guard: bool,
     pattern: &ast::match_pattern::MatchPattern<ALoc, ALoc>,
 ) -> Result<ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>, CheckExprError> {
-    let node_cache = cx.node_cache();
-    match node_cache.get_match_pattern(pattern.loc()) {
+    match cx.node_cache().get_match_pattern(pattern.loc()) {
         Some((p, _)) => Ok(p),
         None => {
             let ident = flow_parser::ast_utils::match_root_ident(case_match_root_loc.dupe());
@@ -21742,7 +21750,7 @@ pub fn match_pattern<'a>(
             });
             fn on_identifier_fn<'a>(
                 encl_ctx: EnclosingContext,
-                cx: &Context<'a>,
+                cx: &mut Context<'a>,
                 id: &ast::IdentifierInner<ALoc, ALoc>,
                 loc: ALoc,
             ) -> Result<Type, JobError> {
@@ -21751,13 +21759,14 @@ pub fn match_pattern<'a>(
                 identifier_inner(cx, &flags, &ast::Identifier::new(id.clone()), loc)
             }
             let on_identifier = on_identifier_fn;
-            let on_expression = |cx: &Context<'a>,
+            let on_expression = |cx: &mut Context<'a>,
                                  expr: &expression::Expression<ALoc, ALoc>|
              -> Result<
                 expression::Expression<ALoc, (ALoc, Type)>,
                 CheckExprError,
             > { expression(None, None, None, cx, expr) };
-            let on_binding = |use_op: &UseOp,
+            let on_binding = |cx: &mut Context<'_>,
+                              use_op: &UseOp,
                               name_loc: ALoc,
                               kind: ast::VariableKind,
                               name: &FlowSmolStr,
@@ -21775,14 +21784,15 @@ pub fn match_pattern<'a>(
                 &acc,
                 pattern,
             )?;
-            node_cache.set_match_pattern(pattern.loc().dupe(), (p.clone(), has_guard));
+            cx.node_cache_mut()
+                .set_match_pattern(pattern.loc().dupe(), (p.clone(), has_guard));
             Ok(p)
         }
     }
 }
 
 fn error_on_match_case_invalid_syntax<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     match_keyword_loc: ALoc,
     invalid_syntax_list: &[ast::match_::InvalidSyntax<ALoc>],
 ) {
@@ -21858,7 +21868,7 @@ fn error_on_match_case_invalid_syntax<'a>(
 }
 
 fn error_on_record_declaration_invalid_syntax<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     multiple_error_loc: ALoc,
     invalid_syntax: Option<&statement::record_declaration::InvalidSyntax<ALoc>>,
     invalid_properties_syntax: &[&statement::record_declaration::InvalidPropertySyntax<ALoc>],
@@ -21948,7 +21958,7 @@ pub fn expression<'a>(
     encl_ctx: Option<EnclosingContext>,
     decl: Option<ast::VariableKind>,
     as_const: Option<bool>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     expr: &expression::Expression<ALoc, ALoc>,
 ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     expression_inner(
@@ -21964,7 +21974,7 @@ pub fn expression<'a>(
 
 pub fn identifier<'a>(
     encl_ctx: EnclosingContext,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     id: &ast::Identifier<ALoc, ALoc>,
     loc: ALoc,
 ) -> Result<Type, JobError> {
@@ -21974,7 +21984,7 @@ pub fn identifier<'a>(
 }
 
 pub fn string_literal<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     encl_ctx: EnclosingContext,
     loc: ALoc,
     v: &ast::StringLiteral<ALoc>,
@@ -21985,7 +21995,7 @@ pub fn string_literal<'a>(
 }
 
 pub fn number_literal<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     encl_ctx: EnclosingContext,
     loc: ALoc,
     v: &ast::NumberLiteral<ALoc>,
@@ -21996,7 +22006,7 @@ pub fn number_literal<'a>(
 }
 
 pub fn boolean_literal<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     encl_ctx: EnclosingContext,
     loc: ALoc,
     v: &ast::BooleanLiteral<ALoc>,
@@ -22007,7 +22017,7 @@ pub fn boolean_literal<'a>(
 }
 
 pub fn bigint_literal<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     encl_ctx: EnclosingContext,
     loc: ALoc,
     v: &ast::BigIntLiteral<ALoc>,

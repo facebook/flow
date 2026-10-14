@@ -523,9 +523,13 @@ mod collect_function_method_inserting_points_tests {
     use flow_typing::type_inference;
     use flow_typing_builtins::builtins::Builtins;
     use flow_typing_context::Context;
+    use flow_typing_context::ContextArena;
+    use flow_typing_context::ContextId;
+    use flow_typing_context::ContextStore;
+    use flow_typing_context::Cx;
     use flow_typing_context::Metadata;
+    use flow_typing_context::ResolveRequire;
     use flow_typing_context::ResolvedRequire;
-    use flow_typing_context::make_ccx;
     use flow_typing_type::type_::AnyErrorKind;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::Type;
@@ -534,7 +538,7 @@ mod collect_function_method_inserting_points_tests {
     use super::*;
     use crate::ast_extraction_utils::insertion_point_collectors;
 
-    fn dummy_context() -> Context<'static> {
+    fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
         let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
         let any_t = |r: &flow_common::reason::Reason| -> Type {
             Type::new(TypeInner::AnyT(
@@ -542,10 +546,8 @@ mod collect_function_method_inserting_points_tests {
                 AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
             ))
         };
-        let mut builtins_values: FlowOrdMap<
-            FlowSmolStr,
-            flow_typing_builtins::LazyVal<'_, Context<'_>>,
-        > = FlowOrdMap::new();
+        let mut builtins_values: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+            FlowOrdMap::new();
         for name in &[
             "console",
             "Object",
@@ -556,16 +558,13 @@ mod collect_function_method_inserting_points_tests {
         ] {
             let r = reason.dupe();
             let t = any_t(&r);
-            let val = Rc::new(flow_lazy::Lazy::new(
-                Box::new(move |_cx: &Context| (ALoc::none(), t))
-                    as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-            ));
+            let val = Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+                (ALoc::none(), t)
+            }));
             builtins_values.insert(FlowSmolStr::from(*name), val);
         }
-        let mut builtin_types: FlowOrdMap<
-            FlowSmolStr,
-            flow_typing_builtins::LazyVal<'_, Context<'_>>,
-        > = FlowOrdMap::new();
+        let mut builtin_types: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+            FlowOrdMap::new();
         for name in &[
             "AsyncIterable",
             "Iterable",
@@ -576,13 +575,11 @@ mod collect_function_method_inserting_points_tests {
         ] {
             let r = reason.dupe();
             let t = any_t(&r);
-            let val = Rc::new(flow_lazy::Lazy::new(
-                Box::new(move |_cx: &Context| (ALoc::none(), t))
-                    as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-            ));
+            let val = Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+                (ALoc::none(), t)
+            }));
             builtin_types.insert(FlowSmolStr::from(*name), val);
         }
-        let ccx = Rc::new(make_ccx());
         let mut metadata = Metadata::default();
         metadata.overridable.checked = true;
         let file = dummy_filename();
@@ -592,58 +589,55 @@ mod collect_function_method_inserting_points_tests {
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>));
         let resolve_reason = reason.dupe();
-        let resolve_require: Rc<
-            dyn Fn(
-                &Context,
-                &flow_common::flow_import_specifier::FlowImportSpecifier,
-            ) -> ResolvedRequire<'static>,
-        > = Rc::new(move |_cx, _| {
-            let r = resolve_reason.dupe();
-            ResolvedRequire::TypedModule(Rc::new(move |_cx, _dst_cx| {
-                Err(Type::new(TypeInner::AnyT(
-                    r.dupe(),
-                    AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-                )))
-            }))
-        });
+        let resolve_require: ResolveRequire = Rc::new(
+            move |_cx: &mut Context<'_>,
+                  _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
+                let r = resolve_reason.dupe();
+                ResolvedRequire::TypedModule(Rc::new(
+                    move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
+                        Err(Type::new(TypeInner::AnyT(
+                            r.dupe(),
+                            AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+                        )))
+                    },
+                ))
+            },
+        );
         let builtins_values_clone = builtins_values.dupe();
         let builtin_types_clone = builtin_types.dupe();
-        Context::make(
+        let ccx = arena.add_component();
+        let cx_id = arena.add_context(
             ccx,
             metadata,
             file,
             Arc::default(),
             aloc_table,
             resolve_require,
-            Rc::new(move |_cx: &Context| {
+            Rc::new(move |_cx: &mut Context<'_>| {
                 Builtins::of_name_map(
-                    Rc::new(|_src_cx: &Context, _dst_cx: &Context, t: Type| t),
-                    Rc::new(
-                        |_src_cx: &Context,
-                         _dst_cx: &Context,
-                         m: &flow_typing_type::type_::ModuleType| m.dupe(),
-                    ),
                     builtins_values_clone.dupe(),
                     builtin_types_clone.dupe(),
                     FlowOrdMap::new(),
                 )
             }),
             flow_utils_concurrency::check_budget::CheckBudget::new(None),
-        )
+        );
+        Context::new(ContextStore::new(vec![arena]), cx_id)
     }
 
     fn typed_ast_of_ast(
-        cx: &Context,
+        cx: &mut Context,
         ast: &ast::Program<Loc, Loc>,
     ) -> ast::Program<ALoc, (ALoc, Type)> {
         let comments = &ast.all_comments;
         let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
+        let metadata = cx.metadata().clone();
         type_inference::infer_ast(
             &LintSettings::<Severity>::empty_severities(),
             cx,
             &dummy_filename(),
             Arc::new(FileSig::empty()),
-            cx.metadata(),
+            &metadata,
             comments,
             ast,
             aloc_ast,
@@ -675,8 +669,9 @@ function foo<A>() {
 }
         ";
                 let ast = parse(source);
-                let cx = dummy_context();
-                let typed_ast = typed_ast_of_ast(&cx, &ast);
+                let mut arena = ContextArena::new();
+                let mut cx = dummy_context(&mut arena);
+                let typed_ast = typed_ast_of_ast(&mut cx, &ast);
                 let extracted_loc = mk_loc(9, 12, 9, 42);
                 let actual: Vec<(FlowSmolStr, Loc, bool, Vec<String>)> =
                     insertion_point_collectors::collect_function_method_inserting_points(
@@ -775,9 +770,13 @@ mod find_closest_enclosing_class_tests {
     use flow_typing::type_inference;
     use flow_typing_builtins::builtins::Builtins;
     use flow_typing_context::Context;
+    use flow_typing_context::ContextArena;
+    use flow_typing_context::ContextId;
+    use flow_typing_context::ContextStore;
+    use flow_typing_context::Cx;
     use flow_typing_context::Metadata;
+    use flow_typing_context::ResolveRequire;
     use flow_typing_context::ResolvedRequire;
-    use flow_typing_context::make_ccx;
     use flow_typing_type::type_::AnyErrorKind;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::Type;
@@ -786,7 +785,7 @@ mod find_closest_enclosing_class_tests {
     use super::*;
     use crate::ast_extraction_utils::insertion_point_collectors;
 
-    fn dummy_context() -> Context<'static> {
+    fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
         let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
         let any_t = |r: &flow_common::reason::Reason| -> Type {
             Type::new(TypeInner::AnyT(
@@ -794,10 +793,8 @@ mod find_closest_enclosing_class_tests {
                 AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
             ))
         };
-        let mut builtins_values: FlowOrdMap<
-            FlowSmolStr,
-            flow_typing_builtins::LazyVal<'_, Context<'_>>,
-        > = FlowOrdMap::new();
+        let mut builtins_values: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+            FlowOrdMap::new();
         for name in &[
             "console",
             "Object",
@@ -808,16 +805,13 @@ mod find_closest_enclosing_class_tests {
         ] {
             let r = reason.dupe();
             let t = any_t(&r);
-            let val = Rc::new(flow_lazy::Lazy::new(
-                Box::new(move |_cx: &Context| (ALoc::none(), t))
-                    as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-            ));
+            let val = Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+                (ALoc::none(), t)
+            }));
             builtins_values.insert(FlowSmolStr::from(*name), val);
         }
-        let mut builtin_types: FlowOrdMap<
-            FlowSmolStr,
-            flow_typing_builtins::LazyVal<'_, Context<'_>>,
-        > = FlowOrdMap::new();
+        let mut builtin_types: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+            FlowOrdMap::new();
         for name in &[
             "AsyncIterable",
             "Iterable",
@@ -828,13 +822,11 @@ mod find_closest_enclosing_class_tests {
         ] {
             let r = reason.dupe();
             let t = any_t(&r);
-            let val = Rc::new(flow_lazy::Lazy::new(
-                Box::new(move |_cx: &Context| (ALoc::none(), t))
-                    as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-            ));
+            let val = Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+                (ALoc::none(), t)
+            }));
             builtin_types.insert(FlowSmolStr::from(*name), val);
         }
-        let ccx = Rc::new(make_ccx());
         let mut metadata = Metadata::default();
         metadata.overridable.checked = true;
         let file = dummy_filename();
@@ -844,58 +836,55 @@ mod find_closest_enclosing_class_tests {
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>));
         let resolve_reason = reason.dupe();
-        let resolve_require: Rc<
-            dyn Fn(
-                &Context,
-                &flow_common::flow_import_specifier::FlowImportSpecifier,
-            ) -> ResolvedRequire<'static>,
-        > = Rc::new(move |_cx, _| {
-            let r = resolve_reason.dupe();
-            ResolvedRequire::TypedModule(Rc::new(move |_cx, _dst_cx| {
-                Err(Type::new(TypeInner::AnyT(
-                    r.dupe(),
-                    AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-                )))
-            }))
-        });
+        let resolve_require: ResolveRequire = Rc::new(
+            move |_cx: &mut Context<'_>,
+                  _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
+                let r = resolve_reason.dupe();
+                ResolvedRequire::TypedModule(Rc::new(
+                    move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
+                        Err(Type::new(TypeInner::AnyT(
+                            r.dupe(),
+                            AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+                        )))
+                    },
+                ))
+            },
+        );
         let builtins_values_clone = builtins_values.dupe();
         let builtin_types_clone = builtin_types.dupe();
-        Context::make(
+        let ccx = arena.add_component();
+        let cx_id = arena.add_context(
             ccx,
             metadata,
             file,
             Arc::default(),
             aloc_table,
             resolve_require,
-            Rc::new(move |_cx: &Context| {
+            Rc::new(move |_cx: &mut Context<'_>| {
                 Builtins::of_name_map(
-                    Rc::new(|_src_cx: &Context, _dst_cx: &Context, t: Type| t),
-                    Rc::new(
-                        |_src_cx: &Context,
-                         _dst_cx: &Context,
-                         m: &flow_typing_type::type_::ModuleType| m.dupe(),
-                    ),
                     builtins_values_clone.dupe(),
                     builtin_types_clone.dupe(),
                     FlowOrdMap::new(),
                 )
             }),
             flow_utils_concurrency::check_budget::CheckBudget::new(None),
-        )
+        );
+        Context::new(ContextStore::new(vec![arena]), cx_id)
     }
 
     fn typed_ast_of_ast(
-        cx: &Context,
+        cx: &mut Context,
         ast: &ast::Program<Loc, Loc>,
     ) -> ast::Program<ALoc, (ALoc, Type)> {
         let comments = &ast.all_comments;
         let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
+        let metadata = cx.metadata().clone();
         type_inference::infer_ast(
             &LintSettings::<Severity>::empty_severities(),
             cx,
             &dummy_filename(),
             Arc::new(FileSig::empty()),
-            cx.metadata(),
+            &metadata,
             comments,
             ast,
             aloc_ast,
@@ -911,8 +900,9 @@ mod find_closest_enclosing_class_tests {
         extracted_loc: Loc,
     ) {
         let ast = parse(source);
-        let cx = dummy_context();
-        let typed_ast = typed_ast_of_ast(&cx, &ast);
+        let mut arena = ContextArena::new();
+        let mut cx = dummy_context(&mut arena);
+        let typed_ast = typed_ast_of_ast(&mut cx, &ast);
         let actual: Option<(Option<FlowSmolStr>, Loc, Vec<String>)> =
             insertion_point_collectors::find_closest_enclosing_class(
                 &typed_ast,
@@ -1416,9 +1406,13 @@ mod type_synthesizer_tests {
     use flow_typing::type_inference;
     use flow_typing_builtins::builtins::Builtins;
     use flow_typing_context::Context;
+    use flow_typing_context::ContextArena;
+    use flow_typing_context::ContextId;
+    use flow_typing_context::ContextStore;
+    use flow_typing_context::Cx;
     use flow_typing_context::Metadata;
+    use flow_typing_context::ResolveRequire;
     use flow_typing_context::ResolvedRequire;
-    use flow_typing_context::make_ccx;
     use flow_typing_type::type_::AnyErrorKind;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::Type;
@@ -1428,7 +1422,7 @@ mod type_synthesizer_tests {
     use crate::insert_type;
     use crate::refactor_extract_utils::type_synthesizer;
 
-    fn dummy_context() -> Context<'static> {
+    fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
         let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
         let any_t = |r: &flow_common::reason::Reason| -> Type {
             Type::new(TypeInner::AnyT(
@@ -1436,10 +1430,8 @@ mod type_synthesizer_tests {
                 AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
             ))
         };
-        let mut builtins_values: FlowOrdMap<
-            FlowSmolStr,
-            flow_typing_builtins::LazyVal<'_, Context<'_>>,
-        > = FlowOrdMap::new();
+        let mut builtins_values: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+            FlowOrdMap::new();
         for name in &[
             "console",
             "Object",
@@ -1451,16 +1443,13 @@ mod type_synthesizer_tests {
         ] {
             let r = reason.dupe();
             let t = any_t(&r);
-            let val = Rc::new(flow_lazy::Lazy::new(
-                Box::new(move |_cx: &Context| (ALoc::none(), t))
-                    as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-            ));
+            let val = Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+                (ALoc::none(), t)
+            }));
             builtins_values.insert(FlowSmolStr::from(*name), val);
         }
-        let mut builtin_types: FlowOrdMap<
-            FlowSmolStr,
-            flow_typing_builtins::LazyVal<'_, Context<'_>>,
-        > = FlowOrdMap::new();
+        let mut builtin_types: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+            FlowOrdMap::new();
         for name in &[
             "AsyncIterable",
             "Iterable",
@@ -1471,13 +1460,11 @@ mod type_synthesizer_tests {
         ] {
             let r = reason.dupe();
             let t = any_t(&r);
-            let val = Rc::new(flow_lazy::Lazy::new(
-                Box::new(move |_cx: &Context| (ALoc::none(), t))
-                    as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-            ));
+            let val = Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+                (ALoc::none(), t)
+            }));
             builtin_types.insert(FlowSmolStr::from(*name), val);
         }
-        let ccx = Rc::new(make_ccx());
         let mut metadata = Metadata::default();
         metadata.overridable.checked = true;
         let file = dummy_filename();
@@ -1487,58 +1474,55 @@ mod type_synthesizer_tests {
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>));
         let resolve_reason = reason.dupe();
-        let resolve_require: Rc<
-            dyn Fn(
-                &Context,
-                &flow_common::flow_import_specifier::FlowImportSpecifier,
-            ) -> ResolvedRequire<'static>,
-        > = Rc::new(move |_cx, _| {
-            let r = resolve_reason.dupe();
-            ResolvedRequire::TypedModule(Rc::new(move |_cx, _dst_cx| {
-                Err(Type::new(TypeInner::AnyT(
-                    r.dupe(),
-                    AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-                )))
-            }))
-        });
+        let resolve_require: ResolveRequire = Rc::new(
+            move |_cx: &mut Context<'_>,
+                  _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
+                let r = resolve_reason.dupe();
+                ResolvedRequire::TypedModule(Rc::new(
+                    move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
+                        Err(Type::new(TypeInner::AnyT(
+                            r.dupe(),
+                            AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+                        )))
+                    },
+                ))
+            },
+        );
         let builtins_values_clone = builtins_values.dupe();
         let builtin_types_clone = builtin_types.dupe();
-        Context::make(
+        let ccx = arena.add_component();
+        let cx_id = arena.add_context(
             ccx,
             metadata,
             file,
             Arc::default(),
             aloc_table,
             resolve_require,
-            Rc::new(move |_cx: &Context| {
+            Rc::new(move |_cx: &mut Context<'_>| {
                 Builtins::of_name_map(
-                    Rc::new(|_src_cx: &Context, _dst_cx: &Context, t: Type| t),
-                    Rc::new(
-                        |_src_cx: &Context,
-                         _dst_cx: &Context,
-                         m: &flow_typing_type::type_::ModuleType| m.dupe(),
-                    ),
                     builtins_values_clone.dupe(),
                     builtin_types_clone.dupe(),
                     FlowOrdMap::new(),
                 )
             }),
             flow_utils_concurrency::check_budget::CheckBudget::new(None),
-        )
+        );
+        Context::new(ContextStore::new(vec![arena]), cx_id)
     }
 
     fn typed_ast_of_ast(
-        cx: &Context,
+        cx: &mut Context,
         ast: &ast::Program<Loc, Loc>,
     ) -> ast::Program<ALoc, (ALoc, Type)> {
         let comments = &ast.all_comments;
         let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
+        let metadata = cx.metadata().clone();
         type_inference::infer_ast(
             &LintSettings::<Severity>::empty_severities(),
             cx,
             &dummy_filename(),
             Arc::new(FileSig::empty()),
-            cx.metadata(),
+            &metadata,
             comments,
             ast,
             aloc_ast,
@@ -1572,16 +1556,15 @@ mod type_synthesizer_tests {
     }
 
     fn create_context(
+        cx: &mut Context,
         source: &str,
         locs: Vec<Loc>,
-    ) -> type_synthesizer::SynthesizerContext<'static, 'static> {
+    ) -> type_synthesizer::SynthesizerContext<'static> {
         let ast = parse(source);
-        let cx = dummy_context();
-        let typed_ast = typed_ast_of_ast(&cx, &ast);
+        let typed_ast = typed_ast_of_ast(cx, &ast);
         let file_sig = file_sig_of_ast(&ast);
         let locs_set: BTreeSet<Loc> = locs.into_iter().collect();
         type_synthesizer::create_synthesizer_context(
-            cx,
             dummy_filename(),
             Arc::new(file_sig),
             typed_ast,
@@ -1594,7 +1577,9 @@ mod type_synthesizer_tests {
     }
 
     fn pretty_print_type(
+        cx: &mut Context,
         type_param_synthesizer: &dyn Fn(
+            &mut Context<'_>,
             &flow_typing_type::type_::TypeParam,
         ) -> Result<
             ast::types::TypeParam<Loc, Loc>,
@@ -1618,7 +1603,7 @@ mod type_synthesizer_tests {
                     _ => {
                         let pretty_print_typeparam =
                             |tparam: &flow_typing_type::type_::TypeParam| -> String {
-                                match type_param_synthesizer(tparam) {
+                                match type_param_synthesizer(cx, tparam) {
                                     Ok(synthesized) => {
                                         // type_param is pub(crate) in js_layout_generator,
                                         // so we manually format: name [: bound] [= default]
@@ -1688,7 +1673,10 @@ mod type_synthesizer_tests {
         let loc_of_c = mk_loc(5, 14, 5, 15);
         let loc_of_d = mk_loc(6, 39, 6, 40);
         let loc_of_missing = mk_loc(100, 14, 100, 15);
+        let mut arena = ContextArena::new();
+        let mut cx = dummy_context(&mut arena);
         let context = create_context(
+            &mut cx,
             source,
             vec![
                 loc_of_a.clone(),
@@ -1698,40 +1686,34 @@ mod type_synthesizer_tests {
                 loc_of_missing.clone(),
             ],
         );
-        let type_synth = type_synthesizer::create_type_synthesizer_with_import_adder(context);
+        let type_synth = type_synthesizer::create_type_synthesizer_with_import_adder(&cx, context);
+        let synthesized_a = (type_synth.type_synthesizer)(&mut cx, &loc_of_a);
         assert_eq!(
             "number",
-            pretty_print_type(
-                &*type_synth.type_param_synthesizer,
-                (type_synth.type_synthesizer)(&loc_of_a),
-            ),
+            pretty_print_type(&mut cx, &*type_synth.type_param_synthesizer, synthesized_a,),
         );
+        let synthesized_b = (type_synth.type_synthesizer)(&mut cx, &loc_of_b);
         assert_eq!(
             "string",
-            pretty_print_type(
-                &*type_synth.type_param_synthesizer,
-                (type_synth.type_synthesizer)(&loc_of_b),
-            ),
+            pretty_print_type(&mut cx, &*type_synth.type_param_synthesizer, synthesized_b,),
         );
+        let synthesized_c = (type_synth.type_synthesizer)(&mut cx, &loc_of_c);
         assert_eq!(
             "C<number>",
-            pretty_print_type(
-                &*type_synth.type_param_synthesizer,
-                (type_synth.type_synthesizer)(&loc_of_c),
-            ),
+            pretty_print_type(&mut cx, &*type_synth.type_param_synthesizer, synthesized_c,),
         );
+        let synthesized_d = (type_synth.type_synthesizer)(&mut cx, &loc_of_d);
         assert_eq!(
             "<D: B = C, C: B, B>: D",
-            pretty_print_type(
-                &*type_synth.type_param_synthesizer,
-                (type_synth.type_synthesizer)(&loc_of_d),
-            ),
+            pretty_print_type(&mut cx, &*type_synth.type_param_synthesizer, synthesized_d,),
         );
+        let synthesized_missing = (type_synth.type_synthesizer)(&mut cx, &loc_of_missing);
         assert_eq!(
             "<missing>",
             pretty_print_type(
+                &mut cx,
                 &*type_synth.type_param_synthesizer,
-                (type_synth.type_synthesizer)(&loc_of_missing),
+                synthesized_missing,
             ),
         );
     }

@@ -24,6 +24,7 @@ use flow_data_structure_wrapper::vector::FlowVector;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumInvalidCheckData;
 use flow_typing_errors::error_message::EnumReferenceData;
@@ -66,25 +67,26 @@ type IMap<V> = FlowOrdMap<usize, V>;
 // * Helper functions for analyzing types *
 // ****************************************
 
-fn singleton_concrete_type<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
+fn singleton_concrete_type<'cx>(cx: &mut Context<'cx>, t: &Type) -> Type {
     FlowJs::singleton_concrete_type_for_match_arg(cx, false, reason_of_t(t), t).unwrap()
 }
 
-fn possible_concrete_types<'cx>(cx: &Context<'cx>, keep_unions: bool, t: &Type) -> Vec<Type> {
+fn possible_concrete_types<'cx>(cx: &mut Context<'cx>, keep_unions: bool, t: &Type) -> Vec<Type> {
     FlowJs::possible_concrete_types_for_match_arg(cx, keep_unions, reason_of_t(t), t)
         .unwrap_or_default()
 }
 
 fn attempt_union_rep_optimization<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     rep: &flow_typing_type::type_::union_rep::UnionRep,
 ) {
     if !rep.is_optimized_finally() {
         rep.optimize(
-            |t1, t2| concrete_type_eq::eq(cx, t1, t2),
-            |ts: &mut dyn Iterator<Item = &Type>| type_mapper::union_flatten(cx, ts.duped()),
-            |t| cx.find_resolved(t),
-            |id| cx.find_props(id),
+            cx,
+            |cx, t1, t2| concrete_type_eq::eq(cx, t1, t2),
+            |cx, ts: &mut dyn Iterator<Item = &Type>| type_mapper::union_flatten(cx, ts.duped()),
+            |cx, t| cx.find_resolved(t),
+            |cx, id| cx.find_props(id),
         );
     }
 }
@@ -92,12 +94,12 @@ fn attempt_union_rep_optimization<'cx>(
 // Walk the `super` chain of an instance, collecting the ids of all super
 // classes. Does not include `class_id` itself. Stops on recursive extends.
 fn get_super_class_ids<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     class_id: &ALocId,
     super_: &Type,
 ) -> FlowOrdSet<ALocId> {
     fn loop_<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         class_id: &ALocId,
         mut acc: FlowOrdSet<ALocId>,
         t: &Type,
@@ -136,7 +138,7 @@ fn get_super_class_ids<'cx>(
 // we can later recognize patterns whose class is a strict subclass of the
 // value's class.
 fn get_class_info_with_supers<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     t: &Type,
 ) -> Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>, Type)> {
     let instance_t = match singleton_concrete_type(cx, t).deref() {
@@ -169,7 +171,10 @@ fn get_class_info_with_supers<'cx>(
     }
 }
 
-pub fn get_class_info<'cx>(cx: &Context<'cx>, t: &Type) -> Option<(ALocId, Option<FlowSmolStr>)> {
+pub fn get_class_info<'cx>(
+    cx: &mut Context<'cx>,
+    t: &Type,
+) -> Option<(ALocId, Option<FlowSmolStr>)> {
     get_class_info_with_supers(cx, t).map(|(class_id, class_name, _, _)| (class_id, class_name))
 }
 
@@ -184,7 +189,7 @@ pub mod pattern_union_builder {
     // Builder helpers
 
     fn not_seen_wildcard<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         raise_errors: bool,
         pattern_union: &pattern_union::PatternUnion,
         reason: &Reason,
@@ -216,7 +221,7 @@ pub mod pattern_union_builder {
     }
 
     fn add_leaf<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         raise_errors: bool,
         guarded: bool,
         mut pattern_union: pattern_union::PatternUnion,
@@ -267,7 +272,7 @@ pub mod pattern_union_builder {
     }
 
     fn add_wildcard<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         raise_errors: bool,
         guarded: bool,
         last: bool,
@@ -306,7 +311,7 @@ pub mod pattern_union_builder {
     }
 
     fn add_tuple<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         raise_errors: bool,
         mut pattern_union: pattern_union::PatternUnion,
         length: usize,
@@ -344,7 +349,7 @@ pub mod pattern_union_builder {
     }
 
     fn add_object<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         raise_errors: bool,
         mut pattern_union: pattern_union::PatternUnion,
         obj: pattern_object::WithIndex,
@@ -369,7 +374,7 @@ pub mod pattern_union_builder {
     // Construction from AST
 
     fn leaf_of_type<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         raise_errors: bool,
         t: &Type,
         pattern_ast: &ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>,
@@ -459,8 +464,8 @@ pub mod pattern_union_builder {
     }
 
     fn of_pattern_ast<'cx>(
-        cx: &Context<'cx>,
-        is_global_var: &dyn Fn(ALoc) -> bool,
+        cx: &mut Context<'cx>,
+        is_global_var: &dyn Fn(&Context<'cx>, ALoc) -> bool,
         raise_errors: bool,
         pattern_ast: &ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>,
     ) -> pattern_union::PatternUnion {
@@ -477,8 +482,8 @@ pub mod pattern_union_builder {
     }
 
     fn of_pattern_ast_inner<'cx>(
-        cx: &Context<'cx>,
-        is_global_var: &dyn Fn(ALoc) -> bool,
+        cx: &mut Context<'cx>,
+        is_global_var: &dyn Fn(&Context<'cx>, ALoc) -> bool,
         raise_errors: bool,
         acc: (pattern_union::PatternUnion, usize),
         guarded: bool,
@@ -594,7 +599,7 @@ pub mod pattern_union_builder {
                 }
             }
             MatchPattern::IdentifierPattern { inner, .. }
-                if inner.name.as_str() == "NaN" && is_global_var(inner.loc.0.dupe()) =>
+                if inner.name.as_str() == "NaN" && is_global_var(cx, inner.loc.0.dupe()) =>
             {
                 // The global `NaN`. It has type `number`, so it does not contribute to
                 // exhaustiveness, but it is a valid pattern and is marked as used whenever
@@ -759,8 +764,8 @@ pub mod pattern_union_builder {
     }
 
     fn object_pattern<'cx>(
-        cx: &Context<'cx>,
-        is_global_var: &dyn Fn(ALoc) -> bool,
+        cx: &mut Context<'cx>,
+        is_global_var: &dyn Fn(&Context<'cx>, ALoc) -> bool,
         raise_errors: bool,
         reason: &Reason,
         next_i: usize,
@@ -870,8 +875,8 @@ pub mod pattern_union_builder {
     }
 
     pub fn add_pattern<'cx>(
-        cx: &Context<'cx>,
-        is_global_var: &dyn Fn(ALoc) -> bool,
+        cx: &mut Context<'cx>,
+        is_global_var: &dyn Fn(&Context<'cx>, ALoc) -> bool,
         raise_errors: bool,
         acc: (pattern_union::PatternUnion, usize),
         (pattern_ast, guarded): (&ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>, bool),
@@ -889,8 +894,8 @@ pub mod pattern_union_builder {
     }
 
     pub(super) fn of_patterns_ast<'cx>(
-        cx: &Context<'cx>,
-        is_global_var: &dyn Fn(ALoc) -> bool,
+        cx: &mut Context<'cx>,
+        is_global_var: &dyn Fn(&Context<'cx>, ALoc) -> bool,
         raise_errors: bool,
         patterns_ast: &match_pattern_ir::PatternAstList,
     ) -> pattern_union::PatternUnion {
@@ -920,10 +925,10 @@ mod value_object_property_builder {
 
     use super::*;
 
-    pub(super) fn of_type_prop<'cx>(
+    pub(super) fn of_type_prop(
         key: &FlowSmolStr,
         p: &type_::Property,
-    ) -> Option<value_object::Property<'cx, Context<'cx>>> {
+    ) -> Option<value_object::Property<Cx>> {
         use flow_typing_type::type_::property;
 
         match property::read_loc(p) {
@@ -948,10 +953,10 @@ mod value_object_property_builder {
                     }
                 };
                 let t = t.dupe();
-                let lazy_value: value_object::LazyValueUnion<'cx, Context<'cx>> =
-                    std::rc::Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                let lazy_value: value_object::LazyValueUnion<Cx> =
+                    std::rc::Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                         value_union_builder::of_type(cx, &t)
-                    })));
+                    }));
                 Some(value_object::Property {
                     loc,
                     value: lazy_value,
@@ -967,10 +972,10 @@ mod value_union_builder {
     use super::*;
 
     fn of_type_inner<'cx>(
-        cx: &Context<'cx>,
-        value_union: value_union::ValueUnion<'cx, Context<'cx>>,
+        cx: &mut Context<'cx>,
+        value_union: value_union::ValueUnion<Cx>,
         t: &Type,
-    ) -> value_union::ValueUnion<'cx, Context<'cx>> {
+    ) -> value_union::ValueUnion<Cx> {
         use flow_typing_type::type_::ArrType;
         use flow_typing_type::type_::ArrayATData;
         use flow_typing_type::type_::EnumInfoInner;
@@ -1122,12 +1127,10 @@ mod value_union_builder {
                                         flow_typing_type::type_::mixed_t::make(elem.reason.dupe())
                                     };
                                     let elem_t = elem_t.dupe();
-                                    let lazy_value: value_object::LazyValueUnion<
-                                        'cx,
-                                        Context<'cx>,
-                                    > = std::rc::Rc::new(flow_lazy::Lazy::new(Box::new(
-                                        move |cx: &Context<'cx>| of_type(cx, &elem_t),
-                                    )));
+                                    let lazy_value: value_object::LazyValueUnion<Cx> =
+                                        std::rc::Rc::new(flow_lazy::Lazy::new(
+                                            move |cx: &mut Context<'_>| of_type(cx, &elem_t),
+                                        ));
                                     let elem_loc = elem.reason.loc();
                                     value_object::Property {
                                         loc: elem_loc.dupe(),
@@ -1142,7 +1145,7 @@ mod value_union_builder {
                                 let length = num_req + idx;
                                 let mut props: FlowOrdMap<
                                     FlowSmolStr,
-                                    Option<value_object::Property<'cx, Context<'cx>>>,
+                                    Option<value_object::Property<Cx>>,
                                 > = FlowOrdMap::default();
                                 for (prop_i, prop) in props_list.iter().take(length).enumerate() {
                                     let key: FlowSmolStr = prop_i.to_string().into();
@@ -1193,7 +1196,7 @@ mod value_union_builder {
                             let props_map = cx.find_props(props_tmap);
                             let mut obj_props: FlowOrdMap<
                                 FlowSmolStr,
-                                Option<value_object::Property<'cx, Context<'cx>>>,
+                                Option<value_object::Property<Cx>>,
                             > = FlowOrdMap::default();
                             let mut sentinel_props_set: FlowOrdSet<FlowSmolStr> =
                                 FlowOrdSet::default();
@@ -1276,16 +1279,16 @@ mod value_union_builder {
     // property from an indexer or not, while preserving type-level method access.
     // TODO: Update existing machinery to return the info we want and use that instead.
     pub fn get_prop<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         key: &(ALoc, FlowSmolStr),
         obj: &Type,
-    ) -> Result<Option<value_object::Property<'cx, Context<'cx>>>, JobError> {
+    ) -> Result<Option<value_object::Property<Cx>>, JobError> {
         fn get_prop_from_dict<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             key_loc: &ALoc,
             key_name: &FlowSmolStr,
             dict: Option<&flow_typing_type::type_::DictType>,
-        ) -> Result<Option<value_object::Property<'cx, Context<'cx>>>, JobError> {
+        ) -> Result<Option<value_object::Property<Cx>>, JobError> {
             match dict {
                 Some(dict) => {
                     let reason_key = flow_common::reason::mk_reason(
@@ -1305,10 +1308,10 @@ mod value_union_builder {
                     {
                         let loc = reason_of_t(&dict.key).loc();
                         let dict_value = dict.value.dupe();
-                        let lazy_value: value_object::LazyValueUnion<'cx, Context<'cx>> =
-                            std::rc::Rc::new(flow_lazy::Lazy::new(Box::new(
-                                move |cx: &Context<'cx>| of_type(cx, &dict_value),
-                            )));
+                        let lazy_value: value_object::LazyValueUnion<Cx> =
+                            std::rc::Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
+                                of_type(cx, &dict_value)
+                            }));
                         Ok(Some(value_object::Property {
                             loc: loc.dupe(),
                             value: lazy_value,
@@ -1323,12 +1326,12 @@ mod value_union_builder {
         }
 
         fn find_key<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             super_t: &Type,
             props_list: &[flow_typing_type::type_::properties::Id],
             dict: Option<&flow_typing_type::type_::DictType>,
             key: &(ALoc, FlowSmolStr),
-        ) -> Result<Option<value_object::Property<'cx, Context<'cx>>>, JobError> {
+        ) -> Result<Option<value_object::Property<Cx>>, JobError> {
             let (_, key_name) = key;
             let current_prop = props_list.iter().find_map(|id| {
                 let name = flow_common::reason::Name::new(key_name.dupe());
@@ -1412,10 +1415,7 @@ mod value_union_builder {
         }
     }
 
-    pub(super) fn of_type<'cx>(
-        cx: &Context<'cx>,
-        t: &Type,
-    ) -> value_union::ValueUnion<'cx, Context<'cx>> {
+    pub(super) fn of_type<'cx>(cx: &mut Context<'cx>, t: &Type) -> value_union::ValueUnion<Cx> {
         // The list members of the `ValueUnion` are accumulated in reverse order,
         // put them back in their original order.
         let mut vu = of_type_inner(cx, value_union::ValueUnion::empty(), t);
@@ -1433,7 +1433,7 @@ mod value_union_builder {
 // *******************
 
 fn is_leaf_subtype_of_inexhaustible<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     leaf_val: &leaf::Leaf,
     inexhaustible: &FlowVector<Type>,
 ) -> Result<bool, JobError> {
@@ -1458,23 +1458,23 @@ fn is_object_subtype_of_inexhaustible(inexhaustible: &FlowVector<Type>) -> Optio
     })
 }
 
-enum FilterObjectResult<'cx> {
+enum FilterObjectResult {
     Match {
         used_pattern_locs: ALocSet,
         // If an object value was only partially matched by a pattern,
         // we store the remainders so we can add them to the queue to check.
-        queue_additions: Vec<value_object::ValueObject<'cx, Context<'cx>>>,
-        matched: value_object::ValueObject<'cx, Context<'cx>>,
+        queue_additions: Vec<value_object::ValueObject<Cx>>,
+        matched: value_object::ValueObject<Cx>,
     },
     NoMatch {
         used_pattern_locs: ALocSet,
-        left: value_object::ValueObject<'cx, Context<'cx>>,
+        left: value_object::ValueObject<Cx>,
     },
 }
 
-struct FilterUnionResult<'cx> {
-    value_left: value_union::ValueUnion<'cx, Context<'cx>>,
-    value_matched: value_union::ValueUnion<'cx, Context<'cx>>,
+struct FilterUnionResult {
+    value_left: value_union::ValueUnion<Cx>,
+    value_matched: value_union::ValueUnion<Cx>,
     used_pattern_locs: ALocSet,
 }
 
@@ -1482,11 +1482,11 @@ struct FilterUnionResult<'cx> {
 /// and those which were not matched and left over. We also computed the set of locs of patterns
 /// which were useful - that is used to computed the unnecessary patterns.
 fn filter_values_by_patterns<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     raise_errors: bool,
-    value_union: &value_union::ValueUnion<'cx, Context<'cx>>,
+    value_union: &value_union::ValueUnion<Cx>,
     pattern_union: &pattern_union::PatternUnion,
-) -> Result<FilterUnionResult<'cx>, JobError> {
+) -> Result<FilterUnionResult, JobError> {
     let value_union::ValueUnion {
         leafs: value_leafs,
         tuples: value_tuples,
@@ -1565,8 +1565,8 @@ fn filter_values_by_patterns<'cx>(
             .collect()
     };
 
-    let mut tuples_left: Vec<value_object::ValueObject<'cx, Context<'cx>>> = Vec::new();
-    let mut tuples_matched: Vec<value_object::ValueObject<'cx, Context<'cx>>> = Vec::new();
+    let mut tuples_left: Vec<value_object::ValueObject<Cx>> = Vec::new();
+    let mut tuples_matched: Vec<value_object::ValueObject<Cx>> = Vec::new();
     for tuple_value in value_tuples.iter() {
         let inner = tuple_value.1.as_ref();
         let value_rest = &inner.rest;
@@ -1680,23 +1680,22 @@ fn filter_values_by_patterns<'cx>(
 /// values against the patterns, and compute which objects were matched, and
 /// which were not matched.
 fn filter_objects_by_patterns<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     raise_errors: bool,
-    value_objects: &[value_object::ValueObject<'cx, Context<'cx>>],
+    value_objects: &[value_object::ValueObject<Cx>],
     pattern_objects: &[pattern_object::WithIndex],
 ) -> Result<
     (
-        Vec<value_object::ValueObject<'cx, Context<'cx>>>,
-        Vec<value_object::ValueObject<'cx, Context<'cx>>>,
+        Vec<value_object::ValueObject<Cx>>,
+        Vec<value_object::ValueObject<Cx>>,
         ALocSet,
     ),
     JobError,
 > {
-    let mut acc_left: Vec<value_object::ValueObject<'cx, Context<'cx>>> = Vec::new();
-    let mut acc_matched: Vec<value_object::ValueObject<'cx, Context<'cx>>> = Vec::new();
+    let mut acc_left: Vec<value_object::ValueObject<Cx>> = Vec::new();
+    let mut acc_matched: Vec<value_object::ValueObject<Cx>> = Vec::new();
     let mut acc_used_pattern_locs: ALocSet = ALocSet::new();
-    let mut queue: VecDeque<value_object::ValueObject<'cx, Context<'cx>>> =
-        value_objects.iter().duped().collect();
+    let mut queue: VecDeque<value_object::ValueObject<Cx>> = value_objects.iter().duped().collect();
 
     while let Some(value_object) = queue.pop_front() {
         // Fold over the object patterns over the current object value. We thread
@@ -1761,12 +1760,12 @@ fn filter_objects_by_patterns<'cx>(
 // the set of class ids of earlier subclass patterns that fully cover their
 // class, returning the (possibly extended) set.
 fn filter_object_by_pattern<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     raise_errors: bool,
     subclass_covered: &FlowOrdSet<ALocId>,
-    value_object: &value_object::ValueObject<'cx, Context<'cx>>,
+    value_object: &value_object::ValueObject<Cx>,
     pattern_object: &pattern_object::PatternObject,
-) -> Result<(FilterObjectResult<'cx>, FlowOrdSet<ALocId>), JobError> {
+) -> Result<(FilterObjectResult, FlowOrdSet<ALocId>), JobError> {
     let value_object::ValueObject(reason_value, value_inner) = value_object;
     let value_object::ValueObjectInner {
         props: value_props_orig,
@@ -1958,7 +1957,7 @@ fn filter_object_by_pattern<'cx>(
     // checking for the purposes of marking patterns as used, we set `no_match` to true.
     let mut used_pattern_locs: ALocSet = ALocSet::new();
     let mut queue_additions = Vec::new();
-    let mut head: FlowOrdMap<FlowSmolStr, Option<value_object::Property<'cx, Context<'cx>>>> =
+    let mut head: FlowOrdMap<FlowSmolStr, Option<value_object::Property<Cx>>> =
         FlowOrdMap::default();
     let mut remainder_value = value_props.dupe();
 
@@ -1987,7 +1986,7 @@ fn filter_object_by_pattern<'cx>(
                         used_pattern_locs: new_used_pattern_locs,
                     } = filter_values_by_patterns(cx, raise_errors, forced_value, pattern)?;
                     let is_empty = value_matched.is_empty();
-                    let matched_lazy: value_object::LazyValueUnion<'cx, Context<'cx>> =
+                    let matched_lazy: value_object::LazyValueUnion<Cx> =
                         // We need to create an already forced value to match ocaml behavior
                         // of creating already forced value for `lazy expr`, where expr is
                         // an already computed expression.
@@ -2028,7 +2027,7 @@ fn filter_object_by_pattern<'cx>(
                 };
                 (None, rest)
             } else {
-                let left_lazy: value_object::LazyValueUnion<'cx, Context<'cx>> =
+                let left_lazy: value_object::LazyValueUnion<Cx> =
                     // We need to create an already forced value to match ocaml behavior
                     // of creating already forced value for `lazy expr`, where expr is
                     // an already computed expression.
@@ -2136,7 +2135,7 @@ fn filter_object_by_pattern<'cx>(
 
 /// mixed/any values mark object and tuple patterns as used.
 fn visit_mixed<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     raise_errors: bool,
     t: &Type,
     pattern_union: &pattern_union::PatternUnion,
@@ -2231,7 +2230,7 @@ fn visit_mixed<'cx>(
 }
 
 fn mark_leaf_pattern_used<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     value_leafs_matched: &LeafSet,
     inexhaustible: &FlowVector<Type>,
     leaf_pattern: &leaf::Leaf,
@@ -2256,7 +2255,7 @@ fn mark_leaf_pattern_used<'cx>(
 /// If there are patterns which contain invalid patterns, for which we have already emitted
 /// other errors, do not also emit an unused pattern error.
 fn check_for_unused_patterns<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     pattern_union: &pattern_union::PatternUnion,
     used_pattern_locs: &ALocSet,
 ) {
@@ -2264,7 +2263,7 @@ fn check_for_unused_patterns<'cx>(
         let loc = reason.loc();
         used_pattern_locs.contains(loc)
     };
-    let error = |reason: &Reason, kind: MatchPatternReferenceKind| {
+    let error = |cx: &mut Context<'cx>, reason: &Reason, kind: MatchPatternReferenceKind| {
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(Box::new(
@@ -2281,13 +2280,13 @@ fn check_for_unused_patterns<'cx>(
     for leaf_val in &pattern_union.leafs {
         let reason = &leaf_val.0;
         if !check(reason) {
-            error(reason, MatchPatternReferenceKind::Pattern);
+            error(cx, reason, MatchPatternReferenceKind::Pattern);
         }
     }
     for leaf_val in &pattern_union.guarded_leafs {
         let reason = &leaf_val.0;
         if !check(reason) {
-            error(reason, MatchPatternReferenceKind::Pattern);
+            error(cx, reason, MatchPatternReferenceKind::Pattern);
         }
     }
     for (_, po) in pattern_union.all_tuples_and_objects() {
@@ -2300,7 +2299,7 @@ fn check_for_unused_patterns<'cx>(
             continue;
         }
         if !check(reason) {
-            error(reason, MatchPatternReferenceKind::Pattern);
+            error(cx, reason, MatchPatternReferenceKind::Pattern);
         } else {
             for (_, prop) in props.iter() {
                 check_for_unused_patterns(cx, &prop.value, used_pattern_locs);
@@ -2310,7 +2309,7 @@ fn check_for_unused_patterns<'cx>(
                             ObjKind::Tuple { .. } => MatchPatternReferenceKind::ArrayRest,
                             ObjKind::Obj => MatchPatternReferenceKind::ObjectRest,
                         };
-                        error(rest_reason, kind);
+                        error(cx, rest_reason, kind);
                     }
                 }
             }
@@ -2318,7 +2317,7 @@ fn check_for_unused_patterns<'cx>(
     }
     if let Some(ref wildcard) = pattern_union.wildcard {
         if !check(wildcard) {
-            error(wildcard, MatchPatternReferenceKind::Wildcard);
+            error(cx, wildcard, MatchPatternReferenceKind::Wildcard);
         }
     }
 }
@@ -2331,8 +2330,8 @@ fn check_for_unused_patterns<'cx>(
 /// Otherwise, build up examples of patterns that could be added to make the `match` exhaustive.
 /// Then, check the patterns to see if any are unused.
 pub fn analyze<'cx>(
-    cx: &Context<'cx>,
-    is_global_var: &dyn Fn(ALoc) -> bool,
+    cx: &mut Context<'cx>,
+    is_global_var: &dyn Fn(&Context<'cx>, ALoc) -> bool,
     match_loc: ALoc,
     patterns: &match_pattern_ir::PatternAstList,
     arg_t: &Type,
@@ -2577,10 +2576,10 @@ pub fn analyze<'cx>(
 
 /// Filter a type by a finalized PatternUnion
 pub fn filter_by_pattern_union<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     root_t: &Type,
     pattern_union: &pattern_union::PatternUnion,
-) -> Result<value_union::ValueUnion<'cx, Context<'cx>>, JobError> {
+) -> Result<value_union::ValueUnion<Cx>, JobError> {
     let value_union = value_union_builder::of_type(cx, root_t);
     let FilterUnionResult {
         value_left,

@@ -19,10 +19,10 @@ use super::helpers::*;
 use super::*;
 
 impl flow_js_utils::GetPropHelper for FlowJs {
-    type R = Box<dyn for<'b> FnOnce(&Context<'b>, Tvar) -> Result<(), FlowJsException>>;
+    type R = Box<dyn for<'b> FnOnce(&mut Context<'b>, Tvar) -> Result<(), FlowJsException>>;
 
     fn error_type<'cx>(
-        _cx: &Context<'cx>,
+        _cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         reason: Reason,
@@ -40,7 +40,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
     }
 
     fn return_<'cx>(
-        _cx: &Context<'cx>,
+        _cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
         trace: DepthTrace,
@@ -59,7 +59,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
     }
 
     fn dict_read_check<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
@@ -69,7 +69,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
     }
 
     fn reposition<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         loc: ALoc,
@@ -79,7 +79,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
     }
 
     fn cg_lookup<'cx>(
-        _cx: &Context<'cx>,
+        _cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         obj_t: Type,
@@ -124,7 +124,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
     }
 
     fn cg_get_prop<'cx>(
-        _cx: &Context<'cx>,
+        _cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         t: Type,
@@ -165,7 +165,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
     }
 
     fn mk_react_dro<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         _env: &FlowJsEnv,
         use_op: UseOp,
         dro: &ReactDro,
@@ -176,7 +176,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
 
     fn key_overlaps_with_indexer() -> Option<
         for<'b> fn(
-            &Context<'b>,
+            &mut Context<'b>,
             &FlowJsEnv,
             &Type,
             &Type,
@@ -219,7 +219,7 @@ pub(crate) fn prop_typo_suggestion_for_name<'cx>(
 }
 
 pub(super) fn get_private_prop<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     allow_method_access: bool,
     trace: DepthTrace,
@@ -263,27 +263,28 @@ pub(super) fn get_private_prop<'cx>(
                 )
             } else {
                 let name = Name::new(prop_name.dupe());
-                let do_lookup = |p: PropertyType| -> Result<(), FlowJsException> {
-                    let action = LookupAction::ReadProp(Box::new(ReadPropData {
-                        use_op: use_op.dupe(),
-                        obj_t: l.dupe(),
-                        tout: tout.dupe(),
-                    }));
-                    let propref = mk_named_prop(reason_op.dupe(), false, name.dupe());
-                    perform_lookup_action(
-                        cx,
-                        env,
-                        trace,
-                        &propref,
-                        &p,
-                        None,
-                        PropertySource::PropertyMapProperty,
-                        l,
-                        reason_op,
-                        &action,
-                        None,
-                    )
-                };
+                let do_lookup =
+                    |cx: &mut Context<'cx>, p: PropertyType| -> Result<(), FlowJsException> {
+                        let action = LookupAction::ReadProp(Box::new(ReadPropData {
+                            use_op: use_op.dupe(),
+                            obj_t: l.dupe(),
+                            tout: tout.dupe(),
+                        }));
+                        let propref = mk_named_prop(reason_op.dupe(), false, name.dupe());
+                        perform_lookup_action(
+                            cx,
+                            env,
+                            trace,
+                            &propref,
+                            &p,
+                            None,
+                            PropertySource::PropertyMapProperty,
+                            l,
+                            reason_op,
+                            &action,
+                            None,
+                        )
+                    };
                 let field_maps = if is_static {
                     instance.class_private_static_fields.dupe()
                 } else {
@@ -291,7 +292,7 @@ pub(super) fn get_private_prop<'cx>(
                 };
                 let props = cx.find_props(field_maps);
                 match props.get(&name) {
-                    Some(p) => do_lookup(property::property_type(p)),
+                    Some(p) => do_lookup(cx, property::property_type(p)),
                     None => {
                         let method_maps = if is_static {
                             instance.class_private_static_methods.dupe()
@@ -300,12 +301,13 @@ pub(super) fn get_private_prop<'cx>(
                         };
                         let method_props = cx.find_props(method_maps);
                         match method_props.get(&name) {
-                            Some(p) => do_lookup(property::property_type(
-                                &flow_js_utils::method_property_for_read(
+                            Some(p) => do_lookup(
+                                cx,
+                                property::property_type(&flow_js_utils::method_property_for_read(
                                     allow_method_access,
                                     p.dupe(),
-                                ),
-                            )),
+                                )),
+                            ),
                             None => flow_js_utils::add_output_with_env(
                                 cx,
                                 env,
@@ -330,14 +332,14 @@ pub(super) fn get_private_prop<'cx>(
 }
 
 pub(super) fn elem_action_on_obj<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     propref: PropRef,
     obj: &Type,
     reason_op: &Reason,
-    action: &ElemAction<Context<'cx>>,
+    action: &ElemAction<Cx>,
 ) -> Result<(), FlowJsException> {
     match action {
         ElemAction::ReadElem(box ReadElemData {
@@ -406,7 +408,7 @@ pub(super) fn elem_action_on_obj<'cx>(
 }
 
 pub(super) fn write_computed_obj_prop<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
@@ -416,7 +418,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
 ) -> Result<(), FlowJsException> {
     let reason = reason_of_t(elem_t);
     fn loop_<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
@@ -525,7 +527,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
 }
 
 pub(super) fn write_obj_prop<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
@@ -605,6 +607,8 @@ pub(super) fn write_obj_prop<'cx>(
                 ..
             } => {
                 if obj_type::is_exact(&o.flags.obj_kind) {
+                    let suggestion =
+                        prop_typo_suggestion_for_name(cx, &[o.props_tmap.dupe()], name);
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
@@ -616,11 +620,7 @@ pub(super) fn write_obj_prop<'cx>(
                                 reason_obj.dupe(),
                             ),
                             use_op: use_op.dupe(),
-                            suggestion: prop_typo_suggestion_for_name(
-                                cx,
-                                &[o.props_tmap.dupe()],
-                                name,
-                            ),
+                            suggestion,
                         })),
                     )
                 } else {

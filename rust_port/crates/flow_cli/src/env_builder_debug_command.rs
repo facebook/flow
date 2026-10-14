@@ -92,7 +92,7 @@ impl Context for TestCx {
         None
     }
 
-    fn add_exhaustive_check(&self, _loc: ALoc, _cases: (Vec<ALoc>, bool)) {}
+    fn add_exhaustive_check(&mut self, _loc: ALoc, _cases: (Vec<ALoc>, bool)) {}
 
     fn exhaustive_check(&self, _loc: &ALoc) -> Option<(Vec<ALoc>, bool)> {
         None
@@ -104,7 +104,7 @@ struct TestFlow;
 impl Flow for TestFlow {
     type Cx = TestCx;
 
-    fn add_output(_cx: &Self::Cx, _error: ErrorMessage<ALoc>) {}
+    fn add_output(_cx: &mut Self::Cx, _error: ErrorMessage<ALoc>) {}
 }
 
 fn print_graph(graph: Vec<(String, String)>) {
@@ -163,7 +163,7 @@ pub fn main(path: Option<String>, filename: Option<String>) {
     if errors.is_empty() {
         // Compute read -> write edges
         let (_, env) = name_resolver::program_with_scope::<TestCx, TestFlow>(
-            &TestCx,
+            &mut TestCx,
             false,
             FlowOrdSet::new(),
             &file_sig,
@@ -187,7 +187,7 @@ pub fn main(path: Option<String>, filename: Option<String>) {
 
         // Connect read -> write edges and write -> read edges to form a graph
         let Ok(graph) = name_def_ordering::build_graph::<_, _, TestCx, TestFlow>(
-            &TestCx,
+            &mut TestCx,
             &autocomplete_hooks,
             &env,
             &inits,

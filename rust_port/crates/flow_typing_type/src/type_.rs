@@ -59,6 +59,7 @@ use flow_data_structure_wrapper::multi_level_map::MultiLevelMap;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_lazy::ContextFamily;
 pub use flow_parser::ast::types::TypeGuardKind;
 use vec1::Vec1;
 
@@ -634,15 +635,15 @@ pub enum HintEvalResult {
 }
 
 pub type LazyHintCompute<CX = ()> = Rc<
-    dyn Fn(
-        /* cx */ &CX,
+    dyn for<'a> Fn(
+        /* cx */ &mut <CX as ContextFamily>::Context<'a>,
         /* expected_only */ bool,
         /* skip_optional */ Option<bool>,
         /* reason */ Reason,
     ) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError>,
 >;
 
-impl<CX> std::fmt::Debug for LazyHintT<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for LazyHintT<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("LazyHintT")
             .field(&self.0)
@@ -651,29 +652,29 @@ impl<CX> std::fmt::Debug for LazyHintT<CX> {
     }
 }
 
-pub struct LazyHintT<CX = ()>(pub bool, pub LazyHintCompute<CX>);
+pub struct LazyHintT<CX: ContextFamily = ()>(pub bool, pub LazyHintCompute<CX>);
 
-impl<CX> Clone for LazyHintT<CX> {
+impl<CX: ContextFamily> Clone for LazyHintT<CX> {
     fn clone(&self) -> Self {
         LazyHintT(self.0, self.1.clone())
     }
 }
 
-impl<CX> PartialEq for LazyHintT<CX> {
+impl<CX: ContextFamily> PartialEq for LazyHintT<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0 && Rc::ptr_eq(&self.1, &other.1)
     }
 }
 
-impl<CX> Eq for LazyHintT<CX> {}
+impl<CX: ContextFamily> Eq for LazyHintT<CX> {}
 
-impl<CX> PartialOrd for LazyHintT<CX> {
+impl<CX: ContextFamily> PartialOrd for LazyHintT<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for LazyHintT<CX> {
+impl<CX: ContextFamily> Ord for LazyHintT<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self.0.cmp(&other.0) {
             std::cmp::Ordering::Equal => {
@@ -686,7 +687,7 @@ impl<CX> Ord for LazyHintT<CX> {
     }
 }
 
-impl<CX> std::hash::Hash for LazyHintT<CX> {
+impl<CX: ContextFamily> std::hash::Hash for LazyHintT<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.0.hash(state);
         let ptr = Rc::as_ptr(&self.1) as *const () as usize;
@@ -1542,7 +1543,7 @@ pub type RootUseOp = VirtualRootUseOp<ALoc>;
 
 pub type FrameUseOp = VirtualFrameUseOp<ALoc>;
 
-pub struct PrivateMethodTData<CX = ()> {
+pub struct PrivateMethodTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub prop_reason: Reason,
@@ -1552,7 +1553,7 @@ pub struct PrivateMethodTData<CX = ()> {
     pub method_action: Box<MethodAction<CX>>,
 }
 
-impl<CX> Clone for PrivateMethodTData<CX> {
+impl<CX: ContextFamily> Clone for PrivateMethodTData<CX> {
     fn clone(&self) -> Self {
         PrivateMethodTData {
             use_op: self.use_op.clone(),
@@ -1566,7 +1567,7 @@ impl<CX> Clone for PrivateMethodTData<CX> {
     }
 }
 
-impl<CX> PartialEq for PrivateMethodTData<CX> {
+impl<CX: ContextFamily> PartialEq for PrivateMethodTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -1578,9 +1579,9 @@ impl<CX> PartialEq for PrivateMethodTData<CX> {
     }
 }
 
-impl<CX> Eq for PrivateMethodTData<CX> {}
+impl<CX: ContextFamily> Eq for PrivateMethodTData<CX> {}
 
-impl<CX> std::hash::Hash for PrivateMethodTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for PrivateMethodTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -1592,13 +1593,13 @@ impl<CX> std::hash::Hash for PrivateMethodTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for PrivateMethodTData<CX> {
+impl<CX: ContextFamily> PartialOrd for PrivateMethodTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for PrivateMethodTData<CX> {
+impl<CX: ContextFamily> Ord for PrivateMethodTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -1611,7 +1612,7 @@ impl<CX> Ord for PrivateMethodTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for PrivateMethodTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for PrivateMethodTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PrivateMethodTData")
             .field("use_op", &self.use_op)
@@ -1638,7 +1639,7 @@ pub struct SetPrivatePropTData {
     pub tout: Option<Type>,
 }
 
-pub struct GetPropTData<CX = ()> {
+pub struct GetPropTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub id: Option<i32>,
@@ -1649,7 +1650,7 @@ pub struct GetPropTData<CX = ()> {
     pub hint: LazyHintT<CX>,
 }
 
-impl<CX> Clone for GetPropTData<CX> {
+impl<CX: ContextFamily> Clone for GetPropTData<CX> {
     fn clone(&self) -> Self {
         GetPropTData {
             use_op: self.use_op.clone(),
@@ -1664,7 +1665,7 @@ impl<CX> Clone for GetPropTData<CX> {
     }
 }
 
-impl<CX> PartialEq for GetPropTData<CX> {
+impl<CX: ContextFamily> PartialEq for GetPropTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -1677,9 +1678,9 @@ impl<CX> PartialEq for GetPropTData<CX> {
     }
 }
 
-impl<CX> Eq for GetPropTData<CX> {}
+impl<CX: ContextFamily> Eq for GetPropTData<CX> {}
 
-impl<CX> std::hash::Hash for GetPropTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for GetPropTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -1692,13 +1693,13 @@ impl<CX> std::hash::Hash for GetPropTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for GetPropTData<CX> {
+impl<CX: ContextFamily> PartialOrd for GetPropTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for GetPropTData<CX> {
+impl<CX: ContextFamily> Ord for GetPropTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -1712,7 +1713,7 @@ impl<CX> Ord for GetPropTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for GetPropTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for GetPropTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("GetPropTData")
             .field("use_op", &self.use_op)
@@ -1737,7 +1738,7 @@ pub struct GetPrivatePropTData {
     pub tout: Box<Tvar>,
 }
 
-pub struct ConstructorTData<CX = ()> {
+pub struct ConstructorTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub targs: Option<Rc<[Targ]>>,
@@ -1747,7 +1748,7 @@ pub struct ConstructorTData<CX = ()> {
     pub specialized_ctor: Option<SpecializedCallee>,
 }
 
-impl<CX> Clone for ConstructorTData<CX> {
+impl<CX: ContextFamily> Clone for ConstructorTData<CX> {
     fn clone(&self) -> Self {
         ConstructorTData {
             use_op: self.use_op.clone(),
@@ -1761,7 +1762,7 @@ impl<CX> Clone for ConstructorTData<CX> {
     }
 }
 
-impl<CX> PartialEq for ConstructorTData<CX> {
+impl<CX: ContextFamily> PartialEq for ConstructorTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -1773,9 +1774,9 @@ impl<CX> PartialEq for ConstructorTData<CX> {
     }
 }
 
-impl<CX> Eq for ConstructorTData<CX> {}
+impl<CX: ContextFamily> Eq for ConstructorTData<CX> {}
 
-impl<CX> std::hash::Hash for ConstructorTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for ConstructorTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -1787,13 +1788,13 @@ impl<CX> std::hash::Hash for ConstructorTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for ConstructorTData<CX> {
+impl<CX: ContextFamily> PartialOrd for ConstructorTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for ConstructorTData<CX> {
+impl<CX: ContextFamily> Ord for ConstructorTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -1806,7 +1807,7 @@ impl<CX> Ord for ConstructorTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for ConstructorTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for ConstructorTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ConstructorTData")
             .field("use_op", &self.use_op)
@@ -1885,7 +1886,7 @@ pub struct SuperTData {
     pub derived_type: DerivedType,
 }
 
-pub struct SpecializeTData<CX> {
+pub struct SpecializeTData<CX: ContextFamily> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub reason2: Reason,
@@ -1893,7 +1894,7 @@ pub struct SpecializeTData<CX> {
     pub upper: Option<Box<Cont<CX>>>,
 }
 
-impl<CX> Clone for SpecializeTData<CX> {
+impl<CX: ContextFamily> Clone for SpecializeTData<CX> {
     fn clone(&self) -> Self {
         Self {
             use_op: self.use_op.dupe(),
@@ -1905,7 +1906,7 @@ impl<CX> Clone for SpecializeTData<CX> {
     }
 }
 
-impl<CX> PartialEq for SpecializeTData<CX> {
+impl<CX: ContextFamily> PartialEq for SpecializeTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -1915,9 +1916,9 @@ impl<CX> PartialEq for SpecializeTData<CX> {
     }
 }
 
-impl<CX> Eq for SpecializeTData<CX> {}
+impl<CX: ContextFamily> Eq for SpecializeTData<CX> {}
 
-impl<CX> Hash for SpecializeTData<CX> {
+impl<CX: ContextFamily> Hash for SpecializeTData<CX> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -1927,13 +1928,13 @@ impl<CX> Hash for SpecializeTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for SpecializeTData<CX> {
+impl<CX: ContextFamily> PartialOrd for SpecializeTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for SpecializeTData<CX> {
+impl<CX: ContextFamily> Ord for SpecializeTData<CX> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -1944,7 +1945,7 @@ impl<CX> Ord for SpecializeTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for SpecializeTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for SpecializeTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SpecializeTData")
             .field("use_op", &self.use_op)
@@ -2064,14 +2065,14 @@ pub struct EvalTypeDestructorTData {
 
 // Data structs for boxed UseTInner variants (with CX parameter - manual impls)
 
-pub struct CallTData<CX = ()> {
+pub struct CallTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub call_action: Box<CallAction>,
     pub return_hint: LazyHintT<CX>,
 }
 
-impl<CX> Clone for CallTData<CX> {
+impl<CX: ContextFamily> Clone for CallTData<CX> {
     fn clone(&self) -> Self {
         CallTData {
             use_op: self.use_op.clone(),
@@ -2082,7 +2083,7 @@ impl<CX> Clone for CallTData<CX> {
     }
 }
 
-impl<CX> PartialEq for CallTData<CX> {
+impl<CX: ContextFamily> PartialEq for CallTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -2091,9 +2092,9 @@ impl<CX> PartialEq for CallTData<CX> {
     }
 }
 
-impl<CX> Eq for CallTData<CX> {}
+impl<CX: ContextFamily> Eq for CallTData<CX> {}
 
-impl<CX> std::hash::Hash for CallTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for CallTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -2102,13 +2103,13 @@ impl<CX> std::hash::Hash for CallTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for CallTData<CX> {
+impl<CX: ContextFamily> PartialOrd for CallTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for CallTData<CX> {
+impl<CX: ContextFamily> Ord for CallTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -2118,7 +2119,7 @@ impl<CX> Ord for CallTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for CallTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for CallTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CallTData")
             .field("use_op", &self.use_op)
@@ -2129,7 +2130,7 @@ impl<CX> std::fmt::Debug for CallTData<CX> {
     }
 }
 
-pub struct TestPropTData<CX = ()> {
+pub struct TestPropTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub id: i32,
@@ -2138,7 +2139,7 @@ pub struct TestPropTData<CX = ()> {
     pub hint: LazyHintT<CX>,
 }
 
-impl<CX> Clone for TestPropTData<CX> {
+impl<CX: ContextFamily> Clone for TestPropTData<CX> {
     fn clone(&self) -> Self {
         TestPropTData {
             use_op: self.use_op.clone(),
@@ -2151,7 +2152,7 @@ impl<CX> Clone for TestPropTData<CX> {
     }
 }
 
-impl<CX> PartialEq for TestPropTData<CX> {
+impl<CX: ContextFamily> PartialEq for TestPropTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -2162,9 +2163,9 @@ impl<CX> PartialEq for TestPropTData<CX> {
     }
 }
 
-impl<CX> Eq for TestPropTData<CX> {}
+impl<CX: ContextFamily> Eq for TestPropTData<CX> {}
 
-impl<CX> std::hash::Hash for TestPropTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for TestPropTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -2175,13 +2176,13 @@ impl<CX> std::hash::Hash for TestPropTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for TestPropTData<CX> {
+impl<CX: ContextFamily> PartialOrd for TestPropTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for TestPropTData<CX> {
+impl<CX: ContextFamily> Ord for TestPropTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -2193,7 +2194,7 @@ impl<CX> Ord for TestPropTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for TestPropTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for TestPropTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TestPropTData")
             .field("use_op", &self.use_op)
@@ -2206,7 +2207,7 @@ impl<CX> std::fmt::Debug for TestPropTData<CX> {
     }
 }
 
-pub struct MethodTData<CX = ()> {
+pub struct MethodTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub prop_reason: Reason,
@@ -2214,7 +2215,7 @@ pub struct MethodTData<CX = ()> {
     pub method_action: Box<MethodAction<CX>>,
 }
 
-impl<CX> Clone for MethodTData<CX> {
+impl<CX: ContextFamily> Clone for MethodTData<CX> {
     fn clone(&self) -> Self {
         MethodTData {
             use_op: self.use_op.clone(),
@@ -2226,7 +2227,7 @@ impl<CX> Clone for MethodTData<CX> {
     }
 }
 
-impl<CX> PartialEq for MethodTData<CX> {
+impl<CX: ContextFamily> PartialEq for MethodTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -2236,9 +2237,9 @@ impl<CX> PartialEq for MethodTData<CX> {
     }
 }
 
-impl<CX> Eq for MethodTData<CX> {}
+impl<CX: ContextFamily> Eq for MethodTData<CX> {}
 
-impl<CX> std::hash::Hash for MethodTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for MethodTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -2248,13 +2249,13 @@ impl<CX> std::hash::Hash for MethodTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for MethodTData<CX> {
+impl<CX: ContextFamily> PartialOrd for MethodTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for MethodTData<CX> {
+impl<CX: ContextFamily> Ord for MethodTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -2265,7 +2266,7 @@ impl<CX> Ord for MethodTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for MethodTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for MethodTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MethodTData")
             .field("use_op", &self.use_op)
@@ -2277,7 +2278,7 @@ impl<CX> std::fmt::Debug for MethodTData<CX> {
     }
 }
 
-pub struct CallElemTData<CX = ()> {
+pub struct CallElemTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub prop_reason: Reason,
@@ -2285,7 +2286,7 @@ pub struct CallElemTData<CX = ()> {
     pub method_action: Box<MethodAction<CX>>,
 }
 
-impl<CX> Clone for CallElemTData<CX> {
+impl<CX: ContextFamily> Clone for CallElemTData<CX> {
     fn clone(&self) -> Self {
         CallElemTData {
             use_op: self.use_op.clone(),
@@ -2297,7 +2298,7 @@ impl<CX> Clone for CallElemTData<CX> {
     }
 }
 
-impl<CX> PartialEq for CallElemTData<CX> {
+impl<CX: ContextFamily> PartialEq for CallElemTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -2307,9 +2308,9 @@ impl<CX> PartialEq for CallElemTData<CX> {
     }
 }
 
-impl<CX> Eq for CallElemTData<CX> {}
+impl<CX: ContextFamily> Eq for CallElemTData<CX> {}
 
-impl<CX> std::hash::Hash for CallElemTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for CallElemTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -2319,13 +2320,13 @@ impl<CX> std::hash::Hash for CallElemTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for CallElemTData<CX> {
+impl<CX: ContextFamily> PartialOrd for CallElemTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for CallElemTData<CX> {
+impl<CX: ContextFamily> Ord for CallElemTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -2336,7 +2337,7 @@ impl<CX> Ord for CallElemTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for CallElemTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for CallElemTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CallElemTData")
             .field("use_op", &self.use_op)
@@ -2348,14 +2349,14 @@ impl<CX> std::fmt::Debug for CallElemTData<CX> {
     }
 }
 
-pub struct ElemTData<CX = ()> {
+pub struct ElemTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub obj: Type,
     pub action: Box<ElemAction<CX>>,
 }
 
-impl<CX> Clone for ElemTData<CX> {
+impl<CX: ContextFamily> Clone for ElemTData<CX> {
     fn clone(&self) -> Self {
         ElemTData {
             use_op: self.use_op.clone(),
@@ -2366,7 +2367,7 @@ impl<CX> Clone for ElemTData<CX> {
     }
 }
 
-impl<CX> PartialEq for ElemTData<CX> {
+impl<CX: ContextFamily> PartialEq for ElemTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op
             && self.reason == other.reason
@@ -2375,9 +2376,9 @@ impl<CX> PartialEq for ElemTData<CX> {
     }
 }
 
-impl<CX> Eq for ElemTData<CX> {}
+impl<CX: ContextFamily> Eq for ElemTData<CX> {}
 
-impl<CX> std::hash::Hash for ElemTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for ElemTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -2386,13 +2387,13 @@ impl<CX> std::hash::Hash for ElemTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for ElemTData<CX> {
+impl<CX: ContextFamily> PartialOrd for ElemTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for ElemTData<CX> {
+impl<CX: ContextFamily> Ord for ElemTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -2402,7 +2403,7 @@ impl<CX> Ord for ElemTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for ElemTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for ElemTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ElemTData")
             .field("use_op", &self.use_op)
@@ -2413,13 +2414,13 @@ impl<CX> std::fmt::Debug for ElemTData<CX> {
     }
 }
 
-pub struct ReactKitTData<CX = ()> {
+pub struct ReactKitTData<CX: ContextFamily = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub tool: Box<react::Tool<CX>>,
 }
 
-impl<CX> Clone for ReactKitTData<CX> {
+impl<CX: ContextFamily> Clone for ReactKitTData<CX> {
     fn clone(&self) -> Self {
         ReactKitTData {
             use_op: self.use_op.clone(),
@@ -2429,15 +2430,15 @@ impl<CX> Clone for ReactKitTData<CX> {
     }
 }
 
-impl<CX> PartialEq for ReactKitTData<CX> {
+impl<CX: ContextFamily> PartialEq for ReactKitTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.use_op == other.use_op && self.reason == other.reason && self.tool == other.tool
     }
 }
 
-impl<CX> Eq for ReactKitTData<CX> {}
+impl<CX: ContextFamily> Eq for ReactKitTData<CX> {}
 
-impl<CX> std::hash::Hash for ReactKitTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for ReactKitTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.use_op.hash(state);
         self.reason.hash(state);
@@ -2445,13 +2446,13 @@ impl<CX> std::hash::Hash for ReactKitTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for ReactKitTData<CX> {
+impl<CX: ContextFamily> PartialOrd for ReactKitTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for ReactKitTData<CX> {
+impl<CX: ContextFamily> Ord for ReactKitTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.use_op
             .cmp(&other.use_op)
@@ -2460,7 +2461,7 @@ impl<CX> Ord for ReactKitTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for ReactKitTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for ReactKitTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ReactKitTData")
             .field("use_op", &self.use_op)
@@ -2470,7 +2471,7 @@ impl<CX> std::fmt::Debug for ReactKitTData<CX> {
     }
 }
 
-pub struct SealGenericTData<CX = ()> {
+pub struct SealGenericTData<CX: ContextFamily = ()> {
     pub loc: ALoc,
     pub id: flow_typing_generics::GenericId,
     pub name: SubstName,
@@ -2478,7 +2479,7 @@ pub struct SealGenericTData<CX = ()> {
     pub cont: Cont<CX>,
 }
 
-impl<CX> Clone for SealGenericTData<CX> {
+impl<CX: ContextFamily> Clone for SealGenericTData<CX> {
     fn clone(&self) -> Self {
         SealGenericTData {
             loc: self.loc.clone(),
@@ -2490,7 +2491,7 @@ impl<CX> Clone for SealGenericTData<CX> {
     }
 }
 
-impl<CX> PartialEq for SealGenericTData<CX> {
+impl<CX: ContextFamily> PartialEq for SealGenericTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.loc == other.loc
             && self.id == other.id
@@ -2500,9 +2501,9 @@ impl<CX> PartialEq for SealGenericTData<CX> {
     }
 }
 
-impl<CX> Eq for SealGenericTData<CX> {}
+impl<CX: ContextFamily> Eq for SealGenericTData<CX> {}
 
-impl<CX> std::hash::Hash for SealGenericTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for SealGenericTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.loc.hash(state);
         self.id.hash(state);
@@ -2512,13 +2513,13 @@ impl<CX> std::hash::Hash for SealGenericTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for SealGenericTData<CX> {
+impl<CX: ContextFamily> PartialOrd for SealGenericTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for SealGenericTData<CX> {
+impl<CX: ContextFamily> Ord for SealGenericTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.loc
             .cmp(&other.loc)
@@ -2529,7 +2530,7 @@ impl<CX> Ord for SealGenericTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for SealGenericTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for SealGenericTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SealGenericTData")
             .field("loc", &self.loc)
@@ -2541,7 +2542,7 @@ impl<CX> std::fmt::Debug for SealGenericTData<CX> {
     }
 }
 
-pub struct ResolveUnionTData<CX = ()> {
+pub struct ResolveUnionTData<CX: ContextFamily = ()> {
     pub reason: Reason,
     pub unresolved: flow_data_structure_wrapper::list::FlowOcamlList<Type>,
     pub resolved: flow_data_structure_wrapper::list::FlowOcamlList<Type>,
@@ -2549,7 +2550,7 @@ pub struct ResolveUnionTData<CX = ()> {
     pub id: i32,
 }
 
-impl<CX> Clone for ResolveUnionTData<CX> {
+impl<CX: ContextFamily> Clone for ResolveUnionTData<CX> {
     fn clone(&self) -> Self {
         ResolveUnionTData {
             reason: self.reason.clone(),
@@ -2561,7 +2562,7 @@ impl<CX> Clone for ResolveUnionTData<CX> {
     }
 }
 
-impl<CX> PartialEq for ResolveUnionTData<CX> {
+impl<CX: ContextFamily> PartialEq for ResolveUnionTData<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.reason == other.reason
             && self.unresolved == other.unresolved
@@ -2571,9 +2572,9 @@ impl<CX> PartialEq for ResolveUnionTData<CX> {
     }
 }
 
-impl<CX> Eq for ResolveUnionTData<CX> {}
+impl<CX: ContextFamily> Eq for ResolveUnionTData<CX> {}
 
-impl<CX> std::hash::Hash for ResolveUnionTData<CX> {
+impl<CX: ContextFamily> std::hash::Hash for ResolveUnionTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.reason.hash(state);
         self.unresolved.hash(state);
@@ -2583,13 +2584,13 @@ impl<CX> std::hash::Hash for ResolveUnionTData<CX> {
     }
 }
 
-impl<CX> PartialOrd for ResolveUnionTData<CX> {
+impl<CX: ContextFamily> PartialOrd for ResolveUnionTData<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for ResolveUnionTData<CX> {
+impl<CX: ContextFamily> Ord for ResolveUnionTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.reason
             .cmp(&other.reason)
@@ -2600,7 +2601,7 @@ impl<CX> Ord for ResolveUnionTData<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for ResolveUnionTData<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for ResolveUnionTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ResolveUnionTData")
             .field("reason", &self.reason)
@@ -2612,7 +2613,7 @@ impl<CX> std::fmt::Debug for ResolveUnionTData<CX> {
     }
 }
 
-pub enum UseTInner<CX = ()> {
+pub enum UseTInner<CX: ContextFamily = ()> {
     /// Use a definition type as an upper bound
     UseT(UseOp, Type),
 
@@ -2735,7 +2736,7 @@ pub enum UseTInner<CX = ()> {
     EvalTypeDestructorT(Box<EvalTypeDestructorTData>),
 }
 
-impl<CX> Clone for UseTInner<CX> {
+impl<CX: ContextFamily> Clone for UseTInner<CX> {
     fn clone(&self) -> Self {
         match self {
             UseTInner::UseT(a, b) => UseTInner::UseT(a.clone(), b.clone()),
@@ -2857,7 +2858,7 @@ impl<CX> Clone for UseTInner<CX> {
     }
 }
 
-impl<CX> PartialEq for UseTInner<CX> {
+impl<CX: ContextFamily> PartialEq for UseTInner<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (UseTInner::UseT(a1, b1), UseTInner::UseT(a2, b2)) => a1 == a2 && b1 == b2,
@@ -3023,9 +3024,9 @@ impl<CX> PartialEq for UseTInner<CX> {
     }
 }
 
-impl<CX> Eq for UseTInner<CX> {}
+impl<CX: ContextFamily> Eq for UseTInner<CX> {}
 
-impl<CX> std::hash::Hash for UseTInner<CX> {
+impl<CX: ContextFamily> std::hash::Hash for UseTInner<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
@@ -3201,15 +3202,15 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
     }
 }
 
-impl<CX> PartialOrd for UseTInner<CX> {
+impl<CX: ContextFamily> PartialOrd for UseTInner<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for UseTInner<CX> {
+impl<CX: ContextFamily> Ord for UseTInner<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        fn variant_index<CX>(v: &UseTInner<CX>) -> u32 {
+        fn variant_index<CX: ContextFamily>(v: &UseTInner<CX>) -> u32 {
             match v {
                 UseTInner::UseT(..) => 0,
                 UseTInner::BindT(..) => 1,
@@ -3466,7 +3467,7 @@ impl<CX> Ord for UseTInner<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for UseTInner<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for UseTInner<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             UseTInner::UseT(a, b) => f.debug_tuple("UseT").field(a).field(b).finish(),
@@ -3636,37 +3637,37 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
     }
 }
 
-pub struct UseT<CX = ()>(Rc<UseTInner<CX>>);
+pub struct UseT<CX: ContextFamily = ()>(Rc<UseTInner<CX>>);
 
-impl<CX> Clone for UseT<CX> {
+impl<CX: ContextFamily> Clone for UseT<CX> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
 }
 
-impl<CX> Dupe for UseT<CX> {}
+impl<CX: ContextFamily> Dupe for UseT<CX> {}
 
-impl<CX> Hash for UseT<CX> {
+impl<CX: ContextFamily> Hash for UseT<CX> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.0.hash(state);
     }
 }
 
-impl<CX> PartialEq for UseT<CX> {
+impl<CX: ContextFamily> PartialEq for UseT<CX> {
     fn eq(&self, other: &Self) -> bool {
         Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
     }
 }
 
-impl<CX> Eq for UseT<CX> {}
+impl<CX: ContextFamily> Eq for UseT<CX> {}
 
-impl<CX> PartialOrd for UseT<CX> {
+impl<CX: ContextFamily> PartialOrd for UseT<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for UseT<CX> {
+impl<CX: ContextFamily> Ord for UseT<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         if Rc::ptr_eq(&self.0, &other.0) {
             std::cmp::Ordering::Equal
@@ -3676,13 +3677,13 @@ impl<CX> Ord for UseT<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for UseT<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for UseT<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
 }
 
-impl<CX> Deref for UseT<CX> {
+impl<CX: ContextFamily> Deref for UseT<CX> {
     type Target = UseTInner<CX>;
 
     fn deref(&self) -> &Self::Target {
@@ -3690,7 +3691,7 @@ impl<CX> Deref for UseT<CX> {
     }
 }
 
-impl<CX> UseT<CX> {
+impl<CX: ContextFamily> UseT<CX> {
     pub fn new(inner: UseTInner<CX>) -> Self {
         Self(Rc::new(inner))
     }
@@ -3700,7 +3701,7 @@ impl<CX> UseT<CX> {
     }
 }
 
-impl<CX> From<UseTInner<CX>> for UseT<CX> {
+impl<CX: ContextFamily> From<UseTInner<CX>> for UseT<CX> {
     fn from(inner: UseTInner<CX>) -> Self {
         UseT::new(inner)
     }
@@ -3733,7 +3734,7 @@ pub enum CallAction {
 }
 
 // opt_use_t: use_ts which can be part of an optional chain
-pub enum OptUseT<CX = ()> {
+pub enum OptUseT<CX: ContextFamily = ()> {
     OptCallT {
         use_op: UseOp,
         reason: Reason,
@@ -3763,7 +3764,7 @@ pub enum OptUseT<CX = ()> {
     OptCallElemT(UseOp, Reason, Reason, Type, OptMethodAction<CX>),
 }
 
-impl<CX> Clone for OptUseT<CX> {
+impl<CX: ContextFamily> Clone for OptUseT<CX> {
     fn clone(&self) -> Self {
         match self {
             OptUseT::OptCallT {
@@ -3818,7 +3819,7 @@ impl<CX> Clone for OptUseT<CX> {
     }
 }
 
-impl<CX> PartialEq for OptUseT<CX> {
+impl<CX: ContextFamily> PartialEq for OptUseT<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
@@ -3879,9 +3880,9 @@ impl<CX> PartialEq for OptUseT<CX> {
     }
 }
 
-impl<CX> Eq for OptUseT<CX> {}
+impl<CX: ContextFamily> Eq for OptUseT<CX> {}
 
-impl<CX> std::hash::Hash for OptUseT<CX> {
+impl<CX: ContextFamily> std::hash::Hash for OptUseT<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
@@ -3957,15 +3958,15 @@ impl<CX> std::hash::Hash for OptUseT<CX> {
     }
 }
 
-impl<CX> PartialOrd for OptUseT<CX> {
+impl<CX: ContextFamily> PartialOrd for OptUseT<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for OptUseT<CX> {
+impl<CX: ContextFamily> Ord for OptUseT<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        fn variant_index<CX>(v: &OptUseT<CX>) -> u32 {
+        fn variant_index<CX: ContextFamily>(v: &OptUseT<CX>) -> u32 {
             match v {
                 OptUseT::OptCallT { .. } => 0,
                 OptUseT::OptMethodT(..) => 1,
@@ -4080,7 +4081,7 @@ impl<CX> Ord for OptUseT<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for OptUseT<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for OptUseT<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             OptUseT::OptCallT {
@@ -4171,13 +4172,13 @@ pub enum OptState {
     AssertChain,
 }
 
-pub struct CallMData<CX = ()> {
+pub struct CallMData<CX: ContextFamily = ()> {
     pub methodcalltype: MethodCallType,
     pub return_hint: LazyHintT<CX>,
     pub specialized_callee: Option<SpecializedCallee>,
 }
 
-pub struct ChainMData<CX = ()> {
+pub struct ChainMData<CX: ContextFamily = ()> {
     pub exp_reason: Reason,
     pub lhs_reason: Reason,
     pub lhs_expression: ExpressionReferenceData<ALoc>,
@@ -4187,13 +4188,13 @@ pub struct ChainMData<CX = ()> {
     pub specialized_callee: Option<SpecializedCallee>,
 }
 
-pub enum MethodAction<CX = ()> {
+pub enum MethodAction<CX: ContextFamily = ()> {
     CallM(Box<CallMData<CX>>),
     ChainM(Box<ChainMData<CX>>),
     NoMethodAction(type_collector::TypeCollector),
 }
 
-impl<CX> Clone for MethodAction<CX> {
+impl<CX: ContextFamily> Clone for MethodAction<CX> {
     fn clone(&self) -> Self {
         match self {
             MethodAction::CallM(box CallMData {
@@ -4227,7 +4228,7 @@ impl<CX> Clone for MethodAction<CX> {
     }
 }
 
-impl<CX> PartialEq for MethodAction<CX> {
+impl<CX: ContextFamily> PartialEq for MethodAction<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
@@ -4268,9 +4269,9 @@ impl<CX> PartialEq for MethodAction<CX> {
     }
 }
 
-impl<CX> Eq for MethodAction<CX> {}
+impl<CX: ContextFamily> Eq for MethodAction<CX> {}
 
-impl<CX> std::hash::Hash for MethodAction<CX> {
+impl<CX: ContextFamily> std::hash::Hash for MethodAction<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
@@ -4307,15 +4308,15 @@ impl<CX> std::hash::Hash for MethodAction<CX> {
     }
 }
 
-impl<CX> PartialOrd for MethodAction<CX> {
+impl<CX: ContextFamily> PartialOrd for MethodAction<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for MethodAction<CX> {
+impl<CX: ContextFamily> Ord for MethodAction<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        fn variant_index<CX>(v: &MethodAction<CX>) -> u32 {
+        fn variant_index<CX: ContextFamily>(v: &MethodAction<CX>) -> u32 {
             match v {
                 MethodAction::CallM(..) => 0,
                 MethodAction::ChainM(..) => 1,
@@ -4372,7 +4373,7 @@ impl<CX> Ord for MethodAction<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for MethodAction<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for MethodAction<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             MethodAction::CallM(box CallMData {
@@ -4408,13 +4409,13 @@ impl<CX> std::fmt::Debug for MethodAction<CX> {
     }
 }
 
-pub struct OptCallMData<CX = ()> {
+pub struct OptCallMData<CX: ContextFamily = ()> {
     pub opt_methodcalltype: OptMethodCallType,
     pub return_hint: LazyHintT<CX>,
     pub specialized_callee: Option<SpecializedCallee>,
 }
 
-pub struct OptChainMData<CX = ()> {
+pub struct OptChainMData<CX: ContextFamily = ()> {
     pub exp_reason: Reason,
     pub lhs_reason: Reason,
     pub lhs_expression: ExpressionReferenceData<ALoc>,
@@ -4424,13 +4425,13 @@ pub struct OptChainMData<CX = ()> {
     pub specialized_callee: Option<SpecializedCallee>,
 }
 
-pub enum OptMethodAction<CX = ()> {
+pub enum OptMethodAction<CX: ContextFamily = ()> {
     OptCallM(Box<OptCallMData<CX>>),
     OptChainM(Box<OptChainMData<CX>>),
     OptNoMethodAction(type_collector::TypeCollector),
 }
 
-impl<CX> Clone for OptMethodAction<CX> {
+impl<CX: ContextFamily> Clone for OptMethodAction<CX> {
     fn clone(&self) -> Self {
         match self {
             OptMethodAction::OptCallM(box OptCallMData {
@@ -4464,7 +4465,7 @@ impl<CX> Clone for OptMethodAction<CX> {
     }
 }
 
-impl<CX> PartialEq for OptMethodAction<CX> {
+impl<CX: ContextFamily> PartialEq for OptMethodAction<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
@@ -4507,9 +4508,9 @@ impl<CX> PartialEq for OptMethodAction<CX> {
     }
 }
 
-impl<CX> Eq for OptMethodAction<CX> {}
+impl<CX: ContextFamily> Eq for OptMethodAction<CX> {}
 
-impl<CX> std::hash::Hash for OptMethodAction<CX> {
+impl<CX: ContextFamily> std::hash::Hash for OptMethodAction<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
@@ -4546,15 +4547,15 @@ impl<CX> std::hash::Hash for OptMethodAction<CX> {
     }
 }
 
-impl<CX> PartialOrd for OptMethodAction<CX> {
+impl<CX: ContextFamily> PartialOrd for OptMethodAction<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for OptMethodAction<CX> {
+impl<CX: ContextFamily> Ord for OptMethodAction<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        fn variant_index<CX>(v: &OptMethodAction<CX>) -> u32 {
+        fn variant_index<CX: ContextFamily>(v: &OptMethodAction<CX>) -> u32 {
             match v {
                 OptMethodAction::OptCallM(..) => 0,
                 OptMethodAction::OptChainM(..) => 1,
@@ -4613,7 +4614,7 @@ impl<CX> Ord for OptMethodAction<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for OptMethodAction<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for OptMethodAction<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             OptMethodAction::OptCallM(box OptCallMData {
@@ -5204,14 +5205,14 @@ pub struct NamespaceType {
     pub types_tmap: properties::Id,
 }
 
-pub enum Cont<CX = ()> {
+pub enum Cont<CX: ContextFamily = ()> {
     Lower(UseOp, Type),
     Upper(Box<UseT<CX>>),
     /// Collects the computed result without adding a subtyping constraint.
     Collect(type_collector::TypeCollector),
 }
 
-impl<CX> Clone for Cont<CX> {
+impl<CX: ContextFamily> Clone for Cont<CX> {
     fn clone(&self) -> Self {
         match self {
             Cont::Lower(a, b) => Cont::Lower(a.clone(), b.clone()),
@@ -5221,7 +5222,7 @@ impl<CX> Clone for Cont<CX> {
     }
 }
 
-impl<CX> PartialEq for Cont<CX> {
+impl<CX: ContextFamily> PartialEq for Cont<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Cont::Lower(a1, b1), Cont::Lower(a2, b2)) => a1 == a2 && b1 == b2,
@@ -5232,9 +5233,9 @@ impl<CX> PartialEq for Cont<CX> {
     }
 }
 
-impl<CX> Eq for Cont<CX> {}
+impl<CX: ContextFamily> Eq for Cont<CX> {}
 
-impl<CX> std::hash::Hash for Cont<CX> {
+impl<CX: ContextFamily> std::hash::Hash for Cont<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
@@ -5250,15 +5251,15 @@ impl<CX> std::hash::Hash for Cont<CX> {
     }
 }
 
-impl<CX> PartialOrd for Cont<CX> {
+impl<CX: ContextFamily> PartialOrd for Cont<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for Cont<CX> {
+impl<CX: ContextFamily> Ord for Cont<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        fn variant_index<CX>(v: &Cont<CX>) -> u32 {
+        fn variant_index<CX: ContextFamily>(v: &Cont<CX>) -> u32 {
             match v {
                 Cont::Lower(..) => 0,
                 Cont::Upper(..) => 1,
@@ -5278,7 +5279,7 @@ impl<CX> Ord for Cont<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for Cont<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for Cont<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Cont::Lower(a, b) => f.debug_tuple("Lower").field(a).field(b).finish(),
@@ -5458,13 +5459,13 @@ pub struct WriteElemData {
     pub mode: SetMode,
 }
 
-pub enum ElemAction<CX = ()> {
+pub enum ElemAction<CX: ContextFamily = ()> {
     ReadElem(Box<ReadElemData>),
     WriteElem(Box<WriteElemData>),
     CallElem(Reason, Box<MethodAction<CX>>),
 }
 
-impl<CX> Clone for ElemAction<CX> {
+impl<CX: ContextFamily> Clone for ElemAction<CX> {
     fn clone(&self) -> Self {
         match self {
             ElemAction::ReadElem(box ReadElemData {
@@ -5492,7 +5493,7 @@ impl<CX> Clone for ElemAction<CX> {
     }
 }
 
-impl<CX> PartialEq for ElemAction<CX> {
+impl<CX: ContextFamily> PartialEq for ElemAction<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
@@ -5529,9 +5530,9 @@ impl<CX> PartialEq for ElemAction<CX> {
     }
 }
 
-impl<CX> Eq for ElemAction<CX> {}
+impl<CX: ContextFamily> Eq for ElemAction<CX> {}
 
-impl<CX> std::hash::Hash for ElemAction<CX> {
+impl<CX: ContextFamily> std::hash::Hash for ElemAction<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
@@ -5561,15 +5562,15 @@ impl<CX> std::hash::Hash for ElemAction<CX> {
     }
 }
 
-impl<CX> PartialOrd for ElemAction<CX> {
+impl<CX: ContextFamily> PartialOrd for ElemAction<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<CX> Ord for ElemAction<CX> {
+impl<CX: ContextFamily> Ord for ElemAction<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        fn variant_index<CX>(v: &ElemAction<CX>) -> u32 {
+        fn variant_index<CX: ContextFamily>(v: &ElemAction<CX>) -> u32 {
             match v {
                 ElemAction::ReadElem(..) => 0,
                 ElemAction::WriteElem(..) => 1,
@@ -5622,7 +5623,7 @@ impl<CX> Ord for ElemAction<CX> {
     }
 }
 
-impl<CX> std::fmt::Debug for ElemAction<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for ElemAction<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ElemAction::ReadElem(box ReadElemData {
@@ -6679,9 +6680,9 @@ pub mod property {
         }
     }
 
-    pub fn map_t<F>(f: F, p: &Property) -> Property
+    pub fn map_t<F>(mut f: F, p: &Property) -> Property
     where
-        F: Fn(&Type) -> Type,
+        F: FnMut(&Type) -> Type,
     {
         match p.deref() {
             PropertyInner::Field(fd) => {
@@ -7964,12 +7965,12 @@ pub mod union_rep {
             self.0.specialization.borrow().is_some()
         }
 
-        pub fn optimize_enum_only<F>(&self, flatten: F)
+        pub fn optimize_enum_only<C, F>(&self, cx: &mut C, flatten: F)
         where
-            F: Fn(&mut dyn Iterator<Item = &Type>) -> Vec<Type>,
+            F: FnOnce(&mut C, &mut dyn Iterator<Item = &Type>) -> Vec<Type>,
         {
             let mut members = self.members_iter();
-            let ts = flatten(&mut members);
+            let ts = flatten(cx, &mut members);
             if has_unflattened_types(&ts).is_none() {
                 if let Ok(opt @ FinallyOptimizedRep::EnumUnion(_, _)) = enum_optimize(&ts) {
                     *self.0.specialization.borrow_mut() = Some(opt);
@@ -7977,28 +7978,34 @@ pub mod union_rep {
             }
         }
 
-        pub fn optimize_<F2, F3, F4, F5>(
+        /// Optimizes this union with the operations given, which run with `cx`.
+        pub fn optimize_<C, F2, F3, F4, F5>(
             &self,
+            cx: &mut C,
             reasonless_eq: F2,
             flatten: F3,
             find_resolved: F4,
             find_props: F5,
         ) -> Result<FinallyOptimizedRep, OptimizedError<ALoc>>
         where
-            F2: Fn(&Type, &Type) -> bool,
-            F3: Fn(&mut dyn Iterator<Item = &Type>) -> Vec<Type>,
-            F4: Fn(&Type) -> Option<Type>,
-            F5: Fn(properties::Id) -> PropertiesMap,
+            F2: Fn(&mut C, &Type, &Type) -> bool,
+            F3: FnOnce(&mut C, &mut dyn Iterator<Item = &Type>) -> Vec<Type>,
+            F4: Fn(&mut C, &Type) -> Option<Type>,
+            F5: Fn(&mut C, properties::Id) -> PropertiesMap,
         {
             let mut members = self.members_iter();
-            let ts = flatten(&mut members);
+            let ts = flatten(cx, &mut members);
             match has_unflattened_types(&ts) {
                 None => {
                     let opt = enum_optimize(&ts);
                     match opt {
-                        Err(_) => {
-                            disjoint_union_optimize(reasonless_eq, find_resolved, find_props, &ts)
-                        }
+                        Err(_) => disjoint_union_optimize(
+                            cx,
+                            &reasonless_eq,
+                            &find_resolved,
+                            &find_props,
+                            &ts,
+                        ),
                         _ => opt,
                     }
                 }
@@ -8015,19 +8022,20 @@ pub mod union_rep {
             }
         }
 
-        pub fn optimize<F2, F3, F4, F5>(
+        pub fn optimize<C, F2, F3, F4, F5>(
             &self,
+            cx: &mut C,
             reasonless_eq: F2,
             flatten: F3,
             find_resolved: F4,
             find_props: F5,
         ) where
-            F2: Fn(&Type, &Type) -> bool,
-            F3: Fn(&mut dyn Iterator<Item = &Type>) -> Vec<Type>,
-            F4: Fn(&Type) -> Option<Type>,
-            F5: Fn(properties::Id) -> PropertiesMap,
+            F2: Fn(&mut C, &Type, &Type) -> bool,
+            F3: FnOnce(&mut C, &mut dyn Iterator<Item = &Type>) -> Vec<Type>,
+            F4: Fn(&mut C, &Type) -> Option<Type>,
+            F5: Fn(&mut C, properties::Id) -> PropertiesMap,
         {
-            let opt = self.optimize_(reasonless_eq, flatten, find_resolved, find_props);
+            let opt = self.optimize_(cx, reasonless_eq, flatten, find_resolved, find_props);
             self.set_optimize(opt);
         }
 
@@ -8057,13 +8065,13 @@ pub mod union_rep {
 
         /// map rep r to rep r' along type mapping f. if nothing would be changed,
         /// returns the physically-identical rep.
-        pub fn ident_map<F>(&self, always_keep_source: bool, f: F) -> UnionRep
+        pub fn ident_map<F>(&self, always_keep_source: bool, mut f: F) -> UnionRep
         where
-            F: Fn(&Type) -> Type,
+            F: FnMut(&Type) -> Type,
         {
             let t0_prime = f(&self.0.t0);
             let t1_prime = f(&self.0.t1);
-            let ts_prime = list_utils::ident_map(&f, Type::ptr_eq, self.0.ts.dupe());
+            let ts_prime = list_utils::ident_map(&mut f, Type::ptr_eq, self.0.ts.dupe());
             let changed = !Rc::ptr_eq(&t0_prime.0, &self.0.t0.0)
                 || !Rc::ptr_eq(&t1_prime.0, &self.0.t1.0)
                 || !Rc::ptr_eq(&self.0.ts, &ts_prime);
@@ -8296,61 +8304,63 @@ pub mod union_rep {
         }
     }
 
-    fn canon_prop<F>(find_resolved: F, p: &Property) -> Option<UnionEnum>
+    fn canon_prop<C, F>(cx: &mut C, find_resolved: &F, p: &Property) -> Option<UnionEnum>
     where
-        F: Fn(&Type) -> Option<Type>,
+        F: Fn(&mut C, &Type) -> Option<Type>,
     {
         property::read_t(p)
-            .and_then(|t| find_resolved(&t))
+            .and_then(|t| find_resolved(cx, &t))
             .and_then(|t| canon(&t))
     }
 
-    fn base_prop<F>(find_resolved: F, p: &Property) -> Option<UnionEnum>
+    fn base_prop<C, F>(cx: &mut C, find_resolved: &F, p: &Property) -> Option<UnionEnum>
     where
-        F: Fn(&Type) -> Option<Type>,
+        F: Fn(&mut C, &Type) -> Option<Type>,
     {
         property::read_t(p)
-            .and_then(|t| find_resolved(&t))
+            .and_then(|t| find_resolved(cx, &t))
             .and_then(|t| if is_base(&t) { canon(&t) } else { None })
     }
 
-    fn props_of<F>(find_props: F, t: &Type) -> Option<PropertiesMap>
+    fn props_of<C, F>(cx: &mut C, find_props: &F, t: &Type) -> Option<PropertiesMap>
     where
-        F: Fn(properties::Id) -> PropertiesMap,
+        F: Fn(&mut C, properties::Id) -> PropertiesMap,
     {
         match &**t {
             TypeInner::DefT(_, def_t) => match &**def_t {
-                DefTInner::ObjT(obj) => Some(find_props(obj.props_tmap.dupe())),
+                DefTInner::ObjT(obj) => Some(find_props(cx, obj.props_tmap.dupe())),
                 _ => None,
             },
             _ => None,
         }
     }
 
-    fn disjoint_union_optimize<ReasonlessEq, FindResolved, FindProps>(
-        reasonless_eq: ReasonlessEq,
-        find_resolved: FindResolved,
-        find_props: FindProps,
+    fn disjoint_union_optimize<C, ReasonlessEq, FindResolved, FindProps>(
+        cx: &mut C,
+        reasonless_eq: &ReasonlessEq,
+        find_resolved: &FindResolved,
+        find_props: &FindProps,
         ts: &[Type],
     ) -> Result<FinallyOptimizedRep, OptimizedError<ALoc>>
     where
-        ReasonlessEq: Fn(&Type, &Type) -> bool,
-        FindResolved: Fn(&Type) -> Option<Type>,
-        FindProps: Fn(properties::Id) -> PropertiesMap,
+        ReasonlessEq: Fn(&mut C, &Type, &Type) -> bool,
+        FindResolved: Fn(&mut C, &Type) -> Option<Type>,
+        FindProps: Fn(&mut C, properties::Id) -> PropertiesMap,
     {
-        fn base_props_of<F2, F3>(
+        fn base_props_of<C, F2, F3>(
+            cx: &mut C,
             find_resolved: &F2,
             find_props: &F3,
             t: &Type,
         ) -> Option<BTreeMap<Name, (UnionEnum, Type)>>
         where
-            F2: Fn(&Type) -> Option<Type>,
-            F3: Fn(properties::Id) -> PropertiesMap,
+            F2: Fn(&mut C, &Type) -> Option<Type>,
+            F3: Fn(&mut C, properties::Id) -> PropertiesMap,
         {
-            props_of(find_props, t).map(|prop_map: PropertiesMap| {
+            props_of(cx, find_props, t).map(|prop_map: PropertiesMap| {
                 let mut result = BTreeMap::new();
                 for (key, p) in prop_map.iter() {
-                    if let Some(enum_val) = base_prop(find_resolved, p) {
+                    if let Some(enum_val) = base_prop(cx, find_resolved, p) {
                         result.insert(key.dupe(), (enum_val, t.dupe()));
                     }
                 }
@@ -8363,20 +8373,21 @@ pub mod union_rep {
         //    A candidate is a mapping from keys in that object to a UnionEnum value.
         //    Properties that do not have a UnionEnum representation are ignored.
         //  - [partial] is true iff there exist non-object-like members in the union
-        fn split_disjoint_union<F2, F3>(
+        fn split_disjoint_union<C, F2, F3>(
+            cx: &mut C,
             find_resolved: &F2,
             find_props: &F3,
             ts: &[Type],
         ) -> (Vec<BTreeMap<Name, (UnionEnum, Type)>>, bool)
         where
-            F2: Fn(&Type) -> Option<Type>,
-            F3: Fn(properties::Id) -> PropertiesMap,
+            F2: Fn(&mut C, &Type) -> Option<Type>,
+            F3: Fn(&mut C, properties::Id) -> PropertiesMap,
         {
             let mut candidates = Vec::new();
             let mut partial = false;
 
             for t in ts {
-                match base_props_of(find_resolved, find_props, t) {
+                match base_props_of(cx, find_resolved, find_props, t) {
                     None => partial = true,
                     Some(base_props) => candidates.push(base_props),
                 }
@@ -8385,13 +8396,14 @@ pub mod union_rep {
             (candidates, partial)
         }
 
-        fn almost_unique_values<F1>(
+        fn almost_unique_values<C, F1>(
+            cx: &mut C,
             reasonless_eq: &F1,
             mut hybrid_idx: UnionEnumMap,
             values: Vec<(UnionEnum, Type)>,
         ) -> UnionEnumMap
         where
-            F1: Fn(&Type, &Type) -> bool,
+            F1: Fn(&mut C, &Type, &Type) -> bool,
         {
             for (enum_val, t) in values {
                 match hybrid_idx.entry(enum_val) {
@@ -8399,7 +8411,7 @@ pub mod union_rep {
                         let existing = entry.get_mut();
                         let exists = existing
                             .iter()
-                            .any(|existing_t| reasonless_eq(&t, existing_t));
+                            .any(|existing_t| reasonless_eq(cx, &t, existing_t));
                         if exists {
                             // This corresponds to the case
                             // type T = { f: "a" };
@@ -8417,16 +8429,17 @@ pub mod union_rep {
             hybrid_idx
         }
 
-        fn almost_unique<F1>(
+        fn almost_unique<C, F1>(
+            cx: &mut C,
             reasonless_eq: &F1,
             idx: BTreeMap<Name, Vec<(UnionEnum, Type)>>,
         ) -> BTreeMap<Name, UnionEnumMap>
         where
-            F1: Fn(&Type, &Type) -> bool,
+            F1: Fn(&mut C, &Type, &Type) -> bool,
         {
             let mut result = BTreeMap::new();
             for (key, values) in idx.into_iter() {
-                let hybrid_idx = almost_unique_values(reasonless_eq, BTreeMap::new(), values);
+                let hybrid_idx = almost_unique_values(cx, reasonless_eq, BTreeMap::new(), values);
                 result.insert(key, hybrid_idx);
             }
             result
@@ -8462,7 +8475,7 @@ pub mod union_rep {
             0 => Ok(FinallyOptimizedRep::Empty),
             1 => Ok(FinallyOptimizedRep::Singleton(ts[0].dupe())),
             _ => {
-                let (candidates, partial) = split_disjoint_union(&find_resolved, &find_props, ts);
+                let (candidates, partial) = split_disjoint_union(cx, find_resolved, find_props, ts);
 
                 match candidates.split_first() {
                     None => Err(OptimizedError::NoCandidateMembers),
@@ -8471,7 +8484,7 @@ pub mod union_rep {
                         if idx.is_empty() {
                             Err(OptimizedError::NoCommonKeys)
                         } else {
-                            let hybrid_map = almost_unique(&reasonless_eq, idx);
+                            let hybrid_map = almost_unique(cx, reasonless_eq, idx);
                             if partial {
                                 Ok(FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(Box::new(hybrid_map)))
                             } else {
@@ -8498,9 +8511,14 @@ pub mod union_rep {
     }
 
     // assume we know that l is a canonizable type
-    pub fn quick_mem_enum<F>(quick_subtype: F, l: &Type, rep: &UnionRep) -> QuickMemResult
+    pub fn quick_mem_enum<C, F>(
+        cx: &mut C,
+        quick_subtype: F,
+        l: &Type,
+        rep: &UnionRep,
+    ) -> QuickMemResult
     where
-        F: Fn(&Type, &Type) -> bool,
+        F: FnOnce(&mut C, &Type, &Type) -> bool,
     {
         match canon(l) {
             Some(tcanon) => {
@@ -8508,7 +8526,7 @@ pub mod union_rep {
                     None => QuickMemResult::Unknown,
                     Some(FinallyOptimizedRep::Empty) => QuickMemResult::No,
                     Some(FinallyOptimizedRep::Singleton(t)) => {
-                        if quick_subtype(l, t) {
+                        if quick_subtype(cx, l, t) {
                             QuickMemResult::Yes
                         } else {
                             QuickMemResult::Conditional(t.dupe())
@@ -8542,14 +8560,15 @@ pub mod union_rep {
         }
     }
 
-    fn lookup_almost_disjoint_union<F>(
-        find_resolved: F,
+    fn lookup_almost_disjoint_union<C, F>(
+        cx: &mut C,
+        find_resolved: &F,
         prop_map: &PropertiesMap,
         partial: bool,
         map: &BTreeMap<Name, UnionEnumMap>,
     ) -> QuickMemResult
     where
-        F: Fn(&Type) -> Option<Type>,
+        F: Fn(&mut C, &Type) -> Option<Type>,
     {
         let mut acc = QuickMemResult::Unknown;
         for (key, idx) in map.iter() {
@@ -8557,7 +8576,7 @@ pub mod union_rep {
                 break;
             }
             acc = match prop_map.get(key) {
-                Some(p) => match canon_prop(&find_resolved, p) {
+                Some(p) => match canon_prop(cx, find_resolved, p) {
                     Some(enum_val) => match idx.get(&enum_val) {
                         Some(types) if types.len() == 1 => {
                             QuickMemResult::Conditional(types[0].dupe())
@@ -8590,30 +8609,31 @@ pub mod union_rep {
     }
 
     // we know that l is an object type or exact object type
-    pub fn quick_mem_disjoint_union(
-        find_resolved: impl Fn(&Type) -> Option<Type>,
-        find_props: impl Fn(properties::Id) -> PropertiesMap,
-        quick_subtype: impl Fn(&Type, &Type) -> bool,
+    pub fn quick_mem_disjoint_union<C>(
+        cx: &mut C,
+        find_resolved: impl Fn(&mut C, &Type) -> Option<Type>,
+        find_props: impl Fn(&mut C, properties::Id) -> PropertiesMap,
+        quick_subtype: impl FnOnce(&mut C, &Type, &Type) -> bool,
         l: &Type,
         rep: &UnionRep,
     ) -> QuickMemResult {
-        match props_of(find_props, l) {
+        match props_of(cx, &find_props, l) {
             Some(prop_map) => {
                 match rep.0.specialization.borrow().as_ref() {
                     None => QuickMemResult::Unknown,
                     Some(FinallyOptimizedRep::Empty) => QuickMemResult::No,
                     Some(FinallyOptimizedRep::Singleton(t)) => {
-                        if quick_subtype(l, t) {
+                        if quick_subtype(cx, l, t) {
                             QuickMemResult::Yes
                         } else {
                             QuickMemResult::Conditional(t.dupe())
                         }
                     }
                     Some(FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(map)) => {
-                        lookup_almost_disjoint_union(find_resolved, &prop_map, false, map)
+                        lookup_almost_disjoint_union(cx, &find_resolved, &prop_map, false, map)
                     }
                     Some(FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(map)) => {
-                        lookup_almost_disjoint_union(find_resolved, &prop_map, true, map)
+                        lookup_almost_disjoint_union(cx, &find_resolved, &prop_map, true, map)
                     }
                     Some(FinallyOptimizedRep::EnumUnion(_, _)) => QuickMemResult::No,
                     Some(FinallyOptimizedRep::PartiallyOptimizedUnionEnum(_)) => QuickMemResult::Unknown,
@@ -8709,9 +8729,9 @@ pub mod inter_rep {
 
         /// map rep r to rep r' along type mapping f. drops history. if nothing would
         /// be changed, returns the physically-identical rep.
-        pub fn ident_map<F>(&self, f: F) -> InterRep
+        pub fn ident_map<F>(&self, mut f: F) -> InterRep
         where
-            F: Fn(&Type) -> Type,
+            F: FnMut(&Type) -> Type,
         {
             let t0_ = f(&self.0.t0);
             let t1_ = f(&self.0.t1);
@@ -8946,7 +8966,7 @@ pub mod object {
 pub mod react {
     use super::*;
 
-    pub struct CreateElementData<CX = ()> {
+    pub struct CreateElementData<CX: ContextFamily = ()> {
         pub component: Type,
         pub jsx_props: Type,
         pub tout: Tvar,
@@ -8957,13 +8977,13 @@ pub mod react {
         pub specialized_props: Option<SpecializedCallee>,
     }
 
-    pub enum Tool<CX = ()> {
+    pub enum Tool<CX: ContextFamily = ()> {
         CreateElement(Box<CreateElementData<CX>>),
         ConfigCheck { props: Type },
         GetConfig { tout: Type },
     }
 
-    impl<CX> Clone for Tool<CX> {
+    impl<CX: ContextFamily> Clone for Tool<CX> {
         fn clone(&self) -> Self {
             match self {
                 Tool::CreateElement(box CreateElementData {
@@ -8993,7 +9013,7 @@ pub mod react {
         }
     }
 
-    impl<CX> PartialEq for Tool<CX> {
+    impl<CX: ContextFamily> PartialEq for Tool<CX> {
         fn eq(&self, other: &Self) -> bool {
             match (self, other) {
                 (
@@ -9034,9 +9054,9 @@ pub mod react {
         }
     }
 
-    impl<CX> Eq for Tool<CX> {}
+    impl<CX: ContextFamily> Eq for Tool<CX> {}
 
-    impl<CX> std::hash::Hash for Tool<CX> {
+    impl<CX: ContextFamily> std::hash::Hash for Tool<CX> {
         fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
             std::mem::discriminant(self).hash(state);
             match self {
@@ -9069,15 +9089,15 @@ pub mod react {
         }
     }
 
-    impl<CX> PartialOrd for Tool<CX> {
+    impl<CX: ContextFamily> PartialOrd for Tool<CX> {
         fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
             Some(self.cmp(other))
         }
     }
 
-    impl<CX> Ord for Tool<CX> {
+    impl<CX: ContextFamily> Ord for Tool<CX> {
         fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-            fn variant_index<CX>(v: &Tool<CX>) -> u32 {
+            fn variant_index<CX: ContextFamily>(v: &Tool<CX>) -> u32 {
                 match v {
                     Tool::CreateElement(..) => 0,
                     Tool::ConfigCheck { .. } => 1,
@@ -9126,7 +9146,7 @@ pub mod react {
         }
     }
 
-    impl<CX> std::fmt::Debug for Tool<CX> {
+    impl<CX: ContextFamily> std::fmt::Debug for Tool<CX> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
                 Tool::CreateElement(box CreateElementData {
@@ -9495,12 +9515,12 @@ pub mod constraint {
     pub type SpeculationId = i32;
     pub type CaseId = i32;
 
-    pub struct UseTypeKey<CX = ()> {
+    pub struct UseTypeKey<CX: ContextFamily = ()> {
         pub use_t: UseT<CX>,
         pub assoc: Option<(SpeculationId, CaseId)>,
     }
 
-    impl<CX> Clone for UseTypeKey<CX> {
+    impl<CX: ContextFamily> Clone for UseTypeKey<CX> {
         fn clone(&self) -> Self {
             UseTypeKey {
                 use_t: self.use_t.clone(),
@@ -9509,22 +9529,22 @@ pub mod constraint {
         }
     }
 
-    impl<CX> PartialEq for UseTypeKey<CX> {
+    impl<CX: ContextFamily> PartialEq for UseTypeKey<CX> {
         fn eq(&self, other: &Self) -> bool {
             self.use_t == other.use_t && self.assoc == other.assoc
         }
     }
 
-    impl<CX> Eq for UseTypeKey<CX> {}
+    impl<CX: ContextFamily> Eq for UseTypeKey<CX> {}
 
-    impl<CX> std::hash::Hash for UseTypeKey<CX> {
+    impl<CX: ContextFamily> std::hash::Hash for UseTypeKey<CX> {
         fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
             self.use_t.hash(state);
             self.assoc.hash(state);
         }
     }
 
-    impl<CX> std::fmt::Debug for UseTypeKey<CX> {
+    impl<CX: ContextFamily> std::fmt::Debug for UseTypeKey<CX> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.debug_struct("UseTypeKey")
                 .field("use_t", &self.use_t)
@@ -9533,13 +9553,13 @@ pub mod constraint {
         }
     }
 
-    impl<CX> PartialOrd for UseTypeKey<CX> {
+    impl<CX: ContextFamily> PartialOrd for UseTypeKey<CX> {
         fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
             Some(self.cmp(other))
         }
     }
 
-    impl<CX> Ord for UseTypeKey<CX> {
+    impl<CX: ContextFamily> Ord for UseTypeKey<CX> {
         fn cmp(&self, other: &Self) -> std::cmp::Ordering {
             match self.assoc.cmp(&other.assoc) {
                 std::cmp::Ordering::Equal => self.use_t.cmp(&other.use_t),
@@ -9550,31 +9570,27 @@ pub mod constraint {
 
     pub mod forcing_state {
         use std::cell::UnsafeCell;
-        use std::marker::PhantomData;
+
+        use flow_lazy::Thunk;
 
         use super::*;
 
-        enum ForcingStateInner<'cx, CX: ?Sized, A> {
-            Lazy(Box<dyn FnOnce(&CX) -> A + 'cx>),
-            LazyResult(
-                Box<
-                    dyn FnOnce(&CX) -> Result<A, flow_utils_concurrency::job_error::JobError> + 'cx,
-                >,
-            ),
+        enum ForcingStateInner<CX: ContextFamily, A> {
+            Lazy(Thunk<CX, A>),
+            LazyResult(Thunk<CX, Result<A, flow_utils_concurrency::job_error::JobError>>),
             Forcing,
             Forced(A),
             ForcedWithCyclicError(A),
             ForcedWithJobError(A, flow_utils_concurrency::job_error::JobError),
         }
 
-        pub struct State<'cx, CX: ?Sized, A, B> {
-            inner: Rc<UnsafeCell<ForcingStateInner<'cx, CX, A>>>,
+        pub struct State<CX: ContextFamily, A, B> {
+            inner: Rc<UnsafeCell<ForcingStateInner<CX, A>>>,
             error_reason: Option<B>,
-            _phantom: PhantomData<fn(&CX)>,
         }
 
-        impl<CX, A: Clone + std::fmt::Debug, B: Clone + std::fmt::Debug> std::fmt::Debug
-            for State<'_, CX, A, B>
+        impl<CX: ContextFamily, A: Clone + std::fmt::Debug, B: Clone + std::fmt::Debug>
+            std::fmt::Debug for State<CX, A, B>
         {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 // SAFETY: single-threaded, just reading for debug
@@ -9593,30 +9609,31 @@ pub mod constraint {
             }
         }
 
-        pub type ForcingState<'cx, CX = ()> = State<'cx, CX, Type, Reason>;
-        pub type ModuleTypeForcingState<'cx, CX = ()> =
-            State<'cx, CX, Result<ModuleType, Type>, Reason>;
+        pub type ForcingState<CX = ()> = State<CX, Type, Reason>;
+        pub type ModuleTypeForcingState<CX = ()> = State<CX, Result<ModuleType, Type>, Reason>;
 
-        impl<'cx, CX: ?Sized + 'cx, A: Dupe + 'static, B: Clone> State<'cx, CX, A, B> {
+        impl<CX: ContextFamily, A: Dupe + 'static, B: Clone> State<CX, A, B> {
             pub fn of_lazy_t<F>(error_reason: B, f: F) -> Self
             where
-                F: FnOnce(&CX) -> A + 'cx,
+                F: for<'a> FnOnce(&mut CX::Context<'a>) -> A + 'static,
             {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(f)))),
                     error_reason: Some(error_reason),
-                    _phantom: PhantomData,
                 }
             }
 
             pub fn try_of_lazy_t<F>(error_reason: B, f: F) -> Self
             where
-                F: FnOnce(&CX) -> Result<A, flow_utils_concurrency::job_error::JobError> + 'cx,
+                F: for<'a> FnOnce(
+                        &mut CX::Context<'a>,
+                    )
+                        -> Result<A, flow_utils_concurrency::job_error::JobError>
+                    + 'static,
             {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::LazyResult(Box::new(f)))),
                     error_reason: Some(error_reason),
-                    _phantom: PhantomData,
                 }
             }
 
@@ -9624,13 +9641,12 @@ pub mod constraint {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Forced(t))),
                     error_reason: None,
-                    _phantom: PhantomData,
                 }
             }
 
-            pub fn force<F>(&self, cx: &CX, on_error: F) -> A
+            pub fn force<'c, F>(&self, cx: &mut CX::Context<'c>, on_error: F) -> A
             where
-                F: Fn(&B) -> A,
+                F: FnOnce(&mut CX::Context<'c>, &B) -> A,
             {
                 // SAFETY: single-threaded, no concurrent access to the same State
                 let inner = unsafe { &mut *self.inner.get() };
@@ -9669,15 +9685,17 @@ pub mod constraint {
                                 _ => panic!("Invalid state after forcing"),
                             },
                             Err(e) => {
-                                let fallback =
-                                    on_error(self.error_reason.as_ref().expect("No error reason"));
+                                let fallback = on_error(
+                                    cx,
+                                    self.error_reason.as_ref().expect("No error reason"),
+                                );
                                 *inner = ForcingStateInner::ForcedWithJobError(fallback.dupe(), e);
                                 fallback
                             }
                         }
                     }
                     ForcingStateInner::Forcing => {
-                        let t = on_error(self.error_reason.as_ref().expect("No error reason"));
+                        let t = on_error(cx, self.error_reason.as_ref().expect("No error reason"));
                         *inner = ForcingStateInner::ForcedWithCyclicError(t.dupe());
                         t
                     }
@@ -9687,13 +9705,13 @@ pub mod constraint {
                 }
             }
 
-            pub fn try_force<F>(
+            pub fn try_force<'c, F>(
                 &self,
-                cx: &CX,
+                cx: &mut CX::Context<'c>,
                 on_error: F,
             ) -> Result<A, flow_utils_concurrency::job_error::JobError>
             where
-                F: Fn(&B) -> A,
+                F: FnOnce(&mut CX::Context<'c>, &B) -> A,
             {
                 // SAFETY: single-threaded, no concurrent access to the same State
                 let inner = unsafe { &mut *self.inner.get() };
@@ -9734,15 +9752,17 @@ pub mod constraint {
                                 _ => panic!("Invalid state after forcing"),
                             },
                             Err(e) => {
-                                let fallback =
-                                    on_error(self.error_reason.as_ref().expect("No error reason"));
+                                let fallback = on_error(
+                                    cx,
+                                    self.error_reason.as_ref().expect("No error reason"),
+                                );
                                 *inner = ForcingStateInner::ForcedWithJobError(fallback, e.dupe());
                                 Err(e)
                             }
                         }
                     }
                     ForcingStateInner::Forcing => {
-                        let t = on_error(self.error_reason.as_ref().expect("No error reason"));
+                        let t = on_error(cx, self.error_reason.as_ref().expect("No error reason"));
                         *inner = ForcingStateInner::ForcedWithCyclicError(t.dupe());
                         Ok(t)
                     }
@@ -9778,61 +9798,34 @@ pub mod constraint {
                 }
             }
 
-            /// Drop the lazy closure if it hasn't been forced yet, replacing it with a default value.
-            /// This is used to break Rc cycles after inference is complete.
-            pub fn drop_if_lazy(&self, default: A) {
-                // SAFETY: single-threaded, no concurrent access to the same State
-                let inner = unsafe { &mut *self.inner.get() };
-                if matches!(
-                    inner,
-                    ForcingStateInner::Lazy(_) | ForcingStateInner::LazyResult(_)
-                ) {
-                    *inner = ForcingStateInner::Forced(default);
-                }
-            }
-
-            pub fn copy<F, G>(&self, src_cx: &CX, on_error: F, visit_for_copier: G) -> Self
+            /// A state for another context's graph. Forcing it calls `force_copy` with the
+            /// context it is forced in and this state, which `force_copy` forces in the context
+            /// it belongs to.
+            pub fn copy<F>(&self, force_copy: F) -> Self
             where
-                CX: Clone,
-                B: 'cx,
-                F: Fn(&CX, &B) -> A + 'cx,
-                G: FnOnce(&CX, &CX, &A) + 'cx,
+                B: 'static,
+                F: for<'a> FnOnce(&mut CX::Context<'a>, &Self) -> A + 'static,
             {
-                let src_inner = self.inner.dupe();
-                let src_error_reason = self.error_reason.clone();
-                let src_cx = src_cx.clone();
+                let src_state = self.clone();
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(
-                        move |dst_cx: &CX| {
-                            let src_state = State {
-                                inner: src_inner,
-                                error_reason: src_error_reason,
-                                _phantom: PhantomData,
-                            };
-                            let t = src_state.force(&src_cx, |r| on_error(&src_cx, r));
-                            visit_for_copier(&src_cx, dst_cx, &t);
-                            t
-                        },
+                        move |dst_cx: &mut CX::Context<'_>| force_copy(dst_cx, &src_state),
                     )))),
                     error_reason: self.error_reason.clone(),
-                    _phantom: PhantomData,
                 }
             }
         }
 
-        impl<'cx, CX: ?Sized + 'cx> State<'cx, CX, Result<ModuleType, Type>, Reason> {
+        impl<CX: ContextFamily> State<CX, Result<ModuleType, Type>, Reason> {
             pub fn of_lazy_module(
                 reason: Reason,
-                lazy_module: Rc<
-                    flow_lazy::Lazy<CX, ModuleType, Box<dyn FnOnce(&CX) -> ModuleType + 'cx>>,
-                >,
+                lazy_module: Rc<flow_lazy::Lazy<CX, ModuleType>>,
             ) -> Self {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(
-                        move |cx: &CX| Ok(lazy_module.get_forced(cx).dupe()),
+                        move |cx: &mut CX::Context<'_>| Ok(lazy_module.get_forced(cx).dupe()),
                     )))),
                     error_reason: Some(reason),
-                    _phantom: PhantomData,
                 }
             }
 
@@ -9840,17 +9833,15 @@ pub mod constraint {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Forced(Err(t)))),
                     error_reason: None,
-                    _phantom: PhantomData,
                 }
             }
         }
 
-        impl<CX, A: Clone, B: Clone> Clone for State<'_, CX, A, B> {
+        impl<CX: ContextFamily, A: Clone, B: Clone> Clone for State<CX, A, B> {
             fn clone(&self) -> Self {
                 State {
                     inner: self.inner.clone(),
                     error_reason: self.error_reason.clone(),
-                    _phantom: PhantomData,
                 }
             }
         }
@@ -9866,7 +9857,7 @@ pub mod constraint {
             use crate::type_::any_t;
 
             fn assert_forced_to_any(s: &ForcingState) {
-                match &*s.force(&(), |r| any_t::error(r.dupe())) {
+                match &*s.force(&mut (), |_, r| any_t::error(r.dupe())) {
                     TypeInner::AnyT(_, _) => {}
                     _ => panic!("Invalid type"),
                 }
@@ -9881,7 +9872,7 @@ pub mod constraint {
                     move |_cx| {
                         let s_ref = s_clone.borrow();
                         let inner_state = s_ref.as_ref().unwrap();
-                        inner_state.force(&(), |r| any_t::error(r.dupe()))
+                        inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
                     },
                 );
                 *s.borrow_mut() = Some(state);
@@ -9901,7 +9892,7 @@ pub mod constraint {
                     move |_cx| {
                         let s2_ref = s2_for_s1.borrow();
                         let inner_state = s2_ref.as_ref().unwrap();
-                        inner_state.force(&(), |r| any_t::error(r.dupe()))
+                        inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
                     },
                 );
 
@@ -9911,7 +9902,7 @@ pub mod constraint {
                     move |_cx| {
                         let s1_ref = s1_for_s2.borrow();
                         let inner_state = s1_ref.as_ref().unwrap();
-                        inner_state.force(&(), |r| any_t::error(r.dupe()))
+                        inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
                     },
                 );
 
@@ -9933,18 +9924,16 @@ pub mod constraint {
                     move |_cx| {
                         let s_ref = s_clone.borrow();
                         let inner_state = s_ref.as_ref().unwrap();
-                        inner_state.force(&(), |r| any_t::error(r.dupe()))
+                        inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
                     },
                 );
                 *s.borrow_mut() = Some(state);
 
                 let s_ref = s.borrow();
                 let state = s_ref.as_ref().unwrap();
-                let state_copy = state.copy(
-                    &(),
-                    |_src_cx, r| any_t::error(r.dupe()),
-                    |_src_cx, _dst_cx, _| {},
-                );
+                let state_copy = state.copy(|_dst_cx, src_state| {
+                    src_state.force(&mut (), |_, r| any_t::error(r.dupe()))
+                });
                 assert_forced_to_any(&state_copy);
             }
 
@@ -9957,30 +9946,28 @@ pub mod constraint {
                     move |_cx| {
                         let s_ref = s_clone.borrow();
                         let inner_state = s_ref.as_ref().unwrap();
-                        let _ = inner_state.force(&(), |r| any_t::error(r.dupe()));
-                        inner_state.force(&(), |r| any_t::error(r.dupe()))
+                        let _ = inner_state.force(&mut (), |_, r| any_t::error(r.dupe()));
+                        inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
                     },
                 );
                 *s.borrow_mut() = Some(state);
 
                 let s_ref = s.borrow();
                 let state = s_ref.as_ref().unwrap();
-                let state_copy = state.copy(
-                    &(),
-                    |_src_cx, r| any_t::error(r.dupe()),
-                    |_src_cx, _dst_cx, _| {},
-                );
+                let state_copy = state.copy(|_dst_cx, src_state| {
+                    src_state.force(&mut (), |_, r| any_t::error(r.dupe()))
+                });
                 assert_forced_to_any(&state_copy);
             }
 
             #[test]
             fn lazy_result_ok_caches_via_try_force() {
-                let state = ForcingState::try_of_lazy_t(
+                let state: ForcingState = ForcingState::try_of_lazy_t(
                     locationless_reason(VirtualReasonDesc::RNull),
                     move |_cx| Ok(any_t::error(locationless_reason(VirtualReasonDesc::RNull))),
                 );
-                let r1 = state.try_force(&(), |r| any_t::error(r.dupe()));
-                let r2 = state.try_force(&(), |r| any_t::error(r.dupe()));
+                let r1 = state.try_force(&mut (), |_, r| any_t::error(r.dupe()));
+                let r2 = state.try_force(&mut (), |_, r| any_t::error(r.dupe()));
                 assert!(r1.is_ok());
                 assert!(r2.is_ok());
             }
@@ -9990,14 +9977,14 @@ pub mod constraint {
                 use flow_utils_concurrency::job_error::JobError;
                 use flow_utils_concurrency::worker_cancel::WorkerCanceled;
 
-                let state = ForcingState::try_of_lazy_t(
+                let state: ForcingState = ForcingState::try_of_lazy_t(
                     locationless_reason(VirtualReasonDesc::RNull),
                     move |_cx| Err(JobError::Canceled(WorkerCanceled)),
                 );
-                let r1 = state.try_force(&(), |r| any_t::error(r.dupe()));
+                let r1 = state.try_force(&mut (), |_, r| any_t::error(r.dupe()));
                 assert!(matches!(r1, Err(JobError::Canceled(_))));
                 // Second call returns the cached error.
-                let r2 = state.try_force(&(), |r| any_t::error(r.dupe()));
+                let r2 = state.try_force(&mut (), |_, r| any_t::error(r.dupe()));
                 assert!(matches!(r2, Err(JobError::Canceled(_))));
             }
 
@@ -10006,31 +9993,31 @@ pub mod constraint {
                 use flow_utils_concurrency::job_error::JobError;
                 use flow_utils_concurrency::worker_cancel::WorkerCanceled;
 
-                let state = ForcingState::try_of_lazy_t(
+                let state: ForcingState = ForcingState::try_of_lazy_t(
                     locationless_reason(VirtualReasonDesc::RNull),
                     move |_cx| Err(JobError::Canceled(WorkerCanceled)),
                 );
                 // Old API: caller observes only the fallback A.
-                let fallback = state.force(&(), |r| any_t::error(r.dupe()));
+                let fallback = state.force(&mut (), |_, r| any_t::error(r.dupe()));
                 match &*fallback {
                     TypeInner::AnyT(_, _) => {}
                     _ => panic!("Invalid type"),
                 }
                 // New API on the same state still surfaces the JobError.
-                let r = state.try_force(&(), |r| any_t::error(r.dupe()));
+                let r = state.try_force(&mut (), |_, r| any_t::error(r.dupe()));
                 assert!(matches!(r, Err(JobError::Canceled(_))));
             }
         }
     }
 
     #[derive(Debug, Clone)]
-    pub enum Constraints<'a, CX = ()> {
+    pub enum Constraints<CX: ContextFamily = ()> {
         Resolved(Type),
         Unresolved(BoundsRef<CX>),
-        FullyResolved(forcing_state::ForcingState<'a, CX>),
+        FullyResolved(forcing_state::ForcingState<CX>),
     }
 
-    impl<CX> Default for Constraints<'_, CX> {
+    impl<CX: ContextFamily> Default for Constraints<CX> {
         fn default() -> Self {
             Constraints::Unresolved(Rc::new(std::cell::RefCell::new(Bounds::default())))
         }
@@ -10039,14 +10026,14 @@ pub mod constraint {
     pub type BoundsRef<CX = ()> = Rc<std::cell::RefCell<Bounds<CX>>>;
 
     #[derive(Debug)]
-    pub struct Bounds<CX = ()> {
+    pub struct Bounds<CX: ContextFamily = ()> {
         pub lower: BTreeMap<Type, (DepthTrace, UseOp)>,
         pub upper: BTreeMap<UseTypeKey<CX>, DepthTrace>,
         pub lowertvars: BTreeMap<i32, (DepthTrace, UseOp)>,
         pub uppertvars: BTreeMap<i32, (DepthTrace, UseOp)>,
     }
 
-    impl<CX> Clone for Bounds<CX> {
+    impl<CX: ContextFamily> Clone for Bounds<CX> {
         fn clone(&self) -> Self {
             Bounds {
                 lower: self.lower.clone(),
@@ -10057,13 +10044,13 @@ pub mod constraint {
         }
     }
 
-    impl<CX> Default for Bounds<CX> {
+    impl<CX: ContextFamily> Default for Bounds<CX> {
         fn default() -> Self {
             Self::empty()
         }
     }
 
-    impl<CX> Bounds<CX> {
+    impl<CX: ContextFamily> Bounds<CX> {
         pub fn empty() -> Self {
             Bounds {
                 lower: BTreeMap::new(),
@@ -10193,11 +10180,12 @@ pub mod aconstraint {
         pub dro_type: DroType,
     }
 
-    pub type AnnotConcretizeForImportsExportsFn<'cx> = Rc<dyn Fn(Type) -> Type + 'cx>;
+    pub type AnnotConcretizeForImportsExportsFn<CX> =
+        Rc<dyn for<'a> Fn(&mut <CX as ContextFamily>::Context<'a>, Type) -> Type>;
 
     #[derive(Clone)]
-    pub enum OpInner<'cx> {
-        AnnotConcretizeForImportsExports(Reason, AnnotConcretizeForImportsExportsFn<'cx>),
+    pub enum OpInner<CX: ContextFamily> {
+        AnnotConcretizeForImportsExports(Reason, AnnotConcretizeForImportsExportsFn<CX>),
         AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(Reason),
         AnnotConcretizeForInspection {
             reason: Reason,
@@ -10269,16 +10257,16 @@ pub mod aconstraint {
     }
 
     #[derive(Clone, Dupe)]
-    pub struct Op<'cx>(Rc<OpInner<'cx>>);
+    pub struct Op<CX: ContextFamily>(Rc<OpInner<CX>>);
 
-    impl<'cx> Op<'cx> {
-        pub fn new(inner: OpInner<'cx>) -> Self {
+    impl<CX: ContextFamily> Op<CX> {
+        pub fn new(inner: OpInner<CX>) -> Self {
             Op(Rc::new(inner))
         }
     }
 
-    impl<'cx> Deref for Op<'cx> {
-        type Target = OpInner<'cx>;
+    impl<CX: ContextFamily> Deref for Op<CX> {
+        type Target = OpInner<CX>;
 
         fn deref(&self) -> &Self::Target {
             &self.0
@@ -10329,36 +10317,36 @@ pub mod aconstraint {
     /// which is similar to how we handle the above constraints, when that type
     /// variable is exported.
     #[derive(Clone)]
-    pub enum AConstraintInner<'cx> {
+    pub enum AConstraintInner<CX: ContextFamily> {
         AnnotUnresolved {
             reason: Reason,
             dependents: Rc<RefCell<FlowOrdSet<i32>>>,
         },
         AnnotOp {
-            op: Op<'cx>,
+            op: Op<CX>,
             id: i32,
             dependents: Rc<RefCell<FlowOrdSet<i32>>>,
         },
     }
 
     #[derive(Clone, Dupe)]
-    pub struct AConstraint<'cx>(Rc<AConstraintInner<'cx>>);
+    pub struct AConstraint<CX: ContextFamily>(Rc<AConstraintInner<CX>>);
 
-    impl<'cx> AConstraint<'cx> {
-        pub fn new(inner: AConstraintInner<'cx>) -> Self {
+    impl<CX: ContextFamily> AConstraint<CX> {
+        pub fn new(inner: AConstraintInner<CX>) -> Self {
             AConstraint(Rc::new(inner))
         }
     }
 
-    impl<'cx> Deref for AConstraint<'cx> {
-        type Target = AConstraintInner<'cx>;
+    impl<CX: ContextFamily> Deref for AConstraint<CX> {
+        type Target = AConstraintInner<CX>;
 
         fn deref(&self) -> &Self::Target {
             &self.0
         }
     }
 
-    impl<'cx> Op<'cx> {
+    impl<CX: ContextFamily> Op<CX> {
         pub fn reason(&self) -> Reason {
             match &**self {
                 OpInner::AnnotConcretizeForImportsExports(reason, _)
@@ -10408,7 +10396,7 @@ pub mod aconstraint {
         }
     }
 
-    impl<'cx> AConstraint<'cx> {
+    impl<CX: ContextFamily> AConstraint<CX> {
         pub fn deps(&self) -> &RefCell<FlowOrdSet<i32>> {
             match &**self {
                 AConstraintInner::AnnotUnresolved { dependents, .. } => dependents,
@@ -10416,7 +10404,7 @@ pub mod aconstraint {
             }
         }
 
-        pub fn to_annot_op_exn(&self) -> &Op<'cx> {
+        pub fn to_annot_op_exn(&self) -> &Op<CX> {
             match &**self {
                 AConstraintInner::AnnotUnresolved { .. } => panic!("to_annot_op_exn on unresolved"),
                 AConstraintInner::AnnotOp { op, .. } => op,
@@ -10433,7 +10421,7 @@ pub mod aconstraint {
         }
     }
 
-    impl<'cx> Op<'cx> {
+    impl<CX: ContextFamily> Op<CX> {
         pub fn string_of_operation(&self) -> &'static str {
             match &**self {
                 OpInner::AnnotSpecializeT(_) => "Annot_SpecializeT",
@@ -10564,10 +10552,10 @@ pub enum UnifyCause {
     Uncategorized,
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct TypeContext<'a, CX = ()> {
+#[derive(Debug, Clone)]
+pub struct TypeContext<CX: ContextFamily = ()> {
     /// map from tvar ids to nodes (type info structures)
-    pub graph: Rc<RefCell<flow_utils_union_find::Graph<constraint::Constraints<'a, CX>>>>,
+    pub graph: flow_utils_union_find::Graph<constraint::Constraints<CX>>,
     /// obj types point to mutable property maps
     pub property_maps: BTreeMap<properties::Id, properties::PropertiesMap>,
     /// indirection to support context opt
@@ -10578,42 +10566,8 @@ pub struct TypeContext<'a, CX = ()> {
     pub evaluated: eval::Map<Type>,
 }
 
-impl<'a, CX: 'a> TypeContext<'a, CX> {
-    /// Walk the graph and drop all unforced ForcingState closures, and clear
-    /// Unresolved bounds that may contain UseT values with LazyHintT closures.
-    /// Used to break Rc cycles after inference is complete.
-    pub fn drop_lazy_forcing_states(&self) {
-        use flow_common::reason::locationless_reason;
-        use flow_utils_union_find::Node;
-
-        let mut graph = self.graph.borrow_mut();
-        // Create the dummy error type once, outside the loop.
-        // It's cheap to dupe (Rc clone) but expensive to create (Arc + Rc allocations).
-        let default = any_t::error(locationless_reason(None));
-        for node in graph.values_mut() {
-            if let Node::Root(root) = node {
-                match &mut root.constraints {
-                    constraint::Constraints::FullyResolved(fs) => {
-                        fs.drop_if_lazy(default.dupe());
-                    }
-                    constraint::Constraints::Unresolved(bounds) => {
-                        // Unresolved bounds may contain UseT values (in upper)
-                        // with LazyHintT(Rc<dyn Fn>) closures that capture cx.
-                        // Clear them to break: Context → graph → Bounds → UseT
-                        // → LazyHintT → cx → Context.
-                        *bounds.borrow_mut() = Default::default();
-                    }
-                    constraint::Constraints::Resolved(_) => {
-                        // Resolved contains a plain Type (no closures).
-                    }
-                }
-            }
-        }
-    }
-}
-
 #[derive(Clone)]
-pub struct FlowSet<CX = ()> {
+pub struct FlowSet<CX: ContextFamily = ()> {
     // Single canonical map for membership lookup. `add` is O(log N) instead
     // of O(L * log N) — no walking of separate BTreeMap layers per call.
     //
@@ -10636,7 +10590,7 @@ pub struct FlowSet<CX = ()> {
     logs: Vec<Vec<(Type, UseT<CX>)>>,
 }
 
-impl<CX> std::fmt::Debug for FlowSet<CX> {
+impl<CX: ContextFamily> std::fmt::Debug for FlowSet<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FlowSet")
             .field("map", &self.map)
@@ -10645,7 +10599,7 @@ impl<CX> std::fmt::Debug for FlowSet<CX> {
     }
 }
 
-impl<CX> Default for FlowSet<CX> {
+impl<CX: ContextFamily> Default for FlowSet<CX> {
     fn default() -> Self {
         Self {
             map: BTreeMap::new(),
@@ -10654,7 +10608,7 @@ impl<CX> Default for FlowSet<CX> {
     }
 }
 
-impl<CX> FlowSet<CX> {
+impl<CX: ContextFamily> FlowSet<CX> {
     /// Returns whether the pair is inserted into the set.
     pub fn add(&mut self, l: Type, u: UseT<CX>) -> bool {
         // Capture the rollback-log info up front, but only `dupe`/`clone`
@@ -11359,10 +11313,14 @@ pub mod locationless {
     }
 }
 
-pub fn hint_unavailable<CX>() -> LazyHintT<CX> {
+pub fn hint_unavailable<CX: ContextFamily>() -> LazyHintT<CX> {
     LazyHintT(
         false,
-        Rc::new(|_cx, _expected_only, _skip_optional, _reason| Ok(HintEvalResult::NoHint)),
+        Rc::new(
+            |_cx: &mut CX::Context<'_>, _expected_only, _skip_optional, _reason| {
+                Ok(HintEvalResult::NoHint)
+            },
+        ),
     )
 }
 
@@ -11377,7 +11335,7 @@ pub fn drop_generic(t: Type) -> Type {
 
 // Primitives, like string, will be promoted to their wrapper object types for
 // certain operations, like GetPropT, but not for others, like `UseT _`.
-pub fn primitive_promoting_use_t<CX>(use_t: &UseT<CX>) -> bool {
+pub fn primitive_promoting_use_t<CX: ContextFamily>(use_t: &UseT<CX>) -> bool {
     match use_t.deref() {
         UseTInner::CallElemT(..)
         | UseTInner::GetElemT(..)
@@ -11690,7 +11648,7 @@ pub fn string_of_predicate_concretizer_variant(
     }
 }
 
-pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
+pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
     match use_t.deref() {
         UseTInner::UseT(op, t) => format!("UseT({}, {})", string_of_use_op(op), string_of_ctor(t)),
         UseTInner::ArrRestT(..) => "ArrRestT".to_string(),
@@ -12332,7 +12290,10 @@ pub fn create_intersection(rep: inter_rep::InterRep) -> Type {
     ))
 }
 
-pub fn apply_opt_action<CX>(action: OptMethodAction<CX>, t_out: Tvar) -> MethodAction<CX> {
+pub fn apply_opt_action<CX: ContextFamily>(
+    action: OptMethodAction<CX>,
+    t_out: Tvar,
+) -> MethodAction<CX> {
     match action {
         OptMethodAction::OptCallM(box OptCallMData {
             opt_methodcalltype,
@@ -12364,7 +12325,7 @@ pub fn apply_opt_action<CX>(action: OptMethodAction<CX>, t_out: Tvar) -> MethodA
     }
 }
 
-pub fn apply_opt_use<CX>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
+pub fn apply_opt_use<CX: ContextFamily>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
     match opt_use {
         OptUseT::OptMethodT(op, r1, r2, propref, action) => {
             UseT::new(UseTInner::MethodT(Box::new(MethodTData {

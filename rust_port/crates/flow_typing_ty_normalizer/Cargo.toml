@@ -11,7 +11,6 @@ flow_aloc = { path = "../flow_aloc" }
 flow_common = { path = "../flow_common" }
 flow_common_ty = { path = "../flow_common_ty" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
-flow_lazy = { path = "../flow_lazy" }
 flow_parser = { path = "../flow_parser" }
 flow_parser_utils = { path = "../flow_parser_utils" }
 flow_typing_context = { path = "../flow_typing_context" }

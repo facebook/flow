@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
@@ -13,6 +12,8 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
+use flow_lazy::ContextFamily;
+use flow_lazy::Lazy;
 use vec1::Vec1;
 
 use crate::reason::Reason;
@@ -33,32 +34,24 @@ pub enum HintKind {
 // then we can check the value of property `f` with the hint `(number) => number`
 // and, further, use `number` as the type of `x`.
 
+/// The lazy parts of a hint are forced with a context of the family `CX`: `()` for hints built
+/// from the AST, the checker's context family for hints mapped onto types.
 #[derive(Clone)]
-pub struct FunCallImplicitInstantiationHints<'a, T, TArgs, Args, PropsAndChildren> {
+pub struct FunCallImplicitInstantiationHints<CX: ContextFamily, T, TArgs, Args, PropsAndChildren> {
     pub reason: Reason,
-    pub return_hints: Rc<
-        LazyCell<
-            Vec<Hint<'a, T, TArgs, Args, PropsAndChildren>>,
-            Box<dyn Fn() -> Vec<Hint<'a, T, TArgs, Args, PropsAndChildren>> + 'a>,
-        >,
-    >,
-    pub targs: Rc<LazyCell<TArgs, Box<dyn Fn() -> TArgs + 'a>>>,
-    pub arg_list: Rc<LazyCell<Args, Box<dyn Fn() -> Args + 'a>>>,
+    pub return_hints: Rc<Lazy<CX, Vec<Hint<CX, T, TArgs, Args, PropsAndChildren>>>>,
+    pub targs: Rc<Lazy<CX, TArgs>>,
+    pub arg_list: Rc<Lazy<CX, Args>>,
     pub arg_index: i32,
 }
 
 #[derive(Clone)]
-pub struct JsxImplicitInstantiationHints<'a, T, TArgs, Args, PropsAndChildren> {
+pub struct JsxImplicitInstantiationHints<CX: ContextFamily, T, TArgs, Args, PropsAndChildren> {
     pub jsx_reason: Reason,
     pub jsx_name: FlowSmolStr,
-    pub jsx_targs: Rc<LazyCell<TArgs, Box<dyn Fn() -> TArgs + 'a>>>,
+    pub jsx_targs: Rc<Lazy<CX, TArgs>>,
     pub jsx_props_and_children: PropsAndChildren,
-    pub jsx_hints: Rc<
-        LazyCell<
-            Vec<Hint<'a, T, TArgs, Args, PropsAndChildren>>,
-            Box<dyn Fn() -> Vec<Hint<'a, T, TArgs, Args, PropsAndChildren>> + 'a>,
-        >,
-    >,
+    pub jsx_hints: Rc<Lazy<CX, Vec<Hint<CX, T, TArgs, Args, PropsAndChildren>>>>,
 }
 
 #[derive(Debug, Clone, Dupe, PartialEq)]
@@ -76,12 +69,12 @@ pub enum PredicateKind {
 }
 
 #[derive(Clone)]
-pub struct HintDecomposition<'a, T, TArgs, Args, PropsAndChildren>(
-    Rc<HintDecompositionInner<'a, T, TArgs, Args, PropsAndChildren>>,
+pub struct HintDecomposition<CX: ContextFamily, T, TArgs, Args, PropsAndChildren>(
+    Rc<HintDecompositionInner<CX, T, TArgs, Args, PropsAndChildren>>,
 );
 
-impl<'a, T, TArgs, Args, PropsAndChildren> Dupe
-    for HintDecomposition<'a, T, TArgs, Args, PropsAndChildren>
+impl<CX: ContextFamily + Clone, T, TArgs, Args, PropsAndChildren> Dupe
+    for HintDecomposition<CX, T, TArgs, Args, PropsAndChildren>
 where
     T: Clone,
     TArgs: Clone,
@@ -90,12 +83,14 @@ where
 {
 }
 
-impl<'a, T, TArgs, Args, PropsAndChildren> HintDecomposition<'a, T, TArgs, Args, PropsAndChildren> {
-    pub fn new(inner: HintDecompositionInner<'a, T, TArgs, Args, PropsAndChildren>) -> Self {
+impl<CX: ContextFamily, T, TArgs, Args, PropsAndChildren>
+    HintDecomposition<CX, T, TArgs, Args, PropsAndChildren>
+{
+    pub fn new(inner: HintDecompositionInner<CX, T, TArgs, Args, PropsAndChildren>) -> Self {
         HintDecomposition(Rc::new(inner))
     }
 
-    pub fn inner(&self) -> &HintDecompositionInner<'a, T, TArgs, Args, PropsAndChildren> {
+    pub fn inner(&self) -> &HintDecompositionInner<CX, T, TArgs, Args, PropsAndChildren> {
         &self.0
     }
 
@@ -152,27 +147,34 @@ impl<'a, T, TArgs, Args, PropsAndChildren> HintDecomposition<'a, T, TArgs, Args,
             DecompPromise => "Decomp_Promise".to_string(),
         }
     }
+}
 
-    pub fn map<'b, CX: Dupe + 'b, T2, TArgs2, Args2, PropsAndChildren2>(
+impl<T, TArgs, Args, PropsAndChildren> HintDecomposition<(), T, TArgs, Args, PropsAndChildren> {
+    pub fn map<CX: ContextFamily, T2, TArgs2, Args2, PropsAndChildren2>(
         &self,
-        cx: &CX,
-        map_base_hint: &Rc<impl for<'c> Fn(&'c CX, T) -> T2 + 'b>,
-        map_targs: &Rc<impl for<'c> Fn(&'c CX, TArgs) -> TArgs2 + 'b>,
-        map_arg_list: &Rc<impl for<'c> Fn(&'c CX, Args) -> Args2 + 'b>,
+        cx: &mut CX::Context<'_>,
+        map_base_hint: &Rc<impl for<'c> Fn(&mut CX::Context<'c>, T) -> T2 + 'static>,
+        map_targs: &Rc<impl for<'c> Fn(&mut CX::Context<'c>, TArgs) -> TArgs2 + 'static>,
+        map_arg_list: &Rc<impl for<'c> Fn(&mut CX::Context<'c>, Args) -> Args2 + 'static>,
         map_jsx: &Rc<
-            impl for<'c> Fn(&'c CX, Reason, FlowSmolStr, PropsAndChildren) -> PropsAndChildren2 + 'b,
+            impl for<'c> Fn(
+                &mut CX::Context<'c>,
+                Reason,
+                FlowSmolStr,
+                PropsAndChildren,
+            ) -> PropsAndChildren2
+            + 'static,
         >,
-    ) -> HintDecomposition<'b, T2, TArgs2, Args2, PropsAndChildren2>
+    ) -> HintDecomposition<CX, T2, TArgs2, Args2, PropsAndChildren2>
     where
-        'a: 'b,
-        T: Clone + 'a,
-        TArgs: Clone + 'a,
-        Args: Clone + 'a,
-        PropsAndChildren: Clone + 'a,
-        T2: Clone + 'b,
-        TArgs2: Clone + 'b,
-        Args2: Clone + 'b,
-        PropsAndChildren2: Clone + 'b,
+        T: Clone + 'static,
+        TArgs: Clone + 'static,
+        Args: Clone + 'static,
+        PropsAndChildren: Clone + 'static,
+        T2: Clone + 'static,
+        TArgs2: Clone + 'static,
+        Args2: Clone + 'static,
+        PropsAndChildren2: Clone + 'static,
     {
         use HintDecompositionInner::*;
         let inner = match self.inner() {
@@ -211,19 +213,19 @@ impl<'a, T, TArgs, Args, PropsAndChildren> HintDecomposition<'a, T, TArgs, Args,
                 } = hints;
 
                 // IMPORTANT: These must remain LAZY — only map when accessed.
-                let return_hints_mapped = Rc::new(LazyCell::new(Box::new({
+                let return_hints_mapped = Rc::new(Lazy::<CX, _>::new({
                     let return_hints = return_hints.dupe();
-                    let cx = cx.dupe();
                     let map_base_hint = map_base_hint.dupe();
                     let map_targs = map_targs.dupe();
                     let map_arg_list = map_arg_list.dupe();
                     let map_jsx = map_jsx.dupe();
-                    move || {
-                        LazyCell::force(&return_hints)
+                    move |cx: &mut CX::Context<'_>| {
+                        return_hints
+                            .get_forced(&mut ())
                             .iter()
                             .map(|h| {
-                                h.clone().map(
-                                    &cx,
+                                h.clone().map::<CX, _, _, _, _>(
+                                    cx,
                                     &map_base_hint,
                                     &map_targs,
                                     &map_arg_list,
@@ -232,22 +234,21 @@ impl<'a, T, TArgs, Args, PropsAndChildren> HintDecomposition<'a, T, TArgs, Args,
                             })
                             .collect()
                     }
-                })
-                    as Box<dyn Fn() -> Vec<Hint<'b, T2, TArgs2, Args2, PropsAndChildren2>> + 'b>));
-                let targs_mapped = Rc::new(LazyCell::new(Box::new({
+                }));
+                let targs_mapped = Rc::new(Lazy::<CX, _>::new({
                     let targs = targs.dupe();
-                    let cx = cx.dupe();
                     let map_targs = map_targs.dupe();
-                    move || (map_targs.as_ref())(&cx, LazyCell::force(&targs).clone())
-                })
-                    as Box<dyn Fn() -> TArgs2 + 'b>));
-                let arg_list_mapped = Rc::new(LazyCell::new(Box::new({
+                    move |cx: &mut CX::Context<'_>| {
+                        (map_targs.as_ref())(cx, targs.get_forced(&mut ()).clone())
+                    }
+                }));
+                let arg_list_mapped = Rc::new(Lazy::<CX, _>::new({
                     let arg_list = arg_list.dupe();
-                    let cx = cx.dupe();
                     let map_arg_list = map_arg_list.dupe();
-                    move || (map_arg_list.as_ref())(&cx, LazyCell::force(&arg_list).clone())
-                })
-                    as Box<dyn Fn() -> Args2 + 'b>));
+                    move |cx: &mut CX::Context<'_>| {
+                        (map_arg_list.as_ref())(cx, arg_list.get_forced(&mut ()).clone())
+                    }
+                }));
 
                 InstantiateCallee(FunCallImplicitInstantiationHints {
                     reason: reason.dupe(),
@@ -266,13 +267,13 @@ impl<'a, T, TArgs, Args, PropsAndChildren> HintDecomposition<'a, T, TArgs, Args,
                     jsx_hints,
                 } = hints;
 
-                let jsx_targs_mapped = Rc::new(LazyCell::new(Box::new({
+                let jsx_targs_mapped = Rc::new(Lazy::<CX, _>::new({
                     let jsx_targs = jsx_targs.dupe();
-                    let cx = cx.dupe();
                     let map_targs = map_targs.dupe();
-                    move || (map_targs.as_ref())(&cx, LazyCell::force(&jsx_targs).clone())
-                })
-                    as Box<dyn Fn() -> TArgs2 + 'b>));
+                    move |cx: &mut CX::Context<'_>| {
+                        (map_targs.as_ref())(cx, jsx_targs.get_forced(&mut ()).clone())
+                    }
+                }));
 
                 let jsx_props_and_children_mapped = (map_jsx.as_ref())(
                     cx,
@@ -281,19 +282,19 @@ impl<'a, T, TArgs, Args, PropsAndChildren> HintDecomposition<'a, T, TArgs, Args,
                     jsx_props_and_children.clone(),
                 );
 
-                let jsx_hints_mapped = Rc::new(LazyCell::new(Box::new({
+                let jsx_hints_mapped = Rc::new(Lazy::<CX, _>::new({
                     let jsx_hints = jsx_hints.dupe();
-                    let cx = cx.dupe();
                     let map_base_hint = map_base_hint.dupe();
                     let map_targs = map_targs.dupe();
                     let map_arg_list = map_arg_list.dupe();
                     let map_jsx = map_jsx.dupe();
-                    move || {
-                        LazyCell::force(&jsx_hints)
+                    move |cx: &mut CX::Context<'_>| {
+                        jsx_hints
+                            .get_forced(&mut ())
                             .iter()
                             .map(|h| {
-                                h.clone().map(
-                                    &cx,
+                                h.clone().map::<CX, _, _, _, _>(
+                                    cx,
                                     &map_base_hint,
                                     &map_targs,
                                     &map_arg_list,
@@ -302,8 +303,7 @@ impl<'a, T, TArgs, Args, PropsAndChildren> HintDecomposition<'a, T, TArgs, Args,
                             })
                             .collect()
                     }
-                })
-                    as Box<dyn Fn() -> Vec<Hint<'b, T2, TArgs2, Args2, PropsAndChildren2>> + 'b>));
+                }));
 
                 InstantiateComponent(JsxImplicitInstantiationHints {
                     jsx_reason: jsx_reason.dupe(),
@@ -319,7 +319,7 @@ impl<'a, T, TArgs, Args, PropsAndChildren> HintDecomposition<'a, T, TArgs, Args,
     }
 }
 
-pub enum HintDecompositionInner<'a, T, TArgs, Args, PropsAndChildren> {
+pub enum HintDecompositionInner<CX: ContextFamily, T, TArgs, Args, PropsAndChildren> {
     /// Hint on `{ f: e }` becomes hint on `e`
     DecompObjProp(FlowSmolStr),
     /// Hint on `{ [k]: e }` becomes hint on `e`
@@ -365,21 +365,21 @@ pub enum HintDecompositionInner<'a, T, TArgs, Args, PropsAndChildren> {
     SimplifyCallee(Reason),
     /// Type of f in f(...) is instantiated with arguments and return hint.
     /// Returns f if the type of f is not polymorphic.
-    InstantiateCallee(FunCallImplicitInstantiationHints<'a, T, TArgs, Args, PropsAndChildren>),
+    InstantiateCallee(FunCallImplicitInstantiationHints<CX, T, TArgs, Args, PropsAndChildren>),
     /// Type of Comp in <Comp ... /> is instantiated with props and children.
     /// Returns Comp if the type of Comp is not polymorphic.
-    InstantiateComponent(JsxImplicitInstantiationHints<'a, T, TArgs, Args, PropsAndChildren>),
+    InstantiateComponent(JsxImplicitInstantiationHints<CX, T, TArgs, Args, PropsAndChildren>),
     /// T of Promise<T> becomes hint on return in async scope
     DecompPromise,
 }
 
 #[derive(Clone)]
-pub enum Hint<'a, T, TArgs, Args, PropsAndChildren> {
+pub enum Hint<CX: ContextFamily, T, TArgs, Args, PropsAndChildren> {
     HintT(T, HintKind),
     HintDecomp(
         Vec1<(
             usize,
-            HintDecomposition<'a, T, TArgs, Args, PropsAndChildren>,
+            HintDecomposition<CX, T, TArgs, Args, PropsAndChildren>,
         )>,
         T,
         HintKind,
@@ -389,9 +389,11 @@ pub enum Hint<'a, T, TArgs, Args, PropsAndChildren> {
     HintPlaceholder,
 }
 
-impl<'a, T, TArgs, Args, PropsAndChildren> Hint<'a, T, TArgs, Args, PropsAndChildren> {
+impl<CX: ContextFamily + Clone, T, TArgs, Args, PropsAndChildren>
+    Hint<CX, T, TArgs, Args, PropsAndChildren>
+{
     pub fn decompose(
-        decomp: HintDecomposition<'a, T, TArgs, Args, PropsAndChildren>,
+        decomp: HintDecomposition<CX, T, TArgs, Args, PropsAndChildren>,
         hints: Vec<Self>,
     ) -> Vec<Self>
     where
@@ -438,49 +440,6 @@ impl<'a, T, TArgs, Args, PropsAndChildren> Hint<'a, T, TArgs, Args, PropsAndChil
         }
     }
 
-    pub fn map<'b, CX: Dupe + 'b, T2, TArgs2, Args2, PropsAndChildren2>(
-        self,
-        cx: &CX,
-        map_base_hint: &Rc<impl for<'c> Fn(&'c CX, T) -> T2 + 'b>,
-        map_targs: &Rc<impl for<'c> Fn(&'c CX, TArgs) -> TArgs2 + 'b>,
-        map_arg_list: &Rc<impl for<'c> Fn(&'c CX, Args) -> Args2 + 'b>,
-        map_jsx: &Rc<
-            impl for<'c> Fn(&'c CX, Reason, FlowSmolStr, PropsAndChildren) -> PropsAndChildren2 + 'b,
-        >,
-    ) -> Hint<'b, T2, TArgs2, Args2, PropsAndChildren2>
-    where
-        'a: 'b,
-        T: Clone + 'a,
-        TArgs: Clone + 'a,
-        Args: Clone + 'a,
-        PropsAndChildren: Clone + 'a,
-        T2: Clone + 'b,
-        TArgs2: Clone + 'b,
-        Args2: Clone + 'b,
-        PropsAndChildren2: Clone + 'b,
-    {
-        match self {
-            Hint::HintT(t, kind) => Hint::HintT((map_base_hint.as_ref())(cx, t), kind),
-            Hint::HintDecomp(ops, t, kind) => {
-                let mapped_ops = ops
-                    .into_iter()
-                    .map(|(i, op)| {
-                        (
-                            i,
-                            op.map(cx, map_base_hint, map_targs, map_arg_list, map_jsx),
-                        )
-                    })
-                    .collect::<Vec<_>>();
-                Hint::HintDecomp(
-                    Vec1::try_from_vec(mapped_ops).unwrap(),
-                    (map_base_hint.as_ref())(cx, t),
-                    kind,
-                )
-            }
-            Hint::HintPlaceholder => Hint::HintPlaceholder,
-        }
-    }
-
     pub fn string_of_hints(on_hint: impl Fn(&T) -> String, hints: &[Self]) -> String
     where
         T: Clone + PartialEq,
@@ -494,6 +453,62 @@ impl<'a, T, TArgs, Args, PropsAndChildren> Hint<'a, T, TArgs, Args, PropsAndChil
             .collect::<Vec<_>>()
             .join(",");
         format!("[{}]", hints_str)
+    }
+}
+
+impl<T, TArgs, Args, PropsAndChildren> Hint<(), T, TArgs, Args, PropsAndChildren> {
+    pub fn map<CX: ContextFamily, T2, TArgs2, Args2, PropsAndChildren2>(
+        self,
+        cx: &mut CX::Context<'_>,
+        map_base_hint: &Rc<impl for<'c> Fn(&mut CX::Context<'c>, T) -> T2 + 'static>,
+        map_targs: &Rc<impl for<'c> Fn(&mut CX::Context<'c>, TArgs) -> TArgs2 + 'static>,
+        map_arg_list: &Rc<impl for<'c> Fn(&mut CX::Context<'c>, Args) -> Args2 + 'static>,
+        map_jsx: &Rc<
+            impl for<'c> Fn(
+                &mut CX::Context<'c>,
+                Reason,
+                FlowSmolStr,
+                PropsAndChildren,
+            ) -> PropsAndChildren2
+            + 'static,
+        >,
+    ) -> Hint<CX, T2, TArgs2, Args2, PropsAndChildren2>
+    where
+        T: Clone + 'static,
+        TArgs: Clone + 'static,
+        Args: Clone + 'static,
+        PropsAndChildren: Clone + 'static,
+        T2: Clone + 'static,
+        TArgs2: Clone + 'static,
+        Args2: Clone + 'static,
+        PropsAndChildren2: Clone + 'static,
+    {
+        match self {
+            Hint::HintT(t, kind) => Hint::HintT((map_base_hint.as_ref())(cx, t), kind),
+            Hint::HintDecomp(ops, t, kind) => {
+                let mapped_ops = ops
+                    .into_iter()
+                    .map(|(i, op)| {
+                        (
+                            i,
+                            op.map::<CX, _, _, _, _>(
+                                cx,
+                                map_base_hint,
+                                map_targs,
+                                map_arg_list,
+                                map_jsx,
+                            ),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                Hint::HintDecomp(
+                    Vec1::try_from_vec(mapped_ops).unwrap(),
+                    (map_base_hint.as_ref())(cx, t),
+                    kind,
+                )
+            }
+            Hint::HintPlaceholder => Hint::HintPlaceholder,
+        }
     }
 }
 

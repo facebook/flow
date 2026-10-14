@@ -229,7 +229,7 @@ fn autofix_insert_type_annotation_helper(
 
 fn autofix_exports_code_actions<'a, 'b>(
     options: &Options,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -277,7 +277,7 @@ fn autofix_exports_code_actions<'a, 'b>(
 
 fn autofix_missing_local_annot_code_actions<'a, 'b>(
     options: &Options,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -329,7 +329,7 @@ fn autofix_missing_local_annot_code_actions<'a, 'b>(
 
 fn code_action_insert_inferred_render_type<'a, 'b>(
     options: &Options,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -391,7 +391,7 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
     support_experimental_snippet_text_edit: bool,
     file_contents: &str,
     ast: &ast::Program<Loc, Loc>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
@@ -505,7 +505,7 @@ fn insert_inferred_type_as_cast_code_actions<'a>(
     options: &Options,
     file_contents: &str,
     ast: &ast::Program<Loc, Loc>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
@@ -741,7 +741,7 @@ fn refactor_arrow_function_code_actions(
 }
 
 fn refactor_switch_to_match_statement_actions(
-    cx: &Context,
+    cx: &mut Context,
     ast: &ast::Program<Loc, Loc>,
     options: &Options,
     only: Option<&[CodeActionKind]>,
@@ -781,7 +781,7 @@ fn refactor_switch_to_match_statement_actions(
 }
 
 fn refactor_match_coded_like_switch(
-    cx: &Context,
+    cx: &mut Context,
     ast: &ast::Program<Loc, Loc>,
     options: &Options,
     only: Option<&[CodeActionKind]>,
@@ -829,7 +829,7 @@ fn refactor_match_coded_like_switch(
 
 fn add_jsx_props_code_actions(
     snippets_enabled: bool,
-    cx: &Context,
+    cx: &mut Context,
     ast: &ast::Program<Loc, Loc>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     options: &Options,
@@ -899,7 +899,7 @@ fn maybe_sort_by_usage(
 
 fn find_unbound_names_from_scope(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &mut Context,
     query_loc: Loc,
 ) -> Vec<(Loc, FlowSmolStr)> {
     let already_handled_unbound_names_with_error =
@@ -940,7 +940,7 @@ fn find_unbound_names_from_scope(
 }
 
 fn suggest_imports(
-    cx: &Context,
+    cx: &mut Context,
     layout_options: &js_layout_generator::Opts,
     module_system_info: &LspModuleSystemInfo,
     src_dir: Option<&str>,
@@ -1014,7 +1014,7 @@ fn suggest_imports(
 
 pub type AstTransform = Box<
     dyn Fn(
-        &Context,
+        &mut Context,
         Arc<FileSig>,
         &ast::Program<Loc, Loc>,
         &ast::Program<ALoc, (ALoc, Type)>,
@@ -1039,14 +1039,14 @@ pub fn untyped_ast_transform(
     transform: Box<dyn Fn(&ast::Program<Loc, Loc>, Loc) -> ast::Program<Loc, Loc>>,
 ) -> AstTransform {
     Box::new(
-        move |_cx: &Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
+        move |_cx: &mut Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
             Some(transform(ast, loc))
         },
     )
 }
 
 fn autofix_in_upstream_file(
-    cx: &Context,
+    cx: &mut Context,
     get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     file_sig: Arc<FileSig>,
     diagnostics: &[Diagnostic],
@@ -1173,7 +1173,7 @@ pub fn ast_transforms_of_error(
         let make_readonly_code_action =
             |upper_ty: &flow_common_ty::ty::Ty<ALoc>, upper_loc: Loc| -> Vec<AstTransformOfError> {
                 let transform: AstTransform = Box::new(
-                    |_cx: &Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
+                    |_cx: &mut Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
                         convert_type_to_readonly_form::convert(ast, loc).map(|(ast, _kind)| ast)
                     },
                 );
@@ -1201,7 +1201,7 @@ pub fn ast_transforms_of_error(
                 let get_haste_module_info_clone = get_haste_module_info.dupe();
                 let get_type_sig_clone = get_type_sig.dupe();
                 let transform: AstTransform = Box::new(
-                    move |cx: &Context,
+                    move |cx: &mut Context,
                           file_sig: Arc<FileSig>,
                           ast: &ast::Program<Loc, Loc>,
                           typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -2447,7 +2447,7 @@ fn code_actions_of_errors(
             >,
         >,
     >,
-    cx: &Context,
+    cx: &mut Context,
     file_sig: &Arc<FileSig>,
     env: &Env,
     ast: &ast::Program<Loc, Loc>,
@@ -2739,7 +2739,7 @@ pub fn code_actions_at_loc<'a>(
         >,
     >,
     module_system_info: &LspModuleSystemInfo,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: &Arc<FileSig>,
     tolerable_errors: &[TolerableError<Loc>],
     file_contents: &str,
@@ -2970,7 +2970,7 @@ fn autofix_imports_fn(
     env: &Env,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     module_system_info: &LspModuleSystemInfo,
-    cx: &Context,
+    cx: &mut Context,
     ast: &ast::Program<Loc, Loc>,
     src_dir: Option<&str>,
 ) -> Vec<(Loc, String)> {
@@ -3078,14 +3078,14 @@ fn autofix_imports_fn(
 
 fn with_type_checked_file<T>(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &Env,
     transaction: Arc<Transaction>,
     file_key: &FileKey,
     file_content: &str,
     f: &dyn Fn(
-        &Context,
+        &mut Context,
         &Arc<FileSig>,
         &ast::Program<Loc, Loc>,
         &ast::Program<ALoc, (ALoc, Type)>,
@@ -3113,18 +3113,20 @@ fn with_type_checked_file<T>(
         }
     };
     match file_artifacts {
-        Ok((parse_artifacts, typecheck_artifacts)) => f(
-            &typecheck_artifacts.cx,
-            &parse_artifacts.file_sig,
-            &parse_artifacts.ast,
-            &typecheck_artifacts.typed_ast,
-        ),
+        Ok((parse_artifacts, typecheck_artifacts)) => typecheck_artifacts.cx.with_cx(cache, |cx| {
+            f(
+                cx,
+                &parse_artifacts.file_sig,
+                &parse_artifacts.ast,
+                &typecheck_artifacts.typed_ast,
+            )
+        }),
         _ => Err("Failed to parse or check file".to_string()),
     }
 }
 
 pub fn autofix_errors_cli(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &Env,
     transaction: Arc<Transaction>,
@@ -3152,7 +3154,7 @@ pub fn autofix_errors_cli(
         transaction,
         file_key,
         file_content,
-        &|cx: &Context,
+        &|cx: &mut Context,
           file_sig: &Arc<FileSig>,
           ast: &ast::Program<Loc, Loc>,
           typed_ast: &ast::Program<ALoc, (ALoc, Type)>| {
@@ -3246,7 +3248,7 @@ pub fn autofix_errors_cli(
 }
 
 pub fn autofix_imports_cli(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &Env,
     transaction: Arc<Transaction>,
@@ -3267,7 +3269,7 @@ pub fn autofix_imports_cli(
         transaction,
         file_key,
         file_content,
-        &|cx: &Context,
+        &|cx: &mut Context,
           _file_sig: &Arc<FileSig>,
           ast: &ast::Program<Loc, Loc>,
           _typed_ast: &ast::Program<ALoc, (ALoc, Type)>| {
@@ -3286,7 +3288,7 @@ pub fn autofix_imports_cli(
 }
 
 pub fn suggest_imports_cli(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &Env,
     transaction: Arc<Transaction>,
@@ -3308,7 +3310,7 @@ pub fn suggest_imports_cli(
         transaction,
         file_key,
         file_content,
-        &|cx: &Context,
+        &|cx: &mut Context,
           _file_sig: &Arc<FileSig>,
           ast: &ast::Program<Loc, Loc>,
           _typed_ast: &ast::Program<ALoc, (ALoc, Type)>| {
@@ -3364,7 +3366,7 @@ pub fn autofix_imports_lsp(
     env: &Env,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     module_system_info: &LspModuleSystemInfo,
-    cx: &Context,
+    cx: &mut Context,
     ast: &ast::Program<Loc, Loc>,
     uri: &Uri,
 ) -> Vec<TextEdit> {
@@ -3385,7 +3387,8 @@ pub fn autofix_imports_lsp(
     flow_loc_patch_to_lsp_edits(&edits)
 }
 
-pub fn autofix_exports_fn<'a>(
+pub fn autofix_exports_fn(
+    cache: &mut CheckContentsCache,
     options: &Options,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
     get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
@@ -3402,7 +3405,7 @@ pub fn autofix_exports_fn<'a>(
     file_key: FileKey,
     _file_content: &str,
     parse_artifacts: &ParseArtifacts,
-    typecheck_artifacts: &TypecheckArtifacts<'a>,
+    typecheck_artifacts: &TypecheckArtifacts,
 ) -> (Vec<(Loc, String)>, Vec<String>) {
     let ParseArtifacts {
         ast,
@@ -3413,26 +3416,29 @@ pub fn autofix_exports_fn<'a>(
     let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
     let sv_errors =
         autofix_exports::set_of_fixable_signature_verification_locations(tolerable_errors);
-    let (new_ast, it_errs) = autofix_exports::fix_signature_verification_errors(
-        file_key,
-        cx,
-        &*loc_of_aloc,
-        options.file_options.dupe(),
-        get_ast_from_heap,
-        &*get_haste_module_info,
-        &*get_type_sig,
-        file_sig,
-        typed_ast,
-        ast.dupe(),
-        &sv_errors,
-    );
+    let (new_ast, it_errs) = cx.with_cx(cache, |cx| {
+        autofix_exports::fix_signature_verification_errors(
+            file_key,
+            cx,
+            &*loc_of_aloc,
+            options.file_options.dupe(),
+            get_ast_from_heap,
+            &*get_haste_module_info,
+            &*get_type_sig,
+            file_sig,
+            typed_ast,
+            ast.dupe(),
+            &sv_errors,
+        )
+    });
     let opts = code_action_utils::layout_options(options);
     let diff = flow_ast_differ::program(ast, &new_ast);
     let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
     (edits, it_errs)
 }
 
-pub fn autofix_missing_local_annot_fn<'a>(
+pub fn autofix_missing_local_annot_fn(
+    cache: &mut CheckContentsCache,
     options: &Options,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
@@ -3446,29 +3452,33 @@ pub fn autofix_missing_local_annot_fn<'a>(
     >,
     _file_content: &str,
     parse_artifacts: &ParseArtifacts,
-    typecheck_artifacts: &TypecheckArtifacts<'a>,
+    typecheck_artifacts: &TypecheckArtifacts,
 ) -> Result<Vec<(Loc, String)>, String> {
     let ParseArtifacts { ast, file_sig, .. } = parse_artifacts;
     let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
-    let new_ast = autofix_missing_local_annots::fix_all_missing_param_annot_errors_in_file(
-        None, // no remote_converter
-        cx,
-        loc_of_aloc,
-        get_ast_from_heap,
-        get_haste_module_info,
-        get_type_sig,
-        file_sig,
-        typed_ast,
-        ast.dupe(),
-    )
-    .map_err(|e| format!("FailedToInsertType: {:?}", e))?;
+    let new_ast = cx
+        .with_cx(cache, |cx| {
+            autofix_missing_local_annots::fix_all_missing_param_annot_errors_in_file(
+                None, // no remote_converter
+                cx,
+                loc_of_aloc,
+                get_ast_from_heap,
+                get_haste_module_info,
+                get_type_sig,
+                file_sig,
+                typed_ast,
+                ast.dupe(),
+            )
+        })
+        .map_err(|e| format!("FailedToInsertType: {:?}", e))?;
     let opts = code_action_utils::layout_options(options);
     let diff = flow_ast_differ::program(ast, &new_ast);
     let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
     Ok(edits)
 }
 
-pub fn insert_type_fn<'a>(
+pub fn insert_type_fn(
+    cache: &mut CheckContentsCache,
     options: &Options,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
@@ -3485,25 +3495,28 @@ pub fn insert_type_fn<'a>(
     omit_targ_defaults: bool,
     strict: bool,
     parse_artifacts: &ParseArtifacts,
-    typecheck_artifacts: &TypecheckArtifacts<'a>,
+    typecheck_artifacts: &TypecheckArtifacts,
 ) -> Result<Vec<(Loc, String)>, String> {
     let ParseArtifacts { ast, file_sig, .. } = parse_artifacts;
     let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
-    let new_ast = insert_type::insert_type(
-        cx,
-        loc_of_aloc,
-        get_ast_from_heap,
-        get_haste_module_info,
-        get_type_sig,
-        file_sig,
-        typed_ast,
-        omit_targ_defaults,
-        strict,
-        None, // no remote_converter
-        ast,
-        target,
-    )
-    .map_err(|err| insert_type::error_to_string(&err))?;
+    let new_ast = cx
+        .with_cx(cache, |cx| {
+            insert_type::insert_type(
+                cx,
+                loc_of_aloc,
+                get_ast_from_heap,
+                get_haste_module_info,
+                get_type_sig,
+                file_sig,
+                typed_ast,
+                omit_targ_defaults,
+                strict,
+                None, // no remote_converter
+                ast,
+                target,
+            )
+        })
+        .map_err(|err| insert_type::error_to_string(&err))?;
     let opts = code_action_utils::layout_options(options);
     let diff = flow_ast_differ::program(ast, &new_ast);
     let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);

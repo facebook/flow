@@ -161,7 +161,7 @@ impl CoverageVisitor {
         }
     }
 
-    fn tvar<'a>(&mut self, cx: &Context<'a>, id: u32) -> Kind {
+    fn tvar<'a>(&mut self, cx: &mut Context<'a>, id: u32) -> Kind {
         let (root_id, constraints) = cx.find_constraints(id as i32);
         let root_id = root_id as u32;
         if id != root_id {
@@ -191,7 +191,7 @@ impl CoverageVisitor {
         }
     }
 
-    pub fn type_<'a>(&mut self, cx: &Context<'a>, t: &FlowType) -> Kind {
+    pub fn type_<'a>(&mut self, cx: &mut Context<'a>, t: &FlowType) -> Kind {
         match t.deref() {
             TypeInner::OpenT(tvar) => self.tvar(cx, tvar.id()),
             TypeInner::ImplicitInstantiationTvar(data) => self.tvar(cx, data.id as u32),
@@ -263,7 +263,7 @@ impl CoverageVisitor {
         }
     }
 
-    fn eval_t<'a>(&mut self, cx: &Context<'a>, t: &FlowType, id: &eval::Id) -> Kind {
+    fn eval_t<'a>(&mut self, cx: &mut Context<'a>, t: &FlowType, id: &eval::Id) -> Kind {
         let evaluated = cx.evaluated();
         let t = match evaluated.get(id) {
             Some(cached) => cached,
@@ -272,7 +272,7 @@ impl CoverageVisitor {
         self.type_(cx, t)
     }
 
-    fn types_<'a>(&mut self, cx: &Context<'a>, op: OpMode, acc: Kind, ts: &[FlowType]) -> Kind {
+    fn types_<'a>(&mut self, cx: &mut Context<'a>, op: OpMode, acc: Kind, ts: &[FlowType]) -> Kind {
         match ts {
             [] => acc,
             [t, rest @ ..] => {
@@ -287,7 +287,7 @@ impl CoverageVisitor {
         }
     }
 
-    fn types_list<'a>(&mut self, cx: &Context<'a>, op: OpMode, ts: &[FlowType]) -> Kind {
+    fn types_list<'a>(&mut self, cx: &mut Context<'a>, op: OpMode, ts: &[FlowType]) -> Kind {
         match ts {
             [] => Kind::Empty,
             [t, rest @ ..] => self.types_nel(cx, op, t, rest),
@@ -296,7 +296,7 @@ impl CoverageVisitor {
 
     fn types_nel<'a>(
         &mut self,
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         op: OpMode,
         t: &FlowType,
         ts: &[FlowType],
@@ -499,7 +499,7 @@ where
 
 pub fn covered_types<'a>(
     should_check: bool,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tast: &ast::Program<ALoc, (ALoc, FlowType)>,
 ) -> Vec<(Loc, Kind)> {
     let mut visitor = CoverageVisitor::new();
@@ -519,7 +519,7 @@ pub fn covered_types<'a>(
 }
 
 pub fn file_coverage<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tast: &ast::Program<ALoc, (ALoc, FlowType)>,
 ) -> FileCoverage {
     let mut visitor = CoverageVisitor::new();

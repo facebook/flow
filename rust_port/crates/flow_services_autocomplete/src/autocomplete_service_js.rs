@@ -411,24 +411,20 @@ pub struct Typing<'a, 'cx: 'a> {
         Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a>,
     pub search_exported_types:
         Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a>,
-    pub cx: &'a Context<'cx>,
+    pub cx: &'a mut Context<'cx>,
     pub file_sig: Arc<FileSig>,
     pub ast: Arc<ast::Program<Loc, Loc>>,
     pub canonical: Option<&'a autocomplete_sigil::canonical::Token>,
 }
 
 impl<'a, 'cx: 'a> Typing<'a, 'cx> {
-    fn aloc_ast(&self) -> &ast::Program<ALoc, ALoc> {
-        flow_aloc::loc_to_aloc_ast(self.ast.as_ref())
-    }
-
-    fn norm_genv(&self) -> flow_typing_ty_normalizer::env::Genv<'_, 'cx> {
-        ty_normalizer_flow::mk_genv(ty_normalizer_options(), self.cx, None, self.file_sig.dupe())
+    fn norm_genv(&self) -> flow_typing_ty_normalizer::env::Genv<'a, 'cx> {
+        ty_normalizer_flow::mk_genv(ty_normalizer_options(), None, self.file_sig.dupe())
     }
 }
 
 fn search_with_filtered_auto_import_results<'a>(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     f: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
 ) -> Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a> {
     let is_available_autoimport_result = lsp_import_edits::is_available_autoimport_result(cx);
@@ -457,7 +453,7 @@ pub fn mk_typing_artifacts<'a, 'cx: 'a>(
     module_system_info: &'a LspModuleSystemInfo,
     search_exported_values: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
     search_exported_types: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     file_sig: Arc<FileSig>,
     ast: Arc<ast::Program<Loc, Loc>>,
     canonical: Option<&'a autocomplete_sigil::canonical::Token>,
@@ -492,13 +488,16 @@ pub enum AutocompleteServiceResultGeneric<R> {
 
 pub type AutocompleteServiceResult = AutocompleteServiceResultGeneric<ac_completion::T>;
 
-fn jsdoc_of_def_loc(typing: &Typing<'_, '_>, def_loc: &ALoc) -> Option<flow_parser::jsdoc::Jsdoc> {
+fn jsdoc_of_def_loc(
+    typing: &mut Typing<'_, '_>,
+    def_loc: &ALoc,
+) -> Option<flow_parser::jsdoc::Jsdoc> {
     let def_loc = (typing.loc_of_aloc)(def_loc);
     find_documentation::jsdoc_of_getdef_loc(&typing.ast, &*typing.get_ast_from_heap, def_loc)
 }
 
 fn jsdoc_of_loc(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     loc: &Loc,
 ) -> Result<Option<flow_parser::jsdoc::Jsdoc>, flow_utils_concurrency::job_error::JobError> {
     let res = get_def_js::get_def(
@@ -507,7 +506,7 @@ fn jsdoc_of_loc(
         &typing.file_sig,
         None,
         &typing.ast,
-        AvailableAst::ALocAst(typing.aloc_ast()),
+        AvailableAst::ALocAst(flow_aloc::loc_to_aloc_ast(&typing.ast)),
         &get_def_types::Purpose::JSDoc,
         loc,
     )?;
@@ -533,7 +532,7 @@ fn documentation_and_tags_of_jsdoc(jsdoc: &flow_parser::jsdoc::Jsdoc) -> Documen
 }
 
 fn documentation_and_tags_of_member(
-    _typing: &Typing<'_, '_>,
+    _typing: &mut Typing<'_, '_>,
     info: &ty_members::MemberInfo<Arc<Ty<ALoc>>>,
 ) -> DocumentationAndTags {
     match info.def_locs.as_slice() {
@@ -547,7 +546,7 @@ fn documentation_and_tags_of_loc(loc: &Loc) -> DocumentationAndTags {
 }
 
 fn force_documentation_and_tags_of_loc(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     loc: &Loc,
 ) -> Result<DocumentationAndTags, flow_utils_concurrency::job_error::JobError> {
     Ok(jsdoc_of_loc(typing, loc)?
@@ -557,7 +556,7 @@ fn force_documentation_and_tags_of_loc(
 }
 
 fn force_documentation_and_tags_of_def_loc(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     def_loc: &ALoc,
 ) -> DocumentationAndTags {
     jsdoc_of_def_loc(typing, def_loc)
@@ -567,7 +566,7 @@ fn force_documentation_and_tags_of_def_loc(
 }
 
 fn members_of_type(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     exclude_proto_members: bool,
     force_instance: bool,
     include_interface_members: bool,
@@ -632,7 +631,7 @@ pub enum AcIdType {
 }
 
 fn extract_record_fields(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     defaulted_props: &BTreeSet<String>,
     record_type: &Type,
 ) -> Result<Vec<String>, String> {
@@ -650,14 +649,15 @@ fn extract_record_fields(
 }
 
 fn autocomplete_record(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     documentation_and_tags: DocumentationAndTags,
     record_name: &str,
     record_type: &Type,
     defaulted_props: &BTreeSet<String>,
 ) -> Option<ac_completion::CompletionItem> {
-    match ty_normalizer_flow::from_type(&typing.norm_genv(), record_type) {
+    let genv = typing.norm_genv();
+    match ty_normalizer_flow::from_type(typing.cx, &genv, record_type) {
         Err(_) => None,
         Ok(elt) => match elt {
             Elt::Decl(record_decl @ Decl::RecordDecl(..)) => {
@@ -690,7 +690,7 @@ fn autocomplete_record(
 }
 
 fn local_value_identifiers(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     ac_loc: &Loc,
 ) -> Result<
     Vec<(
@@ -723,7 +723,7 @@ fn local_value_identifiers(
         },
     );
 
-    fn is_record_type(cx: &Context, t: &Type) -> Option<BTreeSet<String>> {
+    fn is_record_type(cx: &mut Context, t: &Type) -> Option<BTreeSet<String>> {
         let t = match &**t {
             TypeInner::OpenT(tvar) => flow_js_utils::merge_tvar(
                 cx,
@@ -780,15 +780,17 @@ fn local_value_identifiers(
         };
         identifiers.push(((name, documentation_and_tags, ac_id_type), type_));
     }
+    let genv = typing.norm_genv();
     Ok(ty_normalizer_flow::from_types(
         None,
-        &typing.norm_genv(),
+        typing.cx,
+        &genv,
         identifiers,
     ))
 }
 
-fn expected_concrete_type_of_t(cx: &Context, lb_type: &Type) -> Type {
-    fn unwrap(cx: &Context, seen: &mut BTreeSet<u32>, t: &Type) -> Option<Type> {
+fn expected_concrete_type_of_t(cx: &mut Context, lb_type: &Type) -> Type {
+    fn unwrap(cx: &mut Context, seen: &mut BTreeSet<u32>, t: &Type) -> Option<Type> {
         match &**t {
             TypeInner::OpenT(tvar) => {
                 let id = tvar.id();
@@ -875,14 +877,15 @@ fn autocomplete_create_string_literal_edit_controls(
     (prefer_single_quotes, edit_locs)
 }
 
-fn autocomplete_literals(
+fn autocomplete_literals<'cx>(
     prefer_single_quotes: bool,
-    genv: &flow_typing_ty_normalizer::env::Genv<'_, '_>,
+    cx: &mut Context<'cx>,
+    genv: &flow_typing_ty_normalizer::env::Genv<'_, 'cx>,
     edit_locs: &(Loc, Loc),
     expected_type: &Type,
     token: &str,
 ) -> Vec<ac_completion::CompletionItem> {
-    let expected_type_ty = ty_normalizer_flow::expand_literal_union(genv, expected_type)
+    let expected_type_ty = ty_normalizer_flow::expand_literal_union(cx, genv, expected_type)
         .unwrap_or_else(|_| Arc::new(Ty::Top));
     let literals = literals_of_ty(&expected_type_ty);
     let (prefer_single_quotes, edit_locs) =
@@ -928,7 +931,7 @@ fn flow_text_edit_of_lsp_text_edit(source: Option<&FileKey>, edit: &LspTextEdit)
 }
 
 fn completion_item_of_autoimport(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     src_dir: Option<&str>,
     edit_locs: &(Loc, Loc),
     ranking_info: Option<String>,
@@ -1164,7 +1167,7 @@ fn filter_by_token_and_sort_rev(
 }
 
 fn append_completion_items_of_autoimports(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     ac_loc: &Loc,
     locals: &HashSet<String>,
     edit_locs: &(Loc, Loc),
@@ -1231,7 +1234,7 @@ fn append_completion_items_of_autoimports(
 }
 
 fn autocomplete_id(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     ac_loc: &Loc,
     include_keywords: bool,
     include_super: bool,
@@ -1243,9 +1246,11 @@ fn autocomplete_id(
 ) -> Result<AcResult<ac_completion::T>, flow_utils_concurrency::job_error::JobError> {
     let expected_type = expected_concrete_type_of_t(typing.cx, type_);
     let prefer_single_quotes = typing.layout_options.single_quotes;
+    let genv = typing.norm_genv();
     let results = autocomplete_literals(
         prefer_single_quotes,
-        &typing.norm_genv(),
+        typing.cx,
+        &genv,
         edit_locs,
         &expected_type,
         token,
@@ -1564,12 +1569,12 @@ fn exports_of_module_ty(
 }
 
 struct LocalTypeIdentifiersAstSearcher<'a, 'cx> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     rev_ids: Vec<ast::Identifier<ALoc, (ALoc, Type)>>,
 }
 
 impl<'a, 'cx> LocalTypeIdentifiersAstSearcher<'a, 'cx> {
-    fn new(cx: &'a Context<'cx>) -> Self {
+    fn new(cx: &'a mut Context<'cx>) -> Self {
         Self {
             cx,
             rev_ids: Vec::new(),
@@ -1846,7 +1851,7 @@ fn make_type_param(edit_locs: &(Loc, Loc), name: &str) -> ac_completion::Complet
 }
 
 fn local_type_identifiers(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
 ) -> Result<
     Vec<(
         (String, ALoc),
@@ -1855,22 +1860,19 @@ fn local_type_identifiers(
     flow_utils_concurrency::job_error::JobError,
 > {
     let mut search = LocalTypeIdentifiersAstSearcher::new(typing.cx);
-    search.program(typing.aloc_ast())?;
+    search.program(flow_aloc::loc_to_aloc_ast(&typing.ast))?;
     let ids = search
         .rev_ids
         .into_iter()
         .rev()
         .map(|id| ((id.name.to_string(), id.loc.0.dupe()), id.loc.1.dupe()))
         .collect();
-    Ok(ty_normalizer_flow::from_types(
-        None,
-        &typing.norm_genv(),
-        ids,
-    ))
+    let genv = typing.norm_genv();
+    Ok(ty_normalizer_flow::from_types(None, typing.cx, &genv, ids))
 }
 
 fn autocomplete_unqualified_type(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     ac_options: &AcOptions,
     tparams_rev: &[String],
     ac_loc: &Loc,
@@ -2156,7 +2158,7 @@ fn autocomplete_create_result_method(
 }
 
 fn autocomplete_member(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     ac_options: &AcOptions,
     edit_locs: &(Loc, Loc),
     token: &str,
@@ -2359,7 +2361,7 @@ fn binds_react(bindings: &RequireBindings) -> bool {
     }
 }
 
-fn should_autoimport_react(cx: &Context, imports: bool, file_sig: &FileSig) -> bool {
+fn should_autoimport_react(cx: &mut Context, imports: bool, file_sig: &FileSig) -> bool {
     if !imports {
         return false;
     }
@@ -2385,7 +2387,7 @@ fn should_autoimport_react(cx: &Context, imports: bool, file_sig: &FileSig) -> b
 }
 
 fn autocomplete_jsx_intrinsic(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     ac_loc: &Loc,
     edit_locs: &(Loc, Loc),
 ) -> Result<AcResult<ac_completion::T>, flow_utils_concurrency::job_error::JobError> {
@@ -2434,7 +2436,7 @@ fn autocomplete_jsx_intrinsic(
 }
 
 fn autocomplete_jsx_element(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     ac_loc: &Loc,
     ac_options: &AcOptions,
     edit_locs: &(Loc, Loc),
@@ -2500,7 +2502,7 @@ fn autocomplete_jsx_element(
 }
 
 fn autocomplete_record_field(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     used_field_names: &BTreeSet<String>,
     edit_locs: &(Loc, Loc),
     token: &str,
@@ -2538,7 +2540,7 @@ fn autocomplete_record_field(
 }
 
 fn autocomplete_jsx_attribute(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     used_attr_names: &BTreeSet<String>,
     has_value: bool,
     edit_locs: &(Loc, Loc),
@@ -2589,7 +2591,7 @@ enum ModuleTypeOrType {
 }
 
 fn autocomplete_module_exports(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     token: &str,
     kind: ModuleExportKind,
@@ -2601,7 +2603,8 @@ fn autocomplete_module_exports(
     let (items, errors_to_log) = match module_type_opt {
         None => (Vec::new(), Vec::new()),
         Some(ModuleTypeOrType::Module(module_type)) => {
-            match ty_normalizer_flow::from_module_type(&typing.norm_genv(), &module_type) {
+            let genv = typing.norm_genv();
+            match ty_normalizer_flow::from_module_type(typing.cx, &genv, &module_type) {
                 Err(err) => (Vec::new(), vec![err.to_string()]),
                 Ok(module_ty) => (
                     exports_of_module_ty(
@@ -2616,7 +2619,8 @@ fn autocomplete_module_exports(
             }
         }
         Some(ModuleTypeOrType::Type(t)) => {
-            match ty_normalizer_flow::from_type(&typing.norm_genv(), &t) {
+            let genv = typing.norm_genv();
+            match ty_normalizer_flow::from_type(typing.cx, &genv, &t) {
                 Err(err) => (Vec::new(), vec![err.to_string()]),
                 Ok(Elt::Type(_)) => (Vec::new(), Vec::new()),
                 Ok(Elt::Decl(module_ty)) => (
@@ -2642,7 +2646,7 @@ fn autocomplete_module_exports(
 }
 
 fn unused_super_methods(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     exclude_keys: &BTreeSet<String>,
     enclosing_class_t: &Type,
@@ -2678,7 +2682,7 @@ fn unused_super_methods(
 }
 
 fn autocomplete_class_key(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     token: &str,
     edit_locs: &(Loc, Loc),
     enclosing_class_t: Option<Type>,
@@ -2723,7 +2727,7 @@ fn autocomplete_class_key(
 }
 
 fn autocomplete_object_key(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     token: &str,
     used_keys: &BTreeSet<String>,
@@ -2803,7 +2807,7 @@ fn autocomplete_object_key(
 
 fn applicable_error_codes(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &mut Context,
     comment_loc: &ALoc,
 ) -> Vec<ErrorCode> {
     let comment_loc = loc_of_aloc(comment_loc);
@@ -2851,7 +2855,7 @@ fn has_leading(text: &str) -> bool {
 
 fn autocomplete_fixme(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &mut Context,
     edit_locs: &(Loc, Loc),
     token: &str,
     text: &str,
@@ -2923,7 +2927,7 @@ fn autocomplete_jsdoc(
 }
 
 fn autocomplete_comment(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     trigger_character: Option<&str>,
     token: &str,
@@ -2985,7 +2989,7 @@ trait Pipe: Sized {
 impl<T> Pipe for T {}
 
 fn force_documentation_and_tags(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     documentation_and_tags: DocumentationAndTags,
 ) -> Result<DocumentationAndTags, flow_utils_concurrency::job_error::JobError> {
     match documentation_and_tags {
@@ -2999,7 +3003,7 @@ fn force_documentation_and_tags(
 }
 
 fn force_completion_item_documentation(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     mut item: ac_completion::CompletionItem,
 ) -> Result<ac_completion::CompletionItem, flow_utils_concurrency::job_error::JobError> {
     item.documentation_and_tags =
@@ -3008,7 +3012,7 @@ fn force_completion_item_documentation(
 }
 
 fn force_autocomplete_result_documentation(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     result: AutocompleteServiceResult,
 ) -> Result<AutocompleteServiceResult, flow_utils_concurrency::job_error::JobError> {
     match result {
@@ -3042,7 +3046,7 @@ fn force_autocomplete_result_documentation(
 }
 
 pub fn autocomplete_get_results(
-    typing: &Typing<'_, '_>,
+    typing: &mut Typing<'_, '_>,
     ac_options: &AcOptions,
     trigger_character: Option<&str>,
     cursor: &Loc,
@@ -3064,7 +3068,7 @@ pub fn autocomplete_get_results(
         typing.file_sig.dupe(),
         trigger_character,
         &canon_cursor,
-        typing.aloc_ast(),
+        flow_aloc::loc_to_aloc_ast(&typing.ast),
     )? {
         Err(err) => Ok((
             None,
@@ -3157,11 +3161,13 @@ pub fn autocomplete_get_results(
                     lit_type: Some(lit_type),
                 } => {
                     let expected_type = expected_concrete_type_of_t(typing.cx, &lit_type);
+                    let genv = typing.norm_genv();
                     let items = filter_by_token_and_sort(
                         &token,
                         autocomplete_literals(
                             typing.layout_options.single_quotes,
-                            &typing.norm_genv(),
+                            typing.cx,
+                            &genv,
                             &edit_locs,
                             &expected_type,
                             &token,

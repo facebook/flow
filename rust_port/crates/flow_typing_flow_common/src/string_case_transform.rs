@@ -28,7 +28,7 @@ use crate::flow_js_utils::FlowJsException;
 /// Concretization is a `flow_js` operation, so the caller closes over the
 /// [`Context`] and the `flow_js` env it should run under.
 pub type PossibleConcreteTypesForInspection<'a> =
-    dyn Fn(&Reason, &Type) -> Result<Vec<Type>, FlowJsException> + 'a;
+    dyn Fn(&mut Context<'_>, &Reason, &Type) -> Result<Vec<Type>, FlowJsException> + 'a;
 
 pub fn kind_of_name(s: &str) -> Option<StringMappingKind> {
     match s {
@@ -202,11 +202,12 @@ fn can_be_empty_string(t: &Type) -> bool {
 //    function stays infallible (matches OCaml).
 fn can_be_empty_string_concretized(
     possible_concrete_types_for_inspection: Option<&PossibleConcreteTypesForInspection<'_>>,
+    cx: &mut Context<'_>,
     t: &Type,
 ) -> bool {
     match possible_concrete_types_for_inspection {
         None => can_be_empty_string(t),
-        Some(f) => match f(type_util::reason_of_t(t), t) {
+        Some(f) => match f(cx, type_util::reason_of_t(t), t) {
             Ok(ts) => ts.iter().any(can_be_empty_string),
             Err(_) => can_be_empty_string(t),
         },
@@ -222,7 +223,7 @@ fn can_be_empty_string_concretized(
 //    get a chance to reduce to a literal.
 pub fn resolve<'cx>(
     possible_concrete_types_for_inspection: Option<&PossibleConcreteTypesForInspection<'_>>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     kind: StringMappingKind,
     loc: ALoc,
     arg: Type,
@@ -323,6 +324,7 @@ pub fn resolve<'cx>(
                         (Some((_, rest_quasis)), Some((t0, rest_types)))
                             if can_be_empty_string_concretized(
                                 possible_concrete_types_for_inspection,
+                                cx,
                                 t0,
                             ) =>
                         {

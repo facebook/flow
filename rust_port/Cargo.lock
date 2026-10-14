@@ -504,10 +504,7 @@ name = "flow_check_cache"
 version = "0.0.0"
 dependencies = [
  "dupe",
- "flow_parser",
  "flow_typing_context",
- "flow_typing_utils",
- "linked-hash-map",
 ]
 
 [[package]]
@@ -681,6 +678,7 @@ dependencies = [
  "flow_aloc",
  "flow_common_leb128",
  "flow_data_structure_wrapper",
+ "flow_lazy",
  "flow_lint_settings",
  "flow_packed_locs",
  "flow_parser",
@@ -951,6 +949,7 @@ dependencies = [
  "flow_common",
  "flow_common_utils",
  "flow_data_structure_wrapper",
+ "flow_lazy",
  "flow_parser",
  "flow_parser_utils",
  "serde",
@@ -1747,6 +1746,7 @@ name = "flow_services_inference_types"
 version = "0.0.0"
 dependencies = [
  "flow_aloc",
+ "flow_check_cache",
  "flow_common",
  "flow_parser",
  "flow_parser_utils",
@@ -1854,6 +1854,7 @@ dependencies = [
  "flow_services_inference",
  "flow_services_inference_types",
  "flow_typing",
+ "flow_typing_context",
  "flow_typing_ty_normalizer",
  "flow_typing_type",
 ]
@@ -2197,7 +2198,6 @@ dependencies = [
  "flow_common",
  "flow_common_ty",
  "flow_data_structure_wrapper",
- "flow_lazy",
  "flow_parser",
  "flow_parser_utils",
  "flow_typing_context",
@@ -2713,15 +2713,6 @@ name = "link-section"
 version = "0.19.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39c29a617ce3df32c08497bdc1ab6e2376e0b17948ac166a2fbe5977c5954cd9"
-
-[[package]]
-name = "linked-hash-map"
-version = "0.5.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "linktime-proc-macro"

@@ -24,7 +24,9 @@ use flow_common::subst_name;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_lazy::ContextFamily;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_context::TypingMode;
 use flow_typing_errors::error_message::EImplicitInstantiationUnderconstrainedErrorData;
 use flow_typing_errors::error_message::ETooFewTypeArgsData;
@@ -167,7 +169,7 @@ fn union_flatten(t: Type) -> Vec<Type> {
 // for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
 // the rather impractical `42` (resp. `(42)=>void`).
 pub(crate) fn generalize_singletons<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     call_loc: &flow_aloc::ALoc,
     has_syntactic_hint: bool,
     t: Type,
@@ -177,7 +179,7 @@ pub(crate) fn generalize_singletons<'cx>(
     if needs_precise {
         t
     } else {
-        let singleton_action = |loc: &flow_aloc::ALoc| {
+        let singleton_action = |cx: &Context<'_>, loc: &flow_aloc::ALoc| {
             let checked = cx.is_primitive_literal_checked(loc);
             if checked {
                 natural_inference::SingletonAction::KeepAsIs
@@ -215,15 +217,18 @@ impl GeneralizedTarg {
 }
 
 trait Observer {
-    fn on_pinned_tparam<'cx>(cx: &Context<'cx>, tparam: &TypeParam, inferred: Type)
-    -> InferredTarg;
+    fn on_pinned_tparam<'cx>(
+        cx: &mut Context<'cx>,
+        tparam: &TypeParam,
+        inferred: Type,
+    ) -> InferredTarg;
     fn on_constant_tparam_missing_bounds<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         tparam: &TypeParam,
     ) -> Result<InferredTarg, FlowJsException>;
     fn on_missing_bounds<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: &UseOp,
         tparam: &TypeParam,
@@ -231,18 +236,18 @@ trait Observer {
         instantiation_reason: &Reason,
     ) -> Result<InferredTarg, FlowJsException>;
     fn on_upper_non_t<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: &UseOp,
-        u: &UseT<Context<'cx>>,
+        u: &UseT<Cx>,
         tparam: &TypeParam,
         tparam_binder_reason: &Reason,
         instantiation_reason: &Reason,
     ) -> Result<InferredTarg, FlowJsException>;
 }
 
-fn get_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
-    let no_lowers = |_cx: &Context, r: &Reason| unsoundness::merged_any(r.dupe());
+fn get_t<'cx>(cx: &mut Context<'cx>, t: &Type) -> Type {
+    let no_lowers = |_cx: &mut Context, r: &Reason| unsoundness::merged_any(r.dupe());
     match type_util::constraint_node_id(t) {
         Some(node) => {
             flow_js_utils::merge_tvar(cx, false, no_lowers, type_util::reason_of_t(t), node.id())
@@ -253,7 +258,7 @@ fn get_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
 
 // Sorting of the upper bounds is mostly done for compatibility with the version
 // before EvalTypeDestructorT was a use_t.
-fn sort_upper_bounds_for_merging<CX>(
+fn sort_upper_bounds_for_merging<CX: ContextFamily>(
     xs: Vec<(UseT<CX>, DepthTrace)>,
 ) -> Vec<(UseT<CX>, DepthTrace)> {
     let (use_t, rest_t): (Vec<_>, Vec<_>) = xs.into_iter().partition(|(u, _): &(UseT<CX>, _)| {
@@ -266,7 +271,7 @@ fn sort_upper_bounds_for_merging<CX>(
 }
 
 fn speculative_subtyping_succeeds<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -286,17 +291,14 @@ fn speculative_subtyping_succeeds<'cx>(
     }
 }
 
-struct ImplicitInstantiationVisitor<'a, 'cx> {
+struct ImplicitInstantiationVisitor<'a> {
     tparams_map: &'a BTreeMap<SubstName, TypeParam>,
-    cx: &'a Context<'cx>,
 }
 
-impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)>
-    for ImplicitInstantiationVisitor<'_, '_>
-{
+impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)> for ImplicitInstantiationVisitor<'_> {
     fn type_<'cx>(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         pole: Polarity,
         acc: (Marked<SubstName>, FlowOrdSet<SubstName>),
         t: &Type,
@@ -337,7 +339,7 @@ impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)>
                 }
             }
             TypeInner::TypeAppT(box TypeAppTData { type_, targs, .. }) => {
-                self.typeapp(targs, self.cx, pole, (marked, tparam_names), type_)
+                self.typeapp(targs, cx, pole, (marked, tparam_names), type_)
             }
             // ThisTypeAppT is created from a new expression, which cannot be used as an annotation,
             // so we do not special case it like we do with TypeAppT
@@ -346,18 +348,18 @@ impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)>
     }
 }
 
-impl ImplicitInstantiationVisitor<'_, '_> {
+impl ImplicitInstantiationVisitor<'_> {
     fn typeapp<'cx>(
         &mut self,
         targs: &[Type],
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         pole: Polarity,
         acc: (Marked<SubstName>, FlowOrdSet<SubstName>),
         type_: &Type,
     ) -> (Marked<SubstName>, FlowOrdSet<SubstName>) {
         fn loop_<'cx>(
             visitor: &mut ImplicitInstantiationVisitor,
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             pole: Polarity,
             mut acc: (Marked<SubstName>, FlowOrdSet<SubstName>),
             tparams: Option<&[TypeParam]>,
@@ -400,48 +402,49 @@ impl ImplicitInstantiationVisitor<'_, '_> {
     }
 }
 
-enum UseTResult<'cx> {
+enum UseTResult {
     UpperEmpty,
     UpperPlaceholder(Type),
-    UpperNonT(UseT<Context<'cx>>),
+    UpperNonT(UseT<Cx>),
     UpperT(Type),
 }
 
 fn t_of_use_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     seen: &mut BTreeSet<i32>,
     tvar: &Type,
-    u: &UseT<Context<'cx>>,
-) -> Result<UseTResult<'cx>, FlowJsException> {
-    fn use_t_result_of_t_option<'a>(
+    u: &UseT<Cx>,
+) -> Result<UseTResult, FlowJsException> {
+    fn use_t_result_of_t_option(
         opt: Result<Option<Type>, FlowJsException>,
-    ) -> Result<UseTResult<'a>, FlowJsException> {
+    ) -> Result<UseTResult, FlowJsException> {
         match opt? {
             Some(t) => Ok(UseTResult::UpperT(t)),
             None => Ok(UseTResult::UpperEmpty),
         }
     }
     fn merge_lower_or_upper_bounds<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         seen: &mut BTreeSet<i32>,
         t: &Type,
-    ) -> Result<UseTResult<'cx>, FlowJsException> {
+    ) -> Result<UseTResult, FlowJsException> {
         match merge_lower_bounds(cx, env, t)? {
             Some(t) => Ok(UseTResult::UpperT(t)),
             None => merge_upper_bounds(cx, env, seen, t),
         }
     }
-    fn bind_use_t_result<'a>(
-        result: UseTResult<'a>,
-        f: &dyn Fn(Type) -> Result<UseTResult<'a>, FlowJsException>,
-    ) -> Result<UseTResult<'a>, FlowJsException> {
+    fn bind_use_t_result<'cx>(
+        cx: &mut Context<'cx>,
+        result: UseTResult,
+        f: impl FnOnce(&mut Context<'cx>, Type) -> Result<UseTResult, FlowJsException>,
+    ) -> Result<UseTResult, FlowJsException> {
         match result {
             UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
             UseTResult::UpperPlaceholder(t) => Ok(UseTResult::UpperPlaceholder(t)),
             UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
-            UseTResult::UpperT(t) => f(t),
+            UseTResult::UpperT(t) => f(cx, t),
         }
     }
 
@@ -471,7 +474,7 @@ fn t_of_use_t<'cx>(
                 }
                 box Destructor::EnumType => {
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
-                    bind_use_t_result(result, &|tout_val: Type| {
+                    bind_use_t_result(cx, result, |cx, tout_val: Type| {
                         let collector = TypeCollector::create();
                         let u_inner = UseTInner::GetEnumT(Box::new(GetEnumTData {
                             use_op: unknown_use(),
@@ -506,7 +509,7 @@ fn t_of_use_t<'cx>(
                 }
                 box Destructor::ReactElementConfigType => {
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
-                    bind_use_t_result(result, &|config: Type| {
+                    bind_use_t_result(cx, result, |cx, config: Type| {
                         let react_node = FlowJs::get_builtin_react_type_with_env(
                             cx, env,
                             None,
@@ -529,14 +532,14 @@ fn t_of_use_t<'cx>(
                 box Destructor::RestType(_, t_rest) => {
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
                     let t_rest = t_rest.dupe();
-                    bind_use_t_result(result, &|tout_val: Type| {
+                    bind_use_t_result(cx, result, |cx, tout_val: Type| {
                         let reversed = reverse_obj_kit_rest(cx, env, r, &t_rest, &tout_val)?;
                         use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
                     })
                 }
                 box Destructor::NonMaybeType => {
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
-                    bind_use_t_result(result, &|t: Type| {
+                    bind_use_t_result(cx, result, |_, t: Type| {
                         Ok(UseTResult::UpperT(Type::new(TypeInner::MaybeT(
                             r.dupe(),
                             t,
@@ -553,7 +556,7 @@ fn t_of_use_t<'cx>(
                 box Destructor::ReactCheckComponentConfig { props: pmap } => {
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
                     let pmap = pmap.clone();
-                    bind_use_t_result(result, &|t: Type| {
+                    bind_use_t_result(cx, result, |cx, t: Type| {
                         let reversed = reverse_component_check_config(cx, env, r, &pmap, &t)?;
                         use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
                     })
@@ -573,7 +576,7 @@ fn t_of_use_t<'cx>(
                     };
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
                     let todo_rev = todo_rev.dupe();
-                    bind_use_t_result(result, &|t: Type| {
+                    bind_use_t_result(cx, result, |cx, t: Type| {
                         let reversed =
                             reverse_obj_spread(cx, env, r, &todo_rev, &acc_elements, &t)?;
                         use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
@@ -600,7 +603,7 @@ fn t_of_use_t<'cx>(
                             let n = resolved_rev.len() as i32;
                             let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
                             let reason_spread = reason_spread.dupe();
-                            bind_use_t_result(result, &|t: Type| {
+                            bind_use_t_result(cx, result, |cx, t: Type| {
                                 let arr_rest_result = flow_typing_tvar::mk_where(
                                     cx,
                                     reason_spread.dupe(),
@@ -756,7 +759,7 @@ fn t_of_use_t<'cx>(
                         return Ok(UseTResult::UpperNonT(u.dupe()));
                     };
                     let result = merge_lower_or_upper_bounds(cx, env, seen, tout)?;
-                    bind_use_t_result(result, &|t: Type| {
+                    bind_use_t_result(cx, result, |cx, t: Type| {
                         let arr_rest_result =
                             flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, t_prime| {
                                 let u_inner = UseTInner::ArrRestT(Box::new(ArrRestTData {
@@ -867,7 +870,7 @@ fn t_of_use_t<'cx>(
             object::Tool::Rest(box (_, object::rest::State::One(t_rest))) => {
                 let result = merge_upper_bounds(cx, env, seen, tout)?;
                 let t_rest = t_rest.dupe();
-                bind_use_t_result(result, &|t: Type| {
+                bind_use_t_result(cx, result, |cx, t: Type| {
                     let reversed = reverse_obj_kit_rest(cx, env, r, &t_rest, &t)?;
                     match merge_lower_bounds(cx, env, &reversed)? {
                         None => Ok(UseTResult::UpperEmpty),
@@ -915,12 +918,12 @@ fn resolved_elements_count(
 }
 
 fn identity_reverse_upper_bound<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     seen: &mut BTreeSet<i32>,
     tvar: &Type,
     tout: &Type,
-) -> Result<UseTResult<'cx>, FlowJsException> {
+) -> Result<UseTResult, FlowJsException> {
     let solution = merge_upper_bounds(cx, env, seen, tout)?;
     match &solution {
         UseTResult::UpperT(t) => FlowJs::flow_t_with_env(cx, env, t, tvar)?,
@@ -930,14 +933,14 @@ fn identity_reverse_upper_bound<'cx>(
 }
 
 fn reverse_obj_spread<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     r: &Reason,
     todo_rev: &flow_data_structure_wrapper::list::FlowOcamlList<object::spread::Operand>,
     acc_elements: &flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement>,
     tout: &Type,
 ) -> Result<Type, FlowJsException> {
-    let inline_slice_to_t = |s: &object::spread::OperandSlice| -> Type {
+    let inline_slice_to_t = |cx: &mut Context<'cx>, s: &object::spread::OperandSlice| -> Type {
         let obj_kind = obj_type::obj_kind_from_optional_dict(s.dict.clone(), ObjKind::Exact);
         obj_type::mk_with_proto(
             cx,
@@ -951,7 +954,7 @@ fn reverse_obj_spread<'cx>(
         )
     };
 
-    let slice_to_t = |s: &object::Slice| -> Type {
+    let slice_to_t = |cx: &mut Context<'cx>, s: &object::Slice| -> Type {
         let props: properties::PropertiesMap = s.props.dupe();
         obj_type::mk_with_proto(
             cx,
@@ -965,23 +968,23 @@ fn reverse_obj_spread<'cx>(
         )
     };
 
-    let operand_to_t = |o: &object::spread::Operand| -> Type {
+    let operand_to_t = |cx: &mut Context<'cx>, o: &object::spread::Operand| -> Type {
         match o {
-            object::spread::Operand::Slice(s) => inline_slice_to_t(s),
+            object::spread::Operand::Slice(s) => inline_slice_to_t(cx, s),
             object::spread::Operand::Type(t) => t.dupe(),
         }
     };
 
-    let acc_element_to_ts = |e: &object::spread::AccElement| -> Vec<Type> {
+    let acc_element_to_ts = |cx: &mut Context<'cx>, e: &object::spread::AccElement| -> Vec<Type> {
         match e {
-            object::spread::AccElement::InlineSlice(s) => vec![inline_slice_to_t(s)],
+            object::spread::AccElement::InlineSlice(s) => vec![inline_slice_to_t(cx, s)],
             object::spread::AccElement::ResolvedSlice(resolved) => {
-                resolved.0.iter().map(slice_to_t).collect()
+                resolved.0.iter().map(|s| slice_to_t(cx, s)).collect()
             }
         }
     };
 
-    let rest_type = |l: Type, rest: Type| -> Result<Type, FlowJsException> {
+    let rest_type = |cx: &mut Context<'cx>, l: Type, rest: Type| -> Result<Type, FlowJsException> {
         flow_typing_tvar::mk_where(cx, r.dupe(), |cx, tout| {
             let u_inner = UseTInner::ObjKitT(
                 unknown_use(),
@@ -1003,18 +1006,19 @@ fn reverse_obj_spread<'cx>(
         Ok::<(), FlowJsException>(())
     })?;
     for e in acc_elements.iter() {
-        for t in acc_element_to_ts(e) {
-            tout_val = rest_type(tout_val, t)?;
+        for t in acc_element_to_ts(cx, e) {
+            tout_val = rest_type(cx, tout_val, t)?;
         }
     }
     for o in todo_rev.iter() {
-        tout_val = rest_type(tout_val, operand_to_t(o))?;
+        let operand = operand_to_t(cx, o);
+        tout_val = rest_type(cx, tout_val, operand)?;
     }
     Ok(tout_val)
 }
 
 fn reverse_component_check_config<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     pmap: &properties::PropertiesMap,
@@ -1050,7 +1054,7 @@ fn reverse_component_check_config<'cx>(
 }
 
 fn reverse_obj_kit_rest<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t_rest: &Type,
@@ -1089,7 +1093,7 @@ fn reverse_obj_kit_rest<'cx>(
 
 // The params as a tuple type: `[...params, ...rest]`.
 fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: &Reason,
     params: &[FunParam],
     rest_param: &Option<FunRestParam>,
@@ -1199,7 +1203,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
 }
 
 fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     tvar: &Type,
     reason: &Reason,
@@ -1238,15 +1242,15 @@ fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
     Ok(solution)
 }
 
-enum PinningSource<'cx> {
+enum PinningSource {
     Constraints {
         id: i32,
-        constraints: constraint::Constraints<'cx, Context<'cx>>,
+        constraints: constraint::Constraints<Cx>,
     },
     Concrete(Type),
 }
 
-fn pinning_source<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -> PinningSource<'cx> {
+fn pinning_source<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t: &Type) -> PinningSource {
     match type_util::constraint_node_id(t) {
         Some(node) => {
             let id = node.id();
@@ -1267,7 +1271,7 @@ fn pinning_source<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -> PinningS
 }
 
 fn collect_pinning_lowers<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     seen: &mut BTreeSet<i32>,
     acc: &mut Vec<Type>,
@@ -1290,19 +1294,21 @@ fn collect_pinning_lowers<'cx>(
 // merge_upper_bounds is complex — it looks at upper bounds and tries to find a consistent type.
 // For now we provide a simplified version that handles the common cases.
 fn merge_upper_bounds<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     seen: &mut BTreeSet<i32>,
     tvar: &Type,
-) -> Result<UseTResult<'cx>, FlowJsException> {
-    let filter_placeholder = |t: Type| -> UseTResult<'cx> {
+) -> Result<UseTResult, FlowJsException> {
+    let filter_placeholder = |cx: &mut Context<'cx>, t: Type| -> UseTResult {
         if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
             UseTResult::UpperEmpty
         } else {
             UseTResult::UpperT(t)
         }
     };
-    let equal = |t1: &Type, t2: &Type| concrete_type_eq::eq_with_env(cx, env, t1, t2);
+    let equal = |cx: &mut Context<'cx>, t1: &Type, t2: &Type| {
+        concrete_type_eq::eq_with_env(cx, env, t1, t2)
+    };
 
     match pinning_source(cx, env, tvar) {
         PinningSource::Constraints { id, constraints } => {
@@ -1311,7 +1317,8 @@ fn merge_upper_bounds<'cx>(
             }
             match constraints {
                 constraint::Constraints::FullyResolved(s) => {
-                    Ok(filter_placeholder(cx.force_fully_resolved_tvar(&s)))
+                    let t = cx.force_fully_resolved_tvar(&s);
+                    Ok(filter_placeholder(cx, t))
                 }
                 constraint::Constraints::Resolved(t) => {
                     if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
@@ -1345,7 +1352,7 @@ fn merge_upper_bounds<'cx>(
                                 UseTResult::UpperPlaceholder(t)
                             }
                             (UseTResult::UpperEmpty, UseTResult::UpperT(t)) => {
-                                filter_placeholder(t)
+                                filter_placeholder(cx, t)
                             }
                             (UseTResult::UpperPlaceholder(old_t), UseTResult::UpperT(t))
                                 if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) =>
@@ -1364,8 +1371,12 @@ fn merge_upper_bounds<'cx>(
                                 UseTResult::UpperT(old_t)
                             }
                             (UseTResult::UpperT(t_prime), UseTResult::UpperT(t)) => {
-                                if equal(&t_prime, &t)
-                                    || type_util::quick_subtype(None::<&fn(&Type)>, &t, &t_prime)
+                                if equal(cx, &t_prime, &t)
+                                    || type_util::quick_subtype(
+                                        None::<&mut fn(&Type)>,
+                                        &t,
+                                        &t_prime,
+                                    )
                                     || speculative_subtyping_succeeds(
                                         cx,
                                         env,
@@ -1402,7 +1413,7 @@ fn merge_upper_bounds<'cx>(
 }
 
 fn merge_lower_bounds<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t: &Type,
 ) -> Result<Option<Type>, FlowJsException> {
@@ -1467,7 +1478,7 @@ fn merge_lower_bounds<'cx>(
 }
 
 fn on_missing_bounds<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: &UseOp,
     tparam: &TypeParam,
@@ -1489,7 +1500,7 @@ fn on_missing_bounds<'cx, Obs: Observer>(
 }
 
 fn use_upper_bounds<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: &UseOp,
     tparam: &TypeParam,
@@ -1497,7 +1508,7 @@ fn use_upper_bounds<'cx, Obs: Observer>(
     default_bound: &Option<Type>,
     on_upper_empty: Option<
         &dyn Fn(
-            &Context<'cx>,
+            &mut Context<'cx>,
             &FlowJsEnv,
             &TypeParam,
             &Reason,
@@ -1542,7 +1553,7 @@ fn use_upper_bounds<'cx, Obs: Observer>(
 }
 
 fn mk_inference_targ<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     typeparam: &TypeParam,
     reason_op: &Reason,
@@ -1567,30 +1578,29 @@ fn mk_inference_targ<'cx>(
     tvar
 }
 
-fn force_type_arguments(cx: &Context<'_>, targs: &[Targ]) {
-    struct Forcer<'a, 'cx> {
-        cx: &'a Context<'cx>,
+fn force_type_arguments(cx: &mut Context<'_>, targs: &[Targ]) {
+    struct Forcer {
         seen: BTreeSet<i32>,
     }
 
-    impl TypeVisitor<()> for Forcer<'_, '_> {
+    impl TypeVisitor<()> for Forcer {
         fn tvar<'cx>(
             &mut self,
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             pole: Polarity,
             (): (),
             _reason: &Reason,
             id: u32,
         ) {
-            let (root_id, constraints) = self.cx.find_constraints(id as i32);
+            let (root_id, constraints) = cx.find_constraints(id as i32);
             if !self.seen.insert(root_id) {
                 return;
             }
             match constraints {
                 constraint::Constraints::FullyResolved(state)
-                    if !self.cx.is_active_tvar_forcing_state(&state) =>
+                    if !cx.is_active_tvar_forcing_state(&state) =>
                 {
-                    let t = self.cx.force_fully_resolved_tvar(&state);
+                    let t = cx.force_fully_resolved_tvar(&state);
                     self.type_(cx, pole, (), &t);
                 }
                 constraint::Constraints::Resolved(t) => self.type_(cx, pole, (), &t),
@@ -1600,7 +1610,6 @@ fn force_type_arguments(cx: &Context<'_>, targs: &[Targ]) {
     }
 
     let mut forcer = Forcer {
-        cx,
         seen: BTreeSet::new(),
     };
     for targ in targs {
@@ -1611,7 +1620,7 @@ fn force_type_arguments(cx: &Context<'_>, targs: &[Targ]) {
 }
 
 fn check_instantiation<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     tparams: &[TypeParam],
     marked_tparams: Marked<SubstName>,
@@ -1628,7 +1637,9 @@ fn check_instantiation<'cx, Obs: Observer>(
     let reason_tapp = type_util::reason_of_t(&check.lhs);
     let (ref tparams_loc, _, _) = check.poly_t;
 
-    let merge_targs = |explicit_targs: &Option<Rc<[Targ]>>| -> Result<
+    let merge_targs = |cx: &mut Context<'cx>,
+                       explicit_targs: &Option<Rc<[Targ]>>|
+     -> Result<
         (Vec<Targ>, Vec<(SubstName, Type, Type, bool)>),
         FlowJsException,
     > {
@@ -1747,7 +1758,7 @@ fn check_instantiation<'cx, Obs: Observer>(
     let (inferred_targ_list, lower_t, use_t, tout) = match op {
         flow_typing_implicit_instantiation_check::Operation::Call(calltype) => {
             let new_tout = flow_typing_tvar::mk_no_wrap(cx, reason_op);
-            let (call_targs, inferred_targ_list) = merge_targs(&calltype.call_targs)?;
+            let (call_targs, inferred_targ_list) = merge_targs(cx, &calltype.call_targs)?;
             let call_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
@@ -1773,7 +1784,7 @@ fn check_instantiation<'cx, Obs: Observer>(
             )
         }
         flow_typing_implicit_instantiation_check::Operation::SubtypeLowerPoly(u) => {
-            let (_, inferred_targ_list) = merge_targs(&None)?;
+            let (_, inferred_targ_list) = merge_targs(cx, &None)?;
             let targs: Rc<[Type]> = inferred_targ_list
                 .iter()
                 .map(|(_, t, _, _)| t.dupe())
@@ -1802,7 +1813,7 @@ fn check_instantiation<'cx, Obs: Observer>(
             call,
             optional_chain,
         } => {
-            let (_, inferred_targ_list) = merge_targs(&None)?;
+            let (_, inferred_targ_list) = merge_targs(cx, &None)?;
             let targs: Rc<[Type]> = inferred_targ_list
                 .iter()
                 .map(|(_, t, _, _)| t.dupe())
@@ -1858,7 +1869,7 @@ fn check_instantiation<'cx, Obs: Observer>(
         ) => {
             let new_tout = flow_typing_tvar::mk(cx, reason_op.dupe());
             let explicit_targs_rc: Option<Rc<[Targ]>> = explicit_targs.dupe();
-            let (call_targs, inferred_targ_list) = merge_targs(&explicit_targs_rc)?;
+            let (call_targs, inferred_targ_list) = merge_targs(cx, &explicit_targs_rc)?;
             let constructor_t = UseT::new(UseTInner::ConstructorT(Box::new(ConstructorTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
@@ -1878,12 +1889,12 @@ fn check_instantiation<'cx, Obs: Observer>(
         flow_typing_implicit_instantiation_check::Operation::ReactJSX { jsx_props, targs } => {
             let new_tout = flow_typing_tvar::mk(cx, reason_op.dupe());
             let targs_rc: Option<Rc<[Targ]>> = targs.dupe();
-            let (_, inferred_targ_list) = merge_targs(&targs_rc)?;
+            let (_, inferred_targ_list) = merge_targs(cx, &targs_rc)?;
             let new_tout_tvar = open_tvar(&new_tout).dupe();
             let react_kit_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
-                tool: Box::new(react::Tool::<Context<'cx>>::CreateElement(Box::new(
+                tool: Box::new(react::Tool::<Cx>::CreateElement(Box::new(
                     react::CreateElementData {
                         component: check.lhs.dupe(),
                         jsx_props: jsx_props.dupe(),
@@ -1919,7 +1930,7 @@ fn check_instantiation<'cx, Obs: Observer>(
 }
 
 fn make_pin_type<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: &UseOp,
     tparam: &TypeParam,
@@ -1929,7 +1940,8 @@ fn make_pin_type<'cx, Obs: Observer>(
     t: &Type,
 ) -> Result<InferredTarg, FlowJsException> {
     let tparam_binder_reason = type_util::reason_of_t(t);
-    let pin_tparam = |inferred: Type| Ok(Obs::on_pinned_tparam(cx, tparam, inferred));
+    let pin_tparam =
+        |cx: &mut Context<'cx>, inferred: Type| Ok(Obs::on_pinned_tparam(cx, tparam, inferred));
 
     match polarity {
         // Nothing observes an unmarked tparam's solution, so it is never underconstrained.
@@ -1945,9 +1957,9 @@ fn make_pin_type<'cx, Obs: Observer>(
                         inferred,
                     })
                 }
-                UseTResult::UpperT(inferred) => pin_tparam(inferred),
+                UseTResult::UpperT(inferred) => pin_tparam(cx, inferred),
             },
-            Some(inferred) => pin_tparam(inferred),
+            Some(inferred) => pin_tparam(cx, inferred),
         },
         // TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
         // to avoid cluttering the output we are actually interested in from this module,
@@ -1965,7 +1977,7 @@ fn make_pin_type<'cx, Obs: Observer>(
                 tparam_binder_reason,
                 instantiation_reason,
             ),
-            Some(inferred) => pin_tparam(inferred),
+            Some(inferred) => pin_tparam(cx, inferred),
         },
         Some(Polarity::Positive) => match merge_lower_bounds(cx, env, t)? {
             None => use_upper_bounds::<Obs>(
@@ -1979,10 +1991,10 @@ fn make_pin_type<'cx, Obs: Observer>(
                 tparam_binder_reason,
                 instantiation_reason,
             ),
-            Some(inferred) => pin_tparam(inferred),
+            Some(inferred) => pin_tparam(cx, inferred),
         },
         Some(Polarity::Negative) => {
-            let on_upper_empty = |cx: &Context<'_>,
+            let on_upper_empty = |cx: &mut Context<'_>,
                                   env: &FlowJsEnv,
                                   tparam: &TypeParam,
                                   tparam_binder_reason: &Reason,
@@ -2016,7 +2028,7 @@ fn make_pin_type<'cx, Obs: Observer>(
     }
 }
 
-fn type_param_pin_order<'cx>(cx: &Context<'cx>, tparams: &[TypeParam]) -> Vec<usize> {
+fn type_param_pin_order<'cx>(cx: &mut Context<'cx>, tparams: &[TypeParam]) -> Vec<usize> {
     fn visit(
         index: usize,
         dependencies: &[BTreeSet<usize>],
@@ -2063,7 +2075,7 @@ fn type_param_pin_order<'cx>(cx: &Context<'cx>, tparams: &[TypeParam]) -> Vec<us
 }
 
 fn pin_types<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: &UseOp,
     has_new_errors: bool,
@@ -2182,7 +2194,7 @@ fn pin_types<'cx, Obs: Observer>(
 }
 
 fn check_fun<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     tparams: &[TypeParam],
     tparams_map: &BTreeMap<SubstName, TypeParam>,
@@ -2196,7 +2208,7 @@ fn check_fun<'cx, Obs: Observer>(
     ),
     FlowJsException,
 > {
-    let mut visitor = ImplicitInstantiationVisitor { tparams_map, cx };
+    let mut visitor = ImplicitInstantiationVisitor { tparams_map };
     let tparam_names: FlowOrdSet<SubstName> =
         tparams.iter().fold(FlowOrdSet::new(), |mut set, tparam| {
             set.insert(tparam.name.dupe());
@@ -2212,7 +2224,7 @@ fn check_fun<'cx, Obs: Observer>(
 }
 
 fn check_react_fun<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     tparams: &[TypeParam],
     check: &ImplicitInstantiationCheck,
@@ -2231,7 +2243,7 @@ fn check_react_fun<'cx, Obs: Observer>(
 }
 
 fn check_instance<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     tparams: &[TypeParam],
     check: &ImplicitInstantiationCheck,
@@ -2254,7 +2266,7 @@ fn check_instance<'cx, Obs: Observer>(
 }
 
 fn implicitly_instantiate<'cx, Obs: Observer>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     check: &ImplicitInstantiationCheck,
 ) -> Result<
@@ -2338,7 +2350,7 @@ pub mod pin_types {
 
     impl Observer for PinTypesObserver {
         fn on_constant_tparam_missing_bounds<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             tparam: &TypeParam,
         ) -> Result<InferredTarg, FlowJsException> {
@@ -2358,7 +2370,7 @@ pub mod pin_types {
         }
 
         fn on_pinned_tparam<'cx>(
-            _cx: &Context<'cx>,
+            _cx: &mut Context<'cx>,
             tparam: &TypeParam,
             inferred: Type,
         ) -> InferredTarg {
@@ -2369,7 +2381,7 @@ pub mod pin_types {
         }
 
         fn on_missing_bounds<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             _env: &FlowJsEnv,
             _use_op: &UseOp,
             tparam: &TypeParam,
@@ -2383,10 +2395,10 @@ pub mod pin_types {
         }
 
         fn on_upper_non_t<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             _env: &FlowJsEnv,
             _use_op: &UseOp,
-            _u: &UseT<Context<'cx>>,
+            _u: &UseT<Cx>,
             tparam: &TypeParam,
             tparam_binder_reason: &Reason,
             _instantiation_reason: &Reason,
@@ -2399,7 +2411,7 @@ pub mod pin_types {
     }
 
     pub fn pin_type<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
         reason: &Reason,
@@ -2437,7 +2449,7 @@ pub mod instantiation_solver {
 
     impl Observer for MainObserver {
         fn on_constant_tparam_missing_bounds<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             _env: &FlowJsEnv,
             tparam: &TypeParam,
         ) -> Result<InferredTarg, FlowJsException> {
@@ -2473,7 +2485,7 @@ pub mod instantiation_solver {
         }
 
         fn on_pinned_tparam<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             tparam: &TypeParam,
             inferred: Type,
         ) -> InferredTarg {
@@ -2491,7 +2503,7 @@ pub mod instantiation_solver {
         }
 
         fn on_missing_bounds<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             use_op: &UseOp,
             tparam: &TypeParam,
@@ -2555,10 +2567,10 @@ pub mod instantiation_solver {
         }
 
         fn on_upper_non_t<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             env: &FlowJsEnv,
             use_op: &UseOp,
-            u: &UseT<Context<'cx>>,
+            u: &UseT<Cx>,
             tparam: &TypeParam,
             tparam_binder_reason: &Reason,
             instantiation_reason: &Reason,
@@ -2604,7 +2616,7 @@ pub mod instantiation_solver {
     }
 
     pub fn pin_type<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
         tparam: &TypeParam,
@@ -2626,7 +2638,7 @@ pub mod instantiation_solver {
     }
 
     pub fn solve_targs<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
         allow_underconstrained: bool,
@@ -2659,7 +2671,7 @@ pub mod instantiation_solver {
         let preserve_level = cx.constraint_cache().level_count();
         cx.constraint_cache_mut().push_level();
         let mut preserved = false;
-        let result = cx.run_and_rolled_back_cache(|| {
+        let result = cx.run_and_rolled_back_cache(|cx| {
             let init_errors = cx.errors();
             let mut cache_snapshot = match &return_hint {
                 Some((_, flow_common::hint::HintKind::BestEffortHint)) => {
@@ -2792,7 +2804,7 @@ pub mod instantiation_solver {
     }
 
     pub(crate) fn solve_conditional_type_targs<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
@@ -2853,7 +2865,6 @@ pub mod instantiation_solver {
             let (marked_tparams, _) = {
                 let mut visitor = ImplicitInstantiationVisitor {
                     tparams_map: &tparams_map,
-                    cx,
                 };
                 visitor.type_(cx, Polarity::Positive, (Marked::new(), tparams_set), true_t)
             };
@@ -2889,17 +2900,17 @@ pub mod instantiation_solver {
     }
 
     pub fn fold<'cx, Acc>(
-        implicit_instantiation_cx: &Context<'cx>,
+        implicit_instantiation_cx: &mut Context<'cx>,
         env: &FlowJsEnv,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         f: impl Fn(
-            &Context,
+            &mut Context,
             Acc,
             &ImplicitInstantiationCheck,
             &BTreeMap<SubstName, GeneralizedTarg>,
         ) -> Result<Acc, FlowJsException>,
         init: Acc,
-        post: impl FnOnce(&Context, &Context),
+        post: impl FnOnce(&mut Context, &Context),
         implicit_instantiation_checks: &[ImplicitInstantiationCheck],
     ) -> Result<Acc, FlowJsException> {
         let r = implicit_instantiation_checks
@@ -2934,7 +2945,7 @@ pub mod kit {
 
     fn frozen_tvar<'cx>(
         env: &FlowJsEnv,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         t: &Type,
     ) -> Option<(i32, FrozenTvarInfo)> {
         let node = type_util::constraint_node_id(t)?;
@@ -2948,7 +2959,7 @@ pub mod kit {
         Some((data.id, FrozenTvarInfo { has_default }))
     }
 
-    fn frozen_tvar_id<'cx>(env: &FlowJsEnv, cx: &Context<'cx>, t: &Type) -> Option<i32> {
+    fn frozen_tvar_id<'cx>(env: &FlowJsEnv, cx: &mut Context<'cx>, t: &Type) -> Option<i32> {
         frozen_tvar(env, cx, t).map(|(id, _)| id)
     }
 
@@ -2959,27 +2970,32 @@ pub mod kit {
     }
 
     impl<'cx> TypeMapper<'cx, ()> for ConditionalTypeAnySubstituter<'_> {
-        fn tvar(&mut self, _cx: &Context<'cx>, _map_cx: &(), _r: &Reason, id: u32) -> u32 {
+        fn tvar(&mut self, _cx: &mut Context<'cx>, _map_cx: &(), _r: &Reason, id: u32) -> u32 {
             id
         }
 
-        fn exports(&mut self, cx: &Context<'cx>, map_cx: &(), id: exports::Id) -> exports::Id {
+        fn exports(&mut self, cx: &mut Context<'cx>, map_cx: &(), id: exports::Id) -> exports::Id {
             type_subst::exports(self, cx, map_cx, id)
         }
 
-        fn call_prop(&mut self, cx: &Context<'cx>, map_cx: &(), id: i32) -> i32 {
+        fn call_prop(&mut self, cx: &mut Context<'cx>, map_cx: &(), id: i32) -> i32 {
             type_subst::call_prop(self, cx, map_cx, id)
         }
 
-        fn props(&mut self, cx: &Context<'cx>, map_cx: &(), id: properties::Id) -> properties::Id {
+        fn props(
+            &mut self,
+            cx: &mut Context<'cx>,
+            map_cx: &(),
+            id: properties::Id,
+        ) -> properties::Id {
             type_subst::props(self, cx, map_cx, id)
         }
 
-        fn eval_id(&mut self, _cx: &Context<'cx>, _map_cx: &(), id: eval::Id) -> eval::Id {
+        fn eval_id(&mut self, _cx: &mut Context<'cx>, _map_cx: &(), id: eval::Id) -> eval::Id {
             id
         }
 
-        fn type_(&mut self, cx: &Context<'cx>, map_cx: &(), t: Type) -> Type {
+        fn type_(&mut self, cx: &mut Context<'cx>, map_cx: &(), t: Type) -> Type {
             if let Some(id) = frozen_tvar_id(self.env, cx, &t) {
                 self.replaced_frozen_tvar_ids.insert(id);
                 return self.any_t.dupe();
@@ -3013,7 +3029,7 @@ pub mod kit {
     }
 
     impl TypeVisitor<()> for FrozenTvarCollector<'_> {
-        fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, _acc: (), t: &Type) {
+        fn type_<'cx>(&mut self, cx: &mut Context<'cx>, pole: Polarity, _acc: (), t: &Type) {
             if let Some((id, info)) = frozen_tvar(self.env, cx, t) {
                 self.frozen_tvars.insert(id, info);
             } else {
@@ -3059,7 +3075,7 @@ pub mod kit {
     impl<'cx> TypeMapper<'cx, InwardSplitCx> for InwardSplitter<'_> {
         fn tvar(
             &mut self,
-            _cx: &Context<'cx>,
+            _cx: &mut Context<'cx>,
             _map_cx: &InwardSplitCx,
             _r: &Reason,
             id: u32,
@@ -3069,20 +3085,20 @@ pub mod kit {
 
         fn exports(
             &mut self,
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             map_cx: &InwardSplitCx,
             id: exports::Id,
         ) -> exports::Id {
             type_subst::exports(self, cx, map_cx, id)
         }
 
-        fn call_prop(&mut self, cx: &Context<'cx>, map_cx: &InwardSplitCx, id: i32) -> i32 {
+        fn call_prop(&mut self, cx: &mut Context<'cx>, map_cx: &InwardSplitCx, id: i32) -> i32 {
             type_subst::call_prop(self, cx, map_cx, id)
         }
 
         fn props(
             &mut self,
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             map_cx: &InwardSplitCx,
             id: properties::Id,
         ) -> properties::Id {
@@ -3091,14 +3107,14 @@ pub mod kit {
 
         fn eval_id(
             &mut self,
-            _cx: &Context<'cx>,
+            _cx: &mut Context<'cx>,
             _map_cx: &InwardSplitCx,
             id: eval::Id,
         ) -> eval::Id {
             id
         }
 
-        fn type_(&mut self, cx: &Context<'cx>, map_cx: &InwardSplitCx, t: Type) -> Type {
+        fn type_(&mut self, cx: &mut Context<'cx>, map_cx: &InwardSplitCx, t: Type) -> Type {
             let (zone, bound, is_outermost_funt) = map_cx;
             match t.deref() {
                 TypeInner::GenericT(generic)
@@ -3224,7 +3240,7 @@ pub mod kit {
     // return side, so routing those sides to different precisions breaks the
     // callback's internal coherence. Conservatively matches any generic
     // argument; non-callback generic values rarely widen, so they skip anyway.
-    fn has_generic_arg<'cx>(cx: &Context<'cx>, check: &ImplicitInstantiationCheck) -> bool {
+    fn has_generic_arg<'cx>(cx: &mut Context<'cx>, check: &ImplicitInstantiationCheck) -> bool {
         let args: &[CallArg] = match &check.operation.2 {
             Operation::Call(calltype) => calltype.call_args_tlist.as_ref(),
             Operation::Constructor(_, args) => args.as_ref(),
@@ -3246,7 +3262,7 @@ pub mod kit {
     }
 
     fn instantiate_poly_with_subst_map<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         poly_t: &Type,
@@ -3384,10 +3400,10 @@ pub mod kit {
     }
 
     pub fn run_call<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         check: &ImplicitInstantiationCheck,
-        return_hint: &LazyHintT<Context<'cx>>,
+        return_hint: &LazyHintT<Cx>,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -3424,6 +3440,7 @@ pub mod kit {
                 rh,
                 check,
             )?;
+            let has_generic_arg = has_generic_arg(cx, check);
             let result_t = instantiate_poly_with_subst_map(
                 cx,
                 env,
@@ -3433,14 +3450,14 @@ pub mod kit {
                 &use_op,
                 reason_op,
                 reason_tapp,
-                has_generic_arg(cx, check),
+                has_generic_arg,
             )?;
             Ok((result_t, inferred_targs))
         }
     }
 
     pub fn run_render_extractor<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
         reason: &Reason,
@@ -3511,7 +3528,7 @@ pub mod kit {
     // otherwise it just returns the argument type.
     // TODO update this comment when recursive unwrapping of Promise is done.
     pub fn run_await<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
         reason: &Reason,
@@ -3594,7 +3611,7 @@ pub mod kit {
     }
 
     pub fn run_monomorphize<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
@@ -3646,7 +3663,7 @@ pub mod kit {
     }
 
     pub fn run_conditional<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,

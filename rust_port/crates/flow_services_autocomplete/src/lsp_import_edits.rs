@@ -23,7 +23,7 @@ use crate::code_action_text_edits::CodeActionTextEdits;
 use crate::module_system_info::LspModuleSystemInfo;
 
 pub fn is_available_autoimport_result(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
 ) -> impl Fn(&str, &export_index::Source) -> bool + 'static {
     let available_globals = cx.builtins().builtin_ordinary_name_set();
     let available_modules = cx.builtins().builtin_modules_set();

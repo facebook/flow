@@ -11,6 +11,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use flow_aloc::ALoc;
+use flow_check_cache::CheckedContext;
 use flow_common::docblock::Docblock;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_parser::ast;
@@ -42,14 +43,13 @@ pub struct ParseArtifacts {
     pub parse_errors: Vec<(Loc, ParseError)>,
 }
 
-#[derive(Clone)]
-pub struct TypecheckArtifacts<'cx> {
-    pub cx: Context<'cx>,
+pub struct TypecheckArtifacts {
+    pub cx: CheckedContext,
     pub typed_ast: ast::Program<ALoc, (ALoc, Type)>,
     pub obj_to_obj_map: BTreeMap<Loc, BTreeSet<properties::Id>>,
 }
 
-pub type FileArtifacts<'cx> = (Rc<ParseArtifacts>, Rc<TypecheckArtifacts<'cx>>);
+pub type FileArtifacts = (Rc<ParseArtifacts>, Rc<TypecheckArtifacts>);
 
 #[derive(Clone, Debug)]
 pub struct CheckedDependenciesCanceled;
@@ -60,7 +60,7 @@ pub enum TypeContentsError {
     CheckedDependenciesCanceled,
 }
 
-pub type AutocompleteArtifacts<'cx> = (Rc<str>, Rc<ParseArtifacts>, Rc<Context<'cx>>);
+pub type AutocompleteArtifacts = (Rc<str>, Rc<ParseArtifacts>, Rc<CheckedContext>);
 
 pub type Duration = f64;
 

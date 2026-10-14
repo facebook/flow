@@ -29,31 +29,29 @@ pub fn default_no_lowers(r: &Reason) -> Type {
     empty_t::make(r.dupe().replace_desc(VirtualReasonDesc::REmpty))
 }
 
-struct Resolver<'a, 'cx, F>
+struct Resolver<F>
 where
     F: Fn(&Reason) -> Type,
 {
     no_lowers: F,
     filter_empty: bool,
-    cx: &'a Context<'cx>,
 }
 
 type Acc = (BTreeMap<i32, bool>, bool);
 
-impl<F> Resolver<'_, '_, F>
+impl<F> Resolver<F>
 where
     F: Fn(&Reason) -> Type,
 {
     fn constraint_node<'cx>(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         pole: Polarity,
         seen: Acc,
         r: &Reason,
         id: i32,
     ) -> Acc {
-        let tied_cx = self.cx;
-        let (root_id, constraints) = tied_cx.find_constraints(id);
+        let (root_id, constraints) = cx.find_constraints(id);
         match constraints {
             Constraints::FullyResolved(_) => seen,
             Constraints::Unresolved(_) | Constraints::Resolved(_) => {
@@ -63,7 +61,7 @@ where
                 }
                 seen_tvars.insert(root_id, false);
                 let t = match flow_js_utils::merge_tvar_opt(
-                    tied_cx,
+                    cx,
                     self.filter_empty,
                     UnionKind::ResolvedKind,
                     r,
@@ -80,18 +78,18 @@ where
                 } else {
                     Constraints::FullyResolved(ForcingState::of_non_lazy_t(t))
                 };
-                tied_cx.set_constraints(root_id, constraints);
+                cx.set_constraints(root_id, constraints);
                 (seen_tvars, seen_placeholders || seen_placeholders_in_t)
             }
         }
     }
 }
 
-impl<F> TypeVisitor<Acc> for Resolver<'_, '_, F>
+impl<F> TypeVisitor<Acc> for Resolver<F>
 where
     F: Fn(&Reason) -> Type,
 {
-    fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, seen: Acc, t: &Type) -> Acc {
+    fn type_<'cx>(&mut self, cx: &mut Context<'cx>, pole: Polarity, seen: Acc, t: &Type) -> Acc {
         match t.deref() {
             TypeInner::AnyT(_, AnySource::Placeholder) => {
                 let (seen_tvars, _) = seen;
@@ -106,7 +104,7 @@ where
 
     fn tvar<'cx>(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         pole: Polarity,
         seen: Acc,
         r: &Reason,
@@ -116,19 +114,18 @@ where
     }
 }
 
-pub fn resolve<'cx, F>(cx: &Context<'cx>, no_lowers: F, filter_empty: bool, t: &Type)
+pub fn resolve<'cx, F>(cx: &mut Context<'cx>, no_lowers: F, filter_empty: bool, t: &Type)
 where
     F: Fn(&Reason) -> Type,
 {
     let mut resolver = Resolver {
         no_lowers,
         filter_empty,
-        cx,
     };
     resolver.type_(cx, Polarity::Positive, (BTreeMap::new(), false), t);
 }
 
-pub fn resolved_t<'cx, F>(no_lowers: F, filter_empty: bool, cx: &Context<'cx>, t: Type) -> Type
+pub fn resolved_t<'cx, F>(no_lowers: F, filter_empty: bool, cx: &mut Context<'cx>, t: Type) -> Type
 where
     F: Fn(&Reason) -> Type,
 {
@@ -136,23 +133,22 @@ where
     t
 }
 
-struct AbortableResolver<'a, 'cx, F>
+struct AbortableResolver<F>
 where
     F: Fn(&Reason) -> Option<Type>,
 {
     no_lowers: F,
     filter_empty: bool,
-    cx: &'a Context<'cx>,
     aborted: bool,
 }
 
-impl<F> AbortableResolver<'_, '_, F>
+impl<F> AbortableResolver<F>
 where
     F: Fn(&Reason) -> Option<Type>,
 {
     fn constraint_node<'cx>(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         pole: Polarity,
         seen: Acc,
         r: &Reason,
@@ -161,8 +157,7 @@ where
         if self.aborted {
             return seen;
         }
-        let tied_cx = self.cx;
-        let (root_id, constraints) = tied_cx.find_constraints(id);
+        let (root_id, constraints) = cx.find_constraints(id);
         match constraints {
             Constraints::FullyResolved(_) => seen,
             Constraints::Unresolved(_) | Constraints::Resolved(_) => {
@@ -172,7 +167,7 @@ where
                 }
                 seen_tvars.insert(root_id, false);
                 let t = match flow_js_utils::merge_tvar_opt(
-                    tied_cx,
+                    cx,
                     self.filter_empty,
                     UnionKind::ResolvedKind,
                     r,
@@ -198,18 +193,18 @@ where
                 } else {
                     Constraints::FullyResolved(ForcingState::of_non_lazy_t(t))
                 };
-                tied_cx.set_constraints(root_id, constraints);
+                cx.set_constraints(root_id, constraints);
                 (seen_tvars, seen_placeholders || seen_placeholders_in_t)
             }
         }
     }
 }
 
-impl<F> TypeVisitor<Acc> for AbortableResolver<'_, '_, F>
+impl<F> TypeVisitor<Acc> for AbortableResolver<F>
 where
     F: Fn(&Reason) -> Option<Type>,
 {
-    fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, seen: Acc, t: &Type) -> Acc {
+    fn type_<'cx>(&mut self, cx: &mut Context<'cx>, pole: Polarity, seen: Acc, t: &Type) -> Acc {
         if self.aborted {
             return seen;
         }
@@ -227,7 +222,7 @@ where
 
     fn tvar<'cx>(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         pole: Polarity,
         seen: Acc,
         r: &Reason,
@@ -240,7 +235,7 @@ where
 pub fn resolved_t_abortable<'cx, F>(
     no_lowers: F,
     filter_empty: bool,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     t: Type,
 ) -> Option<Type>
 where
@@ -249,7 +244,6 @@ where
     let mut resolver = AbortableResolver {
         no_lowers,
         filter_empty,
-        cx,
         aborted: false,
     };
     resolver.type_(cx, Polarity::Positive, (BTreeMap::new(), false), &t);
@@ -257,9 +251,9 @@ where
 }
 
 pub fn mk_tvar_and_fully_resolve_where<'cx, E>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: Reason,
-    f: impl FnOnce(&Context<'cx>, &Type) -> Result<(), E>,
+    f: impl FnOnce(&mut Context<'cx>, &Type) -> Result<(), E>,
 ) -> Result<Type, E> {
     let tvar = flow_typing_tvar::mk_where(cx, reason, f)?;
     resolve(cx, default_no_lowers, true, &tvar);
@@ -267,9 +261,9 @@ pub fn mk_tvar_and_fully_resolve_where<'cx, E>(
 }
 
 pub fn mk_tvar_and_fully_resolve_no_wrap_where<'cx, E>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: Reason,
-    f: impl FnOnce(&Context<'cx>, &Reason, i32) -> Result<(), E>,
+    f: impl FnOnce(&mut Context<'cx>, &Reason, i32) -> Result<(), E>,
 ) -> Result<Type, E> {
     let tvar = flow_typing_tvar::mk_no_wrap_where(cx, reason, f)?;
     resolve(cx, default_no_lowers, true, &tvar);

@@ -37,7 +37,11 @@ struct TestFlow;
 impl Flow for TestFlow {
     type Cx = TestCx;
 
-    fn add_output(_cx: &Self::Cx, _error: flow_typing_errors::error_message::ErrorMessage<ALoc>) {}
+    fn add_output(
+        _cx: &mut Self::Cx,
+        _error: flow_typing_errors::error_message::ErrorMessage<ALoc>,
+    ) {
+    }
 }
 
 struct TestCx {
@@ -83,7 +87,7 @@ impl Context for TestCx {
         None
     }
 
-    fn add_exhaustive_check(&self, _loc: ALoc, _cases: (Vec<ALoc>, bool)) {}
+    fn add_exhaustive_check(&mut self, _loc: ALoc, _cases: (Vec<ALoc>, bool)) {}
 
     fn exhaustive_check(&self, _loc: &ALoc) -> Option<(Vec<ALoc>, bool)> {
         None
@@ -208,10 +212,10 @@ fn print_order(lst: &[OrderingResult]) -> String {
 
 fn print_init_test(contents: &str) -> String {
     let ast = parse_with_alocs(contents);
-    let cx = TestCx::default();
+    let mut cx = TestCx::default();
     let file_sig = FileSig::from_program(&cx.file(), &parse(contents), &FileSigOptions::default());
     let (_, env) = name_resolver::program_with_scope::<TestCx, TestFlow>(
-        &cx,
+        &mut cx,
         false,
         FlowOrdSet::new(),
         &file_sig,
@@ -252,7 +256,7 @@ fn print_order_test(
     let ast = parse_with_alocs(contents);
     let file_sig = FileSig::from_program(&cx.file(), &parse(contents), &FileSigOptions::default());
     let (_, env) = name_resolver::program_with_scope::<TestCx, TestFlow>(
-        &cx,
+        &mut cx,
         false,
         FlowOrdSet::new(),
         &file_sig,
@@ -271,7 +275,7 @@ fn print_order_test(
     )
     .expect("name def should not hit an internal error in test");
     let order =
-        name_def_ordering::build_ordering::<_, _, TestCx, TestFlow>(&cx, &hooks, &env, &inits)
+        name_def_ordering::build_ordering::<_, _, TestCx, TestFlow>(&mut cx, &hooks, &env, &inits)
             .unwrap_or_else(|_| Vec::new());
     print_order(&order)
 }

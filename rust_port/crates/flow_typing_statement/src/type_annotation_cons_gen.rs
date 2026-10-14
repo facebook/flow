@@ -42,7 +42,7 @@ use flow_typing_type::type_util::reason_of_t;
 use flow_utils_concurrency::job_error::JobError;
 
 pub fn specialize<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     c: Type,
     use_op: UseOp,
     reason_op: Reason,
@@ -51,7 +51,7 @@ pub fn specialize<'a>(
 ) -> Type {
     let reason = reason_of_t(&c).dupe();
     let reason_inner = reason.dupe();
-    let f = move |cx: &Context<'_>, c: Type| -> Result<Type, JobError> {
+    let f = move |cx: &mut Context<'_>, c: Type| -> Result<Type, JobError> {
         let collector = TypeCollector::create();
         let use_t = UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
             use_op,
@@ -68,9 +68,9 @@ pub fn specialize<'a>(
     map_on_resolved_type(cx, reason, c, f)
 }
 
-pub fn mixin<'a>(cx: &Context<'a>, reason: Reason, i: Type) -> Type {
+pub fn mixin<'a>(cx: &mut Context<'a>, reason: Reason, i: Type) -> Type {
     let reason_inner = reason.dupe();
-    let f = move |cx: &Context<'_>, i: Type| -> Result<Type, JobError> {
+    let f = move |cx: &mut Context<'_>, i: Type| -> Result<Type, JobError> {
         let reason_for_mixin = reason_inner.dupe();
         let collector = TypeCollector::create();
         let use_t = UseT::new(UseTInner::MixinT(reason_for_mixin, collector.dupe()));
@@ -85,9 +85,9 @@ pub fn mixin<'a>(cx: &Context<'a>, reason: Reason, i: Type) -> Type {
     map_on_resolved_type(cx, reason, i, f)
 }
 
-pub fn obj_test_proto<'a>(cx: &Context<'a>, reason: Reason, t: Type) -> Type {
+pub fn obj_test_proto<'a>(cx: &mut Context<'a>, reason: Reason, t: Type) -> Type {
     let reason_inner = reason.dupe();
-    let f = move |cx: &Context<'_>, t: Type| -> Result<Type, JobError> {
+    let f = move |cx: &mut Context<'_>, t: Type| -> Result<Type, JobError> {
         let reason_for_proto = reason_inner.dupe();
         let collector = TypeCollector::create();
         let use_t = UseT::new(UseTInner::ObjTestProtoT(reason_for_proto, collector.dupe()));
@@ -106,7 +106,7 @@ pub fn obj_test_proto<'a>(cx: &Context<'a>, reason: Reason, t: Type) -> Type {
 }
 
 pub fn get_prop<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     use_op: UseOp,
     reason: Reason,
     op_reason: Option<Reason>,
@@ -115,7 +115,7 @@ pub fn get_prop<'a>(
 ) -> Type {
     let op_reason = op_reason.unwrap_or_else(|| reason.dupe());
     let op_reason_inner = op_reason.dupe();
-    let f = move |cx: &Context<'_>, l: Type| -> Result<Type, JobError> {
+    let f = move |cx: &mut Context<'_>, l: Type| -> Result<Type, JobError> {
         let op_reason_for_flow = op_reason_inner.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
             cx,
@@ -144,7 +144,7 @@ pub fn get_prop<'a>(
 }
 
 pub fn qualify_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     use_op: UseOp,
     reason: Reason,
     op_reason: Reason,
@@ -152,7 +152,7 @@ pub fn qualify_type<'a>(
     l: Type,
 ) -> Type {
     let op_reason_inner = op_reason.dupe();
-    let f = move |cx: &Context<'_>, l: Type| -> Result<Type, JobError> {
+    let f = move |cx: &mut Context<'_>, l: Type| -> Result<Type, JobError> {
         let op_reason_for_flow = op_reason_inner.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
             cx,
@@ -175,7 +175,7 @@ pub fn qualify_type<'a>(
 }
 
 pub fn mk_instance<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     instance_reason: Reason,
     l: Type,
     type_t_kind: Option<TypeTKind>,
@@ -184,7 +184,7 @@ pub fn mk_instance<'a>(
     let type_t_kind = type_t_kind.unwrap_or(TypeTKind::InstanceKind);
     let use_desc = use_desc.unwrap_or(false);
     let instance_reason_clone = instance_reason.dupe();
-    let f = move |cx: &Context<'_>, t: Type| -> Result<Type, JobError> {
+    let f = move |cx: &mut Context<'_>, t: Type| -> Result<Type, JobError> {
         let concrete = flow_js_utils::flow_js_result_to_job_error(
             FlowJs::singleton_concrete_type_for_inspection(cx, &instance_reason_clone, &t),
         )?;

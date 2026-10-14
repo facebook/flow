@@ -53,14 +53,16 @@ use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing::merge;
 use flow_typing::type_inference;
 use flow_typing_context::Context;
+use flow_typing_context::ContextArena;
+use flow_typing_context::ContextStore;
 use flow_typing_context::MasterContext;
+use flow_typing_context::ModuleTypeThunk;
 use flow_typing_context::ResolvedRequire;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error;
 use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_errors::intermediate_error;
-use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::Type;
 use flow_typing_utils::annotation_inference;
 use flow_utils_concurrency::check_budget::CheckBudget;
@@ -91,16 +93,16 @@ struct ParsedFile {
     parse_errors: Vec<(Loc, flow_parser::parse_error::ParseError)>,
 }
 
-struct PreparedFile {
+struct PreparedFile<'cx> {
     parsed: ParsedFile,
-    cx: Context<'static>,
+    cx: Context<'cx>,
     metadata: flow_typing_context::Metadata,
     lint_severities: LintSettings<Severity>,
     type_sig_options: TypeSigOptions,
 }
 
-struct CheckedFile {
-    prepared: PreparedFile,
+struct CheckedFile<'cx> {
+    prepared: PreparedFile<'cx>,
     typed_ast: ast::Program<ALoc, (ALoc, Type)>,
 }
 
@@ -296,10 +298,10 @@ fn parse_error_set(parsed: &ParsedFile) -> ErrorSet {
     errors
 }
 
-fn typed_builtin_module_opt<'cx>(
-    cx: &Context<'cx>,
+fn typed_builtin_module_opt(
+    cx: &mut Context<'_>,
     builtin_module_name: &flow_common::flow_import_specifier::Userland,
-) -> Option<Rc<dyn Fn(&Context<'cx>, &Context<'cx>) -> Result<ModuleType, Type> + 'cx>> {
+) -> Option<ModuleTypeThunk> {
     cx.builtin_module_opt(builtin_module_name)
         .map(|(reason, lazy_module)| {
             let forcing_state =
@@ -307,16 +309,18 @@ fn typed_builtin_module_opt<'cx>(
                     reason,
                     lazy_module,
                 );
-            annotation_inference::force_module_type_thunk(cx.dupe(), forcing_state)
+            annotation_inference::force_module_type_thunk(cx.id(), forcing_state)
         })
 }
 
-fn prepare_file(
+/// Makes the context of the file in `arena`.
+fn prepare_file<'cx>(
+    arena: &'cx mut ContextArena,
     filename: &str,
     content: &str,
     config: Option<&Value>,
     master_cx: Arc<MasterContext>,
-) -> Result<PreparedFile, String> {
+) -> Result<PreparedFile<'cx>, String> {
     let options = config_options(config);
     let file_key = FileKey::new(FileKeyInner::SourceFile(filename.to_string()));
     let parsed = parse_file(file_key.dupe(), content, &options);
@@ -328,22 +332,24 @@ fn prepare_file(
         false,
     );
     if !parsed.parse_errors.is_empty() {
+        let ccx = arena.add_component();
+        let cx = arena.add_context(
+            ccx,
+            flow_typing_context::mk_context_metadata(&options, Arc::default()),
+            file_key.dupe(),
+            Arc::default(),
+            Rc::new(LazyCell::new(Box::new({
+                let file_key = file_key.dupe();
+                move || Rc::new(ALocTable::empty(file_key))
+            })
+                as Box<dyn FnOnce() -> Rc<ALocTable>>)),
+            Rc::new(|_: &mut Context<'_>, _: &FlowImportSpecifier| ResolvedRequire::MissingModule),
+            Rc::new(|_: &mut Context<'_>| flow_typing_builtins::Builtins::empty()),
+            CheckBudget::new(None),
+        );
         return Ok(PreparedFile {
             parsed,
-            cx: Context::make(
-                Rc::new(flow_typing_context::make_ccx()),
-                flow_typing_context::mk_context_metadata(&options, Arc::default()),
-                file_key.dupe(),
-                Arc::default(),
-                Rc::new(LazyCell::new(Box::new({
-                    let file_key = file_key.dupe();
-                    move || Rc::new(ALocTable::empty(file_key))
-                })
-                    as Box<dyn FnOnce() -> Rc<ALocTable>>)),
-                Rc::new(|_, _| ResolvedRequire::MissingModule),
-                Rc::new(|_| flow_typing_builtins::Builtins::empty()),
-                CheckBudget::new(None),
-            ),
+            cx: Context::new(ContextStore::new(vec![arena]), cx),
             metadata: flow_typing_context::mk_context_metadata(&options, Arc::default()),
             lint_severities: LintSettings::<Severity>::empty_severities(),
             type_sig_options,
@@ -363,7 +369,7 @@ fn prepare_file(
     }) as Box<dyn FnOnce() -> Rc<ALocTable>>));
     let resolve_require =
         Rc::new(
-            |cx: &Context<'static>, module_name: &FlowImportSpecifier| match module_name {
+            |cx: &mut Context<'_>, module_name: &FlowImportSpecifier| match module_name {
                 FlowImportSpecifier::Userland(userland) => {
                     match typed_builtin_module_opt(cx, userland) {
                         Some(typed) => ResolvedRequire::TypedModule(typed),
@@ -372,17 +378,20 @@ fn prepare_file(
                 }
             },
         );
-    let cx = Context::make(
-        Rc::new(flow_typing_context::make_ccx()),
+    let ccx = arena.add_component();
+    let mk_builtins = merge::mk_builtins(&metadata, &master_cx, arena);
+    let cx_id = arena.add_context(
+        ccx,
         metadata.clone(),
         file_key,
         Arc::default(),
         aloc_table,
         resolve_require,
-        merge::mk_builtins(&metadata, &master_cx),
+        mk_builtins,
         CheckBudget::new(None),
     );
-    cx.set_merge_dst_cx(&cx);
+    let mut cx = Context::new(ContextStore::new(vec![arena]), cx_id);
+    cx.set_merge_dst_cx(cx_id);
     Ok(PreparedFile {
         parsed,
         cx,
@@ -392,13 +401,14 @@ fn prepare_file(
     })
 }
 
-fn check_file(
+fn check_file<'cx>(
+    arena: &'cx mut ContextArena,
     filename: &str,
     content: &str,
     config: Option<&Value>,
     master_cx: Arc<MasterContext>,
-) -> Result<CheckedFile, String> {
-    let prepared = prepare_file(filename, content, config, master_cx)?;
+) -> Result<CheckedFile<'cx>, String> {
+    let mut prepared = prepare_file(arena, filename, content, config, master_cx)?;
     if !prepared.parsed.parse_errors.is_empty() {
         return Err("parse error".to_string());
     }
@@ -406,7 +416,7 @@ fn check_file(
     let aloc_ast = flow_aloc::loc_to_aloc_ast(prepared.parsed.ast.as_ref());
     let typed_ast = type_inference::infer_ast(
         &prepared.lint_severities,
-        &prepared.cx,
+        &mut prepared.cx,
         &prepared.parsed.file_key,
         prepared.parsed.file_sig.dupe(),
         &prepared.metadata,
@@ -462,7 +472,7 @@ fn errors_json(
 // Mirrors OCaml `src/flow_dot_js.ml` `check_content`: split lints by severity,
 // apply suppressions, then preserve warnings in the JSON diagnostics array.
 fn filtered_errors(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     parsed: &ParsedFile,
     errors: ErrorSet,
 ) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
@@ -471,9 +481,7 @@ fn filtered_errors(
     let include_suppressions = cx.include_suppressions();
     let aloc_tables = cx.aloc_tables();
     let (errors, warnings) =
-        suppressions.filter_lints(errors, &aloc_tables, include_suppressions, &severity_cover);
-    drop(aloc_tables);
-    drop(severity_cover);
+        suppressions.filter_lints(errors, aloc_tables, include_suppressions, severity_cover);
 
     let loc_of_aloc = |aloc: &ALoc| aloc.to_loc_exn().dupe();
     let file_key = parsed.file_key.dupe();
@@ -522,18 +530,22 @@ fn check_content(params: &Value) -> Result<Value, String> {
     let content = string_arg(params, "content")?;
     let config = params.get("config");
     let master_cx = STATE.with(|state| state.borrow().master_cx.dupe());
-    let prepared = prepare_file(filename, content, config, master_cx)?;
-    if !prepared.parsed.parse_errors.is_empty() || !prepared.parsed.docblock_errors.is_empty() {
-        let errors = parse_error_set(&prepared.parsed);
-        let errors = printable_errors(&prepared.parsed, errors);
-        return Ok(errors_json(
-            &prepared.parsed,
-            content,
-            errors,
-            ConcreteLocPrintableErrorSet::empty(),
-        ));
+    let mut arena = ContextArena::new();
+    {
+        let prepared = prepare_file(&mut arena, filename, content, config, master_cx)?;
+        if !prepared.parsed.parse_errors.is_empty() || !prepared.parsed.docblock_errors.is_empty() {
+            let errors = parse_error_set(&prepared.parsed);
+            let errors = printable_errors(&prepared.parsed, errors);
+            return Ok(errors_json(
+                &prepared.parsed,
+                content,
+                errors,
+                ConcreteLocPrintableErrorSet::empty(),
+            ));
+        }
     }
-    let checked = check_file(
+    let mut checked = check_file(
+        &mut arena,
         filename,
         content,
         config,
@@ -541,7 +553,7 @@ fn check_content(params: &Value) -> Result<Value, String> {
     )?;
     let errors = checked.prepared.cx.errors();
     let (errors, warnings) =
-        filtered_errors(&checked.prepared.cx, &checked.prepared.parsed, errors);
+        filtered_errors(&mut checked.prepared.cx, &checked.prepared.parsed, errors);
     Ok(errors_json(
         &checked.prepared.parsed,
         content,
@@ -759,7 +771,9 @@ fn get_def(params: &Value) -> Result<Value, String> {
     let line = i32_arg(params, "line")?;
     let col = i32_arg(params, "col")?;
     let config = params.get("config");
-    let checked = check_file(
+    let mut arena = ContextArena::new();
+    let mut checked = check_file(
+        &mut arena,
         filename,
         content,
         config,
@@ -768,7 +782,7 @@ fn get_def(params: &Value) -> Result<Value, String> {
     let loc = Loc::cursor(Some(checked.prepared.parsed.file_key.dupe()), line, col);
     let result = get_def_js::get_def(
         &|aloc: &ALoc| aloc.to_loc_exn().dupe(),
-        &checked.prepared.cx,
+        &mut checked.prepared.cx,
         &checked.prepared.parsed.file_sig,
         Some(content),
         checked.prepared.parsed.ast.as_ref(),
@@ -862,7 +876,9 @@ fn autocomplete(params: &Value) -> Result<Value, String> {
         .map_or_else(|| cursor_loc.dupe(), |token| token.cursor.dupe());
     autocomplete_js::autocomplete_set_hooks(&canon_cursor);
     let result = (|| -> Result<Value, String> {
-        let prepared = prepare_file(
+        let mut arena = ContextArena::new();
+        let mut prepared = prepare_file(
+            &mut arena,
             filename,
             &content_with_sigil,
             config,
@@ -873,7 +889,7 @@ fn autocomplete(params: &Value) -> Result<Value, String> {
         }
         let aloc_ast = flow_aloc::loc_to_aloc_ast(prepared.parsed.ast.as_ref());
         type_inference::initialize_env(
-            &prepared.cx,
+            &mut prepared.cx,
             &prepared.type_sig_options,
             None,
             prepared.parsed.ast.as_ref(),
@@ -901,20 +917,20 @@ fn autocomplete(params: &Value) -> Result<Value, String> {
             empty_exports_search_result.clone()
         };
         let layout_options = js_layout_generator::default_opts();
-        let artifacts = autocomplete_service_js::mk_typing_artifacts(
+        let mut artifacts = autocomplete_service_js::mk_typing_artifacts(
             &layout_options,
             Box::new(|aloc: &ALoc| aloc.to_loc_exn().dupe()),
             Box::new(|_| None),
             &module_system_info,
             &search_values,
             &search_types,
-            &prepared.cx,
+            &mut prepared.cx,
             prepared.parsed.file_sig.dupe(),
             prepared.parsed.ast.dupe(),
             canon_token.as_ref(),
         );
         let (_, _, _, result) = autocomplete_service_js::autocomplete_get_results(
-            &artifacts,
+            &mut artifacts,
             &autocomplete_service_js::AcOptions {
                 imports: false,
                 imports_min_characters: 0,
@@ -967,7 +983,9 @@ fn dump_types(params: &Value, for_tool: bool) -> Result<Value, String> {
     let filename = string_arg(params, "filename")?;
     let content = string_arg(params, "content")?;
     let config = params.get("config");
-    let checked = check_file(
+    let mut arena = ContextArena::new();
+    let mut checked = check_file(
+        &mut arena,
         filename,
         content,
         config,
@@ -978,7 +996,7 @@ fn dump_types(params: &Value, for_tool: bool) -> Result<Value, String> {
         EvaluateTypeDestructorsMode::EvaluateNone,
         for_tool.then_some(5),
         None,
-        &checked.prepared.cx,
+        &mut checked.prepared.cx,
         checked.prepared.parsed.file_sig.dupe(),
         &checked.typed_ast,
     );
@@ -989,7 +1007,9 @@ fn semantic_decorations(params: &Value) -> Result<Value, String> {
     let filename = string_arg(params, "filename")?;
     let content = string_arg(params, "content")?;
     let config = params.get("config");
+    let mut arena = ContextArena::new();
     let checked = check_file(
+        &mut arena,
         filename,
         content,
         config,
@@ -1079,7 +1099,9 @@ fn signature_help(params: &Value) -> Result<Value, String> {
     let line = i32_arg(params, "line")?;
     let col = i32_arg(params, "col")?;
     let config = params.get("config");
-    let checked = check_file(
+    let mut arena = ContextArena::new();
+    let mut checked = check_file(
+        &mut arena,
         filename,
         content,
         config,
@@ -1089,7 +1111,7 @@ fn signature_help(params: &Value) -> Result<Value, String> {
     let details = signature_help::find_signatures(
         &|aloc: &ALoc| aloc.to_loc_exn().dupe(),
         &|_| None,
-        &checked.prepared.cx,
+        &mut checked.prepared.cx,
         checked.prepared.parsed.file_sig.dupe(),
         checked.prepared.parsed.ast.as_ref(),
         &checked.typed_ast,
@@ -1116,7 +1138,9 @@ fn type_at_pos(params: &Value) -> Result<Value, String> {
     let line = i32_arg(params, "line")?;
     let col = i32_arg(params, "col")?;
     let config = params.get("config");
-    let checked = check_file(
+    let mut arena = ContextArena::new();
+    let mut checked = check_file(
+        &mut arena,
         filename,
         content,
         config,
@@ -1124,7 +1148,7 @@ fn type_at_pos(params: &Value) -> Result<Value, String> {
     )?;
     let loc_of_aloc = |aloc: &ALoc| aloc.to_loc_exn().dupe();
     let ((_loc, tys, _refining, _invalidated), json_data) = type_info_service::type_at_pos(
-        &checked.prepared.cx,
+        &mut checked.prepared.cx,
         checked.prepared.parsed.file_sig.dupe(),
         &checked.typed_ast,
         false,

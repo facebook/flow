@@ -44,7 +44,7 @@ pub mod component_declaration_body {
     use super::*;
 
     struct ComponentScopeVisitor<'a, 'cx, 'b> {
-        cx: &'a Context<'cx>,
+        cx: &'a mut Context<'cx>,
         body_loc: ALoc,
         renders_t: &'b Type,
         exhaust: &'b Option<(RefCell<Vec<Type>>, Vec<ALoc>)>,
@@ -117,7 +117,7 @@ pub mod component_declaration_body {
         }
 
         fn custom_return(
-            &self,
+            &mut self,
             return_stmt: &ast::statement::Return<ALoc, (ALoc, Type)>,
         ) -> Result<(), JobError> {
             let (_, ref t) = return_stmt.return_out;
@@ -146,7 +146,7 @@ pub mod component_declaration_body {
     }
 
     pub fn eval<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         component: ComponentReferenceData<ALoc>,
         renders_t: Type,
         body: declaration_body_config::Body<ALoc>,
@@ -208,7 +208,7 @@ pub mod component_declaration_body {
 }
 
 pub fn toplevels<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     x: &ComponentSig,
 ) -> Result<
     (
@@ -243,7 +243,7 @@ pub fn toplevels<'a>(
 }
 
 pub fn component_type<'a, C: crate::component_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     in_annotation: bool,
     reason: &flow_common::reason::Reason,
     tparams: type_::TypeParams,

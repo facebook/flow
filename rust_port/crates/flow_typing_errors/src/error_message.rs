@@ -4216,11 +4216,11 @@ pub fn string_of_invalid_render_type_kind<T>(kind: &InvalidRenderTypeKind<T>) ->
 }
 
 fn map_exponential_spread_operand_group<T, U, F>(
-    f: F,
+    mut f: F,
     group: ExponentialSpreadOperandGroup<T>,
 ) -> ExponentialSpreadOperandGroup<U>
 where
-    F: Fn(T) -> U,
+    F: FnMut(T) -> U,
 {
     ExponentialSpreadOperandGroup {
         first: f(group.first),
@@ -4228,8 +4228,8 @@ where
     }
 }
 
-fn map_invalid_render_type_kind<T, U, F: Fn(T) -> U>(
-    f: F,
+fn map_invalid_render_type_kind<T, U, F: FnMut(T) -> U>(
+    mut f: F,
     kind: InvalidRenderTypeKind<T>,
 ) -> InvalidRenderTypeKind<U> {
     match kind {
@@ -4257,7 +4257,7 @@ fn map_invalid_render_type_kind<T, U, F: Fn(T) -> U>(
 fn map_strict_comparison_info<L, M, T, U>(
     info: StrictComparisonInfo<L, T>,
     map_loc: impl Fn(L) -> M,
-    map_type: impl Fn(T) -> U,
+    mut map_type: impl FnMut(T) -> U,
 ) -> StrictComparisonInfo<M, U> {
     match info {
         StrictComparisonInfo::General { left, right } => StrictComparisonInfo::General {
@@ -6830,17 +6830,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         }
     }
 
-    pub fn convert_type_to_type_desc<F>(f: F, msg: ErrorMessage<L>) -> ErrorMessage<L>
+    pub fn convert_type_to_type_desc(
+        f: &mut dyn FnMut(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L>,
+        msg: ErrorMessage<L>,
+    ) -> ErrorMessage<L>
     where
-        F: Fn(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L> + Clone,
         L: Clone,
     {
         use self::ErrorMessage::*;
-        fn map_use_op<
-            L: Dupe + PartialEq + Eq + PartialOrd + Ord,
-            F: Fn(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L> + Clone,
-        >(
-            f: &F,
+        fn map_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+            f: &mut dyn FnMut(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L>,
             use_op: VirtualUseOp<L>,
         ) -> VirtualUseOp<L> {
             match use_op {
@@ -6887,9 +6886,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ),
             }
         }
-        let map_explanation =
-            |explanation: Option<ExplanationWithLazyParts<L>>| -> Option<ExplanationWithLazyParts<L>> {
-                explanation.map(|e| match e {
+        fn map_explanation<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+            f: &mut dyn FnMut(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L>,
+            explanation: Option<ExplanationWithLazyParts<L>>,
+        ) -> Option<ExplanationWithLazyParts<L>> {
+            explanation.map(|e| match e {
                     ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
                         lower_array_loc,
                         upper_array_loc,
@@ -6934,51 +6935,58 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         properties,
                     },
                 })
-            };
-        let map_eager_explanation =
-            |explanation: Option<Explanation<L>>| -> Option<Explanation<L>> {
-                explanation.map(|e| match e {
-                    Explanation::ExplanationAdditionalUnionMembers(
-                        box ExplanationAdditionalUnionMembersData {
-                            left_loc,
-                            left_desc,
-                            right_loc,
-                            right_desc,
-                            members,
-                            extra_number,
-                        },
-                    ) => Explanation::ExplanationAdditionalUnionMembers(Box::new(
-                        ExplanationAdditionalUnionMembersData {
-                            left_loc,
-                            left_desc: f(left_desc),
-                            right_loc,
-                            right_desc: f(right_desc),
-                            members,
-                            extra_number,
-                        },
-                    )),
-                    e => e,
-                })
-            };
-        let map_error_type_ref = |r: ErrorTypeReferenceData<L>| -> ErrorTypeReferenceData<L> {
+        }
+        fn map_eager_explanation<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+            f: &mut dyn FnMut(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L>,
+            explanation: Option<Explanation<L>>,
+        ) -> Option<Explanation<L>> {
+            explanation.map(|e| match e {
+                Explanation::ExplanationAdditionalUnionMembers(
+                    box ExplanationAdditionalUnionMembersData {
+                        left_loc,
+                        left_desc,
+                        right_loc,
+                        right_desc,
+                        members,
+                        extra_number,
+                    },
+                ) => Explanation::ExplanationAdditionalUnionMembers(Box::new(
+                    ExplanationAdditionalUnionMembersData {
+                        left_loc,
+                        left_desc: f(left_desc),
+                        right_loc,
+                        right_desc: f(right_desc),
+                        members,
+                        extra_number,
+                    },
+                )),
+                e => e,
+            })
+        }
+        fn map_error_type_ref<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+            f: &mut dyn FnMut(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L>,
+            r: ErrorTypeReferenceData<L>,
+        ) -> ErrorTypeReferenceData<L> {
             ErrorTypeReferenceData {
                 loc: r.loc,
                 reference_loc: r.reference_loc,
                 type_desc: f(r.type_desc),
             }
-        };
-        let map_error_type_ref_with_reason =
-            |r: ErrorTypeReferenceWithLocData<L>| -> ErrorTypeReferenceWithLocData<L> {
-                ErrorTypeReferenceWithLocData {
-                    loc: r.loc,
-                    definition_loc: r.definition_loc,
-                    reference_loc: r.reference_loc,
-                    type_desc: f(r.type_desc),
-                }
-            };
+        }
+        fn map_error_type_ref_with_reason<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+            f: &mut dyn FnMut(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L>,
+            r: ErrorTypeReferenceWithLocData<L>,
+        ) -> ErrorTypeReferenceWithLocData<L> {
+            ErrorTypeReferenceWithLocData {
+                loc: r.loc,
+                definition_loc: r.definition_loc,
+                reference_loc: r.reference_loc,
+                type_desc: f(r.type_desc),
+            }
+        }
 
         match msg {
-            EUnsupportedImplements(type_) => EUnsupportedImplements(map_error_type_ref(type_)),
+            EUnsupportedImplements(type_) => EUnsupportedImplements(map_error_type_ref(f, type_)),
 
             ECannotSpreadInterface(box ECannotSpreadInterfaceData {
                 spread_loc,
@@ -6986,19 +6994,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => ECannotSpreadInterface(Box::new(ECannotSpreadInterfaceData {
                 spread_loc,
-                interface: map_error_type_ref_with_reason(interface),
-                use_op: map_use_op(&f, use_op),
+                interface: map_error_type_ref_with_reason(f, interface),
+                use_op: map_use_op(f, use_op),
             })),
 
             ENotAReactComponent(box ENotAReactComponentData { component, use_op }) => {
                 ENotAReactComponent(Box::new(ENotAReactComponentData {
-                    component: map_error_type_ref_with_reason(component),
-                    use_op: map_use_op(&f, use_op),
+                    component: map_error_type_ref_with_reason(f, component),
+                    use_op: map_use_op(f, use_op),
                 }))
             }
 
             ECannotCallReactComponent { component } => ECannotCallReactComponent {
-                component: map_error_type_ref_with_reason(component),
+                component: map_error_type_ref_with_reason(f, component),
             },
 
             EReactRefInRender {
@@ -7012,7 +7020,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             },
 
             ESketchyNumberLint(kind, value) => {
-                ESketchyNumberLint(kind, map_error_type_ref_with_reason(value))
+                ESketchyNumberLint(kind, map_error_type_ref_with_reason(f, value))
             }
 
             ETypeGuardFuncIncompatibility {
@@ -7020,16 +7028,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 upper,
             } => {
-                let map_reference = |reference| match reference {
+                let mut map_reference = |reference| match reference {
                     TypeGuardFuncReference::Type(reference) => {
-                        TypeGuardFuncReference::Type(map_error_type_ref_with_reason(reference))
+                        TypeGuardFuncReference::Type(map_error_type_ref_with_reason(f, reference))
                     }
                     reference @ TypeGuardFuncReference::TypeGuard(_) => reference,
                 };
+                let lower = map_reference(lower);
+                let upper = map_reference(upper);
                 ETypeGuardFuncIncompatibility {
-                    use_op: map_use_op(&f, use_op),
-                    lower: map_reference(lower),
-                    upper: map_reference(upper),
+                    use_op: map_use_op(f, use_op),
+                    lower,
+                    upper,
                 }
             }
 
@@ -7040,9 +7050,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower_is_hook,
                 hook_is_annot,
             }) => EHookIncompatible(Box::new(EHookIncompatibleData {
-                use_op: map_use_op(&f, use_op),
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
+                use_op: map_use_op(f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
                 lower_is_hook,
                 hook_is_annot,
             })),
@@ -7052,9 +7062,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 upper,
             }) => EHookUniqueIncompatible(Box::new(EHookUniqueIncompatibleData {
-                use_op: map_use_op(&f, use_op),
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
+                use_op: map_use_op(f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
             })),
 
             EConstructSignatureMissingInSubtyping(
@@ -7065,9 +7075,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ) => EConstructSignatureMissingInSubtyping(Box::new(
                 EConstructSignatureMissingInSubtypingData {
-                    lower: map_error_type_ref_with_reason(lower),
-                    upper: map_error_type_ref_with_reason(upper),
-                    use_op: map_use_op(&f, use_op),
+                    lower: map_error_type_ref_with_reason(f, lower),
+                    upper: map_error_type_ref_with_reason(f, upper),
+                    use_op: map_use_op(f, use_op),
                 },
             )),
 
@@ -7078,9 +7088,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => EPrivateLookupFailed(Box::new(EPrivateLookupFailedData {
                 loc,
-                object: map_error_type_ref_with_reason(object),
+                object: map_error_type_ref_with_reason(f, object),
                 prop_name,
-                use_op: map_use_op(&f, use_op),
+                use_op: map_use_op(f, use_op),
             })),
 
             EExpectedStringLit(box EExpectedStringLitData {
@@ -7088,9 +7098,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper,
                 use_op,
             }) => EExpectedStringLit(Box::new(EExpectedStringLitData {
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-                use_op: map_use_op(&f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
+                use_op: map_use_op(f, use_op),
             })),
 
             EExpectedBooleanLit(box EExpectedBooleanLitData {
@@ -7098,9 +7108,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper,
                 use_op,
             }) => EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-                use_op: map_use_op(&f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
+                use_op: map_use_op(f, use_op),
             })),
 
             EExpectedNumberLit(box EExpectedNumberLitData {
@@ -7108,9 +7118,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper,
                 use_op,
             }) => EExpectedNumberLit(Box::new(EExpectedNumberLitData {
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-                use_op: map_use_op(&f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
+                use_op: map_use_op(f, use_op),
             })),
 
             EExpectedBigIntLit(box EExpectedBigIntLitData {
@@ -7118,9 +7128,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper,
                 use_op,
             }) => EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-                use_op: map_use_op(&f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
+                use_op: map_use_op(f, use_op),
             })),
 
             ETupleOutOfBounds(box ETupleOutOfBoundsData {
@@ -7131,9 +7141,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 length,
                 index,
             }) => ETupleOutOfBounds(Box::new(ETupleOutOfBoundsData {
-                use_op: map_use_op(&f, use_op),
+                use_op: map_use_op(f, use_op),
                 loc,
-                tuple: map_error_type_ref_with_reason(tuple),
+                tuple: map_error_type_ref_with_reason(f, tuple),
                 inexact,
                 length,
                 index,
@@ -7144,7 +7154,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 argument,
             }) => ETupleInvalidTypeSpread(Box::new(ETupleInvalidTypeSpreadData {
                 spread_loc,
-                argument: map_error_type_ref_with_reason(argument),
+                argument: map_error_type_ref_with_reason(f, argument),
             })),
 
             EPropsExtraAgainstExactObject(box EPropsExtraAgainstExactObjectData {
@@ -7155,10 +7165,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => EPropsExtraAgainstExactObject(Box::new(EPropsExtraAgainstExactObjectData {
                 prop_names,
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
                 upper_is_record,
-                use_op: map_use_op(&f, use_op),
+                use_op: map_use_op(f, use_op),
             })),
 
             EPrimitiveAsInterface(box EPrimitiveAsInterfaceData {
@@ -7167,9 +7177,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper,
                 kind,
             }) => EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
-                use_op: map_use_op(&f, use_op),
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
+                use_op: map_use_op(f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
                 kind,
             })),
 
@@ -7179,9 +7189,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
                 kind,
             }) => EClassToObject(Box::new(EClassToObjectData {
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-                use_op: map_use_op(&f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
+                use_op: map_use_op(f, use_op),
                 kind,
             })),
 
@@ -7190,23 +7200,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 property,
                 kind,
             }) => EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
-                object: map_error_type_ref_with_reason(object),
-                property: map_error_type_ref_with_reason(property),
+                object: map_error_type_ref_with_reason(f, object),
+                property: map_error_type_ref_with_reason(f, property),
                 kind,
             })),
 
             EObjectComputedPropertyAssign(box (property, key, kind)) => {
                 EObjectComputedPropertyAssign(Box::new((
-                    map_error_type_ref_with_reason(property),
+                    map_error_type_ref_with_reason(f, property),
                     key,
                     kind,
                 )))
             }
 
-            EBigIntRShift3(box operand) => EBigIntRShift3(Box::new(map_error_type_ref(operand))),
+            EBigIntRShift3(box operand) => EBigIntRShift3(Box::new(map_error_type_ref(f, operand))),
 
             EBigIntNumCoerce(box operand) => {
-                EBigIntNumCoerce(Box::new(map_error_type_ref(operand)))
+                EBigIntNumCoerce(Box::new(map_error_type_ref(f, operand)))
             }
 
             EComparison(box EComparisonData {
@@ -7215,18 +7225,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 loc_opt,
                 strict_comparison_opt,
             }) => EComparison(Box::new(EComparisonData {
-                r1: map_error_type_ref_with_reason(r1),
-                r2: map_error_type_ref_with_reason(r2),
+                r1: map_error_type_ref_with_reason(f, r1),
+                r2: map_error_type_ref_with_reason(f, r2),
                 loc_opt,
                 strict_comparison_opt: strict_comparison_opt.map(|info| {
-                    map_strict_comparison_info(info, |loc| loc, map_error_type_ref_with_reason)
+                    map_strict_comparison_info(
+                        info,
+                        |loc| loc,
+                        |r| map_error_type_ref_with_reason(f, r),
+                    )
                 }),
             })),
 
             ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData { lower, upper }) => {
                 ENonStrictEqualityComparison(Box::new(ENonStrictEqualityComparisonData {
-                    lower: map_error_type_ref_with_reason(lower),
-                    upper: map_error_type_ref_with_reason(upper),
+                    lower: map_error_type_ref_with_reason(f, lower),
+                    upper: map_error_type_ref_with_reason(f, upper),
                 }))
             }
 
@@ -7243,11 +7257,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 unify,
             }) => ETupleArityMismatch(Box::new(ETupleArityMismatchData {
                 use_op,
-                lower: map_error_type_ref_with_reason(lower),
+                lower: map_error_type_ref_with_reason(f, lower),
                 lower_arity,
                 lower_inexact,
                 lower_rest,
-                upper: map_error_type_ref_with_reason(upper),
+                upper: map_error_type_ref_with_reason(f, upper),
                 upper_arity,
                 upper_inexact,
                 upper_rest,
@@ -7256,8 +7270,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ENonLitArrayToTuple((lower, upper), use_op) => ENonLitArrayToTuple(
                 (
-                    map_error_type_ref_with_reason(lower),
-                    map_error_type_ref_with_reason(upper),
+                    map_error_type_ref_with_reason(f, lower),
+                    map_error_type_ref_with_reason(f, upper),
                 ),
                 use_op,
             ),
@@ -7271,17 +7285,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => ETupleElementPolarityMismatch(Box::new(ETupleElementPolarityMismatchData {
                 index,
-                lower: map_error_type_ref_with_reason(lower),
+                lower: map_error_type_ref_with_reason(f, lower),
                 polarity_lower,
-                upper: map_error_type_ref_with_reason(upper),
+                upper: map_error_type_ref_with_reason(f, upper),
                 polarity_upper,
                 use_op,
             })),
 
             EIncompatibleWithExact((lower, upper), use_op, kind) => EIncompatibleWithExact(
                 (
-                    map_error_type_ref_with_reason(lower),
-                    map_error_type_ref_with_reason(upper),
+                    map_error_type_ref_with_reason(f, lower),
+                    map_error_type_ref_with_reason(f, upper),
                 ),
                 use_op,
                 kind,
@@ -7290,8 +7304,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EFunctionIncompatibleWithIndexer((lower, upper), use_op) => {
                 EFunctionIncompatibleWithIndexer(
                     (
-                        map_error_type_ref_with_reason(lower),
-                        map_error_type_ref_with_reason(upper),
+                        map_error_type_ref_with_reason(f, lower),
+                        map_error_type_ref_with_reason(f, upper),
                     ),
                     use_op,
                 )
@@ -7306,11 +7320,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 loc,
                 renders_variant,
                 invalid_render_type_kind: map_invalid_render_type_kind(
-                    map_error_type_ref,
+                    |r| map_error_type_ref(f, r),
                     invalid_render_type_kind,
                 ),
                 invalid_types: Vec1::try_from_vec(
-                    invalid_types.into_iter().map(map_error_type_ref).collect(),
+                    invalid_types
+                        .into_iter()
+                        .map(|r| map_error_type_ref(f, r))
+                        .collect(),
                 )
                 .unwrap(),
             })),
@@ -7327,12 +7344,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EAnyValueUsedAsType { reference, value } => EAnyValueUsedAsType {
                 reference,
-                value: map_error_type_ref(value),
+                value: map_error_type_ref(f, value),
             },
 
             EValueUsedAsType { reference, value } => EValueUsedAsType {
                 reference,
-                value: map_error_type_ref(value),
+                value: map_error_type_ref(f, value),
             },
 
             EUnnecessaryInvariant(box EUnnecessaryInvariantData {
@@ -7343,7 +7360,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EUnnecessaryInvariant(Box::new(EUnnecessaryInvariantData {
                 loc,
                 callee,
-                condition: map_error_type_ref(condition),
+                condition: map_error_type_ref(f, condition),
                 condition_kind,
             })),
 
@@ -7372,7 +7389,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 loc,
                 function_reference,
                 param_count,
-                use_op: map_use_op(&f, use_op),
+                use_op: map_use_op(f, use_op),
             })),
 
             EIllegalAssertOperator(box EIllegalAssertOperatorData {
@@ -7388,7 +7405,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ECannotDelete(box ECannotDeleteData { loc, expression }) => {
                 ECannotDelete(Box::new(ECannotDeleteData {
                     loc,
-                    expression: map_error_type_ref(expression),
+                    expression: map_error_type_ref(f, expression),
                 }))
             }
 
@@ -7405,20 +7422,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 branches,
             })) => EEnumError(EnumErrorKind::EnumIncompatible(Box::new(
                 EIncompatibleTypesWithUseOpData {
-                    use_op: map_use_op(&f, use_op),
+                    use_op: map_use_op(f, use_op),
                     lower_loc,
                     lower_def_loc,
                     upper_loc,
                     upper_def_loc,
                     lower_desc: f(lower_desc),
                     upper_desc: f(upper_desc),
-                    explanation: map_eager_explanation(explanation),
-                    example: example.map(|example| {
-                        Box::new(Self::convert_type_to_type_desc(f.clone(), *example))
-                    }),
+                    explanation: map_eager_explanation(f, explanation),
+                    example: example
+                        .map(|example| Box::new(Self::convert_type_to_type_desc(f, *example))),
                     branches: branches
                         .into_iter()
-                        .map(|branch| Self::convert_type_to_type_desc(f.clone(), branch))
+                        .map(|branch| Self::convert_type_to_type_desc(f, branch))
                         .collect(),
                 },
             ))),
@@ -7436,7 +7452,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             EnumMemberAccess::Named { name, suggestion }
                         }
                         EnumMemberAccess::Computed(key) => {
-                            EnumMemberAccess::Computed(map_error_type_ref(key))
+                            EnumMemberAccess::Computed(map_error_type_ref(f, key))
                         }
                     },
                     member_loc,
@@ -7587,8 +7603,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => EIndexerCheckFailed(Box::new(EIndexerCheckFailedData {
                 prop_name,
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
                 indexer_loc,
                 indexer_desc: f(indexer_desc),
                 use_op,
@@ -7618,7 +7634,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )) => EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern(Box::new(
                 MatchNonExhaustiveObjectPatternData {
                     loc,
-                    rest: rest.map(map_error_type_ref),
+                    rest: rest.map(|r| map_error_type_ref(f, r)),
                     missing_props,
                     pattern_kind,
                 },
@@ -7629,7 +7645,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 upper,
             } => ETypeGuardImpliesMismatch {
-                use_op: map_use_op(&f, use_op),
+                use_op: map_use_op(f, use_op),
                 lower,
                 upper,
             },
@@ -7649,7 +7665,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 upper,
             }) => ETypeParamConstIncompatibility(Box::new(ETypeParamConstIncompatibilityData {
-                use_op: map_use_op(&f, use_op),
+                use_op: map_use_op(f, use_op),
                 lower,
                 upper,
             })),
@@ -7659,7 +7675,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 type_,
             }) => ENegativeTypeGuardConsistency(Box::new(ENegativeTypeGuardConsistencyData {
                 return_reason,
-                type_: map_error_type_ref(type_),
+                type_: map_error_type_ref(f, type_),
             })),
 
             EAssertionFunctionFalsyAtExit(box EAssertionFunctionFalsyAtExitData {
@@ -7670,7 +7686,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EAssertionFunctionFalsyAtExit(Box::new(EAssertionFunctionFalsyAtExitData {
                 loc,
                 param,
-                falsy: map_error_type_ref(falsy),
+                falsy: map_error_type_ref(f, falsy),
                 implicit_return,
             })),
 
@@ -7685,11 +7701,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => EUnableToSpread(Box::new(EUnableToSpreadData {
                 spread_loc,
-                object1: map_error_type_ref_with_reason(object1),
-                object2: map_error_type_ref_with_reason(object2),
+                object1: map_error_type_ref_with_reason(f, object1),
+                object2: map_error_type_ref_with_reason(f, object2),
                 propname,
                 error_kind,
-                use_op: map_use_op(&f, use_op),
+                use_op: map_use_op(f, use_op),
             })),
 
             EExponentialSpread(box EExponentialSpreadData {
@@ -7699,11 +7715,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EExponentialSpread(Box::new(EExponentialSpreadData {
                 spread_loc,
                 operand1: map_exponential_spread_operand_group(
-                    map_error_type_ref_with_reason,
+                    |r| map_error_type_ref_with_reason(f, r),
                     operand1,
                 ),
                 operand2: map_exponential_spread_operand_group(
-                    map_error_type_ref_with_reason,
+                    |r| map_error_type_ref_with_reason(f, r),
                     operand2,
                 ),
             })),
@@ -7722,7 +7738,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 key_desc: f(key_desc),
                 value_loc,
                 value_desc: f(value_desc),
-                object2: map_error_type_ref_with_reason(object2),
+                object2: map_error_type_ref_with_reason(f, object2),
                 use_op,
             })),
 
@@ -7734,7 +7750,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => ECannotSpreadIndexerOnRight(Box::new(ECannotSpreadIndexerOnRightData {
                 spread_loc,
-                object: map_error_type_ref_with_reason(object),
+                object: map_error_type_ref_with_reason(f, object),
                 key_loc,
                 key_desc: f(key_desc),
                 use_op,
@@ -7743,7 +7759,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
                 EInvalidObjectKit(Box::new(EInvalidObjectKitData {
                     loc,
-                    value: map_error_type_ref(value),
+                    value: map_error_type_ref(f, value),
                     use_op,
                 }))
             }
@@ -7766,7 +7782,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 is_new,
                 callee: match callee {
                     CallTypeArityCallee::Type(callee) => {
-                        CallTypeArityCallee::Type(map_error_type_ref(callee))
+                        CallTypeArityCallee::Type(map_error_type_ref(f, callee))
                     }
                     CallTypeArityCallee::Builtin(name) => CallTypeArityCallee::Builtin(name),
                     CallTypeArityCallee::Function => CallTypeArityCallee::Function,
@@ -7806,8 +7822,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 kind,
             }) => EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
                 loc,
-                left: map_error_type_ref(left),
-                right: map_error_type_ref(right),
+                left: map_error_type_ref(f, left),
+                right: map_error_type_ref(f, right),
                 kind,
             })),
 
@@ -7882,7 +7898,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EArithmeticOperand(box EArithmeticOperandData { loc, operand }) => {
                 EArithmeticOperand(Box::new(EArithmeticOperandData {
                     loc,
-                    operand: map_error_type_ref(operand),
+                    operand: map_error_type_ref(f, operand),
                 }))
             }
 
@@ -7898,7 +7914,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     call,
                     type_param_loc,
                     type_param_name,
-                    use_op: map_use_op(&f, use_op),
+                    use_op: map_use_op(f, use_op),
                 },
             )),
 
@@ -7915,7 +7931,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower_def_loc,
                 lower_desc: f(lower_desc),
                 upper,
-                use_op: use_op.map(|use_op| map_use_op(&f, use_op)),
+                use_op: use_op.map(|use_op| map_use_op(f, use_op)),
             })),
 
             EIncompatibleProp(box EIncompatiblePropData {
@@ -7927,9 +7943,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EIncompatibleProp(Box::new(EIncompatiblePropData {
                 prop,
                 prop_loc,
-                object: map_error_type_ref_with_reason(object),
+                object: map_error_type_ref_with_reason(f, object),
                 special,
-                use_op: use_op.map(|use_op| map_use_op(&f, use_op)),
+                use_op: use_op.map(|use_op| map_use_op(f, use_op)),
             })),
 
             EPropNotFoundInLookup(box EPropNotFoundInLookupData {
@@ -7941,8 +7957,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name,
                 prop_loc,
-                object: map_error_type_ref_with_reason(object),
-                use_op: map_use_op(&f, use_op),
+                object: map_error_type_ref_with_reason(f, object),
+                use_op: map_use_op(f, use_op),
                 suggestion,
             })),
 
@@ -7954,7 +7970,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 max_arity,
             }) => EMissingTypeArgs(Box::new(EMissingTypeArgsData {
                 loc,
-                type_: map_error_type_ref_with_reason(type_),
+                type_: map_error_type_ref_with_reason(f, type_),
                 arity_loc,
                 min_arity,
                 max_arity,
@@ -7972,19 +7988,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 example,
                 branches,
             }) => EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
-                use_op: map_use_op(&f, use_op),
+                use_op: map_use_op(f, use_op),
                 lower_loc,
                 lower_def_loc,
                 upper_loc,
                 upper_def_loc,
                 lower_desc: f(lower_desc),
                 upper_desc: f(upper_desc),
-                explanation: map_eager_explanation(explanation),
+                explanation: map_eager_explanation(f, explanation),
                 example: example
-                    .map(|example| Box::new(Self::convert_type_to_type_desc(f.clone(), *example))),
+                    .map(|example| Box::new(Self::convert_type_to_type_desc(f, *example))),
                 branches: branches
                     .into_iter()
-                    .map(|branch| Self::convert_type_to_type_desc(f.clone(), branch))
+                    .map(|branch| Self::convert_type_to_type_desc(f, branch))
                     .collect(),
             })),
 
@@ -8002,8 +8018,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_loc,
                 lower_desc: f(lower_desc),
                 upper_desc: f(upper_desc),
-                use_op: map_use_op(&f, use_op),
-                explanation: map_explanation(explanation),
+                use_op: map_use_op(f, use_op),
+                explanation: map_explanation(f, explanation),
             })),
 
             EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
@@ -8014,9 +8030,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 suggestion,
             }) => EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                 prop_name,
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-                use_op: map_use_op(&f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
+                use_op: map_use_op(f, use_op),
                 suggestion,
             })),
 
@@ -8026,17 +8042,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 props,
                 use_op,
             }) => {
-                let map_object = |object| match object {
+                let mut map_object = |object| match object {
                     PropPolarityMismatchObject::Type(t) => {
-                        PropPolarityMismatchObject::Type(map_error_type_ref_with_reason(t))
+                        PropPolarityMismatchObject::Type(map_error_type_ref_with_reason(f, t))
                     }
                     object @ PropPolarityMismatchObject::Class(_) => object,
                 };
+                let lower = map_object(lower);
+                let upper = map_object(upper);
                 EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
-                    lower: map_object(lower),
-                    upper: map_object(upper),
+                    lower,
+                    upper,
                     props,
-                    use_op: map_use_op(&f, use_op),
+                    use_op: map_use_op(f, use_op),
                 }))
             }
 
@@ -8047,9 +8065,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
                 prop_names,
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-                use_op: map_use_op(&f, use_op),
+                lower: map_error_type_ref_with_reason(f, lower),
+                upper: map_error_type_ref_with_reason(f, upper),
+                use_op: map_use_op(f, use_op),
             })),
 
             EPropsNotFoundInInvariantSubtyping(box EPropsNotFoundInInvariantSubtypingData {
@@ -8060,9 +8078,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EPropsNotFoundInInvariantSubtyping(Box::new(
                 EPropsNotFoundInInvariantSubtypingData {
                     prop_names,
-                    lower: map_error_type_ref_with_reason(lower),
-                    upper: map_error_type_ref_with_reason(upper),
-                    use_op: map_use_op(&f, use_op),
+                    lower: map_error_type_ref_with_reason(f, lower),
+                    upper: map_error_type_ref_with_reason(f, upper),
+                    use_op: map_use_op(f, use_op),
                 },
             )),
 
@@ -8084,7 +8102,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                         match reference {
                                         MatchExampleReference::Type(reference) => {
                                             MatchExampleReference::Type(
-                                                map_error_type_ref_with_reason(reference),
+                                                map_error_type_ref_with_reason(f, reference),
                                             )
                                         }
                                         reference @ (MatchExampleReference::EnumMember { .. }
@@ -8119,7 +8137,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                     .map(|(enum_key, references)| {
                                         (
                                             enum_key,
-                                            references.mapped(&map_error_type_ref_with_reason),
+                                            references
+                                                .mapped(|r| map_error_type_ref_with_reason(f, r)),
                                         )
                                     })
                                     .collect(),
@@ -8134,10 +8153,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 loc,
                 branches,
             }) => {
-                let use_op = use_op.map(|u| map_use_op(&f, u));
+                let use_op = use_op.map(|u| map_use_op(f, u));
                 let branches = branches
                     .into_iter()
-                    .map(|b| Self::convert_type_to_type_desc(f.clone(), b))
+                    .map(|b| Self::convert_type_to_type_desc(f, b))
                     .collect();
                 EIncompatibleSpeculation(Box::new(EIncompatibleSpeculationData {
                     use_op,
@@ -8151,10 +8170,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 loc,
                 branches,
             }) => {
-                let use_op = map_use_op(&f, use_op);
+                let use_op = map_use_op(f, use_op);
                 let branches = branches
                     .into_iter()
-                    .map(|b| Self::convert_type_to_type_desc(f.clone(), b))
+                    .map(|b| Self::convert_type_to_type_desc(f, b))
                     .collect();
                 EUnionSpeculationFailed(Box::new(EUnionSpeculationFailedData {
                     use_op,
@@ -8167,7 +8186,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ERecordError(RecordErrorKind::RecordBannedTypeUtil {
                     op_loc,
                     op,
-                    record: map_error_type_ref_with_reason(record),
+                    record: map_error_type_ref_with_reason(f, record),
                 })
             }
 

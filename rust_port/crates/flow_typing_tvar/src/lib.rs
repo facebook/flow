@@ -12,6 +12,7 @@ use dupe::Dupe;
 use flow_common::reason::Reason;
 use flow_common::reason::mk_id;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
@@ -19,7 +20,7 @@ use flow_typing_type::type_::constraint;
 use flow_typing_type::type_::constraint::forcing_state::ForcingState;
 use flow_utils_union_find::Node;
 
-pub fn mk_no_wrap<'cx>(cx: &Context<'cx>, reason: &Reason) -> i32 {
+pub fn mk_no_wrap<'cx>(cx: &mut Context<'cx>, reason: &Reason) -> i32 {
     let tvar = mk_id() as i32;
     cx.add_fresh_tvar(
         tvar,
@@ -28,34 +29,29 @@ pub fn mk_no_wrap<'cx>(cx: &Context<'cx>, reason: &Reason) -> i32 {
         )))),
     );
     if cx.is_verbose() {
-        eprintln!(
-            "TVAR {} ({}): {:?}",
-            tvar,
-            cx.graph().borrow().len(),
-            reason
-        );
+        eprintln!("TVAR {} ({}): {:?}", tvar, cx.graph().len(), reason);
     }
     tvar
 }
 
-pub fn mk<'cx>(cx: &Context<'cx>, reason: Reason) -> Type {
+pub fn mk<'cx>(cx: &mut Context<'cx>, reason: Reason) -> Type {
     let id = mk_no_wrap(cx, &reason);
     Type::new(TypeInner::OpenT(Tvar::new(reason, id as u32)))
 }
 
 pub fn mk_where<'cx, E>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: Reason,
-    f: impl FnOnce(&Context<'cx>, &Type) -> Result<(), E>,
+    f: impl FnOnce(&mut Context<'cx>, &Type) -> Result<(), E>,
 ) -> Result<Type, E> {
     let tvar = mk(cx, reason);
     f(cx, &tvar)?;
     Ok(tvar)
 }
 
-pub fn mk_where_no_wrap<'cx, F>(cx: &Context<'cx>, reason: Reason, f: F) -> i32
+pub fn mk_where_no_wrap<'cx, F>(cx: &mut Context<'cx>, reason: Reason, f: F) -> i32
 where
-    F: FnOnce(&Context<'cx>, &Type),
+    F: FnOnce(&mut Context<'cx>, &Type),
 {
     let tvar = mk_no_wrap(cx, &reason);
     let t = Type::new(TypeInner::OpenT(Tvar::new(reason, tvar as u32)));
@@ -64,60 +60,55 @@ where
 }
 
 pub fn mk_no_wrap_where<'cx, E>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: Reason,
-    f: impl FnOnce(&Context<'cx>, &Reason, i32) -> Result<(), E>,
+    f: impl FnOnce(&mut Context<'cx>, &Reason, i32) -> Result<(), E>,
 ) -> Result<Type, E> {
     let tvar = mk_no_wrap(cx, &reason);
     f(cx, &reason, tvar)?;
     Ok(Type::new(TypeInner::OpenT(Tvar::new(reason, tvar as u32))))
 }
 
-fn mk_fully_resolved_helper<'cx>(cx: &Context<'cx>, state: ForcingState<'cx, Context<'cx>>) -> i32 {
+fn mk_fully_resolved_helper<'cx>(cx: &mut Context<'cx>, state: ForcingState<Cx>) -> i32 {
     let id = mk_id() as i32;
     let node = Node::create_root(constraint::Constraints::FullyResolved(state));
-    cx.graph().borrow_mut().insert_fresh(id, node);
+    cx.graph_mut().insert_fresh(id, node);
     id
 }
 
 pub fn mk_fully_resolved_lazy<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: Reason,
     force_post_component: bool,
-    f: Box<
-        dyn FnOnce(&Context<'cx>) -> Result<Type, flow_utils_concurrency::job_error::JobError>
-            + 'cx,
-    >,
+    f: impl for<'a> FnOnce(
+        &mut Context<'a>,
+    ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
+    + 'static,
 ) -> Type {
-    let state = ForcingState::try_of_lazy_t(reason.dupe(), f);
+    let state = ForcingState::<Cx>::try_of_lazy_t(reason.dupe(), f);
     let id = mk_fully_resolved_helper(cx, state.clone());
     if force_post_component {
         cx.add_post_component_tvar_forcing_state(id, state);
     }
     if cx.is_verbose() {
-        eprintln!(
-            "Lazy TVAR {} ({}): {:?}",
-            id,
-            cx.graph().borrow().len(),
-            reason
-        );
+        eprintln!("Lazy TVAR {} ({}): {:?}", id, cx.graph().len(), reason);
     }
     Type::new(TypeInner::OpenT(Tvar::new(reason, id as u32)))
 }
 
-pub fn mk_fully_resolved_no_wrap<'cx>(cx: &Context<'cx>, t: Type) -> i32 {
+pub fn mk_fully_resolved_no_wrap<'cx>(cx: &mut Context<'cx>, t: Type) -> i32 {
     mk_fully_resolved_helper(cx, ForcingState::of_non_lazy_t(t))
 }
 
-pub fn mk_fully_resolved<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
+pub fn mk_fully_resolved<'cx>(cx: &mut Context<'cx>, reason: Reason, t: Type) -> Type {
     let id = mk_fully_resolved_helper(cx, ForcingState::of_non_lazy_t(t));
     Type::new(TypeInner::OpenT(Tvar::new(reason, id as u32)))
 }
 
-pub fn mk_resolved<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
+pub fn mk_resolved<'cx>(cx: &mut Context<'cx>, reason: Reason, t: Type) -> Type {
     let id = mk_id() as i32;
     let constraints = constraint::Constraints::Resolved(t);
     let node = Node::create_root(constraints);
-    cx.graph().borrow_mut().insert_fresh(id, node);
+    cx.graph_mut().insert_fresh(id, node);
     Type::new(TypeInner::OpenT(Tvar::new(reason, id as u32)))
 }

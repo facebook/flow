@@ -53,7 +53,7 @@ pub fn set_of_fixable_signature_verification_locations(
 
 pub(crate) fn fix_signature_verification_error_at_loc<'a, 'cx>(
     remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'a>>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -87,7 +87,7 @@ pub(crate) fn fix_signature_verification_error_at_loc<'a, 'cx>(
 
 pub fn fix_signature_verification_errors<'a, 'cx>(
     file_key: FileKey,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     file_options: Arc<FileOptions>,
     get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,

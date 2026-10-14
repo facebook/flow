@@ -21,24 +21,24 @@ pub trait Config: ConfigTypes {
     fn is_param_type_annotated(param: &Self::Param) -> bool;
     fn is_rest_type_annotated(rest: &Self::Rest) -> bool;
     fn subst_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         param: &Self::Param,
     ) -> Self::Param;
     fn subst_rest<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         rest: &Self::Rest,
     ) -> Self::Rest;
     fn subst_this<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         this: &Self::ThisParam,
     ) -> Self::ThisParam;
     fn eval_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, CheckExprError>;
-    fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Self::RestAst;
-    fn eval_this<'a>(cx: &Context<'a>, this: &Self::ThisParam) -> Self::ThisAst;
+    fn eval_rest<'a>(cx: &mut Context<'a>, rest: &Self::Rest) -> Self::RestAst;
+    fn eval_this<'a>(cx: &mut Context<'a>, this: &Self::ThisParam) -> Self::ThisAst;
 }

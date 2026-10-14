@@ -265,7 +265,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for ThisVisitor {
 
 // Visitor that uses the previously found declaration info to check for errors in imports/exports.
 struct ImportExportVisitor<'cx, 'a> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     scope_info: &'a ScopeInfo<ALoc>,
     declarations: &'a Declarations,
     import_star_uses: ALocMap<(ALoc, ast::Identifier<ALoc, ALoc>)>,
@@ -273,7 +273,7 @@ struct ImportExportVisitor<'cx, 'a> {
 
 impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
     fn new(
-        cx: &'a Context<'cx>,
+        cx: &'a mut Context<'cx>,
         scope_info: &'a ScopeInfo<ALoc>,
         declarations: &'a Declarations,
     ) -> Self {
@@ -294,12 +294,12 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         }
     }
 
-    fn add_error(&self, err: ErrorMessage<ALoc>) {
+    fn add_error(&mut self, err: ErrorMessage<ALoc>) {
         flow_js::add_output_non_speculating(self.cx, err)
     }
 
     fn add_bad_default_import_access_error(
-        &self,
+        &mut self,
         loc: ALoc,
         import_star: &(ALoc, ast::Identifier<ALoc, ALoc>),
     ) {
@@ -310,12 +310,12 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         ))))
     }
 
-    fn add_bad_default_import_destructuring_error(&self, loc: ALoc) {
+    fn add_bad_default_import_destructuring_error(&mut self, loc: ALoc) {
         self.add_error(ErrorMessage::EBadDefaultImportDestructuring(loc))
     }
 
     fn add_invalid_import_star_use_error(
-        &self,
+        &mut self,
         loc: ALoc,
         import_star: &(ALoc, ast::Identifier<ALoc, ALoc>),
     ) {
@@ -327,19 +327,19 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
     }
 
     fn add_non_const_var_export_error(
-        &self,
+        &mut self,
         loc: ALoc,
         decl_info: Option<(ALoc, flow_data_structure_wrapper::smol_str::FlowSmolStr)>,
     ) {
         self.add_error(ErrorMessage::ENonConstVarExport(Box::new((loc, decl_info))))
     }
 
-    fn add_this_in_exported_function_error(&self, loc: ALoc) {
+    fn add_this_in_exported_function_error(&mut self, loc: ALoc) {
         self.add_error(ErrorMessage::EThisInExportedFunction(loc))
     }
 
     fn add_export_named_default_error(
-        &self,
+        &mut self,
         loc: ALoc,
         name: Option<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
         is_reexport: bool,
@@ -361,7 +361,7 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         self.import_star_from_use(use_loc).is_some()
     }
 
-    fn add_exported_this_errors(&self, func: &ast::function::Function<ALoc, ALoc>) {
+    fn add_exported_this_errors(&mut self, func: &ast::function::Function<ALoc, ALoc>) {
         let params = &func.params;
         match &params.this_ {
             // if the function has a this parameter, we don't want to report any errors because the user has
@@ -794,7 +794,7 @@ impl<'cx, 'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for ImportExport
     }
 }
 
-fn detect_mixed_import_and_require_error<'cx>(cx: &Context<'cx>, declarations: &Declarations) {
+fn detect_mixed_import_and_require_error<'cx>(cx: &mut Context<'cx>, declarations: &Declarations) {
     match (&declarations.first_import, &declarations.first_require) {
         (Some(first_import_loc), Some(first_require_loc)) => flow_js::add_output_non_speculating(
             cx,
@@ -808,7 +808,7 @@ fn detect_mixed_import_and_require_error<'cx>(cx: &Context<'cx>, declarations: &
 }
 
 fn detect_errors_from_ast<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     file_sig: &FileSig,
     ast: &ast::Program<ALoc, ALoc>,
 ) {
@@ -821,7 +821,7 @@ fn detect_errors_from_ast<'cx>(
 }
 
 pub fn detect_errors<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     file_sig: &FileSig,
     ast: &ast::Program<ALoc, ALoc>,
     metadata: &Metadata,

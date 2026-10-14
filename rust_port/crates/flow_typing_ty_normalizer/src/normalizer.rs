@@ -46,10 +46,10 @@ use flow_common_ty::ty_utils::simplify_elt;
 use flow_common_ty::ty_utils::size_of_type;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_lazy::Lazy;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_flow_common::type_subst;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrayATData;
@@ -85,6 +85,7 @@ use flow_utils_concurrency::job_error::JobError;
 use crate::env::Env;
 use crate::env::EvaluateTypeDestructorsMode;
 use crate::env::Genv;
+use crate::env::ImportedNames;
 use crate::env::ImportedNamesMap;
 use crate::env::Options;
 
@@ -212,13 +213,13 @@ pub mod lookahead {
     #[derive(Debug, Clone, Copy)]
     struct RecursiveError;
 
-    pub fn peek<'cx>(cx: &Context<'cx>, t: &Type) -> Lookahead {
+    pub fn peek<'cx>(cx: &mut Context<'cx>, t: &Type) -> Lookahead {
         peek_types(cx, std::slice::from_ref(t))
     }
 
-    pub fn peek_types<'cx>(cx: &Context<'cx>, ts: &[Type]) -> Lookahead {
+    pub fn peek_types<'cx>(cx: &mut Context<'cx>, ts: &[Type]) -> Lookahead {
         fn loop_<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             acc: &mut Vec<Type>,
             seen: &mut HashSet<i32>,
             t: &Type,
@@ -269,7 +270,6 @@ pub mod lookahead {
 
 pub trait NormalizerInput {
     fn eval<'cx>(
-        cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         should_eval: bool,
@@ -289,7 +289,6 @@ pub trait NormalizerInput {
     ) -> Result<ALocTy, Error>;
 
     fn keys<'cx, A>(
-        cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         should_evaluate: bool,
@@ -301,7 +300,6 @@ pub trait NormalizerInput {
 
     /// Reduce mapped type property and key expressions before normalizing their bodies.
     fn typeapp<'cx, A>(
-        cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
@@ -312,7 +310,7 @@ pub trait NormalizerInput {
         t: Type,
         targs: &[Type],
     ) -> Result<A, Error> {
-        match cx.find_resolved(&t).as_deref() {
+        match env.cx.find_resolved(&t).as_deref() {
             Some(TypeInner::DefT(_, def_t))
                 if let DefTInner::PolyT(box PolyTData {
                     kind: PolyTKind::MappedType,
@@ -334,7 +332,7 @@ pub trait NormalizerInput {
                     .map(|(parameter, argument)| (parameter.name.dupe(), argument.dupe()))
                     .collect();
                 let body = type_subst::subst(
-                    cx,
+                    env.cx,
                     None,
                     true,
                     false,
@@ -344,15 +342,12 @@ pub trait NormalizerInput {
                 );
                 cont(env, state, &body)
             }
-            _ => Self::typeapp_regular(
-                cx, env, state, cont, type_, app, from_value, reason, t, targs,
-            ),
+            _ => Self::typeapp_regular(env, state, cont, type_, app, from_value, reason, t, targs),
         }
     }
 
     /// Normalize regular applications through the backend's instantiation policy.
     fn typeapp_regular<'cx, A>(
-        cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
@@ -365,7 +360,6 @@ pub trait NormalizerInput {
     ) -> Result<A, Error>;
 
     fn builtin_type<'cx, A>(
-        cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
@@ -374,7 +368,6 @@ pub trait NormalizerInput {
     ) -> Result<A, Error>;
 
     fn builtin_typeapp<'cx, A>(
-        cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
@@ -575,10 +568,10 @@ fn symbol_from_loc<'cx>(
     sym_name: FlowSmolStr,
 ) -> Result<ALocSymbol, Error> {
     let symbol_source = sym_def_loc.source();
-    let current_source = env.genv.cx.file();
+    let current_source = env.cx.file();
     let sym_provenance = match symbol_source {
         Some(def_file) if current_source == def_file => Provenance::Local,
-        Some(def_file) if env.genv.cx.is_global_libdef(def_file) => {
+        Some(def_file) if env.cx.is_global_libdef(def_file) => {
             Provenance::Library(flow_common_ty::ty_symbol::RemoteInfo {
                 imported_as: env
                     .imported_names()?
@@ -751,7 +744,7 @@ fn should_eval_skip_aliases<'cx>(env: &mut Env<'_, 'cx>) -> bool {
 fn unwrap_unless_aliased<'cx>(env: &mut Env<'_, 'cx>, t: &Type) -> Option<Type> {
     match t.deref() {
         TypeInner::OpenT(tvar) => flow_typing_flow_common::flow_js_utils::merge_tvar_opt(
-            env.genv.cx,
+            env.cx,
             false,
             flow_typing_type::type_::union_rep::UnionKind::ResolvedKind,
             tvar.reason(),
@@ -759,7 +752,6 @@ fn unwrap_unless_aliased<'cx>(env: &mut Env<'_, 'cx>, t: &Type) -> Option<Type> 
         )
         .and_then(|t| unwrap_unless_aliased(env, &t)),
         TypeInner::EvalT { id, .. } if should_eval_skip_aliases(env) => env
-            .genv
             .cx
             .evaluated()
             .get(id)
@@ -854,7 +846,7 @@ fn should_force_eval_to_avoid_giant_types<'cx>(
 ///
 /// [`type_subst`]: flow_typing_flow_common::type_subst
 fn operand_is_generic<'cx>(env: &mut Env<'_, 'cx>, t: &Type) -> bool {
-    !flow_typing_flow_common::type_subst::free_var_finder(env.genv.cx, None, t).is_empty()
+    !flow_typing_flow_common::type_subst::free_var_finder(env.cx, None, t).is_empty()
 }
 
 /// The policy behind [`EvaluateTypeDestructorsMode::EvaluateForHover`].
@@ -979,12 +971,10 @@ fn eval_t<'cx, I: NormalizerInput>(
 ) -> Result<ALocTy, Error> {
     let (t, defer_use_t, id) = x;
     let flow_typing_type::type_::TypeDestructorTInner(_, _, d) = defer_use_t.deref();
-    let cx = env.genv.cx;
     state.found_computed_type = true;
     let should_eval = should_evaluate_destructor(env, force_eval, t, d);
     let eval_id = id.dupe();
     I::eval(
-        cx,
         env,
         state,
         should_eval,
@@ -1021,7 +1011,7 @@ fn type_variable<'cx>(
             &Type,
         ) -> Result<ALocTy, Error>,
         id: i32,
-        uses: &[flow_typing_type::type_::UseT<Context<'cx>>],
+        uses: &[flow_typing_type::type_::UseT<Cx>],
     ) -> Result<UpperBoundKind<ALoc>, Error> {
         let mut acc = Vec::new();
         let mut uses = VecDeque::from(uses.to_vec());
@@ -1072,7 +1062,7 @@ fn type_variable<'cx>(
             &Type,
         ) -> Result<ALocTy, Error>,
         id: i32,
-        bounds: &Bounds<Context<'cx>>,
+        bounds: &Bounds<Cx>,
     ) -> Result<ALocTy, Error> {
         let uses: Vec<_> = bounds.upper.keys().map(|k| k.use_t.dupe()).collect();
         let use_kind = uses_t(env, state, cont, id, &uses)?;
@@ -1089,7 +1079,7 @@ fn type_variable<'cx>(
             &Type,
         ) -> Result<ALocTy, Error>,
         id: i32,
-        bounds: &Bounds<Context<'cx>>,
+        bounds: &Bounds<Cx>,
     ) -> Result<Vec<ALocTy>, Error> {
         let mut result = Vec::new();
         for t in bounds.lower.keys() {
@@ -1101,11 +1091,11 @@ fn type_variable<'cx>(
         Ok(result)
     }
 
-    let (_, constraints) = env.genv.cx.find_constraints(id);
+    let (_, constraints) = env.cx.find_constraints(id);
     match constraints {
         Constraints::Resolved(t) => cont(env, state, Some(IdKey::TVarKey(id)), &t),
         Constraints::FullyResolved(s) => {
-            let t = env.genv.cx.force_fully_resolved_tvar(&s);
+            let t = env.cx.force_fully_resolved_tvar(&s);
             cont(env, state, Some(IdKey::TVarKey(id)), &t)
         }
         Constraints::Unresolved(bounds) => {
@@ -1157,7 +1147,6 @@ fn keys_t<'cx, I: NormalizerInput>(
     reason: &Reason,
     t: &Type,
 ) -> Result<ALocTy, Error> {
-    let cx = env.genv.cx;
     state.found_computed_type = true;
     let should_evaluate = force_eval
         || match env.evaluate_type_destructors() {
@@ -1168,7 +1157,6 @@ fn keys_t<'cx, I: NormalizerInput>(
             | EvaluateTypeDestructorsMode::EvaluateCustom(_) => true,
         };
     I::keys(
-        cx,
         env,
         state,
         should_evaluate,
@@ -1351,7 +1339,6 @@ mod type_converter {
         depth: u32,
         t: &Type,
     ) -> Result<ALocTy, Error> {
-        let cx = env.genv.cx;
         let prefix = format!(
             "{:width$}[Norm|run_id:{}|depth:{}]",
             "",
@@ -1362,7 +1349,7 @@ mod type_converter {
         eprintln!(
             "{} Input: {}\n",
             prefix,
-            flow_typing_debug::dump_t(None, cx, t)
+            flow_typing_debug::dump_t(None, env.cx, t)
         );
         let result = type_with_alias_reason::<I>(env, state, id, t);
         let result_str = match &result {
@@ -1454,7 +1441,7 @@ mod type_converter {
         id: Option<IdKey>,
         node_id: i32,
     ) -> Result<ALocTy, Error> {
-        let (root_id, _) = env.genv.cx.find_constraints(node_id);
+        let (root_id, _) = env.cx.find_constraints(node_id);
         if id == Some(IdKey::TVarKey(root_id)) {
             return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
                 UpperBoundKind::NoUpper,
@@ -2144,8 +2131,7 @@ mod type_converter {
         source: ty::PropSource,
         allowed_prop_names: Option<&[Name]>,
     ) -> Result<Vec<ty::Prop<ALoc>>, Error> {
-        let cx = env.genv.cx;
-        let prop_map = cx.find_props(props_id);
+        let prop_map = env.cx.find_props(props_id);
         let props: Vec<_> = match allowed_prop_names {
             Some(names) => names
                 .iter()
@@ -2155,7 +2141,7 @@ mod type_converter {
         };
         let call_props = match call_id_opt {
             Some(call_id) => {
-                let call_t = cx.find_call(call_id);
+                let call_t = env.cx.find_call(call_id);
                 call_prop_from_t::<I>(env, state, &call_t)?
             }
             None => Vec::new(),
@@ -2356,7 +2342,7 @@ mod type_converter {
                 Some(construct_id) => {
                     let ts: Vec<Type> = {
                         let ft = flow_typing_flow_common::flow_js_utils::read_construct_t(
-                            env.genv.cx,
+                            env.cx,
                             construct_id,
                         );
                         match ft.deref() {
@@ -2876,7 +2862,6 @@ mod type_converter {
         ) -> Result<ALocTy, Error> {
             if from_value && let Some(targs) = targs {
                 return I::typeapp(
-                    env.genv.cx,
                     env,
                     state,
                     &mut |env, state, t| type__::<I>(env, state, None, t),
@@ -2955,7 +2940,7 @@ mod type_converter {
             }
         }
 
-        match lookahead::peek(env.genv.cx, t) {
+        match lookahead::peek(env.cx, t) {
             lookahead::Lookahead::Recursive => {
                 Err(terr(ErrorKind::BadTypeApp, Some("recursive"), Some(t)))
             }
@@ -2987,7 +2972,7 @@ mod type_converter {
         args: &[Type],
     ) -> Result<ALocTy, Error> {
         let builtin = flow_typing_flow_common::flow_js_utils::lookup_builtin_type(
-            env.genv.cx,
+            env.cx,
             name,
             reason.dupe(),
         );
@@ -3700,22 +3685,25 @@ mod type_converter {
                 true_t,
                 false_t,
                 ..
-            }) => conditional_type::<I>(
-                env,
-                state,
-                ConditionalTypeInput {
-                    check_type: ty,
-                    infer_tparam_ids: Rc::new(
-                        infer_tparams
-                            .iter()
-                            .map(|tp| env.genv.cx.make_aloc_id(tp.reason.loc()))
-                            .collect(),
-                    ),
-                    extends_t,
-                    true_t,
-                    false_t,
-                },
-            ),
+            }) => {
+                let infer_tparam_ids = Rc::new(
+                    infer_tparams
+                        .iter()
+                        .map(|tp| env.cx.make_aloc_id(tp.reason.loc()))
+                        .collect(),
+                );
+                conditional_type::<I>(
+                    env,
+                    state,
+                    ConditionalTypeInput {
+                        check_type: ty,
+                        infer_tparam_ids,
+                        extends_t,
+                        true_t,
+                        false_t,
+                    },
+                )
+            }
             D::TypeMap(TypeMap::ObjectKeyMirror) => {
                 Ok(Arc::new(ty::Ty::Utility(ty::Utility::ObjKeyMirror(ty))))
             }
@@ -3762,7 +3750,7 @@ mod type_converter {
             }) => {
                 let (property_type, name_type, homomorphic) =
                     flow_typing_flow_common::flow_js_utils::substitute_mapped_type_distributive_tparams(
-                        env.genv.cx,
+                        env.cx,
                         Some(flow_typing_type::type_::unknown_use()),
                         distributive_tparam_name.clone(),
                         property_type.dupe(),
@@ -3946,13 +3934,13 @@ pub mod element_converter {
             }
         };
 
-        let current_source = env.genv.cx.file();
+        let current_source = env.cx.file().dupe();
         let opaque_source = reason.def_loc().source();
         let name = symbol_from_reason(env, reason, name_str.dupe())?;
         let t_opt: Option<&Type> = match &nominal_type.underlying_t {
             // opaque type A = number;
             nominal::UnderlyingT::OpaqueWithLocal { t }
-                if Some(current_source) == opaque_source =>
+                if Some(&current_source) == opaque_source =>
             {
                 // Compare the current file (of the query) and the file that the opaque
                 // type is defined. If they differ, then hide the underlying/super type.
@@ -3961,7 +3949,7 @@ pub mod element_converter {
             }
             nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. }) => Some(t),
             _ => {
-                if Some(current_source) == opaque_source {
+                if Some(&current_source) == opaque_source {
                     // declare opaque type B: number;
                     // TODO: This will potentially report a remote name.
                     // The same fix for T25963804 should be applied here as well.
@@ -4458,7 +4446,7 @@ pub mod element_converter {
                                 SymbolKind::SymbolEnum if !env.keep_only_namespace_name => {
                                     let member_ts =
                                         flow_typing_flow_common::flow_js_utils::ts_enum_member_types(
-                                            env.genv.cx,
+                                            env.cx,
                                             ns.types_tmap.dupe(),
                                         );
                                     match member_ts.split_first() {
@@ -4653,7 +4641,7 @@ pub mod element_converter {
             }
         }
 
-        match lookahead::peek(env.genv.cx, t) {
+        match lookahead::peek(env.cx, t) {
             lookahead::Lookahead::LowerBounds(ref bounds) if bounds.len() == 1 => {
                 singleton::<I>(env, state, t, &bounds[0])
             }
@@ -4682,7 +4670,7 @@ pub mod element_converter {
         ) -> Result<Option<ALocTy>, Error> {
             match cjs_export {
                 None => Ok(None),
-                Some((_def_loc, exports)) => match lookahead::peek(env.genv.cx, exports) {
+                Some((_def_loc, exports)) => match lookahead::peek(env.cx, exports) {
                     lookahead::Lookahead::LowerBounds(ref bounds) if bounds.len() == 1 => {
                         match bounds[0].deref() {
                             TypeInner::DefT(_, def_t) => match &**def_t {
@@ -4729,9 +4717,8 @@ pub mod element_converter {
         }
 
         let name = reason_utils::module_symbol_opt(env, reason)?;
-        let cx = env.genv.cx;
-        let value_exports = cx.find_exports(export_types.value_exports_tmap);
-        let type_exports = cx.find_exports(export_types.type_exports_tmap);
+        let value_exports = env.cx.find_exports(export_types.value_exports_tmap);
+        let type_exports = env.cx.find_exports(export_types.type_exports_tmap);
         let exports_tmap = value_exports.union(type_exports);
         let exports = from_exports_tmap::<I>(env, state, &exports_tmap)?;
         let default = from_cjs_export::<I>(env, state, &export_types.cjs_export)?;
@@ -4750,8 +4737,7 @@ pub mod element_converter {
         use flow_typing_type::type_::PropertyInner;
 
         let default_name = Name::new("default");
-        let cx = env.genv.cx;
-        let props = cx.find_props(o.props_tmap.dupe());
+        let props = env.cx.find_props(o.props_tmap.dupe());
         let mut decls: Vec<ty::Decl<ALoc>> = Vec::new();
         let mut default: Option<ALocTy> = None;
 
@@ -4795,8 +4781,7 @@ pub mod element_converter {
         env.keep_only_namespace_name = true;
 
         let (mut exports, default) = module_of_object::<I>(env, state, values_type)?;
-        let cx = env.genv.cx;
-        let type_props = cx.find_props(types_tmap);
+        let type_props = env.cx.find_props(types_tmap);
         for (x, prop) in type_props.iter() {
             match prop.deref() {
                 PropertyInner::Field(fd) => match toplevel::<I>(env, state, &fd.type_)? {
@@ -4885,7 +4870,7 @@ mod expand_members {
         let t = match a {
             flow_typing_type::type_::ArrType::ArrayAT(box ArrayATData { .. }) => {
                 flow_typing_flow_common::flow_js_utils::lookup_builtin_value(
-                    env.genv.cx,
+                    env.cx,
                     "Array",
                     r.dupe(),
                 )
@@ -4893,7 +4878,7 @@ mod expand_members {
             flow_typing_type::type_::ArrType::ROArrayAT(box (..))
             | flow_typing_type::type_::ArrType::TupleAT(box TupleATData { .. }) => {
                 flow_typing_flow_common::flow_js_utils::lookup_builtin_type(
-                    env.genv.cx,
+                    env.cx,
                     "ReadonlyArray",
                     r.dupe(),
                 )
@@ -5011,7 +4996,6 @@ mod expand_members {
             }),
         ));
         let proto_ty = I::builtin_typeapp(
-            env.genv.cx,
             env,
             state,
             &mut |env, state, t| {
@@ -5122,7 +5106,6 @@ mod expand_members {
         name: &str,
     ) -> Result<ALocTy, Error> {
         I::builtin_type(
-            env.genv.cx,
             env,
             state,
             &mut |env, state, t| {
@@ -5201,7 +5184,7 @@ mod expand_members {
         r: &Reason,
         nominal_type: &NominalType,
     ) -> Result<ALocTy, Error> {
-        let current_source = env.genv.cx.file();
+        let current_source = env.cx.file();
         let opaque_source = r.def_loc().source();
         // Compare the current file (of the query) and the file that the opaque
         //    type is defined. If they differ, then hide the underlying type.
@@ -5293,7 +5276,7 @@ mod expand_members {
     // inherits what the signature returns, the way [ThisSpecializeT] works it
     // out, rather than the members of the value itself.
     fn constructed_instance<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         c: &Type,
         targs: Option<&[Type]>,
     ) -> Option<Type> {
@@ -5304,7 +5287,8 @@ mod expand_members {
         let DefTInner::InstanceT(instance) = def_t.deref() else {
             return None;
         };
-        let construct_t = cx.find_resolved(&cx.find_call(instance.inst.inst_construct_t?))?;
+        let construct_t = cx.find_call(instance.inst.inst_construct_t?);
+        let construct_t = cx.find_resolved(&construct_t)?;
         let construct_t = match construct_t.deref() {
             TypeInner::IntersectionT(_, rep) => cx.find_resolved(rep.members_iter().next()?)?,
             _ => construct_t,
@@ -5318,7 +5302,7 @@ mod expand_members {
                     .zip(targs.unwrap_or_default())
                     .map(|(tparam, targ)| (tparam.name.dupe(), targ.dupe()))
                     .collect();
-                cx.find_resolved(&type_subst::subst(
+                let t_out = type_subst::subst(
                     cx,
                     None,
                     true,
@@ -5326,7 +5310,8 @@ mod expand_members {
                     type_subst::Purpose::Normal,
                     &map,
                     t_out.dupe(),
-                ))?
+                );
+                cx.find_resolved(&t_out)?
             }
             _ => construct_t,
         };
@@ -5352,7 +5337,7 @@ mod expand_members {
         match t.deref() {
             _ if let Some(node) = type_util::constraint_node_id(t) => {
                 let id_ = node.id();
-                let (root_id, _) = env.genv.cx.find_constraints(id_);
+                let (root_id, _) = env.cx.find_constraints(id_);
                 if id == Some(IdKey::TVarKey(root_id)) {
                     return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
                         UpperBoundKind::NoUpper,
@@ -5402,7 +5387,7 @@ mod expand_members {
             TypeInner::ThisTypeAppT(box ThisTypeAppTData {
                 type_: c, targs, ..
             }) => {
-                let inherited_t = constructed_instance(env.genv.cx, c, targs.as_deref());
+                let inherited_t = constructed_instance(env.cx, c, targs.as_deref());
                 type__::<I>(
                     env,
                     state,
@@ -5544,7 +5529,6 @@ mod expand_members {
                     inner_t,
                 ),
                 DefTInner::ReactAbstractComponentT(_) => I::builtin_type(
-                    env.genv.cx,
                     env,
                     state,
                     &mut |env, state, t| {
@@ -5665,7 +5649,6 @@ mod expand_members {
                 from_value,
                 ..
             }) => I::typeapp(
-                env.genv.cx,
                 env,
                 state,
                 &mut |env, state, t| {
@@ -5839,7 +5822,7 @@ mod expand_literal_union {
         descend(env, t)?;
         match t.deref() {
             _ if let Some(node) = type_util::constraint_node_id(t) => {
-                let (root_id, _) = env.genv.cx.find_constraints(node.id());
+                let (root_id, _) = env.cx.find_constraints(node.id());
                 if id == Some(IdKey::TVarKey(root_id)) {
                     return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
                         UpperBoundKind::NoUpper,
@@ -5892,7 +5875,6 @@ mod expand_literal_union {
                 from_value,
                 ..
             }) => I::typeapp(
-                env.genv.cx,
                 env,
                 state,
                 &mut |env, state, t| type__::<I>(env, state, None, t),
@@ -5974,13 +5956,14 @@ pub struct Normalizer<I: NormalizerInput> {
 
 impl<I: NormalizerInput> Normalizer<I> {
     fn run_type_aux<'cx, T>(
+        cx: &mut Context<'cx>,
         genv: &Genv<'_, 'cx>,
         state: &mut State,
         t: &Type,
         f: impl FnOnce(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<T, Error>,
         simpl: impl FnOnce(bool, Option<bool>, T) -> T,
     ) -> Result<T, Error> {
-        let mut env = Env::init(genv.clone());
+        let mut env = Env::init(cx, genv.clone());
         let result = run(state, |state| f(&mut env, state, t));
         match result {
             Ok(r) if env.optimize_types() => {
@@ -5990,9 +5973,15 @@ impl<I: NormalizerInput> Normalizer<I> {
         }
     }
 
-    pub fn run_type(genv: &Genv<'_, '_>, state: &mut State, t: &Type) -> Result<ALocElt, Error> {
+    pub fn run_type<'cx>(
+        cx: &mut Context<'cx>,
+        genv: &Genv<'_, 'cx>,
+        state: &mut State,
+        t: &Type,
+    ) -> Result<ALocElt, Error> {
         state.reset_type_size_budget(genv.options.max_type_size);
         match Self::run_type_aux(
+            cx,
             genv,
             state,
             t,
@@ -6006,12 +5995,13 @@ impl<I: NormalizerInput> Normalizer<I> {
         }
     }
 
-    pub fn run_module_type(
-        genv: &Genv<'_, '_>,
+    pub fn run_module_type<'cx>(
+        cx: &mut Context<'cx>,
+        genv: &Genv<'_, 'cx>,
         state: &mut State,
         module_type: &ModuleType,
     ) -> Result<ALocDecl, Error> {
-        let mut env = Env::init(genv.clone());
+        let mut env = Env::init(cx, genv.clone());
         let result = run(state, |state| {
             element_converter::module_t::<I>(
                 &mut env,
@@ -6039,7 +6029,7 @@ impl<I: NormalizerInput> Normalizer<I> {
     // remote (hidden or non-imported) name.
 
     pub fn normalize_imports<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         file_sig: std::sync::Arc<FileSig>,
         typed_ast_opt: Option<&flow_parser::ast::Program<ALoc, (ALoc, Type)>>,
         options: &Options,
@@ -6100,18 +6090,10 @@ impl<I: NormalizerInput> Normalizer<I> {
         options.evaluate_type_destructors = EvaluateTypeDestructorsMode::EvaluateNone;
 
         // Note: Genv holds references, so we construct it directly
-        let imported_names: std::rc::Rc<
-            Lazy<
-                Context<'cx>,
-                Result<ImportedNamesMap, JobError>,
-                Box<dyn FnOnce(&Context<'cx>) -> Result<ImportedNamesMap, JobError>>,
-            >,
-        > = std::rc::Rc::new(Lazy::new_forced(Ok(ImportedNamesMap::new())));
         let genv = Genv {
-            cx,
             typed_ast_opt,
             file_sig,
-            imported_names,
+            imported_names: ImportedNames::new(|_| Ok(ImportedNamesMap::new())),
             options,
             ref_type_bodies: None,
         };
@@ -6119,18 +6101,19 @@ impl<I: NormalizerInput> Normalizer<I> {
         let mut state = State::empty();
         let mut result = ImportedNamesMap::new();
 
-        fn convert<I: NormalizerInput>(
-            genv: &Genv<'_, '_>,
+        fn convert<'cx, I: NormalizerInput>(
+            cx: &mut Context<'cx>,
+            genv: &Genv<'_, 'cx>,
             state: &mut State,
             t: &Type,
         ) -> Result<Option<ALoc>, Error> {
-            let mut env = Env::init(genv.clone());
+            let mut env = Env::init(cx, genv.clone());
             let ty = element_converter::convert_toplevel::<I>(&mut env, state, t)?;
             Ok(def_loc_of_elt(&ty))
         }
 
         for (name, loc, import_mode, t) in imports {
-            match convert::<I>(&genv, &mut state, &t) {
+            match convert::<I>(cx, &genv, &mut state, &t) {
                 Ok(Some(def_loc)) => {
                     let imported_ident = flow_common_ty::ty_symbol::ImportedIdent(
                         loc,
@@ -6149,14 +6132,16 @@ impl<I: NormalizerInput> Normalizer<I> {
         result
     }
 
-    pub fn run_expand_members(
+    pub fn run_expand_members<'cx>(
         force_instance: bool,
         allowed_prop_names: Option<Vec<Name>>,
-        genv: &Genv<'_, '_>,
+        cx: &mut Context<'cx>,
+        genv: &Genv<'_, 'cx>,
         state: &mut State,
         t: &Type,
     ) -> Result<ALocTy, Error> {
         Self::run_type_aux(
+            cx,
             genv,
             state,
             t,
@@ -6173,12 +6158,14 @@ impl<I: NormalizerInput> Normalizer<I> {
         )
     }
 
-    pub fn run_expand_literal_union(
-        genv: &Genv<'_, '_>,
+    pub fn run_expand_literal_union<'cx>(
+        cx: &mut Context<'cx>,
+        genv: &Genv<'_, 'cx>,
         state: &mut State,
         t: &Type,
     ) -> Result<ALocTy, Error> {
         Self::run_type_aux(
+            cx,
             genv,
             state,
             t,

@@ -246,7 +246,7 @@ where
     Cx: Context,
     Fl: Flow<Cx = Cx>,
 {
-    cx: &'cx Cx,
+    cx: &'cx mut Cx,
     named_only_for_synthesis: bool,
     this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
     env_values: &'a Values<ALoc>,
@@ -266,7 +266,7 @@ where
     Fl: Flow<Cx = Cx>,
 {
     pub fn new(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         named_only_for_synthesis: bool,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
@@ -1411,7 +1411,7 @@ where
 // For all the possible defs, explore the def's structure with the class above
 // to find what variables have to be resolved before this def itself can be resolved
 fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-    cx: &'cx Cx,
+    cx: &'cx mut Cx,
     autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
     this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
     env_values: &'a Values<ALoc>,
@@ -1424,7 +1424,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     def: &Def,
 ) -> EnvMap<ALoc, Vec1<ALoc>> {
     fn depends_of_node<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -1452,7 +1452,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_tparams_map<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -1486,7 +1486,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     // depends_of_annotation and of_expression take the `state` parameter from
     // `depends_of_node` above as an additional currried parameter.
     fn depends_of_annotation<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -1525,7 +1525,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_expression<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -1558,7 +1558,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_hint_node<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -1677,7 +1677,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_hint<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
@@ -1711,7 +1711,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     Cx: Context,
                     Fl: Flow<Cx = Cx>,
                 >(
-                    cx: &'cx Cx,
+                    cx: &'cx mut Cx,
                     autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
                     this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
                     env_values: &'a Values<ALoc>,
@@ -1867,10 +1867,10 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                             )
                         }
                         HintDecompositionInner::InstantiateCallee(hints) => {
-                            let return_hints = &*hints.return_hints;
-                            let arg_list = &*hints.arg_list;
+                            let return_hints = hints.return_hints.get_forced(&mut ());
+                            let arg_list = hints.arg_list.get_forced(&mut ());
                             let arg_index = hints.arg_index;
-                            let targs = &*hints.targs;
+                            let targs = hints.targs.get_forced(&mut ());
                             let acc = depends_of_node::<Cx, Fl>(
                                 cx,
                                 this_super_dep_loc_map,
@@ -1945,7 +1945,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_hints<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
@@ -1973,7 +1973,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_fun<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
@@ -2006,6 +2006,17 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             hints,
             state,
         );
+        let state = depends_of_tparams_map::<Cx, Fl>(
+            cx,
+            this_super_dep_loc_map,
+            env_values,
+            env_entries,
+            providers,
+            declare_namespace_read_paths,
+            refinement_of_id,
+            tparams_map,
+            state,
+        );
         let state = depends_of_node::<Cx, Fl>(
             cx,
             this_super_dep_loc_map,
@@ -2015,17 +2026,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             declare_namespace_read_paths,
             refinement_of_id,
             false,
-            depends_of_tparams_map::<Cx, Fl>(
-                cx,
-                this_super_dep_loc_map,
-                env_values,
-                env_entries,
-                providers,
-                declare_namespace_read_paths,
-                refinement_of_id,
-                tparams_map,
-                state,
-            ),
+            state,
             |visitor| {
                 visitor.function_def(fully_annotated, function_);
             },
@@ -2052,7 +2053,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_declared_fun<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2102,7 +2103,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_component<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2141,7 +2142,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_class<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2179,7 +2180,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_record<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2211,7 +2212,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_declared_class<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2275,7 +2276,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_declared_component<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2302,7 +2303,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_declared_namespace<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2328,7 +2329,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_alias<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2357,7 +2358,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_opaque<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2397,7 +2398,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_tparam<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2439,7 +2440,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_interface<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2471,7 +2472,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_hinted_expression<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
@@ -2512,7 +2513,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_on_match_pattern<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -2543,7 +2544,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_root<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
@@ -2640,7 +2641,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 synthesizable: OS { .. },
             }) => {
                 fn depends_of_synthesizable_expression<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-                    cx: &'cx Cx,
+                    cx: &'cx mut Cx,
                     autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
                     this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
                     env_values: &'a Values<ALoc>,
@@ -2807,7 +2808,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 }
 
                 fn loop_obj<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-                    cx: &'cx Cx,
+                    cx: &'cx mut Cx,
                     autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
                     this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
                     env_values: &'a Values<ALoc>,
@@ -3025,7 +3026,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_selector<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -3079,7 +3080,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_lhs<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -3144,7 +3145,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_binding<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
@@ -3236,7 +3237,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_update<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -3283,7 +3284,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_op_assign<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -3327,7 +3328,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
     }
 
     fn depends_of_member_assign<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
-        cx: &'cx Cx,
+        cx: &'cx mut Cx,
         this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
         env_values: &'a Values<ALoc>,
         env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
@@ -3966,7 +3967,7 @@ fn annotation_locs(
 }
 
 fn dependencies<Cx: Context, F: Flow<Cx = Cx>>(
-    cx: &Cx,
+    cx: &mut Cx,
     autocomplete_hooks: &AutocompleteHooks<ALoc>,
     this_super_dep_loc_map: &EnvMap<ALoc, EnvKey<ALoc>>,
     env: &EnvInfo<ALoc>,
@@ -4000,7 +4001,7 @@ fn dependencies<Cx: Context, F: Flow<Cx = Cx>>(
 }
 
 pub fn build_graph<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
-    cx: &Cx,
+    cx: &mut Cx,
     autocomplete_hooks: &AutocompleteHooks<ALoc>,
     env: &EnvInfo<ALoc>,
     map: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>, DefinitionReferenceKind)>,
@@ -4062,7 +4063,7 @@ pub fn build_graph<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
 }
 
 pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
-    cx: &Cx,
+    cx: &mut Cx,
     autocomplete_hooks: &AutocompleteHooks<ALoc>,
     env: &EnvInfo<ALoc>,
     map: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>, DefinitionReferenceKind)>,

@@ -225,7 +225,7 @@ fn import_provenance(file_sig: &FileSig, local_name: &FlowSmolStr) -> Option<Imp
     })
 }
 
-fn framed_of_identifier_reference(cx: &Context<'_>, file_sig: &FileSig, loc: &ALoc) -> Framed {
+fn framed_of_identifier_reference(cx: &mut Context<'_>, file_sig: &FileSig, loc: &ALoc) -> Framed {
     let env = cx.environment();
     let Some(def) = env.var_info.scopes.def_of_use_opt(loc) else {
         return Framed::default();
@@ -246,7 +246,7 @@ fn framed_of_identifier_reference(cx: &Context<'_>, file_sig: &FileSig, loc: &AL
 }
 
 fn is_local_definition_site<F>(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     loc_of_aloc: &F,
     loc: &Loc,
     head_name: Option<&FlowSmolStr>,
@@ -370,7 +370,7 @@ fn owner_of_receiver_elt(elt: &Elt<ALoc>) -> (Option<FlowSmolStr>, bool) {
 /// `(property) A.p: T` or `(method) A.m(): T`. The object's type has to be expanded
 /// to tell which, since the property's own type looks the same either way.
 fn binder_of_member_reference(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     file_sig: Arc<FileSig>,
     typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
     object_type: &Type,
@@ -390,7 +390,7 @@ fn binder_of_member_reference(
     let force_instance = matches!(&**object_type, TypeInner::ThisTypeAppT(_));
     // Expanding members flows types, which can raise errors. Server state persists
     // across IDE requests, so they are rolled back rather than left behind.
-    let (expanded, object_ty) = cx.run_and_rolled_back_cache(|| {
+    let (expanded, object_ty) = cx.run_and_rolled_back_cache(|cx| {
         let errors = cx.errors();
         let genv = ty_normalizer_flow::mk_genv(
             Options {
@@ -405,17 +405,17 @@ fn binder_of_member_reference(
                 max_type_size: None,
                 toplevel_is_type_identifier_reference: false,
             },
-            cx,
             typed_ast_opt,
             file_sig,
         );
         let expanded = ty_normalizer_flow::expand_members(
             force_instance,
             Some(vec![prop_name.dupe()]),
+            cx,
             &genv,
             object_type,
         );
-        let object_ty = ty_normalizer_flow::from_type(&genv, object_type);
+        let object_ty = ty_normalizer_flow::from_type(cx, &genv, object_type);
         cx.reset_errors(errors);
         (expanded, object_ty)
     });
@@ -460,7 +460,7 @@ fn binder_of_member_reference(
     })
 }
 pub fn dump_type_at_pos(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
 ) -> Result<Option<(Loc, String)>, flow_utils_concurrency::job_error::JobError> {
@@ -476,7 +476,7 @@ pub fn dump_type_at_pos(
 }
 
 pub fn type_at_pos_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: Arc<FileSig>,
     omit_targ_defaults: bool,
     verbose_normalizer: bool,
@@ -621,24 +621,24 @@ pub fn type_at_pos_type<'a>(
                     toplevel_is_type_identifier_reference,
                 };
 
-                let from_type = |t: &Type, evaluate_type_destructors| {
+                let from_type = |cx: &mut Context<'_>, t: &Type, evaluate_type_destructors| {
                     let options = options(evaluate_type_destructors);
-                    let genv =
-                        ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig.dupe());
-                    ty_normalizer_flow::from_type_with_found_computed_type(&genv, t)
+                    let genv = ty_normalizer_flow::mk_genv(options, typed_ast_opt, file_sig.dupe());
+                    ty_normalizer_flow::from_type_with_found_computed_type(cx, &genv, t)
                 };
                 // This pass evaluates the destructors it judges worth evaluating, so
                 // it has to leave the server's caches and error set as it found them:
                 // that state outlives the request, and a hover must not change how the
                 // next one behaves. Its result is kept whatever the errors say -- there
                 // is no second form to fall back on.
-                let (ty, type_parameter_context) = cx.run_and_rolled_back_cache(|| {
+                let (ty, type_parameter_context) = cx.run_and_rolled_back_cache(|cx| {
                     let errors = cx.errors();
-                    let (ty, _) = from_type(&t, EvaluateTypeDestructorsMode::EvaluateForHover);
+                    let (ty, _) = from_type(cx, &t, EvaluateTypeDestructorsMode::EvaluateForHover);
                     let type_parameter_context = match type_parameter_context.as_ref() {
                         None => Ok(None),
                         Some(context) => {
                             let (declaration, _) = from_type(
+                                cx,
                                 &context.declaration,
                                 EvaluateTypeDestructorsMode::EvaluateForHover,
                             );
@@ -720,7 +720,7 @@ pub fn type_at_pos_type<'a>(
 pub fn dump_types<'a>(
     printer: &dyn Fn(&ALocElt) -> String,
     evaluate_type_destructors: EvaluateTypeDestructorsMode,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Vec<(Loc, String)> {
@@ -728,9 +728,13 @@ pub fn dump_types<'a>(
         evaluate_type_destructors,
         ..Options::default()
     };
-    let genv = ty_normalizer_flow::mk_genv(options, cx, Some(typed_ast), file_sig);
-    let result =
-        ty_normalizer_flow::from_types(None, &genv, typed_ast_utils::typed_ast_to_list(typed_ast));
+    let genv = ty_normalizer_flow::mk_genv(options, Some(typed_ast), file_sig);
+    let result = ty_normalizer_flow::from_types(
+        None,
+        cx,
+        &genv,
+        typed_ast_utils::typed_ast_to_list(typed_ast),
+    );
     let print_ok = |(l, r): (ALoc, Result<ALocElt, Error>)| -> Option<(ALoc, String)> {
         match r {
             Ok(t) => Some((l, printer(&t))),
@@ -744,33 +748,33 @@ pub fn dump_types<'a>(
 /// Returns the per-location types and, when `dedup_threshold` is set, the
 /// shared `$defs` table those locations refer to via `{"$ref": id}`.
 pub fn dump_types_for_tool(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     depth: i32,
     dedup_threshold: Option<usize>,
 ) -> (Vec<(Loc, String)>, Option<String>) {
     let types = typed_ast_utils::typed_ast_to_list(typed_ast);
-    let env = cx.environment();
-    let env_values = &env.var_info.env_values;
+    let var_info = cx.environment().var_info.dupe();
+    let env_values = &var_info.env_values;
     // That is also why `$defs` has to be a file-level table rather than being
     // folded into each location's string — cross-location sharing is where
     // almost all of the size win is.
-    let json_cx = convert_types::TypeJsonCx::with_dedup(cx, dedup_threshold);
-    let type_to_json = |t: &Type| -> Json {
+    let mut json_cx = convert_types::TypeJsonCx::with_dedup(cx, dedup_threshold);
+    let type_to_json = |json_cx: &mut convert_types::TypeJsonCx<'_, '_>, t: &Type| -> Json {
         let concrete =
-            FlowJs::singleton_concrete_type_for_inspection(cx, type_util::reason_of_t(t), t)
+            FlowJs::singleton_concrete_type_for_inspection(json_cx, type_util::reason_of_t(t), t)
                 .unwrap_or_else(|_| t.dupe());
-        convert_types::type_to_json(&json_cx, depth, &concrete)
+        convert_types::type_to_json(json_cx, depth, &concrete)
     };
     let print_type_json = |(loc, t): (ALoc, Type)| -> (ALoc, String) {
-        let expression_type = type_to_json(&t);
+        let expression_type = type_to_json(&mut json_cx, &t);
         let mut fields: Vec<(String, Json)> =
             vec![("expression_type".to_string(), expression_type)];
         match env_values.get(&loc) {
             Some(read) if let Some(dl) = &read.def_loc => {
                 let dl = dl.dupe();
-                let provider_json =
-                    type_to_json(&type_env::provider_type_for_def_loc(false, cx, &env, dl));
+                let provider_t = type_env::provider_type_for_def_loc(false, &mut json_cx, dl);
+                let provider_json = type_to_json(&mut json_cx, &provider_t);
                 fields.push(("provider_type".to_string(), provider_json));
             }
             _ => {}
@@ -784,8 +788,8 @@ pub fn dump_types_for_tool(
     (sorted, defs)
 }
 
-pub fn insert_type_normalize<'a, 'cx>(
-    cx: &'a Context<'cx>,
+pub fn insert_type_normalize<'cx>(
+    cx: &mut Context<'cx>,
     file_sig: Arc<FileSig>,
     omit_targ_defaults: bool,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -804,8 +808,8 @@ pub fn insert_type_normalize<'a, 'cx>(
         max_type_size: None,
         toplevel_is_type_identifier_reference: false,
     };
-    let genv = ty_normalizer_flow::mk_genv(options, cx, Some(typed_ast), file_sig);
-    match ty_normalizer_flow::from_type(&genv, t) {
+    let genv = ty_normalizer_flow::mk_genv(options, Some(typed_ast), file_sig);
+    match ty_normalizer_flow::from_type(cx, &genv, t) {
         Ok(elt) => QueryResult::Success(loc, elt),
         Err(err) => result_of_normalizer_error(loc, t.dupe(), err),
     }

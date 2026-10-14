@@ -132,7 +132,7 @@ pub mod keys {
 /// get type refinement for expression, if it exists
 pub fn get<'a, M: Dupe, T: Dupe>(
     allow_optional: bool,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     expr: &Expression<M, T>,
     loc: ALoc,
 ) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {

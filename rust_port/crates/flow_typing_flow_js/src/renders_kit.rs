@@ -95,7 +95,7 @@ fn incompatible_renders_error(
 }
 
 pub fn rec_renders_to_renders<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -383,7 +383,7 @@ pub fn rec_renders_to_renders<'cx>(
 }
 
 fn possibly_promoted_render_types_of_react_element_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     elem_reason: &Reason,
     opq: &NominalType,
@@ -408,7 +408,7 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
     };
 
     let concretize_component_renders_and_check =
-        |component_t: &Type| -> Result<(Vec<Type>, bool), FlowJsException> {
+        |cx: &mut Context<'cx>, component_t: &Type| -> Result<(Vec<Type>, bool), FlowJsException> {
             let extracted = FlowJs::run_render_extractor_with_env(
                 cx,
                 env,
@@ -467,7 +467,7 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
             component_t,
             &top_abstract_component,
         )? {
-            concretize_component_renders_and_check(component_t)
+            concretize_component_renders_and_check(cx, component_t)
         } else if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
             cx,
             env,
@@ -498,7 +498,7 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
 }
 
 fn try_promote_render_type_from_react_element_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -536,7 +536,7 @@ fn try_promote_render_type_from_react_element_type<'cx>(
 }
 
 pub fn non_renders_to_renders<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -696,7 +696,7 @@ enum RenderTypeSynthesisState {
 }
 
 pub(super) fn try_synthesize_render_type_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     drop_renders_any: bool,
     t: &Type,
@@ -734,7 +734,7 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
     }
 
     fn on_concretized_react_node_types<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         ts: Vec<Type>,
         ancestors: &mut BTreeSet<Type>,
@@ -939,7 +939,7 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
 }
 
 pub fn try_synthesize_render_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     drop_renders_any: bool,
     t: &Type,
 ) -> Result<Option<(RendersVariant, Vec<Type>)>, FlowJsException> {

@@ -80,8 +80,12 @@ fn def_loc_of_t(t: &Type) -> ALoc {
 ///
 /// for now, we only implement Go to Definition; if we want to do Go to Type
 /// Definition, it would ignore the annot loc.
-pub fn process_type_request<'cx>(cx: &Context<'cx>, t: &Type) -> Result<ALoc, String> {
-    fn loop_fn<'cx>(cx: &Context<'cx>, mut seen: BTreeSet<i32>, t: &Type) -> Result<ALoc, String> {
+pub fn process_type_request<'cx>(cx: &mut Context<'cx>, t: &Type) -> Result<ALoc, String> {
+    fn loop_fn<'cx>(
+        cx: &mut Context<'cx>,
+        mut seen: BTreeSet<i32>,
+        t: &Type,
+    ) -> Result<ALoc, String> {
         match &**t {
             TypeInner::OpenT(tvar) => {
                 let root = cx.find_root_id(tvar.id() as i32);
@@ -154,40 +158,40 @@ pub(crate) trait SearcherCallback<T: Dupe> {
     fn annot_loc(annot: &T) -> &ALoc;
 
     fn type_from_enclosing_node(
-        &self,
+        &mut self,
         annot: &T,
         enclosing_node: &EnclosingNode<ALoc, T>,
     ) -> Result<Type, Found>;
 
-    fn get_module_def_loc(&self, annot: &T, module_name: &str) -> Result<ALoc, Found>;
+    fn get_module_def_loc(&mut self, annot: &T, module_name: &str) -> Result<ALoc, Found>;
 
     fn remote_name_def_loc_of_import_named_specifier(
-        &self,
+        &mut self,
         decl: &statement::import_declaration::NamedSpecifier<ALoc, T>,
         enclosing_node: &EnclosingNode<ALoc, T>,
     ) -> Result<Option<ALoc>, Found>;
 
     fn imported_name_def_loc_of_export_named_declaration_specifier(
-        &self,
+        &mut self,
         spec: &statement::export_named_declaration::ExportSpecifier<ALoc, T>,
         enclosing_node: &EnclosingNode<ALoc, T>,
     ) -> Result<Option<ALoc>, Found>;
 
     fn remote_default_name_def_loc_of_import_declaration(
-        &self,
+        &mut self,
         loc: &ALoc,
         decl: &statement::ImportDeclaration<ALoc, T>,
     ) -> Result<Option<ALoc>, Found>;
 
     fn props_of_jsx_element(
-        &self,
+        &mut self,
         loc: &T,
         expr: &ast::jsx::Element<ALoc, T>,
     ) -> Result<(ALoc, Type), Found>;
 }
 
 struct Searcher<'a, T: Dupe, C: SearcherCallback<T>> {
-    callback: &'a C,
+    callback: &'a mut C,
     is_local_use: &'a dyn Fn(&ALoc) -> bool,
     is_legit_require: &'a dyn Fn(&ALoc) -> bool,
     covers_target: &'a dyn Fn(&ALoc) -> bool,
@@ -201,7 +205,7 @@ struct Searcher<'a, T: Dupe, C: SearcherCallback<T>> {
 
 impl<'a, T: Dupe, C: SearcherCallback<T>> Searcher<'a, T, C> {
     fn new(
-        callback: &'a C,
+        callback: &'a mut C,
         is_local_use: &'a dyn Fn(&ALoc) -> bool,
         is_legit_require: &'a dyn Fn(&ALoc) -> bool,
         covers_target: &'a dyn Fn(&ALoc) -> bool,
@@ -233,12 +237,6 @@ impl<'a, T: Dupe, C: SearcherCallback<T>> Searcher<'a, T, C> {
         &self.found_loc
     }
 
-    fn enclosing_node(&self) -> &EnclosingNode<ALoc, T> {
-        self.enclosing_node_stack
-            .last()
-            .expect("enclosing_node_stack is empty")
-    }
-
     fn own_named_def(&mut self, loc: ALoc, name: FlowSmolStr) -> Result<!, Found> {
         self.found_loc = ProcessLocationResult::OwnNamedDef(loc, name);
         Err(Found::Found)
@@ -264,9 +262,13 @@ impl<'a, T: Dupe, C: SearcherCallback<T>> Searcher<'a, T, C> {
         Err(Found::Found)
     }
 
-    fn type_from_enclosing_node(&self, annot: &T) -> Result<Type, Found> {
+    fn type_from_enclosing_node(&mut self, annot: &T) -> Result<Type, Found> {
+        let enclosing_node = self
+            .enclosing_node_stack
+            .last()
+            .expect("enclosing_node_stack is empty");
         self.callback
-            .type_from_enclosing_node(annot, self.enclosing_node())
+            .type_from_enclosing_node(annot, enclosing_node)
     }
 
     fn module_def_for_entire_module_related_id(
@@ -370,7 +372,10 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         let name = &decl.remote.name;
 
         if self.annot_covers_target(remote_annot) {
-            let enclosing = self.enclosing_node().dupe();
+            let enclosing = self
+                .enclosing_node_stack
+                .last()
+                .expect("enclosing_node_stack is empty");
             match self
                 .callback
                 .remote_name_def_loc_of_import_named_specifier(decl, enclosing)?
@@ -385,7 +390,10 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         if let Some(local_id) = local {
             let local_annot = &local_id.loc;
             if self.annot_covers_target(local_annot) {
-                let enclosing = self.enclosing_node().dupe();
+                let enclosing = self
+                    .enclosing_node_stack
+                    .last()
+                    .expect("enclosing_node_stack is empty");
                 match self
                     .callback
                     .remote_name_def_loc_of_import_named_specifier(decl, enclosing)?
@@ -457,7 +465,10 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         let local_name = &local.name;
         if self.annot_covers_target(local_annot) {
             if from_remote {
-                let enclosing = self.enclosing_node().dupe();
+                let enclosing = self
+                    .enclosing_node_stack
+                    .last()
+                    .expect("enclosing_node_stack is empty");
                 match self
                     .callback
                     .imported_name_def_loc_of_export_named_declaration_specifier(spec, enclosing)?
@@ -1302,7 +1313,7 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>> Searcher<'a, 
 }
 
 struct TypedAstSearcherCallback<'a, 'cx> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
 }
 
 impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'cx> {
@@ -1315,7 +1326,7 @@ impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'c
     }
 
     fn remote_name_def_loc_of_import_named_specifier(
-        &self,
+        &mut self,
         decl: &statement::import_declaration::NamedSpecifier<ALoc, (ALoc, Type)>,
         _enclosing_node: &EnclosingNode<ALoc, (ALoc, Type)>,
     ) -> Result<Option<ALoc>, Found> {
@@ -1323,7 +1334,7 @@ impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'c
     }
 
     fn remote_default_name_def_loc_of_import_declaration(
-        &self,
+        &mut self,
         _loc: &ALoc,
         decl: &statement::ImportDeclaration<ALoc, (ALoc, Type)>,
     ) -> Result<Option<ALoc>, Found> {
@@ -1334,14 +1345,18 @@ impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'c
     }
 
     fn imported_name_def_loc_of_export_named_declaration_specifier(
-        &self,
+        &mut self,
         spec: &statement::export_named_declaration::ExportSpecifier<ALoc, (ALoc, Type)>,
         _enclosing_node: &EnclosingNode<ALoc, (ALoc, Type)>,
     ) -> Result<Option<ALoc>, Found> {
         Ok(spec.imported_name_def_loc.dupe())
     }
 
-    fn get_module_def_loc(&self, annot: &(ALoc, Type), module_name: &str) -> Result<ALoc, Found> {
+    fn get_module_def_loc(
+        &mut self,
+        annot: &(ALoc, Type),
+        module_name: &str,
+    ) -> Result<ALoc, Found> {
         let (loc, _) = annot;
         let mref = flow_import_specifier::Userland::from_smol_str(FlowSmolStr::new(module_name));
         match flow_js_utils::import_export_utils::get_module_type_or_any(
@@ -1358,7 +1373,7 @@ impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'c
     }
 
     fn props_of_jsx_element(
-        &self,
+        &mut self,
         _loc: &(ALoc, Type),
         expr: &ast::jsx::Element<ALoc, (ALoc, Type)>,
     ) -> Result<(ALoc, Type), Found> {
@@ -1366,7 +1381,7 @@ impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'c
     }
 
     fn type_from_enclosing_node(
-        &self,
+        &mut self,
         annot: &(ALoc, Type),
         _enclosing_node: &EnclosingNode<ALoc, (ALoc, Type)>,
     ) -> Result<Type, Found> {
@@ -1468,7 +1483,7 @@ fn find_imported_name_def_loc_in_node(
 }
 
 struct OnDemandSearcherCallback<'a, 'cx> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
 }
 
 impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
@@ -1481,7 +1496,7 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
     }
 
     fn remote_name_def_loc_of_import_named_specifier(
-        &self,
+        &mut self,
         decl: &statement::import_declaration::NamedSpecifier<ALoc, ALoc>,
         enclosing_node: &EnclosingNode<ALoc, ALoc>,
     ) -> Result<Option<ALoc>, Found> {
@@ -1508,7 +1523,7 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
     }
 
     fn remote_default_name_def_loc_of_import_declaration(
-        &self,
+        &mut self,
         loc: &ALoc,
         decl: &statement::ImportDeclaration<ALoc, ALoc>,
     ) -> Result<Option<ALoc>, Found> {
@@ -1536,7 +1551,7 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
     }
 
     fn imported_name_def_loc_of_export_named_declaration_specifier(
-        &self,
+        &mut self,
         spec: &statement::export_named_declaration::ExportSpecifier<ALoc, ALoc>,
         enclosing_node: &EnclosingNode<ALoc, ALoc>,
     ) -> Result<Option<ALoc>, Found> {
@@ -1562,7 +1577,7 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
         }
     }
 
-    fn get_module_def_loc(&self, annot: &ALoc, module_name: &str) -> Result<ALoc, Found> {
+    fn get_module_def_loc(&mut self, annot: &ALoc, module_name: &str) -> Result<ALoc, Found> {
         let mref = flow_import_specifier::Userland::from_smol_str(FlowSmolStr::new(module_name));
         match flow_js_utils::import_export_utils::get_module_type_or_any(
             self.cx,
@@ -1578,7 +1593,7 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
     }
 
     fn props_of_jsx_element(
-        &self,
+        &mut self,
         loc: &ALoc,
         expr: &ast::jsx::Element<ALoc, ALoc>,
     ) -> Result<(ALoc, Type), Found> {
@@ -1597,7 +1612,7 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
     }
 
     fn type_from_enclosing_node(
-        &self,
+        &mut self,
         annot: &ALoc,
         enclosing_node: &EnclosingNode<ALoc, ALoc>,
     ) -> Result<Type, Found> {
@@ -1635,7 +1650,7 @@ fn search<T: Dupe + PartialEq, C: SearcherCallback<T>>(
 }
 
 pub fn process_location<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     available_ast: &AvailableAst<'_>,
     is_local_use: &dyn Fn(&ALoc) -> bool,
     is_legit_require: &dyn Fn(&ALoc) -> bool,
@@ -1646,9 +1661,9 @@ pub fn process_location<'cx>(
         AvailableAst::TypedAst(typed_ast) => {
             let covers_target =
                 |test_loc: &ALoc| -> bool { reason::in_range(&loc, test_loc.to_loc_exn()) };
-            let callback = TypedAstSearcherCallback { cx };
+            let mut callback = TypedAstSearcherCallback { cx };
             let mut searcher = Searcher::new(
-                &callback,
+                &mut callback,
                 is_local_use,
                 is_legit_require,
                 &covers_target,
@@ -1659,9 +1674,9 @@ pub fn process_location<'cx>(
         AvailableAst::ALocAst(aloc_ast) => {
             let covers_target =
                 |test_loc: &ALoc| -> bool { reason::in_range(&loc, test_loc.to_loc_exn()) };
-            let callback = OnDemandSearcherCallback { cx };
+            let mut callback = OnDemandSearcherCallback { cx };
             let mut searcher = Searcher::new(
-                &callback,
+                &mut callback,
                 is_local_use,
                 is_legit_require,
                 &covers_target,

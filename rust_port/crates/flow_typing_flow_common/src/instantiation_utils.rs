@@ -51,7 +51,7 @@ pub mod implicit_type_argument {
     /// explicit instantiation (via a type application), or when we want to cache a
     /// unique instantiation and unify it with other explicit instantiations.
     pub fn mk_targ<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         typeparam: &TypeParam,
         reason_op: &Reason,
         reason_tapp: &Reason,
@@ -118,7 +118,7 @@ pub mod type_app_expansion {
     impl TypeVisitor<RootSet> for RootsCollector {
         fn type_<'cx>(
             &mut self,
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             pole: Polarity,
             mut acc: RootSet,
             t: &Type,
@@ -151,7 +151,7 @@ pub mod type_app_expansion {
         }
     }
 
-    fn collect_roots<'cx>(cx: &Context<'cx>, t: &Type) -> RootSet {
+    fn collect_roots<'cx>(cx: &mut Context<'cx>, t: &Type) -> RootSet {
         let mut collector = RootsCollector;
         collector.type_(cx, Polarity::Neutral, RootSet::new(), t)
     }
@@ -159,7 +159,7 @@ pub mod type_app_expansion {
     /// Detect whether expanding `c<ts>` would loop. Returns the env to expand
     /// under, or [`None`] if the expansion limit has been reached.
     pub fn push_unless_loop<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         side: Bound,
         c: &Type,

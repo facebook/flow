@@ -23,6 +23,7 @@ use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_lazy::ContextFamily;
 
 use crate::type_::ArrRestTData;
 use crate::type_::AssertionFunctionConsistencyData;
@@ -364,7 +365,7 @@ pub fn mod_reason_of_defer_use_t(
     ))
 }
 
-pub fn util_use_op_of_use_t<T, CX>(
+pub fn util_use_op_of_use_t<T, CX: ContextFamily>(
     nope: &dyn Fn(&UseT<CX>) -> T,
     util: &dyn Fn(&UseT<CX>, &UseOp, &dyn Fn(UseOp) -> UseT<CX>) -> T,
     u: &UseT<CX>,
@@ -981,11 +982,11 @@ pub fn is_in_common_interface_conformance_check(use_op: &UseOp) -> bool {
     )
 }
 
-pub fn use_op_of_use_t<CX>(u: &UseT<CX>) -> Option<UseOp> {
+pub fn use_op_of_use_t<CX: ContextFamily>(u: &UseT<CX>) -> Option<UseOp> {
     util_use_op_of_use_t(&|_| None, &|_, op, _| Some(op.dupe()), u)
 }
 
-pub fn mod_use_op_of_use_t<F, CX>(f: F, u: &UseT<CX>) -> UseT<CX>
+pub fn mod_use_op_of_use_t<F, CX: ContextFamily>(f: F, u: &UseT<CX>) -> UseT<CX>
 where
     F: Fn(&UseOp) -> UseOp,
 {
@@ -1798,9 +1799,9 @@ pub fn is_mixed_subtype(l: &Type, mixed_flavor: MixedFlavor) -> bool {
     }
 }
 
-fn ground_subtype<F>(on_singleton_eq: &F, l: &Type, u: &Type) -> bool
+fn ground_subtype<F>(on_singleton_eq: &mut F, l: &Type, u: &Type) -> bool
 where
-    F: Fn(&Type),
+    F: FnMut(&Type),
 {
     use crate::type_::DefTInner as D;
     use crate::type_::Literal;
@@ -2036,9 +2037,13 @@ where
     }
 }
 
-pub fn ground_subtype_use_t<F, CX>(on_singleton_eq: &F, l: &Type, u: &UseT<CX>) -> bool
+pub fn ground_subtype_use_t<F, CX: ContextFamily>(
+    on_singleton_eq: &mut F,
+    l: &Type,
+    u: &UseT<CX>,
+) -> bool
 where
-    F: Fn(&Type),
+    F: FnMut(&Type),
 {
     match u.deref() {
         UseTInner::UseT(_, t) => ground_subtype(on_singleton_eq, l, t),
@@ -2046,15 +2051,15 @@ where
     }
 }
 
-pub fn quick_subtype<F>(on_singleton_eq: Option<&F>, t1: &Type, t2: &Type) -> bool
+pub fn quick_subtype<F>(on_singleton_eq: Option<&mut F>, t1: &Type, t2: &Type) -> bool
 where
-    F: Fn(&Type),
+    F: FnMut(&Type),
 {
     use crate::type_::DefTInner as D;
 
     let check_ground = match on_singleton_eq {
         Some(f) => ground_subtype(f, t1, t2),
-        None => ground_subtype(&|_: &Type| {}, t1, t2),
+        None => ground_subtype(&mut |_: &Type| {}, t1, t2),
     };
 
     if check_ground {
@@ -2209,7 +2214,7 @@ pub fn class_type(t: Type, structural: bool, annot_loc: Option<ALoc>) -> Type {
     Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::ClassT(t))))
 }
 
-pub fn extends_use_type<CX>(use_op: UseOp, l: Type, u: Type) -> UseT<CX> {
+pub fn extends_use_type<CX: ContextFamily>(use_op: UseOp, l: Type, u: Type) -> UseT<CX> {
     let reason = reason_of_t(&u).dupe().update_desc_new(|desc| {
         desc.map(|desc| flow_common::reason::VirtualReasonDesc::RExtends(Arc::new(desc)))
     });

@@ -24,11 +24,11 @@ use crate::refinement;
 struct Marker<'a, 'cx> {
     cond: bool,
     predicate: bool,
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
 }
 
 impl<'a, 'cx> Marker<'a, 'cx> {
-    fn new(cx: &'a Context<'cx>) -> Self {
+    fn new(cx: &'a mut Context<'cx>) -> Self {
         Marker {
             cond: false,
             predicate: false,
@@ -321,7 +321,7 @@ impl<'ast, 'cx: 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for Ma
     }
 }
 
-pub fn mark<'a>(cx: &Context<'a>, ast: &ast::Program<ALoc, (ALoc, Type)>) {
+pub fn mark<'a>(cx: &mut Context<'a>, ast: &ast::Program<ALoc, (ALoc, Type)>) {
     let mut marker = Marker::new(cx);
     let Ok(()) = marker.program(ast);
 }

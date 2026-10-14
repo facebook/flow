@@ -64,7 +64,7 @@ use crate::type_env;
 // This check to be performed after the function has been checked to ensure all
 // entries have been prepared for type checking.
 fn check_type_guard_consistency<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: &Reason,
     one_sided: bool,
     param_loc: &ALoc,
@@ -201,7 +201,7 @@ fn check_type_guard_consistency<'cx>(
 // asserted parameter. The check is one-sided since the throwing paths carry no
 // information.
 fn check_assertion_consistency<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: &Reason,
     param_loc: &ALoc,
     tg_param: &(ALoc, flow_data_structure_wrapper::smol_str::FlowSmolStr),
@@ -330,7 +330,7 @@ fn check_assertion_consistency<'cx>(
 /// body-carrying context where `this` is bound to a class instance and can
 /// therefore be refined.
 pub fn check_type_guard<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     params: &function::Params<ALoc, ALoc>,
     type_guard_val: &TypeGuard,
     allow_this_type_guard: bool,
@@ -343,7 +343,8 @@ pub fn check_type_guard<'cx>(
         type_guard,
     } = type_guard_val.deref();
 
-    let err_with_binding = |binding_kind: TypeGuardBindingKind,
+    let err_with_binding = |cx: &mut Context<'cx>,
+                            binding_kind: TypeGuardBindingKind,
                             type_guard_loc: &ALoc,
                             name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
                             binding_loc: ALoc| {
@@ -361,19 +362,22 @@ pub fn check_type_guard<'cx>(
     };
 
     let error_on_non_root_binding =
-        |type_guard_loc: &ALoc,
+        |cx: &mut Context<'cx>,
+         type_guard_loc: &ALoc,
          name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
          binding: &(ALoc, Rc<pattern_helper::Binding<ALoc, ALoc>>)| {
             let (loc, binding_kind) = binding;
             match binding_kind.deref() {
                 pattern_helper::Binding::Root => (),
                 pattern_helper::Binding::Rest => err_with_binding(
+                    cx,
                     TypeGuardBindingKind::RestParameter,
                     type_guard_loc,
                     name,
                     loc.dupe(),
                 ),
                 pattern_helper::Binding::Select { .. } => err_with_binding(
+                    cx,
                     TypeGuardBindingKind::PatternParameter,
                     type_guard_loc,
                     name,
@@ -390,7 +394,8 @@ pub fn check_type_guard<'cx>(
         } else {
             mk_reason(RTypeGuardParam(name.dupe()), name_loc.dupe())
         };
-        let check_consistency = |binding_loc: &ALoc| match (kind, type_guard) {
+        let check_consistency = |cx: &mut Context<'cx>, binding_loc: &ALoc| match (kind, type_guard)
+        {
             (TypeGuardKind::Asserts, _) => check_assertion_consistency(
                 cx,
                 reason,
@@ -423,7 +428,7 @@ pub fn check_type_guard<'cx>(
                         Some(this_param) => &this_param.loc,
                         None => name_loc,
                     };
-                    check_consistency(binding_loc)?;
+                    check_consistency(cx, binding_loc)?;
                 } else if is_this_guard {
                     flow_js::add_output_non_speculating(
                         cx,
@@ -442,10 +447,10 @@ pub fn check_type_guard<'cx>(
             Some((p_loc, binding_kind))
                 if matches!(binding_kind.deref(), pattern_helper::Binding::Root) =>
             {
-                check_consistency(p_loc)?;
+                check_consistency(cx, p_loc)?;
             }
             Some(binding) => {
-                error_on_non_root_binding(name_loc, name, binding);
+                error_on_non_root_binding(cx, name_loc, name, binding);
             }
         }
     }
@@ -461,13 +466,13 @@ pub fn check_type_guard<'cx>(
 
 // All predicates are allowed to contribute to the inferred type guard except
 // for the trivial truthy predicate to avoid things like: `(x: mixed) => x`.
-fn is_inferable_type_guard_predicate<'cx>(cx: &Context<'cx>, p: &Predicate) -> bool {
+fn is_inferable_type_guard_predicate<'cx>(cx: &mut Context<'cx>, p: &Predicate) -> bool {
     struct InferableTypeGuardVisitor;
 
     impl TypeVisitor<Result<(), ()>> for InferableTypeGuardVisitor {
         fn predicate<'cx>(
             &mut self,
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             acc: Result<(), ()>,
             p: &Predicate,
         ) -> Result<(), ()> {
@@ -483,7 +488,7 @@ fn is_inferable_type_guard_predicate<'cx>(cx: &Context<'cx>, p: &Predicate) -> b
 }
 
 fn is_inferable_type_guard_read<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     read: &flow_env_builder::env_api::Read<ALoc>,
 ) -> Result<bool, JobError> {
     Ok(match type_env::read_to_predicate(cx, read)? {
@@ -494,7 +499,7 @@ fn is_inferable_type_guard_read<'cx>(
 
 fn infer_type_guard_from_read<'cx, F>(
     infer_expr: &F,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     name: &flow_parser::ast::Identifier<ALoc, ALoc>,
     return_expr: &Expression<ALoc, ALoc>,
     return_reason: &Reason,
@@ -502,7 +507,7 @@ fn infer_type_guard_from_read<'cx, F>(
 ) -> Result<Option<TypeGuard>, CheckExprError>
 where
     F: Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &Expression<ALoc, ALoc>,
     ) -> Result<Expression<ALoc, (ALoc, Type)>, CheckExprError>,
 {
@@ -520,7 +525,7 @@ where
             kind: TypeGuardKind::Implies,
         })
     };
-    let returns_bool = || -> Result<bool, CheckExprError> {
+    let returns_bool = |cx: &mut Context<'cx>| -> Result<bool, CheckExprError> {
         let result = infer_expr(cx, return_expr)?;
         let (_aloc, body_t) = result.loc();
         let bool_general = Type::new(TypeInner::DefT(
@@ -534,7 +539,7 @@ where
         )?)
     };
 
-    Ok(if !matches!(&*cx.typing_mode(), TypingMode::CheckingMode) {
+    Ok(if !matches!(cx.typing_mode(), TypingMode::CheckingMode) {
         None
     } else if is_inferable_type_guard_read(cx, read)? {
         let return_loc = return_reason.loc().dupe();
@@ -551,7 +556,7 @@ where
         )?;
         // Only keep the type guard if the function is actually refining the input
         // and is returning a boolean expression.
-        if FlowJs::speculative_subtyping_succeeds(cx, &param_t, &guard_t)? || !returns_bool()? {
+        if FlowJs::speculative_subtyping_succeeds(cx, &param_t, &guard_t)? || !returns_bool(cx)? {
             None
         } else {
             Some(mk_guard(guard_t))
@@ -562,13 +567,13 @@ where
 }
 
 pub fn infer_type_guard<'cx, F>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     infer_expr: &F,
     params: &function::Params<ALoc, ALoc>,
 ) -> Result<Option<TypeGuard>, CheckExprError>
 where
     F: Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &Expression<ALoc, ALoc>,
     ) -> Result<Expression<ALoc, (ALoc, Type)>, CheckExprError>,
 {

@@ -91,7 +91,7 @@ fn json_data_of_locs_opt(
 }
 
 pub fn type_at_pos<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     omit_targ_defaults: bool,
@@ -200,7 +200,7 @@ static BATCHED_TYPE_AT_POS_SPECIAL_COMMENT_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^ *\^\?$").unwrap());
 
 pub fn batched_type_at_pos_from_special_comments<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     omit_targ_defaults: bool,
@@ -224,7 +224,7 @@ pub fn batched_type_at_pos_from_special_comments<'a>(
     flow_utils_concurrency::job_error::JobError,
 > {
     let all_comments = &typed_ast.all_comments;
-    let handle_comment = |comment: &ast::Comment<ALoc>| -> Result<
+    let mut handle_comment = |comment: &ast::Comment<ALoc>| -> Result<
         Option<(
             (
                 Loc,
@@ -291,7 +291,7 @@ pub fn dump_types<'a>(
     evaluate_type_destructors: EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
     dedup_threshold: Option<usize>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> (Vec<(Loc, String)>, Option<String>) {
@@ -318,7 +318,7 @@ pub fn dump_types<'a>(
 }
 
 pub fn coverage(
-    cx: &Context,
+    cx: &mut Context,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     force: bool,
     file: &FileKey,

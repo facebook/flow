@@ -138,7 +138,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundTarget> for
 
 pub fn stub<'a, 'b>(
     ast: &ast::Program<Loc, Loc>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file: &FileKey,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -181,7 +181,6 @@ pub fn stub<'a, 'b>(
         }
     }
     let synthesizer_context = type_synthesizer::create_synthesizer_context(
-        cx.dupe(),
         file.dupe(),
         file_sig.dupe(),
         typed_ast.clone(),
@@ -192,7 +191,7 @@ pub fn stub<'a, 'b>(
         &locs,
     );
     let type_synth =
-        type_synthesizer::create_type_synthesizer_with_import_adder(synthesizer_context);
+        type_synthesizer::create_type_synthesizer_with_import_adder(cx, synthesizer_context);
     let mut tparams_set: TypeParamSet = BTreeSet::new();
     let mut typed_props: BTreeMap<String, ast::types::Type<Loc, Loc>> = BTreeMap::new();
     for (key, attr) in &attributes {
@@ -214,7 +213,7 @@ pub fn stub<'a, 'b>(
             ),
             Attribute::EmptyAttribute => (vec![], ast_builder::types::mixed(None, None)),
             Attribute::TypedAttribute(loc) => {
-                let result = (type_synth.type_synthesizer)(&loc_of_aloc(loc));
+                let result = (type_synth.type_synthesizer)(cx, &loc_of_aloc(loc));
                 match result {
                     Ok(Some((tparams_rev, type_))) => (tparams_rev, type_),
                     Ok(None) | Err(_) => (
@@ -234,7 +233,7 @@ pub fn stub<'a, 'b>(
     let mut acc = Vec::new();
     let mut tparams_failed = false;
     for tparam in &tparams_list {
-        match (type_synth.type_param_synthesizer)(tparam) {
+        match (type_synth.type_param_synthesizer)(cx, tparam) {
             Ok(tp) => acc.push(tp),
             Err(_) => {
                 tparams_failed = true;

@@ -13,7 +13,6 @@
 //! Flow type inference context, suitable for simpler use cases.
 
 use std::ops::Deref;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use dupe::Dupe;
@@ -22,7 +21,6 @@ use flow_common::reason::Reason;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty::Elt;
-use flow_lazy::Lazy;
 use flow_parser::ast;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
@@ -35,6 +33,7 @@ use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 
 use crate::env::Env;
 use crate::env::Genv;
+use crate::env::ImportedNames;
 use crate::env::Options;
 use crate::normalizer::Error;
 use crate::normalizer::Normalizer;
@@ -45,7 +44,6 @@ pub struct NoFlowInput;
 
 impl NormalizerInput for NoFlowInput {
     fn eval<'cx>(
-        _cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         _should_eval: bool,
@@ -65,7 +63,6 @@ impl NormalizerInput for NoFlowInput {
     }
 
     fn keys<'cx, A>(
-        _cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         _should_evaluate: bool,
@@ -78,7 +75,6 @@ impl NormalizerInput for NoFlowInput {
     }
 
     fn typeapp_regular<'cx, A>(
-        _cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         _cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
@@ -95,14 +91,13 @@ impl NormalizerInput for NoFlowInput {
     }
 
     fn builtin_type<'cx, A>(
-        cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
         reason: Reason,
         name: &str,
     ) -> Result<A, Error> {
-        let t = flow_typing_flow_common::flow_js_utils::lookup_builtin_type(cx, name, reason);
+        let t = flow_typing_flow_common::flow_js_utils::lookup_builtin_type(env.cx, name, reason);
         let t = match t.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::TypeT(_, inner_t) => inner_t.dupe(),
@@ -114,7 +109,6 @@ impl NormalizerInput for NoFlowInput {
     }
 
     fn builtin_typeapp<'cx, A>(
-        cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
@@ -124,8 +118,11 @@ impl NormalizerInput for NoFlowInput {
         name: &str,
         targs: &[Type],
     ) -> Result<A, Error> {
-        let t =
-            flow_typing_flow_common::flow_js_utils::lookup_builtin_type(cx, name, reason.dupe());
+        let t = flow_typing_flow_common::flow_js_utils::lookup_builtin_type(
+            env.cx,
+            name,
+            reason.dupe(),
+        );
         let t = flow_typing_type::type_util::typeapp(false, false, reason, t, targs.to_vec());
         cont(env, state, t)
     }
@@ -133,35 +130,35 @@ impl NormalizerInput for NoFlowInput {
 
 pub type NoFlowNormalizer = Normalizer<NoFlowInput>;
 
-pub fn from_type(genv: &Genv<'_, '_>, t: &Type) -> Result<ALocElt, Error> {
+pub fn from_type<'cx>(
+    cx: &mut Context<'cx>,
+    genv: &Genv<'_, 'cx>,
+    t: &Type,
+) -> Result<ALocElt, Error> {
     let mut state = State::empty();
-    NoFlowNormalizer::run_type(genv, &mut state, t)
+    NoFlowNormalizer::run_type(cx, genv, &mut state, t)
 }
 
 pub fn mk_genv<'a, 'cx: 'a>(
     options: Options,
-    cx: &'a Context<'cx>,
     typed_ast_opt: Option<&'a ast::Program<ALoc, (ALoc, Type)>>,
     file_sig: Arc<FileSig>,
 ) -> Genv<'a, 'cx> {
     // Computing proper import information would introduce cycles making this module
     // unusable in any code depending on Flow_js.
-    let dummy_import_list = vec![];
     let file_sig_clone = file_sig.clone();
     let options_clone = options.dupe();
-    let imported_names = Rc::new(Lazy::new(Box::new(move |cx: &Context<'cx>| {
+    let imported_names = ImportedNames::new(move |cx: &mut Context<'cx>| {
         Ok(NoFlowNormalizer::normalize_imports(
             cx,
-            file_sig_clone,
+            file_sig_clone.clone(),
             typed_ast_opt,
             &options_clone,
-            dummy_import_list,
+            vec![],
         ))
-    })
-        as Box<dyn FnOnce(&Context<'cx>) -> _ + 'a>));
+    });
     Genv {
         options,
-        cx,
         typed_ast_opt,
         file_sig,
         imported_names,
@@ -169,10 +166,7 @@ pub fn mk_genv<'a, 'cx: 'a>(
     }
 }
 
-pub fn mk_default_genv<'a, 'cx: 'a>(
-    options: Option<Options>,
-    cx: &'a Context<'cx>,
-) -> Genv<'a, 'cx> {
+pub fn mk_default_genv<'a, 'cx: 'a>(options: Option<Options>) -> Genv<'a, 'cx> {
     thread_local! {
         static EMPTY_TYPED_AST: &'static ast::Program<ALoc, (ALoc, Type)> =
             Box::leak(Box::new(ast::Program {
@@ -186,12 +180,12 @@ pub fn mk_default_genv<'a, 'cx: 'a>(
     let typed_ast_opt = Some(EMPTY_TYPED_AST.with(|ast| *ast));
 
     let file_sig = Arc::new(FileSig::empty());
-    mk_genv(options.unwrap_or_default(), cx, typed_ast_opt, file_sig)
+    mk_genv(options.unwrap_or_default(), typed_ast_opt, file_sig)
 }
 
-pub fn debug_string_of_t<'a, 'cx: 'a>(cx: &'a Context<'cx>, t: &Type) -> String {
-    let genv = mk_default_genv(None, cx);
-    match from_type(&genv, t) {
+pub fn debug_string_of_t(cx: &mut Context<'_>, t: &Type) -> String {
+    let genv = mk_default_genv(None);
+    match from_type(cx, &genv, t) {
         Err(e) => format!("<Error {}>", e.kind),
         Ok(elt) => {
             let opts = flow_common_ty::ty_printer::PrinterOptions::default();
@@ -200,7 +194,11 @@ pub fn debug_string_of_t<'a, 'cx: 'a>(cx: &'a Context<'cx>, t: &Type) -> String 
     }
 }
 
-pub fn type_to_desc_for_errors(genv: &Genv<'_, '_>, t: &Type) -> ErrorTypeDesc<ALoc> {
+pub fn type_to_desc_for_errors<'cx>(
+    cx: &mut Context<'cx>,
+    genv: &Genv<'_, 'cx>,
+    t: &Type,
+) -> ErrorTypeDesc<ALoc> {
     use flow_common::reason::VirtualReasonDesc;
     let desc = flow_typing_type::type_util::desc_of_t(t);
     match desc {
@@ -226,7 +224,7 @@ pub fn type_to_desc_for_errors(genv: &Genv<'_, '_>, t: &Type) -> ErrorTypeDesc<A
         // To fully describe the type of `x`, we need to point to multiple locations, which
         // is not well supported by the reason infra. So we use the printed types instead.
         // The location might still be non-ideal, but at least the description makes sense.
-        _ => match from_type(genv, t) {
+        _ => match from_type(cx, genv, t) {
             Err(_) => ErrorTypeDesc::Unknown,
             Ok(Elt::Type(t)) => ErrorTypeDesc::Normalized(Elt::Type(
                 flow_common_ty::ty_utils::patch_up_react_types(t),

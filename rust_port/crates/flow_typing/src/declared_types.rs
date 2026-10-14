@@ -80,7 +80,7 @@ impl CanonicalCallee {
 
 pub(crate) fn pack(
     opts: &TypeSigOptions,
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     ast: &ast::Program<Loc, Loc>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
     scope_info: &flow_analysis::scope_api::ScopeInfo<ALoc>,
@@ -127,7 +127,7 @@ pub(crate) fn pack(
                         source.dupe(),
                         def.id_loc().as_usize() as u32,
                     );
-                    let root_loc = ALoc::of_loc(keyed_root_loc.to_loc_with_tables(&aloc_tables));
+                    let root_loc = ALoc::of_loc(keyed_root_loc.to_loc_with_tables(aloc_tables));
                     roots
                         .contains(&root_loc)
                         .then_some((root_loc, TargetedRoot::LocalDef(Index::new(index))))
@@ -174,8 +174,8 @@ pub(crate) struct ResolvedAnalysis {
     assertion_calls: BTreeMap<ALoc, AssertionInfo>,
 }
 
-pub(crate) fn resolve<'cx>(cx: &Context<'cx>, analysis: PackedAnalysis) -> ResolvedAnalysis {
-    let Ok(result) = cx.with_suppressed_errors(|| -> Result<_, !> {
+pub(crate) fn resolve<'cx>(cx: &mut Context<'cx>, analysis: PackedAnalysis) -> ResolvedAnalysis {
+    let Ok(result) = cx.with_suppressed_errors(|cx| -> Result<_, !> {
         let merged = analysis
             .local
             .map(|local| MergedLocalAnalysis::new(cx, local));
@@ -219,9 +219,7 @@ pub(crate) fn resolve<'cx>(cx: &Context<'cx>, analysis: PackedAnalysis) -> Resol
                 None if candidate.is_global => {
                     // Global roots (e.g. lib declarations) are never merged here.
                     // Their annotation lives in the lib itself, so a guard refines directly.
-                    if let Some((_, global_t)) = cx
-                        .builtins()
-                        .get_builtin_type_opt(cx, candidate.root_name.as_str())
+                    if let Some((_, global_t)) = cx.builtin_type_opt(candidate.root_name.as_str())
                         && let Some(callee_type) = callee_type_for_classification(
                             cx,
                             &candidate.callee_loc,
@@ -273,14 +271,14 @@ fn assertion_of_function(function: &flow_typing_type::type_::FunType) -> Option<
 
 /// Resolve tvars/annotations and evaluate deferred heads.
 /// Runs under error suppression; the reason only labels inspection diagnostics.
-fn normalized_assertion_head(cx: &Context<'_>, reason: &Reason, type_: &Type) -> Option<Type> {
+fn normalized_assertion_head(cx: &mut Context<'_>, reason: &Reason, type_: &Type) -> Option<Type> {
     let type_ = cx.find_resolved(type_)?;
     let type_ = annotation_inference::concretize_type(cx, reason.dupe(), type_);
     cx.find_resolved(&type_)
 }
 
 fn imported_assertion_info(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     reason: &Reason,
     candidate: &CalleeTarget<ALoc>,
 ) -> Option<AssertionInfo> {
@@ -293,7 +291,8 @@ fn imported_assertion_info(
     else {
         return None;
     };
-    let Ok(module) = module(cx, cx) else {
+    let dst_cx = cx.id();
+    let Ok(module) = module(cx, dst_cx) else {
         return None;
     };
     // Mirror checking's ESM default-import typing
@@ -345,7 +344,7 @@ fn imported_assertion_info(
 
 /// Classify a callee type that has already been navigated.
 fn assertion_info_of_type(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     reason: &Reason,
     type_: &Type,
 ) -> Option<AssertionInfo> {
@@ -375,7 +374,7 @@ fn assertion_info_of_type(
 /// Shared by locals (roots from merged signatures) and imports (roots from
 /// dependency exports).
 fn callee_type_for_classification(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     callee_loc: &ALoc,
     property_path: &[FlowSmolStr],
     root_type: &Type,
@@ -399,7 +398,7 @@ fn callee_type_for_classification(
 }
 
 fn property_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     callee_loc: &ALoc,
     property_path: &[flow_data_structure_wrapper::smol_str::FlowSmolStr],
     root_type: Type,
@@ -418,13 +417,13 @@ fn property_type<'cx>(
     })
 }
 
-struct MergedLocalAnalysis<'cx> {
-    existing: Option<type_sig_merge::TargetedMergeResult<'cx, ALoc>>,
-    parsed: Option<type_sig_merge::TargetedMergeResult<'cx, Loc>>,
+struct MergedLocalAnalysis {
+    existing: Option<type_sig_merge::TargetedMergeResult<ALoc>>,
+    parsed: Option<type_sig_merge::TargetedMergeResult<Loc>>,
 }
 
-impl<'cx> MergedLocalAnalysis<'cx> {
-    fn new(cx: &Context<'cx>, local: PackedLocalAnalysis) -> Self {
+impl MergedLocalAnalysis {
+    fn new(cx: &mut Context<'_>, local: PackedLocalAnalysis) -> Self {
         let existing = local.existing.map(|existing| {
             type_sig_merge::merge_packed_target_roots(
                 cx,

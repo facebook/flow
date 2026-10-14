@@ -675,12 +675,12 @@ pub fn try_resolve_to_strings(
 /// Flow_js).
 pub fn extract_strings_concretized<'cx>(
     possible_concrete_types_for_inspection: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         &reason::Reason,
         &Type,
     ) -> Result<Vec<Type>, FlowJsException>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t: &Type,
 ) -> Result<Option<Vec<FlowSmolStr>>, FlowJsException> {
@@ -694,12 +694,12 @@ pub fn extract_strings_concretized<'cx>(
 
 pub fn try_resolve_concretized<'cx>(
     possible_concrete_types_for_inspection: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         &reason::Reason,
         &Type,
     ) -> Result<Vec<Type>, FlowJsException>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     types: &[Type],
 ) -> Result<Option<Vec<Vec<FlowSmolStr>>>, FlowJsException> {
@@ -712,12 +712,12 @@ pub fn try_resolve_concretized<'cx>(
 /// Concretizing analogue of `try_resolve_to_strings`.
 pub fn try_resolve_to_strings_concretized<'cx>(
     possible_concrete_types_for_inspection: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         &reason::Reason,
         &Type,
     ) -> Result<Vec<Type>, FlowJsException>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     quasis: &[FlowSmolStr],
     types: &[Type],
@@ -799,8 +799,8 @@ fn mk_singleton_or_union(
 ///    FlowJs after main inference to concretize types hidden behind
 ///    EvalT/OpenT/AnnotT (indexed access, mapped/conditional types, property
 ///    access) and re-run the predicate on each branch.
-fn validate_placeholders<'cx>(cx: &Context<'cx>, loc: &ALoc, types: &[Type]) {
-    let emit_error = |cx: &Context<'cx>, loc: &ALoc| {
+fn validate_placeholders<'cx>(cx: &mut Context<'cx>, loc: &ALoc, types: &[Type]) {
+    let emit_error = |cx: &mut Context<'cx>, loc: &ALoc| {
         flow_js_utils::add_output_non_speculating(
             cx,
             ErrorMessage::EInvalidTemplateLiteralType {
@@ -815,13 +815,13 @@ fn validate_placeholders<'cx>(cx: &Context<'cx>, loc: &ALoc, types: &[Type]) {
         } else {
             let t = t.dupe();
             let loc = loc.dupe();
-            cx.add_post_inference_validation_callback(Box::new(move |cx: &Context<'cx>| {
+            cx.add_post_inference_validation_callback(Box::new(move |cx: &mut Context<'_>| {
                 // Concretization can emit its own errors as a side effect
                 // (e.g. "indexed access is not an object" when evaluating
                 // `T[K]` under an unresolved generic `T`). Those errors are
                 // unrelated to the placeholder-validity question we're
                 // asking.
-                let concrete = cx.with_suppressed_errors(|| {
+                let concrete = cx.with_suppressed_errors(|cx| {
                     crate::flow_js::FlowJs::possible_concrete_types_for_inspection(
                         cx,
                         type_util::reason_of_t(&t),
@@ -862,7 +862,7 @@ pub fn resolve<'cx>(
     quasis: Vec<FlowSmolStr>,
     types: Vec<Type>,
     loc: ALoc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
 ) -> Type {
     let unresolved = || {
         let reason = reason::mk_annot_reason(VirtualReasonDesc::RTemplateLiteralType, loc.dupe());
@@ -947,7 +947,7 @@ pub fn resolve_for_value<'cx>(
     quasis: Vec<FlowSmolStr>,
     types: Vec<Type>,
     loc: ALoc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     from_annot: bool,
 ) -> Type {
     let unresolved = || {
@@ -1011,13 +1011,13 @@ pub fn resolve_for_value<'cx>(
 pub fn concretize_placeholders<'cx>(
     possible_concrete_types_for_inspection: Option<
         &dyn Fn(
-            &Context<'cx>,
+            &mut Context<'cx>,
             &FlowJsEnv,
             &reason::Reason,
             &Type,
         ) -> Result<Vec<Type>, FlowJsException>,
     >,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     upper: &Type,
     types: &[Type],
@@ -1070,13 +1070,13 @@ pub fn concretize_placeholders<'cx>(
 pub fn subtype_str_lit_into_template<'cx>(
     possible_concrete_types_for_inspection: Option<
         &dyn Fn(
-            &Context<'cx>,
+            &mut Context<'cx>,
             &FlowJsEnv,
             &reason::Reason,
             &Type,
         ) -> Result<Vec<Type>, FlowJsException>,
     >,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1149,7 +1149,7 @@ pub fn subtype_str_lit_into_template<'cx>(
 /// TemplateLiteralT <: UnionT: enumerate the strings the LHS could produce
 /// (expanding generics) and flow each one into the RHS union independently.
 pub fn subtype_template_into_union<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1222,7 +1222,7 @@ pub enum TlToTlResult {
 ///    and whose outer quasis match the RHS `prefix${string}suffix` shape.
 ///    Uses raw LHS quasis/types (unfolded), matching the original semantics.
 pub fn try_subtype_template_to_template<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1340,7 +1340,7 @@ pub fn try_subtype_template_to_template<'cx>(
 /// least one quasi is non-empty, AnyLiteral otherwise) when the cross product
 /// can't be resolved.
 pub fn subtype_template_to_other<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,

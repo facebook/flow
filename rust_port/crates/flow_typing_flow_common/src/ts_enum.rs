@@ -94,7 +94,7 @@ pub fn ts_enum_member_type(loc: ALoc, value: &TsEnumMemberValue) -> Type {
 //   yields the member-name string (TS types this lookup as `string`). String and
 //   computed members have no reverse mapping.
 pub fn mk_ts_enum_namespace_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: Reason,
     namespace_symbol: Symbol,
     members: &[(FlowSmolStr, ALoc, TsEnumMemberValue)],
@@ -146,7 +146,7 @@ pub fn mk_ts_enum_namespace_type<'cx>(
 // defaulted member that does not follow a numeric constant) are reported here as
 // errors; the model degrades them to a computed value.
 pub fn mk_ts_enum_namespace<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     declared: bool,
     enum_reason: Reason,
     name_loc: ALoc,

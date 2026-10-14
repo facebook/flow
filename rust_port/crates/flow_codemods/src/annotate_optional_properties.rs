@@ -185,7 +185,6 @@ impl flow_services_code_action::insert_type_utils::BaseStats for ErrorStats {
 }
 
 pub struct AnnotateOptionalPropertiesMapper<'a, 'cx> {
-    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     max_type_size: i32,
     default_any: bool,
     prop_data: PropDataSet,
@@ -197,11 +196,10 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
     pub fn new(
         max_type_size: i32,
         default_any: bool,
-        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> Self {
         let lint_severities = codemod_context::typed::lint_severities(cctx);
         Self {
-            cctx,
             max_type_size,
             default_any,
             prop_data: PropDataSet::new(),
@@ -354,7 +352,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
     }
 
     #[allow(unreachable_code)]
-    fn get_props_for_obj(&self, oloc: Loc) -> Vec<Prop<ALoc>> {
+    fn get_props_for_obj(&mut self, oloc: Loc) -> Vec<Prop<ALoc>> {
         let relevant_errors: PropDataSet = self
             .prop_data
             .iter()
@@ -442,7 +440,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
                     .iter()
                     .flat_map(|loc| {
                         crate::utils::codemod_annotator::get_validated_ty(
-                            self.cctx,
+                            self.mapper.cctx,
                             self.max_type_size,
                             loc.clone(),
                         )
@@ -508,7 +506,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
                         {
                             let ploc = ploc.clone();
                             match crate::utils::codemod_annotator::get_validated_ty(
-                                self.cctx,
+                                self.mapper.cctx,
                                 self.max_type_size,
                                 ploc.clone(),
                             ) {
@@ -564,24 +562,25 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
     }
 
     pub fn program(&mut self, prog: ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
-        let cx = &self.cctx.cx;
+        let cx = &self.mapper.cctx.cx;
         let unsuppressable_error_codes: BTreeSet<
             flow_data_structure_wrapper::smol_str::FlowSmolStr,
         > = self
+            .mapper
             .cctx
             .options
             .unsuppressable_error_codes
             .iter()
             .cloned()
             .collect();
-        let reader = &self.cctx.reader;
+        let reader = &self.mapper.cctx.reader;
         let loc_of_aloc = |aloc: &flow_aloc::ALoc| reader.loc_of_aloc(aloc);
         let get_ast =
             |file: &flow_parser::file_key::FileKey| -> Option<Arc<ast::Program<Loc, Loc>>> {
                 reader.get_ast(file)
             };
-        let suppressions = self.cctx.error_suppressions.clone();
-        let root = &self.cctx.options.root;
+        let suppressions = self.mapper.cctx.error_suppressions.clone();
+        let root = &self.mapper.cctx.options.root;
         let error_is_suppressed =
             |error: &flow_typing_errors::flow_error::FlowError<flow_aloc::ALoc>| -> bool {
                 let mut unused = suppressions.clone();

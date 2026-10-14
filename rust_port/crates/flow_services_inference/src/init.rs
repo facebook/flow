@@ -22,6 +22,7 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
+use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::options::Options;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -36,6 +37,8 @@ use flow_typing::merge;
 use flow_typing::type_inference;
 use flow_typing_builtins::builtins::Builtins;
 use flow_typing_context::Context;
+use flow_typing_context::ContextArena;
+use flow_typing_context::ContextStore;
 use flow_typing_context::MasterContext;
 use flow_typing_context::ResolvedRequire;
 use flow_typing_context::mk_context_metadata;
@@ -95,13 +98,13 @@ pub(crate) fn assemble_ordered_lib_inputs(
 /// passed.
 ///
 /// returns (success, parse and signature errors, exports)
-fn load_lib_files(
-    ccx: &Rc<flow_typing_context::ComponentT<'static>>,
+fn load_lib_files<'cx>(
+    arena: &'cx mut ContextArena,
     options: &Options,
     reader: &Transaction,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: &[OrderedLibInput],
-) -> (bool, MasterContext, Option<Context<'static>>, Exports) {
+) -> (bool, MasterContext, Option<Context<'cx>>, Exports) {
     let mut ok = true;
     let mut ordered_asts: Vec<(
         flow_common::type_strictness::TypeStrictnessKind,
@@ -152,8 +155,9 @@ fn load_lib_files(
             } => {
                 let mut metadata = mk_context_metadata(options, global_libdefs.dupe());
                 metadata.overridable.checked = false;
-                let cx = Context::make(
-                    ccx.dupe(),
+                let ccx = arena.add_component();
+                let cx = arena.add_context(
+                    ccx,
                     metadata,
                     builtin_leader_file_key.dupe(),
                     all_unordered_libs.dupe(),
@@ -164,14 +168,17 @@ fn load_lib_files(
                         })
                             as Box<dyn FnOnce() -> Rc<ALocTable>>))
                     },
-                    Rc::new(move |_cx: &Context, _| ResolvedRequire::MissingModule),
-                    Rc::new(move |_cx: &Context| Builtins::empty()),
+                    Rc::new(|_cx: &mut Context<'_>, _: &FlowImportSpecifier| {
+                        ResolvedRequire::MissingModule
+                    }),
+                    Rc::new(|_cx: &mut Context<'_>| Builtins::empty()),
                     flow_utils_concurrency::check_budget::CheckBudget::new(
                         options
                             .merge_timeout
                             .map(std::time::Duration::from_secs_f64),
                     ),
                 );
+                let mut cx = Context::new(ContextStore::new(vec![arena]), cx);
                 let file_keys_with_comments: Vec<(FileKey, &[flow_parser::ast::Comment<Loc>])> =
                     ordered_asts
                         .iter()
@@ -198,7 +205,7 @@ fn load_lib_files(
                 cx.add_severity_covers(severity_cover);
                 cx.add_error_suppressions(suppressions);
                 for error in suppression_errors {
-                    add_output_non_speculating(&cx, error);
+                    add_output_non_speculating(&mut cx, error);
                 }
                 (
                     exports::of_builtins(&builtins.builtins),
@@ -247,9 +254,9 @@ pub(crate) fn init(
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     lib_files: Vec<OrderedLibInput>,
 ) -> InitResult {
-    let ccx = Rc::new(flow_typing_context::make_ccx());
+    let mut arena = ContextArena::new();
     let (ok, master_cx, cx_opt, exports) =
-        load_lib_files(&ccx, options, reader, all_unordered_libs, &lib_files);
+        load_lib_files(&mut arena, options, reader, all_unordered_libs, &lib_files);
     let (errors, warnings, suppressions) = match cx_opt {
         None => (BTreeMap::new(), BTreeMap::new(), ErrorSuppressions::empty()),
         Some(cx) => {
@@ -261,12 +268,10 @@ pub(crate) fn init(
             let mut suppressions = suppressions;
             let (errors, warnings) = suppressions.filter_lints(
                 errors,
-                &aloc_tables,
+                aloc_tables,
                 include_suppressions,
                 &severity_cover,
             );
-            // Break Rc cycles in the init Context before dropping it.
-            cx.post_inference_cleanup();
             let mut error_map = BTreeMap::new();
             let mut warning_map = BTreeMap::new();
             for file in aloc_tables.keys() {

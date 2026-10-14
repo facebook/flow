@@ -25,6 +25,7 @@ use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::polymorphic_ast_mapper;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -50,7 +51,7 @@ use crate::func_params;
 use crate::statement;
 
 struct FuncScopeVisitor<'a, 'cx, 'b> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     has_return_annot: bool,
     ret_annot_loc: ALoc,
     return_t: &'b Type,
@@ -58,11 +59,7 @@ struct FuncScopeVisitor<'a, 'cx, 'b> {
     next_t: &'b Type,
     body_loc: ALoc,
     kind: &'b Kind,
-    exhaust: &'b Option<(
-        RefCell<Vec<Type>>,
-        Vec<ALoc>,
-        (Type, type_::UseT<Context<'cx>>),
-    )>,
+    exhaust: &'b Option<(RefCell<Vec<Type>>, Vec<ALoc>, (Type, type_::UseT<Cx>))>,
     no_return: bool,
     has_throw: bool,
     no_yield: bool,
@@ -346,7 +343,7 @@ pub fn field_initializer<C: ConfigTypes>(
 }
 
 pub fn functiontype<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     arrow: bool,
     func_loc: Option<ALoc>,
     this_default: Type,
@@ -366,7 +363,7 @@ pub fn functiontype<'a, C: crate::func_params_intf::Config>(
     let return_t = match return_t {
         AnnotatedOrInferred::Inferred(t)
             if !matches!(
-                &*cx.typing_mode(),
+                cx.typing_mode(),
                 flow_typing_context::TypingMode::CheckingMode
             ) && !func_params::all_params_annotated::<C>(
                 &fparams.params,
@@ -424,7 +421,7 @@ pub fn functiontype<'a, C: crate::func_params_intf::Config>(
 }
 
 pub fn methodtype<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     method_this_loc: Option<ALoc>,
     this_default: Type,
     x: &Func<C>,
@@ -498,7 +495,7 @@ pub fn settertype<C: crate::func_params_intf::Config>(x: &Func<C>) -> Type {
 }
 
 pub fn toplevels<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     x: &Func<C>,
 ) -> Result<
     (
@@ -863,10 +860,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     exhaustive,
                     (
                         void_t,
-                        type_::UseT::new(type_::UseTInner::<Context>::UseT(
-                            use_op,
-                            return_t.dupe(),
-                        )),
+                        type_::UseT::new(type_::UseTInner::<Cx>::UseT(use_op, return_t.dupe())),
                     ),
                 ))
             }

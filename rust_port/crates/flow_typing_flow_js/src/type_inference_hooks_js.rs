@@ -8,26 +8,25 @@
 use std::cell::RefCell;
 
 use flow_aloc::ALoc;
-use flow_typing_context::Context;
 use flow_typing_type::type_::Type;
 
-fn id_nop(_cx: &Context, _name: &str, _loc: ALoc) -> bool {
+fn id_nop(_name: &str, _loc: ALoc) -> bool {
     false
 }
 
-fn literal_nop(_cx: &Context, _loc: ALoc) -> bool {
+fn literal_nop(_loc: ALoc) -> bool {
     false
 }
 
-fn jsx_nop(_cx: &Context, _name: &str, _loc: ALoc) -> bool {
+fn jsx_nop(_name: &str, _loc: ALoc) -> bool {
     false
 }
 
-fn obj_prop_decl_nop(_cx: &Context, _name: &str, _loc: ALoc) -> bool {
+fn obj_prop_decl_nop(_name: &str, _loc: ALoc) -> bool {
     false
 }
 
-fn obj_to_obj_nop(_cx: &Context, _t1: &Type, _t2: &Type) {}
+fn obj_to_obj_nop(_t1: &Type, _t2: &Type) {}
 
 // This type represents the possible definition-points for an lvalue.
 pub enum Def {
@@ -60,12 +59,12 @@ pub enum Def {
 }
 
 pub struct HookState {
-    pub id_hook: fn(&Context, &str, ALoc) -> bool,
-    pub literal_hook: fn(&Context, ALoc) -> bool,
-    pub jsx_hook: fn(&Context, &str, ALoc) -> bool,
-    pub obj_prop_decl_hook: fn(&Context, &str, ALoc) -> bool,
+    pub id_hook: fn(&str, ALoc) -> bool,
+    pub literal_hook: fn(ALoc) -> bool,
+    pub jsx_hook: fn(&str, ALoc) -> bool,
+    pub obj_prop_decl_hook: fn(&str, ALoc) -> bool,
     // Called when ObjT 1 ~> ObjT 2
-    pub obj_to_obj_hook: fn(&Context, &Type, &Type),
+    pub obj_to_obj_hook: fn(&Type, &Type),
     // Flag to indicate if the current check is for IDE services
     pub for_ide: bool,
 }
@@ -90,31 +89,31 @@ thread_local! {
     });
 }
 
-pub fn set_id_hook(hook: fn(&Context, &str, ALoc) -> bool) {
+pub fn set_id_hook(hook: fn(&str, ALoc) -> bool) {
     HOOK_STATE.with(|state| {
         state.borrow_mut().id_hook = hook;
     });
 }
 
-pub fn set_literal_hook(hook: fn(&Context, ALoc) -> bool) {
+pub fn set_literal_hook(hook: fn(ALoc) -> bool) {
     HOOK_STATE.with(|state| {
         state.borrow_mut().literal_hook = hook;
     });
 }
 
-pub fn set_jsx_hook(hook: fn(&Context, &str, ALoc) -> bool) {
+pub fn set_jsx_hook(hook: fn(&str, ALoc) -> bool) {
     HOOK_STATE.with(|state| {
         state.borrow_mut().jsx_hook = hook;
     });
 }
 
-pub fn set_obj_prop_decl_hook(hook: fn(&Context, &str, ALoc) -> bool) {
+pub fn set_obj_prop_decl_hook(hook: fn(&str, ALoc) -> bool) {
     HOOK_STATE.with(|state| {
         state.borrow_mut().obj_prop_decl_hook = hook;
     });
 }
 
-pub fn set_obj_to_obj_hook(hook: fn(&Context, &Type, &Type)) {
+pub fn set_obj_to_obj_hook(hook: fn(&Type, &Type)) {
     HOOK_STATE.with(|state| {
         state.borrow_mut().obj_to_obj_hook = hook;
     });
@@ -146,29 +145,29 @@ pub fn reset_hooks() {
     });
 }
 
-pub fn dispatch_id_hook<'cx>(cx: &Context<'cx>, name: &str, loc: ALoc) -> bool {
+pub fn dispatch_id_hook(name: &str, loc: ALoc) -> bool {
     let hook = HOOK_STATE.with(|state| state.borrow().id_hook);
-    hook(cx, name, loc)
+    hook(name, loc)
 }
 
-pub fn dispatch_literal_hook<'cx>(cx: &Context<'cx>, loc: ALoc) -> bool {
+pub fn dispatch_literal_hook(loc: ALoc) -> bool {
     let hook = HOOK_STATE.with(|state| state.borrow().literal_hook);
-    hook(cx, loc)
+    hook(loc)
 }
 
-pub fn dispatch_jsx_hook<'cx>(cx: &Context<'cx>, name: &str, loc: ALoc) -> bool {
+pub fn dispatch_jsx_hook(name: &str, loc: ALoc) -> bool {
     let hook = HOOK_STATE.with(|state| state.borrow().jsx_hook);
-    hook(cx, name, loc)
+    hook(name, loc)
 }
 
-pub fn dispatch_obj_prop_decl_hook<'cx>(cx: &Context<'cx>, name: &str, loc: ALoc) -> bool {
+pub fn dispatch_obj_prop_decl_hook(name: &str, loc: ALoc) -> bool {
     let hook = HOOK_STATE.with(|state| state.borrow().obj_prop_decl_hook);
-    hook(cx, name, loc)
+    hook(name, loc)
 }
 
-pub fn dispatch_obj_to_obj_hook<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) {
+pub fn dispatch_obj_to_obj_hook(t1: &Type, t2: &Type) {
     let hook = HOOK_STATE.with(|state| state.borrow().obj_to_obj_hook);
-    hook(cx, t1, t2);
+    hook(t1, t2);
 }
 
 pub fn is_for_ide() -> bool {

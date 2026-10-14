@@ -74,7 +74,7 @@ impl Context for TestCx {
         None
     }
 
-    fn add_exhaustive_check(&self, _loc: ALoc, _cases: (Vec<ALoc>, bool)) {}
+    fn add_exhaustive_check(&mut self, _loc: ALoc, _cases: (Vec<ALoc>, bool)) {}
 
     fn exhaustive_check(&self, _loc: &ALoc) -> Option<(Vec<ALoc>, bool)> {
         None
@@ -86,7 +86,11 @@ struct TestFlow;
 impl Flow for TestFlow {
     type Cx = TestCx;
 
-    fn add_output(_cx: &Self::Cx, _error: flow_typing_errors::error_message::ErrorMessage<ALoc>) {}
+    fn add_output(
+        _cx: &mut Self::Cx,
+        _error: flow_typing_errors::error_message::ErrorMessage<ALoc>,
+    ) {
+    }
 }
 
 fn print_values<F>(
@@ -213,7 +217,7 @@ fn print_ssa_test(
     let exclude = exclude_syms.unwrap_or_default();
     let file_sig = FileSig::from_program(&cx.file(), &parse(contents), &FileSigOptions::default());
     let result =
-        name_resolver::program::<TestCx, TestFlow>(&cx, is_lib, exclude, &file_sig, &aloc_ast);
+        name_resolver::program::<TestCx, TestFlow>(&mut cx, is_lib, exclude, &file_sig, &aloc_ast);
     print_values(|id| result.refinement_of_id.get(id))(
         &result.env_values,
         &result.env_refinement_invalidation_info,

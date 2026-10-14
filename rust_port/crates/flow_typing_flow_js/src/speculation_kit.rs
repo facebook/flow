@@ -16,7 +16,9 @@ use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
+use flow_lazy::ContextFamily;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
 use flow_typing_errors::error_message::EUnionOptimizationData;
 use flow_typing_errors::error_message::EUnionPartialOptimizationNonUniqueKeyData;
@@ -76,25 +78,27 @@ enum CasesSpec<'cx, 'a> {
         l: Type,
         union_rep: &'a union_rep::UnionRep,
         us: Vec<Type>,
-        on_success: Option<Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) + 'a>>,
+        on_success: Option<Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) + 'a>>,
     },
     IntersectionCases {
         intersection: Type,
         ls: Vec<Type>,
-        use_t: UseT<Context<'cx>>,
+        use_t: UseT<Cx>,
     },
-    SingletonCase(Type, UseT<Context<'cx>>),
+    SingletonCase(Type, UseT<Cx>),
     SingletonUnifyCase(Type, UseOp, Type),
     SingletonCustomCase(
-        Option<Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
+        Option<Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
     ),
     CustomCases {
         use_op: Option<UseOp>,
         no_match_error_loc: ALoc,
-        use_t: Option<UseT<Context<'cx>>>,
-        default_resolve:
-            Option<Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
-        cases: Vec<Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
+        use_t: Option<UseT<Cx>>,
+        default_resolve: Option<
+            Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
+        >,
+        cases:
+            Vec<Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
     },
 }
 
@@ -148,7 +152,11 @@ fn log_synthesis_result(
     }
 }
 
-fn log_specialized_use<CX>(use_t: &UseT<CX>, case: &SpeculationCase, speculation_id: i32) {
+fn log_specialized_use<CX: ContextFamily>(
+    use_t: &UseT<CX>,
+    case: &SpeculationCase,
+    speculation_id: i32,
+) {
     let finalize = |c: &SpecializedCallee| {
         let spec_id = SpecState {
             speculation_id,
@@ -214,8 +222,8 @@ fn log_specialized_callee(spec: &CasesSpec<'_, '_>, case: &SpeculationCase, spec
 }
 
 enum CaseSpec<'cx, 'a> {
-    CustomCase(Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>),
-    FlowCase(Type, UseT<Context<'cx>>),
+    CustomCase(Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>),
+    FlowCase(Type, UseT<Cx>),
     UnifyCase(Type, UseOp, Type),
 }
 
@@ -342,9 +350,9 @@ impl SpecMatchError {
 // unique identifier, called the speculation_id. This identifier keeps track of
 // unresolved tvars encountered when trying to fully resolve types.
 pub fn try_union<'cx, 'a>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
-    on_success: Option<Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) + 'a>>,
+    on_success: Option<Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) + 'a>>,
     trace: DepthTrace,
     use_op: UseOp,
     l: Type,
@@ -369,10 +377,10 @@ pub fn try_union<'cx, 'a>(
 }
 
 pub fn try_intersection<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
-    use_t: UseT<Context<'cx>>,
+    use_t: UseT<Cx>,
     intersection: Type,
     rep: &inter_rep::InterRep,
 ) -> Result<(), FlowJsException> {
@@ -391,15 +399,15 @@ pub fn try_intersection<'cx>(
 }
 
 pub fn try_custom<'cx, 'a>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: Option<UseOp>,
-    use_t: Option<UseT<Context<'cx>>>,
+    use_t: Option<UseT<Cx>>,
     default_resolve: Option<
-        Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
+        Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
     >,
     no_match_error_loc: ALoc,
-    cases: Vec<Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
+    cases: Vec<Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>>,
 ) -> Result<(), FlowJsException> {
     speculative_matches(
         cx,
@@ -421,20 +429,20 @@ pub fn try_custom<'cx, 'a>(
 /// SpeculationSingletonError exception is raised. This needs to be caught by
 /// the caller of this function.
 pub fn try_singleton_throw_on_failure<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     t: Type,
-    u: UseT<Context<'cx>>,
+    u: UseT<Cx>,
 ) -> Result<(), FlowJsException> {
     speculative_matches(cx, env, trace, CasesSpec::SingletonCase(t, u))
         .map_err(SpecMatchError::into_flow_js_exception)
 }
 
 pub fn try_singleton_custom_throw_on_failure<'cx, 'a>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
-    f: Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
+    f: Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
 ) -> Result<(), FlowJsException> {
     speculative_matches(
         cx,
@@ -448,9 +456,9 @@ pub fn try_singleton_custom_throw_on_failure<'cx, 'a>(
 /// Runs a custom singleton speculation, committing its constraints on success
 /// and returning the first error after rolling its constraints back on failure.
 pub fn try_singleton_custom_with_error<'cx, 'a>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
-    f: Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
+    f: Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + 'a>,
 ) -> Result<Option<SpeculativeError>, FlowJsException> {
     match speculative_matches(
         cx,
@@ -465,7 +473,7 @@ pub fn try_singleton_custom_with_error<'cx, 'a>(
 }
 
 pub fn try_unify<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     t1: Type,
@@ -520,7 +528,7 @@ fn speculative_match(
 // abstract the latter into a so-called "spec." The spec is used to customize
 // error messages.
 fn speculative_matches<'cx, 'a>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     mut spec: CasesSpec<'cx, 'a>,
@@ -537,7 +545,7 @@ where
 }
 
 fn long_path_speculative_matches<'cx, 'a>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     spec: &mut CasesSpec<'cx, 'a>,
@@ -560,7 +568,7 @@ where
     cx.constraint_cache_mut().push_level();
 
     fn return_errs<'cx, 'a>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         spec: &mut CasesSpec<'cx, 'a>,
         msgs: Vec<ErrorMessage<ALoc>>,
@@ -634,10 +642,12 @@ where
             } => {
                 let intersection_reason = type_util::reason_of_t(intersection);
                 let reason_lower = mk_intersection_reason(intersection_reason, ls);
-                let flow_fn =
-                    |t: &Type, u: &UseT<Context<'cx>>| FlowJs::flow_with_env(cx, env, t, u);
+                let flow_fn = |cx: &mut Context<'cx>, t: &Type, u: &UseT<Cx>| {
+                    FlowJs::flow_with_env(cx, env, t, u)
+                };
                 let resolve_callee_pair = (intersection_reason.dupe(), ls.clone());
                 default_resolve::default_resolve_touts(
+                    cx,
                     &flow_fn,
                     Some(&resolve_callee_pair),
                     env,
@@ -760,7 +770,7 @@ where
                 // Move entries from both pushed levels back below the
                 // truncation line so they survive any outer truncate_to.
                 {
-                    let mut cc = cx.constraint_cache_mut();
+                    let cc = cx.constraint_cache_mut();
                     cc.move_top_entries_to_level(cc_base_level - 1);
                     cc.pop_level();
                     cc.move_top_entries_to_level(cc_base_level - 1);
@@ -883,7 +893,7 @@ where
 // during speculative matching, by checking sentinel properties first we force immediate match
 // failures in the vast majority of cases without having to do any useless additional work.
 fn optimize_spec_try_shortcut<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     spec: &mut CasesSpec<'cx, '_>,
@@ -909,10 +919,13 @@ fn optimize_spec_try_shortcut<'cx>(
                 _ => unreachable!(),
             };
             let specialization = rep.optimize_(
-                |t1, t2| concrete_type_eq::eq_with_env(cx, env, t1, t2),
-                |ts: &mut dyn Iterator<Item = &Type>| type_mapper::union_flatten(cx, ts.duped()),
-                |t| cx.find_resolved(t),
-                |id| cx.find_props(id),
+                cx,
+                |cx, t1, t2| concrete_type_eq::eq_with_env(cx, env, t1, t2),
+                |cx, ts: &mut dyn Iterator<Item = &Type>| {
+                    type_mapper::union_flatten(cx, ts.duped())
+                },
+                |cx, t| cx.find_resolved(t),
+                |cx, id| cx.find_props(id),
             );
             match specialization {
                 Err(kind) => {
@@ -984,12 +997,13 @@ fn optimize_spec_try_shortcut<'cx>(
         } => {
             if !rep.is_optimized_finally() {
                 rep.optimize(
-                    |t1, t2| concrete_type_eq::eq_with_env(cx, env, t1, t2),
-                    |ts: &mut dyn Iterator<Item = &Type>| {
+                    cx,
+                    |cx, t1, t2| concrete_type_eq::eq_with_env(cx, env, t1, t2),
+                    |cx, ts: &mut dyn Iterator<Item = &Type>| {
                         type_mapper::union_flatten(cx, ts.duped())
                     },
-                    |t| cx.find_resolved(t),
-                    |id| cx.find_props(id),
+                    |cx, t| cx.find_resolved(t),
+                    |cx, id| cx.find_props(id),
                 );
             }
             let result = match &**l {
@@ -1057,7 +1071,7 @@ fn optimize_spec_try_shortcut<'cx>(
 }
 
 fn shortcut_enum<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     reason_op: &Reason,
@@ -1066,7 +1080,8 @@ fn shortcut_enum<'cx>(
     rep: &union_rep::UnionRep,
 ) -> Result<bool, FlowJsException> {
     let result = union_rep::quick_mem_enum(
-        |t1, t2| type_util::quick_subtype(None::<&fn(&Type)>, t1, t2),
+        cx,
+        |_, t1, t2| type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2),
         l,
         rep,
     );
@@ -1074,7 +1089,7 @@ fn shortcut_enum<'cx>(
 }
 
 fn shortcut_disjoint_union<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     reason_op: &Reason,
@@ -1083,9 +1098,10 @@ fn shortcut_disjoint_union<'cx>(
     rep: &union_rep::UnionRep,
 ) -> Result<bool, FlowJsException> {
     let result = union_rep::quick_mem_disjoint_union(
-        |t| cx.find_resolved(t),
-        |id| cx.find_props(id),
-        |t1, t2| type_util::quick_subtype(None::<&fn(&Type)>, t1, t2),
+        cx,
+        |cx, t| cx.find_resolved(t),
+        |cx, id| cx.find_props(id),
+        |_, t1, t2| type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2),
         l,
         rep,
     );
@@ -1093,7 +1109,7 @@ fn shortcut_disjoint_union<'cx>(
 }
 
 fn quick_mem_result<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     reason_op: &Reason,
@@ -1138,7 +1154,7 @@ fn quick_mem_result<'cx>(
 }
 
 fn fire_actions<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     spec: &CasesSpec<'cx, '_>,

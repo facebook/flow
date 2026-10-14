@@ -76,13 +76,16 @@ fn type_param_set_add_all(list: &[flow_typing_type::type_::TypeParam], set: &mut
 }
 
 fn create_extracted_function(
+    cx: &mut Context<'_>,
     type_param_synthesizer: &dyn Fn(
+        &mut Context<'_>,
         &flow_typing_type::type_::TypeParam,
     ) -> Result<
         ast::types::TypeParam<Loc, Loc>,
         crate::insert_type::Expected,
     >,
     type_synthesizer: &dyn Fn(
+        &mut Context<'_>,
         &Loc,
     ) -> Result<
         Option<(
@@ -103,7 +106,7 @@ fn create_extracted_function(
     let mut params_list = Vec::new();
     let mut used_tparam_set: TypeParamSet = BTreeSet::new();
     for (v, loc) in undefined_variables.iter() {
-        let annot = match type_synthesizer(loc) {
+        let annot = match type_synthesizer(cx, loc) {
             Err(_) | Ok(None) => ast::types::AnnotationOrHint::Missing(Loc::none()),
             Ok(Some((tparams_rev, type_))) => {
                 type_param_set_add_all(&tparams_rev, &mut used_tparam_set);
@@ -126,7 +129,7 @@ fn create_extracted_function(
     all_returned.extend(vars_with_shadowed_local_reassignments.iter().cloned());
     let mut returned_variables: Vec<(FlowSmolStr, ast::types::Type<Loc, Loc>)> = Vec::new();
     for (v, loc) in all_returned.iter() {
-        let type_ = match type_synthesizer(loc) {
+        let type_ = match type_synthesizer(cx, loc) {
             Err(_) | Ok(None) => ast::types::Type::new(ast::types::TypeInner::Any {
                 loc: Loc::none(),
                 comments: None,
@@ -144,7 +147,7 @@ fn create_extracted_function(
     };
     let synthesized: Vec<ast::types::TypeParam<Loc, Loc>> = unbound_tparams
         .iter()
-        .map(type_param_synthesizer)
+        .map(|tparam| type_param_synthesizer(cx, tparam))
         .collect::<Result<Vec<_>, _>>()?;
     let tparams: Option<ast::types::TypeParams<Loc, Loc>> = if synthesized.is_empty() {
         None
@@ -405,7 +408,8 @@ fn create_extracted_function_call(
     result
 }
 
-fn create_refactor_for_statements<'a, 'b>(
+fn create_refactor_for_statements<'b>(
+    cx: &mut Context<'_>,
     scope_info: &flow_analysis::scope_api::ScopeInfo<Loc>,
     defs_with_scopes_of_local_uses: &[(
         flow_analysis::scope_api::Def<Loc>,
@@ -413,7 +417,7 @@ fn create_refactor_for_statements<'a, 'b>(
     )],
     escaping_definitions: &variable_analysis::EscapingDefinitions,
     vars_with_shadowed_local_reassignments: &[(FlowSmolStr, Loc)],
-    type_synthesizer_context: type_synthesizer::SynthesizerContext<'b, 'a>,
+    type_synthesizer_context: type_synthesizer::SynthesizerContext<'b>,
     async_function: bool,
     is_method: bool,
     new_function_name: &str,
@@ -442,7 +446,7 @@ fn create_refactor_for_statements<'a, 'b>(
         extracted_statements_loc,
     );
     let type_synth =
-        type_synthesizer::create_type_synthesizer_with_import_adder(type_synthesizer_context);
+        type_synthesizer::create_type_synthesizer_with_import_adder(cx, type_synthesizer_context);
     let function_call_statements = create_extracted_function_call(
         &undefined_variables,
         escaping_definitions,
@@ -454,6 +458,7 @@ fn create_refactor_for_statements<'a, 'b>(
     );
     let new_ast = if is_method {
         let extracted_function = create_extracted_function(
+            cx,
             &*type_synth.type_param_synthesizer,
             &*type_synth.type_synthesizer,
             target_tparams_rev,
@@ -475,6 +480,7 @@ fn create_refactor_for_statements<'a, 'b>(
         )
     } else {
         let extracted_function = create_extracted_function(
+            cx,
             &*type_synth.type_param_synthesizer,
             &*type_synth.type_synthesizer,
             target_tparams_rev,
@@ -507,7 +513,8 @@ pub struct Refactor {
     pub added_imports: Vec<(String, autofix_imports::Bindings)>,
 }
 
-fn available_refactors_for_statements<'a, 'b>(
+fn available_refactors_for_statements<'b>(
+    cx: &mut Context<'_>,
     scope_info: &flow_analysis::scope_api::ScopeInfo<Loc>,
     defs_with_scopes_of_local_uses: &[(
         flow_analysis::scope_api::Def<Loc>,
@@ -515,7 +522,7 @@ fn available_refactors_for_statements<'a, 'b>(
     )],
     escaping_definitions: &variable_analysis::EscapingDefinitions,
     vars_with_shadowed_local_reassignments: &[(FlowSmolStr, Loc)],
-    type_synthesizer_context: type_synthesizer::SynthesizerContext<'b, 'a>,
+    type_synthesizer_context: type_synthesizer::SynthesizerContext<'b>,
     async_function: bool,
     has_this_super: bool,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
@@ -525,7 +532,8 @@ fn available_refactors_for_statements<'a, 'b>(
     extracted_statements: &[statement::Statement<Loc, Loc>],
     extracted_statements_loc: &Loc,
 ) -> Vec<Refactor> {
-    let create_refactor = |is_method: bool,
+    let create_refactor = |cx: &mut Context<'_>,
+                           is_method: bool,
                            new_function_name: &str,
                            target_body_loc: &Loc,
                            target_tparams_rev: &[flow_typing_type::type_::TypeParam]|
@@ -537,6 +545,7 @@ fn available_refactors_for_statements<'a, 'b>(
         crate::insert_type::Expected,
     > {
         create_refactor_for_statements(
+            cx,
             scope_info,
             defs_with_scopes_of_local_uses,
             escaping_definitions,
@@ -562,6 +571,7 @@ fn available_refactors_for_statements<'a, 'b>(
             None => vec![],
             Some(cip) => {
                 match create_refactor(
+                    cx,
                     true, // is_method
                     &create_unique_name_fn("newMethod"),
                     &cip.body_loc,
@@ -589,14 +599,20 @@ fn available_refactors_for_statements<'a, 'b>(
     let new_function_name = create_unique_name_fn("newFunction");
 
     let create_inner_function_refactor =
-        |point: &insertion_point_collectors::FunctionInsertionPoint|
+        |cx: &mut Context<'_>,
+         point: &insertion_point_collectors::FunctionInsertionPoint|
          -> Result<Refactor, crate::insert_type::Expected> {
             let title = format!(
                 "Extract to inner function in {} '{}'",
-                if point.is_method { "method" } else { "function" },
+                if point.is_method {
+                    "method"
+                } else {
+                    "function"
+                },
                 point.function_name
             );
             let (new_ast, added_imports) = create_refactor(
+                cx,
                 false, // is_method
                 &new_function_name,
                 &point.body_loc,
@@ -610,6 +626,7 @@ fn available_refactors_for_statements<'a, 'b>(
         };
 
     let top_level_function_refactor: Result<Refactor, _> = create_refactor(
+        cx,
         false, // is_method
         &new_function_name,
         &ast.loc,
@@ -628,8 +645,11 @@ fn available_refactors_for_statements<'a, 'b>(
     );
     let mut extract_to_functions_refactor_results: Vec<Result<Refactor, _>> =
         vec![top_level_function_refactor];
-    extract_to_functions_refactor_results
-        .extend(inner_points.iter().map(create_inner_function_refactor));
+    extract_to_functions_refactor_results.extend(
+        inner_points
+            .iter()
+            .map(|point| create_inner_function_refactor(cx, point)),
+    );
 
     let extract_to_functions_refactors: Vec<Refactor> = extract_to_functions_refactor_results
         .into_iter()
@@ -643,7 +663,7 @@ fn available_refactors_for_statements<'a, 'b>(
 
 fn extract_from_statements_refactors<'a, 'b>(
     ast: &ast::Program<Loc, Loc>,
-    cx: &Context<'a>,
+    cx: &'b mut Context<'a>,
     file: &FileKey,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
@@ -714,7 +734,6 @@ fn extract_from_statements_refactors<'a, 'b>(
                 locs.insert(loc.dupe());
             }
             let type_synthesizer_context = type_synthesizer::create_synthesizer_context(
-                cx.dupe(),
                 file.dupe(),
                 file_sig.dupe(),
                 typed_ast.clone(),
@@ -725,6 +744,7 @@ fn extract_from_statements_refactors<'a, 'b>(
                 &locs,
             );
             available_refactors_for_statements(
+                cx,
                 &scope_info,
                 &relevant_defs.defs_with_scopes_of_local_uses,
                 &escaping_definitions,
@@ -848,14 +868,15 @@ fn create_expression_extract_to_constant_refactor(
     })
 }
 
-fn create_expression_extract_to_react_component_refactor<'a, 'b>(
+fn create_expression_extract_to_react_component_refactor<'b>(
+    cx: &mut Context<'_>,
     use_component_syntax: bool,
     scope_info: &flow_analysis::scope_api::ScopeInfo<Loc>,
     defs_with_scopes_of_local_uses: &[(
         flow_analysis::scope_api::Def<Loc>,
         flow_analysis::scope_api::Scope<Loc>,
     )],
-    type_synthesizer_context: type_synthesizer::SynthesizerContext<'b, 'a>,
+    type_synthesizer_context: type_synthesizer::SynthesizerContext<'b>,
     extracted_expression_loc: &Loc,
     expression: &ast::expression::Expression<Loc, Loc>,
     new_component_name: &str,
@@ -868,11 +889,11 @@ fn create_expression_extract_to_react_component_refactor<'a, 'b>(
         extracted_expression_loc,
     );
     let type_synth =
-        type_synthesizer::create_type_synthesizer_with_import_adder(type_synthesizer_context);
+        type_synthesizer::create_type_synthesizer_with_import_adder(cx, type_synthesizer_context);
     let mut typed_props: Vec<(FlowSmolStr, ast::types::Type<Loc, Loc>)> = Vec::new();
     let mut tparams_set: TypeParamSet = BTreeSet::new();
     for (def, loc) in undefined_variables.iter() {
-        match (type_synth.type_synthesizer)(loc) {
+        match (type_synth.type_synthesizer)(cx, loc) {
             Ok(Some((tparams_rev, type_))) => {
                 typed_props.push((def.clone(), type_));
                 type_param_set_add_all(&tparams_rev, &mut tparams_set);
@@ -887,7 +908,7 @@ fn create_expression_extract_to_react_component_refactor<'a, 'b>(
         } else {
             let mut synthesized = Vec::new();
             for tp in &tparams_list {
-                match (type_synth.type_param_synthesizer)(tp) {
+                match (type_synth.type_param_synthesizer)(cx, tp) {
                     Ok(synth_tp) => synthesized.push(synth_tp),
                     Err(_) => return None,
                 }
@@ -960,7 +981,7 @@ fn create_expression_extract_to_react_component_refactor<'a, 'b>(
 
 fn extract_from_expression_refactors<'a, 'b>(
     ast: &ast::Program<Loc, Loc>,
-    cx: &Context<'a>,
+    cx: &'b mut Context<'a>,
     file: &FileKey,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
@@ -1012,7 +1033,6 @@ fn extract_from_expression_refactors<'a, 'b>(
                     .map(|(def, _)| def.locs.first().dupe())
                     .collect();
                 let type_synthesizer_context = type_synthesizer::create_synthesizer_context(
-                    cx.dupe(),
                     file.dupe(),
                     file_sig.dupe(),
                     typed_ast.clone(),
@@ -1023,8 +1043,10 @@ fn extract_from_expression_refactors<'a, 'b>(
                     &locs,
                 );
                 let new_component_name = create_unique_name_fn("NewComponent");
+                let use_component_syntax = cx.component_syntax();
                 create_expression_extract_to_react_component_refactor(
-                    cx.component_syntax(),
+                    cx,
+                    use_component_syntax,
                     &scope_info,
                     &relevant_defs.defs_with_scopes_of_local_uses,
                     type_synthesizer_context,
@@ -1125,7 +1147,7 @@ fn extract_from_expression_refactors<'a, 'b>(
 
 fn extract_from_type_refactors<'a, 'b>(
     ast: &ast::Program<Loc, Loc>,
-    cx: &Context<'a>,
+    cx: &'b mut Context<'a>,
     file: &FileKey,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
@@ -1158,7 +1180,6 @@ fn extract_from_type_refactors<'a, 'b>(
     let new_ast_result: Result<ast::Program<Loc, Loc>, crate::insert_type::Expected> = (|| {
         let locs: BTreeSet<Loc> = std::iter::once(type_loc.dupe()).collect();
         let type_synthesizer_context = type_synthesizer::create_synthesizer_context(
-            cx.dupe(),
             file.dupe(),
             file_sig.dupe(),
             typed_ast.clone(),
@@ -1168,11 +1189,13 @@ fn extract_from_type_refactors<'a, 'b>(
             get_type_sig,
             &locs,
         );
-        let type_synth =
-            type_synthesizer::create_type_synthesizer_with_import_adder(type_synthesizer_context);
+        let type_synth = type_synthesizer::create_type_synthesizer_with_import_adder(
+            cx,
+            type_synthesizer_context,
+        );
 
         let used_tparams: TypeParamSet = {
-            let synth_result = (type_synth.type_synthesizer)(&type_loc)?;
+            let synth_result = (type_synth.type_synthesizer)(cx, &type_loc)?;
             match synth_result {
                 None => BTreeSet::new(),
                 Some((tparams_list, _)) => tparams_list.into_iter().collect(),
@@ -1204,7 +1227,7 @@ fn extract_from_type_refactors<'a, 'b>(
         } else {
             let mut synthesized = Vec::new();
             for tp in &type_params_to_add {
-                synthesized.push((type_synth.type_param_synthesizer)(tp)?);
+                synthesized.push((type_synth.type_param_synthesizer)(cx, tp)?);
             }
             Some(ast_builder::types::type_params(None, None, synthesized))
         };
@@ -1233,7 +1256,7 @@ fn extract_from_type_refactors<'a, 'b>(
 pub fn provide_available_refactors<'a, 'b>(
     tokens: &[flow_parser::TokenSinkResult],
     ast: &ast::Program<Loc, Loc>,
-    cx: &Context<'a>,
+    cx: &'b mut Context<'a>,
     file: &FileKey,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,

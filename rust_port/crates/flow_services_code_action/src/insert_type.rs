@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_common::files::FileOptions;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty_serializer;
@@ -80,7 +81,7 @@ pub fn simplify(ty: ALocTy) -> ALocTy {
 }
 
 pub fn serialize(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     file_sig: &FileSig,
@@ -116,7 +117,7 @@ pub fn path_of_loc(error: Option<Result<String, String>>, loc: &Loc) -> Result<S
     }
 }
 
-pub struct Mapper<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> {
+pub struct Mapper<F: FnMut(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> {
     strict: bool,
     synth_type: F,
     target: Loc,
@@ -125,7 +126,7 @@ pub struct Mapper<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expect
     changed: bool,
 }
 
-impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F> {
+impl<F: FnMut(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F> {
     pub fn new(strict: bool, synth_type: F, target: Loc) -> Self {
         let target_is_point = insert_type_utils::is_point(&target);
         Mapper {
@@ -151,7 +152,7 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
         self.target == *loc
     }
 
-    fn synth_type_annotation_hint(&self, loc: Loc) -> ast::types::AnnotationOrHint<Loc, Loc> {
+    fn synth_type_annotation_hint(&mut self, loc: Loc) -> ast::types::AnnotationOrHint<Loc, Loc> {
         let loc_clone = loc.dupe();
         match (self.synth_type)(loc) {
             Ok((l, type_ast)) => ast::types::AnnotationOrHint::Available(ast::types::Annotation {
@@ -162,7 +163,10 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
         }
     }
 
-    fn synth_return_type_annotation_hint(&self, loc: Loc) -> ast::function::ReturnAnnot<Loc, Loc> {
+    fn synth_return_type_annotation_hint(
+        &mut self,
+        loc: Loc,
+    ) -> ast::function::ReturnAnnot<Loc, Loc> {
         let loc_clone = loc.dupe();
         match (self.synth_type)(loc) {
             Ok((l, type_ast)) => ast::function::ReturnAnnot::Available(ast::types::Annotation {
@@ -487,7 +491,7 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
     }
 }
 
-impl<'ast, F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>>
+impl<'ast, F: FnMut(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>>
     flow_parser::ast_visitor::AstVisitor<'ast, Loc> for Mapper<F>
 {
     fn normalize_loc(loc: &Loc) -> &Loc {
@@ -686,7 +690,7 @@ pub fn type_lookup_at_location(
 }
 
 pub fn normalize<'a, 'cx>(
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
     omit_targ_defaults: bool,
@@ -713,7 +717,7 @@ pub fn normalize<'a, 'cx>(
 
 pub fn synth_type<'a, 'cx>(
     size_limit: Option<usize>,
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     file_sig: &Arc<FileSig>,
@@ -740,7 +744,7 @@ pub fn synth_type<'a, 'cx>(
             None => Ok(ty),
         }
     };
-    let t = natural_inference::convert_literal_type(cx, |_| SingletonAction::DoNotKeep, t);
+    let t = natural_inference::convert_literal_type(cx, |_, _| SingletonAction::DoNotKeep, t);
     let elt = normalize(
         cx,
         file_sig,
@@ -903,7 +907,7 @@ pub fn add_imports(
 }
 
 pub fn insert_type_custom_synth_type<'a>(
-    cx: &Context,
+    file_options: Arc<FileOptions>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'a dyn Fn(
@@ -914,7 +918,7 @@ pub fn insert_type_custom_synth_type<'a>(
         >,
     >,
     strict: bool,
-    synth_type: &dyn Fn(
+    synth_type: &mut dyn FnMut(
         &mut insert_type_imports::imports_helper::RemoteConverter<'_>,
         Loc,
     ) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>,
@@ -932,7 +936,7 @@ pub fn insert_type_custom_synth_type<'a>(
         None => {
             owned_rc = insert_type_imports::imports_helper::RemoteConverter::new(
                 Box::new(|aloc| loc_of_aloc(aloc)),
-                cx.file_options(),
+                file_options,
                 Box::new(|fk| get_haste_module_info(fk)),
                 Box::new(|fk| get_type_sig(fk)),
                 0, // iteration
@@ -961,7 +965,7 @@ pub fn insert_type_custom_synth_type<'a>(
 }
 
 pub fn insert_type_<'a, 'b>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -981,8 +985,9 @@ pub fn insert_type_<'a, 'b>(
     target: Loc,
     loc_to_type: &dyn Fn(Loc) -> InsertTypeResult<flow_typing_type::type_::Type>,
 ) -> InsertTypeResult<ast::Program<Loc, Loc>> {
-    let synth_type_fn = |rc: &mut insert_type_imports::imports_helper::RemoteConverter<'_>,
-                         location: Loc|
+    let file_options = cx.file_options();
+    let mut synth_type_fn = |rc: &mut insert_type_imports::imports_helper::RemoteConverter<'_>,
+                             location: Loc|
      -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected> {
         let t = loc_to_type(location.dupe()).map_err(|e| match e {
             Errors::Expected(e) => e,
@@ -1002,12 +1007,12 @@ pub fn insert_type_<'a, 'b>(
         )
     };
     insert_type_custom_synth_type(
-        cx,
+        file_options,
         loc_of_aloc,
         get_haste_module_info,
         get_type_sig,
         strict,
-        &synth_type_fn,
+        &mut synth_type_fn,
         remote_converter,
         ast,
         target,
@@ -1015,7 +1020,7 @@ pub fn insert_type_<'a, 'b>(
 }
 
 pub fn insert_type<'a, 'b>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -1055,7 +1060,7 @@ pub fn insert_type<'a, 'b>(
 }
 
 pub fn insert_type_t<'a, 'b>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -1095,7 +1100,7 @@ pub fn insert_type_t<'a, 'b>(
 }
 
 pub fn insert_type_ty<'a>(
-    cx: &Context,
+    cx: &mut Context,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -1114,8 +1119,9 @@ pub fn insert_type_ty<'a>(
     target: Loc,
     ty: ALocTy,
 ) -> InsertTypeResult<ast::Program<Loc, Loc>> {
-    let synth_type_fn = |rc: &mut insert_type_imports::imports_helper::RemoteConverter<'_>,
-                         loc: Loc|
+    let file_options = cx.file_options();
+    let mut synth_type_fn = |rc: &mut insert_type_imports::imports_helper::RemoteConverter<'_>,
+                             loc: Loc|
      -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected> {
         let import_fixed_ty = match rc.type_(ty.dupe()) {
             Ok(ty) => ty,
@@ -1136,12 +1142,12 @@ pub fn insert_type_ty<'a>(
         Ok((loc, ast))
     };
     insert_type_custom_synth_type(
-        cx,
+        file_options,
         loc_of_aloc,
         get_haste_module_info,
         get_type_sig,
         strict,
-        &synth_type_fn,
+        &mut synth_type_fn,
         remote_converter,
         ast,
         target,

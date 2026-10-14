@@ -3603,24 +3603,14 @@ impl<'a> DefFinder<'a> {
                                 HintDecomposition::new(HintDecompositionInner::InstantiateCallee(
                                     flow_common::hint::FunCallImplicitInstantiationHints {
                                         reason: call_reason.clone(),
-                                        return_hints: std::rc::Rc::new(std::cell::LazyCell::new(
-                                            Box::new(move || return_hints_clone.clone())
-                                                as Box<dyn Fn() -> AstHints>,
+                                        return_hints: std::rc::Rc::new(
+                                            flow_lazy::Lazy::new_forced(return_hints_clone),
+                                        ),
+                                        targs: std::rc::Rc::new(flow_lazy::Lazy::new_forced(
+                                            targs_clone,
                                         )),
-                                        targs: std::rc::Rc::new(std::cell::LazyCell::new(
-                                            Box::new(move || targs_clone.clone())
-                                                as Box<
-                                                    dyn Fn() -> Option<
-                                                        ast::expression::CallTypeArgs<ALoc, ALoc>,
-                                                    >,
-                                                >,
-                                        )),
-                                        arg_list: std::rc::Rc::new(std::cell::LazyCell::new(
-                                            Box::new(move || arg_list_clone.clone())
-                                                as Box<
-                                                    dyn Fn()
-                                                        -> ast::expression::ArgList<ALoc, ALoc>,
-                                                >,
+                                        arg_list: std::rc::Rc::new(flow_lazy::Lazy::new_forced(
+                                            arg_list_clone,
                                         )),
                                         arg_index: i as i32,
                                     },
@@ -6959,14 +6949,9 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
             HintDecompositionInner::InstantiateComponent(JsxImplicitInstantiationHints {
                 jsx_reason,
                 jsx_name: jsx_name.dupe(),
-                jsx_targs: std::rc::Rc::new(std::cell::LazyCell::new(Box::new(move || {
-                    targs_for_hints.clone()
-                })
-                    as Box<dyn Fn() -> Option<ast::expression::CallTypeArgs<ALoc, ALoc>>>)),
+                jsx_targs: std::rc::Rc::new(flow_lazy::Lazy::new_forced(targs_for_hints)),
                 jsx_props_and_children,
-                jsx_hints: std::rc::Rc::new(std::cell::LazyCell::new(
-                    Box::new(Vec::new) as Box<dyn Fn() -> AstHints>
-                )),
+                jsx_hints: std::rc::Rc::new(flow_lazy::Lazy::new_forced(Vec::new())),
             }),
         );
         let hints = Hint::decompose(instantiate_decomp, hints);

@@ -716,7 +716,7 @@ pub fn debug_string_of_def_loc(dl: &DefLoc) -> String {
 }
 
 // Re-enable the unused value warning
-fn extract_instancet<'cx>(cx: &Context<'cx>, ty: &Type) -> Result<Type, String> {
+fn extract_instancet<'cx>(cx: &mut Context<'cx>, ty: &Type) -> Result<Type, String> {
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::PolyTData;
@@ -756,7 +756,7 @@ fn extract_instancet<'cx>(cx: &Context<'cx>, ty: &Type) -> Result<Type, String> 
 
 // Must be called with the result from Members.extract_type
 fn get_def_locs_from_extracted_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     extracted_type: GenericT<Type, Type>,
     name: &str,
 ) -> Result<Option<Vec1<ALoc>>, String> {
@@ -775,7 +775,7 @@ fn get_def_locs_from_extracted_type<'cx>(
 
 pub fn extract_def_loc<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     ty: &Type,
     name: &str,
 ) -> Result<DefLoc, String> {
@@ -787,7 +787,7 @@ pub fn extract_def_loc<'cx>(
 // definitions of the member in superclasses and returns those as well
 fn extract_def_locs_from_instancet<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     extracted_type: GenericT<Type, Type>,
     super_: &Type,
     name: &str,
@@ -844,7 +844,7 @@ fn extract_def_locs_from_instancet<'cx>(
 
 fn extract_def_loc_resolved<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     ty: &Type,
     name: &str,
 ) -> Result<DefLoc, String> {
@@ -937,7 +937,7 @@ fn get_loc_of_prop(
 
 fn def_info_of_typecheck_results<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     props_access_info: DefKind<Loc>,
 ) -> Result<Option<PropertyDefInfo>, String> {
@@ -972,7 +972,7 @@ fn def_info_of_typecheck_results<'cx>(
         }
     }
 
-    let def_info_of_type =
+    let mut def_info_of_type =
         |name: &str, ty: &Type| -> Result<Option<Vec1<SinglePropertyDefInfo>>, String> {
             let dl = extract_def_loc(loc_of_aloc, cx, ty, name)?;
             Ok(def_info_of_def_loc(dl))
@@ -1097,7 +1097,7 @@ fn def_info_of_typecheck_results<'cx>(
 
 pub fn get_property_def_info<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     loc: &Loc,
@@ -1121,7 +1121,7 @@ pub fn get_def_info<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     purpose: &crate::get_def_types::Purpose,
     ast_info: &crate::find_refs_utils::AstInfo,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     loc: &Loc,

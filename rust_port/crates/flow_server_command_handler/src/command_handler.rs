@@ -61,22 +61,20 @@ use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
 use flow_services_inference_types::TypeContentsError;
 use flow_typing::query_types::binder_kind_of_binding_kind;
-use flow_typing_context::Context;
 use lsp_types::MessageType;
 
-type CheckResult<'cx> = FileArtifacts<'cx>;
-type FileArtifactsResult<'cx> = Result<CheckResult<'cx>, TypeContentsError>;
-type AcArtifactsResult<'cx> = Result<AutocompleteArtifacts<'cx>, TypeContentsError>;
+type CheckResult = FileArtifacts;
+type FileArtifactsResult = Result<CheckResult, TypeContentsError>;
+type AcArtifactsResult = Result<AutocompleteArtifacts, TypeContentsError>;
 #[derive(Clone)]
 struct TypeParseArtifactsCacheEntry {
     content: Arc<str>,
-    result: FileArtifactsResult<'static>,
+    result: FileArtifactsResult,
 }
 type TypeParseArtifactsCache =
     flow_common_utils::filename_cache::Cache<TypeParseArtifactsCacheEntry>;
-type AutocompleteArtifactsCache = flow_common_utils::filename_cache::Cache<
-    Result<AutocompleteArtifacts<'static>, TypeContentsError>,
->;
+type AutocompleteArtifactsCache =
+    flow_common_utils::filename_cache::Cache<Result<AutocompleteArtifacts, TypeContentsError>>;
 type AcResult = Option<(
     Arc<flow_common::docblock::Docblock>,
     Vec<(flow_parser::loc::Loc, String)>,
@@ -101,7 +99,7 @@ const MAX_TYPE_AT_POS_PRINT_SIZE: usize = 100;
 
 fn binder_kind_at_aloc(
     transaction: &Transaction,
-    cx: &Context<'_>,
+    enable_enums: bool,
     aloc: &flow_aloc::ALoc,
 ) -> Option<BinderKind> {
     let loc = transaction.loc_of_aloc(aloc);
@@ -109,7 +107,7 @@ fn binder_kind_at_aloc(
     let ast = transaction.get_ast(file)?;
     let file_sig = transaction.get_file_sig(file)?;
     let scope_info = flow_analysis::scope_builder::program(
-        cx.enable_enums(),
+        enable_enums,
         true,
         file_sig.requires().is_empty(),
         &ast,
@@ -212,14 +210,14 @@ type PersistentParallelizableWorkload = Box<
     dyn FnOnce(
             &server_env::Env,
             &Arc<flow_heap::parsing_heaps::Transaction>,
-            &CheckContentsCache,
+            &mut CheckContentsCache,
         ) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>
         + Send,
 >;
 type PersistentNonparallelizableWorkload = Box<
     dyn FnOnce(
             &server_env::Env,
-            &CheckContentsCache,
+            &mut CheckContentsCache,
         ) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>
         + Send,
 >;
@@ -231,7 +229,7 @@ pub enum PersistentCommandHandler {
 
 fn type_parse_artifacts_with_cache(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -243,7 +241,7 @@ fn type_parse_artifacts_with_cache(
         Option<ParseArtifacts>,
         flow_typing_errors::flow_error::ErrorSet,
     ),
-) -> (FileArtifactsResult<'static>, Option<bool>) {
+) -> (FileArtifactsResult, Option<bool>) {
     match type_parse_artifacts_cache {
         None => {
             let result = type_parse_artifacts(
@@ -970,7 +968,7 @@ fn json_of_autocomplete_result(
 
 fn type_parse_artifacts_for_ac_with_cache(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     type_parse_artifacts_cache: Option<&AutocompleteArtifactsCache>,
@@ -982,7 +980,7 @@ fn type_parse_artifacts_for_ac_with_cache(
         Option<ParseArtifacts>,
         flow_typing_errors::flow_error::ErrorSet,
     ),
-) -> (AcArtifactsResult<'static>, Option<bool>) {
+) -> (AcArtifactsResult, Option<bool>) {
     let file_for_result = file.dupe();
     let type_parse_artifacts = || match artifacts() {
         (None, errs) => Err(TypeContentsError::Errors(errs)),
@@ -1024,7 +1022,7 @@ fn type_parse_artifacts_for_ac_with_cache(
             ))
         }
     };
-    let cond = |result: &AcArtifactsResult<'static>| match result {
+    let cond = |result: &AcArtifactsResult| match result {
         Err(_) => false,
         Ok((contents_prime, _, _)) => contents == contents_prime.as_ref(),
     };
@@ -1039,7 +1037,7 @@ fn type_parse_artifacts_for_ac_with_cache(
 
 fn autocomplete_on_parsed(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1167,18 +1165,6 @@ fn autocomplete_on_parsed(
                 >,
             > = Box::new(move |f| transaction_ast.get_ast(f).map(|a| (*a).clone()));
             let canon_token_owned = canon_token;
-            let typing = flow_services_autocomplete::autocomplete_service_js::mk_typing_artifacts(
-                &layout_options,
-                loc_of_aloc,
-                get_ast_from_transaction,
-                &module_system_info,
-                &*search_exported_values_fn,
-                &*search_exported_types_fn,
-                cx.as_ref(),
-                file_sig,
-                ast.dupe(),
-                canon_token_owned.as_ref(),
-            );
             let ac_options = flow_services_autocomplete::autocomplete_service_js::AcOptions {
                 imports,
                 imports_min_characters,
@@ -1189,13 +1175,29 @@ fn autocomplete_on_parsed(
             // LSP boundary: convert any JobError (cancel/timeout) escaping the
             // autocomplete pipeline into "no autocomplete suggestion" (an empty
             // AcResult) exactly once. The cascade itself stays Result-typed.
-            let (token_opt, ac_loc, ac_type_string, results_res) =
-                match flow_services_autocomplete::autocomplete_service_js::autocomplete_get_results(
-                    &typing,
+            let results = cx.with_cx(cache, |cx| {
+                let mut typing =
+                    flow_services_autocomplete::autocomplete_service_js::mk_typing_artifacts(
+                        &layout_options,
+                        loc_of_aloc,
+                        get_ast_from_transaction,
+                        &module_system_info,
+                        &*search_exported_values_fn,
+                        &*search_exported_types_fn,
+                        cx,
+                        file_sig,
+                        ast.dupe(),
+                        canon_token_owned.as_ref(),
+                    );
+                flow_services_autocomplete::autocomplete_service_js::autocomplete_get_results(
+                    &mut typing,
                     &ac_options,
                     trigger_character,
                     &cursor_loc,
-                ) {
+                )
+            });
+            let (token_opt, ac_loc, ac_type_string, results_res) =
+                match results {
                     Ok(tuple) => tuple,
                     Err(_job_err) => (
                         None,
@@ -1236,7 +1238,7 @@ fn autocomplete_on_parsed(
 }
 
 fn autofix_errors_cli(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1291,7 +1293,7 @@ fn autofix_errors_cli(
 }
 
 fn autofix_imports_cli(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1316,7 +1318,7 @@ fn autofix_imports_cli(
 }
 
 fn suggest_imports_cli(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1344,7 +1346,7 @@ fn suggest_imports_cli(
 
 fn autocomplete(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1404,7 +1406,7 @@ enum ErrorsOfFileError {
 
 fn errors_of_file(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1440,6 +1442,7 @@ fn errors_of_file(
             let (errors, warnings) = printable_errors_of_file_artifacts_result(
                 &options,
                 env,
+                cache,
                 &transaction,
                 &file_key,
                 result.as_ref(),
@@ -1451,7 +1454,7 @@ fn errors_of_file(
 
 fn check_file(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1485,11 +1488,12 @@ fn check_file(
 }
 
 fn get_def_of_check_result(
+    cache: &mut CheckContentsCache,
     transaction: &flow_heap::parsing_heaps::Transaction,
     file: &flow_parser::file_key::FileKey,
     line: u32,
     col: u32,
-    check_result: &CheckResult<'_>,
+    check_result: &CheckResult,
     file_content: Option<&str>,
     purpose: &flow_services_get_def::get_def_types::Purpose,
 ) -> (
@@ -1498,16 +1502,20 @@ fn get_def_of_check_result(
 ) {
     let loc = flow_parser::loc::Loc::cursor(Some(file.clone()), line as i32, col as i32);
     let (ref parse_artifacts, ref typecheck_artifacts) = *check_result;
-    let result = match get_def_js::get_def(
-        &|aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc),
-        &typecheck_artifacts.cx,
-        &parse_artifacts.file_sig,
-        file_content,
-        &parse_artifacts.ast,
-        flow_typing_utils::typed_ast_utils::AvailableAst::TypedAst(&typecheck_artifacts.typed_ast),
-        purpose,
-        &loc,
-    ) {
+    let result = match typecheck_artifacts.cx.with_cx(cache, |cx| {
+        get_def_js::get_def(
+            &|aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc),
+            cx,
+            &parse_artifacts.file_sig,
+            file_content,
+            &parse_artifacts.ast,
+            flow_typing_utils::typed_ast_utils::AvailableAst::TypedAst(
+                &typecheck_artifacts.typed_ast,
+            ),
+            purpose,
+            &loc,
+        )
+    }) {
         Ok(r) => r,
         Err(_canceled) => GetDefResult::DefError("Worker canceled".to_string()),
     };
@@ -1654,15 +1662,17 @@ fn infer_type_to_response(
 }
 
 fn documentation_at_loc(
+    cache: &mut CheckContentsCache,
     transaction: &flow_heap::parsing_heaps::Transaction,
     file_key: &flow_parser::file_key::FileKey,
     line: u32,
     column: u32,
-    check_result: &CheckResult<'_>,
+    check_result: &CheckResult,
     ast: &flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>,
 ) -> Option<String> {
     let (getdef_loc_result, _) = try_with_json(|| {
         let (result, _json_props) = get_def_of_check_result(
+            cache,
             transaction,
             file_key,
             line,
@@ -1700,7 +1710,7 @@ fn documentation_at_loc(
 
 fn infer_type(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -1781,12 +1791,13 @@ fn infer_type(
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc {
                         transaction.loc_of_aloc(aloc)
                     };
-                    let remote_binding_kind = |aloc: &flow_aloc::ALoc| {
-                        binder_kind_at_aloc(&transaction, &typecheck_artifacts.cx, aloc)
-                    };
-                    let ((loc, tys, refining_locs, refinement_invalidated), type_at_pos_json_props) =
-                        match flow_services_type_info::type_info_service::type_at_pos(
-                            &typecheck_artifacts.cx,
+                    let type_at_pos_result = typecheck_artifacts.cx.with_cx(cache, |cx| {
+                        let enable_enums = cx.enable_enums();
+                        let remote_binding_kind = |aloc: &flow_aloc::ALoc| {
+                            binder_kind_at_aloc(&transaction, enable_enums, aloc)
+                        };
+                        flow_services_type_info::type_info_service::type_at_pos(
+                            cx,
                             parse_artifacts.file_sig.clone(),
                             &typecheck_artifacts.typed_ast,
                             omit_targ_defaults,
@@ -1803,7 +1814,10 @@ fn infer_type(
                             file_key.dupe(),
                             line,
                             column,
-                        ) {
+                        )
+                    });
+                    let ((loc, tys, refining_locs, refinement_invalidated), type_at_pos_json_props) =
+                        match type_at_pos_result {
                             Ok(v) => v,
                             Err(e) => {
                                 let err_str = format!("infer_type: cancel/timeout: {:?}", e);
@@ -1817,6 +1831,7 @@ fn infer_type(
                             }
                         };
                     let documentation = documentation_at_loc(
+                        cache,
                         &transaction,
                         &file_key,
                         line as u32,
@@ -1857,7 +1872,7 @@ fn infer_type(
 
 fn type_of_name(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -1899,8 +1914,9 @@ fn type_of_name(
                     Ok(names.iter().map(|_| Err(err_str.clone())).collect())
                 }
                 Ok(check_result) => {
-                    let doc_at_loc = |reader: &flow_heap::parsing_heaps::Transaction,
-                                      check_result: &CheckResult<'_>,
+                    let doc_at_loc = |cache: &mut CheckContentsCache,
+                                      reader: &flow_heap::parsing_heaps::Transaction,
+                                      check_result: &CheckResult,
                                       ast: &flow_parser::ast::Program<
                         flow_parser::loc::Loc,
                         flow_parser::loc::Loc,
@@ -1910,6 +1926,7 @@ fn type_of_name(
                                       column: i32|
                      -> Option<String> {
                         documentation_at_loc(
+                            cache,
                             reader,
                             file_key,
                             line as u32,
@@ -1937,7 +1954,7 @@ fn type_of_name(
 
 fn inlay_hint(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -2004,15 +2021,16 @@ fn inlay_hint(
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc {
                         transaction.loc_of_aloc(aloc)
                     };
-                    let remote_binding_kind = |aloc: &flow_aloc::ALoc| {
-                        binder_kind_at_aloc(&transaction, &typecheck_artifacts.cx, aloc)
-                    };
                     // LSP boundary: convert JobError (cancel/timeout) escaping
                     // batched_type_at_pos_from_special_comments into an empty
                     // inlay-hint response exactly once.
-                    let (result, json_data) =
-                        match flow_services_type_info::type_info_service::batched_type_at_pos_from_special_comments(
-                            &typecheck_artifacts.cx,
+                    let batched_result = typecheck_artifacts.cx.with_cx(cache, |cx| {
+                        let enable_enums = cx.enable_enums();
+                        let remote_binding_kind = |aloc: &flow_aloc::ALoc| {
+                            binder_kind_at_aloc(&transaction, enable_enums, aloc)
+                        };
+                        flow_services_type_info::type_info_service::batched_type_at_pos_from_special_comments(
+                            cx,
                             parse_artifacts.file_sig.clone(),
                             &typecheck_artifacts.typed_ast,
                             omit_targ_defaults,
@@ -2022,12 +2040,14 @@ fn inlay_hint(
                             &loc_of_aloc,
                             &remote_binding_kind,
                             file_key.dupe(),
-                        ) {
-                            Ok(tuple) => tuple,
-                            Err(_job_err) => {
-                                return Ok((Ok(vec![]), None));
-                            }
-                        };
+                        )
+                    });
+                    let (result, json_data) = match batched_result {
+                        Ok(tuple) => tuple,
+                        Err(_job_err) => {
+                            return Ok((Ok(vec![]), None));
+                        }
+                    };
                     let mut result_with_docs: Vec<server_prot::response::inlay_hint::Item> =
                         Vec::with_capacity(result.len());
                     for (cursor_loc, type_loc, tys, refining_locs, refinement_invalidated) in result
@@ -2035,6 +2055,7 @@ fn inlay_hint(
                         let line = type_loc.start.line;
                         let column = type_loc.start.column;
                         let documentation = documentation_at_loc(
+                            cache,
                             &transaction,
                             &file_key,
                             line as u32,
@@ -2080,7 +2101,7 @@ fn inlay_hint(
 
 fn insert_type(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2128,9 +2149,10 @@ fn insert_type(
         file_key,
         intermediate_result,
     );
-    let result = (|| match &file_artifacts_result {
+    (|| match &file_artifacts_result {
         Ok((parse_artifacts, typecheck_artifacts)) => {
             match flow_services_code_action::code_action_service::insert_type_fn(
+                cache,
                 options,
                 &loc_of_aloc,
                 &get_ast_from_transaction,
@@ -2156,16 +2178,12 @@ fn insert_type(
             error,
             "Failed to type-check file",
         )?)),
-    })();
-    if let Ok((_, typecheck_artifacts)) = &file_artifacts_result {
-        typecheck_artifacts.cx.post_inference_cleanup();
-    }
-    result
+    })()
 }
 
 fn autofix_exports(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2220,6 +2238,7 @@ fn autofix_exports(
         Ok((parse_artifacts, typecheck_artifacts)) => {
             let (edits, errors) =
                 flow_services_code_action::code_action_service::autofix_exports_fn(
+                    cache,
                     options,
                     loc_of_aloc,
                     &get_ast_from_transaction,
@@ -2253,7 +2272,7 @@ fn autofix_exports(
 
 fn autofix_missing_local_annot(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2309,6 +2328,7 @@ fn autofix_missing_local_annot(
     };
     let (ref parse_artifacts, ref typecheck_artifacts) = file_artifacts;
     let edits = match flow_services_code_action::code_action_service::autofix_missing_local_annot_fn(
+        cache,
         options,
         &loc_of_aloc,
         &get_ast_from_transaction,
@@ -2409,7 +2429,7 @@ fn collect_rage(
 
 fn dump_types(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2444,19 +2464,21 @@ fn dump_types(
             )?));
         }
     };
-    Ok(Ok(flow_services_type_info::type_info_service::dump_types(
-        evaluate_type_destructors,
-        for_tool,
-        dedup_threshold,
-        &typecheck_artifacts.cx,
-        parse_artifacts.file_sig.clone(),
-        &typecheck_artifacts.typed_ast,
-    )))
+    Ok(Ok(typecheck_artifacts.cx.with_cx(cache, |cx| {
+        flow_services_type_info::type_info_service::dump_types(
+            evaluate_type_destructors,
+            for_tool,
+            dedup_threshold,
+            cx,
+            parse_artifacts.file_sig.clone(),
+            &typecheck_artifacts.typed_ast,
+        )
+    })))
 }
 
 fn coverage(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -2490,13 +2512,15 @@ fn coverage(
     let extra_data = serde_json::Value::Object(json_props.into_iter().collect());
     match file_artifacts_result {
         Ok((ref _parse_artifacts, ref typecheck_artifacts)) => {
-            let coverage = flow_services_type_info::type_info_service::coverage(
-                &typecheck_artifacts.cx,
-                &typecheck_artifacts.typed_ast,
-                force,
-                file_key,
-                content,
-            );
+            let coverage = typecheck_artifacts.cx.with_cx(cache, |cx| {
+                flow_services_type_info::type_info_service::coverage(
+                    cx,
+                    &typecheck_artifacts.typed_ast,
+                    force,
+                    file_key,
+                    content,
+                )
+            });
             Ok((Ok(coverage), Some(extra_data)))
         }
         Err(parse_errors) => Ok((
@@ -2683,7 +2707,7 @@ fn find_module(
 
 fn get_def(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -2750,6 +2774,7 @@ fn get_def(
                 }
                 Ok(ref check_result) => {
                     let (result, json_props) = get_def_of_check_result(
+                        cache,
                         &transaction,
                         &file_key,
                         line,
@@ -2803,7 +2828,7 @@ fn get_def(
 }
 
 fn save_state(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     genv: &server_env::Genv,
     committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
     env: &server_env::Env,
@@ -2892,7 +2917,7 @@ fn rank_autoimports_by_usage(options: &Options, client_id: lsp_prot::ClientId) -
 }
 
 fn handle_apply_code_action(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2941,7 +2966,7 @@ fn handle_apply_code_action(
 
 fn handle_autocomplete(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2975,7 +3000,7 @@ fn handle_autocomplete(
 
 fn handle_autofix_exports(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2990,7 +3015,7 @@ fn handle_autofix_exports(
 
 fn handle_autofix_missing_local_annot(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3006,7 +3031,7 @@ fn handle_autofix_missing_local_annot(
 
 fn handle_check_file(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3019,7 +3044,7 @@ fn handle_check_file(
 
 fn handle_coverage(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3169,7 +3194,7 @@ fn handle_query(
 
 fn handle_dump_types(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3231,7 +3256,7 @@ fn handle_force_recheck(
 
 fn handle_get_def(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3269,7 +3294,7 @@ fn handle_graph_dep_graph(
 
 fn handle_infer_type(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3293,7 +3318,7 @@ fn handle_infer_type(
 
 fn handle_type_of_name(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3325,7 +3350,7 @@ fn handle_type_of_name(
 
 fn handle_inlay_hint(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3348,7 +3373,7 @@ fn handle_inlay_hint(
 
 fn handle_insert_type(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3397,7 +3422,7 @@ fn handle_status(
 }
 
 fn handle_save_state(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     genv: &server_env::Genv,
     committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
     env: &server_env::Env,
@@ -3409,7 +3434,7 @@ fn handle_save_state(
 
 pub fn handle_ephemeral_command_for_standalone(
     orchestrator: &ServerOrchestratorHandle,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     genv: &server_env::Genv,
     env: &server_env::Env,
     command: server_prot::request::Command,
@@ -3637,7 +3662,7 @@ pub fn handle_ephemeral_command_for_standalone(
 
 pub fn handle_ephemeral_command_for_standalone_wrapped(
     orchestrator: &ServerOrchestratorHandle,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     genv: &server_env::Genv,
     env: &server_env::Env,
     command: server_prot::request::Command,
@@ -3667,7 +3692,7 @@ pub fn handle_ephemeral_command_for_standalone_wrapped(
 
 fn find_code_actions(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3718,7 +3743,9 @@ fn find_code_actions(
                         .unwrap_or_default();
                     let imports_ranked_usage = rank_autoimports_by_usage(options, client_id);
                     let scope_info = flow_analysis::scope_builder::program(
-                        typecheck_artifacts.cx.enable_enums(),
+                        typecheck_artifacts
+                            .cx
+                            .with_cx(cache, |cx| cx.enable_enums()),
                         false,
                         parse_artifacts.file_sig.requires().is_empty(),
                         &parse_artifacts.ast,
@@ -3756,7 +3783,7 @@ fn find_code_actions(
                         })
                     });
                     let module_system_info = mk_module_system_info(options, transaction.clone());
-                    let code_actions =
+                    let code_actions = typecheck_artifacts.cx.with_cx(cache, |cx| {
                         flow_services_code_action::code_action_service::code_actions_at_loc(
                             options,
                             &lsp_init_params,
@@ -3766,7 +3793,7 @@ fn find_code_actions(
                             get_ast_from_transaction,
                             get_type_sig,
                             &module_system_info,
-                            &typecheck_artifacts.cx,
+                            cx,
                             &parse_artifacts.file_sig,
                             &parse_artifacts.tolerable_errors,
                             &file_contents,
@@ -3778,7 +3805,8 @@ fn find_code_actions(
                             only,
                             uri,
                             loc,
-                        );
+                        )
+                    });
                     let extra_data = match &code_actions {
                         Err(_) => None,
                         Ok(actions) => {
@@ -3807,7 +3835,7 @@ fn find_code_actions(
 
 fn add_missing_imports(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3841,17 +3869,17 @@ fn add_missing_imports(
                 Ok((ref parse_artifacts, ref typecheck_artifacts)) => {
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc);
                     let module_system_info = mk_module_system_info(options, transaction.clone());
-                    Ok(
+                    Ok(typecheck_artifacts.cx.with_cx(cache, |cx| {
                         flow_services_code_action::code_action_service::autofix_imports_lsp(
                             options,
                             env,
                             &loc_of_aloc,
                             &module_system_info,
-                            &typecheck_artifacts.cx,
+                            cx,
                             &parse_artifacts.ast,
                             uri,
-                        ),
-                    )
+                        )
+                    }))
                 }
             }
         }
@@ -4175,7 +4203,7 @@ fn handle_parallelizable_ephemeral(
     let parallelizable_workload_handler: flow_server_env::workload_stream::ParallelizableWorkloadHandler = Box::new(
         move |env: &server_env::Env,
               _transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
-              cache: &CheckContentsCache| {
+              cache: &mut CheckContentsCache| {
             let workload_command = command.clone();
             let workload_genv = genv.clone();
             let result = wrap_ephemeral_handler(&genv, &request_id, &client_context, &cmd_str, || {
@@ -4221,7 +4249,7 @@ fn handle_nonparallelizable_ephemeral(
     let workload_handler: WorkloadHandler = Box::new(
         move |env: &server_env::Env,
               _transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
-              cache: &CheckContentsCache| {
+              cache: &mut CheckContentsCache| {
             let result = handle_ephemeral_command_for_standalone(
                 &orchestrator,
                 cache,
@@ -4725,7 +4753,7 @@ fn handle_persistent_did_change_configuration_notification(
 
 fn handle_persistent_get_def(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -4820,7 +4848,7 @@ fn loc_to_vscode_linked_location_in_markdown(
 
 fn handle_persistent_infer_type(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5008,7 +5036,7 @@ fn handle_persistent_infer_type(
 
 fn handle_persistent_code_action_request(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5039,7 +5067,7 @@ fn handle_persistent_code_action_request(
 
 fn handle_persistent_autocomplete_lsp(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5170,7 +5198,7 @@ fn handle_persistent_autocomplete_lsp(
 
 fn handle_persistent_signaturehelp_lsp(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5240,26 +5268,28 @@ fn handle_persistent_signaturehelp_lsp(
                         transaction.get_ast(file_key).map(|arc| (*arc).clone())
                     };
                     let cursor_loc = flow_parser::loc::Loc::cursor(Some(path.dupe()), line, col);
-                    let func_details =
-                        match flow_services_type_info::signature_help::find_signatures(
+                    let signatures = typecheck_artifacts.cx.with_cx(cache, |cx| {
+                        flow_services_type_info::signature_help::find_signatures(
                             &loc_of_aloc,
                             &get_ast_from_transaction,
-                            &typecheck_artifacts.cx,
+                            cx,
                             parse_artifacts.file_sig.clone(),
                             &parse_artifacts.ast,
                             &typecheck_artifacts.typed_ast,
                             cursor_loc,
-                        ) {
-                            Ok(inner) => inner,
-                            Err(_canceled) => {
-                                return mk_lsp_error_response(
-                                    Some(id),
-                                    "Worker canceled".to_string(),
-                                    None,
-                                    metadata,
-                                );
-                            }
-                        };
+                        )
+                    });
+                    let func_details = match signatures {
+                        Ok(inner) => inner,
+                        Err(_canceled) => {
+                            return mk_lsp_error_response(
+                                Some(id),
+                                "Worker canceled".to_string(),
+                                None,
+                                metadata,
+                            );
+                        }
+                    };
                     match func_details {
                         Ok(details) => {
                             let lsp_result =
@@ -5385,7 +5415,7 @@ fn handle_persistent_workspace_symbol(
 
 fn get_file_artifacts(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5393,7 +5423,7 @@ fn get_file_artifacts(
     pos: &lsp_types::TextDocumentPositionParams,
     supplied_file_input: Option<&FileInput>,
 ) -> (
-    Result<Option<(FileArtifacts<'static>, flow_parser::file_key::FileKey)>, String>,
+    Result<Option<(FileArtifacts, flow_parser::file_key::FileKey)>, String>,
     Option<lsp_prot::Json>,
 ) {
     loop {
@@ -5459,9 +5489,10 @@ fn get_file_artifacts(
     }
 }
 
-fn find_local_references<'cx>(
+fn find_local_references(
+    cache: &mut CheckContentsCache,
     loc_of_aloc: &dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc,
-    file_artifacts: &FileArtifacts<'cx>,
+    file_artifacts: &FileArtifacts,
     kind: flow_services_references::find_refs_types::Kind,
     file_key: &flow_parser::file_key::FileKey,
     pos: &lsp_types::TextDocumentPositionParams,
@@ -5484,17 +5515,19 @@ fn find_local_references<'cx>(
         parse_artifacts.file_sig.dupe(),
         parse_artifacts.docblock.dupe(),
     );
-    let refs_results = match flow_services_references::find_refs_js::find_local_refs(
-        loc_of_aloc,
-        file_key,
-        &ast_info,
-        &typecheck_artifacts.cx,
-        &typecheck_artifacts.typed_ast,
-        &typecheck_artifacts.obj_to_obj_map,
-        kind,
-        line,
-        col,
-    ) {
+    let refs_results = match typecheck_artifacts.cx.with_cx(cache, |cx| {
+        flow_services_references::find_refs_js::find_local_refs(
+            loc_of_aloc,
+            file_key,
+            &ast_info,
+            cx,
+            &typecheck_artifacts.typed_ast,
+            &typecheck_artifacts.obj_to_obj_map,
+            kind,
+            line,
+            col,
+        )
+    }) {
         Ok(r) => r,
         Err(_canceled) => Err("Worker canceled".to_string()),
     };
@@ -5516,7 +5549,7 @@ fn find_local_references<'cx>(
 
 fn map_local_find_references_results<T>(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5539,6 +5572,7 @@ fn map_local_find_references_results<T>(
         Ok(Some((file_artifacts, file_key))) => {
             let loc_of_aloc = |aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc);
             let (local_refs, extra_data) = find_local_references(
+                cache,
                 &loc_of_aloc,
                 &file_artifacts,
                 flow_services_references::find_refs_types::Kind::FindReferences,
@@ -5572,7 +5606,7 @@ type RefsToLspResult = Box<
 
 fn handle_global_find_references(
     orchestrator: &ServerOrchestratorHandle,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5624,17 +5658,19 @@ fn handle_global_find_references(
                 file_artifacts.0.file_sig.dupe(),
                 file_artifacts.0.docblock.dupe(),
             );
-            let result = match flow_services_references::find_refs_js::find_local_refs(
-                &loc_of_aloc,
-                &file_key,
-                &ast_info,
-                &file_artifacts.1.cx,
-                &file_artifacts.1.typed_ast,
-                &file_artifacts.1.obj_to_obj_map,
-                kind,
-                line,
-                col,
-            ) {
+            let result = match file_artifacts.1.cx.with_cx(cache, |cx| {
+                flow_services_references::find_refs_js::find_local_refs(
+                    &loc_of_aloc,
+                    &file_key,
+                    &ast_info,
+                    cx,
+                    &file_artifacts.1.typed_ast,
+                    &file_artifacts.1.obj_to_obj_map,
+                    kind,
+                    line,
+                    col,
+                )
+            }) {
                 Ok(r) => r,
                 Err(_canceled) => Err("Worker canceled".to_string()),
             };
@@ -5767,7 +5803,7 @@ fn handle_global_find_references(
 
 fn handle_persistent_find_references(
     orchestrator: &ServerOrchestratorHandle,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5821,7 +5857,7 @@ fn handle_persistent_find_references(
 
 fn handle_persistent_document_highlight(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5865,7 +5901,7 @@ fn handle_persistent_document_highlight(
 
 fn handle_persistent_prepare_rename(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5918,7 +5954,7 @@ fn handle_persistent_prepare_rename(
 
 fn handle_persistent_rename(
     orchestrator: &ServerOrchestratorHandle,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6018,7 +6054,7 @@ fn handle_persistent_rename(
 
 fn handle_persistent_coverage(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6196,7 +6232,7 @@ fn send_workspace_edit(
 
 fn handle_persistent_add_missing_imports_command(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6357,7 +6393,7 @@ fn auto_close_jsx_handler(
 
 fn prepare_document_paste(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6406,15 +6442,16 @@ fn prepare_document_paste(
                         .iter()
                         .map(|r| lsp_range_to_flow_loc(Some(file_key.dupe()), r))
                         .collect();
-                    let import_items =
+                    let import_items = typecheck_artifacts.cx.with_cx(cache, |cx| {
                         flow_services_code_action::document_paste::prepare_document_paste(
-                            &typecheck_artifacts.cx,
+                            cx,
                             &loc_of_aloc,
                             &parse_artifacts.file_sig,
                             &parse_artifacts.ast,
                             &typecheck_artifacts.typed_ast,
                             &ranges,
-                        );
+                        )
+                    });
                     (import_items, Some(serde_json::json!({})))
                 }
             }
@@ -6511,7 +6548,7 @@ fn provide_document_paste(
 
 fn handle_persistent_prepare_document_paste(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6765,7 +6802,7 @@ fn handle_result_from_client(
 
 fn live_diagnostics_of_uri(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6814,7 +6851,7 @@ fn live_diagnostics_of_uri(
                             &options.file_options,
                             &file_path,
                         );
-                        let (result, did_hit_cache): (FileArtifactsResult<'static>, Option<bool>) = {
+                        let (result, did_hit_cache): (FileArtifactsResult, Option<bool>) = {
                             let intermediate_result =
                                 parse_contents(options, env.configured_libs(), content, &file_key);
                             let (_, parse_errs) = &intermediate_result;
@@ -6843,27 +6880,32 @@ fn live_diagnostics_of_uri(
                             printable_errors_of_file_artifacts_result(
                                 options,
                                 env,
+                                cache,
                                 &transaction,
                                 &file_key,
                                 result.as_ref(),
                             );
                         let switch_to_match_eligible_locations: Vec<flow_parser::loc::Loc> =
                             match &result {
-                                Ok((_pa, ta)) if semantic_decorations(client_id) => ta
-                                    .cx
-                                    .switch_to_match_eligible_locations()
-                                    .iter()
-                                    .map(|aloc| transaction.loc_of_aloc(aloc))
-                                    .collect(),
+                                Ok((_pa, ta)) if semantic_decorations(client_id) => {
+                                    ta.cx.with_cx(cache, |cx| {
+                                        cx.switch_to_match_eligible_locations()
+                                            .iter()
+                                            .map(|aloc| transaction.loc_of_aloc(aloc))
+                                            .collect()
+                                    })
+                                }
                                 _ => vec![],
                             };
                         let refined_locations: Vec<flow_parser::loc::Loc> = match &result {
-                            Ok((_pa, ta)) if semantic_decorations(client_id) => ta
-                                .cx
-                                .refined_locations()
-                                .iter()
-                                .map(|(aloc, _)| transaction.loc_of_aloc(aloc))
-                                .collect(),
+                            Ok((_pa, ta)) if semantic_decorations(client_id) => {
+                                ta.cx.with_cx(cache, |cx| {
+                                    cx.refined_locations()
+                                        .iter()
+                                        .map(|(aloc, _)| transaction.loc_of_aloc(aloc))
+                                        .collect()
+                                })
+                            }
                             _ => vec![],
                         };
                         let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
@@ -6934,7 +6976,7 @@ fn live_diagnostics_of_uri(
 
 fn handle_live_errors_request(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6977,7 +7019,7 @@ fn handle_live_errors_request(
 
 fn handle_persistent_text_document_diagnostics_lsp(
     orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -7990,7 +8032,7 @@ fn mk_parallelizable_persistent_workload(
         parallelizable_workload_handler: Box::new(
             move |env: &server_env::Env,
                   transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
-                  cache: &CheckContentsCache| {
+                  cache: &mut CheckContentsCache| {
                 let workload = match workload.take() {
                     Some(workload) => workload,
                     None => match get_persistent_handler(

@@ -10,6 +10,7 @@ use std::ops::Deref;
 use dupe::Dupe;
 use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::callee_recorder;
@@ -31,14 +32,14 @@ use crate::flow_js::FlowJs;
 use crate::speculation_kit;
 
 fn run_on_concretized<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
     reason: &flow_common::reason::Reason,
     lhs_reason: &flow_common::reason::Reason,
     lhs_expression: &ExpressionReferenceData<flow_aloc::ALoc>,
-    upper: &UseT<Context<'cx>>,
+    upper: &UseT<Cx>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
     match l.deref() {
@@ -112,14 +113,16 @@ fn run_on_concretized<'cx>(
             let r_loc = r.loc().dupe();
             let upper_for_default = upper.dupe();
             let default_resolve_fn: Box<
-                dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>,
+                dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>,
             > = {
                 let r_loc_clone = r_loc.dupe();
                 let upper_clone = upper_for_default.dupe();
                 Box::new(move |cx, env: &FlowJsEnv| {
-                    let flow_fn =
-                        |t: &Type, u: &UseT<Context<'cx>>| FlowJs::flow_with_env(cx, env, t, u);
+                    let flow_fn = |cx: &mut Context<'cx>, t: &Type, u: &UseT<Cx>| {
+                        FlowJs::flow_with_env(cx, env, t, u)
+                    };
                     default_resolve::default_resolve_touts(
+                        cx,
                         &flow_fn,
                         None,
                         env,
@@ -130,7 +133,7 @@ fn run_on_concretized<'cx>(
                 })
             };
             let cases: Vec<
-                Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>>,
+                Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>>,
             > = rep
                 .members_iter()
                 .map(|t| {
@@ -141,7 +144,7 @@ fn run_on_concretized<'cx>(
                     let upper = upper.dupe();
                     let voided_out_collector_clone = voided_out_collector.clone();
                     let f: Box<
-                        dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>,
+                        dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>,
                     > = Box::new(move |cx, env: &FlowJsEnv| {
                         run_with_env(
                             cx,
@@ -183,13 +186,13 @@ fn run_on_concretized<'cx>(
 }
 
 pub fn run<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     trace: DepthTrace,
     lhs: &Type,
     reason: &flow_common::reason::Reason,
     lhs_reason: &flow_common::reason::Reason,
     lhs_expression: &ExpressionReferenceData<flow_aloc::ALoc>,
-    upper: &UseT<Context<'cx>>,
+    upper: &UseT<Cx>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
     run_with_env(
@@ -206,14 +209,14 @@ pub fn run<'cx>(
 }
 
 pub(super) fn run_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     lhs: &Type,
     reason: &flow_common::reason::Reason,
     lhs_reason: &flow_common::reason::Reason,
     lhs_expression: &ExpressionReferenceData<flow_aloc::ALoc>,
-    upper: &UseT<Context<'cx>>,
+    upper: &UseT<Cx>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
     let concrete_types =

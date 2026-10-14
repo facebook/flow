@@ -38,7 +38,7 @@ use super::helpers::*;
 use super::*;
 
 pub(super) fn eval_selector<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     annot: bool,
@@ -62,7 +62,7 @@ pub(super) fn eval_selector<'cx>(
     let use_t = match selector {
         Selector::Prop(name_str, has_default) => {
             let name = Name::new(name_str.dupe());
-            let lookup_ub = || -> UseT<Context<'cx>> {
+            let lookup_ub = || -> UseT<Cx> {
                 let use_op = unknown_use();
                 let action = LookupAction::ReadProp(Box::new(ReadPropData {
                     use_op: use_op.dupe(),
@@ -93,7 +93,7 @@ pub(super) fn eval_selector<'cx>(
                     ignore_dicts: false,
                 })))
             };
-            let getprop_ub = || -> UseT<Context<'cx>> {
+            let getprop_ub = || -> UseT<Cx> {
                 UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                     use_op: unknown_use(),
                     reason: reason.dupe(),
@@ -160,7 +160,7 @@ pub(super) fn eval_selector<'cx>(
 }
 
 pub(super) fn evaluate_type_destructor<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -193,7 +193,7 @@ pub(super) fn evaluate_type_destructor<'cx>(
 }
 
 fn evaluate_type_destructor_<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -301,7 +301,7 @@ fn evaluate_type_destructor_<'cx>(
 }
 
 pub(super) fn mk_type_destructor<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -445,7 +445,7 @@ pub(super) fn mk_type_destructor<'cx>(
 }
 
 pub(super) fn eval_destructor<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -491,10 +491,11 @@ pub(super) fn eval_destructor<'cx>(
         );
     }
 
-    let destruct_union = |f: Option<Box<dyn Fn(Type) -> Type>>,
+    let destruct_union = |cx: &mut Context<'cx>,
+                          f: Option<Box<dyn Fn(Type) -> Type>>,
                           r: Reason,
                           members: Vec<Type>,
-                          upper: UseT<Context<'cx>>|
+                          upper: UseT<Cx>|
      -> Result<(), FlowJsException> {
         let f: Box<dyn Fn(Type) -> Type> = f.unwrap_or_else(|| Box::new(|t| t));
         let destructor = TypeDestructorT::new(TypeDestructorTInner(
@@ -519,89 +520,93 @@ pub(super) fn eval_destructor<'cx>(
         rec_flow(cx, env, trace, (&first, &u))
     };
 
-    let destruct_maybe = |f: Option<Box<dyn Fn(Type) -> Type>>,
+    let destruct_maybe = |cx: &mut Context<'cx>,
+                          f: Option<Box<dyn Fn(Type) -> Type>>,
                           r: Reason,
                           inner_t: Type,
-                          upper: UseT<Context<'cx>>|
+                          upper: UseT<Cx>|
      -> Result<(), FlowJsException> {
         let null_or_void_reason = r.dupe().replace_desc_new(VirtualReasonDesc::RNullOrVoid);
         let null = null::make(null_or_void_reason.dupe());
         let void = void::make(null_or_void_reason.dupe());
-        destruct_union(f, null_or_void_reason, vec![inner_t, null, void], upper)
+        destruct_union(cx, f, null_or_void_reason, vec![inner_t, null, void], upper)
     };
 
-    let destruct_optional = |f: Option<Box<dyn Fn(Type) -> Type>>,
+    let destruct_optional = |cx: &mut Context<'cx>,
+                             f: Option<Box<dyn Fn(Type) -> Type>>,
                              r: Reason,
                              inner_t: Type,
-                             upper: UseT<Context<'cx>>|
+                             upper: UseT<Cx>|
      -> Result<(), FlowJsException> {
         let void_reason = r.dupe().replace_desc_new(VirtualReasonDesc::RVoid);
         let void = void::make(void_reason.dupe());
-        destruct_union(f, void_reason, vec![inner_t, void], upper)
+        destruct_union(cx, f, void_reason, vec![inner_t, void], upper)
     };
 
-    let destruct_and_preserve_nominal_t =
-        |r: &Reason, nominal_type: &Rc<NominalType>| -> Result<(), FlowJsException> {
-            let eval_t = |inner_t: &Type| -> Result<Type, FlowJsException> {
-                let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
-                // We have to eagerly evaluate these destructors when possible because
-                // various other systems, like type_filter, expect NominalT underlying_t upper_t,
-                // and lower_t to be inspectable
-                eagerly_eval_destructor_if_resolved(
-                    cx,
-                    env,
-                    trace,
-                    use_op.dupe(),
-                    reason,
-                    inner_t,
-                    d,
-                    tvar_id,
-                )
-            };
-
-            let underlying_t = match &nominal_type.underlying_t {
-                nominal::UnderlyingT::FullyOpaque => nominal::UnderlyingT::FullyOpaque,
-                nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
-                    t: inner_t,
-                    custom_error_loc,
-                }) => nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
-                    t: eval_t(inner_t)?,
-                    custom_error_loc: custom_error_loc.dupe(),
-                })),
-                nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
-                    nominal::UnderlyingT::OpaqueWithLocal {
-                        t: eval_t(inner_t)?,
-                    }
-                }
-            };
-            let lower_t = match nominal_type.lower_t.as_ref() {
-                Some(lt) => Some(eval_t(lt)?),
-                None => None,
-            };
-            let upper_t = match nominal_type.upper_t.as_ref() {
-                Some(ut) => Some(eval_t(ut)?),
-                None => None,
-            };
-            let nominal_t = Type::new(TypeInner::NominalT {
-                reason: r.dupe(),
-                nominal_type: Rc::new(NominalType::new(NominalTypeInner {
-                    nominal_id: nominal_type.nominal_id.clone(),
-                    underlying_t,
-                    lower_t,
-                    upper_t,
-                    nominal_type_args: nominal_type.nominal_type_args.dupe(),
-                })),
-            });
-            rec_flow_t(
+    let destruct_and_preserve_nominal_t = |cx: &mut Context<'cx>,
+                                           r: &Reason,
+                                           nominal_type: &Rc<NominalType>|
+     -> Result<(), FlowJsException> {
+        let eval_t = |cx: &mut Context<'cx>, inner_t: &Type| -> Result<Type, FlowJsException> {
+            let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
+            // We have to eagerly evaluate these destructors when possible because
+            // various other systems, like type_filter, expect NominalT underlying_t upper_t,
+            // and lower_t to be inspectable
+            eagerly_eval_destructor_if_resolved(
                 cx,
                 env,
                 trace,
                 use_op.dupe(),
-                (&nominal_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
+                reason,
+                inner_t,
+                d,
+                tvar_id,
             )
         };
 
-    let should_destruct_union = || -> bool {
+        let underlying_t = match &nominal_type.underlying_t {
+            nominal::UnderlyingT::FullyOpaque => nominal::UnderlyingT::FullyOpaque,
+            nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
+                t: inner_t,
+                custom_error_loc,
+            }) => nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
+                t: eval_t(cx, inner_t)?,
+                custom_error_loc: custom_error_loc.dupe(),
+            })),
+            nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
+                nominal::UnderlyingT::OpaqueWithLocal {
+                    t: eval_t(cx, inner_t)?,
+                }
+            }
+        };
+        let lower_t = match nominal_type.lower_t.as_ref() {
+            Some(lt) => Some(eval_t(cx, lt)?),
+            None => None,
+        };
+        let upper_t = match nominal_type.upper_t.as_ref() {
+            Some(ut) => Some(eval_t(cx, ut)?),
+            None => None,
+        };
+        let nominal_t = Type::new(TypeInner::NominalT {
+            reason: r.dupe(),
+            nominal_type: Rc::new(NominalType::new(NominalTypeInner {
+                nominal_id: nominal_type.nominal_id.clone(),
+                underlying_t,
+                lower_t,
+                upper_t,
+                nominal_type_args: nominal_type.nominal_type_args.dupe(),
+            })),
+        });
+        rec_flow_t(
+            cx,
+            env,
+            trace,
+            use_op.dupe(),
+            (&nominal_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
+        )
+    };
+
+    let should_destruct_union = |cx: &mut Context<'cx>| -> bool {
         match d {
             Destructor::ConditionalType(box DestructorConditionalTypeData {
                 distributive_tparam_name,
@@ -609,7 +614,7 @@ pub(super) fn eval_destructor<'cx>(
             }) => distributive_tparam_name.is_some(),
             Destructor::ReactDRO(_) if let TypeInner::UnionT(_, rep) = t.deref() => {
                 if !rep.is_optimized_finally() {
-                    rep.optimize_enum_only(|members| {
+                    rep.optimize_enum_only(cx, |cx, members| {
                         flow_typing_visitors::type_mapper::union_flatten(cx, members.duped())
                     });
                 }
@@ -674,7 +679,7 @@ pub(super) fn eval_destructor<'cx>(
                 nominal_type,
             },
             Destructor::ReactDRO(_),
-        ) => destruct_and_preserve_nominal_t(r, nominal_type),
+        ) => destruct_and_preserve_nominal_t(cx, r, nominal_type),
         (
             TypeInner::NominalT {
                 reason: _,
@@ -806,9 +811,10 @@ pub(super) fn eval_destructor<'cx>(
         // bounds, which prevents the speculative match process from working.
         // Instead, we preserve the union by pushing down the destructor onto the
         // branches of the unions.
-        (TypeInner::UnionT(_, rep), _) if should_destruct_union() => {
+        (TypeInner::UnionT(_, rep), _) if should_destruct_union(cx) => {
             let members: Vec<Type> = rep.members_iter().duped().collect();
             destruct_union(
+                cx,
                 None,
                 reason.dupe(),
                 members,
@@ -828,13 +834,14 @@ pub(super) fn eval_destructor<'cx>(
             }),
             _,
         ) if let TypeInner::UnionT(_, rep) = bound.deref()
-            && should_destruct_union() =>
+            && should_destruct_union(cx) =>
         {
             let g_id = g_id.clone();
             let name = name.dupe();
             let no_infer = *no_infer;
             let members: Vec<Type> = rep.members_iter().duped().collect();
             destruct_union(
+                cx,
                 Some(Box::new(move |bound: Type| {
                     Type::new(TypeInner::GenericT(Box::new(GenericTData {
                         reason: reason_of_t(&bound).dupe(),
@@ -852,7 +859,8 @@ pub(super) fn eval_destructor<'cx>(
                 )),
             )
         }
-        (TypeInner::MaybeT(r, inner_t), _) if should_destruct_union() => destruct_maybe(
+        (TypeInner::MaybeT(r, inner_t), _) if should_destruct_union(cx) => destruct_maybe(
+            cx,
             None,
             r.dupe(),
             inner_t.dupe(),
@@ -871,12 +879,13 @@ pub(super) fn eval_destructor<'cx>(
             }),
             _,
         ) if let TypeInner::MaybeT(_, inner_t) = bound.deref()
-            && should_destruct_union() =>
+            && should_destruct_union(cx) =>
         {
             let g_id = g_id.clone();
             let name = name.dupe();
             let no_infer = *no_infer;
             destruct_maybe(
+                cx,
                 Some(Box::new(move |bound: Type| {
                     Type::new(TypeInner::GenericT(Box::new(GenericTData {
                         reason: reason_of_t(&bound).dupe(),
@@ -901,7 +910,8 @@ pub(super) fn eval_destructor<'cx>(
                 use_desc: _,
             },
             _,
-        ) if should_destruct_union() => destruct_optional(
+        ) if should_destruct_union(cx) => destruct_optional(
+            cx,
             None,
             r.dupe(),
             inner_t.dupe(),
@@ -924,12 +934,13 @@ pub(super) fn eval_destructor<'cx>(
             type_: inner_t,
             use_desc: _,
         } = bound.deref()
-            && should_destruct_union() =>
+            && should_destruct_union(cx) =>
         {
             let g_id = g_id.clone();
             let name = name.dupe();
             let no_infer = *no_infer;
             destruct_optional(
+                cx,
                 Some(Box::new(move |bound: Type| {
                     Type::new(TypeInner::GenericT(Box::new(GenericTData {
                         reason: reason_of_t(&bound).dupe(),
@@ -1297,7 +1308,7 @@ pub(super) fn eval_destructor<'cx>(
                         &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                             use_op: use_op.dupe(),
                             reason: reason.dupe(),
-                            tool: Box::new(react::Tool::<Context<'cx>>::GetConfig {
+                            tool: Box::new(react::Tool::<Cx>::GetConfig {
                                 tout: Type::new(TypeInner::OpenT(tout.dupe())),
                             }),
                         }))),
@@ -1361,7 +1372,7 @@ pub(super) fn eval_destructor<'cx>(
 }
 
 pub(super) fn eagerly_eval_destructor_if_resolved<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1400,7 +1411,7 @@ pub(super) fn eagerly_eval_destructor_if_resolved<'cx>(
 }
 
 pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     t: &Type,
@@ -1488,9 +1499,9 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
             // Hoisted out of try_evaluate so the post-loop check below can read it.
             let evaluation_error: Rc<RefCell<Option<FlowJsException>>> =
                 Rc::new(RefCell::new(None));
-            let try_evaluate = |stuck_eval_kind: nominal::StuckEvalKind,
-                                stuck_eval_targs: Vec<Type>,
-                                upper_t: Option<Type>| {
+            let mut try_evaluate = |stuck_eval_kind: nominal::StuckEvalKind,
+                                    stuck_eval_targs: Vec<Type>,
+                                    upper_t: Option<Type>| {
                 let trace = DepthTrace::dummy_trace();
                 let use_op_for_map = use_op.dupe();
                 let reason_for_map = reason.dupe();

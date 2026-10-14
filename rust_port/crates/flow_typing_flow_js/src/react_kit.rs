@@ -18,6 +18,7 @@ use flow_common::reason::mk_reason;
 use flow_common::reason::react_element_desc_of_component_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message::ENotAReactComponentData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
@@ -89,7 +90,7 @@ use crate::renders_kit;
 use crate::tvar_resolver;
 
 pub fn err_incompatible<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     component: &Type,
@@ -103,11 +104,12 @@ pub fn err_incompatible<'cx>(
 }
 
 pub fn component_class<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     props: &Type,
 ) -> Result<Type, FlowJsException> {
+    let instance = flow_typing_tvar::mk(cx, reason.dupe());
     Ok(Type::new(TypeInner::DefT(
         reason.dupe(),
         DefT::new(DefTInner::ClassT(
@@ -117,7 +119,7 @@ pub fn component_class<'cx>(
                 reason,
                 None,
                 ExpectedModulePurpose::ReactModuleForReactClassComponent,
-                vec![props.dupe(), flow_typing_tvar::mk(cx, reason.dupe())],
+                vec![props.dupe(), instance],
             )?,
         )),
     )))
@@ -134,7 +136,7 @@ enum IntrinsicLiteral {
 }
 
 fn get_intrinsic<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     component_reason: &Reason,
@@ -262,7 +264,7 @@ fn get_intrinsic<'cx>(
 }
 
 pub fn subtype_class_component_render<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -314,7 +316,7 @@ pub fn subtype_class_component_render<'cx>(
 // Lookup the defaultProps of a component and flow with upper depending
 // on the given polarity.
 fn lookup_defaults<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     component: &Type,
@@ -366,7 +368,7 @@ fn lookup_defaults<'cx>(
 // default props then either the type will be Some {||} or we will
 // return None.
 fn get_defaults<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     component: &Type,
@@ -395,7 +397,7 @@ fn get_defaults<'cx>(
 }
 
 fn add_optional_ref_prop_to_props<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     props: &Type,
@@ -441,7 +443,7 @@ fn add_optional_ref_prop_to_props<'cx>(
 }
 
 fn props_to_tout<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     component: &Type,
@@ -450,7 +452,7 @@ fn props_to_tout<'cx>(
     tout: Type,
 ) -> Result<(), FlowJsException> {
     let dropped = drop_generic(component.dupe());
-    let general_intrinsic = |gen_lit: Literal| {
+    let general_intrinsic = |cx: &mut Context<'cx>, gen_lit: Literal| {
         let props = flow_typing_tvar::mk(cx, reason_op.dupe());
         let i =
             tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_op.dupe(), |cx, tout_t| {
@@ -484,14 +486,8 @@ fn props_to_tout<'cx>(
             // Class components or legacy components.
             DefTInner::ClassT(i) => {
                 let props = flow_typing_tvar::mk(cx, reason_op.dupe());
-                FlowJs::rec_flow_t_with_env(
-                    cx,
-                    env,
-                    trace,
-                    unknown_use(),
-                    component,
-                    &component_class(cx, env, r, &props)?,
-                )?;
+                let class = component_class(cx, env, r, &props)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), component, &class)?;
                 add_optional_ref_prop_to_props(cx, env, trace, &props, reason_op, i, tout.dupe())?;
                 Ok(())
             }
@@ -591,7 +587,7 @@ fn props_to_tout<'cx>(
                 add_optional_ref_prop_to_props(cx, env, trace, &props, reason_op, &i, tout)?;
                 Ok(())
             }
-            DefTInner::StrGeneralT(gen_lit) => general_intrinsic(gen_lit.clone()),
+            DefTInner::StrGeneralT(gen_lit) => general_intrinsic(cx, gen_lit.clone()),
             DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config, ..
             }) => {
@@ -631,13 +627,14 @@ fn props_to_tout<'cx>(
                 Ok(())
             }
         },
-        TypeInner::TemplateLiteralT { quasis, .. } => {
-            general_intrinsic(if quasis.iter().any(|q| !q.is_empty()) {
+        TypeInner::TemplateLiteralT { quasis, .. } => general_intrinsic(
+            cx,
+            if quasis.iter().any(|q| !q.is_empty()) {
                 Literal::Truthy
             } else {
                 Literal::AnyLiteral
-            })
-        }
+            },
+        ),
         // Any and any specializations
         TypeInner::AnyT(reason, src) => {
             FlowJs::rec_flow_t_with_env(
@@ -692,7 +689,7 @@ fn props_to_tout<'cx>(
 // the places in which this approach stalls are the same places as other type
 // destructor annotations. Like object spread, $Diff, and $Rest.
 pub fn get_config<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     component: &Type,
@@ -788,24 +785,24 @@ pub fn get_config<'cx>(
 }
 
 pub fn run<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
     l: &Type,
-    u: &react::Tool<Context<'cx>>,
+    u: &react::Tool<Cx>,
 ) -> Result<(), FlowJsException> {
     run_with_env(cx, &FlowJsEnv::entry(), trace, use_op, reason_op, l, u)
 }
 
 pub(super) fn run_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
     l: &Type,
-    u: &react::Tool<Context<'cx>>,
+    u: &react::Tool<Cx>,
 ) -> Result<(), FlowJsException> {
     // This function creates a constraint *from* tin *to* props so that props is
     // an upper bound on tin. This is important because when the type of a
@@ -815,7 +812,7 @@ pub(super) fn run_with_env<'cx>(
     // inferred props type. Returns the props type, which is any when the component
     // is any or invalid.
     fn tin_to_props<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
@@ -825,7 +822,7 @@ pub(super) fn run_with_env<'cx>(
     ) -> Result<Type, FlowJsException> {
         let component = l;
         let dropped = drop_generic(component.dupe());
-        let intrinsic_to_props = |component: &Type| {
+        let intrinsic_to_props = |cx: &mut Context<'cx>, component: &Type| {
             // In the annotation expressions below, T is the intrinsic tag type, e.g. 'div'.
             // Anchor errors for the synthesized annotation to T's source location.
             let reason_component = type_util::reason_of_t(component);
@@ -833,7 +830,7 @@ pub(super) fn run_with_env<'cx>(
                 desc.map(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)))
             });
             // Apply an annotation operation, such as A['props'] or $ReadOnly<A>.
-            let eval = |type_: Type, destructor: Destructor| {
+            let eval = |cx: &mut Context<'cx>, type_: Type, destructor: Destructor| {
                 FlowJs::mk_type_destructor_with_env(
                     cx,
                     env,
@@ -906,6 +903,7 @@ pub(super) fn run_with_env<'cx>(
             };
             // type Props = Intrinsic['props'];
             let props = eval(
+                cx,
                 intrinsic.dupe(),
                 Destructor::PropertyType {
                     name: Name::new("props"),
@@ -917,6 +915,7 @@ pub(super) fn run_with_env<'cx>(
                 let ref_slice = {
                     // type Instance = Intrinsic['instance'];
                     let instance = eval(
+                        cx,
                         intrinsic,
                         Destructor::PropertyType {
                             name: Name::new("instance"),
@@ -946,12 +945,14 @@ pub(super) fn run_with_env<'cx>(
                         reachable_targs: Rc::from([]),
                     })
                 };
+                let strictness_kind = cx.type_strictness_kind();
                 eval(
+                    cx,
                     props,
                     Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
                         object::spread::Target::Value {
                             make_seal: object::spread::SealType::Sealed,
-                            strictness_kind: cx.type_strictness_kind(),
+                            strictness_kind,
                         },
                         Default::default(),
                         Some(ref_slice),
@@ -959,7 +960,7 @@ pub(super) fn run_with_env<'cx>(
                 )?
             };
             // type Config = Readonly<{...Props, ref?: Ref}>;
-            let props = eval(props, Destructor::ReadOnlyType)?;
+            let props = eval(cx, props, Destructor::ReadOnlyType)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
             Ok(props)
         };
@@ -997,20 +998,21 @@ pub(super) fn run_with_env<'cx>(
                                 .unwrap_or_else(|| obj_type::mk(ObjKind::Exact, cx, r.dupe()));
                             FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &t)?;
                             if !env.in_implicit_instantiation() {
+                                let react_node = FlowJs::get_builtin_react_type_with_env(
+                                    cx,
+                                    env,
+                                    None,
+                                    reason_op,
+                                    None,
+                                    ExpectedModulePurpose::ReactModuleForReactNodeType,
+                                )?;
                                 FlowJs::rec_flow_t_with_env(
                                     cx,
                                     env,
                                     trace,
                                     unknown_use(),
                                     &ft.return_t,
-                                    &FlowJs::get_builtin_react_type_with_env(
-                                        cx,
-                                        env,
-                                        None,
-                                        reason_op,
-                                        None,
-                                        ExpectedModulePurpose::ReactModuleForReactNodeType,
-                                    )?,
+                                    &react_node,
                                 )?;
                             }
                             Ok(t)
@@ -1052,7 +1054,7 @@ pub(super) fn run_with_env<'cx>(
                 }
                 // Intrinsic components.
                 DefTInner::SingletonStrT { .. } | DefTInner::StrGeneralT(_) => {
-                    intrinsic_to_props(&dropped)
+                    intrinsic_to_props(cx, &dropped)
                 }
                 // ...otherwise, error.
                 _ => {
@@ -1063,7 +1065,7 @@ pub(super) fn run_with_env<'cx>(
                     Ok(any)
                 }
             },
-            TypeInner::TemplateLiteralT { .. } => intrinsic_to_props(&dropped),
+            TypeInner::TemplateLiteralT { .. } => intrinsic_to_props(cx, &dropped),
             TypeInner::AnyT(reason, source) => {
                 let any = any_t::why(source.clone(), reason.dupe());
                 FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &any)?;
@@ -1081,7 +1083,7 @@ pub(super) fn run_with_env<'cx>(
     }
 
     fn config_check<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
@@ -1154,7 +1156,7 @@ pub(super) fn run_with_env<'cx>(
     }
 
     fn create_element<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         original_use_op: UseOp,

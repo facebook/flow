@@ -8,7 +8,6 @@
 //! New Environment:
 //! New environment maps locs to types using the ssa builder
 
-use std::cell::RefCell;
 use std::rc::Rc;
 
 use dupe::Dupe;
@@ -24,6 +23,7 @@ use flow_env_builder::env_api::EnvMap;
 use flow_env_builder::name_def_types::EnvEntriesMap;
 use flow_env_builder::name_def_types::HintMap;
 use flow_env_builder::name_def_types::ScopeKind;
+use flow_lazy::ContextFamily;
 use flow_parser::loc_sig::LocSig;
 use flow_typing_type::type_::ClassBinding;
 use flow_typing_type::type_::LazyHintT;
@@ -32,12 +32,12 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_util::mod_reason_of_t;
 
-pub struct TypeEntry<'a, CX = ()> {
+pub struct TypeEntry<CX: ContextFamily = ()> {
     pub t: Type,
-    pub state: Rc<RefCell<flow_lazy::Lazy<CX, Type, Box<dyn FnOnce(&CX) -> Type + 'a>>>>,
+    pub state: Rc<flow_lazy::Lazy<CX, Type>>,
 }
 
-impl<CX> Clone for TypeEntry<'_, CX> {
+impl<CX: ContextFamily> Clone for TypeEntry<CX> {
     fn clone(&self) -> Self {
         TypeEntry {
             t: self.t.clone(),
@@ -46,13 +46,8 @@ impl<CX> Clone for TypeEntry<'_, CX> {
     }
 }
 
-type LazyResult<'a, CX, T> = Rc<
-    flow_lazy::Lazy<
-        CX,
-        Result<T, flow_utils_concurrency::job_error::JobError>,
-        Box<dyn FnOnce(&CX) -> Result<T, flow_utils_concurrency::job_error::JobError> + 'a>,
-    >,
->;
+type LazyResult<CX, T> =
+    Rc<flow_lazy::Lazy<CX, Result<T, flow_utils_concurrency::job_error::JobError>>>;
 
 /// Lazily-resolved information about a call site whose callee might be a
 /// predicate function, split into two stages.
@@ -62,12 +57,12 @@ type LazyResult<'a, CX, T> = Rc<
 /// converts the type arguments and types every call argument -- is only forced
 /// once that check has passed. `full` reuses `callee`'s result, so the callee is
 /// typed at most once.
-pub struct PredFuncLazy<'a, CX> {
-    pub callee: LazyResult<'a, CX, Type>,
-    pub full: LazyResult<'a, CX, PredFuncallInfo>,
+pub struct PredFuncLazy<CX: ContextFamily> {
+    pub callee: LazyResult<CX, Type>,
+    pub full: LazyResult<CX, PredFuncallInfo>,
 }
 
-impl<CX> Clone for PredFuncLazy<'_, CX> {
+impl<CX: ContextFamily> Clone for PredFuncLazy<CX> {
     fn clone(&self) -> Self {
         PredFuncLazy {
             callee: self.callee.dupe(),
@@ -76,10 +71,10 @@ impl<CX> Clone for PredFuncLazy<'_, CX> {
     }
 }
 
-impl<CX> Dupe for PredFuncLazy<'_, CX> {}
+impl<CX: ContextFamily> Dupe for PredFuncLazy<CX> {}
 
-pub struct LocEnv<'a, CX = ()> {
-    pub types: EnvMap<ALoc, TypeEntry<'a, CX>>,
+pub struct LocEnv<CX: ContextFamily = ()> {
+    pub types: EnvMap<ALoc, TypeEntry<CX>>,
     pub tparams: EnvMap<ALoc, (SubstName, TypeParam, Type)>,
     pub class_bindings: EnvMap<ALoc, ClassBinding>,
     pub class_stack: FlowVector<ALoc>,
@@ -87,11 +82,11 @@ pub struct LocEnv<'a, CX = ()> {
     pub ast_hint_map: HintMap,
     pub hint_map: EnvMap<ALoc, LazyHintT<CX>>,
     pub var_info: Rc<EnvInfo<ALoc>>,
-    pub pred_func_map: FlowOrdMap<ALoc, PredFuncLazy<'a, CX>>,
+    pub pred_func_map: FlowOrdMap<ALoc, PredFuncLazy<CX>>,
     pub name_defs: EnvEntriesMap,
 }
 
-impl<CX> Clone for LocEnv<'_, CX> {
+impl<CX: ContextFamily> Clone for LocEnv<CX> {
     fn clone(&self) -> Self {
         LocEnv {
             types: self.types.clone(),
@@ -108,8 +103,8 @@ impl<CX> Clone for LocEnv<'_, CX> {
     }
 }
 
-impl<'a, CX> LocEnv<'a, CX> {
-    pub fn initialize(&mut self, def_loc_kind: DefLocType, loc: ALoc, state: TypeEntry<'a, CX>) {
+impl<CX: ContextFamily> LocEnv<CX> {
+    pub fn initialize(&mut self, def_loc_kind: DefLocType, loc: ALoc, state: TypeEntry<CX>) {
         let key = EnvKey::new(def_loc_kind, loc.dupe());
         if self.types.contains_key(&key) {
             panic!("{} already initialized", loc.debug_to_string(true));
@@ -132,18 +127,37 @@ impl<'a, CX> LocEnv<'a, CX> {
         }
     }
 
-    pub fn find_write(&self, def_loc_kind: DefLocType, loc: ALoc) -> Option<&TypeEntry<'a, CX>> {
+    pub fn update_state(
+        &mut self,
+        def_loc_kind: DefLocType,
+        loc: ALoc,
+        state: flow_lazy::Lazy<CX, Type>,
+    ) {
+        let key = EnvKey::new(def_loc_kind, loc);
+        match self.types.get(&key) {
+            Some(TypeEntry { t, .. }) => {
+                let new_entry = TypeEntry {
+                    t: t.dupe(),
+                    state: Rc::new(state),
+                };
+                self.types.insert(key, new_entry);
+            }
+            None => panic!("Cannot update state on non-existent entry"),
+        }
+    }
+
+    pub fn find_write(&self, def_loc_kind: DefLocType, loc: ALoc) -> Option<&TypeEntry<CX>> {
         self.types.get(&EnvKey::new(def_loc_kind, loc))
     }
 
-    pub fn find_ordinary_write(&self, loc: ALoc) -> Option<&TypeEntry<'a, CX>> {
+    pub fn find_ordinary_write(&self, loc: ALoc) -> Option<&TypeEntry<CX>> {
         self.find_write(DefLocType::OrdinaryNameLoc, loc)
     }
 
     pub fn empty(scope_kind: ScopeKind) -> Self {
         // Cache the non-generic fields in a thread_local to avoid expensive
         // im::OrdMap pool allocations (Arc::new) on every empty() call.
-        // Fields that depend on CX/'a cannot be cached (different type params)
+        // Fields that depend on CX cannot be cached (different type params)
         // so they are constructed fresh.
         struct CachedFields {
             tparams: EnvMap<ALoc, (SubstName, TypeParam, Type)>,
@@ -180,7 +194,7 @@ impl<'a, CX> LocEnv<'a, CX> {
         ast_hint_map: HintMap,
         hint_map: EnvMap<ALoc, LazyHintT<CX>>,
         var_info: Rc<EnvInfo<ALoc>>,
-        pred_func_map: FlowOrdMap<ALoc, PredFuncLazy<'a, CX>>,
+        pred_func_map: FlowOrdMap<ALoc, PredFuncLazy<CX>>,
         name_defs: EnvEntriesMap,
     ) -> Self {
         let mut env = Self::empty(scope_kind);

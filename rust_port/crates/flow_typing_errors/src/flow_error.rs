@@ -71,9 +71,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> FlowError<L> {
         }
     }
 
-    pub fn convert_type_to_type_desc<F>(f: F, error: FlowError<L>) -> FlowError<L>
+    pub fn convert_type_to_type_desc(
+        f: &mut dyn FnMut(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L>,
+        error: FlowError<L>,
+    ) -> FlowError<L>
     where
-        F: Fn(TypeOrTypeDesc<L>) -> TypeOrTypeDesc<L> + Clone,
         L: Clone,
     {
         FlowError {
@@ -271,7 +273,7 @@ impl ErrorSet {
 
     pub fn map<F>(self, f: F) -> Self
     where
-        F: Fn(FlowError<ALoc>) -> FlowError<ALoc>,
+        F: FnMut(FlowError<ALoc>) -> FlowError<ALoc>,
     {
         Self(self.0.into_iter().map(f).collect())
     }

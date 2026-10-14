@@ -16,7 +16,7 @@ use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::constraint::forcing_state::ForcingState;
 
 fn assert_forced_to_any(s: &ForcingState) {
-    match &*s.force(&(), |r| any_t::error(r.dupe())) {
+    match &*s.force(&mut (), |_, r| any_t::error(r.dupe())) {
         TypeInner::AnyT(_, _) => {}
         _ => panic!("Invalid type"),
     }
@@ -28,10 +28,10 @@ fn invalid_self_recursive() {
     let s_clone = s.clone();
     let state = ForcingState::of_lazy_t(
         locationless_reason(VirtualReasonDesc::RNull),
-        move |_: &()| {
+        move |_: &mut ()| {
             let s_ref = s_clone.borrow();
             let inner_state = s_ref.as_ref().unwrap();
-            inner_state.force(&(), |r| any_t::error(r.dupe()))
+            inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
         },
     );
     *s.borrow_mut() = Some(state);
@@ -48,20 +48,20 @@ fn invalid_mutually_recursive() {
     let s2_for_s1 = s2.clone();
     let state1 = ForcingState::of_lazy_t(
         locationless_reason(VirtualReasonDesc::RNull),
-        move |_: &()| {
+        move |_: &mut ()| {
             let s2_ref = s2_for_s1.borrow();
             let inner_state = s2_ref.as_ref().unwrap();
-            inner_state.force(&(), |r| any_t::error(r.dupe()))
+            inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
         },
     );
 
     let s1_for_s2 = s1.clone();
     let state2 = ForcingState::of_lazy_t(
         locationless_reason(VirtualReasonDesc::RNull),
-        move |_: &()| {
+        move |_: &mut ()| {
             let s1_ref = s1_for_s2.borrow();
             let inner_state = s1_ref.as_ref().unwrap();
-            inner_state.force(&(), |r| any_t::error(r.dupe()))
+            inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
         },
     );
 
@@ -80,17 +80,19 @@ fn invalid_self_recursive_mapped() {
     let s_clone = s.clone();
     let state = ForcingState::of_lazy_t(
         locationless_reason(VirtualReasonDesc::RNull),
-        move |_: &()| {
+        move |_: &mut ()| {
             let s_ref = s_clone.borrow();
             let inner_state = s_ref.as_ref().unwrap();
-            inner_state.force(&(), |r| any_t::error(r.dupe()))
+            inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
         },
     );
     *s.borrow_mut() = Some(state);
 
     let s_ref = s.borrow();
     let state = s_ref.as_ref().unwrap();
-    let state_copy = state.copy(&(), |_cx: &(), r| any_t::error(r.dupe()), |_, _, _| {});
+    let state_copy = state.copy(|_cx: &mut (), src_state: &ForcingState| {
+        src_state.force(&mut (), |_, r| any_t::error(r.dupe()))
+    });
     assert_forced_to_any(&state_copy);
 }
 
@@ -100,17 +102,19 @@ fn invalid_self_recursive_force_twice() {
     let s_clone = s.clone();
     let state = ForcingState::of_lazy_t(
         locationless_reason(VirtualReasonDesc::RNull),
-        move |_: &()| {
+        move |_: &mut ()| {
             let s_ref = s_clone.borrow();
             let inner_state = s_ref.as_ref().unwrap();
-            inner_state.force(&(), |r| any_t::error(r.dupe()));
-            inner_state.force(&(), |r| any_t::error(r.dupe()))
+            inner_state.force(&mut (), |_, r| any_t::error(r.dupe()));
+            inner_state.force(&mut (), |_, r| any_t::error(r.dupe()))
         },
     );
     *s.borrow_mut() = Some(state);
 
     let s_ref = s.borrow();
     let state = s_ref.as_ref().unwrap();
-    let state_copy = state.copy(&(), |_cx: &(), r| any_t::error(r.dupe()), |_, _, _| {});
+    let state_copy = state.copy(|_cx: &mut (), src_state: &ForcingState| {
+        src_state.force(&mut (), |_, r| any_t::error(r.dupe()))
+    });
     assert_forced_to_any(&state_copy);
 }

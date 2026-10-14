@@ -26,6 +26,7 @@ use flow_parser::loc_sig::LocSig;
 use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_default::Default;
 use flow_typing_errors::error_message::CallTypeArityCallee;
 use flow_typing_errors::error_message::EAbstractClassData;
@@ -904,17 +905,12 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
     }
 }
 
-fn dump_use_t_<CX>(
-    depth: u32,
-    tvars: &mut BTreeSet<i32>,
-    cx: &Context,
-    use_t: &UseT<CX>,
-) -> String {
+fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT<Cx>) -> String {
     if depth == 0 {
         return string_of_use_ctor(use_t);
     }
 
-    fn p<CX>(_cx: &Context, use_t: &UseT<CX>, reason: bool, extra: &str) -> String {
+    fn p(_cx: &Context, use_t: &UseT<Cx>, reason: bool, extra: &str) -> String {
         let ctor = string_of_use_ctor(use_t);
         let reason_str = String::new();
         let sep = if reason && !extra.is_empty() {
@@ -928,7 +924,7 @@ fn dump_use_t_<CX>(
     let kid =
         move |tvars: &mut BTreeSet<i32>, t: &Type| -> String { dump_t_(depth - 1, tvars, cx, t) };
 
-    let use_kid = move |tvars: &mut BTreeSet<i32>, u: &UseT<CX>| -> String {
+    let use_kid = move |tvars: &mut BTreeSet<i32>, u: &UseT<Cx>| -> String {
         dump_use_t_(depth - 1, tvars, cx, u)
     };
 
@@ -1022,7 +1018,7 @@ fn dump_use_t_<CX>(
         }
     };
 
-    let react_kit = |tvars: &mut BTreeSet<i32>, tool: &type_::react::Tool<CX>| -> String {
+    let react_kit = |tvars: &mut BTreeSet<i32>, tool: &type_::react::Tool<Cx>| -> String {
         match tool {
             type_::react::Tool::CreateElement(box type_::react::CreateElementData {
                 jsx_props,
@@ -1257,7 +1253,7 @@ fn dump_use_t_<CX>(
         format!("({}, {})", resolve_tool_str, tool_str)
     };
 
-    let method_action = |tvars: &mut BTreeSet<i32>, action: &type_::MethodAction<CX>| -> String {
+    let method_action = |tvars: &mut BTreeSet<i32>, action: &type_::MethodAction<Cx>| -> String {
         match action {
             type_::MethodAction::CallM(box type_::CallMData { methodcalltype, .. })
             | type_::MethodAction::ChainM(box type_::ChainMData { methodcalltype, .. }) => {
@@ -1751,7 +1747,7 @@ fn dump_tvar_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, id: i32) -> S
     tvars.insert(id);
 
     let node = if cx.is_inference_node(id) {
-        Node::create_root(cx.find_constraints(id).1)
+        Node::create_root(cx.constraints_of(id).1)
     } else {
         cx.find_tvar(id)
     };
@@ -1868,7 +1864,7 @@ pub fn dump_t(depth: Option<u32>, cx: &Context, t: &Type) -> String {
     dump_t_(depth.unwrap_or(3), &mut BTreeSet::new(), cx, t)
 }
 
-pub fn dump_use_t<CX>(depth: Option<u32>, cx: &Context, use_t: &UseT<CX>) -> String {
+pub fn dump_use_t(depth: Option<u32>, cx: &Context, use_t: &UseT<Cx>) -> String {
     dump_use_t_(depth.unwrap_or(3), &mut BTreeSet::new(), cx, use_t)
 }
 
@@ -1884,7 +1880,7 @@ pub fn dump_tvar(depth: Option<u32>, cx: &Context, id: i32) -> String {
     dump_tvar_(depth.unwrap_or(3), &mut BTreeSet::new(), cx, id)
 }
 
-pub fn dump_flow<CX>(depth: Option<u32>, cx: &Context, t: &Type, use_t: &UseT<CX>) -> String {
+pub fn dump_flow(depth: Option<u32>, cx: &Context, t: &Type, use_t: &UseT<Cx>) -> String {
     let depth = depth.unwrap_or(3);
     format!(
         "Lower: {} ~>\n Upper: {}",
@@ -1928,7 +1924,7 @@ pub fn string_of_default<L: Clone + std::fmt::Debug>(default: &Default<L>) -> St
         default,
         &|loc| format!("Expr {:?}", loc),
         &|str1, str2| format!("Cons ({}) ({})", str1, str2),
-        &|_, str, sel| format!("Selector ({}) ({})", str, string_of_selector(&sel)),
+        &mut |_, str, sel| format!("Selector ({}) ({})", str, string_of_selector(&sel)),
     )
 }
 
@@ -4692,12 +4688,12 @@ pub mod verbose {
         }
     }
 
-    pub fn print_types_if_verbose<CX>(
+    pub fn print_types_if_verbose(
         cx: &Context,
         trace: &DepthTrace,
         note: Option<&str>,
         t: &Type,
-        use_t: &UseT<CX>,
+        use_t: &UseT<Cx>,
     ) {
         if !cx.is_verbose() {
             return;

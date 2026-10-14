@@ -72,7 +72,7 @@ fn mk_attribute(
 
 fn get_obj_prop_names(
     include_optional: bool,
-    cx: &Context,
+    cx: &mut Context,
     reason: &Reason,
     t: &Type,
 ) -> Option<BTreeSet<FlowSmolStr>> {
@@ -131,7 +131,7 @@ fn name_of_attribute(attribute: &ast::jsx::OpeningAttribute<Loc, Loc>) -> String
 }
 
 fn get_existing_attributes_names(
-    cx: &Context,
+    cx: &mut Context,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
     attributes: &[ast::jsx::OpeningAttribute<Loc, Loc>],
     children: &(Loc, Vec<ast::jsx::Child<Loc, Loc>>),
@@ -242,7 +242,7 @@ enum Found {
 }
 
 struct Mapper<'a, 'cx> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     snippets_enabled: bool,
     tast: &'a ast::Program<ALoc, (ALoc, Type)>,
     target_loc: Loc,
@@ -316,7 +316,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, Found> for Mapper<'_, '_> {
 }
 
 pub fn fill_props(
-    cx: &Context,
+    cx: &mut Context,
     snippets_enabled: bool,
     ast: &ast::Program<Loc, Loc>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,

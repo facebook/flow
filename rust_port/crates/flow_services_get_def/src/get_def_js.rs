@@ -42,7 +42,7 @@ pub enum GetDefResult {
 
 fn extract_member_def<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     file_sig: &std::sync::Arc<FileSig>,
     typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
     force_instance: bool,
@@ -76,7 +76,7 @@ fn extract_member_def<'cx>(
 
 fn process_request<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
     file_sig: &std::sync::Arc<FileSig>,
     scope_info: &scope_api::ScopeInfo<Loc>,
@@ -192,7 +192,7 @@ mod depth {
 
 pub fn get_def<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     file_sig: &std::sync::Arc<FileSig>,
     file_content: Option<&str>,
     ast: &ast::Program<Loc, Loc>,
@@ -223,7 +223,7 @@ pub fn get_def<'cx>(
 
     fn loop_fn<'cx>(
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         is_legit_require: &dyn Fn(&ALoc) -> bool,
         typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
         file_sig: &std::sync::Arc<FileSig>,

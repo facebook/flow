@@ -111,7 +111,7 @@ impl HintNode {
 }
 
 pub type AstHint = Hint<
-    'static,
+    (),
     HintNode,
     Option<ast::expression::CallTypeArgs<ALoc, ALoc>>,
     ast::expression::ArgList<ALoc, ALoc>,

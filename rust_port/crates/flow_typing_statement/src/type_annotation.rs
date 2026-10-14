@@ -146,7 +146,7 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
     }
 
     fn subst_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         param: &Self::Param,
     ) -> Self::Param {
@@ -155,7 +155,7 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
     }
 
     fn subst_rest<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         rest: &Self::Rest,
     ) -> Self::Rest {
@@ -164,7 +164,7 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
     }
 
     fn subst_this<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         this: &Self::ThisParam,
     ) -> Self::ThisParam {
@@ -173,17 +173,17 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
     }
 
     fn eval_param<'a>(
-        _cx: &Context<'a>,
+        _cx: &mut Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, flow_typing_utils::abnormal::CheckExprError> {
         Ok(param.1.clone())
     }
 
-    fn eval_rest<'a>(_cx: &Context<'a>, rest: &Self::Rest) -> Self::RestAst {
+    fn eval_rest<'a>(_cx: &mut Context<'a>, rest: &Self::Rest) -> Self::RestAst {
         rest.1.clone()
     }
 
-    fn eval_this<'a>(_cx: &Context<'a>, this: &Self::ThisParam) -> Self::ThisAst {
+    fn eval_this<'a>(_cx: &mut Context<'a>, this: &Self::ThisParam) -> Self::ThisAst {
         this.1.clone()
     }
 }
@@ -230,14 +230,14 @@ impl crate::component_params_intf::Config for TypeAnnotationConfig {
     }
 
     fn eval_param<'a>(
-        _cx: &Context<'a>,
+        _cx: &mut Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, flow_typing_utils::abnormal::CheckExprError> {
         Ok(param.1.clone())
     }
 
     fn eval_rest<'a>(
-        _cx: &Context<'a>,
+        _cx: &mut Context<'a>,
         rest: &Self::Rest,
     ) -> Result<Self::RestAst, flow_typing_utils::abnormal::CheckExprError> {
         Ok(rest.1.clone())
@@ -306,7 +306,7 @@ fn ident_name(id: &ast::Identifier<ALoc, ALoc>) -> FlowSmolStr {
 }
 
 pub fn error_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     msg: ErrorMessage<ALoc>,
     t_in: &ast::types::Type<ALoc, ALoc>,
@@ -320,12 +320,14 @@ pub fn error_type<'a>(
 }
 
 fn check_type_arg_arity<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     t_ast: &ast::types::Type<ALoc, ALoc>,
     params: Option<&ast::types::TypeArgs<ALoc, ALoc>>,
     n: i32,
-    f: impl FnOnce() -> Result<
+    f: impl FnOnce(
+        &mut Context<'a>,
+    ) -> Result<
         ast::types::Type<ALoc, (ALoc, Type)>,
         flow_utils_concurrency::job_error::JobError,
     >,
@@ -333,7 +335,7 @@ fn check_type_arg_arity<'a>(
     match params {
         None => {
             if n == 0 {
-                f()
+                f(cx)
             } else {
                 Ok(error_type(
                     cx,
@@ -346,7 +348,7 @@ fn check_type_arg_arity<'a>(
         Some(targs) => {
             let l_len = targs.arguments.len() as i32;
             if n == l_len && n != 0 {
-                f()
+                f(cx)
             } else {
                 Ok(error_type(
                     cx,
@@ -367,14 +369,14 @@ fn mk_eval_id<'a>(cx: &Context<'a>, loc: ALoc) -> type_::eval::Id {
     }
 }
 
-fn add_unclear_type_error_if_not_lib_file<'a>(cx: &Context<'a>, loc: ALoc) {
+fn add_unclear_type_error_if_not_lib_file<'a>(cx: &mut Context<'a>, loc: ALoc) {
     if !cx.is_global_lib_context() {
         flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EUnclearType(loc));
     }
 }
 
 pub fn polarity<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     on: flow_typing_errors::intermediate_error_types::VarianceSigilParent,
     variance: Option<&ast::Variance<ALoc>>,
 ) -> Polarity {
@@ -433,7 +435,7 @@ pub fn polarity<'a>(
 // =========================================================================
 
 fn use_distributive_tparam_name<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     name: &FlowSmolStr,
     name_loc: ALoc,
     tparams_map: &mut FlowOrdMap<SubstName, Type>,
@@ -455,7 +457,7 @@ fn use_distributive_tparam_name<'a>(
                 is_const: false,
             });
             let generic =
-                flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), &distributive_tparam);
+                flow_js_utils::generic_of_tparam(cx, |_, x: &Type| x.dupe(), &distributive_tparam);
             tparams_map.insert(subst_name.dupe(), generic);
             Some(subst_name)
         }
@@ -464,7 +466,7 @@ fn use_distributive_tparam_name<'a>(
 }
 
 fn use_distributive_tparam_name_from_ast<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     ast_type: &ast::types::Type<ALoc, ALoc>,
     tparams_map: &mut FlowOrdMap<SubstName, Type>,
 ) -> Option<SubstName> {
@@ -536,7 +538,7 @@ pub fn method_kind_to_string(kind: MethodKind) -> &'static str {
 // =========================================================================
 
 pub fn error_on_unsupported_variance_annotation<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     kind: &str,
     tparams: Option<&ast::types::TypeParams<ALoc, ALoc>>,
 ) {
@@ -608,7 +610,7 @@ impl ConvertEnv {
 }
 
 fn resolve_computed_key_name(
-    cx: &Context,
+    cx: &mut Context,
     expr: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<
     (
@@ -673,7 +675,7 @@ fn resolve_computed_key_name(
 /// The property a computed key names, or `None` when the key type is not a
 /// single literal and so names no one property.
 fn resolve_key_type_name(
-    cx: &Context,
+    cx: &mut Context,
     key_t: &Type,
 ) -> Result<Option<Name>, flow_utils_concurrency::job_error::JobError> {
     let reason = type_util::reason_of_t(key_t);
@@ -748,7 +750,7 @@ enum KeyRead {
 /// without a label rather than a computed key. Either the key was read as the
 /// value side of a name that also names a type, as in `{[C]: V}`, or it names a
 /// type the namespace half of a merge exposes, as in `{[C.K]: V}`.
-fn key_is_type_name(cx: &Context, key_ast: &ast::types::Type<ALoc, (ALoc, Type)>) -> bool {
+fn key_is_type_name(cx: &mut Context, key_ast: &ast::types::Type<ALoc, (ALoc, Type)>) -> bool {
     is_type_name_value(cx, &key_ast.loc().1) || names_namespace_type(cx, key_ast)
 }
 
@@ -756,7 +758,7 @@ fn key_is_type_name(cx: &Context, key_ast: &ast::types::Type<ALoc, (ALoc, Type)>
 /// class, an enum, or a namespace merged into one of them, which is the only
 /// way a namespace object reaches here at all. Answered from the type rather
 /// than the binding, so an imported class reads like a local one.
-fn is_type_name_value(cx: &Context, t: &Type) -> bool {
+fn is_type_name_value(cx: &mut Context, t: &Type) -> bool {
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::TypeInner;
@@ -783,7 +785,7 @@ fn is_type_name_value(cx: &Context, t: &Type) -> bool {
 /// key went through was always going to land on nothing. Asked of the namespace
 /// the read walked to, so an ordinary missing property, as a misspelled static,
 /// is not mistaken for one.
-fn names_namespace_type(cx: &Context, key_ast: &ast::types::Type<ALoc, (ALoc, Type)>) -> bool {
+fn names_namespace_type(cx: &mut Context, key_ast: &ast::types::Type<ALoc, (ALoc, Type)>) -> bool {
     use ast::types::TypeInner as AstTypeInner;
     use ast::types::generic::Identifier;
     use flow_typing_type::type_::TypeInner;
@@ -820,7 +822,7 @@ fn type_of_type_name(id: &ast::types::generic::Identifier<ALoc, (ALoc, Type)>) -
 /// and names a property when that type is a single literal, matching the
 /// value-level computed key `{[x]: v}`. Returns the typed key and that name.
 fn convert_value_object_type_key<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: &ALoc,
     generic: &ast::types::Generic<ALoc, ALoc>,
 ) -> Result<
@@ -872,7 +874,7 @@ fn empty_interface_annot(loc: ALoc) -> ast::types::Type<ALoc, ALoc> {
 /// property name whose type is this symbol, when known, so it renders as
 /// `[name]` rather than a generic `[symbol]`.
 fn convert_unique_symbol<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     t: &ast::types::Type<ALoc, ALoc>,
     loc: &ALoc,
     symbol_loc: &ALoc,
@@ -913,7 +915,7 @@ fn convert_unique_symbol<'a>(
 /// `Array<unique symbol>`) is still rejected: only the whole annotation
 /// standing for one symbol is meaningful.
 fn convert_single_binding_value<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     value: &ast::types::Type<ALoc, ALoc>,
     name_hint: Option<&FlowSmolStr>,
@@ -956,7 +958,7 @@ pub(crate) fn bare_unique_symbol_loc(t: &ast::types::Type<ALoc, ALoc>) -> Option
 /// the annotation is then rejected outright by [`convert_unique_symbol`] and
 /// saying where it may appear would only point at another error.
 fn report_unique_symbol<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     value: &ast::types::Type<ALoc, ALoc>,
     kind: intermediate_error_types::UnsupportedSyntax,
 ) {
@@ -977,7 +979,7 @@ fn report_unique_symbol<'a>(
 /// polarity rather than the `readonly` keyword, so a covariant property counts
 /// however it is spelled.
 fn check_unique_symbol_read_only<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     value: &ast::types::Type<ALoc, ALoc>,
     polarity: Polarity,
 ) {
@@ -996,7 +998,7 @@ fn check_unique_symbol_read_only<'a>(
 /// instance field is one per instance, so a single annotation there would be
 /// shared by every instance. TypeScript requires the same (`TS1331`).
 pub(crate) fn check_unique_symbol_class_field<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     value: &ast::types::Type<ALoc, ALoc>,
     static_: bool,
     polarity: Polarity,
@@ -1014,7 +1016,7 @@ pub(crate) fn check_unique_symbol_class_field<'a>(
 /// Report a bare `unique symbol` on a member of an interface, object type, or
 /// `declare class` body, under whichever rule that body imposes.
 fn check_unique_symbol_member<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     value: &ast::types::Type<ALoc, ALoc>,
     obj_kind: &intermediate_error_types::ObjKind,
     static_: bool,
@@ -1030,7 +1032,7 @@ fn check_unique_symbol_member<'a>(
 /// Report a bare `unique symbol` on a binding that can be reassigned. See
 /// [`check_unique_symbol_read_only`]. TypeScript requires the same (`TS1332`).
 pub(crate) fn check_unique_symbol_const<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     value: &ast::types::Type<ALoc, ALoc>,
 ) {
     report_unique_symbol(
@@ -1044,7 +1046,7 @@ pub(crate) fn check_unique_symbol_const<'a>(
 /// takes a different value on each iteration however it is declared. TypeScript
 /// requires the same (`TS1334`).
 pub(crate) fn check_unique_symbol_loop_binding<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     id: &ast::pattern::Pattern<ALoc, ALoc>,
 ) {
     if let ast::pattern::Pattern::Identifier { inner, .. } = id
@@ -1059,7 +1061,7 @@ pub(crate) fn check_unique_symbol_loop_binding<'a>(
 }
 
 fn convert_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     t: &ast::types::Type<ALoc, ALoc>,
 ) -> Result<ast::types::Type<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
@@ -1680,7 +1682,6 @@ fn convert_inner<'a>(
                     })
                 }
                 _ => {
-                    drop(environment);
                     let (tparam_tast, t) = env
                         .infer_tparams_map
                         .get(tparam_loc)
@@ -1878,7 +1879,7 @@ fn convert_inner<'a>(
                 let id_name = ident;
                 let name = &ident.name;
                 // Comments are innecessary, so they can be stripped to meet the generic requirements
-                let convert_type_params = |cx,
+                let convert_type_params = |cx: &mut Context<'a>,
                                            env: &mut ConvertEnv,
                                            targs: Option<&ast::types::TypeArgs<ALoc, ALoc>>|
                  -> Result<
@@ -1929,7 +1930,7 @@ fn convert_inner<'a>(
                     }))
                 };
                 let local_generic_type =
-                    |cx,
+                    |cx: &mut Context<'a>,
                      env: &mut ConvertEnv,
                      name: &FlowSmolStr,
                      name_loc: ALoc,
@@ -1979,7 +1980,7 @@ fn convert_inner<'a>(
                                 t,
                                 inner.targs.as_ref(),
                                 0,
-                                || {
+                                |_| {
                                     let tparam_t = env
                                         .tparams_map
                                         .get(&SubstName::name(FlowSmolStr::new_inline("this")))
@@ -2011,7 +2012,7 @@ fn convert_inner<'a>(
                             .invalid_type_param_default_locs
                             .contains(&name_loc) =>
                     {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |_| {
                             let mut tp = env
                                 .tparams_map
                                 .get(&SubstName::name(name.dupe()))
@@ -2063,7 +2064,7 @@ fn convert_inner<'a>(
                         if flow_common::files::has_ts_ext(cx.file())
                             || cx.is_global_libdef(cx.file()) =>
                     {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |cx| {
                             let interface_ast = empty_interface_annot(loc.dupe());
                             let result = convert_inner(cx, env, &interface_ast)?;
                             let (_, result_t) = result.loc();
@@ -2116,13 +2117,13 @@ fn convert_inner<'a>(
                     // their use sites, so this body is never consulted; we accept the name
                     // in library definitions and model it as `empty`.
                     "intrinsic" if cx.is_global_lib_context() => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |_| {
                             Ok(reconstruct_ast(empty_t::at(loc.dupe()), None, None))
                         })?
                     }
                     // NoInfer intrinsic that makes every GenericT inside it no_infer
                     "NoInfer" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let mut env_no_infer = env.clone();
                             env_no_infer.in_no_infer = true;
                             let (elemts, targs_ast) =
@@ -2133,7 +2134,7 @@ fn convert_inner<'a>(
                     }
                     kind_name @ ("Uppercase" | "Lowercase" | "Capitalize" | "Uncapitalize") => {
                         let kind = string_case_transform::kind_of_name(kind_name).unwrap();
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let arg = ts.into_iter().next().unwrap();
@@ -2150,7 +2151,7 @@ fn convert_inner<'a>(
                                 type_::str_module_t::at(loc.dupe()),
                             );
                             let t = string_case_transform::resolve(
-                                Some(&|r, t| {
+                                Some(&|cx: &mut Context<'_>, r: &Reason, t: &Type| {
                                     FlowJs::possible_concrete_types_for_inspection(cx, r, t)
                                 }),
                                 cx,
@@ -2163,7 +2164,7 @@ fn convert_inner<'a>(
                     }
                     // Array<T>
                     "Array" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (elemts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let elem_t = elemts.into_iter().next().unwrap();
@@ -2203,7 +2204,7 @@ fn convert_inner<'a>(
                                 },
                             )),
                         );
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (elemts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let elemt = elemts.into_iter().next().unwrap();
@@ -2234,7 +2235,7 @@ fn convert_inner<'a>(
                                 },
                             )),
                         );
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2271,7 +2272,7 @@ fn convert_inner<'a>(
                     ),
                     // Partial<T> makes all of `T`'s properties optional
                     "Partial" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2296,7 +2297,7 @@ fn convert_inner<'a>(
                     }
                     // Required<T> makes all of `T`'s optional properties required.
                     "Required" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2331,7 +2332,7 @@ fn convert_inner<'a>(
                         if flow_common::files::has_ts_ext(cx.file())
                             || cx.is_global_libdef(cx.file()) =>
                     {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (_ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let interface_ast = empty_interface_annot(loc.dupe());
@@ -2365,7 +2366,7 @@ fn convert_inner<'a>(
                                 ),
                             );
                         }
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 2, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 2, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let mut ts_iter = ts.into_iter();
@@ -2429,7 +2430,7 @@ fn convert_inner<'a>(
                                 },
                             )),
                         );
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2461,7 +2462,7 @@ fn convert_inner<'a>(
                                 ),
                             );
                         }
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2496,7 +2497,7 @@ fn convert_inner<'a>(
                                 },
                             )),
                         );
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2524,7 +2525,7 @@ fn convert_inner<'a>(
                                 },
                             )),
                         );
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2549,7 +2550,7 @@ fn convert_inner<'a>(
                     }
                     // Values<T> replaces $Values<T>
                     "Values" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2571,7 +2572,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "$Exact" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2595,7 +2596,7 @@ fn convert_inner<'a>(
                     }
                     // Exports<'M'> is the type of the exports of module 'M'
                     "$Exports" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             Ok(match &inner.targs {
                                 Some(targs_node)
                                     if !targs_node.arguments.is_empty()
@@ -2675,7 +2676,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "$KeyMirror" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let t1 = ts.into_iter().next().unwrap();
@@ -2698,7 +2699,7 @@ fn convert_inner<'a>(
                     }
                     // Class<T> is the type of the class whose instances are of type T
                     "Class" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2719,7 +2720,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "Function" if !cx.function_and_object_type_is_no_longer_any() => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |cx| {
                             add_unclear_type_error_if_not_lib_file(cx, loc.dupe());
                             let reason = reason::mk_annot_reason(
                                 reason::VirtualReasonDesc::RFunctionType,
@@ -2733,7 +2734,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "Object" if !cx.function_and_object_type_is_no_longer_any() => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |cx| {
                             add_unclear_type_error_if_not_lib_file(cx, loc.dupe());
                             let reason = reason::mk_annot_reason(
                                 reason::VirtualReasonDesc::RObjectType,
@@ -2762,7 +2763,7 @@ fn convert_inner<'a>(
                             reason::VirtualReasonDesc::REnum { name: None },
                             loc.dupe(),
                         );
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let representation_t = ts.into_iter().next().unwrap();
@@ -2796,7 +2797,7 @@ fn convert_inner<'a>(
                             reason::VirtualReasonDesc::REnum { name: None },
                             loc.dupe(),
                         );
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2814,7 +2815,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "Function$Prototype$Bind" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |_| {
                             let reason = reason::mk_annot_reason(
                                 reason::VirtualReasonDesc::RFunctionPrototype,
                                 loc.dupe(),
@@ -2827,7 +2828,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "$Flow$EnforceOptimized" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2836,7 +2837,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "Readonly" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -2858,7 +2859,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "ReadonlyArray" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (elemts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let elemt = elemts.into_iter().next().unwrap();
@@ -2881,7 +2882,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "NonNullable" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
@@ -3434,6 +3435,49 @@ fn convert_inner<'a>(
                     type_::VirtualUseOp::Op(Arc::new(type_::VirtualRootUseOp::EvalMappedType {
                         mapped_type: reason.dupe(),
                     }));
+                let mapped_type_variance = {
+                    use flow_parser::ast::types::object::MappedTypeVarianceOp;
+                    match (variance, variance_op) {
+                        (Some(v), Some(MappedTypeVarianceOp::Add))
+                            if v.kind == flow_parser::ast::VarianceKind::Readonly =>
+                        {
+                            type_::MappedTypeVariance::OverrideVariance(Polarity::Positive)
+                        }
+                        (Some(v), None) if v.kind == flow_parser::ast::VarianceKind::Readonly => {
+                            type_::MappedTypeVariance::OverrideVariance(Polarity::Positive)
+                        }
+                        (Some(v), Some(MappedTypeVarianceOp::Remove))
+                            if v.kind == flow_parser::ast::VarianceKind::Readonly =>
+                        {
+                            type_::MappedTypeVariance::RemoveVariance(Polarity::Positive)
+                        }
+                        (Some(v), Some(MappedTypeVarianceOp::Add))
+                            if v.kind == flow_parser::ast::VarianceKind::Writeonly =>
+                        {
+                            type_::MappedTypeVariance::OverrideVariance(Polarity::Negative)
+                        }
+                        (Some(v), None) if v.kind == flow_parser::ast::VarianceKind::Writeonly => {
+                            type_::MappedTypeVariance::OverrideVariance(Polarity::Negative)
+                        }
+                        (Some(v), Some(MappedTypeVarianceOp::Remove))
+                            if v.kind == flow_parser::ast::VarianceKind::Writeonly =>
+                        {
+                            type_::MappedTypeVariance::RemoveVariance(Polarity::Negative)
+                        }
+                        _ => {
+                            let pol = polarity(
+                                            cx,
+                                            flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                                            variance.as_ref(),
+                                        );
+                            if pol == Polarity::Neutral {
+                                type_::MappedTypeVariance::KeepVariance
+                            } else {
+                                type_::MappedTypeVariance::OverrideVariance(pol)
+                            }
+                        }
+                    }
+                };
                 let eval_t = FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                     cx,
                     use_op,
@@ -3445,65 +3489,7 @@ fn convert_inner<'a>(
                         name_type: poly_name_type,
                         mapped_type_flags: type_::MappedTypeFlags {
                             optional: mapped_type_optionality,
-                            variance: {
-                                use flow_parser::ast::types::object::MappedTypeVarianceOp;
-                                match (variance, variance_op) {
-                                    (Some(v), Some(MappedTypeVarianceOp::Add))
-                                        if v.kind == flow_parser::ast::VarianceKind::Readonly =>
-                                    {
-                                        type_::MappedTypeVariance::OverrideVariance(
-                                            Polarity::Positive,
-                                        )
-                                    }
-                                    (Some(v), None)
-                                        if v.kind == flow_parser::ast::VarianceKind::Readonly =>
-                                    {
-                                        type_::MappedTypeVariance::OverrideVariance(
-                                            Polarity::Positive,
-                                        )
-                                    }
-                                    (Some(v), Some(MappedTypeVarianceOp::Remove))
-                                        if v.kind == flow_parser::ast::VarianceKind::Readonly =>
-                                    {
-                                        type_::MappedTypeVariance::RemoveVariance(
-                                            Polarity::Positive,
-                                        )
-                                    }
-                                    (Some(v), Some(MappedTypeVarianceOp::Add))
-                                        if v.kind == flow_parser::ast::VarianceKind::Writeonly =>
-                                    {
-                                        type_::MappedTypeVariance::OverrideVariance(
-                                            Polarity::Negative,
-                                        )
-                                    }
-                                    (Some(v), None)
-                                        if v.kind == flow_parser::ast::VarianceKind::Writeonly =>
-                                    {
-                                        type_::MappedTypeVariance::OverrideVariance(
-                                            Polarity::Negative,
-                                        )
-                                    }
-                                    (Some(v), Some(MappedTypeVarianceOp::Remove))
-                                        if v.kind == flow_parser::ast::VarianceKind::Writeonly =>
-                                    {
-                                        type_::MappedTypeVariance::RemoveVariance(
-                                            Polarity::Negative,
-                                        )
-                                    }
-                                    _ => {
-                                        let pol = polarity(
-                                            cx,
-                                            flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
-                                            variance.as_ref(),
-                                        );
-                                        if pol == Polarity::Neutral {
-                                            type_::MappedTypeVariance::KeepVariance
-                                        } else {
-                                            type_::MappedTypeVariance::OverrideVariance(pol)
-                                        }
-                                    }
-                                }
-                            },
+                            variance: mapped_type_variance,
                         },
                         distributive_tparam_name,
                     })),
@@ -3860,7 +3846,7 @@ fn convert_inner<'a>(
 }
 
 fn convert_list_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     asts: &[ast::types::Type<ALoc, ALoc>],
 ) -> Result<
@@ -3879,7 +3865,7 @@ fn convert_list_inner<'a>(
 }
 
 pub fn convert_opt<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: &FlowOrdMap<SubstName, Type>,
     ast_opt: Option<&ast::types::Type<ALoc, ALoc>>,
 ) -> Result<
@@ -3899,7 +3885,7 @@ pub fn convert_opt<'a>(
 }
 
 pub fn convert_qualification<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     id: &ast::types::generic::Identifier<ALoc, ALoc>,
 ) -> Result<
     (Type, ast::types::generic::Identifier<ALoc, (ALoc, Type)>),
@@ -3909,7 +3895,7 @@ pub fn convert_qualification<'a>(
 }
 
 fn convert_qualification_with_lookup_mode<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     lookup_mode: Option<type_env::LookupMode>,
     id: &ast::types::generic::Identifier<ALoc, ALoc>,
 ) -> Result<
@@ -4060,7 +4046,7 @@ fn convert_qualification_with_lookup_mode<'a>(
 }
 
 fn convert_typeof<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     target: &ast::types::typeof_::Target<ALoc, ALoc>,
 ) -> Result<
     (Type, ast::types::typeof_::Target<ALoc, (ALoc, Type)>),
@@ -4121,7 +4107,6 @@ fn convert_typeof<'a>(
                 (t, mapped)
             } else {
                 let t = if flow_typing_flow_js::type_inference_hooks_js::dispatch_id_hook(
-                    cx,
                     &ident.name,
                     ident.loc.dupe(),
                 ) {
@@ -4219,7 +4204,7 @@ fn convert_typeof<'a>(
 }
 
 fn convert_render_type_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     renders: &ast::types::Renders<ALoc, ALoc>,
@@ -4276,7 +4261,7 @@ fn convert_render_type_inner<'a>(
                     ast::types::RendersVariant::Star => type_::RendersVariant::RendersStar,
                 };
                 fn concretize_fn<'cx>(
-                    cx_arg: &Context<'cx>,
+                    cx_arg: &mut Context<'cx>,
                     t_arg: &Type,
                 ) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>
                 {
@@ -4295,7 +4280,7 @@ fn convert_render_type_inner<'a>(
                     }
                 }
                 fn is_iterable_fn<'cx>(
-                    cx_arg: &Context<'cx>,
+                    cx_arg: &mut Context<'cx>,
                     t_arg: &Type,
                 ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
                     let r = type_util::reason_of_t(t_arg).dupe();
@@ -4335,7 +4320,7 @@ fn convert_render_type_inner<'a>(
 }
 
 fn convert_object<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     exact: bool,
@@ -4476,7 +4461,7 @@ fn convert_object<'a>(
     }
 
     fn mk_object<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         loc: ALoc,
         src_loc: bool,
         exact: bool,
@@ -4520,7 +4505,7 @@ fn convert_object<'a>(
     }
 
     fn mk_object_annot<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         loc: ALoc,
         exact: bool,
         call: Option<Type>,
@@ -4556,7 +4541,7 @@ fn convert_object<'a>(
     }
 
     fn named_property<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         acc: &mut Acc,
         prop: &ast::types::object::NormalProperty<ALoc, ALoc>,
@@ -4595,7 +4580,7 @@ fn convert_object<'a>(
                         ))),
                     );
                 }
-                let prop_of_name = |cx,
+                let prop_of_name = |cx: &mut Context<'a>,
                                     env: &mut ConvertEnv,
                                     acc: &mut Acc,
                                     key_loc: ALoc,
@@ -5474,7 +5459,7 @@ fn convert_object<'a>(
 }
 
 fn convert_tuple_element<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     element: &ast::types::tuple::Element<ALoc, ALoc>,
 ) -> Result<
@@ -5641,7 +5626,7 @@ fn convert_tuple_element<'a>(
 }
 
 fn check_guard_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     fparams: &[type_::FunParam],
     guard_name: &FlowSmolStr,
     guard_t: &Type,
@@ -5673,7 +5658,7 @@ fn type_guard_return_t(kind: ast::types::TypeGuardKind, loc: &ALoc) -> Type {
 }
 
 fn convert_type_guard_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     fparams: &[type_::FunParam],
     gloc: ALoc,
@@ -5726,7 +5711,7 @@ fn convert_type_guard_inner<'a>(
 }
 
 fn error_type_guard<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     x: &ast::Identifier<ALoc, ALoc>,
@@ -5763,7 +5748,7 @@ fn error_type_guard<'a>(
 }
 
 fn convert_return_annotation_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     meth_kind: MethodKind,
     params: &ast::types::function::Params<ALoc, ALoc>,
@@ -6009,7 +5994,7 @@ pub fn typed_function_param_ast(
 }
 
 fn mk_method_func_sig<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     meth_kind: MethodKind,
     loc: ALoc,
@@ -6022,7 +6007,7 @@ fn mk_method_func_sig<'a>(
     flow_utils_concurrency::job_error::JobError,
 > {
     fn add_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         x: &mut func_class_sig_types::param::Param<FuncTypeParamsConfig>,
         param: &ast::types::function::Param<ALoc, ALoc>,
@@ -6043,7 +6028,7 @@ fn mk_method_func_sig<'a>(
     }
 
     fn add_rest<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         x: &mut func_class_sig_types::param::Param<FuncTypeParamsConfig>,
         rest_param: &ast::types::function::RestParam<ALoc, ALoc>,
@@ -6070,7 +6055,7 @@ fn mk_method_func_sig<'a>(
     }
 
     fn add_this<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         x: &mut func_class_sig_types::param::Param<FuncTypeParamsConfig>,
         this_param: &ast::types::function::ThisParam<ALoc, ALoc>,
@@ -6093,7 +6078,7 @@ fn mk_method_func_sig<'a>(
     }
 
     fn convert_params<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         params_node: &ast::types::function::Params<ALoc, ALoc>,
     ) -> Result<
@@ -6193,7 +6178,7 @@ fn mk_method_func_sig<'a>(
 }
 
 fn mk_type_available_annotation_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     annotation: &ast::types::Annotation<ALoc, ALoc>,
 ) -> Result<
@@ -6213,7 +6198,7 @@ fn mk_type_available_annotation_inner<'a>(
         },
         _ => false,
     };
-    let convert_annot = |cx: &Context<'a>, env: &mut ConvertEnv| match &binds_single_value {
+    let convert_annot = |cx: &mut Context<'a>, env: &mut ConvertEnv| match &binds_single_value {
         BindsSingleValue::Yes(name_hint) => {
             convert_single_binding_value(cx, env, annot, name_hint.as_ref())
         }
@@ -6259,7 +6244,7 @@ fn mk_type_available_annotation_inner<'a>(
 }
 
 fn mk_function_type_annotation_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     func: &(ALoc, ast::types::Function<ALoc, ALoc>),
 ) -> Result<
@@ -6333,7 +6318,7 @@ fn mk_singleton_bigint(loc: ALoc, num: Option<i64>, raw: &str) -> Type {
 /// Given the type of expression C and type arguments T1...Tn, return the type of
 /// values described by C<T1,...,Tn>, or C when there are no type arguments.
 fn mk_nominal_type_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     reason: Reason,
     c: Type,
@@ -6401,7 +6386,7 @@ fn mk_nominal_type_inner<'a>(
 }
 
 fn mk_type_param_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     kind: flow_parser::ast_visitor::TypeParamsContext,
     type_param: &ast::types::TypeParam<ALoc, ALoc>,
@@ -6523,7 +6508,7 @@ fn mk_type_param_inner<'a>(
         is_this: false,
         is_const,
     });
-    let t = flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), &tparam);
+    let t = flow_js_utils::generic_of_tparam(cx, |_, x: &Type| x.dupe(), &tparam);
     let name_ast = ast::Identifier::new(ast::IdentifierInner {
         loc: (name_loc, t.dupe()),
         name: id.name.dupe(),
@@ -6549,7 +6534,7 @@ fn mk_type_param_inner<'a>(
 /// take a list of AST type param declarations,
 /// do semantic checking and create types for them.
 fn mk_type_param_declarations_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     kind: flow_parser::ast_visitor::TypeParamsContext,
     tparams: Option<&ast::types::TypeParams<ALoc, ALoc>>,
@@ -6606,7 +6591,7 @@ fn mk_type_param_declarations_inner<'a>(
 }
 
 fn type_identifier<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     name: &FlowSmolStr,
     loc: ALoc,
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
@@ -6623,7 +6608,7 @@ fn type_identifier<'a>(
 /// keeps the applied type. The lookup itself would report an unbound name,
 /// so it only runs when the global resolves.
 fn unapplied_type_identifier_opt<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     name: &FlowSmolStr,
     loc: ALoc,
 ) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
@@ -6635,7 +6620,7 @@ fn unapplied_type_identifier_opt<'a>(
 }
 
 pub fn binding_kind_of_generic_id_pre_convert(
-    cx: &Context,
+    cx: &mut Context,
     id: &ast::types::generic::Identifier<ALoc, ALoc>,
 ) -> ClassLikeBindingKind {
     use ast::types::generic::Identifier;
@@ -6657,7 +6642,7 @@ pub fn binding_kind_of_generic_id_pre_convert(
 }
 
 pub fn binding_kind_of_generic_id_post_convert(
-    cx: &Context,
+    cx: &mut Context,
     id_pre_convert: &ast::types::generic::Identifier<ALoc, ALoc>,
     converted_t: &Type,
 ) -> Result<ClassLikeBindingKind, flow_utils_concurrency::job_error::JobError> {
@@ -6821,7 +6806,7 @@ pub fn binding_kind_of_generic_id_post_convert(
 }
 
 fn mk_interface_super<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     generic_with_loc: &(ALoc, ast::types::Generic<ALoc, ALoc>),
 ) -> Result<
@@ -6901,7 +6886,7 @@ fn is_function_like(properties: &[ast::types::object::Property<ALoc, ALoc>]) -> 
 /// already been removed, and are responsible for building the typed AST node
 /// that matches their own syntax.
 fn mk_inline_interface_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     loc: &ALoc,
     reason: Reason,
@@ -6965,7 +6950,7 @@ fn mk_inline_interface_type<'a>(
 /// symbol`. A symbol key has no name to render the value after, hence
 /// `as_smol_str_opt`.
 fn convert_indexer_value(
-    cx: &Context,
+    cx: &mut Context,
     env: &mut ConvertEnv,
     indexer: &ast::types::object::Indexer<ALoc, ALoc>,
     key_ast: ast::types::Type<ALoc, (ALoc, Type)>,
@@ -7008,7 +6993,7 @@ fn convert_indexer_value(
 }
 
 fn convert_indexer_internal(
-    cx: &Context,
+    cx: &mut Context,
     env: &mut ConvertEnv,
     indexer: &ast::types::object::Indexer<ALoc, ALoc>,
 ) -> Result<
@@ -7054,7 +7039,7 @@ enum InterfaceKeyForm<'a> {
 }
 
 fn interface_key_form<'a>(
-    cx: &Context,
+    cx: &mut Context,
     indexer: &'a ast::types::object::Indexer<ALoc, ALoc>,
 ) -> InterfaceKeyForm<'a> {
     // The labeled form `[label: K]` is an index signature outright.
@@ -7207,7 +7192,7 @@ impl DeferredMethod {
 }
 
 fn add_interface_properties<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     record_for_interface: Option<ALoc>,
     enclosing_class_abstract: bool,
@@ -7222,7 +7207,7 @@ fn add_interface_properties<'a>(
     ),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let record_field = |name: &Name, t: &Type| {
+    let record_field = |cx: &mut Context<'a>, name: &Name, t: &Type| {
         if let Some(id_loc) = &record_for_interface {
             cx.record_interface_field(id_loc.dupe(), name.dupe(), t.dupe());
         }
@@ -7370,7 +7355,7 @@ fn add_interface_properties<'a>(
                         // Keep the full `Name` so a `unique symbol` indexer key
                         // retains its nominal identity in the (now `Name`-keyed)
                         // class Signature, matching the computed-key path.
-                        record_field(&name, &value_t);
+                        record_field(cx, &name, &value_t);
                         class_sig::add_field(
                             idx.static_,
                             false,
@@ -7617,7 +7602,8 @@ fn add_interface_properties<'a>(
                             np.variance.as_ref(),
                         )
                     };
-                    let add_field_or_proto = |name: Name,
+                    let add_field_or_proto = |cx: &mut Context<'a>,
+                                              name: Name,
                                               id_loc: ALoc,
                                               t: Type,
                                               s: &mut func_class_sig_types::class::Class<
@@ -7634,7 +7620,7 @@ fn add_interface_properties<'a>(
                                 s,
                             );
                         } else {
-                            record_field(&name, &t);
+                            record_field(cx, &name, &t);
                             class_sig::add_field(
                                 np.static_,
                                 abstract_on,
@@ -7648,7 +7634,8 @@ fn add_interface_properties<'a>(
                         }
                     };
                     let mut handle_init_only_property =
-                        |name: Name,
+                        |cx: &mut Context<'a>,
+                         name: Name,
                          id_loc: ALoc,
                          rebuild_key: &dyn Fn(Type) -> ast::expression::object::Key<ALoc, (ALoc, Type)>|
                          -> Option<ast::types::object::Property<ALoc, (ALoc, Type)>> {
@@ -7670,7 +7657,13 @@ fn add_interface_properties<'a>(
                                     } else {
                                         t
                                     };
-                                    add_field_or_proto(name.dupe(), id_loc.dupe(), t.dupe(), &mut s);
+                                    add_field_or_proto(
+                                        cx,
+                                        name.dupe(),
+                                        id_loc.dupe(),
+                                        t.dupe(),
+                                        &mut s,
+                                    );
                                     Some(Property::NormalProperty(
                                         ast::types::object::NormalProperty {
                                             loc: np.loc.dupe(),
@@ -7766,6 +7759,7 @@ fn add_interface_properties<'a>(
                                                 );
                                                 if optional_method {
                                                     add_field_or_proto(
+                                                        cx,
                                                         name.dupe(),
                                                         id_loc.dupe(),
                                                         type_util::optional(ft.dupe(), None, false),
@@ -7872,6 +7866,7 @@ fn add_interface_properties<'a>(
                                                     t.dupe()
                                                 };
                                                 add_field_or_proto(
+                                                    cx,
                                                     name.dupe(),
                                                     id_loc.dupe(),
                                                     t_with_optional.dupe(),
@@ -7919,6 +7914,7 @@ fn add_interface_properties<'a>(
                                                 let ck_loc = ck.loc.dupe();
                                                 let ck_comments = ck.comments.dupe();
                                                 if let Some(prop_ast) = handle_init_only_property(
+                                                    cx,
                                                     name.dupe(),
                                                     id_loc.dupe(),
                                                     &|_t| {
@@ -7981,8 +7977,10 @@ fn add_interface_properties<'a>(
                     };
                     type RebuildKey = Box<dyn Fn(Type) -> Key<ALoc, (ALoc, Type)>>;
                     let resolve_named_key =
-                        |check_variance: bool| -> Option<(FlowSmolStr, ALoc, RebuildKey)> {
-                            let check_num =
+                        |cx: &mut Context<'a>,
+                         check_variance: bool|
+                         -> Option<(FlowSmolStr, ALoc, RebuildKey)> {
+                            let mut check_num =
                                 |key_loc: ALoc,
                                  num_value: f64,
                                  num_lit: ast::NumberLiteral<ALoc>|
@@ -8073,7 +8071,7 @@ fn add_interface_properties<'a>(
                                     inner: func,
                                 } = &**value =>
                             {
-                                match resolve_named_key(false) {
+                                match resolve_named_key(cx, false) {
                                     None => {
                                         let Ok(error_prop) =
                                             polymorphic_ast_mapper::object_property_type(
@@ -8119,6 +8117,7 @@ fn add_interface_properties<'a>(
                                         );
                                         if optional_method {
                                             add_field_or_proto(
+                                                cx,
                                                 Name::new(name.dupe()),
                                                 key_loc.dupe(),
                                                 type_util::optional(ft.dupe(), None, false),
@@ -8204,7 +8203,7 @@ fn add_interface_properties<'a>(
                         match &np.value {
                             // field with annotation
                             ast::types::object::PropertyValue::Init(Some(value)) => {
-                                match resolve_named_key(true) {
+                                match resolve_named_key(cx, true) {
                                     None => {
                                         let Ok(error_prop) =
                                             polymorphic_ast_mapper::object_property_type(
@@ -8240,6 +8239,7 @@ fn add_interface_properties<'a>(
                                             t.dupe()
                                         };
                                         add_field_or_proto(
+                                            cx,
                                             Name::new(name.dupe()),
                                             key_loc.dupe(),
                                             t_with_optional.dupe(),
@@ -8279,7 +8279,7 @@ fn add_interface_properties<'a>(
                             }
                             // field without annotation
                             ast::types::object::PropertyValue::Init(None) => {
-                                match resolve_named_key(true) {
+                                match resolve_named_key(cx, true) {
                                     None => {
                                         let Ok(error_prop) =
                                             polymorphic_ast_mapper::object_property_type(
@@ -8290,6 +8290,7 @@ fn add_interface_properties<'a>(
                                     }
                                     Some((name, key_loc, rebuild_key)) => {
                                         if let Some(prop_ast) = handle_init_only_property(
+                                            cx,
                                             Name::new(name),
                                             key_loc,
                                             &*rebuild_key,
@@ -8308,7 +8309,7 @@ fn add_interface_properties<'a>(
                             }
                             // getter
                             ast::types::object::PropertyValue::Get(get_loc, func) => {
-                                match resolve_named_key(false) {
+                                match resolve_named_key(cx, false) {
                                     None => {
                                         let Ok(error_prop) =
                                             polymorphic_ast_mapper::object_property_type(
@@ -8370,7 +8371,7 @@ fn add_interface_properties<'a>(
                             }
                             // setter
                             ast::types::object::PropertyValue::Set(set_loc, func) => {
-                                match resolve_named_key(false) {
+                                match resolve_named_key(cx, false) {
                                     None => {
                                         let Ok(error_prop) =
                                             polymorphic_ast_mapper::object_property_type(
@@ -8539,7 +8540,7 @@ fn add_interface_properties<'a>(
 }
 
 fn optional_indexed_access<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     ia: &ast::types::OptionalIndexedAccess<ALoc, ALoc>,
@@ -8655,7 +8656,7 @@ fn optional_indexed_access<'a>(
 }
 
 fn mk_component<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     reason: Reason,
     id_opt: Option<&ast::Identifier<ALoc, ALoc>>,
@@ -8678,7 +8679,7 @@ fn mk_component<'a>(
         flow_parser::ast_visitor::TypeParamsContext::ComponentDeclaration,
         tparams_node,
     )?;
-    let mk_param = |cx_ref,
+    let mk_param = |cx_ref: &mut Context<'a>,
                     env_ref: &mut ConvertEnv,
                     param: &ast::types::component_params::Param<ALoc, ALoc>|
      -> Result<
@@ -8710,7 +8711,7 @@ fn mk_component<'a>(
             },
         ))
     };
-    let mk_rest = |cx_ref,
+    let mk_rest = |cx_ref: &mut Context<'a>,
                    env_ref: &mut ConvertEnv,
                    rest: &ast::types::component_params::RestParam<ALoc, ALoc>|
      -> Result<
@@ -8814,7 +8815,7 @@ fn mk_component<'a>(
 }
 
 fn mk_super_inner<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     c: Type,
@@ -8843,7 +8844,7 @@ fn mk_super_inner<'a>(
 }
 
 pub fn mk_interface_sig<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     intf_loc: ALoc,
     reason: Reason,
     decl: &ast::statement::Interface<ALoc, ALoc>,
@@ -8953,7 +8954,7 @@ pub fn mk_interface_sig<'a>(
 }
 
 pub fn mk_declare_component_sig<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
     component: &ast::statement::DeclareComponent<ALoc, ALoc>,
 ) -> Result<
@@ -8979,7 +8980,7 @@ pub fn mk_declare_component_sig<'a>(
 
     // Helper to convert annotation_or_hint to annotation
     fn convert_annot_or_hint<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         _loc: &ALoc,
         annot_or_hint: &ast::types::AnnotationOrHint<ALoc, ALoc>,
@@ -9004,7 +9005,7 @@ pub fn mk_declare_component_sig<'a>(
     // Process each param: convert statement param to type param for Component_type_params,
     // and build typed statement param for output
     fn process_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         param: &ast::statement::component_params::Param<ALoc, ALoc>,
     ) -> Result<
@@ -9167,7 +9168,7 @@ pub fn mk_declare_component_sig<'a>(
 
     // Process rest param
     fn process_rest<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         rest_param: &ast::statement::component_params::RestParam<ALoc, ALoc>,
     ) -> Result<
@@ -9350,7 +9351,7 @@ pub fn mk_declare_component_sig<'a>(
 }
 
 pub fn mk_declare_class_sig<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     class_loc: ALoc,
     class_name: &FlowSmolStr,
     reason: Reason,
@@ -9366,7 +9367,7 @@ pub fn mk_declare_class_sig<'a>(
     use flow_typing_type::type_::*;
 
     fn mk_mixins<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         env: &mut ConvertEnv,
         generic_with_loc: &(ALoc, ast::types::Generic<ALoc, ALoc>),
     ) -> Result<
@@ -9404,7 +9405,7 @@ pub fn mk_declare_class_sig<'a>(
         ))
     }
 
-    fn is_object_builtin_libdef(cx: &Context<'_>, loc: &ALoc, name: &str) -> bool {
+    fn is_object_builtin_libdef(cx: &mut Context<'_>, loc: &ALoc, name: &str) -> bool {
         name == "Object"
             && match loc.source() {
                 None => false,
@@ -9412,15 +9413,10 @@ pub fn mk_declare_class_sig<'a>(
             }
     }
 
-    let reason_c = reason.dupe();
-    let class_loc_c = class_loc.dupe();
-    let class_name_owned = class_name.dupe();
-    let decl_clone = decl.clone();
-
-    use std::cell::RefCell;
+    use std::cell::OnceCell;
     use std::rc::Rc;
 
-    type LazyResult = Result<
+    type SigResult = Result<
         (
             Type,
             Type,
@@ -9429,45 +9425,15 @@ pub fn mk_declare_class_sig<'a>(
         ),
         flow_utils_concurrency::job_error::JobError,
     >;
-    let lazy_cell: Rc<
-        RefCell<
-            Option<
-                Rc<
-                    flow_lazy::Lazy<
-                        Context<'a>,
-                        LazyResult,
-                        Box<dyn FnOnce(&Context<'a>) -> LazyResult + 'a>,
-                    >,
-                >,
-            >,
-        >,
-    > = Rc::new(RefCell::new(None));
-    let lazy_cell_c = lazy_cell.dupe();
 
-    let lazy_val: Rc<
-        flow_lazy::Lazy<Context<'a>, LazyResult, Box<dyn FnOnce(&Context<'a>) -> LazyResult + 'a>>,
-    > = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'_>| {
-        let reason = reason_c;
-        let class_loc = class_loc_c;
-        let class_name = &class_name_owned;
-        let decl = &decl_clone;
-
-        // Build self type via lazy reference
-        let lazy_ref = lazy_cell_c.borrow().as_ref().unwrap().dupe();
-        let self_ = flow_typing_tvar::mk_fully_resolved_lazy(
-            cx,
-            reason.dupe(),
-            true,
-            Box::new(move |cx: &Context<'_>| {
-                let val = lazy_ref.get_forced(cx);
-                match val {
-                    Ok(v) => Ok(v.0.dupe()),
-                    Err(e) => Err(e.clone()),
-                }
-            }),
-        );
-
-        // Now implement f:
+    fn mk_declare_class_sig_with_self<'a>(
+        cx: &mut Context<'a>,
+        class_loc: ALoc,
+        class_name: &FlowSmolStr,
+        reason: Reason,
+        self_: Type,
+        decl: &ast::statement::DeclareClass<ALoc, ALoc>,
+    ) -> SigResult {
         let id_loc = &decl.id.loc;
         let id_name = &*decl.id;
         let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::new(), BindsSingleValue::No);
@@ -9687,13 +9653,27 @@ pub fn mk_declare_class_sig<'a>(
         };
 
         Ok((t_internal, t, iface_sig, tast))
-    })));
+    }
 
-    *lazy_cell.borrow_mut() = Some(lazy_val.dupe());
-
-    let result = lazy_val.get_forced(cx);
-    let result = result.as_ref().map_err(|c| c.dupe())?;
-    Ok((result.1.dupe(), result.2.clone(), result.3.clone()))
+    // The self type of the class is the internal class type of its signature, which is only
+    // made once the self type is in place.
+    let class_t_internal: Rc<OnceCell<Result<Type, flow_utils_concurrency::job_error::JobError>>> =
+        Rc::new(OnceCell::new());
+    let self_ = flow_typing_tvar::mk_fully_resolved_lazy(cx, reason.dupe(), true, {
+        let class_t_internal = class_t_internal.dupe();
+        move |_cx: &mut Context<'_>| {
+            class_t_internal
+                .get()
+                .expect("the class signature is made before its self type is forced")
+                .clone()
+        }
+    });
+    let result = mk_declare_class_sig_with_self(cx, class_loc, class_name, reason, self_, decl);
+    class_t_internal
+        .set(result.as_ref().map(|r| r.0.dupe()).map_err(|e| e.dupe()))
+        .expect("the class signature is made once");
+    let (_, t, iface_sig, tast) = result?;
+    Ok((t, iface_sig, tast))
 }
 
 // =========================================================================
@@ -9701,7 +9681,7 @@ pub fn mk_declare_class_sig<'a>(
 // =========================================================================
 
 pub fn convert<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     t: &ast::types::Type<ALoc, ALoc>,
 ) -> Result<ast::types::Type<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
@@ -9710,7 +9690,7 @@ pub fn convert<'a>(
 }
 
 pub fn convert_list<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     asts: &[ast::types::Type<ALoc, ALoc>],
 ) -> Result<
@@ -9722,7 +9702,7 @@ pub fn convert_list<'a>(
 }
 
 pub fn convert_render_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     loc: ALoc,
     renders: &ast::types::Renders<ALoc, ALoc>,
@@ -9735,7 +9715,7 @@ pub fn convert_render_type<'a>(
 }
 
 pub fn convert_type_guard<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     fparams: &[type_::FunParam],
     gloc: ALoc,
@@ -9756,7 +9736,7 @@ pub fn convert_type_guard<'a>(
 }
 
 pub fn convert_indexer(
-    cx: &Context,
+    cx: &mut Context,
     tparams_map: &FlowOrdMap<SubstName, Type>,
     indexer: &ast::types::object::Indexer<ALoc, ALoc>,
 ) -> Result<
@@ -9771,7 +9751,7 @@ pub fn convert_indexer(
 }
 
 pub fn convert_return_annotation<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     meth_kind: MethodKind,
     tparams_map: FlowOrdMap<SubstName, Type>,
     params: &ast::types::function::Params<ALoc, ALoc>,
@@ -9790,7 +9770,7 @@ pub fn convert_return_annotation<'a>(
 }
 
 pub fn mk_empty_interface_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     loc: ALoc,
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let interface_type = empty_interface_annot(loc);
@@ -9807,7 +9787,7 @@ pub fn mk_empty_interface_type<'a>(
 }
 
 pub fn mk_super<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     loc: ALoc,
     c: Type,
@@ -9827,7 +9807,7 @@ pub fn mk_super<'a>(
 /// that binds exactly one value, which a variable declaration and a static
 /// class field do. Only such a position may spell out a `unique symbol`.
 pub fn mk_type_available_annotation<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     annotation: &ast::types::Annotation<ALoc, ALoc>,
     binds_single_value: BindsSingleValue,
@@ -9840,7 +9820,7 @@ pub fn mk_type_available_annotation<'a>(
 }
 
 pub fn mk_function_type_annotation<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     func: &(ALoc, ast::types::Function<ALoc, ALoc>),
 ) -> Result<
@@ -9852,7 +9832,7 @@ pub fn mk_function_type_annotation<'a>(
 }
 
 pub fn mk_nominal_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     reason: Reason,
     tparams_map: FlowOrdMap<SubstName, Type>,
     c: Type,
@@ -9866,7 +9846,7 @@ pub fn mk_nominal_type<'a>(
 }
 
 pub fn mk_type_param<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     kind: flow_parser::ast_visitor::TypeParamsContext,
     type_param: &ast::types::TypeParam<ALoc, ALoc>,
@@ -9879,7 +9859,7 @@ pub fn mk_type_param<'a>(
 }
 
 pub fn mk_type_param_declarations<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     kind: flow_parser::ast_visitor::TypeParamsContext,
     tparams_map: Option<FlowOrdMap<SubstName, Type>>,
     tparams: Option<&ast::types::TypeParams<ALoc, ALoc>>,

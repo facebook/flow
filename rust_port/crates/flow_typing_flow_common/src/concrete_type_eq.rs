@@ -188,13 +188,13 @@ fn eq_swap_reason(t1: &Type, t2: &Type) -> bool {
     }
 }
 
-pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
+pub fn eq<'cx>(cx: &mut Context<'cx>, t1: &Type, t2: &Type) -> bool {
     eq_with_env(cx, &FlowJsEnv::entry(), t1, t2)
 }
 
 /// This predicate attempts to flatten out OpenTs and AnnotTs before performing a
 /// structural reasonless equality check of two types.
-pub fn eq_with_env<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t1: &Type, t2: &Type) -> bool {
+pub fn eq_with_env<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t1: &Type, t2: &Type) -> bool {
     if t1.ptr_eq(t2) {
         return true;
     }
@@ -211,14 +211,16 @@ pub fn eq_with_env<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t1: &Type, t2: &Type
         (Some(node1), _) => match cx.find_constraints(node1.id()).1 {
             Constraints::Resolved(resolved_t1) => eq_with_env(cx, env, &resolved_t1, t2),
             Constraints::FullyResolved(s1) => {
-                eq_with_env(cx, env, &cx.force_fully_resolved_tvar(&s1), t2)
+                let resolved_t1 = cx.force_fully_resolved_tvar(&s1);
+                eq_with_env(cx, env, &resolved_t1, t2)
             }
             Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
         },
         (_, Some(node2)) => match cx.find_constraints(node2.id()).1 {
             Constraints::Resolved(resolved_t2) => eq_with_env(cx, env, t1, &resolved_t2),
             Constraints::FullyResolved(s2) => {
-                eq_with_env(cx, env, t1, &cx.force_fully_resolved_tvar(&s2))
+                let resolved_t2 = cx.force_fully_resolved_tvar(&s2);
+                eq_with_env(cx, env, t1, &resolved_t2)
             }
             Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
         },
@@ -273,7 +275,12 @@ pub fn eq_with_env<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t1: &Type, t2: &Type
     }
 }
 
-pub fn eq_targs<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, targs1: &[Type], targs2: &[Type]) -> bool {
+pub fn eq_targs<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    targs1: &[Type],
+    targs2: &[Type],
+) -> bool {
     if targs1.len() != targs2.len() {
         return false;
     }

@@ -37,7 +37,7 @@ fn validator_validate_type(
 }
 
 fn hardcoded_ty_fixes_run<Extra: BaseStats>(
-    cctx: &codemod_context::typed::TypedCodemodContext<'_>,
+    cctx: &mut codemod_context::typed::TypedCodemodContext<'_>,
     lint_severities: &LintSettings<Severity>,
     generalize_maybe: bool,
     generalize_react_mixed_element: bool,
@@ -58,7 +58,7 @@ fn hardcoded_ty_fixes_run<Extra: BaseStats>(
     };
     let mut mapper =
         flow_services_code_action::insert_type_utils::TypeNormalizationHardcodedFixesMapper::new(
-            &cctx.cx,
+            &mut cctx.cx,
             &loc_of_aloc,
             &get_ast_from_transaction,
             &cctx.file_sig,
@@ -179,7 +179,7 @@ pub(crate) enum TyOrTypeAst {
 
 #[allow(unreachable_code)]
 pub fn validate_ty(
-    cctx: &codemod_context::typed::TypedCodemodContext<'_>,
+    cctx: &mut codemod_context::typed::TypedCodemodContext<'_>,
     _max_type_size: i32,
     _ty: ALocTy,
 ) -> Result<ALocTy, Vec<error::Kind>> {
@@ -195,7 +195,7 @@ pub fn validate_ty(
 
 #[allow(unreachable_code)]
 pub fn get_ty<'a, 'cx>(
-    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+    cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
     loc: Loc,
 ) -> Result<ALocTy, Vec<error::Kind>> {
     let norm_opts = flow_typing_ty_normalizer::env::Options::default_for_codemod();
@@ -209,7 +209,7 @@ pub fn get_ty<'a, 'cx>(
 }
 
 pub fn get_validated_ty<'a, 'cx>(
-    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+    cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
     max_type_size: i32,
     loc: Loc,
 ) -> Result<ALocTy, Vec<error::Kind>> {
@@ -234,7 +234,7 @@ pub struct Mapper<'a, 'cx, Extra: BaseStats> {
         flow_services_code_action::insert_type_imports::imports_helper::RemoteConverter<'cx>,
     >,
 
-    pub cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+    pub cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
     pub default_any: bool,
     pub generalize_maybe: bool,
     pub generalize_react_mixed_element: bool,

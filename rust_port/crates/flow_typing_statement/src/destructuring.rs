@@ -54,6 +54,7 @@ pub struct State {
 }
 
 pub type Callback<'a> = dyn Fn(
+        &mut Context<'_>,
         /*use_op:*/ &UseOp,
         /*name_loc:*/ ALoc,
         /*name:*/ &FlowSmolStr,
@@ -74,7 +75,7 @@ pub fn empty(
 }
 
 fn pattern_default<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     acc: &mut State,
     default_expr: Option<&expression::Expression<ALoc, ALoc>>,
 ) -> Result<Option<expression::Expression<ALoc, (ALoc, Type)>>, CheckExprError> {
@@ -92,7 +93,7 @@ fn pattern_default<'a>(
 }
 
 fn array_element<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     acc: &State,
     i: i32,
     loc: ALoc,
@@ -157,7 +158,7 @@ fn array_rest_element(acc: &State, i: i32, loc: ALoc) -> State {
 fn object_named_property<'a>(
     has_default: bool,
     _parent_loc: ALoc,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     acc: &State,
     loc: ALoc,
     x: &FlowSmolStr,
@@ -210,7 +211,7 @@ fn object_named_property<'a>(
 }
 
 fn object_computed_property<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     acc: &State,
     e: &expression::Expression<ALoc, ALoc>,
 ) -> Result<(State, expression::Expression<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -256,7 +257,7 @@ fn object_rest_property(acc: &State, xs: &[FlowSmolStr], loc: ALoc) -> State {
 }
 
 fn object_property<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     has_default: bool,
     parent_loc: ALoc,
     current: Type,
@@ -373,7 +374,7 @@ fn object_property<'a>(
 }
 
 fn identifier<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     f: &Callback<'_>,
     acc: &State,
     name_loc: ALoc,
@@ -406,10 +407,10 @@ fn identifier<'a>(
         var: Some(reason),
         init: init_reason,
     }));
-    f(&use_op, name_loc, name, default_val.as_ref(), current)
+    f(cx, &use_op, name_loc, name, default_val.as_ref(), current)
 }
 
-fn current_type<'a>(cx: &Context<'a>, p: &pattern::Pattern<ALoc, ALoc>) -> Type {
+fn current_type<'a>(cx: &mut Context<'a>, p: &pattern::Pattern<ALoc, ALoc>) -> Type {
     let loc = p.loc().dupe();
     match p {
         pattern::Pattern::Identifier { inner, .. } => {
@@ -441,13 +442,15 @@ fn current_type<'a>(cx: &Context<'a>, p: &pattern::Pattern<ALoc, ALoc>) -> Type 
 }
 
 pub fn pattern<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     f: &Callback<'_>,
     acc: &mut State,
     p: &pattern::Pattern<ALoc, ALoc>,
 ) -> Result<pattern::Pattern<ALoc, (ALoc, Type)>, CheckExprError> {
     let check_for_invalid_annot =
-        |has_parent: bool, annot: &ast::types::AnnotationOrHint<ALoc, ALoc>| {
+        |cx: &mut Context<'a>,
+         has_parent: bool,
+         annot: &ast::types::AnnotationOrHint<ALoc, ALoc>| {
             if let (true, ast::types::AnnotationOrHint::Available(ann)) = (has_parent, annot) {
                 flow_js::add_output_non_speculating(
                     cx,
@@ -464,7 +467,7 @@ pub fn pattern<'a>(
 
     match p {
         pattern::Pattern::Array { inner, .. } => {
-            check_for_invalid_annot(acc.has_parent, &inner.annot);
+            check_for_invalid_annot(cx, acc.has_parent, &inner.annot);
             let elements = array_elements(cx, f, acc, &inner.elements)?;
             let mut mapper = typed_ast_utils::UnimplementedMapper;
             let Ok(annot) = polymorphic_ast_mapper::type_annotation_hint(&mut mapper, &inner.annot);
@@ -480,7 +483,7 @@ pub fn pattern<'a>(
             })
         }
         pattern::Pattern::Object { inner, .. } => {
-            check_for_invalid_annot(acc.has_parent, &inner.annot);
+            check_for_invalid_annot(cx, acc.has_parent, &inner.annot);
             let properties = object_properties(cx, f, loc.dupe(), acc, &inner.properties)?;
             let mut mapper = typed_ast_utils::UnimplementedMapper;
             let Ok(annot) = polymorphic_ast_mapper::type_annotation_hint(&mut mapper, &inner.annot);
@@ -499,7 +502,7 @@ pub fn pattern<'a>(
             let id_loc = inner.name.loc.dupe();
             let name = &inner.name.name;
             let comments = &inner.name.comments;
-            check_for_invalid_annot(acc.has_parent, &inner.annot);
+            check_for_invalid_annot(cx, acc.has_parent, &inner.annot);
             let mut mapper = typed_ast_utils::UnimplementedMapper;
             let Ok(annot) = polymorphic_ast_mapper::type_annotation_hint(&mut mapper, &inner.annot);
             let id_ty = identifier(cx, f, acc, id_loc.dupe(), name)?;
@@ -537,7 +540,7 @@ pub fn pattern<'a>(
 }
 
 pub fn array_elements<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     f: &Callback<'_>,
     acc: &mut State,
     elements: &[pattern::array::Element<ALoc, ALoc>],
@@ -577,7 +580,7 @@ pub fn array_elements<'a>(
 }
 
 pub fn object_properties<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     f: &Callback<'_>,
     parent_loc: ALoc,
     acc: &mut State,
@@ -650,14 +653,14 @@ pub fn type_of_pattern(
 
 /// instantiate pattern visitor for assignments
 pub fn assignment<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     init: expression::Expression<ALoc, ALoc>,
     p: &pattern::Pattern<ALoc, ALoc>,
 ) -> Result<pattern::Pattern<ALoc, (ALoc, Type)>, CheckExprError> {
     let mut acc = empty(Some(init), None);
     pattern(
         cx,
-        &|use_op, name_loc, name, _default, t| {
+        &|cx, use_op, name_loc, name, _default, t| {
             // TODO destructuring+defaults unsupported in assignment expressions
             type_env::set_var(cx, use_op, name, &t, name_loc.dupe())?;
             Ok(type_env::constraining_type(t, cx, name, name_loc))

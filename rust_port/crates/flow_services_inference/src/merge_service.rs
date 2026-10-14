@@ -21,6 +21,7 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_check_cache::CheckCache;
 use flow_check_cache::CheckContentsCache;
+use flow_check_cache::CheckedContext;
 use flow_common::docblock::Docblock;
 use flow_common::docblock::FlowMode;
 use flow_common::files;
@@ -57,6 +58,7 @@ use flow_type_sig::type_sig_pack::ModuleKind;
 use flow_typing::merge::get_lint_severities;
 use flow_typing::type_inference::scan_for_suppressions;
 use flow_typing_context::Context;
+use flow_typing_context::ContextArena;
 use flow_typing_context::MasterContext;
 use flow_typing_context::Metadata;
 use flow_typing_context::OverridableMetadata;
@@ -759,8 +761,8 @@ fn merge_component(
     Ok((diff, Some((suppressions, duration))))
 }
 
-pub type CheckFileArtifacts = (
-    Context<'static>,
+pub type CheckFileArtifacts<'cx> = (
+    Context<'cx>,
     Arc<flow_type_sig::packed_type_sig::Module<Loc>>,
     Arc<FileSig>,
     ast::Program<ALoc, (ALoc, Type)>,
@@ -775,71 +777,62 @@ pub type CheckFileAccs = (
     f64,
 );
 
-pub type CheckFileResult = (CheckFileArtifacts, CheckFileAccs);
+/// Checks files one after the other, keeping the contexts of their dependencies in its cache for
+/// the files checked after them.
+pub struct Checker {
+    transaction: Arc<Transaction>,
+    find_ref_request: flow_services_references::find_refs_types::Request,
+    check_file_and_comp_env: check_service::CheckFileAndCompEnv,
+    cache: CheckCache,
+}
 
-pub type CheckCacheRef = Rc<std::cell::RefCell<CheckCache<'static>>>;
-
-pub fn cleanup_check_context(file: &FileKey, cx: &Context<'_>) {
-    cx.post_inference_cleanup();
-    #[cfg(debug_assertions)]
-    {
-        let count = cx.strong_count();
-        if count > 2 {
-            eprintln!(
-                "[LEAK-DEBUG] Context for {} has strong_count={} after cleanup (expected <=2)",
-                file.as_str(),
-                count
-            );
+impl Checker {
+    /// Checks `file`, and hands its artifacts to `finish`, which has to be done with its context
+    /// by the time it returns.
+    pub fn check<R>(
+        &mut self,
+        file: FileKey,
+        finish: impl FnOnce(CheckFileArtifacts<'_>, CheckFileAccs) -> R,
+    ) -> CheckJobOutcome<R> {
+        match self.check_file(file.dupe(), finish) {
+            Ok(opt) => CheckJobOutcome::Ok(opt),
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c)) => {
+                CheckJobOutcome::Canceled(c)
+            }
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t)) => {
+                let file_loc = ALoc::of_loc(Loc {
+                    source: Some(file),
+                    ..LOC_NONE
+                });
+                CheckJobOutcome::PerFileError((file_loc, InternalError::check_timeout(t.elapsed)))
+            }
+            Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc }) => {
+                CheckJobOutcome::PerFileError((loc, InternalError::DebugThrow))
+            }
         }
     }
-}
 
-fn cleanup_check_error(file: &FileKey, cx: &Context<'_>) {
-    cleanup_check_context(file, cx);
-}
+    /// Drops the contexts of the dependencies of the files checked so far.
+    pub fn clear_cache(&mut self) {
+        self.cache.clear_dependencies();
+    }
 
-pub fn finish_check_file<R>(
-    result: CheckFileResult,
-    f: impl FnOnce(CheckFileArtifacts, CheckFileAccs) -> R,
-) -> R {
-    let (artifacts, accs) = result;
-    let file = artifacts.0.file().dupe();
-    let cleanup_cx = artifacts.0.clone();
-    let result = f(artifacts, accs);
-    cleanup_check_context(&file, &cleanup_cx);
-    result
-}
-
-fn mk_check_file(
-    transaction: Arc<Transaction>,
-    options: Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
-    master_cx: &MasterContext,
-    find_ref_request: flow_services_references::find_refs_types::Request,
-) -> (
-    Box<
-        dyn FnMut(
-            FileKey,
-        )
-            -> Result<Option<CheckFileResult>, flow_utils_concurrency::job_error::JobError>,
-    >,
-    Rc<std::cell::RefCell<CheckCache<'static>>>,
-) {
-    let cache = Rc::new(std::cell::RefCell::new(CheckCache::create(10_000_000)));
-    let cache_ref = cache.dupe();
-    let check_service::CheckFileAndCompEnv {
-        mut make_cx,
-        mut check_file,
-        compute_env: _,
-    } = check_service::mk_check_file(
-        transaction.dupe(),
-        options.dupe(),
-        all_unordered_libs,
-        master_cx,
-        cache,
-    );
-
-    let check_file_fn = Box::new(move |file: FileKey| {
+    fn check_file<R>(
+        &mut self,
+        file: FileKey,
+        finish: impl FnOnce(CheckFileArtifacts<'_>, CheckFileAccs) -> R,
+    ) -> Result<Option<R>, flow_utils_concurrency::job_error::JobError> {
+        let Checker {
+            transaction,
+            find_ref_request,
+            check_file_and_comp_env:
+                check_service::CheckFileAndCompEnv {
+                    make_cx,
+                    check_file,
+                    compute_env: _,
+                },
+            cache,
+        } = self;
         let start_time = Instant::now();
         let parse = match transaction.get_typed_parse(&file) {
             Some(p) => p,
@@ -872,127 +865,123 @@ fn mk_check_file(
                 .collect()
         };
         let docblock_for_find_refs = docblock.dupe();
-        let cx = make_cx(
-            file.dupe(),
-            resolved_modules,
-            ast.dupe(),
-            docblock,
-            aloc_table,
-        );
-        let ast_ref = ast;
-        let ast::Program {
-            all_comments: comments,
-            ..
-        } = ast_ref.as_ref();
-        let aloc_ast = flow_aloc::loc_to_aloc_ast(ast_ref.as_ref());
-        let metadata = cx.metadata().clone();
-        let enabled = matches!(
-            &find_ref_request.def_info,
-            flow_services_get_def::get_def_types::DefInfo::PropertyDefinition(_)
-        );
-        let loc_of_aloc = |aloc: &ALoc| transaction.loc_of_aloc(aloc);
-        let (typed_ast_result, obj_to_obj_map) =
-            obj_to_obj_hook::with_obj_to_obj_hook(enabled, &loc_of_aloc, || {
-                check_file(
-                    &cx,
-                    &file,
-                    &type_sig_options,
-                    file_sig.dupe(),
-                    &metadata,
-                    comments,
-                    ast_ref.as_ref(),
-                    aloc_ast,
-                    Some(type_sig.dupe()),
-                )
-            });
-        let typed_ast = match typed_ast_result {
-            Ok(typed_ast) => typed_ast,
-            Err(e) => {
-                cleanup_check_error(&file, &cx);
-                return Err(e);
-            }
-        };
-        let find_refs_result = match &find_ref_request.def_info {
-            flow_services_get_def::get_def_types::DefInfo::NoDefinition(_) => Ok(Vec::new()),
-            _ => {
-                let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
-                    ast_ref.dupe(),
-                    file_sig.dupe(),
-                    docblock_for_find_refs.dupe(),
-                );
-                let result =
-                    match flow_services_references::find_refs_js::local_refs_of_find_ref_request(
-                        &loc_of_aloc,
-                        &ast_info,
-                        &cx,
-                        &typed_ast,
-                        &obj_to_obj_map,
+        let dependencies = cache.dependencies().id();
+        let mut arena = ContextArena::new();
+        let own = arena.id();
+        {
+            let mut cx = make_cx(
+                cache.store(&mut arena),
+                own,
+                dependencies,
+                file.dupe(),
+                resolved_modules,
+                ast.dupe(),
+                docblock,
+                aloc_table,
+            );
+            let ast_ref = ast;
+            let ast::Program {
+                all_comments: comments,
+                ..
+            } = ast_ref.as_ref();
+            let aloc_ast = flow_aloc::loc_to_aloc_ast(ast_ref.as_ref());
+            let metadata = cx.metadata().clone();
+            let enabled = matches!(
+                &find_ref_request.def_info,
+                flow_services_get_def::get_def_types::DefInfo::PropertyDefinition(_)
+            );
+            let loc_of_aloc = |aloc: &ALoc| transaction.loc_of_aloc(aloc);
+            let (typed_ast_result, obj_to_obj_map) =
+                obj_to_obj_hook::with_obj_to_obj_hook(enabled, &loc_of_aloc, || {
+                    check_file(
+                        &mut cx,
                         &file,
-                        &find_ref_request,
-                    ) {
-                        Ok(result) => result,
-                        Err(e) => {
-                            drop(typed_ast);
-                            cleanup_check_error(&file, &cx);
-                            return Err(e);
-                        }
-                    };
-                match result {
-                    Ok(flow_services_references::find_refs_types::FindRefsOk::FoundReferences(
-                        refs,
-                    )) => Ok(refs),
-                    Ok(flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_)) => {
-                        Ok(Vec::new())
+                        &type_sig_options,
+                        file_sig.dupe(),
+                        &metadata,
+                        comments,
+                        ast_ref.as_ref(),
+                        aloc_ast,
+                        Some(type_sig.dupe()),
+                    )
+                });
+            let typed_ast = typed_ast_result?;
+            let find_refs_result = match &find_ref_request.def_info {
+                flow_services_get_def::get_def_types::DefInfo::NoDefinition(_) => Ok(Vec::new()),
+                _ => {
+                    let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
+                        ast_ref.dupe(),
+                        file_sig.dupe(),
+                        docblock_for_find_refs.dupe(),
+                    );
+                    let result =
+                        flow_services_references::find_refs_js::local_refs_of_find_ref_request(
+                            &loc_of_aloc,
+                            &ast_info,
+                            &mut cx,
+                            &typed_ast,
+                            &obj_to_obj_map,
+                            &file,
+                            find_ref_request,
+                        )?;
+                    match result {
+                        Ok(
+                            flow_services_references::find_refs_types::FindRefsOk::FoundReferences(
+                                refs,
+                            ),
+                        ) => Ok(refs),
+                        Ok(
+                            flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_),
+                        ) => Ok(Vec::new()),
+                        Err(e) => Err(e),
                     }
-                    Err(e) => Err(e),
                 }
-            }
-        };
-        drop(ast_ref);
-        let coverage = file_coverage(&cx, &typed_ast);
-        let errors = cx.errors();
-        let errors = if tolerable_errors.is_empty() {
-            errors
-        } else {
-            let tolerable_error_set =
-                inference_utils::set_of_file_sig_tolerable_errors(file.dupe(), &tolerable_errors);
-            errors.union(&tolerable_error_set)
-        };
-        let mut suppressions = cx.take_error_suppressions();
-        let severity_cover = cx.severity_cover().dupe();
-        let include_suppressions = cx.include_suppressions();
-        let aloc_tables_ref = cx.aloc_tables();
-        let (errors, warnings) = suppressions.filter_lints(
-            errors,
-            &aloc_tables_ref,
-            include_suppressions,
-            &severity_cover,
-        );
-        drop(aloc_tables_ref);
-        let duration = start_time.elapsed().as_secs_f64();
-        if duration > 5.0 {
-            eprintln!("[SLOW-CHECK] {:>8.3}s  {}", duration, file.as_str());
-        }
-        Ok(Some((
-            (cx, type_sig, file_sig, typed_ast),
-            (
+            };
+            drop(ast_ref);
+            let coverage = file_coverage(&mut cx, &typed_ast);
+            let errors = cx.errors();
+            let errors = if tolerable_errors.is_empty() {
+                errors
+            } else {
+                let tolerable_error_set = inference_utils::set_of_file_sig_tolerable_errors(
+                    file.dupe(),
+                    &tolerable_errors,
+                );
+                errors.union(&tolerable_error_set)
+            };
+            let mut suppressions = cx.take_error_suppressions();
+            let severity_cover = cx.severity_cover().dupe();
+            let include_suppressions = cx.include_suppressions();
+            let (errors, warnings) = suppressions.filter_lints(
                 errors,
-                warnings,
-                suppressions,
-                coverage,
-                find_refs_result,
-                duration,
-            ),
-        )))
-    });
-    (check_file_fn, cache_ref)
+                cx.aloc_tables(),
+                include_suppressions,
+                &severity_cover,
+            );
+            let duration = start_time.elapsed().as_secs_f64();
+            if duration > 5.0 {
+                eprintln!("[SLOW-CHECK] {:>8.3}s  {}", duration, file.as_str());
+            }
+            Ok(Some(finish(
+                (cx, type_sig, file_sig, typed_ast),
+                (
+                    errors,
+                    warnings,
+                    suppressions,
+                    coverage,
+                    find_refs_result,
+                    duration,
+                ),
+            )))
+        }
+    }
 }
 
 // When we check the contents of a file, we create types from the signatures of its dependencies.
 // `cache` holds those, so the next request for a file with the same dependencies does not rebuild
 // them. It is owned by the workload runner and lent to each workload; see `CheckContentsCache`.
 pub fn check_contents_context(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -1003,7 +992,7 @@ pub fn check_contents_context(
     file_sig: Arc<FileSig>,
     type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<
-    (Context<'static>, ast::Program<ALoc, (ALoc, Type)>),
+    (CheckedContext, ast::Program<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
 > {
     let aloc_table: flow_aloc::LazyALocTable = {
@@ -1038,6 +1027,7 @@ pub fn check_contents_context(
             })
             .collect()
     };
+    let cache = cache.check_cache();
     let check_service::CheckFileAndCompEnv {
         mut make_cx,
         mut check_file,
@@ -1047,41 +1037,51 @@ pub fn check_contents_context(
         options.dupe(),
         all_unordered_libs,
         master_cx.as_ref(),
-        cache.handle(),
+        cache,
     );
-    let cx = make_cx(
-        file.dupe(),
-        resolved_modules,
-        ast.dupe(),
-        docblock,
-        aloc_table,
-    );
-    let ast_ref = ast;
-    let ast::Program {
-        all_comments: comments,
-        ..
-    } = ast_ref.as_ref();
-    let aloc_ast = flow_aloc::loc_to_aloc_ast(ast_ref.as_ref());
-    let metadata = cx.metadata().clone();
-    let typed_ast = check_file(
-        &cx,
-        &file,
-        &type_sig_options,
-        file_sig,
-        &metadata,
-        comments,
-        ast_ref.as_ref(),
-        aloc_ast,
-        // Fresh contents may not match the transaction's ALoc table. Repack
-        // the small set of roots needed by declared-types analysis from the
-        // fresh AST instead of reusing its keyed signature.
-        None,
-    )?;
-    Ok((cx, typed_ast))
+    let mut arena = ContextArena::new();
+    let own = arena.id();
+    let dependencies = cache.dependencies().id();
+    let (cx, typed_ast) = {
+        let mut cx = make_cx(
+            cache.store(&mut arena),
+            own,
+            dependencies,
+            file.dupe(),
+            resolved_modules,
+            ast.dupe(),
+            docblock,
+            aloc_table,
+        );
+        let cx_id = cx.id();
+        let ast_ref = ast;
+        let ast::Program {
+            all_comments: comments,
+            ..
+        } = ast_ref.as_ref();
+        let aloc_ast = flow_aloc::loc_to_aloc_ast(ast_ref.as_ref());
+        let metadata = cx.metadata().clone();
+        let typed_ast = check_file(
+            &mut cx,
+            &file,
+            &type_sig_options,
+            file_sig,
+            &metadata,
+            comments,
+            ast_ref.as_ref(),
+            aloc_ast,
+            // Fresh contents may not match the transaction's ALoc table. Repack
+            // the small set of roots needed by declared-types analysis from the
+            // fresh AST instead of reusing its keyed signature.
+            None,
+        )?;
+        (cx_id, typed_ast)
+    };
+    Ok((CheckedContext::new(arena, cx, cache), typed_ast))
 }
 
 pub fn compute_env_of_contents(
-    cache: &CheckContentsCache,
+    cache: &mut CheckContentsCache,
     transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -1091,7 +1091,7 @@ pub fn compute_env_of_contents(
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
     type_sig_options: Arc<TypeSigOptions>,
-) -> Result<Context<'static>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<CheckedContext, flow_utils_concurrency::job_error::JobError> {
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
         let transaction_for_aloc = transaction.dupe();
@@ -1124,6 +1124,7 @@ pub fn compute_env_of_contents(
             })
             .collect()
     };
+    let cache = cache.check_cache();
     let check_service::CheckFileAndCompEnv {
         mut make_cx,
         check_file: _,
@@ -1133,18 +1134,33 @@ pub fn compute_env_of_contents(
         options.dupe(),
         all_unordered_libs,
         master_cx.as_ref(),
-        cache.handle(),
+        cache,
     );
-    let cx = make_cx(
-        file.dupe(),
-        resolved_modules,
-        ast.dupe(),
-        docblock,
-        aloc_table,
-    );
-    let aloc_ast = flow_aloc::loc_to_aloc_ast(ast.as_ref());
-    compute_env(&cx, &type_sig_options, ast.as_ref(), aloc_ast, &file_sig)?;
-    Ok(cx)
+    let mut arena = ContextArena::new();
+    let own = arena.id();
+    let dependencies = cache.dependencies().id();
+    let cx = {
+        let mut cx = make_cx(
+            cache.store(&mut arena),
+            own,
+            dependencies,
+            file.dupe(),
+            resolved_modules,
+            ast.dupe(),
+            docblock,
+            aloc_table,
+        );
+        let aloc_ast = flow_aloc::loc_to_aloc_ast(ast.as_ref());
+        compute_env(
+            &mut cx,
+            &type_sig_options,
+            ast.as_ref(),
+            aloc_ast,
+            &file_sig,
+        )?;
+        cx.id()
+    };
+    Ok(CheckedContext::new(arena, cx, cache))
 }
 
 fn merge_job<A, F>(
@@ -1300,8 +1316,8 @@ pub fn merge(
 /// failures (timeout, `$Flow$DebugThrow`) ride `PerFileError`; worker-level
 /// cancellation rides `Canceled` so the worker-pool driver can stop pulling
 /// files and unwind back to the recheck loop.
-pub enum CheckJobOutcome {
-    Ok(Option<CheckFileResult>),
+pub enum CheckJobOutcome<R> {
+    Ok(Option<R>),
     PerFileError((ALoc, InternalError)),
     Canceled(flow_utils_concurrency::worker_cancel::WorkerCanceled),
 }
@@ -1312,32 +1328,19 @@ pub fn mk_check(
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: &MasterContext,
     find_ref_request: flow_services_references::find_refs_types::Request,
-) -> (
-    Box<dyn FnMut(FileKey) -> CheckJobOutcome>,
-    Rc<std::cell::RefCell<CheckCache<'static>>>,
-) {
-    let (mut check_file, cache) = mk_check_file(
+) -> Checker {
+    let mut cache = CheckCache::create(10_000_000);
+    let check_file_and_comp_env = check_service::mk_check_file(
         transaction.dupe(),
-        options.dupe(),
+        options,
         all_unordered_libs,
         master_cx,
-        find_ref_request,
+        &mut cache,
     );
-    let check_fn = Box::new(move |file: FileKey| match check_file(file.dupe()) {
-        Ok(opt) => CheckJobOutcome::Ok(opt),
-        Err(flow_utils_concurrency::job_error::JobError::Canceled(c)) => {
-            CheckJobOutcome::Canceled(c)
-        }
-        Err(flow_utils_concurrency::job_error::JobError::TimedOut(t)) => {
-            let file_loc = ALoc::of_loc(Loc {
-                source: Some(file),
-                ..LOC_NONE
-            });
-            CheckJobOutcome::PerFileError((file_loc, InternalError::check_timeout(t.elapsed)))
-        }
-        Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc }) => {
-            CheckJobOutcome::PerFileError((loc, InternalError::DebugThrow))
-        }
-    });
-    (check_fn, cache)
+    Checker {
+        transaction,
+        find_ref_request,
+        check_file_and_comp_env,
+        cache,
+    }
 }

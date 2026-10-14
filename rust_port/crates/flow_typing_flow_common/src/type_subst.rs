@@ -19,6 +19,7 @@ use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
@@ -55,19 +56,12 @@ use crate::flow_cache;
 // substitutions
 
 #[derive(Debug, Clone)]
-pub enum Replacement<'cx> {
+pub enum Replacement {
     TypeSubst(
         Type,
-        // Free vars in type (lazy for memoization).
-        // CX = Context<'cx> so the lazy can receive cx at force time
-        // (no context capture needed).
-        Rc<
-            flow_lazy::Lazy<
-                Context<'cx>,
-                FlowOrdSet<SubstName>,
-                Box<dyn FnOnce(&Context<'cx>) -> FlowOrdSet<SubstName> + 'cx>,
-            >,
-        >,
+        // Free vars in type (lazy for memoization). The lazy receives cx at
+        // force time (no context capture needed).
+        Rc<flow_lazy::Lazy<Cx, FlowOrdSet<SubstName>>>,
     ),
     AlphaRename(SubstName),
 }
@@ -81,7 +75,13 @@ struct FvAcc {
 struct FreeVarVisitor;
 
 impl TypeVisitor<FvAcc> for FreeVarVisitor {
-    fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, mut acc: FvAcc, t: &Type) -> FvAcc {
+    fn type_<'cx>(
+        &mut self,
+        cx: &mut Context<'cx>,
+        pole: Polarity,
+        mut acc: FvAcc,
+        t: &Type,
+    ) -> FvAcc {
         match t.deref() {
             TypeInner::ImplicitInstantiationTvar(_) => acc,
             TypeInner::GenericT(box GenericTData { name, .. }) if !acc.bound.contains(name) => {
@@ -122,7 +122,7 @@ impl TypeVisitor<FvAcc> for FreeVarVisitor {
         }
     }
 
-    fn destructor<'cx>(&mut self, cx: &Context<'cx>, acc: FvAcc, t: &Destructor) -> FvAcc {
+    fn destructor<'cx>(&mut self, cx: &mut Context<'cx>, acc: FvAcc, t: &Destructor) -> FvAcc {
         match t {
             Destructor::ConditionalType(box DestructorConditionalTypeData {
                 distributive_tparam_name,
@@ -195,7 +195,7 @@ impl FreeVarVisitor {
 }
 
 pub fn free_var_finder<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     bound: Option<FlowOrdSet<SubstName>>,
     t: &Type,
 ) -> FlowOrdSet<SubstName> {
@@ -214,7 +214,7 @@ pub fn free_var_finder<'cx>(
 }
 
 pub fn free_var_finder_in_destructor<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     bound: Option<FlowOrdSet<SubstName>>,
     d: &Destructor,
 ) -> FlowOrdSet<SubstName> {
@@ -234,8 +234,8 @@ pub fn free_var_finder_in_destructor<'cx>(
 // Substitute bound type variables with associated types in a type.
 
 fn fvs_of_map<'cx>(
-    cx: &Context<'cx>,
-    map: &FlowOrdMap<SubstName, Replacement<'cx>>,
+    cx: &mut Context<'cx>,
+    map: &FlowOrdMap<SubstName, Replacement>,
 ) -> FlowOrdSet<SubstName> {
     let mut acc = FlowOrdSet::new();
     for replacement in map.values() {
@@ -332,8 +332,8 @@ pub enum Purpose {
     ConditionalTypeAnySubst,
 }
 
-type MapCx<'cx> = (
-    FlowOrdMap<SubstName, Replacement<'cx>>,
+type MapCx = (
+    FlowOrdMap<SubstName, Replacement>,
     bool,
     bool,
     Purpose,
@@ -342,7 +342,7 @@ type MapCx<'cx> = (
 
 pub fn call_prop<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &MapCx,
     id: i32,
 ) -> i32 {
@@ -357,7 +357,7 @@ pub fn call_prop<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
 
 pub fn props<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &MapCx,
     id: properties::Id,
 ) -> properties::Id {
@@ -378,7 +378,7 @@ pub fn props<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
 
 pub fn exports<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     mapper: &mut M,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     map_cx: &MapCx,
     id: exports::Id,
 ) -> exports::Id {
@@ -412,16 +412,13 @@ pub fn exports<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     }
 }
 
-struct Substituter<'cx> {
+struct Substituter {
     change_id: bool,
     obj_reachable_targs: Option<Vec<(Type, Polarity)>>,
-    cached_fvs: Option<(
-        FlowOrdMap<SubstName, Replacement<'cx>>,
-        FlowOrdSet<SubstName>,
-    )>,
+    cached_fvs: Option<(FlowOrdMap<SubstName, Replacement>, FlowOrdSet<SubstName>)>,
 }
 
-impl<'cx> Substituter<'cx> {
+impl Substituter {
     fn new() -> Self {
         Self {
             change_id: false,
@@ -432,8 +429,8 @@ impl<'cx> Substituter<'cx> {
 
     fn get_fvs_of_map(
         &mut self,
-        cx: &Context<'cx>,
-        map: &FlowOrdMap<SubstName, Replacement<'cx>>,
+        cx: &mut Context<'_>,
+        map: &FlowOrdMap<SubstName, Replacement>,
     ) -> FlowOrdSet<SubstName> {
         match &self.cached_fvs {
             Some((cached_map, fvs)) if cached_map.as_inner().ptr_eq(map.as_inner()) => fvs.dupe(),
@@ -447,8 +444,8 @@ impl<'cx> Substituter<'cx> {
 
     fn name_in_fvs_of_map(
         &self,
-        cx: &Context<'cx>,
-        map: &FlowOrdMap<SubstName, Replacement<'cx>>,
+        cx: &mut Context<'_>,
+        map: &FlowOrdMap<SubstName, Replacement>,
         name: &SubstName,
     ) -> bool {
         match &self.cached_fvs {
@@ -464,10 +461,10 @@ impl<'cx> Substituter<'cx> {
 
     fn avoid_capture(
         &mut self,
-        cx: &Context<'cx>,
-        map: FlowOrdMap<SubstName, Replacement<'cx>>,
+        cx: &mut Context<'_>,
+        map: FlowOrdMap<SubstName, Replacement>,
         name: SubstName,
-    ) -> (SubstName, FlowOrdMap<SubstName, Replacement<'cx>>) {
+    ) -> (SubstName, FlowOrdMap<SubstName, Replacement>) {
         if self.name_in_fvs_of_map(cx, &map, &name) {
             let fvs = self.get_fvs_of_map(cx, &map);
             let mut used_names = fvs.dupe();
@@ -497,10 +494,10 @@ impl<'cx> Substituter<'cx> {
 
     fn subst_distributive_tparam_name(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'_>,
         name: &Option<SubstName>,
-        map: FlowOrdMap<SubstName, Replacement<'cx>>,
-    ) -> (Option<SubstName>, FlowOrdMap<SubstName, Replacement<'cx>>) {
+        map: FlowOrdMap<SubstName, Replacement>,
+    ) -> (Option<SubstName>, FlowOrdMap<SubstName, Replacement>) {
         match name {
             None => (None, map),
             Some(name) => {
@@ -511,12 +508,12 @@ impl<'cx> Substituter<'cx> {
     }
 }
 
-impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
-    fn tvar(&mut self, _cx: &Context<'cx>, _map_cx: &MapCx<'cx>, _r: &Reason, id: u32) -> u32 {
+impl<'cx> TypeMapper<'cx, MapCx> for Substituter {
+    fn tvar(&mut self, _cx: &mut Context<'cx>, _map_cx: &MapCx, _r: &Reason, id: u32) -> u32 {
         id
     }
 
-    fn call_prop(&mut self, cx: &Context<'cx>, map_cx: &MapCx<'cx>, id: i32) -> i32 {
+    fn call_prop(&mut self, cx: &mut Context<'cx>, map_cx: &MapCx, id: i32) -> i32 {
         let (map, _, _, _, _) = map_cx;
         if map.is_empty() {
             id
@@ -527,8 +524,8 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
 
     fn props(
         &mut self,
-        cx: &Context<'cx>,
-        map_cx: &MapCx<'cx>,
+        cx: &mut Context<'cx>,
+        map_cx: &MapCx,
         id: properties::Id,
     ) -> properties::Id {
         let (map, _, _, _, _) = map_cx;
@@ -539,7 +536,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
         }
     }
 
-    fn exports(&mut self, cx: &Context<'cx>, map_cx: &MapCx<'cx>, id: exports::Id) -> exports::Id {
+    fn exports(&mut self, cx: &mut Context<'cx>, map_cx: &MapCx, id: exports::Id) -> exports::Id {
         let (map, _, _, _, _) = map_cx;
         if map.is_empty() {
             id
@@ -548,7 +545,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
         }
     }
 
-    fn type_(&mut self, cx: &Context<'cx>, map_cx: &MapCx<'cx>, t: Type) -> Type {
+    fn type_(&mut self, cx: &mut Context<'cx>, map_cx: &MapCx, t: Type) -> Type {
         let (map, force, placeholder_no_infer, purpose, use_op) = map_cx;
         if map.is_empty() {
             return t;
@@ -885,7 +882,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
         }
     }
 
-    fn predicate(&mut self, cx: &Context<'cx>, map_cx: &MapCx<'cx>, p: &Predicate) -> Predicate {
+    fn predicate(&mut self, cx: &mut Context<'cx>, map_cx: &MapCx, p: &Predicate) -> Predicate {
         match p.deref() {
             PredicateInner::LatentP(..) => type_mapper::predicate_default(self, cx, map_cx, p),
             PredicateInner::LatentThisP(..) => type_mapper::predicate_default(self, cx, map_cx, p),
@@ -893,7 +890,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
         }
     }
 
-    fn obj_type(&mut self, cx: &Context<'cx>, map_cx: &MapCx<'cx>, t: Rc<ObjType>) -> Rc<ObjType> {
+    fn obj_type(&mut self, cx: &mut Context<'cx>, map_cx: &MapCx, t: Rc<ObjType>) -> Rc<ObjType> {
         let old_obj_reachable_targs = self.obj_reachable_targs.replace(Vec::new());
         let t_prime = type_mapper::obj_type_default(self, cx, map_cx, t.dupe());
         let reachable_targs = self
@@ -928,8 +925,8 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
 
     fn destructor(
         &mut self,
-        cx: &Context<'cx>,
-        map_cx: &MapCx<'cx>,
+        cx: &mut Context<'cx>,
+        map_cx: &MapCx,
         t: Rc<Destructor>,
     ) -> Rc<Destructor> {
         let (map, _, placeholder_no_infer, purpose, _) = map_cx;
@@ -1091,8 +1088,8 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
 
     fn eval_id(
         &mut self,
-        _cx: &Context<'cx>,
-        _map_cx: &MapCx<'cx>,
+        _cx: &mut Context<'cx>,
+        _map_cx: &MapCx,
         _id: flow_typing_type::type_::eval::Id,
     ) -> flow_typing_type::type_::eval::Id {
         unreachable!("eval_id should never be called on substituter")
@@ -1100,7 +1097,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
 }
 
 pub fn subst<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: Option<UseOp>,
     force: bool,
     placeholder_no_infer: bool,
@@ -1113,7 +1110,7 @@ pub fn subst<'cx>(
         return t;
     }
 
-    let replacement_map: FlowOrdMap<SubstName, Replacement<'cx>> = map
+    let replacement_map: FlowOrdMap<SubstName, Replacement> = map
         .iter()
         .map(|(k, v)| {
             let v = v.dupe();
@@ -1122,9 +1119,9 @@ pub fn subst<'cx>(
                 k.dupe(),
                 Replacement::TypeSubst(
                     v,
-                    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                    Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                         free_var_finder(cx, None, &v_c)
-                    }))),
+                    })),
                 ),
             )
         })
@@ -1145,7 +1142,7 @@ pub fn subst<'cx>(
 }
 
 pub fn subst_destructor<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: Option<UseOp>,
     force: bool,
     placeholder_no_infer: bool,
@@ -1158,7 +1155,7 @@ pub fn subst_destructor<'cx>(
         return destructor;
     }
 
-    let replacement_map: FlowOrdMap<SubstName, Replacement<'cx>> = map
+    let replacement_map: FlowOrdMap<SubstName, Replacement> = map
         .iter()
         .map(|(k, v)| {
             let v = v.dupe();
@@ -1167,9 +1164,9 @@ pub fn subst_destructor<'cx>(
                 k.dupe(),
                 Replacement::TypeSubst(
                     v,
-                    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                    Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                         free_var_finder(cx, None, &v_c)
-                    }))),
+                    })),
                 ),
             )
         })
@@ -1190,7 +1187,7 @@ pub fn subst_destructor<'cx>(
 }
 
 pub fn subst_instance_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: Option<UseOp>,
     force: bool,
     placeholder_no_infer: bool,
@@ -1203,7 +1200,7 @@ pub fn subst_instance_type<'cx>(
         return instance.dupe();
     }
 
-    let replacement_map: FlowOrdMap<SubstName, Replacement<'cx>> = map
+    let replacement_map: FlowOrdMap<SubstName, Replacement> = map
         .iter()
         .map(|(k, v)| {
             let v = v.dupe();
@@ -1212,9 +1209,9 @@ pub fn subst_instance_type<'cx>(
                 k.dupe(),
                 Replacement::TypeSubst(
                     v,
-                    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                    Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                         free_var_finder(cx, None, &v_c)
-                    }))),
+                    })),
                 ),
             )
         })

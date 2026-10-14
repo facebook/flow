@@ -9,6 +9,7 @@
 //!
 //! Port of `ty_normalizer_env.ml`
 
+use std::cell::OnceCell;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -22,7 +23,6 @@ use flow_aloc::ALocId;
 use flow_common_ty::ty_symbol::ALocImportedIdent;
 use flow_common_ty::ty_symbol::ALocSymbol;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
-use flow_lazy::Lazy;
 use flow_parser::ast;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
@@ -129,8 +129,6 @@ impl Options {
 /// Global environment that does not change during normalization
 #[derive(Clone)]
 pub struct Genv<'a, 'cx> {
-    /// Full (merged) context
-    pub cx: &'a Context<'cx>,
     /// Typed AST of the current file
     pub typed_ast_opt: Option<&'a ast::Program<ALoc, (ALoc, Type)>>,
     /// The file_sig of the current file
@@ -139,13 +137,7 @@ pub struct Genv<'a, 'cx> {
     /// useful to keep a map of imported names and the corresponding
     /// location available. We can then make this decision by comparing the
     /// source file with the current context's file information.
-    pub imported_names: Rc<
-        Lazy<
-            Context<'cx>,
-            Result<ImportedNamesMap, JobError>,
-            Box<dyn FnOnce(&Context<'cx>) -> Result<ImportedNamesMap, JobError> + 'a>,
-        >,
-    >,
+    pub imported_names: ImportedNames<'a, 'cx>,
     /// Normalization parameters
     pub options: Options,
     /// When set, the normalizer collects the body Type.t for each type alias it encounters.
@@ -155,10 +147,37 @@ pub struct Genv<'a, 'cx> {
 
 pub type ImportedNamesMap = ALocFuzzyMap<ALocImportedIdent>;
 
+/// The imported names of the environment's context, computed with the context the first time
+/// they are asked for, and shared by the copies of the environment.
+#[derive(Clone, Dupe)]
+pub struct ImportedNames<'a, 'cx> {
+    names: Rc<OnceCell<Result<ImportedNamesMap, JobError>>>,
+    compute: Rc<dyn Fn(&mut Context<'cx>) -> Result<ImportedNamesMap, JobError> + 'a>,
+}
+
+impl<'a, 'cx> ImportedNames<'a, 'cx> {
+    pub fn new(
+        compute: impl Fn(&mut Context<'cx>) -> Result<ImportedNamesMap, JobError> + 'a,
+    ) -> Self {
+        ImportedNames {
+            names: Rc::new(OnceCell::new()),
+            compute: Rc::new(compute),
+        }
+    }
+
+    pub fn get(&self, cx: &mut Context<'cx>) -> Result<&ImportedNamesMap, JobError> {
+        self.names
+            .get_or_init(|| (self.compute)(cx))
+            .as_ref()
+            .map_err(|e| e.dupe())
+    }
+}
+
 pub type SymbolSet = BTreeSet<ALocSymbol>;
 
-#[derive(Clone)]
 pub struct Env<'a, 'cx> {
+    /// The context the normalized types belong to.
+    pub cx: &'a mut Context<'cx>,
     /// Does not change. Set once in the beginning.
     pub genv: Genv<'a, 'cx>,
     pub infer_tparam_ids: Rc<Vec<ALocId>>,
@@ -172,9 +191,10 @@ pub struct Env<'a, 'cx> {
 }
 
 impl<'a, 'cx> Env<'a, 'cx> {
-    pub fn init(genv: Genv<'a, 'cx>) -> Self {
+    pub fn init(cx: &'a mut Context<'cx>, genv: Genv<'a, 'cx>) -> Self {
         let omit_targ_defaults = genv.options.omit_targ_defaults_option;
         Env {
+            cx,
             genv,
             depth: 0,
             infer_tparam_ids: Rc::new(Vec::new()),
@@ -203,12 +223,8 @@ impl<'a, 'cx> Env<'a, 'cx> {
         CACHED.with(|c| c.clone())
     }
 
-    pub fn get_cx(&self) -> &'cx Context {
-        self.genv.cx
-    }
-
-    pub fn imported_names(&self) -> Result<&ImportedNamesMap, JobError> {
-        self.genv.imported_names.try_get_forced(self.genv.cx)
+    pub fn imported_names(&mut self) -> Result<&ImportedNamesMap, JobError> {
+        self.genv.imported_names.get(self.cx)
     }
 
     pub fn expand_internal_types(&self) -> bool {

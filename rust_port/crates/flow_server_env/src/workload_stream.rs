@@ -26,7 +26,7 @@ use flow_heap::parsing_heaps::Transaction;
 use crate::server_env::Env;
 
 pub type WorkloadHandler = Box<
-    dyn FnMut(&Env, &Arc<Transaction>, &CheckContentsCache) -> WorkloadOutcome + Send + 'static,
+    dyn FnMut(&Env, &Arc<Transaction>, &mut CheckContentsCache) -> WorkloadOutcome + Send + 'static,
 >;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

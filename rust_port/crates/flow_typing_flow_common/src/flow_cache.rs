@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeDestructorT;
 use flow_typing_type::type_::TypeInner;
@@ -56,7 +57,7 @@ pub mod flow_constraint {
     }
 
     // attempt to read LB/UB pair from cache, add if absent
-    pub fn get<'cx>(cx: &Context<'cx>, l: &Type, u: &UseT<Context<'cx>>) -> bool {
+    pub fn get<'cx>(cx: &mut Context<'cx>, l: &Type, u: &UseT<Cx>) -> bool {
         match (l.deref(), u.deref()) {
             // Don't cache constraints involving type variables, since the
             // corresponding typing rules are already sufficiently robust.
@@ -117,8 +118,7 @@ pub mod flow_constraint {
                 } else {
                     mod_use_op_of_use_t(toplevel_use_op, u)
                 };
-                let mut cache = cx.constraint_cache_mut();
-                let found = !cache.add(l.dupe(), u_owned.dupe());
+                let found = !cx.constraint_cache_mut().add(l.dupe(), u_owned.dupe());
                 if !found {
                     // New entry
                 } else if cx.is_verbose() {
@@ -140,10 +140,7 @@ pub mod eval {
 
     use super::*;
 
-    pub fn id(cx: &Context, t: Type, defer_use: TypeDestructorT) -> Type {
-        let mut eval_id_cache = cx.eval_id_cache_mut();
-        let mut id_cache = cx.id_cache_mut();
-
+    pub fn id(cx: &mut Context, t: Type, defer_use: TypeDestructorT) -> Type {
         if let TypeInner::EvalT {
             defer_use_t: d,
             id: i,
@@ -151,11 +148,11 @@ pub mod eval {
         } = &*t
         {
             if d == &defer_use {
-                if let Some(cached_t) = eval_id_cache.get(i) {
+                if let Some(cached_t) = cx.eval_id_cache().get(i) {
                     return cached_t.dupe();
                 }
                 let i = type_eval::Id::generate_id();
-                eval_id_cache.insert(i.dupe(), t.dupe());
+                cx.eval_id_cache_mut().insert(i.dupe(), t.dupe());
                 return Type::new(TypeInner::EvalT {
                     type_: t,
                     defer_use_t: defer_use,
@@ -165,11 +162,11 @@ pub mod eval {
         }
 
         let cache_key = (t.dupe(), defer_use.dupe());
-        let id = match id_cache.get(&cache_key).cloned() {
+        let id = match cx.id_cache().get(&cache_key).cloned() {
             Some(i) => i,
             None => {
                 let i = type_eval::Id::generate_id();
-                id_cache.insert(cache_key, i.dupe());
+                cx.id_cache_mut().insert(cache_key, i.dupe());
                 i
             }
         };
@@ -192,13 +189,13 @@ pub mod eval {
     }
 
     pub fn add_repos(
-        cx: &Context,
+        cx: &mut Context,
         t: Type,
         defer_use: TypeDestructorT,
         id: type_eval::Id,
         tvar: Type,
     ) {
-        let mut repos_cache = cx.eval_repos_cache_mut();
+        let repos_cache = cx.eval_repos_cache_mut();
         let cache_key = (t, defer_use, id);
         repos_cache.insert(cache_key, tvar);
     }
@@ -215,8 +212,8 @@ pub mod fix {
         cache.get(&cache_key).map(|t| t.dupe())
     }
 
-    pub fn add(cx: &Context, is_this: bool, i: Type, tvar: Type) {
-        let mut cache = cx.fix_cache_mut();
+    pub fn add(cx: &mut Context, is_this: bool, i: Type, tvar: Type) {
+        let cache = cx.fix_cache_mut();
         let cache_key = (is_this, i);
         cache.insert(cache_key, tvar);
     }

@@ -5,182 +5,79 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::cell::Cell;
-use std::collections::HashMap;
-use std::rc::Rc;
-
 use dupe::Dupe;
-use flow_parser::file_key::FileKey;
-use flow_typing_context::ComponentT;
-use flow_typing_context::make_ccx;
-use flow_typing_utils::type_sig_merge;
-use linked_hash_map::LinkedHashMap;
+use flow_typing_context::ContextArena;
+use flow_typing_context::ContextStore;
+use flow_typing_context::MkBuiltins;
 
-/// Files which form a dependency cycle will share the same component context.
-/// We will create a component context on demand for the first file in a given
-/// component, then re-use it for any future files in the cycle.
+/// The contexts that checking a file creates for its dependencies, and the context the builtins
+/// are merged in, kept so that checking the next file can reuse them.
 ///
-/// We keep track of a reference count, so we can forget about a cached
-/// component context once every file referencing it has been removed.
-struct CachedCcx<'cx> {
-    leader: FileKey,
-    ccx: Rc<ComponentT<'cx>>,
-    refcount: Cell<usize>,
-}
-
-/// Each cached file holds a reference to its associated cached component
-/// context so that we can decrement its reference count.
-struct CachedFile<'cx> {
-    file: type_sig_merge::File<'cx>,
-    cx: flow_typing_context::Context<'cx>,
-    cached_ccx: Rc<CachedCcx<'cx>>,
-}
-
-pub struct CheckCache<'cx> {
-    // This data structure contains a hash table for O(1) lookup as well
-    // as a doubly linked list, which we use to keep track of recency of use. When
-    // a file is created or accessed, we move it to the front of the list. When we
-    // exceed the capacity of the cache, entries at the back of the list are
-    // dropped.
-    files: LinkedHashMap<FileKey, CachedFile<'cx>>,
-    ccxs: HashMap<FileKey, Rc<CachedCcx<'cx>>>,
-    size: usize,
+/// A check borrows the cache, so the cache can only be flushed between checks. Files which form a
+/// dependency cycle share a component context, which the dependency arena keys by the cycle's
+/// leader.
+pub struct CheckCache {
+    builtins_arena: ContextArena,
+    builtins: Option<MkBuiltins>,
+    dependencies: ContextArena,
     capacity: usize,
 }
 
-impl<'cx> CheckCache<'cx> {
+impl CheckCache {
+    /// A cache which is flushed by [CheckCache::trim] once it holds `capacity` dependencies.
     pub fn create(capacity: usize) -> Self {
-        let files = LinkedHashMap::new();
-        let ccxs = HashMap::new();
         CheckCache {
-            files,
-            ccxs,
-            size: 0,
+            builtins_arena: ContextArena::new(),
+            builtins: None,
+            dependencies: ContextArena::new(),
             capacity,
         }
     }
 
-    /// When a file is dropped from the cache, we decrement the refcount on its
-    /// cached component context. Once no more files reference a given component
-    /// context, we remove it from the cache.
-    fn release_ccx(&mut self, cached_ccx: &Rc<CachedCcx<'cx>>) {
-        let refcount = cached_ccx.refcount.get();
-        if refcount == 1 {
-            self.ccxs.remove(&cached_ccx.leader);
-        } else {
-            cached_ccx.refcount.set(refcount - 1);
-        }
-    }
-
-    /// Files are added to the front of the cache and moved to the front when
-    /// accessed, so the least recently used file(s) are at the back.
-    fn drop_least_recently_used(&mut self) {
-        match self.files.pop_front() {
-            None => {}
-            Some((
-                _,
-                CachedFile {
-                    file,
-                    cx,
-                    cached_ccx,
-                },
-            )) => {
-                if cached_ccx.refcount.get() == 1 {
-                    // This is the last file using this component context.
-                    // Use full cleanup to also break ForcingState cycles in
-                    // the shared graph: ForcingState closure -> cx -> ComponentT -> graph -> cycle
-                    cx.post_inference_cleanup();
-                } else {
-                    // Other files still share this component context.
-                    // Only break per-file Rc cycles; shared component data
-                    // is still needed by sibling files in the cache.
-                    cx.post_inference_cleanup_per_file();
-                }
-                file.drop_closures();
-                self.release_ccx(&cached_ccx);
-                self.size -= 1;
-            }
-        }
-    }
-
-    /// Files in a cycle share the same component context, so if we are creating a
-    /// file in a cycle with an already cached file, its component context will
-    /// also be cached.
-    fn find_or_create_ccx(&mut self, leader: FileKey) -> Rc<CachedCcx<'cx>> {
-        match self.ccxs.get(&leader) {
-            Some(cached_ccx) => {
-                cached_ccx.refcount.set(cached_ccx.refcount.get() + 1);
-                cached_ccx.dupe()
-            }
-            None => {
-                let ccx = Rc::new(make_ccx());
-                let cached_ccx = Rc::new(CachedCcx {
-                    leader: leader.dupe(),
-                    ccx,
-                    refcount: Cell::new(1),
-                });
-                self.ccxs.insert(leader, cached_ccx.dupe());
-                cached_ccx
-            }
-        }
-    }
-
-    /// If a file for the given file key is already in the cache, we move it to the
-    /// front of the queue to indicate that it was recently used. Otherwise, we
-    /// add a newly created file at the front of the queue.
-    pub fn find_or_create(
+    /// The builtins of the contexts made with this cache, which `mk_builtins` merges into the
+    /// builtins arena the first time they are asked for. The cached dependency contexts read
+    /// these, so the cache has to be cleared whenever the libraries they come from change.
+    pub fn builtins(
         &mut self,
-        leader: impl FnOnce() -> FileKey,
-        create_file: impl FnOnce(
-            Rc<ComponentT<'cx>>,
-        )
-            -> (type_sig_merge::File<'cx>, flow_typing_context::Context<'cx>),
-        file_key: FileKey,
-    ) -> (type_sig_merge::File<'cx>, flow_typing_context::Context<'cx>) {
-        match self.files.get_refresh(&file_key) {
-            Some(CachedFile { file, cx, .. }) => (file.dupe(), cx.dupe()),
-            None => {
-                let cached_ccx = self.find_or_create_ccx(leader());
-                let (file, cx) = create_file(cached_ccx.ccx.dupe());
-                if self.size == self.capacity {
-                    self.drop_least_recently_used();
-                }
-                self.files.insert(
-                    file_key,
-                    CachedFile {
-                        file: file.dupe(),
-                        cx: cx.dupe(),
-                        cached_ccx,
-                    },
-                );
-                self.size += 1;
-                (file, cx)
-            }
-        }
+        mk_builtins: impl FnOnce(&mut ContextArena) -> MkBuiltins,
+    ) -> MkBuiltins {
+        self.builtins
+            .get_or_insert_with(|| mk_builtins(&mut self.builtins_arena))
+            .dupe()
     }
 
-    /// Clearing the cache does not need to worry about the reference counts for
-    /// cached component contexts, since all cached files are also cleared.
+    /// The arena that owns the dependency contexts.
+    pub fn dependencies(&self) -> &ContextArena {
+        &self.dependencies
+    }
+
+    /// A store of `arena`, the arena of a checked file, with the dependencies and the builtins.
+    pub fn store<'a>(&'a mut self, arena: &'a mut ContextArena) -> ContextStore<'a> {
+        ContextStore::new(vec![
+            arena,
+            &mut self.dependencies,
+            &mut self.builtins_arena,
+        ])
+    }
+
+    /// Drops the dependency contexts. The builtins are kept.
+    pub fn clear_dependencies(&mut self) {
+        self.dependencies.clear();
+    }
+
+    /// Drops the dependency contexts once there are `capacity` of them, and tells whether it did.
+    pub fn trim(&mut self) -> bool {
+        let full = self.dependencies.dependency_count() >= self.capacity;
+        if full {
+            self.clear_dependencies();
+        }
+        full
+    }
+
+    /// Drops everything, the builtins included.
     pub fn clear(&mut self) {
-        self.cleanup_all_files();
-        self.files.clear();
-        self.ccxs.clear();
-        self.size = 0;
-    }
-
-    /// Break Rc cycles in all cached files. Call before dropping the cache.
-    /// Clears both Context Rc cycles (via post_inference_cleanup) and File
-    /// closure fields that capture Arc<Transaction> and Rc<CheckCache>.
-    pub fn cleanup_all_files(&mut self) {
-        for (_, cached_file) in self.files.iter() {
-            cached_file.cx.post_inference_cleanup();
-            cached_file.file.drop_closures();
-        }
-    }
-}
-
-impl Drop for CheckCache<'_> {
-    fn drop(&mut self) {
-        self.cleanup_all_files();
+        self.clear_dependencies();
+        self.builtins_arena.clear();
+        self.builtins = None;
     }
 }

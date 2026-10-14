@@ -95,7 +95,7 @@ use flow_typing_type::type_util;
 use vec1::Vec1;
 
 pub fn mk_object_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: &Reason,
     wrap_on_exact_obj: bool,
     invalidate_aliases: bool,
@@ -211,7 +211,7 @@ pub fn mk_object_type<'cx>(
 }
 
 /// The object type a resolved slice stands for, so errors can print it.
-fn object_type_of_slice<'cx>(cx: &Context<'cx>, slice: &object::Slice) -> Type {
+fn object_type_of_slice<'cx>(cx: &mut Context<'cx>, slice: &object::Slice) -> Type {
     let object::Slice {
         reason,
         strictness_kind,
@@ -407,7 +407,7 @@ fn record_banned_type_util_op(tool: &object::Tool) -> Option<RecordBannedTypeUti
 }
 
 pub fn object_slice<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     interface: Option<(Type, InstType)>,
     r: &Reason,
     id: properties::Id,
@@ -472,14 +472,14 @@ pub fn get_prop<'a>(
 
 // Lift a pairwise function to a function over a resolved list
 pub fn merge<F>(
-    f: F,
+    mut f: F,
     x0: Vec1<object::Slice>,
     rest: (Vec1<object::Slice>, Vec<Vec1<object::Slice>>),
 ) -> Vec1<object::Slice>
 where
-    F: Fn(&object::Slice, &object::Slice) -> object::Slice,
+    F: FnMut(&object::Slice, &object::Slice) -> object::Slice,
 {
-    let f_prime = |x0: Vec1<object::Slice>, x1: &Vec1<object::Slice>| -> Vec1<object::Slice> {
+    let mut f_prime = |x0: Vec1<object::Slice>, x1: &Vec1<object::Slice>| -> Vec1<object::Slice> {
         let mut result = Vec::new();
         for slice1 in x1.iter() {
             for slice0 in x0.iter() {
@@ -499,16 +499,16 @@ where
 // Lift a pairwise function that may return an error to a function over a resolved list
 // that may return an error, like spread2
 pub fn merge_result<A: Clone, B: Clone, F, C>(
-    f: F,
+    mut f: F,
     conv: C,
     x0: B,
     rest: (B, flow_data_structure_wrapper::list::FlowOcamlList<B>),
 ) -> Result<Vec1<A>, FlowJsException>
 where
-    F: Fn(&A, &A) -> Result<A, FlowJsException>,
+    F: FnMut(&A, &A) -> Result<A, FlowJsException>,
     C: Fn(B) -> Vec1<A>,
 {
-    let f_prime = |x0: Vec1<A>, x1: B| -> Result<Vec1<A>, FlowJsException> {
+    let mut f_prime = |x0: Vec1<A>, x1: B| -> Result<Vec1<A>, FlowJsException> {
         let x1 = conv(x1);
         let mut all: Vec<A> = Vec::new();
         for slice1 in x1.iter() {
@@ -529,8 +529,13 @@ where
 }
 
 fn spread2<'cx>(
-    dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
-    cx: &Context<'cx>,
+    dict_check: &dyn Fn(
+        &mut Context<'cx>,
+        UseOp,
+        &DictType,
+        &DictType,
+    ) -> Result<(), FlowJsException>,
+    cx: &mut Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
     allow_inexact: bool,
@@ -781,8 +786,13 @@ fn spread2<'cx>(
 }
 
 pub fn spread<'cx>(
-    dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
-    cx: &Context<'cx>,
+    dict_check: &dyn Fn(
+        &mut Context<'cx>,
+        UseOp,
+        &DictType,
+        &DictType,
+    ) -> Result<(), FlowJsException>,
+    cx: &mut Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
     allow_inexact: bool,
@@ -849,7 +859,7 @@ pub fn spread<'cx>(
 }
 
 pub fn spread_mk_object<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: &Reason,
     target: &object::spread::Target,
     slice: object::Slice,
@@ -936,15 +946,20 @@ pub fn spread_mk_object<'cx>(
 }
 
 pub fn object_spread<'cx, A>(
-    dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
+    dict_check: &dyn Fn(
+        &mut Context<'cx>,
+        UseOp,
+        &DictType,
+        &DictType,
+    ) -> Result<(), FlowJsException>,
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    return_: &dyn Fn(&mut Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -954,7 +969,7 @@ pub fn object_spread<'cx, A>(
     ) -> Result<A, FlowJsException>,
     options: &object::spread::Target,
     state: object::spread::State,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -975,15 +990,20 @@ pub fn object_spread<'cx, A>(
 }
 
 pub fn object_spread_with_env<'cx, A>(
-    dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
+    dict_check: &dyn Fn(
+        &mut Context<'cx>,
+        UseOp,
+        &DictType,
+        &DictType,
+    ) -> Result<(), FlowJsException>,
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    return_: &dyn Fn(&mut Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -993,7 +1013,7 @@ pub fn object_spread_with_env<'cx, A>(
     ) -> Result<A, FlowJsException>,
     options: &object::spread::Target,
     state: object::spread::State,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
@@ -1022,11 +1042,11 @@ pub fn object_spread_with_env<'cx, A>(
     //
     // Any other latent constraints involving this spread_id will also stop when they hit this
     // logic.
-    let cache = cx.spread_cache_cell();
-    let prev_can_spread = flow_typing_spread_cache::can_spread(cache, spread_id);
+    let prev_can_spread = flow_typing_spread_cache::can_spread(cx.spread_cache(), spread_id);
     if !prev_can_spread {
         return return_(cx, use_op, any_t::error(reason.dupe()));
     }
+    let cache = cx.spread_cache_mut();
     match (union_t, &x) {
         (None, x) => {
             for slice in x.iter() {
@@ -1049,10 +1069,11 @@ pub fn object_spread_with_env<'cx, A>(
             );
         }
     }
-    let can_spread = flow_typing_spread_cache::can_spread(cache, spread_id);
+    let can_spread = flow_typing_spread_cache::can_spread(cx.spread_cache(), spread_id);
     if prev_can_spread && !can_spread {
-        let (group1, group2) = flow_typing_spread_cache::get_error_groups(cache, spread_id);
-        let operand_ref = |bound: LowerBound| match bound {
+        let (group1, group2) =
+            flow_typing_spread_cache::get_error_groups(cx.spread_cache(), spread_id);
+        let operand_ref = |cx: &mut Context<'cx>, bound: LowerBound| match bound {
             LowerBound::Union(t) => flow_js_utils::type_reference_with_reason_for_error(
                 &t,
                 type_util::reason_of_t(&t).dupe(),
@@ -1062,17 +1083,20 @@ pub fn object_spread_with_env<'cx, A>(
                 slice.reason.dupe(),
             ),
         };
-        let operand_group = |group: LowerBoundGroup| ExponentialSpreadOperandGroup {
-            first: operand_ref(group.first),
-            second: group.second.map(operand_ref),
-        };
+        let operand_group =
+            |cx: &mut Context<'cx>, group: LowerBoundGroup| ExponentialSpreadOperandGroup {
+                first: operand_ref(cx, group.first),
+                second: group.second.map(|bound| operand_ref(cx, bound)),
+            };
+        let operand1 = operand_group(cx, group1);
+        let operand2 = operand_group(cx, group2);
         add_output(
             cx,
             env,
             ErrorMessage::EExponentialSpread(Box::new(EExponentialSpreadData {
                 spread_loc: reason.loc().dupe(),
-                operand1: operand_group(group1),
-                operand2: operand_group(group2),
+                operand1,
+                operand2,
             })),
         )?;
         return return_(cx, use_op, any_t::error(reason.dupe()));
@@ -1145,7 +1169,7 @@ pub fn object_spread_with_env<'cx, A>(
 }
 
 fn check_config2<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     pmap: &properties::PropertiesMap,
     slice: &object::Slice,
 ) -> (Type, Vec<(ALoc, Name, ALoc)>) {
@@ -1215,13 +1239,13 @@ fn check_config2<'cx>(
 
 pub fn check_component_config<'cx, A>(
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    return_: &dyn Fn(&mut Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     pmap: &properties::PropertiesMap,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
@@ -1266,18 +1290,18 @@ pub fn check_component_config<'cx, A>(
 
 pub fn object_rest<'cx, A>(
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
     return_: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         Box<dyn Fn(Polarity) -> UseOp>,
         object::rest::MergeMode,
         Type,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -1285,10 +1309,10 @@ pub fn object_rest<'cx, A>(
         object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    subt_check: &dyn Fn(UseOp, &Context<'cx>, (&Type, &Type)) -> Result<(), FlowJsException>,
+    subt_check: &dyn Fn(UseOp, &mut Context<'cx>, (&Type, &Type)) -> Result<(), FlowJsException>,
     options: &object::rest::MergeMode,
     state: &object::rest::State,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -1310,18 +1334,18 @@ pub fn object_rest<'cx, A>(
 
 pub fn object_rest_with_env<'cx, A>(
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
     return_: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         Box<dyn Fn(Polarity) -> UseOp>,
         object::rest::MergeMode,
         Type,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -1329,10 +1353,10 @@ pub fn object_rest_with_env<'cx, A>(
         object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    subt_check: &dyn Fn(UseOp, &Context<'cx>, (&Type, &Type)) -> Result<(), FlowJsException>,
+    subt_check: &dyn Fn(UseOp, &mut Context<'cx>, (&Type, &Type)) -> Result<(), FlowJsException>,
     options: &object::rest::MergeMode,
     state: &object::rest::State,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
@@ -1361,7 +1385,7 @@ pub fn object_rest_with_env<'cx, A>(
     //
     // The resulting object only has a property if the property is own in props1 and
     // it is not an own property of props2.
-    let rest = |cx,
+    let rest = |cx: &mut Context<'cx>,
                 use_op: &UseOp,
                 merge_mode: &object::rest::MergeMode,
                 slice1 @ object::Slice {
@@ -1597,7 +1621,7 @@ pub fn object_rest_with_env<'cx, A>(
 
 // Object Make Exact
 pub fn object_make_exact<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -1700,7 +1724,11 @@ pub fn object_make_exact<'cx>(
 }
 
 // Object Read Only
-pub fn object_read_only<'cx>(cx: &Context<'cx>, reason: &Reason, x: Vec1<object::Slice>) -> Type {
+pub fn object_read_only<'cx>(
+    cx: &mut Context<'cx>,
+    reason: &Reason,
+    x: Vec1<object::Slice>,
+) -> Type {
     let polarity = Polarity::Positive;
     let mk_read_only_object = |object::Slice {
                                    reason: r,
@@ -1773,7 +1801,7 @@ pub enum ObjectUpdateOptionalityKind {
 
 pub fn object_update_optionality<'cx>(
     kind: ObjectUpdateOptionalityKind,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: &Reason,
     x: Vec1<object::Slice>,
 ) -> Type {
@@ -1880,7 +1908,7 @@ pub fn object_update_optionality<'cx>(
 // {...A&(B|C)} = {...(A&B)|(A&C)}
 // {...(A|B)&C} = {...(A&C)|(B&C)}
 pub fn intersect2<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     object::Slice {
@@ -1912,7 +1940,7 @@ pub fn intersect2<'cx>(
 ) {
     let dict1 = obj_type::get_dict_opt(&flags1.obj_kind);
     let dict2 = obj_type::get_dict_opt(&flags2.obj_kind);
-    let intersection = |t1: Type, t2: Type| -> Type {
+    let mut intersection = |t1: Type, t2: Type| -> Type {
         if flow_typing_flow_common::concrete_type_eq::eq_with_env(cx, env, &t1, &t2) {
             t1
         } else {
@@ -1922,7 +1950,7 @@ pub fn intersect2<'cx>(
             ))
         }
     };
-    let merge_props = |q1: &Property, q2: &Property| -> Property {
+    let mut merge_props = |q1: &Property, q2: &Property| -> Property {
         let t1 = property::type_(q1);
         let t2 = property::type_(q2);
         let m1 = property::is_method(q1);
@@ -2004,7 +2032,7 @@ pub fn intersect2<'cx>(
 }
 
 pub fn intersect2_with_reason<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     intersection_loc: ALoc,
@@ -2026,9 +2054,9 @@ pub fn intersect2_with_reason<'cx>(
 }
 
 pub fn resolved<'cx, A>(
-    next: &dyn Fn(&Context<'cx>, UseOp, &object::Tool, &Reason, Vec1<object::Slice>) -> A,
+    next: &dyn Fn(&mut Context<'cx>, UseOp, &object::Tool, &Reason, Vec1<object::Slice>) -> A,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -2036,7 +2064,7 @@ pub fn resolved<'cx, A>(
         &object::Tool,
         Type,
     ) -> A,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
@@ -2102,7 +2130,7 @@ pub fn resolved<'cx, A>(
 }
 
 pub fn interface_slice<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     r: &Reason,
     static_: &Type,
     inst: InstType,
@@ -2149,20 +2177,20 @@ pub fn interface_slice<'cx>(
 
 pub fn resolve<'cx, A>(
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    return_: &dyn Fn(&mut Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         UseOp,
         &object::Tool,
         &Reason,
         Vec1<object::Slice>,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -2170,8 +2198,13 @@ pub fn resolve<'cx, A>(
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    statics: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Reason, &Type) -> Result<Type, FlowJsException>,
-    cx: &Context<'cx>,
+    statics: &dyn Fn(
+        &mut Context<'cx>,
+        &FlowJsEnv,
+        &Reason,
+        &Type,
+    ) -> Result<Type, FlowJsException>,
+    cx: &mut Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::Resolve,
@@ -2196,20 +2229,20 @@ pub fn resolve<'cx, A>(
 
 fn resolve_with_env<'cx, A>(
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    return_: &dyn Fn(&mut Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         UseOp,
         &object::Tool,
         &Reason,
         Vec1<object::Slice>,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -2217,8 +2250,13 @@ fn resolve_with_env<'cx, A>(
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    statics: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Reason, &Type) -> Result<Type, FlowJsException>,
-    cx: &Context<'cx>,
+    statics: &dyn Fn(
+        &mut Context<'cx>,
+        &FlowJsEnv,
+        &Reason,
+        &Type,
+    ) -> Result<Type, FlowJsException>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
@@ -2229,7 +2267,7 @@ fn resolve_with_env<'cx, A>(
     let dict_polarity_override = object_tool_dict_polarity_override(tool);
     let (t_generic_id, t) = {
         fn loop_generic<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             t: &Type,
             ls: object::GenericSpreadId,
         ) -> (object::GenericSpreadId, Type) {
@@ -2386,6 +2424,7 @@ fn resolve_with_env<'cx, A>(
             // top-level pattern matching against class lower bounds to object-like
             // uses. This duplication should be removed.
             DefTInner::ClassT(i) => {
+                let statics_t = statics(cx, env, r, i)?;
                 return recurse(
                     cx,
                     env,
@@ -2393,7 +2432,7 @@ fn resolve_with_env<'cx, A>(
                     reason,
                     object::ResolveTool::Resolve(resolve_tool.clone()),
                     tool,
-                    statics(cx, env, r, i)?,
+                    statics_t,
                 );
             }
             // `null` and `void` should pass through Partial, Required, $Exact,
@@ -2796,16 +2835,16 @@ fn resolve_with_env<'cx, A>(
 }
 
 pub fn super_<'cx, A>(
-    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    return_: &dyn Fn(&mut Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         UseOp,
         &object::Tool,
         &Reason,
         Vec1<object::Slice>,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -2813,7 +2852,7 @@ pub fn super_<'cx, A>(
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
@@ -2889,8 +2928,9 @@ pub fn super_<'cx, A>(
     }
 }
 
-pub fn mk_mapped_prop_type(
-    filter_optional: &dyn Fn(Type) -> Result<Type, FlowJsException>,
+pub fn mk_mapped_prop_type<'cx>(
+    cx: &mut Context<'cx>,
+    filter_optional: &dyn Fn(&mut Context<'cx>, Type) -> Result<Type, FlowJsException>,
     use_op: &UseOp,
     mapped_type_optionality: &MappedTypeOptionality,
     poly_prop: &Type,
@@ -2911,7 +2951,7 @@ pub fn mk_mapped_prop_type(
         MappedTypeOptionality::MakeOptional => Ok(type_util::optional(t, None, false)),
         MappedTypeOptionality::RemoveOptional => {
             if prop_optional {
-                filter_optional(t)
+                filter_optional(cx, t)
             } else {
                 Ok(t)
             }
@@ -3043,11 +3083,11 @@ pub fn merge_field(
 }
 
 pub fn map_object<'cx>(
-    filter_optional: &dyn Fn(Type) -> Result<Type, FlowJsException>,
+    filter_optional: &dyn Fn(&mut Context<'cx>, Type) -> Result<Type, FlowJsException>,
     name_remap: Option<&NameRemap>,
     poly_prop: &Type,
     mapped_type_flags: &MappedTypeFlags,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     use_op: &UseOp,
@@ -3066,8 +3106,12 @@ pub fn map_object<'cx>(
         interface,
         reachable_targs,
     } = slice;
-    let mk_prop_type = |key_t: Type, prop_optional: bool| -> Result<Type, FlowJsException> {
+    let mk_prop_type = |cx: &mut Context<'cx>,
+                        key_t: Type,
+                        prop_optional: bool|
+     -> Result<Type, FlowJsException> {
         mk_mapped_prop_type(
+            cx,
             filter_optional,
             use_op,
             mapped_type_optionality,
@@ -3090,49 +3134,51 @@ pub fn map_object<'cx>(
         }
     };
     /* Build the field for a given source key and its prop in the source object. */
-    let build_source_field =
-        |key: &Name, prop: &Property| -> Result<(ALoc, Property), FlowJsException> {
-            let prop_t = property::type_(prop);
-            let prop_polarity = property::polarity(prop);
-            let key_loc = property::first_loc(prop)
-                .unwrap_or_else(|| type_util::reason_of_t(prop_t).loc().dupe());
-            // A symbol-typed key contributes its `unique symbol` type, not a string literal.
-            let key_t = match key {
-                Name::Symbol(_) => {
-                    let r = flow_common::reason::mk_reason(
-                        VirtualReasonDesc::RUniqueSymbol,
+    let build_source_field = |cx: &mut Context<'cx>,
+                              key: &Name,
+                              prop: &Property|
+     -> Result<(ALoc, Property), FlowJsException> {
+        let prop_t = property::type_(prop);
+        let prop_polarity = property::polarity(prop);
+        let key_loc = property::first_loc(prop)
+            .unwrap_or_else(|| type_util::reason_of_t(prop_t).loc().dupe());
+        // A symbol-typed key contributes its `unique symbol` type, not a string literal.
+        let key_t = match key {
+            Name::Symbol(_) => {
+                let r = flow_common::reason::mk_reason(
+                    VirtualReasonDesc::RUniqueSymbol,
+                    key_loc.dupe(),
+                );
+                flow_js_utils::type_of_key_name_with_env(env, key.dupe(), &r)
+            }
+            Name::Str(key_str) => {
+                let key_str = key_str.dupe();
+                Type::new(TypeInner::DefT(
+                    flow_common::reason::mk_reason(
+                        VirtualReasonDesc::RStringLit(key_str.dupe()),
                         key_loc.dupe(),
-                    );
-                    flow_js_utils::type_of_key_name_with_env(env, key.dupe(), &r)
-                }
-                Name::Str(key_str) => {
-                    let key_str = key_str.dupe();
-                    Type::new(TypeInner::DefT(
-                        flow_common::reason::mk_reason(
-                            VirtualReasonDesc::RStringLit(key_str.dupe()),
-                            key_loc.dupe(),
-                        ),
-                        DefT::new(DefTInner::SingletonStrT {
-                            from_annot: true,
-                            value: key_str,
-                        }),
-                    ))
-                }
-            };
-            let prop_optional = is_prop_optional(prop_t);
-            let polarity = if *frozen {
-                Polarity::Positive
-            } else {
-                mk_variance(variance, prop_polarity)
-            };
-            let field = Property::new(PropertyInner::Field(Box::new(FieldData {
-                preferred_def_locs: None,
-                key_loc: Some(key_loc.dupe()),
-                type_: mk_prop_type(key_t, prop_optional)?,
-                polarity,
-            })));
-            Ok((key_loc, field))
+                    ),
+                    DefT::new(DefTInner::SingletonStrT {
+                        from_annot: true,
+                        value: key_str,
+                    }),
+                ))
+            }
         };
+        let prop_optional = is_prop_optional(prop_t);
+        let polarity = if *frozen {
+            Polarity::Positive
+        } else {
+            mk_variance(variance, prop_polarity)
+        };
+        let field = Property::new(PropertyInner::Field(Box::new(FieldData {
+            preferred_def_locs: None,
+            key_loc: Some(key_loc.dupe()),
+            type_: mk_prop_type(cx, key_t, prop_optional)?,
+            polarity,
+        })));
+        Ok((key_loc, field))
+    };
     let any_field = || -> Property {
         Property::new(PropertyInner::Field(Box::new(FieldData {
             preferred_def_locs: None,
@@ -3166,7 +3212,7 @@ pub fn map_object<'cx>(
                         out.insert(key.dupe(), any_field());
                     }
                     Some(prop) => {
-                        let (_, field) = build_source_field(key, prop)?;
+                        let (_, field) = build_source_field(cx, key, prop)?;
                         out.insert(key.dupe(), field);
                     }
                 }
@@ -3209,7 +3255,7 @@ pub fn map_object<'cx>(
                             }
                         }
                         Some(prop) => {
-                            let (_, field) = build_source_field(src_key, prop)?;
+                            let (_, field) = build_source_field(cx, src_key, prop)?;
                             for (n, _r) in dest_names {
                                 name_utils::map::update(
                                     n.dupe(),
@@ -3252,7 +3298,7 @@ pub fn map_object<'cx>(
                 let dict_key = type_util::union_of_ts(reason.dupe(), xs.clone(), None);
                 let dict_t_prime = DictType {
                     key: dict_key,
-                    value: mk_prop_type(dict_t.key.dupe(), dict_optional)?,
+                    value: mk_prop_type(cx, dict_t.key.dupe(), dict_optional)?,
                     dict_polarity: mk_variance(variance, dict_t.dict_polarity),
                     ..dict_t.clone()
                 };
@@ -3271,7 +3317,7 @@ pub fn map_object<'cx>(
             (None, ObjKind::Indexed(dict_t)) => {
                 let dict_optional = is_prop_optional(&dict_t.value);
                 let dict_t_prime = DictType {
-                    value: mk_prop_type(dict_t.key.dupe(), dict_optional)?,
+                    value: mk_prop_type(cx, dict_t.key.dupe(), dict_optional)?,
                     dict_polarity: mk_variance(variance, dict_t.dict_polarity),
                     ..dict_t.clone()
                 };
@@ -3316,7 +3362,7 @@ pub fn map_object<'cx>(
                     ObjKind::Indexed(dict_t),
                 ) => {
                     let dict_optional = is_prop_optional(&dict_t.value);
-                    let value = mk_prop_type(dict_t.key.dupe(), dict_optional)?;
+                    let value = mk_prop_type(cx, dict_t.key.dupe(), dict_optional)?;
                     let pol = mk_variance(variance, dict_t.dict_polarity);
                     let mut keys = vec![new_key.dupe()];
                     keys.extend(xs.iter().duped());
@@ -3326,7 +3372,7 @@ pub fn map_object<'cx>(
                     /* Selected_keys.xs entries with source dict — value comes from source dict_t.key,
                      * matching the legacy `(Some((_, xs)), ObjKind::Indexed(dict_t))` arm. */
                     let dict_optional = is_prop_optional(&dict_t.value);
-                    let value = mk_prop_type(dict_t.key.dupe(), dict_optional)?;
+                    let value = mk_prop_type(cx, dict_t.key.dupe(), dict_optional)?;
                     let pol = mk_variance(variance, dict_t.dict_polarity);
                     (xs.iter().duped().collect(), Some(value), Some(pol))
                 }
@@ -3418,20 +3464,20 @@ pub fn map_object<'cx>(
 
 pub fn run<'cx, A>(
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    return_: &dyn Fn(&mut Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         UseOp,
         &object::Tool,
         &Reason,
         Vec1<object::Slice>,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -3439,8 +3485,13 @@ pub fn run<'cx, A>(
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    statics: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Reason, &Type) -> Result<Type, FlowJsException>,
-    cx: &Context<'cx>,
+    statics: &dyn Fn(
+        &mut Context<'cx>,
+        &FlowJsEnv,
+        &Reason,
+        &Type,
+    ) -> Result<Type, FlowJsException>,
+    cx: &mut Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::ResolveTool,
@@ -3465,20 +3516,20 @@ pub fn run<'cx, A>(
 
 pub fn run_with_env<'cx, A>(
     add_output: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         ErrorMessage<ALoc>,
     ) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    return_: &dyn Fn(&mut Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         UseOp,
         &object::Tool,
         &Reason,
         Vec1<object::Slice>,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         &FlowJsEnv,
         UseOp,
         &Reason,
@@ -3486,8 +3537,13 @@ pub fn run_with_env<'cx, A>(
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    statics: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Reason, &Type) -> Result<Type, FlowJsException>,
-    cx: &Context<'cx>,
+    statics: &dyn Fn(
+        &mut Context<'cx>,
+        &FlowJsEnv,
+        &Reason,
+        &Type,
+    ) -> Result<Type, FlowJsException>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,

@@ -30,7 +30,7 @@ use super::*;
 // subtyping a sequence of arguments with a sequence of parameters
 
 pub(super) fn multiflow_call<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -54,7 +54,7 @@ pub(super) fn multiflow_call<'cx>(
 }
 
 pub(super) fn multiflow_subtype<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: VirtualUseOp<ALoc>,
@@ -80,7 +80,7 @@ pub(super) fn multiflow_subtype<'cx>(
 // Like multiflow_partial, but if there is no spread argument, it flows VoidT to
 // all unused parameters
 pub(super) fn multiflow_full<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -142,7 +142,7 @@ pub(super) fn multiflow_full<'cx>(
 /// It is a little trickier in that there may be a single spread argument after
 /// all the regular arguments. There may also be a rest parameter.
 pub(super) fn multiflow_partial<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -158,13 +158,13 @@ pub(super) fn multiflow_partial<'cx>(
     use flow_typing_type::type_::elemt_of_arrtype;
 
     fn multiflow_non_spreads<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         use_op: &UseOp,
         n: i32,
         mut arglist: VecDeque<(Type, Option<GenericId>)>,
         mut parlist: VecDeque<(Option<FlowSmolStr>, Type)>,
     ) -> (
-        Vec<(Type, UseT<Context<'cx>>)>,
+        Vec<(Type, UseT<Cx>)>,
         VecDeque<(Type, Option<GenericId>)>,
         VecDeque<(Option<FlowSmolStr>, Type)>,
     ) {
@@ -429,7 +429,7 @@ pub(super) fn multiflow_partial<'cx>(
 }
 
 pub(super) fn resolve_call_list<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
@@ -469,7 +469,7 @@ pub(super) fn resolve_call_list<'cx>(
 }
 
 pub(super) fn resolve_spread_list<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     reason_op: &Reason,
@@ -489,7 +489,7 @@ pub(super) fn resolve_spread_list<'cx>(
 }
 
 pub(super) fn resolve_spread_list_rec<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
@@ -546,7 +546,7 @@ pub(super) fn resolve_spread_list_rec<'cx>(
 
 // Now that everything is resolved, we can construct whatever type we're trying to resolve to.
 pub(super) fn finish_resolve_spread_list<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
@@ -570,7 +570,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     use flow_typing_type::type_util::reason_of_resolved_param;
     use flow_typing_type::type_util::type_ex_set;
 
-    fn propagate_dro<'cx>(cx: &Context<'cx>, elem: Type, arrtype: &ArrType) -> Type {
+    fn propagate_dro<'cx>(cx: &mut Context<'cx>, elem: Type, arrtype: &ArrType) -> Type {
         match arrtype {
             ArrType::ROArrayAT(box (_, Some(l)))
             | ArrType::ArrayAT(box ArrayATData {
@@ -585,7 +585,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
 
     // Turn tuple rest params into single params
     fn flatten_spread_args<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         args: &flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     ) -> Result<(Vec<ResolvedParam>, bool, bool), FlowJsException> {
@@ -750,7 +750,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     }
 
     fn finish_array<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
         trace: Option<DepthTrace>,
@@ -1010,50 +1010,52 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     }
                 }
 
-                let create_tuple_type =
-                    |inexact: bool, elements: Vec<TupleElement>| -> Result<Type, FlowJsException> {
-                        let (valid, arity) = flow_js_utils::validate_tuple_elements(
-                            cx, env, reason_op, true, &elements,
-                        )?;
-                        let arity = (arity.0 as i32, arity.1 as i32);
-                        let inexact = inexact || inexact_spread;
-                        // A tuple with a rest element after an inexact spread was reported by
-                        // `flatten_spread_args`.
-                        Ok(if valid && !(inexact && rest.is_some()) {
-                            let arrtype = match &rest {
-                                // A tuple type with only a rest element is an array.
-                                Some(TupleElement {
-                                    polarity: Polarity::Positive,
-                                    ..
-                                }) if elements.is_empty() => {
-                                    ArrType::ROArrayAT(Box::new((elem_t.dupe(), None)))
-                                }
-                                Some(_) if elements.is_empty() => {
-                                    ArrType::ArrayAT(Box::new(ArrayATData {
-                                        elem_t: elem_t.dupe(),
-                                        tuple_view: None,
-                                        react_dro: None,
-                                        strictness_kind: cx.type_strictness_kind(),
-                                    }))
-                                }
-                                _ => ArrType::TupleAT(Box::new(TupleATData {
+                let create_tuple_type = |cx: &mut Context<'cx>,
+                                         inexact: bool,
+                                         elements: Vec<TupleElement>|
+                 -> Result<Type, FlowJsException> {
+                    let (valid, arity) = flow_js_utils::validate_tuple_elements(
+                        cx, env, reason_op, true, &elements,
+                    )?;
+                    let arity = (arity.0 as i32, arity.1 as i32);
+                    let inexact = inexact || inexact_spread;
+                    // A tuple with a rest element after an inexact spread was reported by
+                    // `flatten_spread_args`.
+                    Ok(if valid && !(inexact && rest.is_some()) {
+                        let arrtype = match &rest {
+                            // A tuple type with only a rest element is an array.
+                            Some(TupleElement {
+                                polarity: Polarity::Positive,
+                                ..
+                            }) if elements.is_empty() => {
+                                ArrType::ROArrayAT(Box::new((elem_t.dupe(), None)))
+                            }
+                            Some(_) if elements.is_empty() => {
+                                ArrType::ArrayAT(Box::new(ArrayATData {
                                     elem_t: elem_t.dupe(),
-                                    elements: elements.into(),
-                                    arity,
-                                    inexact,
-                                    rest: rest.dupe(),
+                                    tuple_view: None,
                                     react_dro: None,
-                                    strictness_kind: Default::default(),
-                                })),
-                            };
-                            Type::new(TypeInner::DefT(
-                                reason_op.dupe(),
-                                DefT::new(DefTInner::ArrT(Rc::new(arrtype))),
-                            ))
-                        } else {
-                            any_t::error(reason_op.dupe())
-                        })
-                    };
+                                    strictness_kind: cx.type_strictness_kind(),
+                                }))
+                            }
+                            _ => ArrType::TupleAT(Box::new(TupleATData {
+                                elem_t: elem_t.dupe(),
+                                elements: elements.into(),
+                                arity,
+                                inexact,
+                                rest: rest.dupe(),
+                                react_dro: None,
+                                strictness_kind: Default::default(),
+                            })),
+                        };
+                        Type::new(TypeInner::DefT(
+                            reason_op.dupe(),
+                            DefT::new(DefTInner::ArrT(Rc::new(arrtype))),
+                        ))
+                    } else {
+                        any_t::error(reason_op.dupe())
+                    })
+                };
                 let t = match (resolve_to, &tuple_elements, spread_after_opt) {
                     (SpreadArrayResolveTo::ResolveToArray, _, _)
                     | (SpreadArrayResolveTo::ResolveToArrayLiteral { .. }, None, _)
@@ -1120,13 +1122,13 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         }
                     }
                     (SpreadArrayResolveTo::ResolveToTupleType { inexact }, Some(elements), _) => {
-                        create_tuple_type(inexact, elements.clone())?
+                        create_tuple_type(cx, inexact, elements.clone())?
                     }
                     (
                         SpreadArrayResolveTo::ResolveToArrayLiteral { as_const: true },
                         Some(elements),
                         _,
-                    ) => create_tuple_type(false, elements.clone())?,
+                    ) => create_tuple_type(cx, false, elements.clone())?,
                     (SpreadArrayResolveTo::ResolveToTupleType { .. }, None, _) => {
                         any_t::error(reason_op.dupe())
                     }
@@ -1153,7 +1155,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     // unknown length, then we're in trouble. Basically, any remaining argument
     // might flow to any remaining parameter.
     fn flatten_call_arg<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
         r: &Reason,
@@ -1166,7 +1168,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         FlowJsException,
     > {
         fn flatten<'cx>(
-            cx: &Context<'cx>,
+            cx: &mut Context<'cx>,
             mut args: Vec<(Type, Option<flow_typing_generics::GenericId>)>,
             spread: Option<(type_ex_set::TypeExSet, Option<ArrType>, array_spread::T)>,
             resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
@@ -1424,7 +1426,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     // This is used for things like Function.prototype.bind, which partially
     // apply arguments and then return the new function.
     fn finish_multiflow_partial<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         use_op: UseOp,
@@ -1531,7 +1533,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     // This is used for things like function application, where all the arguments
     // are applied to a function
     fn finish_multiflow_full<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         use_op: UseOp,

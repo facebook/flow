@@ -26,7 +26,7 @@ use flow_typing_type::type_util;
 use crate::insert_type;
 use crate::insert_type_imports;
 
-pub fn map_of_fixable_missing_local_params(cx: &Context) -> BTreeMap<Loc, Type> {
+pub fn map_of_fixable_missing_local_params(cx: &mut Context) -> BTreeMap<Loc, Type> {
     let all_errors = cx.errors();
     let aloc_tables = cx.aloc_tables();
     let missing_local_annot_lower_bounds = cx.missing_local_annot_lower_bounds();
@@ -35,7 +35,7 @@ pub fn map_of_fixable_missing_local_params(cx: &Context) -> BTreeMap<Loc, Type> 
         match err.msg_of_error() {
             ErrorMessage::EMissingLocalAnnotation { .. } => {
                 if let Some(aloc) = err.loc_of_error() {
-                    let loc = aloc.to_loc_with_tables(&aloc_tables);
+                    let loc = aloc.to_loc_with_tables(aloc_tables);
                     let aloc_fuzzy = flow_aloc::ALocFuzzy::new(aloc.dupe());
                     match missing_local_annot_lower_bounds.get(&aloc_fuzzy) {
                         None => {}
@@ -72,7 +72,7 @@ pub fn map_of_fixable_missing_local_params(cx: &Context) -> BTreeMap<Loc, Type> 
 
 pub fn fix_missing_param_annot_at_loc<'a, 'cx>(
     remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'a>>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
@@ -108,7 +108,7 @@ pub fn fix_missing_param_annot_at_loc<'a, 'cx>(
 
 pub fn fix_all_missing_param_annot_errors_in_file<'a, 'cx>(
     mut remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'a>>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,

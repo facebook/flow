@@ -19,11 +19,11 @@ pub trait Context {
     fn enable_const_params(&self) -> bool;
     fn invariant_special_casing_disabled(&self) -> bool;
     fn stylex_shorthand_prop(&self) -> Option<&str>;
-    fn add_exhaustive_check(&self, loc: ALoc, cases: (Vec<ALoc>, bool));
+    fn add_exhaustive_check(&mut self, loc: ALoc, cases: (Vec<ALoc>, bool));
     fn exhaustive_check(&self, loc: &ALoc) -> Option<(Vec<ALoc>, bool)>;
 }
 
 pub trait Flow {
     type Cx;
-    fn add_output(cx: &Self::Cx, error: ErrorMessage<ALoc>);
+    fn add_output(cx: &mut Self::Cx, error: ErrorMessage<ALoc>);
 }

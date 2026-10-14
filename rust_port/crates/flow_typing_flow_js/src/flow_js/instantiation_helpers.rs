@@ -17,7 +17,7 @@ use super::*;
 
 impl flow_js_utils::InstantiationHelper for FlowJs {
     fn reposition<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         loc: ALoc,
@@ -27,7 +27,7 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
     }
 
     fn is_subtype<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
@@ -38,7 +38,7 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
     }
 
     fn unify<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
@@ -58,7 +58,7 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
     }
 
     fn mk_targ<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         typeparam: &TypeParam,
         reason_op: &Reason,
         reason_tapp: &Reason,
@@ -69,7 +69,7 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
 
 /// Instantiate a polymorphic definition given tparam instantiations in a Call or New expression.  
 pub(super) fn instantiate_with_targs_with_soln<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -107,7 +107,7 @@ pub(super) fn instantiate_with_targs_with_soln<'cx>(
 }
 
 pub(super) fn instantiate_with_targs<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -130,11 +130,11 @@ pub(super) fn instantiate_with_targs<'cx>(
 }
 
 pub(super) fn instantiate_poly_call_or_new_with_soln<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     lparts: (Reason, ALoc, Vec1<TypeParam>, Type),
-    uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Context<'cx>>),
+    uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Cx>),
     check: impl FnOnce() -> ImplicitInstantiationCheck,
 ) -> Result<(Type, Vec<(Type, SubstName)>), FlowJsException> {
     let (reason_tapp, tparams_loc, xs, t) = lparts;
@@ -168,11 +168,11 @@ pub(super) fn instantiate_poly_call_or_new_with_soln<'cx>(
 }
 
 pub(super) fn instantiate_poly_call_or_new<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     lparts: (Reason, ALoc, Vec1<TypeParam>, Type),
-    uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Context<'cx>>),
+    uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Cx>),
     check: impl FnOnce() -> ImplicitInstantiationCheck,
 ) -> Result<Type, FlowJsException> {
     let (reason_tapp, tparams_loc, xs, t) = lparts;
@@ -208,7 +208,7 @@ pub(super) fn instantiate_poly_call_or_new<'cx>(
 /// Instantiate a polymorphic definition with stated bound or 'any' for args  
 /// Needed only for `instanceof` refis and React.PropTypes.instanceOf types  
 pub(super) fn instantiate_poly_default_args<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -241,7 +241,7 @@ pub(super) fn instantiate_poly_default_args<'cx>(
 
 // Specialize This in a class. Eventually this causes substitution
 pub(super) fn instantiate_this_class<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     reason_op: &Reason,
@@ -249,7 +249,7 @@ pub(super) fn instantiate_this_class<'cx>(
     c: &Type,
     ts: Option<Rc<[Type]>>,
     this: &Type,
-    k: &Cont<Context<'cx>>,
+    k: &Cont<Cx>,
 ) -> Result<(), FlowJsException> {
     let this_use = UseT::new(UseTInner::ThisSpecializeT(
         reason_tapp.dupe(),

@@ -55,7 +55,7 @@ use flow_typing_type::type_util::reason_of_t;
 use crate::type_operation_utils;
 
 pub fn check_polarity<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     tparams: &BTreeMap<SubstName, TypeParam>,
     polarity: Polarity,
     t: &Type,
@@ -64,7 +64,7 @@ pub fn check_polarity<'cx>(
 }
 
 fn check_polarity_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     tparams: &BTreeMap<SubstName, TypeParam>,
     polarity: Polarity,
@@ -84,7 +84,7 @@ fn check_polarity_with_env<'cx>(
 // TODO: flesh this out
 // [seen] is the set of visited EvalT ids
 fn check_polarity_impl<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
@@ -194,7 +194,7 @@ fn check_polarity_impl<'cx>(
                         cx, env, reason, t,
                     )
                 },
-                &|reason| reason.loc().dupe(),
+                &|_, reason| reason.loc().dupe(),
                 &|cx, env, l| {
                     match l.deref() {
                         TypeInner::AnyT(..) => return Ok(()),
@@ -206,7 +206,7 @@ fn check_polarity_impl<'cx>(
                                 );
                             }
                             if matches!(d.deref(), DefTInner::InstanceT(_)) {
-                                let concretize = |t: &Type| {
+                                let concretize = |cx: &mut Context<'_>, t: &Type| {
                                     flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(
                                         cx,
                                         env,
@@ -619,7 +619,7 @@ fn check_polarity_impl<'cx>(
 }
 
 fn check_polarity_propmap<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     skip_ctor: bool,
@@ -639,7 +639,7 @@ fn check_polarity_propmap<'cx>(
 }
 
 fn check_polarity_prop<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
@@ -688,7 +688,7 @@ fn check_polarity_prop<'cx>(
 }
 
 fn check_polarity_dict<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
@@ -716,7 +716,7 @@ fn check_polarity_dict<'cx>(
 }
 
 fn check_polarity_call<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
@@ -729,7 +729,7 @@ fn check_polarity_call<'cx>(
 }
 
 fn check_polarity_typeparam<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
@@ -759,7 +759,7 @@ fn check_polarity_typeparam<'cx>(
 // the elements after it. The spread itself is not evaluated, since evaluating it with type
 // parameters reports errors at the definition.
 fn check_tuple_spread_polarity<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
@@ -794,7 +794,7 @@ fn check_tuple_spread_polarity<'cx>(
 
 // A spread argument's elements are read and copied, so their own polarity does not matter.
 fn check_spread_argument_polarity<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
@@ -832,7 +832,7 @@ fn check_spread_argument_polarity<'cx>(
 }
 
 fn variance_check<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     tparams: &BTreeMap<SubstName, TypeParam>,

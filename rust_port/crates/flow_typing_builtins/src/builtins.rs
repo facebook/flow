@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::cell::RefCell;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 use dupe::Dupe;
@@ -17,36 +15,29 @@ use flow_common::flow_import_specifier::Userland;
 use flow_common::reason::Reason;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_lazy::ContextFamily;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::Type;
 
-pub type LazyVal<'a, CX> =
-    Rc<flow_lazy::Lazy<CX, (ALoc, Type), Box<dyn FnOnce(&CX) -> (ALoc, Type) + 'a>>>;
+pub type LazyVal<CX> = Rc<flow_lazy::Lazy<CX, (ALoc, Type)>>;
 
-pub type LazyModuleType<'a, CX> =
-    Rc<flow_lazy::Lazy<CX, ModuleType, Box<dyn FnOnce(&CX) -> ModuleType + 'a>>>;
+pub type LazyModuleType<CX> = Rc<flow_lazy::Lazy<CX, ModuleType>>;
 
-pub type LazyModule<'a, CX> = Rc<
-    flow_lazy::Lazy<
-        CX,
-        (Reason, LazyModuleType<'a, CX>),
-        Box<dyn FnOnce(&CX) -> (Reason, LazyModuleType<'a, CX>) + 'a>,
-    >,
->;
+pub type LazyModule<CX> = Rc<flow_lazy::Lazy<CX, (Reason, LazyModuleType<CX>)>>;
 
-pub struct Builtins<'a, CX> {
-    original_global_values: FlowOrdMap<FlowSmolStr, LazyVal<'a, CX>>,
-    original_global_types: FlowOrdMap<FlowSmolStr, LazyVal<'a, CX>>,
-    original_global_modules: FlowOrdMap<FlowSmolStr, LazyModule<'a, CX>>,
-    source_cx: Option<CX>,
-    type_mapper: Rc<dyn Fn(&CX, &CX, Type) -> Type + 'a>,
-    module_type_mapper: Rc<dyn Fn(&CX, &CX, &ModuleType) -> ModuleType + 'a>,
-    mapped_global_names: RefCell<HashMap<FlowSmolStr, (ALoc, Type)>>,
-    mapped_global_types: RefCell<HashMap<FlowSmolStr, (ALoc, Type)>>,
-    mapped_global_modules: RefCell<HashMap<FlowSmolStr, (Reason, LazyModuleType<'a, CX>)>>,
+/// Reads a builtin into the context that asked for it.
+pub type ReadBuiltin<CX, B, T> =
+    Rc<dyn for<'a> Fn(&mut <CX as ContextFamily>::Context<'a>, &B) -> T>;
+
+pub struct Builtins<CX: ContextFamily> {
+    original_global_values: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
+    original_global_types: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
+    original_global_modules: FlowOrdMap<FlowSmolStr, LazyModule<CX>>,
+    read_value: ReadBuiltin<CX, LazyVal<CX>, (ALoc, Type)>,
+    read_module: ReadBuiltin<CX, LazyModule<CX>, (Reason, ModuleType)>,
 }
 
-impl<CX> std::fmt::Debug for Builtins<'_, CX> {
+impl<CX: ContextFamily> std::fmt::Debug for Builtins<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Builtins")
             .field(
@@ -65,7 +56,7 @@ impl<CX> std::fmt::Debug for Builtins<'_, CX> {
     }
 }
 
-impl<'a, CX: Clone + 'a> Builtins<'a, CX> {
+impl<CX: ContextFamily> Builtins<CX> {
     pub fn builtin_ordinary_name_set(&self) -> BTreeSet<FlowSmolStr> {
         let mut result = BTreeSet::new();
         for k in self.original_global_values.keys() {
@@ -81,148 +72,73 @@ impl<'a, CX: Clone + 'a> Builtins<'a, CX> {
         self.original_global_modules.keys().duped().collect()
     }
 
-    pub fn get_builtin_value_opt(&self, cx: &CX, name: &str) -> Option<(ALoc, Type)> {
-        if let Some(v) = self.mapped_global_names.borrow().get(name) {
-            return Some((v.0.dupe(), v.1.dupe()));
-        }
-        match self.original_global_values.get(name) {
-            None => None,
-            Some(lazy_val) => {
-                let source_cx = self.source_cx.as_ref().unwrap_or(cx);
-                let (l, v) = lazy_val.get_forced(source_cx).clone();
-                let v = (self.type_mapper)(source_cx, cx, v);
-                self.mapped_global_names
-                    .borrow_mut()
-                    .insert(FlowSmolStr::from(name), (l.dupe(), v.dupe()));
-                Some((l, v))
-            }
-        }
+    /// Reads the global value `name` into `cx`. Each read forces and copies it again, so the
+    /// context memoizes the result.
+    pub fn read_value_opt(&self, cx: &mut CX::Context<'_>, name: &str) -> Option<(ALoc, Type)> {
+        let lazy_val = self.original_global_values.get(name)?;
+        Some((self.read_value)(cx, lazy_val))
     }
 
-    fn get_builtin_type_opt_inner(&self, cx: &CX, name: &str) -> Option<(ALoc, Type)> {
-        if let Some(v) = self.mapped_global_types.borrow().get(name) {
-            return Some((v.0.dupe(), v.1.dupe()));
-        }
-        match self.original_global_types.get(name) {
-            None => None,
-            Some(lazy_val) => {
-                let source_cx = self.source_cx.as_ref().unwrap_or(cx);
-                let (l, v) = lazy_val.get_forced(source_cx).clone();
-                let v = (self.type_mapper)(source_cx, cx, v);
-                self.mapped_global_types
-                    .borrow_mut()
-                    .insert(FlowSmolStr::from(name), (l.dupe(), v.dupe()));
-                Some((l, v))
-            }
-        }
+    /// Reads the global type `name` into `cx`, like [Builtins::read_value_opt].
+    pub fn read_type_opt(&self, cx: &mut CX::Context<'_>, name: &str) -> Option<(ALoc, Type)> {
+        let lazy_val = self.original_global_types.get(name)?;
+        Some((self.read_value)(cx, lazy_val))
     }
 
-    pub fn get_builtin_type_opt(&self, cx: &CX, name: &str) -> Option<(ALoc, Type)> {
-        match self.get_builtin_type_opt_inner(cx, name) {
-            None => self.get_builtin_value_opt(cx, name),
-            v_opt => v_opt,
-        }
-    }
-
-    pub fn get_builtin_module_opt(
+    /// Reads the global module `name` into `cx`, like [Builtins::read_value_opt].
+    pub fn read_module_opt(
         &self,
-        cx: &CX,
+        cx: &mut CX::Context<'_>,
         name: &Userland,
-    ) -> Option<(Reason, LazyModuleType<'a, CX>)> {
-        let name_str = name.as_str();
-        if let Some(v) = self.mapped_global_modules.borrow().get(name_str) {
-            return Some((v.0.dupe(), v.1.dupe()));
-        }
-        match self.original_global_modules.get(name_str) {
-            None => None,
-            Some(lazy_val) => {
-                let source_cx = self.source_cx.as_ref().unwrap_or(cx);
-                let (r, lazy_module) = lazy_val.get_forced(source_cx);
-                let module = lazy_module.get_forced(source_cx).dupe();
-                let mapped_module: LazyModuleType<'a, CX> = Rc::new(flow_lazy::Lazy::new_forced(
-                    (self.module_type_mapper)(source_cx, cx, &module),
-                ));
-                self.mapped_global_modules.borrow_mut().insert(
-                    FlowSmolStr::from(name_str),
-                    (r.dupe(), mapped_module.dupe()),
-                );
-                Some((r.dupe(), mapped_module))
-            }
-        }
+    ) -> Option<(Reason, ModuleType)> {
+        let lazy_module = self.original_global_modules.get(name.as_str())?;
+        Some((self.read_module)(cx, lazy_module))
     }
 
+    /// Builtins read in the context that forces them.
     pub fn of_name_map(
-        type_mapper: Rc<dyn Fn(&CX, &CX, Type) -> Type + 'a>,
-        module_type_mapper: Rc<dyn Fn(&CX, &CX, &ModuleType) -> ModuleType + 'a>,
-        values: FlowOrdMap<FlowSmolStr, LazyVal<'a, CX>>,
-        types: FlowOrdMap<FlowSmolStr, LazyVal<'a, CX>>,
-        modules: FlowOrdMap<FlowSmolStr, LazyModule<'a, CX>>,
+        values: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
+        types: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
+        modules: FlowOrdMap<FlowSmolStr, LazyModule<CX>>,
     ) -> Self {
-        Self::of_name_map_with_source_cx_opt(
-            None,
-            type_mapper,
-            module_type_mapper,
+        Self::of_name_map_with_readers(
+            Rc::new(|cx: &mut CX::Context<'_>, lazy_val: &LazyVal<CX>| {
+                lazy_val.get_forced(cx).clone()
+            }),
+            Rc::new(|cx: &mut CX::Context<'_>, lazy_module: &LazyModule<CX>| {
+                let (r, lazy_module_type) = lazy_module.get_forced(cx);
+                (r.dupe(), lazy_module_type.get_forced(cx).dupe())
+            }),
             values,
             types,
             modules,
         )
     }
 
-    pub fn of_name_map_with_source_cx(
-        source_cx: CX,
-        type_mapper: Rc<dyn Fn(&CX, &CX, Type) -> Type + 'a>,
-        module_type_mapper: Rc<dyn Fn(&CX, &CX, &ModuleType) -> ModuleType + 'a>,
-        values: FlowOrdMap<FlowSmolStr, LazyVal<'a, CX>>,
-        types: FlowOrdMap<FlowSmolStr, LazyVal<'a, CX>>,
-        modules: FlowOrdMap<FlowSmolStr, LazyModule<'a, CX>>,
-    ) -> Self {
-        Self::of_name_map_with_source_cx_opt(
-            Some(source_cx),
-            type_mapper,
-            module_type_mapper,
-            values,
-            types,
-            modules,
-        )
-    }
-
-    fn of_name_map_with_source_cx_opt(
-        source_cx: Option<CX>,
-        type_mapper: Rc<dyn Fn(&CX, &CX, Type) -> Type + 'a>,
-        module_type_mapper: Rc<dyn Fn(&CX, &CX, &ModuleType) -> ModuleType + 'a>,
-        values: FlowOrdMap<FlowSmolStr, LazyVal<'a, CX>>,
-        types: FlowOrdMap<FlowSmolStr, LazyVal<'a, CX>>,
-        modules: FlowOrdMap<FlowSmolStr, LazyModule<'a, CX>>,
+    /// Builtins whose lazy values belong to another context, which `read_value` and
+    /// `read_module` force and copy into the context asking for them.
+    pub fn of_name_map_with_readers(
+        read_value: ReadBuiltin<CX, LazyVal<CX>, (ALoc, Type)>,
+        read_module: ReadBuiltin<CX, LazyModule<CX>, (Reason, ModuleType)>,
+        values: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
+        types: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
+        modules: FlowOrdMap<FlowSmolStr, LazyModule<CX>>,
     ) -> Self {
         Builtins {
             original_global_values: values,
             original_global_types: types,
             original_global_modules: modules,
-            source_cx,
-            type_mapper,
-            module_type_mapper,
-            mapped_global_names: RefCell::new(HashMap::new()),
-            mapped_global_types: RefCell::new(HashMap::new()),
-            mapped_global_modules: RefCell::new(HashMap::new()),
+            read_value,
+            read_module,
         }
     }
 
     pub fn empty() -> Self {
-        Builtins {
-            original_global_values: FlowOrdMap::new(),
-            original_global_types: FlowOrdMap::new(),
-            original_global_modules: FlowOrdMap::new(),
-            source_cx: None,
-            type_mapper: Rc::new(|_src_cx: &CX, _dst_cx: &CX, t| t),
-            module_type_mapper: Rc::new(|_src_cx: &CX, _dst_cx: &CX, m: &ModuleType| m.dupe()),
-            mapped_global_names: RefCell::new(HashMap::new()),
-            mapped_global_types: RefCell::new(HashMap::new()),
-            mapped_global_modules: RefCell::new(HashMap::new()),
-        }
+        Self::of_name_map(FlowOrdMap::new(), FlowOrdMap::new(), FlowOrdMap::new())
     }
 }
 
-impl<'a, CX: Clone + 'a> Default for Builtins<'a, CX> {
+impl<CX: ContextFamily> Default for Builtins<CX> {
     fn default() -> Self {
         Self::empty()
     }

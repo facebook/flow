@@ -21,7 +21,7 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_common::flow_js_utils;
 use vec1::Vec1;
 
-fn handle_element(cx: &Context, elt: &Element) -> bool {
+fn handle_element(cx: &mut Context, elt: &Element) -> bool {
     match elt {
         Element::Normal(_) | Element::Resolvable(_) => false,
         Element::Illegal(Blame {
@@ -51,7 +51,7 @@ fn key_of_element(elt: &Element) -> &EnvKey<ALoc> {
 }
 
 pub fn handle_component<A: Clone, B: Clone>(
-    cx: &Context,
+    cx: &mut Context,
     graph: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>, DefinitionReferenceKind)>,
     scc: &OrderingResult,
 ) {

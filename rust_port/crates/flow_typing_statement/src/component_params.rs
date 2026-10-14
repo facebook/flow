@@ -37,13 +37,16 @@ impl Config for DeclarationConfig {
     type RestAst = declaration_param_config::RestAst<(ALoc, Type)>;
 
     fn eval_param<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, CheckExprError> {
         component_declaration_config::eval_param(cx, param)
     }
 
-    fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Result<Self::RestAst, CheckExprError> {
+    fn eval_rest<'a>(
+        cx: &mut Context<'a>,
+        rest: &Self::Rest,
+    ) -> Result<Self::RestAst, CheckExprError> {
         component_declaration_config::eval_rest(cx, rest)
     }
 
@@ -63,7 +66,7 @@ pub struct TparamFinder;
 impl TypeVisitor<Result<FlowOrdSet<SubstName>, Found>> for TparamFinder {
     fn type_<'a>(
         &mut self,
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         pole: Polarity,
         acc: Result<FlowOrdSet<SubstName>, Found>,
         t: &Type,
@@ -109,7 +112,7 @@ pub fn add_rest(r: declaration_param_config::Rest, x: &mut param_types::Params) 
 }
 
 pub fn config<'a, C: Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     in_annotation: bool,
     config_reason: &flow_common::reason::Reason,
     params: &[C::Param],
@@ -228,7 +231,7 @@ pub fn config<'a, C: Config>(
 }
 
 pub fn eval<'a, C: Config, R>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     params: &[C::Param],
     rest: Option<&C::Rest>,
     reconstruct: impl Fn(Vec<C::ParamAst>, Option<C::RestAst>) -> R,

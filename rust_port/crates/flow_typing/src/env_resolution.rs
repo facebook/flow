@@ -57,6 +57,7 @@ use flow_parser::ast;
 use flow_parser::ast_utils;
 use flow_parser::loc_sig::LocSig;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_context::TypingMode;
 use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
@@ -89,7 +90,7 @@ use flow_typing_utils::type_operation_utils;
 use flow_utils_concurrency::job_error::JobError;
 
 fn mk_tparams_map<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
 ) -> FlowOrdMap<SubstName, Type> {
     let env = cx.environment();
@@ -103,29 +104,29 @@ fn mk_tparams_map<'cx>(
 }
 
 fn try_cache_result<'cx, T>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     target_loc: Option<ALoc>,
-    check: impl FnOnce(&Context<'cx>) -> Result<T, CheckExprError>,
-    cache: impl FnOnce(&T),
+    check: impl FnOnce(&mut Context<'cx>) -> Result<T, CheckExprError>,
+    cache: impl FnOnce(&mut Context<'cx>, &T),
 ) -> Result<T, CheckExprError> {
     if !matches!(
-        &*cx.typing_mode(),
+        cx.typing_mode(),
         flow_typing_context::TypingMode::CheckingMode
     ) {
         let original_errors = cx.errors();
         cx.reset_errors(ErrorSet::new());
         let (produced_uncacheable_result, result) =
-            cx.run_in_synthesis_mode(false, target_loc, || check(cx));
+            cx.run_in_synthesis_mode(false, target_loc, check);
         let can_cache = !produced_uncacheable_result && cx.errors().is_empty();
         cx.reset_errors(original_errors);
         let e = result?;
         if can_cache {
-            cache(&e);
+            cache(cx, &e);
         }
         Ok(e)
     } else {
         let e = check(cx)?;
-        cache(&e);
+        cache(cx, &e);
         Ok(e)
     }
 }
@@ -133,7 +134,7 @@ fn try_cache_result<'cx, T>(
 // Helper to incrementally build PatternUnion state from a previous pattern location.
 // Returns the pattern_union_state to use for the current pattern.
 fn get_pattern_union_state_from_prev<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     prev_pattern_loc: Option<ALoc>,
 ) -> (match_pattern_ir::pattern_union::PatternUnion, usize) {
     match prev_pattern_loc {
@@ -148,7 +149,7 @@ fn get_pattern_union_state_from_prev<'cx>(
                         .expect("match pattern cache missing");
                     exhaustive::pattern_union_builder::add_pattern(
                         cx,
-                        &|loc| type_env::is_global_var(cx, loc),
+                        &|cx, loc| type_env::is_global_var(cx, loc),
                         false,
                         (
                             prev_pattern_union_state.0,
@@ -165,14 +166,13 @@ fn get_pattern_union_state_from_prev<'cx>(
 }
 
 fn expression<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     encl_ctx: Option<EnclosingContext>,
     decl: Option<ast::VariableKind>,
     as_const: Option<bool>,
     exp: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
-    let cache = cx.node_cache();
-    let target_loc = match &*cx.typing_mode() {
+    let target_loc = match cx.typing_mode() {
         TypingMode::SynthesisMode { target_loc } => target_loc.clone(),
         _ => None,
     };
@@ -181,15 +181,15 @@ fn expression<'cx>(
         cx,
         target_loc,
         move |cx| statement::expression(encl_ctx, decl, as_const, cx, &exp_clone),
-        |e| {
-            cache.set_expression(e.dupe());
+        |cx, e| {
+            cx.node_cache_mut().set_expression(e.dupe());
         },
     )?;
     let (_loc, t) = result.loc().dupe();
     Ok(t)
 }
 
-fn make_hooklike<'cx>(cx: &Context<'cx>, t: Type) -> Type {
+fn make_hooklike<'cx>(cx: &mut Context<'cx>, t: Type) -> Type {
     if cx.hook_compatibility() {
         match t.deref() {
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), type_::DefTInner::TypeT(..)) => t,
@@ -220,13 +220,12 @@ fn make_hooklike<'cx>(cx: &Context<'cx>, t: Type) -> Type {
 /// that binds exactly one value. A variable declaration does, and is the only
 /// statement position that may spell out a `unique symbol`.
 fn resolve_annotation<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
     react_deep_read_only: Option<(ALoc, name_def_types::DroAnnot)>,
     anno: &ast::types::Annotation<ALoc, ALoc>,
     binds_single_value: BindsSingleValue,
 ) -> Result<Type, JobError> {
-    let cache = cx.node_cache();
     let tparams_map = mk_tparams_map(cx, tparams_map);
     let (t, anno_typed) =
         type_annotation::mk_type_available_annotation(cx, tparams_map, anno, binds_single_value)?;
@@ -266,16 +265,16 @@ fn resolve_annotation<'cx>(
         _ => t,
     };
     if matches!(
-        &*cx.typing_mode(),
+        cx.typing_mode(),
         flow_typing_context::TypingMode::CheckingMode
     ) {
-        cache.set_annotation(anno_typed);
+        cx.node_cache_mut().set_annotation(anno_typed);
     }
     Ok(t)
 }
 
 fn synthesizable_expression<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     encl_ctx: EnclosingContext,
     exp: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
@@ -352,7 +351,7 @@ fn synthesizable_expression<'cx>(
 }
 
 fn mk_selector_reason_has_default<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc: &ALoc,
     selector: &selector::Selector<ALoc, ALoc>,
 ) -> Result<(type_::Selector, Reason, bool), CheckExprError> {
@@ -429,7 +428,7 @@ fn mk_selector_reason_has_default<'cx>(
 }
 
 fn synthesize_expression_for_instantiation<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     target_loc: Option<ALoc>,
     e: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<ast::expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
@@ -438,14 +437,14 @@ fn synthesize_expression_for_instantiation<'cx>(
         cx,
         target_loc,
         move |cx| statement::expression(None, None, None, cx, &e_clone),
-        |e| {
-            cx.node_cache().set_expression(e.dupe());
+        |cx, e| {
+            cx.node_cache_mut().set_expression(e.dupe());
         },
     )
 }
 
 fn synthesize_jsx_children_for_instantiation<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     children: &(ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
 ) -> Result<
     (
@@ -454,20 +453,19 @@ fn synthesize_jsx_children_for_instantiation<'cx>(
     ),
     CheckExprError,
 > {
-    let cache = cx.node_cache();
     let children_clone = children.clone();
     try_cache_result(
         cx,
         None,
         move |cx| statement::collapse_children(cx, &children_clone),
-        |result| {
-            cache.set_jsx_children(result.clone());
+        |cx, result| {
+            cx.node_cache_mut().set_jsx_children(result.clone());
         },
     )
 }
 
 fn synth_arg_list<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     target_loc: Option<ALoc>,
     arg_list: &ast::expression::ArgList<ALoc, ALoc>,
 ) -> Result<Vec<(ALoc, type_::CallArg)>, JobError> {
@@ -518,17 +516,17 @@ fn check_expr_error_to_job_error<T>(r: Result<T, CheckExprError>) -> Result<T, J
 }
 
 fn resolve_hint<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc: ALoc,
     hint: flow_env_builder::name_def_types::AstHint,
-) -> type_hint::ConcrHint<'cx> {
+) -> type_hint::ConcrHint {
     use flow_env_builder::name_def_types::ArrayElementPatternHint;
     use flow_env_builder::name_def_types::HintNode;
     use flow_env_builder::name_def_types::ObjectPropPatternHint;
     use flow_typing_type::type_::TypeInner;
 
     fn resolve_hint_node<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         loc: ALoc,
         hint_node: HintNode,
     ) -> Result<Type, JobError> {
@@ -618,14 +616,14 @@ fn resolve_hint<'cx>(
                     cx,
                     react_node_reason.dupe(),
                     false,
-                    Box::new(move |cx: &Context<'cx>| {
+                    move |cx: &mut Context<'_>| {
                         flow_js::get_builtin_react_type_non_speculating(
                             cx,
                             &react_node_reason,
                             None,
                             ExpectedModulePurpose::ReactModuleForReactNodeType,
                         )
-                    }),
+                    },
                 )
             }
             HintNode::AnyErrorHint(reason) => type_::any_t::error(reason),
@@ -720,9 +718,9 @@ fn resolve_hint<'cx>(
                     cx,
                     obj_reason.dupe(),
                     false,
-                    Box::new(move |cx: &Context<'cx>| {
+                    move |cx: &mut Context<'_>| {
                         acc.mk_object_from_spread_acc(cx, obj_reason, false, false, default_proto)
-                    }),
+                    },
                 )
             }
         })
@@ -730,21 +728,21 @@ fn resolve_hint<'cx>(
 
     let loc_clone = loc.dupe();
     let map_base_hint =
-        Rc::new(move |cx: &Context<'cx>, h| resolve_hint_node(cx, loc_clone.dupe(), h));
+        Rc::new(move |cx: &mut Context<'_>, h| resolve_hint_node(cx, loc_clone.dupe(), h));
 
     let map_targs = Rc::new(
-        move |cx: &Context<'cx>, targs: Option<ast::expression::CallTypeArgs<ALoc, ALoc>>| {
+        move |cx: &mut Context<'_>, targs: Option<ast::expression::CallTypeArgs<ALoc, ALoc>>| {
             statement::convert_call_targs_opt_prime(cx, targs.as_ref())
         },
     );
 
     let map_arg_list = Rc::new(
-        move |_cx: &Context<'cx>,
+        move |_cx: &mut Context<'_>,
               arg_list: ast::expression::ArgList<ALoc, ALoc>|
               -> type_hint::ConcrArgListFn {
             let l = arg_list.loc.dupe();
             let arg_list = std::sync::Arc::new(arg_list);
-            Rc::new(move |cx, target_loc: Option<ALoc>| {
+            Rc::new(move |cx: &mut Context<'_>, target_loc: Option<ALoc>| {
                 if let Some(result) = cx
                     .hint_map_arglist_cache()
                     .get(&(l.dupe(), target_loc.dupe()))
@@ -766,11 +764,11 @@ fn resolve_hint<'cx>(
         (ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
     );
     let map_jsx = Rc::new(
-        move |cx: &Context<'cx>,
+        move |cx: &mut Context<'_>,
               jsx_reason: Reason,
               name: FlowSmolStr,
               (props, children): PropsAndChildren|
-              -> type_hint::ConcrJsxProps<'cx> {
+              -> type_hint::ConcrJsxProps {
             let key_locs: Vec<ALoc> = props
                 .iter()
                 .map(|attr| match attr {
@@ -790,8 +788,8 @@ fn resolve_hint<'cx>(
                 let children_clone = children.clone();
                 let jsx_reason_clone = jsx_reason.dupe();
                 let name_clone = name.dupe();
-                let lazy_props: type_hint::ConcrJsxProps<'cx> =
-                    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                let lazy_props: type_hint::ConcrJsxProps =
+                    Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                         let (jsx_props_t, _, _, _) =
                             check_expr_error_to_job_error(statement::jsx_mk_props(
                                 cx,
@@ -807,7 +805,7 @@ fn resolve_hint<'cx>(
                                 &children_clone,
                             ))?;
                         Ok(jsx_props_t)
-                    })));
+                    }));
                 cx.reset_errors(original_errors);
                 cx.hint_map_jsx_cache_mut()
                     .insert(cache_key, lazy_props.dupe());
@@ -816,14 +814,14 @@ fn resolve_hint<'cx>(
         },
     );
 
-    hint.map(cx, &map_base_hint, &map_targs, &map_arg_list, &map_jsx)
+    hint.map::<Cx, _, _, _, _>(cx, &map_base_hint, &map_targs, &map_arg_list, &map_jsx)
 }
 
-fn resolve_hints<'a>(
-    cx: &Context<'a>,
+fn resolve_hints<'cx>(
+    cx: &mut Context<'cx>,
     loc: ALoc,
     hints: &[flow_env_builder::name_def_types::AstHint],
-) -> Vec<type_hint::ConcrHint<'a>> {
+) -> Vec<type_hint::ConcrHint> {
     hints
         .iter()
         .map(|h| resolve_hint(cx, loc.dupe(), h.clone()))
@@ -831,13 +829,13 @@ fn resolve_hints<'a>(
 }
 
 pub fn lazily_resolve_hints<'cx>(
-    _cx: &Context<'cx>,
+    _cx: &mut Context<'cx>,
     loc: ALoc,
     hints: &[flow_env_builder::name_def_types::AstHint],
-) -> type_::LazyHintT<Context<'cx>> {
+) -> type_::LazyHintT<Cx> {
     let has_hint = !hints.is_empty();
     let hints_owned: Vec<flow_env_builder::name_def_types::AstHint> = hints.to_vec();
-    let lazy_hint = move |cx: &Context<'cx>,
+    let lazy_hint = move |cx: &mut Context<'_>,
                           expected_only: bool,
                           skip_optional: Option<bool>,
                           r: Reason|
@@ -849,20 +847,20 @@ pub fn lazily_resolve_hints<'cx>(
 }
 
 pub fn resolve_pred_func<'cx>(
-    _cx: &Context<'cx>,
+    _cx: &mut Context<'cx>,
     info: &env_api::PredFuncInfo<ALoc>,
-) -> PredFuncLazy<'cx, Context<'cx>> {
+) -> PredFuncLazy<Cx> {
     let callee_info = info.clone();
-    let callee = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+    let callee = Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
         let loc = callee_info.callee.loc();
         // [callee] might be a member access expression. Type it separately in
         // synthesis mode so resolving predicate metadata does not cache or duplicate errors.
         Ok(type_env::with_class_stack(
             cx,
             callee_info.class_stack.dupe(),
-            || {
+            |cx| {
                 // Synthesis mode to avoid caching
-                let (_, (t, new_errors)) = cx.run_in_synthesis_mode_with_errors(None, || {
+                let (_, (t, new_errors)) = cx.run_in_synthesis_mode_with_errors(None, |cx| {
                     expression(cx, None, None, None, &callee_info.callee)
                 });
                 if new_errors.is_lint_only_errorset() {
@@ -875,12 +873,11 @@ pub fn resolve_pred_func<'cx>(
                 }
             },
         ))
-    })
-        as Box<dyn FnOnce(&Context<'cx>) -> Result<type_::Type, JobError> + 'cx>));
+    }));
 
     let info = info.clone();
     let callee_for_full = callee.dupe();
-    let full = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+    let full = Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
         let use_op = type_::VirtualUseOp::Op(Arc::new(type_::VirtualRootUseOp::FunCall(Box::new(
             type_::FunCallData {
                 op: reason::mk_expression_reason(&info.call_expr),
@@ -910,16 +907,13 @@ pub fn resolve_pred_func<'cx>(
             targs.map(Rc::from),
             argts,
         ))
-    })
-        as Box<
-            dyn FnOnce(&Context<'cx>) -> Result<type_::PredFuncallInfo, JobError> + 'cx,
-        >));
+    }));
 
     PredFuncLazy { callee, full }
 }
 
 fn resolve_annotated_function<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     scope_kind: ScopeKind,
     bind_this: bool,
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
@@ -950,7 +944,6 @@ fn resolve_annotated_function<'cx>(
             ))),
         );
     }
-    let cache = cx.node_cache();
     let tparams_map = mk_tparams_map(cx, tparams_map);
     let default_this = flow_js_utils::default_this_type(cx, bind_this, function_)
         .unwrap_or_else(|_| type_::mixed_t::at(function_loc.dupe()));
@@ -964,7 +957,7 @@ fn resolve_annotated_function<'cx>(
         function_,
     )?;
     let (ref func_sig, ref reconstruct, ref deferred_tg_check) = sig_data;
-    cache.set_function_sig(
+    cx.node_cache_mut().set_function_sig(
         sig_loc,
         (
             func_sig.clone(),
@@ -993,7 +986,7 @@ fn resolve_annotated_function<'cx>(
 }
 
 fn resolve_function_statics<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: Reason,
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
 ) -> Type {
@@ -1067,7 +1060,7 @@ fn replace_function_statics(function_t: Type, statics_t: &Type) -> Type {
 }
 
 fn wrap_with_namespace_types<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     namespace_name: &FlowSmolStr,
     namespace_loc: ALoc,
     values_type: Type,
@@ -1103,7 +1096,7 @@ fn wrap_with_namespace_types<'cx>(
 }
 
 fn wrap_function_with_namespace_types<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     id: Option<&ast::Identifier<ALoc, ALoc>>,
     values_type: Type,
     namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
@@ -1117,7 +1110,7 @@ fn wrap_function_with_namespace_types<'cx>(
 }
 
 fn resolve_declared_function<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     declarations: &[(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)],
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
     namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
@@ -1181,7 +1174,7 @@ fn resolve_declared_function<'cx>(
 }
 
 fn resolve_annotated_component<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     scope_kind: ScopeKind,
     reason: Reason,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
@@ -1226,8 +1219,8 @@ fn resolve_annotated_component<'cx>(
         let body = &component.body;
         let sig_data = statement::mk_component_sig(cx, &tparams_map, reason.dupe(), component)?;
         let (ref component_sig, _) = sig_data;
-        let cache = cx.node_cache();
-        cache.set_component_sig(sig_loc, sig_data.clone());
+        cx.node_cache_mut()
+            .set_component_sig(sig_loc, sig_data.clone());
         let in_annotation = body.is_none();
         flow_typing_statement::component_sig::component_type::<
             flow_typing_statement::component_params::DeclarationConfig,
@@ -1253,7 +1246,7 @@ fn binding_has_annot(binding: &Binding) -> bool {
 }
 
 fn resolve_binding<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     def_scope_kind: ScopeKind,
     reason: Reason,
     loc: ALoc,
@@ -1323,13 +1316,12 @@ fn resolve_binding<'cx>(
                 &FlowSmolStr::new_inline("<match_root>"),
                 case_match_root_loc.dupe(),
             )?;
-            let node_cache = cx.node_cache();
             let pattern_union_state =
                 get_pattern_union_state_from_prev(cx, prev_pattern_loc.dupe());
             // Optimization: if the previous value_left was only inexhaustible (e.g., just `string`),
             // filtering won't change it, so we can reuse it directly.
             let value_left = prev_pattern_loc.as_ref().and_then(|prev_loc| {
-                node_cache
+                cx.node_cache()
                     .get_match_pattern_value_union(prev_loc)
                     .filter(|vu| vu.is_only_inexhaustible())
             });
@@ -1341,6 +1333,7 @@ fn resolve_binding<'cx>(
                     exhaustive::filter_by_pattern_union(cx, &unfiltered_t, &pattern_union)?
                 }
             };
+            let node_cache = cx.node_cache_mut();
             node_cache.set_match_pattern_value_union(root_pattern_loc.dupe(), value_left.dupe());
             node_cache.set_match_pattern_union(
                 root_pattern_loc.dupe(),
@@ -1353,7 +1346,8 @@ fn resolve_binding<'cx>(
             obj,
             synthesizable: name_def_types::ObjectSynthKind::ObjectSynthesizable { .. },
         })) => {
-            let resolve_prop = |bind_this: bool,
+            let resolve_prop = |cx: &mut Context<'cx>,
+                                bind_this: bool,
                                 prop_loc: ALoc,
                                 fn_loc: ALoc,
                                 fn_: &ast::function::Function<ALoc, ALoc>|
@@ -1374,9 +1368,10 @@ fn resolve_binding<'cx>(
             };
 
             fn mk_expression<'cx>(
-                cx: &Context<'cx>,
+                cx: &mut Context<'cx>,
                 def_scope_kind: ScopeKind,
                 resolve_prop: &dyn Fn(
+                    &mut Context<'cx>,
                     bool,
                     ALoc,
                     ALoc,
@@ -1402,11 +1397,11 @@ fn resolve_binding<'cx>(
                     }
                     ast::expression::ExpressionInner::Function { loc, inner: fn_ } => {
                         let sig_loc = fn_.sig_loc.dupe();
-                        resolve_prop(true, sig_loc, loc.dupe(), fn_)?
+                        resolve_prop(cx, true, sig_loc, loc.dupe(), fn_)?
                     }
                     ast::expression::ExpressionInner::ArrowFunction { loc, inner: fn_ } => {
                         let sig_loc = fn_.sig_loc.dupe();
-                        resolve_prop(false, sig_loc, loc.dupe(), fn_)?
+                        resolve_prop(cx, false, sig_loc, loc.dupe(), fn_)?
                     }
                     ast::expression::ExpressionInner::Object { loc, inner: obj } => {
                         mk_obj(cx, def_scope_kind, resolve_prop, reason, loc.dupe(), obj)?
@@ -1545,9 +1540,10 @@ fn resolve_binding<'cx>(
             }
 
             fn mk_obj<'cx>(
-                cx: &Context<'cx>,
+                cx: &mut Context<'cx>,
                 def_scope_kind: ScopeKind,
                 resolve_prop: &dyn Fn(
+                    &mut Context<'cx>,
                     bool,
                     ALoc,
                     ALoc,
@@ -1580,7 +1576,8 @@ fn resolve_binding<'cx>(
                                 key,
                                 value: (fn_loc, fn_),
                             }) => {
-                                let t = resolve_prop(false, prop_loc.dupe(), fn_loc.dupe(), fn_)?;
+                                let t =
+                                    resolve_prop(cx, false, prop_loc.dupe(), fn_loc.dupe(), fn_)?;
                                 match key {
                                     Key::Identifier(id) => {
                                         let name_loc = id.loc.dupe();
@@ -1690,7 +1687,6 @@ fn resolve_binding<'cx>(
             arrow,
             tparams_map,
         })) => {
-            let cache = cx.node_cache();
             let tparams_map = mk_tparams_map(cx, tparams_map);
             let sig_loc = function_.sig_loc.dupe();
             let async_ = function_.async_;
@@ -1723,7 +1719,7 @@ fn resolve_binding<'cx>(
                 default_this,
                 func_sig,
             );
-            cache.set_function_sig(
+            cx.node_cache_mut().set_function_sig(
                 sig_loc,
                 (
                     func_sig.clone(),
@@ -1769,7 +1765,7 @@ fn resolve_binding<'cx>(
                 )?
             };
             let (func_type, func_ast) = func;
-            let cache = cx.node_cache();
+            let cache = cx.node_cache_mut();
             match id {
                 Some(id) => {
                     cache.set_function(id.loc.dupe(), (func_type.dupe(), func_ast.clone()));
@@ -1849,7 +1845,6 @@ fn resolve_binding<'cx>(
                     },
                 ))))),
             ));
-            let cache = cx.node_cache();
             let exp: ast::expression::Expression<ALoc, (ALoc, Type)> =
                 ast::expression::Expression::new(ast::expression::ExpressionInner::Array {
                     loc: (arr_loc.dupe(), t.dupe()),
@@ -1860,7 +1855,7 @@ fn resolve_binding<'cx>(
                     }
                     .into(),
                 });
-            cache.set_expression(exp);
+            cx.node_cache_mut().set_expression(exp);
             Ok(t)
         }
         Binding::Root(Root::Contextual(box ContextualData {
@@ -1989,12 +1984,13 @@ fn resolve_binding<'cx>(
             selector,
             parent: (parent_loc, binding),
         } => {
-            let node_cache = cx.node_cache();
-            let filtered_pattern_type = node_cache
+            let filtered_pattern_type = cx
+                .node_cache()
                 .get_match_pattern_value_union(parent_loc)
                 .and_then(|vu| vu.select(cx, selector))
                 .map(|value_left| {
-                    node_cache.set_match_pattern_value_union(loc.dupe(), value_left.clone());
+                    cx.node_cache_mut()
+                        .set_match_pattern_value_union(loc.dupe(), value_left.clone());
                     value_left.to_type(reason.dupe())
                 });
             Ok(match filtered_pattern_type {
@@ -2022,7 +2018,7 @@ fn resolve_binding<'cx>(
                             let annot = binding_has_annot(binding);
                             let (selector_ty, sel_reason, has_default) =
                                 mk_selector_reason_has_default(cx, &loc, selector)?;
-                            let eval_destruct = |cx: &Context<'_>,
+                            let eval_destruct = |cx: &mut Context<'_>,
                                                  reason: Reason,
                                                  t: Type,
                                                  selector: type_::Selector,
@@ -2114,7 +2110,7 @@ fn resolve_binding<'cx>(
 }
 
 fn resolve_inferred_function<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     scope_kind: ScopeKind,
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
     namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
@@ -2124,7 +2120,6 @@ fn resolve_inferred_function<'cx>(
     function_loc: ALoc,
     function_: &ast::function::Function<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
-    let cache = cx.node_cache();
     let fn_ = statement::mk_function(
         cx,
         needs_this_param,
@@ -2136,7 +2131,7 @@ fn resolve_inferred_function<'cx>(
     )?;
     let (fun_type, _) = &fn_;
     let fun_type = fun_type.dupe();
-    cache.set_function(id_loc, fn_);
+    cx.node_cache_mut().set_function(id_loc, fn_);
     if (scope_kind == ScopeKind::ComponentOrHookBody
         || scope_kind == ScopeKind::AsyncComponentOrHookBody)
         && function_.effect_ == ast::function::Effect::Hook
@@ -2162,12 +2157,8 @@ fn resolve_inferred_function<'cx>(
         if function_.effect_ != ast::function::Effect::Hook
             && ast_utils::hook_function(function_).is_some()
         {
-            wrap_function_with_namespace_types(
-                cx,
-                function_.id.as_ref(),
-                make_hooklike(cx, fun_type),
-                namespace_types,
-            )
+            let fun_type = make_hooklike(cx, fun_type);
+            wrap_function_with_namespace_types(cx, function_.id.as_ref(), fun_type, namespace_types)
         } else {
             wrap_function_with_namespace_types(cx, function_.id.as_ref(), fun_type, namespace_types)
         },
@@ -2175,14 +2166,13 @@ fn resolve_inferred_function<'cx>(
 }
 
 fn resolve_class<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     id_loc: ALoc,
     reason: Reason,
     kind: &name_def_types::ClassKind,
     class_loc: ALoc,
     class_: &ast::class::Class<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
-    let cache = cx.node_cache();
     let inst_kind = match kind {
         name_def_types::ClassKind::Class => type_::InstanceKind::ClassKind,
         name_def_types::ClassKind::Record { defaulted_props } => type_::InstanceKind::RecordKind {
@@ -2192,7 +2182,7 @@ fn resolve_class<'cx>(
     let sig_info =
         statement::mk_class_sig(cx, id_loc, class_loc.dupe(), inst_kind, reason, class_)?;
     let (class_t, class_t_internal, class_sig, reconstruct_fn) = sig_info;
-    cache.set_class_sig(
+    cx.node_cache_mut().set_class_sig(
         class_loc.dupe(),
         (
             class_t.dupe(),
@@ -2206,14 +2196,13 @@ fn resolve_class<'cx>(
 }
 
 fn resolve_record<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     id_loc: ALoc,
     reason: Reason,
     record_loc: ALoc,
     defaulted_props: &BTreeSet<FlowSmolStr>,
     record: &ast::statement::RecordDeclaration<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
-    let cache = cx.node_cache();
     let sig_info = statement::mk_record_sig(
         cx,
         id_loc,
@@ -2225,13 +2214,11 @@ fn resolve_record<'cx>(
     let (record_t, record_t_internal, record_class_sig, record_reconstruct_fn) = sig_info;
     let record_cache_fn: Rc<
         dyn Fn(
-                &Context<'cx>,
-                Type,
-            )
-                -> Result<ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>, JobError>
-            + 'cx,
-    > = Rc::new(move |cx: &Context<'cx>, t| record_reconstruct_fn(cx, t));
-    cache.set_record_sig(
+            &mut Context<'_>,
+            Type,
+        ) -> Result<ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>, JobError>,
+    > = Rc::new(move |cx: &mut Context<'_>, t| record_reconstruct_fn(cx, t));
+    cx.node_cache_mut().set_record_sig(
         record_loc.dupe(),
         (
             record_t.dupe(),
@@ -2245,7 +2232,7 @@ fn resolve_record<'cx>(
 }
 
 fn resolve_op_assign<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     exp_loc: ALoc,
     lhs: &ast::pattern::Pattern<ALoc, ALoc>,
     assertion: bool,
@@ -2319,7 +2306,7 @@ fn resolve_op_assign<'cx>(
 }
 
 fn resolve_update<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     id_loc: ALoc,
     exp_loc: ALoc,
     id_reason: Reason,
@@ -2330,29 +2317,27 @@ fn resolve_update<'cx>(
 }
 
 fn resolve_type_alias<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc: ALoc,
     alias: &ast::statement::TypeAlias<ALoc, ALoc>,
 ) -> Result<Type, JobError> {
-    let cache = cx.node_cache();
     let (t, ast) = statement::type_alias(cx, loc.dupe(), alias)?;
-    cache.set_alias(loc, (t.dupe(), ast));
+    cx.node_cache_mut().set_alias(loc, (t.dupe(), ast));
     Ok(t)
 }
 
 fn resolve_opaque_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc: ALoc,
     opaque: &ast::statement::OpaqueType<ALoc, ALoc>,
 ) -> Result<Type, JobError> {
-    let cache = cx.node_cache();
     let (t, ast) = statement::opaque_type(cx, loc.dupe(), opaque)?;
-    cache.set_opaque(loc, (t.dupe(), ast));
+    cx.node_cache_mut().set_opaque(loc, (t.dupe(), ast));
     Ok(t)
 }
 
 fn resolve_import<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     id_loc: ALoc,
     import_reason: Reason,
     import_kind: ast::statement::ImportKind,
@@ -2383,7 +2368,7 @@ fn resolve_import<'cx>(
         } => {
             let import_kind = kind.unwrap_or(import_kind);
             let singleton_concretize =
-                |cx: &Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
+                |cx: &mut Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
                     flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
                 };
             let (_, t) = flow_js_exception_to_job_error(
@@ -2426,7 +2411,7 @@ fn resolve_import<'cx>(
         }
         Import::Default(local_name) => {
             let singleton_concretize =
-                |cx: &Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
+                |cx: &mut Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
                     flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
                 };
             let (_, t) = flow_js_exception_to_job_error(
@@ -2454,7 +2439,7 @@ fn resolve_import<'cx>(
 // mention the absorbed declaration's local type parameters, so translate them
 // into the canonical declaration's GenericTs before mutating the target maps.
 fn subst_merge_props<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     tparam_subst_map: &FlowOrdMap<SubstName, Type>,
     props: type_::properties::PropertiesMap,
 ) -> type_::properties::PropertiesMap {
@@ -2480,7 +2465,7 @@ fn subst_merge_props<'cx>(
 }
 
 fn merge_props_by_id<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     target_own: &type_::properties::Id,
     target_proto: &type_::properties::Id,
     source_own: &type_::properties::Id,
@@ -2535,10 +2520,9 @@ fn merge_props_by_id<'cx>(
 }
 
 fn merge_with_conflicts<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     name_loc: &ALoc,
     merge_conflicts: &flow_data_structure_wrapper::ord_map::FlowOrdMap<ALoc, Vec<ALoc>>,
-    prop_ids: &std::collections::BTreeMap<ALoc, (type_::properties::Id, type_::properties::Id)>,
 ) {
     let is_good = merge_conflicts.contains_key(name_loc);
     let is_bad = !is_good
@@ -2547,9 +2531,11 @@ fn merge_with_conflicts<'cx>(
             .any(|(_good, bad_locs)| bad_locs.contains(name_loc));
     if is_good {
         if let Some(bad_locs) = merge_conflicts.get(name_loc) {
-            if let Some((good_own, good_proto)) = prop_ids.get(name_loc).cloned() {
+            if let Some((good_own, good_proto)) = cx.interface_prop_ids().get(name_loc).cloned() {
                 for bad_name_loc in bad_locs {
-                    if let Some((bad_own, bad_proto)) = prop_ids.get(bad_name_loc).cloned() {
+                    if let Some((bad_own, bad_proto)) =
+                        cx.interface_prop_ids().get(bad_name_loc).cloned()
+                    {
                         let tparam_subst_map =
                             cx.interface_tparam_subst_map(bad_name_loc, name_loc);
                         merge_props_by_id(
@@ -2567,8 +2553,12 @@ fn merge_with_conflicts<'cx>(
     } else if is_bad {
         for (good_name_loc, bad_locs) in merge_conflicts.iter() {
             if bad_locs.contains(name_loc) {
-                if let Some((good_own, good_proto)) = prop_ids.get(good_name_loc).cloned() {
-                    if let Some((bad_own, bad_proto)) = prop_ids.get(name_loc).cloned() {
+                if let Some((good_own, good_proto)) =
+                    cx.interface_prop_ids().get(good_name_loc).cloned()
+                {
+                    if let Some((bad_own, bad_proto)) =
+                        cx.interface_prop_ids().get(name_loc).cloned()
+                    {
                         let tparam_subst_map =
                             cx.interface_tparam_subst_map(name_loc, good_name_loc);
                         merge_props_by_id(
@@ -2587,85 +2577,78 @@ fn merge_with_conflicts<'cx>(
 }
 
 fn resolve_interface<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc: ALoc,
     inter: &ast::statement::Interface<ALoc, ALoc>,
 ) -> Result<Type, JobError> {
-    let cache = cx.node_cache();
     let name_loc = inter.id.loc.dupe();
     let (t, ast) = statement::interface(cx, loc.dupe(), inter)?;
-    cache.set_interface(loc, (t.dupe(), ast));
+    cx.node_cache_mut().set_interface(loc, (t.dupe(), ast));
     // Interface declaration merging. The conflict map (good_name_loc -> [bad_name_locs])
     // built in env_builder drives everything. Prop IDs are registered in mk_interface_sig
     // (type_annotation.rs) when the InstanceT is created. Here we just look them up and merge.
     // If this interface is being absorbed by a `declare class`, route through the
     // declare-class conflict map so the class's InstanceT becomes the merge target.
     let env = cx.environment();
-    let dc_conflicts = &env.var_info.declare_class_interface_merge_conflicts;
+    let dc_conflicts = env.var_info.declare_class_interface_merge_conflicts.dupe();
     let absorbed_by_declare_class = dc_conflicts
         .iter()
         .any(|(_good, bad_locs)| bad_locs.contains(&name_loc));
     if absorbed_by_declare_class {
-        merge_with_conflicts(cx, &name_loc, dc_conflicts, &cx.interface_prop_ids());
+        merge_with_conflicts(cx, &name_loc, &dc_conflicts);
     } else {
-        merge_with_conflicts(
-            cx,
-            &name_loc,
-            &env.var_info.interface_merge_conflicts,
-            &cx.interface_prop_ids(),
-        );
+        let conflicts = env.var_info.interface_merge_conflicts.dupe();
+        merge_with_conflicts(cx, &name_loc, &conflicts);
     }
     Ok(t)
 }
 
 fn resolve_declare_class<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc: ALoc,
     class_: &ast::statement::DeclareClass<ALoc, ALoc>,
 ) -> Result<Type, JobError> {
-    let cache = cx.node_cache();
     let name_loc = class_.id.loc.dupe();
     let (t, ast) = statement::declare_class(cx, loc.dupe(), class_)?;
-    cache.set_declared_class(loc, (t.dupe(), ast));
+    cx.node_cache_mut().set_declared_class(loc, (t.dupe(), ast));
     // Declaration merging: a `declare class` and same-name `interface`(s) fold the
     // interface members into the class type. The conflict map built in env_builder
     // keys the canonical class loc to the bad interface locs. Both class and
     // interface prop_ids land in the shared registry from mk_declare_class_sig /
     // mk_interface_sig.
-    let env = cx.environment();
-    merge_with_conflicts(
-        cx,
-        &name_loc,
-        &env.var_info.declare_class_interface_merge_conflicts,
-        &cx.interface_prop_ids(),
-    );
+    let conflicts = cx
+        .environment()
+        .var_info
+        .declare_class_interface_merge_conflicts
+        .dupe();
+    merge_with_conflicts(cx, &name_loc, &conflicts);
     Ok(t)
 }
 
 fn resolve_declare_component<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc: ALoc,
     component: &ast::statement::DeclareComponent<ALoc, ALoc>,
 ) -> Result<Type, JobError> {
-    let cache = cx.node_cache();
     let (t, ast) = statement::declare_component(cx, loc.dupe(), component)?;
-    cache.set_declared_component(loc, (t.dupe(), ast));
+    cx.node_cache_mut()
+        .set_declared_component(loc, (t.dupe(), ast));
     Ok(t)
 }
 
 fn resolve_declare_namespace<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc: ALoc,
     ns: &ast::statement::DeclareNamespace<ALoc, ALoc>,
 ) -> Result<Type, JobError> {
-    let cache = cx.node_cache();
     let (t, ast) = statement::declare_namespace(cx, loc.dupe(), ns)?;
-    cache.set_declared_namespace(loc, (t.dupe(), ast));
+    cx.node_cache_mut()
+        .set_declared_namespace(loc, (t.dupe(), ast));
     Ok(t)
 }
 
 fn resolve_enum<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     id_loc: ALoc,
     declared: bool,
     enum_reason: Reason,
@@ -2703,7 +2686,7 @@ fn resolve_enum<'cx>(
     }
 }
 
-fn resolve_type_param<'cx>(cx: &Context<'cx>, id_loc: &ALoc) -> Type {
+fn resolve_type_param<'cx>(cx: &mut Context<'cx>, id_loc: &ALoc) -> Type {
     let env = cx.environment();
     let (_, _, t) = env.tparams.get_ordinary(id_loc).expect("tparam not found");
     let reason = type_util::reason_of_t(t).dupe();
@@ -2714,18 +2697,17 @@ fn resolve_type_param<'cx>(cx: &Context<'cx>, id_loc: &ALoc) -> Type {
 }
 
 fn resolve_chain_expression<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     cond: EnclosingContext,
     exp: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
-    let cache = cx.node_cache();
     let (t, _, exp_typed) = statement::optional_chain(cond, cx, exp)?;
-    cache.set_expression(exp_typed);
+    cx.node_cache_mut().set_expression(exp_typed);
     Ok(t)
 }
 
 fn resolve_write_expression<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     cond: EnclosingContext,
     exp: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
@@ -2733,7 +2715,7 @@ fn resolve_write_expression<'cx>(
 }
 
 fn resolve_match_pattern<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     def_reason: Reason,
     case_match_root_loc: ALoc,
     has_guard: bool,
@@ -2745,8 +2727,7 @@ fn resolve_match_pattern<'cx>(
     // Set the match pattern union cache for incremental PatternUnion building.
     // This allows subsequent patterns to depend on this one and build incrementally.
     let pattern_union_state = get_pattern_union_state_from_prev(cx, prev_pattern_loc);
-    let cache = cx.node_cache();
-    cache.set_match_pattern_union(
+    cx.node_cache_mut().set_match_pattern_union(
         pattern_loc,
         (pattern_union_state.0, pattern_union_state.1 as i32),
     );
@@ -2754,7 +2735,7 @@ fn resolve_match_pattern<'cx>(
 }
 
 fn resolve_generator_next<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason: Reason,
     gen_info: Option<&name_def_types::GeneratorAnnot>,
 ) -> Result<Type, JobError> {
@@ -2766,7 +2747,6 @@ fn resolve_generator_next<'cx>(
             Ok(type_::void::make(r))
         }
         Some(gen_info) => {
-            let cache = cx.node_cache();
             let tparams_map = mk_tparams_map(cx, &gen_info.tparams_map);
             let (t, anno) = type_annotation::mk_type_available_annotation(
                 cx,
@@ -2777,7 +2757,7 @@ fn resolve_generator_next<'cx>(
                 },
                 BindsSingleValue::No,
             )?;
-            cache.set_annotation(anno);
+            cx.node_cache_mut().set_annotation(anno);
             let return_t = t;
             let gen_name = if gen_info.async_ {
                 "AsyncGenerator"
@@ -2807,7 +2787,7 @@ fn resolve_generator_next<'cx>(
 }
 
 fn resolve<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     def_kind: env_api::DefLocType,
     id_loc: ALoc,
     def: &Def,
@@ -2816,7 +2796,7 @@ fn resolve<'cx>(
     def_reason: Reason,
 ) -> Result<(), flow_typing_utils::abnormal::CheckExprError> {
     {
-        let mut env = cx.environment_mut();
+        let env = cx.environment_mut();
         env.scope_kind = def_scope_kind;
         env.class_stack = class_stack.dupe();
     }
@@ -3198,12 +3178,12 @@ fn entries_of_component(
 }
 
 fn init_type_param<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     graph: &name_def_types::EnvEntriesMap,
     def_loc: ALoc,
 ) -> Result<(SubstName, type_::TypeParam, Type), JobError> {
     fn get_type_param<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         graph: &name_def_types::EnvEntriesMap,
         l: ALoc,
     ) -> Result<(SubstName, type_::TypeParam, Type), JobError> {
@@ -3218,7 +3198,7 @@ fn init_type_param<'cx>(
     }
 
     fn mk_tparams_map_from_graph<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         graph: &name_def_types::EnvEntriesMap,
         tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
     ) -> Result<FlowOrdMap<SubstName, Type>, JobError> {
@@ -3230,7 +3210,7 @@ fn init_type_param<'cx>(
         Ok(subst_map)
     }
 
-    fn mk_synthetic_this<'cx>(cx: &Context<'cx>, reason: Reason) -> (type_::TypeParam, Type) {
+    fn mk_synthetic_this<'cx>(cx: &mut Context<'cx>, reason: Reason) -> (type_::TypeParam, Type) {
         flow_typing_statement::class_sig::mk_this(
             type_::implicit_mixed_this(reason.dupe()),
             cx,
@@ -3252,10 +3232,9 @@ fn init_type_param<'cx>(
             let tparams_map = mk_tparams_map_from_graph(cx, graph, tparams_locs)?;
             let (_, tparam_inner) = tparam;
             let info = type_annotation::mk_type_param(cx, tparams_map, *kind, tparam_inner)?;
-            let cache = cx.node_cache();
             let (_, ref tparam_result, ref t) = info;
             let result = (tparam_result.name.dupe(), tparam_result.dupe(), t.dupe());
-            cache.set_tparam(info);
+            cx.node_cache_mut().set_tparam(info);
             result
         }
         Some((Def::Class(box ClassDefData { class_loc, .. }), _, _, reason, _)) => {
@@ -3313,11 +3292,11 @@ fn init_type_param<'cx>(
 }
 
 fn resolve_component_type_params<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     graph: &name_def_types::EnvEntriesMap,
     component: &name_def_ordering::OrderingResult,
 ) -> Result<(), JobError> {
-    let resolve_illegal = |loc: ALoc, def: &name_def_types::NameDefEntry| {
+    let resolve_illegal = |cx: &mut Context<'cx>, loc: ALoc, def: &name_def_types::NameDefEntry| {
         let (def, _, _, _, _) = def;
         match def {
             Def::TypeParam(box TypeParamData {
@@ -3395,7 +3374,7 @@ fn resolve_component_type_params<'cx>(
     };
 
     let cyclic_type_param_locs = cx.environment().var_info.cyclic_type_param_locs.dupe();
-    let seed_cyclic_type_param = |elt: &name_def_ordering::Element| {
+    let seed_cyclic_type_param = |cx: &mut Context<'cx>, elt: &name_def_ordering::Element| {
         let key = match elt {
             name_def_ordering::Element::Normal(key)
             | name_def_ordering::Element::Resolvable(key) => key,
@@ -3404,39 +3383,40 @@ fn resolve_component_type_params<'cx>(
         if cyclic_type_param_locs.contains(&key.loc)
             && let Some(def_data) = graph.get(key)
         {
-            resolve_illegal(key.loc.dupe(), def_data);
+            resolve_illegal(cx, key.loc.dupe(), def_data);
         }
     };
     match component {
-        name_def_ordering::OrderingResult::Singleton(elt) => seed_cyclic_type_param(elt),
+        name_def_ordering::OrderingResult::Singleton(elt) => seed_cyclic_type_param(cx, elt),
         name_def_ordering::OrderingResult::ResolvableSCC(elts) => {
             for elt in elts.iter() {
-                seed_cyclic_type_param(elt);
+                seed_cyclic_type_param(cx, elt);
             }
         }
         name_def_ordering::OrderingResult::IllegalSCC(_) => {}
     }
 
-    let resolve_element = |elt: &name_def_ordering::Element| -> Result<(), JobError> {
-        match elt {
-            name_def_ordering::Element::Illegal(blame) => {
-                let key = &blame.payload;
-                let loc = key.loc.dupe();
-                if let Some(def_data) = graph.get(key) {
-                    resolve_illegal(loc, def_data);
+    let resolve_element =
+        |cx: &mut Context<'cx>, elt: &name_def_ordering::Element| -> Result<(), JobError> {
+            match elt {
+                name_def_ordering::Element::Illegal(blame) => {
+                    let key = &blame.payload;
+                    let loc = key.loc.dupe();
+                    if let Some(def_data) = graph.get(key) {
+                        resolve_illegal(cx, loc, def_data);
+                    }
+                }
+                name_def_ordering::Element::Normal(key)
+                | name_def_ordering::Element::Resolvable(key) => {
+                    if let Some((def, _, _, _, _)) = graph.get(key)
+                        && let Def::TypeParam(_) | Def::Class(_) | Def::Record(_) = def
+                    {
+                        init_type_param(cx, graph, key.loc.dupe())?;
+                    }
                 }
             }
-            name_def_ordering::Element::Normal(key)
-            | name_def_ordering::Element::Resolvable(key) => {
-                if let Some((def, _, _, _, _)) = graph.get(key)
-                    && let Def::TypeParam(_) | Def::Class(_) | Def::Record(_) = def
-                {
-                    init_type_param(cx, graph, key.loc.dupe())?;
-                }
-            }
-        }
-        Ok(())
-    };
+            Ok(())
+        };
 
     match component {
         name_def_ordering::OrderingResult::IllegalSCC(elts) => {
@@ -3448,14 +3428,14 @@ fn resolve_component_type_params<'cx>(
                 };
                 let loc = key.loc.dupe();
                 if let Some(def_data) = graph.get(key) {
-                    resolve_illegal(loc, def_data);
+                    resolve_illegal(cx, loc, def_data);
                 }
             }
         }
-        name_def_ordering::OrderingResult::Singleton(elt) => resolve_element(elt)?,
+        name_def_ordering::OrderingResult::Singleton(elt) => resolve_element(cx, elt)?,
         name_def_ordering::OrderingResult::ResolvableSCC(elts) => {
             for elt in elts.iter() {
-                resolve_element(elt)?;
+                resolve_element(cx, elt)?;
             }
         }
     }
@@ -3463,14 +3443,14 @@ fn resolve_component_type_params<'cx>(
 }
 
 pub fn resolve_component<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     graph: &name_def_types::EnvEntriesMap,
     component: &name_def_ordering::OrderingResult,
 ) -> Result<(), JobError> {
     cx.constraint_cache_mut().clear();
     cx.eval_repos_cache_mut().clear();
 
-    let resolve_illegal = |entries: &env_api::EnvSet<ALoc>| {
+    let resolve_illegal = |cx: &mut Context<'cx>, entries: &env_api::EnvSet<ALoc>| {
         for entry in entries.iter() {
             let kind = entry.def_loc_type;
             let loc = entry.loc.dupe();
@@ -3484,36 +3464,37 @@ pub fn resolve_component<'cx>(
         }
     };
 
-    let resolve_element = |elt: &name_def_ordering::Element| -> Result<(), JobError> {
-        match elt {
-            name_def_ordering::Element::Illegal(blame) => {
-                let key = &blame.payload;
-                resolve_illegal(&entries_of_def(graph, key.def_loc_type, key.loc.dupe()));
-            }
-            name_def_ordering::Element::Normal(key)
-            | name_def_ordering::Element::Resolvable(key) => {
-                if let Some((def, scope_kind, class_stack, reason, _)) = graph.get(key) {
-                    flow_typing_utils::abnormal::try_with_abnormal_exn(
-                        || {
-                            resolve(
-                                cx,
-                                key.def_loc_type,
-                                key.loc.dupe(),
-                                def,
-                                *scope_kind,
-                                class_stack,
-                                reason.dupe(),
-                            )
-                        },
-                        // When there is an unhandled exception, it means that the initialization of the env slot
-                        // won't be completed and will never be written in the new-env, so it's OK to do nothing.
-                        |_| (),
-                    )?;
+    let resolve_element =
+        |cx: &mut Context<'cx>, elt: &name_def_ordering::Element| -> Result<(), JobError> {
+            match elt {
+                name_def_ordering::Element::Illegal(blame) => {
+                    let key = &blame.payload;
+                    resolve_illegal(cx, &entries_of_def(graph, key.def_loc_type, key.loc.dupe()));
+                }
+                name_def_ordering::Element::Normal(key)
+                | name_def_ordering::Element::Resolvable(key) => {
+                    if let Some((def, scope_kind, class_stack, reason, _)) = graph.get(key) {
+                        flow_typing_utils::abnormal::try_with_abnormal_exn(
+                            || {
+                                resolve(
+                                    cx,
+                                    key.def_loc_type,
+                                    key.loc.dupe(),
+                                    def,
+                                    *scope_kind,
+                                    class_stack,
+                                    reason.dupe(),
+                                )
+                            },
+                            // When there is an unhandled exception, it means that the initialization of the env slot
+                            // won't be completed and will never be written in the new-env, so it's OK to do nothing.
+                            |_| (),
+                        )?;
+                    }
                 }
             }
-        }
-        Ok(())
-    };
+            Ok(())
+        };
 
     flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
         vec![format!(
@@ -3522,12 +3503,14 @@ pub fn resolve_component<'cx>(
         )]
     });
 
-    let log_slow_to_check = |f: &mut dyn FnMut() -> Result<(), JobError>| -> Result<(), JobError> {
+    let log_slow_to_check = |cx: &mut Context<'cx>,
+                             f: &mut dyn FnMut(&mut Context<'cx>) -> Result<(), JobError>|
+     -> Result<(), JobError> {
         let slow_to_check = cx.slow_to_check_logging();
         match slow_to_check.slow_components_logging_threshold {
             Some(threshold) => {
                 let start_time = std::time::Instant::now();
-                f()?;
+                f(cx)?;
                 let run_time = start_time.elapsed().as_secs_f64();
                 if run_time > threshold {
                     flow_hh_logger::info!(
@@ -3539,11 +3522,11 @@ pub fn resolve_component<'cx>(
                 }
                 Ok(())
             }
-            None => f(),
+            None => f(cx),
         }
     };
 
-    let mut f = || -> Result<(), JobError> {
+    let mut f = |cx: &mut Context<'cx>| -> Result<(), JobError> {
         let entries_for_resolution = entries_of_component(graph, component);
         type_env::make_env_entries_under_resolution(cx, entries_for_resolution.dupe());
 
@@ -3551,12 +3534,12 @@ pub fn resolve_component<'cx>(
 
         match component {
             name_def_ordering::OrderingResult::IllegalSCC(_) => {
-                resolve_illegal(&entries_for_resolution)
+                resolve_illegal(cx, &entries_for_resolution)
             }
-            name_def_ordering::OrderingResult::Singleton(elt) => resolve_element(elt)?,
+            name_def_ordering::OrderingResult::Singleton(elt) => resolve_element(cx, elt)?,
             name_def_ordering::OrderingResult::ResolvableSCC(elts) => {
                 for elt in elts.iter() {
-                    resolve_element(elt)?;
+                    resolve_element(cx, elt)?;
                 }
             }
         }
@@ -3567,25 +3550,26 @@ pub fn resolve_component<'cx>(
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
             vec!["Forcing all lazy tvars after resolving component".to_string()]
         });
-        {
-            let env = cx.environment();
-            for entry in entries_for_resolution.iter() {
-                let kind = entry.def_loc_type;
-                let loc = entry.loc.dupe();
-                if let Some(type_entry) = env.find_write(kind, loc) {
-                    match type_entry.t.deref() {
-                        TypeInner::OpenT(tvar) => {
-                            let id = tvar.id() as i32;
-                            cx.inspect_constraints(id, |root_id, constraints| {
-                                if let type_::constraint::Constraints::FullyResolved(s) =
-                                    constraints
-                                {
-                                    cx.add_post_component_tvar_forcing_state(root_id, s.clone());
-                                }
-                            });
-                        }
-                        _ => {}
+        for entry in entries_for_resolution.iter() {
+            let kind = entry.def_loc_type;
+            let loc = entry.loc.dupe();
+            let tvar_id = match cx.environment().find_write(kind, loc) {
+                Some(type_entry) => match type_entry.t.deref() {
+                    TypeInner::OpenT(tvar) => Some(tvar.id() as i32),
+                    _ => None,
+                },
+                None => None,
+            };
+            if let Some(id) = tvar_id {
+                let fully_resolved = cx.inspect_constraints(id, |root_id, constraints| {
+                    if let type_::constraint::Constraints::FullyResolved(s) = constraints {
+                        Some((root_id, s.clone()))
+                    } else {
+                        None
                     }
+                });
+                if let Some((root_id, s)) = fully_resolved {
+                    cx.add_post_component_tvar_forcing_state(root_id, s);
                 }
             }
         }
@@ -3596,5 +3580,5 @@ pub fn resolve_component<'cx>(
         Ok(())
     };
 
-    log_slow_to_check(&mut f)
+    log_slow_to_check(cx, &mut f)
 }

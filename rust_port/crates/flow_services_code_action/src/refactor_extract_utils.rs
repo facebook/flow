@@ -992,9 +992,9 @@ pub mod type_synthesizer {
             BTreeSet<flow_common::subst_name::SubstName>,
         > for GenericNameCollector
     {
-        fn type_(
+        fn type_<'cx>(
             &mut self,
-            cx: &flow_typing_context::Context,
+            cx: &mut flow_typing_context::Context<'cx>,
             pole: flow_common::polarity::Polarity,
             acc: BTreeSet<flow_common::subst_name::SubstName>,
             t: &flow_typing_type::type_::Type,
@@ -1015,7 +1015,7 @@ pub mod type_synthesizer {
     }
 
     fn keep_used_tparam_rev(
-        cx: &flow_typing_context::Context,
+        cx: &mut flow_typing_context::Context,
         tparams_rev: &[flow_typing_type::type_::TypeParam],
         type_: &flow_typing_type::type_::Type,
     ) -> Vec<flow_typing_type::type_::TypeParam> {
@@ -1046,8 +1046,7 @@ pub mod type_synthesizer {
     }
 
     #[derive(Clone)]
-    pub struct SynthesizerContext<'a, 'cx> {
-        pub cx: Context<'cx>,
+    pub struct SynthesizerContext<'a> {
         pub file: FileKey,
         pub file_sig: std::sync::Arc<FileSig>,
         pub typed_ast: ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
@@ -1184,8 +1183,7 @@ pub mod type_synthesizer {
         }
     }
 
-    pub fn create_synthesizer_context<'a, 'cx>(
-        cx: Context<'cx>,
+    pub fn create_synthesizer_context<'a>(
         file: FileKey,
         file_sig: std::sync::Arc<FileSig>,
         typed_ast: ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
@@ -1203,12 +1201,11 @@ pub mod type_synthesizer {
             >,
         >,
         locs: &BTreeSet<Loc>,
-    ) -> SynthesizerContext<'a, 'cx> {
+    ) -> SynthesizerContext<'a> {
         let mut collector = TypeCollector::new(loc_of_aloc, locs);
         let Ok(()) = collector.program(&typed_ast);
         let type_at_loc_map = collector.acc;
         SynthesizerContext {
-            cx,
             file,
             file_sig,
             typed_ast,
@@ -1223,6 +1220,7 @@ pub mod type_synthesizer {
     pub struct TypeSynthesizerWithImportAdder<'a> {
         pub type_param_synthesizer: Box<
             dyn Fn(
+                    &mut Context<'_>,
                     &flow_typing_type::type_::TypeParam,
                 )
                     -> Result<ast::types::TypeParam<Loc, Loc>, insert_type::Expected>
@@ -1230,6 +1228,7 @@ pub mod type_synthesizer {
         >,
         pub type_synthesizer: Box<
             dyn Fn(
+                    &mut Context<'_>,
                     &Loc,
                 ) -> Result<
                     Option<(
@@ -1242,8 +1241,9 @@ pub mod type_synthesizer {
         pub added_imports: Box<dyn Fn() -> Vec<(String, autofix_imports::Bindings)> + 'a>,
     }
 
-    pub fn create_type_synthesizer_with_import_adder<'a, 'cx: 'a>(
-        synthesizer_context: SynthesizerContext<'a, 'cx>,
+    pub fn create_type_synthesizer_with_import_adder<'a>(
+        cx: &Context<'_>,
+        synthesizer_context: SynthesizerContext<'a>,
     ) -> TypeSynthesizerWithImportAdder<'a> {
         use std::cell::RefCell;
         use std::rc::Rc;
@@ -1251,7 +1251,6 @@ pub mod type_synthesizer {
         use crate::insert_type_imports;
 
         let SynthesizerContext {
-            cx,
             file,
             file_sig,
             typed_ast,
@@ -1275,17 +1274,17 @@ pub mod type_synthesizer {
             ),
         ));
 
-        let cx_clone = cx.dupe();
         let file_sig_clone = file_sig.dupe();
         let remote_converter_clone = remote_converter.dupe();
         let synth_type =
-            move |loc: Loc,
+            move |cx: &mut Context<'_>,
+                  loc: Loc,
                   t: flow_typing_type::type_::Type|
                   -> Result<(Loc, ast::types::Type<Loc, Loc>), insert_type::Expected> {
                 let mut rc = remote_converter_clone.borrow_mut();
                 insert_type::synth_type(
                     None,
-                    &cx_clone,
+                    cx,
                     loc_of_aloc,
                     get_ast_from_heap,
                     &file_sig_clone,
@@ -1302,10 +1301,11 @@ pub mod type_synthesizer {
         let synth_type_for_tparam = synth_type.dupe();
         let type_param_synthesizer: Box<
             dyn Fn(
+                &mut Context<'_>,
                 &flow_typing_type::type_::TypeParam,
             ) -> Result<ast::types::TypeParam<Loc, Loc>, insert_type::Expected>,
         > = Box::new(
-            move |tparam| -> Result<ast::types::TypeParam<Loc, Loc>, insert_type::Expected> {
+            move |cx, tparam| -> Result<ast::types::TypeParam<Loc, Loc>, insert_type::Expected> {
                 use flow_common::polarity::Polarity;
                 use flow_parser_utils::ast_builder;
 
@@ -1314,7 +1314,7 @@ pub mod type_synthesizer {
 
                 let bound = {
                     let (_, synth_bound) =
-                        synth_type_for_tparam(Loc::default(), tparam.bound.dupe())?;
+                        synth_type_for_tparam(cx, Loc::default(), tparam.bound.dupe())?;
                     match &*synth_bound {
                         ast::types::TypeInner::Mixed { .. }
                         | ast::types::TypeInner::Unknown { .. } => None,
@@ -1344,7 +1344,7 @@ pub mod type_synthesizer {
                 let default = match &tparam.default {
                     None => None,
                     Some(default_t) => {
-                        let (_, ast) = synth_type_for_tparam(Loc::default(), default_t.dupe())?;
+                        let (_, ast) = synth_type_for_tparam(cx, Loc::default(), default_t.dupe())?;
                         Some(ast)
                     }
                 };
@@ -1362,9 +1362,9 @@ pub mod type_synthesizer {
         );
 
         let synth_type_for_type = synth_type.dupe();
-        let cx_for_type = cx.dupe();
         let type_synthesizer: Box<
             dyn Fn(
+                &mut Context<'_>,
                 &Loc,
             ) -> Result<
                 Option<(
@@ -1374,7 +1374,9 @@ pub mod type_synthesizer {
                 insert_type::Expected,
             >,
         > = Box::new(
-            move |loc| -> Result<
+            move |cx,
+                  loc|
+                  -> Result<
                 Option<(
                     Vec<flow_typing_type::type_::TypeParam>,
                     ast::types::Type<Loc, Loc>,
@@ -1384,8 +1386,8 @@ pub mod type_synthesizer {
                 match type_at_loc_map.get(loc) {
                     None => Ok(None),
                     Some((tparams_rev, type_)) => {
-                        let (_, ast_type) = synth_type_for_type(loc.dupe(), type_.dupe())?;
-                        let kept = keep_used_tparam_rev(&cx_for_type, tparams_rev, type_);
+                        let (_, ast_type) = synth_type_for_type(cx, loc.dupe(), type_.dupe())?;
+                        let kept = keep_used_tparam_rev(cx, tparams_rev, type_);
                         Ok(Some((kept, ast_type)))
                     }
                 }

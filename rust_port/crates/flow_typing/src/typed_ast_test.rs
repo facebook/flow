@@ -35,11 +35,15 @@ use flow_parser_utils_output::pretty_printer;
 use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing_builtins::builtins::Builtins;
 use flow_typing_context::Context;
+use flow_typing_context::ContextArena;
+use flow_typing_context::ContextStore;
+use flow_typing_context::Cx;
 use flow_typing_context::FrozenMetadata;
 use flow_typing_context::Metadata;
+use flow_typing_context::MkBuiltins;
 use flow_typing_context::OverridableMetadata;
+use flow_typing_context::ResolveRequire;
 use flow_typing_context::ResolvedRequire;
-use flow_typing_context::make_ccx;
 use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::Type;
@@ -78,51 +82,36 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
     // in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
     // we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
     // to avoid any "Any value used as type" errors that may otherwise appear
-    let mk_builtins: Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>> =
-        Rc::new(|_cx| {
-            let reason =
-                flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
-            let t = Type::new(TypeInner::AnyT(
-                reason.dupe(),
-                AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-            ));
-            let mut values: FlowOrdMap<
-                FlowSmolStr,
-                flow_typing_builtins::LazyVal<'static, Context<'static>>,
-            > = FlowOrdMap::new();
-            values.insert(
-                FlowSmolStr::from("Object"),
-                Rc::new(flow_lazy::Lazy::new(
-                    Box::new(move |_cx: &Context<'static>| (ALoc::none(), t.dupe()))
-                        as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-                )),
-            );
-            Builtins::of_name_map(
-                Rc::new(|_src_cx: &Context<'static>, _dst_cx: &Context<'static>, t: Type| t),
-                Rc::new(
-                    |_src_cx: &Context<'static>,
-                     _dst_cx: &Context<'static>,
-                     m: &flow_typing_type::type_::ModuleType| { m.dupe() },
-                ),
-                values,
-                FlowOrdMap::new(),
-                FlowOrdMap::new(),
-            )
-        });
+    let mk_builtins: MkBuiltins = Rc::new(|_cx: &mut Context<'_>| {
+        let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
+        let t = Type::new(TypeInner::AnyT(
+            reason.dupe(),
+            AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+        ));
+        let mut values: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+            FlowOrdMap::new();
+        values.insert(
+            FlowSmolStr::from("Object"),
+            Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+                (ALoc::none(), t.dupe())
+            })),
+        );
+        Builtins::of_name_map(values, FlowOrdMap::new(), FlowOrdMap::new())
+    });
     let aloc_table: LazyALocTable = Rc::new(std::cell::LazyCell::new(Box::new({
         let fk = file_key.dupe();
         move || Rc::new(ALocTable::empty(fk))
     })
         as Box<dyn FnOnce() -> Rc<ALocTable>>));
-    let resolve_require: Rc<
-        dyn Fn(
-            &Context<'static>,
-            &flow_common::flow_import_specifier::FlowImportSpecifier,
-        ) -> ResolvedRequire<'static>,
-    > = Rc::new(|_, _| ResolvedRequire::MissingModule);
-    let ccx = Rc::new(make_ccx());
+    let resolve_require: ResolveRequire = Rc::new(
+        |_: &mut Context<'_>, _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
+            ResolvedRequire::MissingModule
+        },
+    );
     let md = metadata();
-    let cx = Context::make(
+    let mut arena = ContextArena::new();
+    let ccx = arena.add_component();
+    let cx_id = arena.add_context(
         ccx,
         md.clone(),
         file_key.dupe(),
@@ -132,6 +121,7 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
         mk_builtins,
         flow_utils_concurrency::check_budget::CheckBudget::new(None),
     );
+    let mut cx = Context::new(ContextStore::new(vec![&mut arena]), cx_id);
     let aloc_ast = flow_aloc::loc_to_aloc_ast(&ast);
     let type_sig_options = TypeSigOptions::of_options(
         &Options {
@@ -148,7 +138,7 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
     );
     let typed_ast = type_inference::infer_ast(
         &LintSettings::<Severity>::empty_severities(),
-        &cx,
+        &mut cx,
         &file_key,
         Arc::new(FileSig::empty()),
         &md,

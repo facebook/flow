@@ -235,7 +235,7 @@ mod potential_ordinary_refs_search {
 
 fn type_matches_locs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     ty: &Type,
     prop_def_info: &Vec1<SinglePropertyDefInfo>,
     name: &str,
@@ -270,7 +270,7 @@ fn type_matches_locs<'cx>(
 }
 
 fn get_loc_of_def_info<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     prop_def_info: &Vec1<SinglePropertyDefInfo>,
@@ -302,7 +302,7 @@ fn get_loc_of_def_info<'cx>(
 
 fn process_prop_refs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     potential_refs: &ALocMap<Type>,
     file_key: &flow_parser::file_key::FileKey,
     prop_def_info: &Vec1<SinglePropertyDefInfo>,
@@ -338,7 +338,7 @@ fn process_prop_refs<'cx>(
 fn ordinary_property_find_refs_in_file<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &flow_parser::file_key::FileKey,
@@ -379,7 +379,7 @@ fn ordinary_property_find_refs_in_file<'cx>(
 pub fn property_find_refs_in_file<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &flow_parser::file_key::FileKey,
@@ -416,7 +416,7 @@ pub fn find_local_refs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     file_key: &flow_parser::file_key::FileKey,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     loc: &Loc,

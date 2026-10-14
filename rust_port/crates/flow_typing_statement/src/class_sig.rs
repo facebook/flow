@@ -744,7 +744,7 @@ fn to_field<C: ConfigTypes>(entry: &class_types::FieldPrime<C>) -> Property {
 }
 
 fn to_method<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     this_default: &Type,
     info: &class_types::FuncInfo<C>,
 ) -> Property {
@@ -779,7 +779,7 @@ impl AsPropName for FlowSmolStr {
 }
 
 pub(crate) fn fields_to_prop_map<'a, C: ConfigTypes, K: AsPropName>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     fields: &BTreeMap<K, class_types::FieldPrime<C>>,
 ) -> properties::Id {
     let pmap: properties::PropertiesMap = fields
@@ -790,7 +790,7 @@ pub(crate) fn fields_to_prop_map<'a, C: ConfigTypes, K: AsPropName>(
 }
 
 fn methods_to_prop_map<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     this_default: &Type,
     static_this: Option<&Type>,
     methods: &BTreeMap<FlowSmolStr, class_types::FuncInfo<C>>,
@@ -810,7 +810,7 @@ fn methods_to_prop_map<'a, C: crate::func_params_intf::Config>(
 }
 
 fn elements<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     this: Type,
     static_: bool,
     constructor: Option<(Option<ALoc>, Type)>,
@@ -1040,13 +1040,13 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     (initialized_fields, fields, methods_props, call, construct)
 }
 
-fn specialize<'a>(cx: &Context<'a>, use_op: UseOp, targs: Option<Vec<Type>>, c: Type) -> Type {
+fn specialize<'a>(cx: &mut Context<'a>, use_op: UseOp, targs: Option<Vec<Type>>, c: Type) -> Type {
     let reason = type_util::reason_of_t(&c).dupe();
     type_annotation_cons_gen::specialize(cx, c, use_op, reason.dupe(), reason, targs)
 }
 
 fn statictype<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     static_proto: Type,
     x: &class_types::Class<C>,
 ) -> (FlowOrdSet<Name>, ObjType) {
@@ -1093,7 +1093,7 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
 }
 
 fn insttype<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     initialized_static_fields: FlowOrdSet<Name>,
     inst_kind: Option<InstanceKind>,
     s: &class_types::Class<C>,
@@ -1202,7 +1202,7 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
     })
 }
 
-pub fn mk_this<'a>(self_: Type, cx: &Context<'a>, reason: Reason) -> (TypeParam, Type) {
+pub fn mk_this<'a>(self_: Type, cx: &mut Context<'a>, reason: Reason) -> (TypeParam, Type) {
     let this_reason = reason.replace_desc(VirtualReasonDesc::RThisType);
     let this_tp = TypeParam::new(TypeParamInner {
         name: SubstName::name(FlowSmolStr::new("this")),
@@ -1213,11 +1213,11 @@ pub fn mk_this<'a>(self_: Type, cx: &Context<'a>, reason: Reason) -> (TypeParam,
         is_this: true,
         is_const: false,
     });
-    let generic = flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), &this_tp);
+    let generic = flow_js_utils::generic_of_tparam(cx, |_, x: &Type| x.dupe(), &this_tp);
     (this_tp, generic)
 }
 
-fn supertype<'a, C: ConfigTypes>(cx: &Context<'a>, x: &class_types::Class<C>) -> (Type, Type) {
+fn supertype<'a, C: ConfigTypes>(cx: &mut Context<'a>, x: &class_types::Class<C>) -> (Type, Type) {
     let super_reason = x
         .instance
         .reason
@@ -1420,7 +1420,7 @@ fn supertype<'a, C: ConfigTypes>(cx: &Context<'a>, x: &class_types::Class<C>) ->
 }
 
 fn this_instance_type<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     inst_kind: Option<InstanceKind>,
     x: &class_types::Class<C>,
 ) -> (Reason, InstanceT) {
@@ -1468,7 +1468,7 @@ fn this_instance_type<'a, C: crate::func_params_intf::Config>(
 }
 
 pub fn thistype<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     x: &class_types::Class<C>,
 ) -> Type {
     let (reason, instance_t) = this_instance_type(cx, None, x);
@@ -1501,13 +1501,13 @@ pub fn thistype<'a, C: crate::func_params_intf::Config>(
 }
 
 fn check_methods<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
     self_: &Type,
 ) {
     let skip = files::has_ts_ext(cx.file()) || cx.is_global_lib_context();
-    let check_method =
+    let mut check_method =
         |msig: &func_class_sig_types::func::Func<C>, static_: bool, name: &str, id_loc: ALoc| {
             if let Some(this_param) = func_sig::this_param(&msig.fparams) {
                 if skip {
@@ -1564,7 +1564,7 @@ fn check_methods<'a, C: crate::func_params_intf::Config>(
 }
 
 fn check_implements<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
@@ -1665,7 +1665,7 @@ fn check_implements<'a, C: crate::func_params_intf::Config>(
 }
 
 fn check_super<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
     self_: &Type,
@@ -1781,7 +1781,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
 // [first_loc] tracking uses the SHALLOWEST abstract decl so the
 // error points at the closest ancestor that left it open.
 fn post_inference_check_abstract_obligations<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     super_: &Type,
     class_name: &Option<FlowSmolStr>,
     class_loc: &ALoc,
@@ -1794,7 +1794,7 @@ fn post_inference_check_abstract_obligations<'cx>(
     let add_obligation = |name: Name, loc: ALoc| {
         obligations.borrow_mut().entry(name).or_insert(loc);
     };
-    let process_inst = |inst: &InstType| -> bool {
+    let process_inst = |cx: &Context<'cx>, inst: &InstType| -> bool {
         if seen.borrow().contains(&inst.own_props) {
             false
         } else {
@@ -1834,11 +1834,11 @@ fn post_inference_check_abstract_obligations<'cx>(
         }
     };
     fn walk<'cx>(
-        cx: &Context<'cx>,
-        process_inst: &dyn Fn(&InstType) -> bool,
+        cx: &mut Context<'cx>,
+        process_inst: &dyn Fn(&Context<'cx>, &InstType) -> bool,
         t: &Type,
     ) -> Result<(), FlowJsException> {
-        let concretes = cx.with_suppressed_errors(|| {
+        let concretes = cx.with_suppressed_errors(|cx| {
             FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)
         })?;
         for c in &concretes {
@@ -1847,18 +1847,18 @@ fn post_inference_check_abstract_obligations<'cx>(
         Ok(())
     }
     fn walk_one<'cx>(
-        cx: &Context<'cx>,
-        process_inst: &dyn Fn(&InstType) -> bool,
+        cx: &mut Context<'cx>,
+        process_inst: &dyn Fn(&Context<'cx>, &InstType) -> bool,
         t: &Type,
     ) -> Result<(), FlowJsException> {
         match t.deref() {
             TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. })
-                if process_inst(&instance.inst) =>
+                if process_inst(cx, &instance.inst) =>
             {
                 walk(cx, process_inst, &instance.super_)?;
             }
             TypeInner::DefT(_, def_t) => match def_t.deref() {
-                DefTInner::InstanceT(inst_t) if process_inst(&inst_t.inst) => {
+                DefTInner::InstanceT(inst_t) if process_inst(cx, &inst_t.inst) => {
                     walk(cx, process_inst, &inst_t.super_)?;
                 }
                 _ => {}
@@ -1881,7 +1881,7 @@ fn post_inference_check_abstract_obligations<'cx>(
         Ok(())
     }
     let walk_result = {
-        let pi: &dyn Fn(&InstType) -> bool = &process_inst;
+        let pi: &dyn Fn(&Context<'cx>, &InstType) -> bool = &process_inst;
         walk(cx, pi, super_)
     };
     match walk_result {
@@ -1922,7 +1922,7 @@ fn post_inference_check_abstract_obligations<'cx>(
 // empty everywhere, so the walk would always find no obligations — pure
 // wasted work on every non-abstract class in every Flow root.
 fn check_abstract_obligations<'cx, C: crate::func_params_intf::Config>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
@@ -1949,7 +1949,7 @@ fn check_abstract_obligations<'cx, C: crate::func_params_intf::Config>(
     let class_name = x.class_name.clone();
     let class_loc = x.class_loc.dupe();
     let def_loc = def_reason.loc().dupe();
-    cx.add_post_inference_validation_callback(Box::new(move |cx: &Context<'cx>| {
+    cx.add_post_inference_validation_callback(Box::new(move |cx: &mut Context<'_>| {
         post_inference_check_abstract_obligations(
             cx,
             &super_,
@@ -1972,7 +1972,7 @@ fn check_abstract_obligations<'cx, C: crate::func_params_intf::Config>(
 // where the alias resolves to [ObjProtoT] is correctly classified as
 // "no real extends" instead of leaking into the not-inherited check's
 // "not declared in the base class" branch.
-fn super_has_real_extends<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+fn super_has_real_extends<'cx>(cx: &mut Context<'cx>, t: &Type) -> bool {
     fn check(t: &Type) -> bool {
         match t.deref() {
             TypeInner::NullProtoT(_) | TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) => false,
@@ -1985,7 +1985,7 @@ fn super_has_real_extends<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         }
     }
     let concretes = cx
-        .with_suppressed_errors(|| {
+        .with_suppressed_errors(|cx| {
             FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)
         })
         .unwrap_or_default();
@@ -2037,7 +2037,7 @@ fn mk_inherited_side_state() -> InheritedSideState {
 // abstract bit is recorded. Returns the per-side state plus the
 // immediate-super's class name (for [base_class_name] in errors).
 fn collect_inherited_members_both_sides<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     super_: &Type,
 ) -> Result<
     (InheritedSideState, InheritedSideState, Option<FlowSmolStr>),
@@ -2061,92 +2061,93 @@ fn collect_inherited_members_both_sides<'cx>(
             s.name_abstract.insert(name.dupe(), is_abstract);
         }
     };
-    let process_inst = |instance_t: &InstanceT, inst_reason: &Reason| -> bool {
-        let inst = &instance_t.inst;
-        if seen.borrow().contains(&inst.own_props) {
-            false
-        } else {
-            seen.borrow_mut().insert(inst.own_props.dupe());
-            let inst_name = class_name_of_inst_reason(inst_reason);
-            if *first_inst.borrow() {
-                *immediate_super_name.borrow_mut() = inst_name.clone();
-                *first_inst.borrow_mut() = false;
-            }
-            let own_props = cx.find_props(inst.own_props.dupe());
-            let proto_props = cx.find_props(inst.proto_props.dupe());
-            let visit_instance = |props: &properties::PropertiesMap| {
-                for (name, p) in props.iter() {
-                    let is_abstract = inst.inst_abstract_props.contains(name);
-                    add_member(
-                        &instance_state,
-                        &inst_name,
-                        is_abstract,
-                        name,
-                        property::first_loc(p),
-                    );
+    let process_inst =
+        |cx: &mut Context<'cx>, instance_t: &InstanceT, inst_reason: &Reason| -> bool {
+            let inst = &instance_t.inst;
+            if seen.borrow().contains(&inst.own_props) {
+                false
+            } else {
+                seen.borrow_mut().insert(inst.own_props.dupe());
+                let inst_name = class_name_of_inst_reason(inst_reason);
+                if *first_inst.borrow() {
+                    *immediate_super_name.borrow_mut() = inst_name.clone();
+                    *first_inst.borrow_mut() = false;
                 }
-            };
-            visit_instance(&own_props);
-            visit_instance(&proto_props);
-            fn visit_static_concrete<'cx>(
-                cx: &Context<'cx>,
-                static_state: &RefCell<InheritedSideState>,
-                add_member: &dyn Fn(
-                    &RefCell<InheritedSideState>,
-                    &Option<FlowSmolStr>,
-                    bool,
-                    &Name,
-                    Option<ALoc>,
-                ),
-                inst_name: &Option<FlowSmolStr>,
-                t: &Type,
-            ) {
-                match t.deref() {
-                    TypeInner::DefT(_, def_t) => match def_t.deref() {
-                        DefTInner::ObjT(obj) => {
-                            let static_props = cx.find_props(obj.props_tmap.dupe());
-                            for (name, p) in static_props.iter() {
-                                // Static members can't be abstract in our model.
-                                add_member(
-                                    static_state,
-                                    inst_name,
-                                    false,
-                                    name,
-                                    property::first_loc(p),
-                                );
+                let own_props = cx.find_props(inst.own_props.dupe());
+                let proto_props = cx.find_props(inst.proto_props.dupe());
+                let visit_instance = |props: &properties::PropertiesMap| {
+                    for (name, p) in props.iter() {
+                        let is_abstract = inst.inst_abstract_props.contains(name);
+                        add_member(
+                            &instance_state,
+                            &inst_name,
+                            is_abstract,
+                            name,
+                            property::first_loc(p),
+                        );
+                    }
+                };
+                visit_instance(&own_props);
+                visit_instance(&proto_props);
+                fn visit_static_concrete<'cx>(
+                    cx: &mut Context<'cx>,
+                    static_state: &RefCell<InheritedSideState>,
+                    add_member: &dyn Fn(
+                        &RefCell<InheritedSideState>,
+                        &Option<FlowSmolStr>,
+                        bool,
+                        &Name,
+                        Option<ALoc>,
+                    ),
+                    inst_name: &Option<FlowSmolStr>,
+                    t: &Type,
+                ) {
+                    match t.deref() {
+                        TypeInner::DefT(_, def_t) => match def_t.deref() {
+                            DefTInner::ObjT(obj) => {
+                                let static_props = cx.find_props(obj.props_tmap.dupe());
+                                for (name, p) in static_props.iter() {
+                                    // Static members can't be abstract in our model.
+                                    add_member(
+                                        static_state,
+                                        inst_name,
+                                        false,
+                                        name,
+                                        property::first_loc(p),
+                                    );
+                                }
+                            }
+                            _ => {}
+                        },
+                        TypeInner::IntersectionT(_, rep) => {
+                            for m in rep.members_iter() {
+                                visit_static_concrete(cx, static_state, add_member, inst_name, m);
                             }
                         }
                         _ => {}
-                    },
-                    TypeInner::IntersectionT(_, rep) => {
-                        for m in rep.members_iter() {
-                            visit_static_concrete(cx, static_state, add_member, inst_name, m);
-                        }
                     }
-                    _ => {}
                 }
+                let static_concretes = cx
+                    .with_suppressed_errors(|cx| {
+                        FlowJs::possible_concrete_types_for_inspection(
+                            cx,
+                            type_util::reason_of_t(&instance_t.static_),
+                            &instance_t.static_,
+                        )
+                    })
+                    .unwrap_or_default();
+                for c in &static_concretes {
+                    visit_static_concrete(cx, &static_state, &add_member, &inst_name, c);
+                }
+                true
             }
-            let static_concretes = cx
-                .with_suppressed_errors(|| {
-                    FlowJs::possible_concrete_types_for_inspection(
-                        cx,
-                        type_util::reason_of_t(&instance_t.static_),
-                        &instance_t.static_,
-                    )
-                })
-                .unwrap_or_default();
-            for c in &static_concretes {
-                visit_static_concrete(cx, &static_state, &add_member, &inst_name, c);
-            }
-            true
-        }
-    };
+        };
     fn walk<'cx>(
-        cx: &Context<'cx>,
-        process_inst: &dyn Fn(&InstanceT, &Reason) -> bool,
+        cx: &mut Context<'cx>,
+        process_inst: &dyn Fn(&mut Context<'cx>, &InstanceT, &Reason) -> bool,
         t: &Type,
     ) -> Result<(), FlowJsException> {
-        let concretes = cx.with_suppressed_errors(|| {
+        let concretes = cx.with_suppressed_errors(|cx| {
             FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)
         })?;
         for c in &concretes {
@@ -2155,21 +2156,21 @@ fn collect_inherited_members_both_sides<'cx>(
         Ok(())
     }
     fn walk_one<'cx>(
-        cx: &Context<'cx>,
-        process_inst: &dyn Fn(&InstanceT, &Reason) -> bool,
+        cx: &mut Context<'cx>,
+        process_inst: &dyn Fn(&mut Context<'cx>, &InstanceT, &Reason) -> bool,
         t: &Type,
     ) -> Result<(), FlowJsException> {
         match t.deref() {
             TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
                 let r = type_util::reason_of_t(t);
-                if process_inst(instance, r) {
+                if process_inst(cx, instance, r) {
                     walk(cx, process_inst, &instance.super_)?;
                 }
             }
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::InstanceT(inst_t) => {
                     let r = type_util::reason_of_t(t);
-                    if process_inst(inst_t, r) {
+                    if process_inst(cx, inst_t, r) {
                         walk(cx, process_inst, &inst_t.super_)?;
                     }
                 }
@@ -2184,7 +2185,7 @@ fn collect_inherited_members_both_sides<'cx>(
         }
         Ok(())
     }
-    let pi: &dyn Fn(&InstanceT, &Reason) -> bool = &process_inst;
+    let pi: &dyn Fn(&mut Context<'cx>, &InstanceT, &Reason) -> bool = &process_inst;
     let walk_result = walk(cx, pi, super_);
     match walk_result {
         Ok(()) => {}
@@ -2228,7 +2229,7 @@ fn collect_inherited_members_both_sides<'cx>(
 //   skipped.
 #[allow(clippy::too_many_arguments)]
 fn check_override_side<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     class_name: &Option<FlowSmolStr>,
     own_concrete_names: &BTreeMap<Name, Option<ALoc>>,
     override_members: &BTreeMap<Name, ALoc>,
@@ -2351,7 +2352,7 @@ fn check_override_side<'cx>(
 // [override_members] is always empty AND there's no way for a user to
 // satisfy the implicit-override check.
 fn check_override_obligations<'cx, C: crate::func_params_intf::Config>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     _def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
@@ -2429,7 +2430,7 @@ fn check_override_obligations<'cx, C: crate::func_params_intf::Config>(
     let own_concrete_instance = own_concrete_names_of(&x.instance);
     let own_concrete_static = own_concrete_names_of(&x.static_);
     let (super_, _static_proto) = supertype(cx, x);
-    cx.add_post_inference_validation_callback(Box::new(move |cx: &Context<'cx>| {
+    cx.add_post_inference_validation_callback(Box::new(move |cx: &mut Context<'_>| {
         // One super-chain walk feeds both sides — each ancestor's
         // static slot lives on the same [InstanceT] we're already
         // visiting. Halves the [possible_concrete_types_for_inspection]
@@ -2461,7 +2462,7 @@ fn check_override_obligations<'cx, C: crate::func_params_intf::Config>(
 }
 
 pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
@@ -2476,16 +2477,16 @@ pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
     check_override_obligations(cx, def_reason, x);
 }
 
-fn merge_tparam_polarities(cx: &Context, name_loc: &ALoc, tparams: &TypeParams) -> TypeParams {
+fn merge_tparam_polarities(cx: &mut Context, name_loc: &ALoc, tparams: &TypeParams) -> TypeParams {
     let Some((loc, tparams)) = tparams else {
         return None;
     };
-    let env = cx.environment();
-    let conflicts = env
-        .var_info
+    let var_info = cx.environment().var_info.dupe();
+    let name_defs = cx.environment().name_defs.dupe();
+    let conflicts = var_info
         .interface_merge_conflicts
         .iter()
-        .chain(env.var_info.declare_class_interface_merge_conflicts.iter())
+        .chain(var_info.declare_class_interface_merge_conflicts.iter())
         .find(|(canonical_loc, other_locs)| {
             *canonical_loc == name_loc || other_locs.contains(name_loc)
         });
@@ -2493,8 +2494,7 @@ fn merge_tparam_polarities(cx: &Context, name_loc: &ALoc, tparams: &TypeParams) 
     if let Some((canonical_loc, other_locs)) = conflicts {
         let mut first_polarities = vec![None; merged.len()];
         for decl_loc in std::iter::once(canonical_loc).chain(other_locs) {
-            let Some((def, _, _, _, _)) = env.name_defs.get(&EnvKey::ordinary(decl_loc.dupe()))
-            else {
+            let Some((def, _, _, _, _)) = name_defs.get(&EnvKey::ordinary(decl_loc.dupe())) else {
                 continue;
             };
             let decl_tparams = match def {
@@ -2553,7 +2553,7 @@ fn merge_tparam_polarities(cx: &Context, name_loc: &ALoc, tparams: &TypeParams) 
 // TODO: Ideally we should check polarity for all class types, but this flag is
 // flipped off for interface/declare class currently.
 pub fn classtype<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     check_polarity_flag: bool,
     inst_kind: InstanceKind,
     x: &class_types::Class<C>,
@@ -2661,7 +2661,7 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
 }
 
 pub fn mk_class_binding<'a, C: ConfigTypes>(
-    _cx: &Context<'a>,
+    _cx: &mut Context<'a>,
     x: &class_types::Class<C>,
 ) -> ClassBinding {
     ClassBinding {
@@ -2670,7 +2670,7 @@ pub fn mk_class_binding<'a, C: ConfigTypes>(
 }
 
 pub fn make_thises<'a, C: ConfigTypes>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     x: &class_types::Class<C>,
 ) -> (Type, Type, Type, Type) {
     let super_reason = x
@@ -2731,11 +2731,12 @@ pub fn make_thises<'a, C: ConfigTypes>(
 
 /// Processes the bodies of instance and static class members.
 pub fn toplevels<'a, C: crate::func_params_intf::Config>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     x: &class_types::Class<C>,
 ) -> Result<(), CheckExprError> {
-    type_env::in_class_scope(cx, x.class_loc.dupe(), || {
-        let method_ = |set_asts: &class_types::SetAsts<C>,
+    type_env::in_class_scope(cx, x.class_loc.dupe(), |cx| {
+        let method_ = |cx: &mut Context<'a>,
+                       set_asts: &class_types::SetAsts<C>,
                        f: &func_class_sig_types::func::Func<C>| {
             match (&f.body, &f.kind) {
                 (None, func_class_sig_types::func::Kind::FieldInit { .. }) | (Some(_), _) => {
@@ -2750,12 +2751,14 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             }
             Ok(())
         };
-        let field = |entry: &class_types::FieldPrime<C>| -> Result<(), CheckExprError> {
+        let field = |cx: &mut Context<'a>,
+                     entry: &class_types::FieldPrime<C>|
+         -> Result<(), CheckExprError> {
             let (_, _, value) = entry;
             match value {
                 class_types::Field::Annot(_) => {}
                 class_types::Field::Infer(fsig, set_asts) => {
-                    method_(set_asts, fsig)?;
+                    method_(cx, set_asts, fsig)?;
                 }
             }
             Ok(())
@@ -2765,14 +2768,14 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             |s| -> Result<(), CheckExprError> {
                 // process static methods and fields
                 iter_methods(
-                    &mut |fi: &class_types::FuncInfo<C>| method_(&fi.set_asts, &fi.func_sig),
+                    &mut |fi: &class_types::FuncInfo<C>| method_(cx, &fi.set_asts, &fi.func_sig),
                     s,
                 )?;
                 for entry in s.fields.values() {
-                    field(entry)?;
+                    field(cx, entry)?;
                 }
                 for entry in s.private_fields.values() {
-                    field(entry)?;
+                    field(cx, entry)?;
                 }
                 Ok(())
             },
@@ -2783,21 +2786,21 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             |s| -> Result<(), CheckExprError> {
                 // process constructor
                 for fi in &x.constructor {
-                    method_(&fi.set_asts, &fi.func_sig)?;
+                    method_(cx, &fi.set_asts, &fi.func_sig)?;
                 }
                 // process instance methods and fields
                 iter_methods(
-                    &mut |fi: &class_types::FuncInfo<C>| method_(&fi.set_asts, &fi.func_sig),
+                    &mut |fi: &class_types::FuncInfo<C>| method_(cx, &fi.set_asts, &fi.func_sig),
                     s,
                 )?;
                 for entry in s.fields.values() {
-                    field(entry)?;
+                    field(cx, entry)?;
                 }
                 for entry in s.private_fields.values() {
-                    field(entry)?;
+                    field(cx, entry)?;
                 }
                 for entry in s.proto_fields.values() {
-                    field(entry)?;
+                    field(cx, entry)?;
                 }
                 Ok(())
             },

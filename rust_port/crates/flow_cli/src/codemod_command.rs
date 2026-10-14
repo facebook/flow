@@ -394,14 +394,14 @@ mod annotate_exports_command {
     fn visit<'cx>(
         options: &Options,
         ast: &ast::Program<Loc, Loc>,
-        cctx: flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &mut flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> flow_services_code_action::insert_type_utils::Acc<SignatureVerificationErrorStats> {
         let config = RUNTIME_CONFIG.get().unwrap();
-        let mut mapper =
-            AnnotateExportsMapper::new(config.max_type_size, config.default_any, &cctx);
+        let mut mapper = AnnotateExportsMapper::new(config.max_type_size, config.default_any, cctx);
         let ast_prime = mapper.program(ast);
+        let acc = mapper.acc();
         save_ast_diff(options, &cctx.file, ast, &ast_prime);
-        mapper.acc()
+        acc
     }
 
     struct RunnerConfig;
@@ -429,7 +429,7 @@ mod annotate_exports_command {
         fn visit(
             options: &Options,
             ast: &ast::Program<Loc, Loc>,
-            cctx: flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
+            cctx: &mut flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
         ) -> Self::Accumulator {
             annotate_exports_command::visit(options, ast, cctx)
         }
@@ -502,14 +502,15 @@ mod annotate_literal_declaration_command {
     fn visit<'cx>(
         options: &Options,
         ast: &ast::Program<Loc, Loc>,
-        cctx: flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &mut flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> AnnotateLiteralAccumulator {
         let config = RUNTIME_CONFIG.get().unwrap();
-        let mut mapper = AnnotateLiteralDeclarationsMapper::new(config.max_type_size, &cctx);
+        let mut mapper = AnnotateLiteralDeclarationsMapper::new(config.max_type_size, cctx);
         let ast_prime = mapper.program(ast.clone());
+        let stats = mapper.post_run();
         save_ast_diff(options, &cctx.file, ast, &ast_prime);
         let mut acc = flow_services_code_action::insert_type_utils::Acc::empty();
-        acc.stats.extra = mapper.post_run();
+        acc.stats.extra = stats;
         AnnotateLiteralAccumulator { acc }
     }
 
@@ -541,7 +542,7 @@ mod annotate_literal_declaration_command {
         fn visit(
             options: &Options,
             ast: &ast::Program<Loc, Loc>,
-            cctx: flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
+            cctx: &mut flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
         ) -> Self::Accumulator {
             annotate_literal_declaration_command::visit(options, ast, cctx)
         }
@@ -662,14 +663,15 @@ mod annotate_optional_properties_command {
     fn visit<'cx>(
         options: &Options,
         ast: &ast::Program<Loc, Loc>,
-        cctx: flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &mut flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> flow_services_code_action::insert_type_utils::Acc<AnnotateOptionalPropertiesStats> {
         let config = RUNTIME_CONFIG.get().unwrap();
         let mut mapper =
-            AnnotateOptionalPropertiesMapper::new(config.max_type_size, config.default_any, &cctx);
+            AnnotateOptionalPropertiesMapper::new(config.max_type_size, config.default_any, cctx);
         let ast_prime = mapper.program(ast.clone());
+        let acc = mapper.acc();
         save_ast_diff(options, &cctx.file, ast, &ast_prime);
-        mapper.acc()
+        acc
     }
 
     struct RunnerConfig;
@@ -697,7 +699,7 @@ mod annotate_optional_properties_command {
         fn visit(
             options: &Options,
             ast: &ast::Program<Loc, Loc>,
-            cctx: flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
+            cctx: &mut flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
         ) -> Self::Accumulator {
             annotate_optional_properties_command::visit(options, ast, cctx)
         }
@@ -916,7 +918,7 @@ mod fix_errors_command {
         fn visit(
             options: &Options,
             ast: &ast::Program<Loc, Loc>,
-            cctx: flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
+            cctx: &mut flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
         ) -> Self::Accumulator {
             let transformable_errors = FIX_ERRORS_HEAP
                 .get_or_init(|| Mutex::new(BTreeMap::new()))
@@ -968,7 +970,7 @@ mod fix_errors_command {
                             .next()
                             .expect("ast_transforms_of_error returned empty list");
                         let result = (transform.transform)(
-                            &cctx.cx,
+                            &mut cctx.cx,
                             cctx.file_sig.dupe(),
                             &current_ast,
                             &cctx.typed_ast,

@@ -33,7 +33,7 @@ pub struct SearchResult {
 
 pub fn search<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     file_sig: &Arc<FileSig>,
     ast: &ast::Program<Loc, Loc>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,

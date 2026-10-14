@@ -57,7 +57,7 @@ use super::*;
 use crate::speculation_kit;
 use crate::tvar_resolver;
 
-pub(super) fn not_linked<CX>(
+pub(super) fn not_linked<CX: ContextFamily>(
     (id1, _bounds1): (i32, &constraint::BoundsRef<CX>),
     (_id2, bounds2): (i32, &constraint::BoundsRef<CX>),
 ) -> bool {
@@ -72,7 +72,7 @@ thread_local! {
 }
 
 pub(super) fn check_canceled<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     CHECK_CANCELED_COUNT.with(|count| {
         let n = (count.get() + 1) % 128;
@@ -86,7 +86,7 @@ pub(super) fn inherited_method(name: &Name) -> bool {
 }
 
 pub(super) fn speculative_subtyping_succeeds<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     l: &Type,
     u: &Type,
@@ -105,7 +105,7 @@ pub(super) fn speculative_subtyping_succeeds<'cx>(
 }
 
 pub(super) fn speculative_subtyping_succeeds_non_speculating<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     l: &Type,
     u: &Type,
@@ -135,7 +135,7 @@ pub(super) fn speculative_subtyping_succeeds_non_speculating<'cx>(
 /// upper properties at once; `dispatch::lookup_targets` pairs each of them with
 /// the reference it is looked up under.
 pub(super) fn perform_lookup_action<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     propref: &PropRef,
@@ -329,7 +329,12 @@ pub(super) fn perform_lookup_action<'cx>(
     Ok(())
 }
 
-pub(super) fn mk_react_dro<'cx>(_cx: &Context<'cx>, use_op: UseOp, dro: ReactDro, t: Type) -> Type {
+pub(super) fn mk_react_dro<'cx>(
+    _cx: &mut Context<'cx>,
+    use_op: UseOp,
+    dro: ReactDro,
+    t: Type,
+) -> Type {
     let id = eval::Id::generate_id();
     let reason = type_util::reason_of_t(&t).dupe();
     Type::new(TypeInner::EvalT {
@@ -347,7 +352,7 @@ pub(super) fn mk_react_dro<'cx>(_cx: &Context<'cx>, use_op: UseOp, dro: ReactDro
 /// key is a string literal, the property exists, and is readable; None otherwise.
 /// Applies react_dro wrapping if needed.
 pub(super) fn lookup_prop_type_direct<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     use_op: &UseOp,
     react_dro: &Option<ReactDro>,
     props: &properties::PropertiesMap,
@@ -379,7 +384,7 @@ pub(super) fn lookup_prop_type_direct<'cx>(
 }
 
 /// Returns true when __flow should succeed immediately if EmptyT flows into u.
-pub(super) fn empty_success(u: &UseT<Context>) -> bool {
+pub(super) fn empty_success(u: &UseT<Cx>) -> bool {
     match u.deref() {
         // Work has to happen when Empty flows to these types
         UseTInner::ConcretizeT(box ConcretizeTData {
@@ -430,7 +435,7 @@ fn is_concrete(t: &Type) -> bool {
 }
 
 pub(super) fn handle_generic<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     no_infer: bool,
@@ -438,7 +443,7 @@ pub(super) fn handle_generic<'cx>(
     reason: &Reason,
     id: &GenericId,
     name: &SubstName,
-    u: &UseT<Context<'cx>>,
+    u: &UseT<Cx>,
 ) -> Result<bool, FlowJsException> {
     let make_generic = |t: Type| -> Type {
         Type::new(TypeInner::GenericT(Box::new(GenericTData {
@@ -449,8 +454,9 @@ pub(super) fn handle_generic<'cx>(
             no_infer,
         })))
     };
-    let narrow_generic_with_continuation = |mk_use_t: &dyn Fn(Tvar) -> UseT<Context<'cx>>,
-                                            cont: Cont<Context<'cx>>|
+    let narrow_generic_with_continuation = |cx: &mut Context<'cx>,
+                                            mk_use_t: &dyn Fn(Tvar) -> UseT<Cx>,
+                                            cont: Cont<Cx>|
      -> Result<(), FlowJsException> {
         let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
         let t_out_prime = Tvar::new(reason.dupe(), tvar_id as u32);
@@ -467,29 +473,33 @@ pub(super) fn handle_generic<'cx>(
         })));
         rec_flow(cx, env, trace, (&open_t, &seal))
     };
-    let narrow_generic_use = |mk_use_t: &dyn Fn(Tvar) -> UseT<Context<'cx>>,
-                              use_t_out: UseT<Context<'cx>>|
+    let narrow_generic_use = |cx: &mut Context<'cx>,
+                              mk_use_t: &dyn Fn(Tvar) -> UseT<Cx>,
+                              use_t_out: UseT<Cx>|
      -> Result<(), FlowJsException> {
-        narrow_generic_with_continuation(mk_use_t, Cont::Upper(Box::new(use_t_out)))
+        narrow_generic_with_continuation(cx, mk_use_t, Cont::Upper(Box::new(use_t_out)))
     };
-    let narrow_generic = |use_op: Option<UseOp>,
-                          mk_use_t: &dyn Fn(Type) -> UseT<Context<'cx>>,
+    let narrow_generic = |cx: &mut Context<'cx>,
+                          use_op: Option<UseOp>,
+                          mk_use_t: &dyn Fn(Type) -> UseT<Cx>,
                           t_out: &Type|
      -> Result<(), FlowJsException> {
         let use_op = use_op.unwrap_or_else(unknown_use);
-        let mk_use_t_wrapper =
-            |v: Tvar| -> UseT<Context<'cx>> { mk_use_t(Type::new(TypeInner::OpenT(v))) };
+        let mk_use_t_wrapper = |v: Tvar| -> UseT<Cx> { mk_use_t(Type::new(TypeInner::OpenT(v))) };
         narrow_generic_use(
+            cx,
             &mk_use_t_wrapper,
             UseT::new(UseTInner::UseT(use_op, t_out.dupe())),
         )
     };
-    let narrow_generic_tvar = |use_op: Option<UseOp>,
-                               mk_use_t: &dyn Fn(Tvar) -> UseT<Context<'cx>>,
+    let narrow_generic_tvar = |cx: &mut Context<'cx>,
+                               use_op: Option<UseOp>,
+                               mk_use_t: &dyn Fn(Tvar) -> UseT<Cx>,
                                t_out: &Tvar|
      -> Result<(), FlowJsException> {
         let use_op = use_op.unwrap_or_else(unknown_use);
         narrow_generic_use(
+            cx,
             mk_use_t,
             UseT::new(UseTInner::UseT(
                 use_op,
@@ -498,7 +508,7 @@ pub(super) fn handle_generic<'cx>(
         )
     };
     let wait_for_concrete_bound =
-        |upper: Option<&UseT<Context<'cx>>>| -> Result<bool, FlowJsException> {
+        |cx: &mut Context<'cx>, upper: Option<&UseT<Cx>>| -> Result<bool, FlowJsException> {
             let upper = upper.unwrap_or(u);
             let repos_bound = reposition_reason(cx, env, Some(trace), reason, false, bound)?;
             let seal = UseT::new(UseTInner::SealGenericT(Box::new(SealGenericTData {
@@ -511,47 +521,47 @@ pub(super) fn handle_generic<'cx>(
             rec_flow(cx, env, trace, (&repos_bound, &seal))?;
             Ok(true)
         };
-    let distribute_union_intersection =
-        |upper: Option<&UseT<Context<'cx>>>| -> Result<bool, FlowJsException> {
-            let upper = upper.unwrap_or(u);
-            match bound.deref() {
-                TypeInner::UnionT(_, rep) => {
-                    let mut members = rep.members_iter();
-                    let t1 = members.next().unwrap();
-                    let t2 = members.next().unwrap();
-                    let ts: Vec<Type> = members.duped().collect();
-                    let union_of_generics = union_rep::make(
-                        None,
-                        rep.union_kind(),
-                        make_generic(t1.dupe()),
-                        make_generic(t2.dupe()),
-                        ts.into_iter().map(make_generic).collect::<Rc<[_]>>(),
-                    );
-                    let union_t = Type::new(TypeInner::UnionT(reason.dupe(), union_of_generics));
-                    rec_flow(cx, env, trace, (&union_t, upper))?;
-                    Ok(true)
-                }
-                TypeInner::IntersectionT(_, rep) => {
-                    let mut members = rep.members_iter();
-                    let t1 = members.next().unwrap();
-                    let t2 = members.next().unwrap();
-                    let ts: Vec<Type> = members.duped().collect();
-                    let inter_of_generics = inter_rep::make(
-                        make_generic(t1.dupe()),
-                        make_generic(t2.dupe()),
-                        ts.into_iter().map(make_generic).collect::<Rc<[_]>>(),
-                    );
-                    let inter_t =
-                        Type::new(TypeInner::IntersectionT(reason.dupe(), inter_of_generics));
-                    rec_flow(cx, env, trace, (&inter_t, upper))?;
-                    Ok(true)
-                }
-                _ => Ok(false),
+    let distribute_union_intersection = |cx: &mut Context<'cx>,
+                                         upper: Option<&UseT<Cx>>|
+     -> Result<bool, FlowJsException> {
+        let upper = upper.unwrap_or(u);
+        match bound.deref() {
+            TypeInner::UnionT(_, rep) => {
+                let mut members = rep.members_iter();
+                let t1 = members.next().unwrap();
+                let t2 = members.next().unwrap();
+                let ts: Vec<Type> = members.duped().collect();
+                let union_of_generics = union_rep::make(
+                    None,
+                    rep.union_kind(),
+                    make_generic(t1.dupe()),
+                    make_generic(t2.dupe()),
+                    ts.into_iter().map(make_generic).collect::<Rc<[_]>>(),
+                );
+                let union_t = Type::new(TypeInner::UnionT(reason.dupe(), union_of_generics));
+                rec_flow(cx, env, trace, (&union_t, upper))?;
+                Ok(true)
             }
-        };
+            TypeInner::IntersectionT(_, rep) => {
+                let mut members = rep.members_iter();
+                let t1 = members.next().unwrap();
+                let t2 = members.next().unwrap();
+                let ts: Vec<Type> = members.duped().collect();
+                let inter_of_generics = inter_rep::make(
+                    make_generic(t1.dupe()),
+                    make_generic(t2.dupe()),
+                    ts.into_iter().map(make_generic).collect::<Rc<[_]>>(),
+                );
+                let inter_t = Type::new(TypeInner::IntersectionT(reason.dupe(), inter_of_generics));
+                rec_flow(cx, env, trace, (&inter_t, upper))?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    };
 
     let update_action_meth_generic_this =
-        |l: Type, action: &MethodAction<Context<'cx>>| -> MethodAction<Context<'cx>> {
+        |l: Type, action: &MethodAction<Cx>| -> MethodAction<Cx> {
             match action {
                 MethodAction::CallM(box CallMData {
                     methodcalltype,
@@ -680,9 +690,9 @@ pub(super) fn handle_generic<'cx>(
         }
         UseTInner::ReactKitT(..) => {
             if is_concrete(bound) {
-                distribute_union_intersection(None)
+                distribute_union_intersection(cx, None)
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
         UseTInner::ToStringT {
@@ -693,7 +703,8 @@ pub(super) fn handle_generic<'cx>(
             let orig_t = orig_t.dupe();
             let to_string_reason = to_string_reason.dupe();
             narrow_generic_use(
-                &|t_out_prime: Tvar| -> UseT<Context<'cx>> {
+                cx,
+                &|t_out_prime: Tvar| -> UseT<Cx> {
                     UseT::new(UseTInner::ToStringT {
                         orig_t: orig_t.dupe(),
                         reason: to_string_reason.dupe(),
@@ -717,7 +728,8 @@ pub(super) fn handle_generic<'cx>(
             let keys_reason = keys_reason.dupe();
             let include_symbols = *include_symbols;
             narrow_generic_use(
-                &|t_out_prime: Tvar| -> UseT<Context<'cx>> {
+                cx,
+                &|t_out_prime: Tvar| -> UseT<Cx> {
                     UseT::new(UseTInner::GetKeysDictKeyT {
                         reason: keys_reason.dupe(),
                         t_out: Box::new(UseT::new(UseTInner::UseT(
@@ -735,8 +747,9 @@ pub(super) fn handle_generic<'cx>(
             let use_op_cloned = use_op.dupe();
             let r = r.dupe();
             narrow_generic(
+                cx,
                 Some(use_op.dupe()),
-                &|t_out_prime: Type| -> UseT<Context<'cx>> {
+                &|t_out_prime: Type| -> UseT<Cx> {
                     UseT::new(UseTInner::UseT(
                         use_op_cloned.dupe(),
                         Type::new(TypeInner::MaybeT(r.dupe(), t_out_prime)),
@@ -757,8 +770,9 @@ pub(super) fn handle_generic<'cx>(
             let opt_reason = opt_reason.dupe();
             let opt_use_desc = *opt_use_desc;
             narrow_generic(
+                cx,
                 Some(use_op.dupe()),
-                &|t_out_prime: Type| -> UseT<Context<'cx>> {
+                &|t_out_prime: Type| -> UseT<Cx> {
                     UseT::new(UseTInner::UseT(
                         use_op_cloned.dupe(),
                         Type::new(TypeInner::OptionalT {
@@ -775,8 +789,9 @@ pub(super) fn handle_generic<'cx>(
         UseTInner::DeepReadOnlyT(t_out, dro) => {
             let dro = dro.clone();
             narrow_generic_tvar(
+                cx,
                 None,
-                &|t_out_prime: Tvar| -> UseT<Context<'cx>> {
+                &|t_out_prime: Tvar| -> UseT<Cx> {
                     UseT::new(UseTInner::DeepReadOnlyT(Box::new(t_out_prime), dro.clone()))
                 },
                 t_out,
@@ -785,8 +800,9 @@ pub(super) fn handle_generic<'cx>(
         }
         UseTInner::HooklikeT(t_out) => {
             narrow_generic_tvar(
+                cx,
                 None,
-                &|t_out_prime: Tvar| -> UseT<Context<'cx>> {
+                &|t_out_prime: Tvar| -> UseT<Cx> {
                     UseT::new(UseTInner::HooklikeT(Box::new(t_out_prime)))
                 },
                 t_out,
@@ -796,8 +812,9 @@ pub(super) fn handle_generic<'cx>(
         UseTInner::FilterMaybeT(use_op, t_out) => {
             let use_op = use_op.dupe();
             narrow_generic(
+                cx,
                 None,
-                &|t_out_prime: Type| -> UseT<Context<'cx>> {
+                &|t_out_prime: Type| -> UseT<Cx> {
                     UseT::new(UseTInner::FilterMaybeT(use_op.dupe(), t_out_prime))
                 },
                 t_out,
@@ -807,8 +824,9 @@ pub(super) fn handle_generic<'cx>(
         UseTInner::FilterOptionalT(use_op, t_out) => {
             let use_op = use_op.dupe();
             narrow_generic(
+                cx,
                 None,
-                &|t_out_prime: Type| -> UseT<Context<'cx>> {
+                &|t_out_prime: Type| -> UseT<Cx> {
                     UseT::new(UseTInner::FilterOptionalT(use_op.dupe(), t_out_prime))
                 },
                 t_out,
@@ -820,8 +838,9 @@ pub(super) fn handle_generic<'cx>(
             let xs = xs.clone();
             let obj_rest_id = *obj_rest_id;
             narrow_generic(
+                cx,
                 None,
-                &|t_out_prime: Type| -> UseT<Context<'cx>> {
+                &|t_out_prime: Type| -> UseT<Cx> {
                     UseT::new(UseTInner::ObjRestT(
                         r.dupe(),
                         xs.clone(),
@@ -854,8 +873,9 @@ pub(super) fn handle_generic<'cx>(
                         let prop_name = prop_name.dupe();
                         let hint = data.hint.clone();
                         narrow_generic_tvar(
+                            cx,
                             None,
-                            &|tout_prime: Tvar| -> UseT<Context<'cx>> {
+                            &|tout_prime: Tvar| -> UseT<Cx> {
                                 UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                                     use_op: get_use_op.dupe(),
                                     reason: reason_op.dupe(),
@@ -878,7 +898,7 @@ pub(super) fn handle_generic<'cx>(
                     _ => Ok(false),
                 }
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
         UseTInner::ConstructorT(data) => {
@@ -899,8 +919,9 @@ pub(super) fn handle_generic<'cx>(
                     let return_hint = data.return_hint.clone();
                     let specialized_ctor = data.specialized_ctor.clone();
                     narrow_generic(
+                        cx,
                         None,
-                        &|tout_prime: Type| -> UseT<Context<'cx>> {
+                        &|tout_prime: Type| -> UseT<Cx> {
                             UseT::new(UseTInner::ConstructorT(Box::new(ConstructorTData {
                                 use_op: ctor_use_op.dupe(),
                                 reason: reason_op.dupe(),
@@ -918,14 +939,14 @@ pub(super) fn handle_generic<'cx>(
                     Ok(false)
                 }
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
         UseTInner::ElemT(..) => {
             if is_concrete(bound) {
-                distribute_union_intersection(None)
+                distribute_union_intersection(cx, None)
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
         UseTInner::MethodT(box MethodTData {
@@ -946,9 +967,9 @@ pub(super) fn handle_generic<'cx>(
             })));
             let consumed = {
                 if is_concrete(bound) {
-                    distribute_union_intersection(Some(&u_prime))?
+                    distribute_union_intersection(cx, Some(&u_prime))?
                 } else {
-                    wait_for_concrete_bound(Some(&u_prime))?
+                    wait_for_concrete_bound(cx, Some(&u_prime))?
                 }
             };
             if !consumed {
@@ -971,9 +992,9 @@ pub(super) fn handle_generic<'cx>(
             })));
             let consumed = {
                 if is_concrete(bound) {
-                    distribute_union_intersection(Some(&u_prime))?
+                    distribute_union_intersection(cx, Some(&u_prime))?
                 } else {
-                    wait_for_concrete_bound(Some(&u_prime))?
+                    wait_for_concrete_bound(cx, Some(&u_prime))?
                 }
             };
             if !consumed {
@@ -984,23 +1005,23 @@ pub(super) fn handle_generic<'cx>(
         }
         UseTInner::ObjKitT(..) => {
             if is_concrete(bound) {
-                distribute_union_intersection(None)
+                distribute_union_intersection(cx, None)
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
         UseTInner::UseT(_, t) if matches!(t.deref(), TypeInner::IntersectionT(..)) => {
             if is_concrete(bound) {
-                distribute_union_intersection(None)
+                distribute_union_intersection(cx, None)
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
         UseTInner::UseT(_, union_t) if matches!(union_t.deref(), TypeInner::UnionT(..)) => {
             if matches!(
                 flow_js_utils::union_optimization_guard(
                     cx,
-                    |t1, t2| type_util::quick_subtype(None::<&fn(&Type)>, t1, t2),
+                    |t1, t2| type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2),
                     bound,
                     union_t,
                 ),
@@ -1011,26 +1032,26 @@ pub(super) fn handle_generic<'cx>(
                 }
                 Ok(true)
             } else if is_concrete(bound) {
-                distribute_union_intersection(None)
+                distribute_union_intersection(cx, None)
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
         UseTInner::UseT(_, t) if matches!(t.deref(), TypeInner::KeysT(..)) => {
             if is_concrete(bound) {
                 Ok(false)
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
         UseTInner::EvalTypeDestructorT(..) => {
             if is_concrete(bound) {
                 Ok(false)
             } else {
-                wait_for_concrete_bound(None)
+                wait_for_concrete_bound(cx, None)
             }
         }
-        UseTInner::ResolveSpreadT(..) if !is_concrete(bound) => wait_for_concrete_bound(None),
+        UseTInner::ResolveSpreadT(..) if !is_concrete(bound) => wait_for_concrete_bound(cx, None),
         _ => Ok(false),
     }
 }
@@ -1041,38 +1062,38 @@ pub(super) fn handle_generic<'cx>(
 /// a use sees it through its bound, and what a type destructor or the object
 /// kit computes from it is a frozen tvar derived from it.
 pub(super) fn handle_frozen_tvar<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
     tvar: &ImplicitInstantiationTvarData,
-    u: &UseT<Context<'cx>>,
+    u: &UseT<Cx>,
 ) -> Result<bool, FlowJsException> {
     let ImplicitInstantiationTvarData {
         reason, bound, id, ..
     } = tvar;
-    let repos_bound = || reposition_reason(cx, env, Some(trace), reason, false, bound);
     // The derived tvar is owned by the solve owning this one. Here it is bounded
     // by what the use computes from the bound. In the owning solve it is what
     // the use computes from this tvar, so that solve infers through it.
-    let derive = |use_reason: &Reason,
-                  mk_use_t: &dyn Fn(Tvar) -> UseT<Context<'cx>>,
+    let derive = |cx: &mut Context<'cx>,
+                  use_reason: &Reason,
+                  mk_use_t: &dyn Fn(Tvar) -> UseT<Cx>,
                   use_op: UseOp,
                   tout: &Type|
      -> Result<bool, FlowJsException> {
         let root_id = cx.find_constraints(*id).0;
-        let is_tvar = |frozen_id: i32| cx.find_constraints(frozen_id).0 == root_id;
-        let (Some(owner_env), Some((_, has_default))) = (
-            env.implicit_instantiation_owner(is_tvar),
-            env.frozen_implicit_instantiation_tvar_with_default(is_tvar),
-        ) else {
+        let mut is_tvar = |frozen_id: i32| cx.find_constraints(frozen_id).0 == root_id;
+        let owner_env = env.implicit_instantiation_owner(&mut is_tvar);
+        let frozen = env.frozen_implicit_instantiation_tvar_with_default(&mut is_tvar);
+        let (Some(owner_env), Some((_, has_default))) = (owner_env, frozen) else {
             return Ok(false);
         };
         let rigid = Tvar::new(
             use_reason.dupe(),
             flow_typing_tvar::mk_no_wrap(cx, use_reason) as u32,
         );
-        rec_flow(cx, env, trace, (&repos_bound()?, &mk_use_t(rigid.dupe())))?;
+        let repos_bound = reposition_reason(cx, env, Some(trace), reason, false, bound)?;
+        rec_flow(cx, env, trace, (&repos_bound, &mk_use_t(rigid.dupe())))?;
         let thawed = Tvar::new(
             use_reason.dupe(),
             flow_typing_tvar::mk_no_wrap(cx, use_reason) as u32,
@@ -1118,6 +1139,7 @@ pub(super) fn handle_frozen_tvar<'cx>(
             destructor,
             tout,
         }) if !matches!(**destructor, Destructor::ConditionalType(_)) => derive(
+            cx,
             use_reason,
             &|tout| {
                 UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
@@ -1134,6 +1156,7 @@ pub(super) fn handle_frozen_tvar<'cx>(
             &Type::new(TypeInner::OpenT((**tout).dupe())),
         ),
         UseTInner::ObjKitT(use_op, reason_op, resolve_tool, tool, tout) => derive(
+            cx,
             reason_op,
             &|tout| {
                 UseT::new(UseTInner::ObjKitT(
@@ -1184,7 +1207,7 @@ pub(super) fn handle_frozen_tvar<'cx>(
 /// reason for this continuation if resolving the next member hits the recursion
 /// limit.
 pub(super) fn resolve_union<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     reason: &Reason,
@@ -1192,12 +1215,11 @@ pub(super) fn resolve_union<'cx>(
     resolved: &flow_data_structure_wrapper::list::FlowOcamlList<Type>,
     unresolved: &flow_data_structure_wrapper::list::FlowOcamlList<Type>,
     l: &Type,
-    upper: &UseT<Context<'cx>>,
-) -> Result<Option<(Type, UseT<Context<'cx>>, Reason)>, FlowJsException> {
-    let do_continue = |resolved: flow_data_structure_wrapper::list::FlowOcamlList<Type>| -> Result<
-        Option<(Type, UseT<Context<'cx>>, Reason)>,
-        FlowJsException,
-    > {
+    upper: &UseT<Cx>,
+) -> Result<Option<(Type, UseT<Cx>, Reason)>, FlowJsException> {
+    let do_continue = |cx: &mut Context<'cx>,
+                       resolved: flow_data_structure_wrapper::list::FlowOcamlList<Type>|
+     -> Result<Option<(Type, UseT<Cx>, Reason)>, FlowJsException> {
         match unresolved.first() {
             None => {
                 let ts: Vec<Type> = resolved.iter().duped().collect();
@@ -1228,7 +1250,7 @@ pub(super) fn resolve_union<'cx>(
     };
     match l.deref() {
         TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {
-            do_continue(resolved.dupe())
+            do_continue(cx, resolved.dupe())
         }
         _ => {
             let reason_elemt = reason_of_t(l).dupe();
@@ -1236,15 +1258,15 @@ pub(super) fn resolve_union<'cx>(
             // Union resolution can fall prey to the same sort of infinite recursion that array
             // spreads can, so we can use the same constant folding guard logic that arrays do.
             // To more fully understand how that works, see the comment there
-            const_fold_expansion::guard(cx, id, (reason_elemt, pos), |count| {
+            const_fold_expansion::guard(cx, id, (reason_elemt, pos), |cx, count| {
                 match count {
                     0 => {
                         let mut new_resolved = resolved.dupe();
                         new_resolved.push_front(l.dupe());
-                        do_continue(new_resolved)
+                        do_continue(cx, new_resolved)
                     }
                     // Unions are idempotent, so we can just skip any duplicated elements
-                    1 => do_continue(resolved.dupe()),
+                    1 => do_continue(cx, resolved.dupe()),
                     _ => Ok(None),
                 }
             })
@@ -1254,7 +1276,7 @@ pub(super) fn resolve_union<'cx>(
 
 // filter out undefined from a type
 pub(super) fn filter_optional<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     reason: &Reason,
@@ -1384,7 +1406,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
     }
 }
 
-pub(super) fn flow_use_op<CX>(env: &FlowJsEnv, op1: UseOp, u: UseT<CX>) -> UseT<CX> {
+pub(super) fn flow_use_op<CX: ContextFamily>(env: &FlowJsEnv, op1: UseOp, u: UseT<CX>) -> UseT<CX> {
     use flow_typing_type::type_::VirtualRootUseOp;
     use flow_typing_type::type_::root_of_use_op;
 
@@ -1397,14 +1419,14 @@ pub(super) fn flow_use_op<CX>(env: &FlowJsEnv, op1: UseOp, u: UseT<CX>) -> UseT<
 }
 
 pub(super) fn apply_method_action<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
     use_op: UseOp,
     reason_call: Reason,
     this_arg: Type,
-    action: &MethodAction<Context<'cx>>,
+    action: &MethodAction<Cx>,
 ) -> Result<(), FlowJsException> {
     match action {
         MethodAction::CallM(box CallMData {
@@ -1460,7 +1482,7 @@ pub(super) fn apply_method_action<'cx>(
 }
 
 pub(super) fn perform_elem_action<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1468,20 +1490,18 @@ pub(super) fn perform_elem_action<'cx>(
     reason_op: &Reason,
     l: &Type,
     value: &Type,
-    action: &ElemAction<Context<'cx>>,
+    action: &ElemAction<Cx>,
 ) -> Result<(), FlowJsException> {
     match (action, restrict_deletes) {
         (ElemAction::ReadElem(box ReadElemData { tout, .. }), _) => {
             let loc = reason_op.loc().dupe();
+            let value = reposition(cx, env, Some(trace), loc, None, None, value.dupe())?;
             rec_flow_t(
                 cx,
                 env,
                 trace,
                 unknown_use(),
-                (
-                    &reposition(cx, env, Some(trace), loc, None, None, value.dupe())?,
-                    &Type::new(TypeInner::OpenT(tout.dupe())),
-                ),
+                (&value, &Type::new(TypeInner::OpenT(tout.dupe()))),
             )?;
         }
         (
@@ -1557,7 +1577,7 @@ pub(super) fn perform_elem_action<'cx>(
 // builtins, contd.
 
 pub(super) fn get_builtin_typeapp<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     use_desc: Option<bool>,
@@ -1570,7 +1590,7 @@ pub(super) fn get_builtin_typeapp<'cx>(
 }
 
 pub(super) fn get_builtin_react_typeapp<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     use_desc: Option<bool>,
@@ -1598,7 +1618,7 @@ pub(super) fn get_builtin_react_typeapp<'cx>(
 
 /// Specialize a polymorphic class, make an instance of the specialized class.
 pub(super) fn mk_typeapp_instance_annot<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
@@ -1638,7 +1658,7 @@ pub(super) fn mk_typeapp_instance_annot<'cx>(
 }
 
 pub(super) fn mk_typeapp_instance<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
@@ -1684,7 +1704,7 @@ pub(super) fn mk_typeapp_instance<'cx>(
 }
 
 pub(super) fn mk_typeapp_instance_of_poly<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1718,7 +1738,7 @@ pub(super) fn mk_typeapp_instance_of_poly<'cx>(
 }
 
 pub(super) fn mk_instance<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     type_t_kind: Option<TypeTKind>,
     trace: Option<DepthTrace>,
@@ -1739,7 +1759,7 @@ pub(super) fn mk_instance<'cx>(
 }
 
 pub(super) fn mk_instance_source<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     type_t_kind: TypeTKind,
     trace: Option<DepthTrace>,
@@ -1770,7 +1790,7 @@ pub(super) fn mk_instance_source<'cx>(
 }
 
 pub(super) fn mk_instance_raw<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     type_t_kind: Option<TypeTKind>,
     trace: Option<DepthTrace>,
@@ -1790,7 +1810,7 @@ pub(super) fn mk_instance_raw<'cx>(
 }
 
 pub(super) fn instance_lookup_kind<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     reason_op: &Reason,
     method_accessible: bool,
     instance_t: &Type,
@@ -1829,7 +1849,7 @@ pub(super) fn instance_lookup_kind<'cx>(
 }
 
 pub(super) fn reposition_reason<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     reason: &Reason,
@@ -1848,7 +1868,7 @@ pub(super) fn reposition_reason<'cx>(
 
 // set the position of the given def type from a reason
 pub(super) fn reposition<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     loc: ALoc,
@@ -1885,7 +1905,7 @@ pub(super) fn reposition<'cx>(
     };
 
     fn recurse<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         desc: Option<Option<&ReasonDesc>>,
@@ -1932,9 +1952,9 @@ pub(super) fn reposition<'cx>(
                                     cx,
                                     reason.dupe(),
                                     false,
-                                    Box::new({
+                                    {
                                         let cell = lazy_thunk_cell.dupe();
-                                        move |_cx| {
+                                        move |_cx: &mut Context<'_>| {
                                             Ok(cell
                                                 .get()
                                                 .expect(
@@ -1942,11 +1962,11 @@ pub(super) fn reposition<'cx>(
                                                 )
                                                 .dupe())
                                         }
-                                    }),
+                                    },
                                 );
                                 seen.insert(id, lazy_t_val.dupe());
                                 let env = env.signature_tvar_env();
-                                let thunk_result = cx.run_in_signature_tvar_env(|| {
+                                let thunk_result = cx.run_in_signature_tvar_env(|cx| {
                                     recurse(cx, &env, trace, desc, mod_reason, seen, &forced_t)
                                 });
                                 seen.remove(&id);
@@ -2209,7 +2229,7 @@ pub(super) fn reposition<'cx>(
 }
 
 pub(super) fn get_builtin_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     reason: &Reason,
@@ -2222,7 +2242,7 @@ pub(super) fn get_builtin_type<'cx>(
 }
 
 pub(super) fn get_builtin_react_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     reason: &Reason,
@@ -2249,11 +2269,11 @@ pub(super) fn get_builtin_react_type<'cx>(
 }
 
 pub(super) fn flow_all_in_union<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     rep: &union_rep::UnionRep,
-    u: &UseT<Context<'cx>>,
+    u: &UseT<Cx>,
 ) -> Result<(), FlowJsException> {
     flow_js_utils::iter_union(
         |cx, trace, (t, u)| rec_flow(cx, env, *trace, (t, u)),
@@ -2282,7 +2302,7 @@ pub(super) fn call_args_iter<E, F: FnMut(&Type) -> Result<(), E>>(
 // something with one or two arguments. Usually this code assumes that the
 // argument is not a spread argument. This utility function helps with that
 pub(super) fn extract_non_spread<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     arg: &CallArg,
 ) -> Result<Type, FlowJsException> {
@@ -2312,10 +2332,10 @@ pub(super) fn extract_non_spread<'cx>(
 // on other than concatenating subtraces to make longer traces to describe
 // transitive data flows
 pub(super) fn join_flow<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     ts: &[DepthTrace],
-    (t1, t2): (&Type, &UseT<Context<'cx>>),
+    (t1, t2): (&Type, &UseT<Cx>),
 ) -> Result<(), FlowJsException> {
     __flow(cx, env, (t1, t2), DepthTrace::concat_trace(ts))
 }
@@ -2326,16 +2346,16 @@ pub(super) fn join_flow<'cx>(
 // an error and walk back, we can know why the particular constraints that
 // caused the immediate error were generated.
 pub(super) fn rec_flow<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
-    (t1, t2): (&Type, &UseT<Context<'cx>>),
+    (t1, t2): (&Type, &UseT<Cx>),
 ) -> Result<(), FlowJsException> {
     __flow(cx, env, (t1, t2), DepthTrace::rec_trace(trace))
 }
 
 pub(super) fn rec_flow_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -2355,10 +2375,10 @@ pub(super) fn rec_flow_t<'cx>(
 // which are themselves called both from outside and inside (with or without
 // traces), so they call this function instead.
 pub(super) fn flow_opt<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
-    (t1, t2): (&Type, &UseT<Context<'cx>>),
+    (t1, t2): (&Type, &UseT<Cx>),
 ) -> Result<(), FlowJsException> {
     let trace = match trace {
         None => DepthTrace::unit_trace(),
@@ -2368,7 +2388,7 @@ pub(super) fn flow_opt<'cx>(
 }
 
 pub(super) fn flow_opt_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     trace: Option<DepthTrace>,
@@ -2385,9 +2405,9 @@ pub(super) fn flow_opt_t<'cx>(
 /// Externally visible function for subtyping.
 /// Calls internal entry point and traps runaway recursion.
 pub(super) fn flow<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
-    (lower, upper): (&Type, &UseT<Context<'cx>>),
+    (lower, upper): (&Type, &UseT<Cx>),
 ) -> Result<(), FlowJsException> {
     match flow_opt(cx, env, None, (lower, upper)) {
         Ok(()) => Ok(()),
@@ -2418,7 +2438,7 @@ pub(super) fn flow<'cx>(
 }
 
 pub(super) fn flow_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     (t1, t2): (&Type, &Type),
 ) -> Result<(), FlowJsException> {
@@ -2430,7 +2450,7 @@ pub(super) fn flow_t<'cx>(
 }
 
 pub(super) fn flow_p<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     lower: PropPolarityMismatchObject<&Type, ALoc>,
@@ -2446,7 +2466,7 @@ pub(super) fn flow_p<'cx>(
 // Wrapper functions around __unify that manage traces. Use these functions for
 // all recursive calls in the implementation of __unify.
 pub(super) fn rec_unify<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -2469,7 +2489,7 @@ pub(super) fn rec_unify<'cx>(
 }
 
 pub(super) fn unify_opt<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
@@ -2489,7 +2509,7 @@ pub(super) fn unify_opt<'cx>(
 // Externally visible function for unification.
 // Calls internal entry point and traps runaway recursion.
 pub(super) fn unify<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: Option<UseOp>,
     unify_cause: UnifyCause,
@@ -2515,11 +2535,11 @@ pub(super) fn unify<'cx>(
 }
 
 pub(super) fn continue_<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     t: &Type,
-    cont: &Cont<Context<'cx>>,
+    cont: &Cont<Cx>,
 ) -> Result<(), FlowJsException> {
     match cont {
         Cont::Lower(use_op, l) => rec_flow(
@@ -2537,13 +2557,13 @@ pub(super) fn continue_<'cx>(
 }
 
 pub(super) fn continue_repos<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     reason: &Reason,
     use_desc: bool,
     t: &Type,
-    cont: &Cont<Context<'cx>>,
+    cont: &Cont<Cx>,
 ) -> Result<(), FlowJsException> {
     match cont {
         Cont::Lower(use_op, l) => {
@@ -2569,7 +2589,7 @@ pub(super) fn continue_repos<'cx>(
 }
 
 pub(super) fn type_app_variance_check<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -2602,55 +2622,56 @@ pub(super) fn type_app_variance_check<'cx>(
             let default = &tparam.default;
             let polarity = tparam.polarity;
             let reason = &tparam.reason;
-            let flow_targs = |t1: &Type, t2: &Type| -> Result<(), FlowJsException> {
-                let use_op = UseOp::Frame(
-                    Arc::new(VirtualFrameUseOp::TypeArgCompatibility(Box::new(
-                        TypeArgCompatibilityData {
-                            name: name.dupe(),
-                            targ: reason.dupe(),
-                            lower: reason_op.dupe(),
-                            upper: reason_tapp.dupe(),
-                            polarity,
-                        },
-                    ))),
-                    Arc::new(use_op.dupe()),
-                );
-                match polarity {
-                    Polarity::Positive => rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (t1, &UseT::new(UseTInner::UseT(use_op, t2.dupe()))),
-                    ),
-                    Polarity::Negative => rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (t2, &UseT::new(UseTInner::UseT(use_op, t1.dupe()))),
-                    ),
-                    Polarity::Neutral if strictness_kind.is_typescript_loose() => {
-                        // TS treats Neutral (read-write) tparam slots as covariant in
-                        // instantiation, not invariant. Match that by doing a covariant
-                        // subtype check in .ts instead of unification.
-                        rec_flow(
+            let flow_targs =
+                |cx: &mut Context<'cx>, t1: &Type, t2: &Type| -> Result<(), FlowJsException> {
+                    let use_op = UseOp::Frame(
+                        Arc::new(VirtualFrameUseOp::TypeArgCompatibility(Box::new(
+                            TypeArgCompatibilityData {
+                                name: name.dupe(),
+                                targ: reason.dupe(),
+                                lower: reason_op.dupe(),
+                                upper: reason_tapp.dupe(),
+                                polarity,
+                            },
+                        ))),
+                        Arc::new(use_op.dupe()),
+                    );
+                    match polarity {
+                        Polarity::Positive => rec_flow(
                             cx,
                             env,
                             trace,
                             (t1, &UseT::new(UseTInner::UseT(use_op, t2.dupe()))),
-                        )
+                        ),
+                        Polarity::Negative => rec_flow(
+                            cx,
+                            env,
+                            trace,
+                            (t2, &UseT::new(UseTInner::UseT(use_op, t1.dupe()))),
+                        ),
+                        Polarity::Neutral if strictness_kind.is_typescript_loose() => {
+                            // TS treats Neutral (read-write) tparam slots as covariant in
+                            // instantiation, not invariant. Match that by doing a covariant
+                            // subtype check in .ts instead of unification.
+                            rec_flow(
+                                cx,
+                                env,
+                                trace,
+                                (t1, &UseT::new(UseTInner::UseT(use_op, t2.dupe()))),
+                            )
+                        }
+                        Polarity::Neutral => rec_unify(
+                            cx,
+                            env,
+                            trace,
+                            use_op,
+                            UnifyCause::Uncategorized,
+                            None,
+                            t1,
+                            t2,
+                        ),
                     }
-                    Polarity::Neutral => rec_unify(
-                        cx,
-                        env,
-                        trace,
-                        use_op,
-                        UnifyCause::Uncategorized,
-                        None,
-                        t1,
-                        t2,
-                    ),
-                }
-            };
+                };
             match (default, targs.pop_front()) {
                 (None, None) => {
                     // fewer arguments than params but no default
@@ -2667,12 +2688,12 @@ pub(super) fn type_app_variance_check<'cx>(
                 (Some(default), None) => {
                     let t1 = subst(cx, Some(use_op.dupe()), None, None, &map1, default.dupe());
                     let t2 = subst(cx, Some(use_op.dupe()), None, None, &map2, default.dupe());
-                    flow_targs(&t1, &t2)?;
+                    flow_targs(cx, &t1, &t2)?;
                     map1.insert(name.dupe(), t1);
                     map2.insert(name.dupe(), t2);
                 }
                 (_, Some((t1, t2))) => {
-                    flow_targs(&t1, &t2)?;
+                    flow_targs(cx, &t1, &t2)?;
                     map1.insert(name.dupe(), t1);
                     map2.insert(name.dupe(), t2);
                 }
@@ -2685,7 +2706,7 @@ pub(super) fn type_app_variance_check<'cx>(
 
 pub(super) fn possible_concrete_types<'cx>(
     kind: ConcretizationKind,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2709,7 +2730,7 @@ pub(super) fn possible_concrete_types<'cx>(
 
 pub(super) fn singleton_concrete_type<'cx>(
     kind: ConcretizationKind,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2731,14 +2752,17 @@ pub(super) fn singleton_concrete_type<'cx>(
     }
 }
 
-fn find_resolved_opt<'cx, T, F>(cx: &Context<'cx>, default: T, f: F, id: i32) -> T
+fn find_resolved_opt<'cx, T, F>(cx: &mut Context<'cx>, default: T, f: F, id: i32) -> T
 where
-    F: FnOnce(&Type) -> T,
+    F: FnOnce(&mut Context<'cx>, &Type) -> T,
 {
     use flow_typing_type::type_::constraint::Constraints;
     match cx.find_constraints(id).1 {
-        Constraints::Resolved(t) => f(&t),
-        Constraints::FullyResolved(s) => f(&cx.force_fully_resolved_tvar(&s)),
+        Constraints::Resolved(t) => f(cx, &t),
+        Constraints::FullyResolved(s) => {
+            let t = cx.force_fully_resolved_tvar(&s);
+            f(cx, &t)
+        }
         Constraints::Unresolved(_) => default,
     }
 }
@@ -2747,7 +2771,7 @@ where
 // without otherwise concretizing. Used as a local optimization by
 // [evaluate_type_destructor_] so a resolved tvar is evaluated once to an
 // annotation rather than getting a bound on both sides.
-pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -> Type {
+pub(super) fn drop_resolved<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t: &Type) -> Type {
     if super::constraint_helpers::frozen_implicit_instantiation_tvar(cx, env, t).is_some() {
         return t.dupe();
     }
@@ -2755,7 +2779,7 @@ pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -
         _ if let Some(node) = type_util::constraint_node_id(t) => find_resolved_opt(
             cx,
             t.dupe(),
-            |resolved_t| drop_resolved(cx, env, resolved_t),
+            |cx, resolved_t| drop_resolved(cx, env, resolved_t),
             node.id(),
         ),
         TypeInner::GenericT(box GenericTData {
@@ -2767,7 +2791,7 @@ pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -
         }) if let Some(node) = constraint_node_id(bound) => find_resolved_opt(
             cx,
             t.dupe(),
-            |resolved_t| {
+            |cx, resolved_t| {
                 Type::new(TypeInner::GenericT(Box::new(GenericTData {
                     reason: reason.dupe(),
                     name: name.dupe(),
@@ -2783,7 +2807,7 @@ pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -
 }
 
 pub(super) fn possible_concrete_types_for_optional_chain<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2798,7 +2822,7 @@ pub(super) fn possible_concrete_types_for_optional_chain<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_inspection<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2813,7 +2837,7 @@ pub(super) fn possible_concrete_types_for_inspection<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_class_extends<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2829,7 +2853,7 @@ pub(super) fn possible_concrete_types_for_class_extends<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_enum_exhaustive_check<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2844,7 +2868,7 @@ pub(super) fn possible_concrete_types_for_enum_exhaustive_check<'cx>(
 }
 
 pub(super) fn singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2859,7 +2883,7 @@ pub(super) fn singleton_concrete_type_for_cjs_extract_named_exports_and_type_exp
 }
 
 pub(super) fn singleton_concretize_type_for_imports_exports<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2874,7 +2898,7 @@ pub(super) fn singleton_concretize_type_for_imports_exports<'cx>(
 }
 
 pub(super) fn singleton_concrete_type_for_inspection<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2889,13 +2913,13 @@ pub(super) fn singleton_concrete_type_for_inspection<'cx>(
 }
 
 pub(super) fn singleton_concrete_type_for_type_cast<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     _reason: &Reason,
     t: &Type,
 ) -> Result<Type, FlowJsException> {
     use flow_typing_type::type_::constraint::Constraints;
-    fn resolve<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -> Type {
+    fn resolve<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t: &Type) -> Type {
         match t.deref() {
             TypeInner::AnnotT(r, inner, use_desc) => {
                 let repositioned = reposition_reason(cx, env, None, r, *use_desc, inner).unwrap();
@@ -2918,10 +2942,10 @@ pub(super) fn singleton_concrete_type_for_type_cast<'cx>(
     Ok(resolve(cx, env, t))
 }
 
-pub(super) fn add_specialized_callee_method_action<'cx>(
+pub(super) fn add_specialized_callee_method_action(
     env: &FlowJsEnv,
     l: &Type,
-    action: &MethodAction<Context<'cx>>,
+    action: &MethodAction<Cx>,
 ) -> Result<(), FlowJsException> {
     match action {
         MethodAction::CallM(box CallMData {
@@ -2945,7 +2969,7 @@ pub(super) fn add_specialized_callee_method_action<'cx>(
     }
 }
 pub(super) fn possible_concrete_types_for_imports_exports<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2961,7 +2985,7 @@ pub(super) fn possible_concrete_types_for_imports_exports<'cx>(
 
 pub(super) fn possible_concrete_types_for_predicate<'cx>(
     predicate_concretizer_variant: PredicateConcretetizerVariant,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2976,7 +3000,7 @@ pub(super) fn possible_concrete_types_for_predicate<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_sentinel_prop_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -2991,7 +3015,7 @@ pub(super) fn possible_concrete_types_for_sentinel_prop_test<'cx>(
 }
 
 pub(super) fn all_possible_concrete_types<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -3000,7 +3024,7 @@ pub(super) fn all_possible_concrete_types<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_operators_checking<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -3015,7 +3039,7 @@ pub(super) fn possible_concrete_types_for_operators_checking<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_object_assign<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -3030,7 +3054,7 @@ pub(super) fn possible_concrete_types_for_object_assign<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_destructuring<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -3045,7 +3069,7 @@ pub(super) fn possible_concrete_types_for_destructuring<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_computed_object_keys<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     t: &Type,
@@ -3060,7 +3084,7 @@ pub(super) fn possible_concrete_types_for_computed_object_keys<'cx>(
 }
 
 pub(super) fn singleton_concrete_type_for_match_arg<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     keep_unions: bool,
     reason: &Reason,
@@ -3076,7 +3100,7 @@ pub(super) fn singleton_concrete_type_for_match_arg<'cx>(
 }
 
 pub(super) fn possible_concrete_types_for_match_arg<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     keep_unions: bool,
     reason: &Reason,

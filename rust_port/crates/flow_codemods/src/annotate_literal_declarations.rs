@@ -112,7 +112,7 @@ impl flow_services_code_action::insert_type_utils::BaseStats for Stats {
 }
 
 pub struct AnnotateLiteralDeclarationsMapper<'a, 'cx> {
-    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+    cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
     max_type_size: i32,
     stats: Option<Stats>,
 }
@@ -120,7 +120,7 @@ pub struct AnnotateLiteralDeclarationsMapper<'a, 'cx> {
 impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
     pub fn new(
         max_type_size: i32,
-        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> Self {
         Self {
             cctx,
@@ -137,7 +137,7 @@ impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
 
     pub fn program(&mut self, prog: ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
         self.stats = None;
-        let cx = &self.cctx.cx;
+        let cx = &mut self.cctx.cx;
         let reader = &self.cctx.reader;
         let file_sig = &self.cctx.file_sig;
         let typed_ast = &self.cctx.typed_ast;
@@ -167,9 +167,9 @@ impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
         let mut suppressions = self.cctx.error_suppressions.clone();
         let (errors, _warnings) = suppressions.filter_lints(
             cx.errors(),
-            &cx.aloc_tables(),
+            cx.aloc_tables(),
             include_suppressions,
-            &cx.severity_cover(),
+            cx.severity_cover(),
         );
         let raw_sites: Vec<(Loc, ALocTy)> = errors.fold(Vec::new(), |mut acc, error| {
             match error.msg_of_error() {

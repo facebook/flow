@@ -675,14 +675,14 @@ fn type_declaration_references(
     root: &str,
     write_root: &str,
     loc_of_aloc: &LocOfALoc,
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let mut results: Vec<type_declaration_reference::T> = Vec::new();
     let add_reference = |id: &ast::Identifier<ALoc, (ALoc, Type)>| {
         let loc = loc_of_aloc(&id.loc.0);
-        let def_loc_of_t = |t: &Type| -> Option<Loc> {
+        let mut def_loc_of_t = |t: &Type| -> Option<Loc> {
             let mut t = t.dupe();
             loop {
                 let def_loc = loc_of_aloc(type_util::def_loc_of_t(&t));
@@ -722,7 +722,7 @@ fn type_declaration_references(
 
 fn extract_member_def<'a, 'cx>(
     imported_names: &ty_normalizer_flow::ImportedNames<'a, 'cx>,
-    cx: &'a Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     file_sig: &Arc<FileSig>,
     scheme: &Type,
@@ -751,7 +751,7 @@ fn member_declaration_references<'a, 'cx>(
     root: &str,
     write_root: &str,
     loc_of_aloc: &LocOfALoc,
-    cx: &'a Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     file_sig: &Arc<FileSig>,
     offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
@@ -1617,7 +1617,7 @@ fn declaration_infos<'a, 'cx>(
     scope_info: &scope_api::ScopeInfo<Loc>,
     file: &FileKey,
     file_sig: &Arc<FileSig>,
-    cx: &'a Context<'cx>,
+    cx: &mut Context<'cx>,
     loc_of_aloc: &LocOfALoc,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     ast: &ast::Program<Loc, Loc>,
@@ -1658,7 +1658,6 @@ fn declaration_infos<'a, 'cx>(
     let options = TyNormalizerOptions::default();
     let genv = ty_normalizer_flow::mk_genv_with_imported_names(
         options,
-        cx,
         Some(typed_ast),
         file_sig.clone(),
         imported_names.dupe(),
@@ -1674,7 +1673,7 @@ fn declaration_infos<'a, 'cx>(
         }
     };
     for ((kind, name, loc), elt_result) in
-        ty_normalizer_flow::from_types(Some(&log_normalizing), &genv, infos)
+        ty_normalizer_flow::from_types(Some(&log_normalizing), cx, &genv, infos)
     {
         let Ok(elt) = elt_result else {
             continue;
@@ -1883,7 +1882,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
     fn visit(
         options: &Options,
         ast: &ast::Program<Loc, Loc>,
-        cctx: flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
+        cctx: &mut flow_codemods::utils::codemod_context::typed::TypedCodemodContext<'_>,
     ) -> Self::Accumulator {
         let config = GLEAN_RUNTIME_CONFIG.get().unwrap();
         let file = &cctx.file;
@@ -1892,7 +1891,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
         if config.glean_log {
             eprintln!("visiting: {}", file.to_absolute());
         }
-        let f = || {
+        let mut f = || {
             let root = options.root.to_string_lossy().to_string();
             let root = &root;
             let reader = &cctx.reader;
@@ -1906,12 +1905,8 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             };
             let imported_names = {
                 let options = TyNormalizerOptions::default();
-                let genv = ty_normalizer_flow::mk_genv(
-                    options,
-                    &cctx.cx,
-                    Some(&cctx.typed_ast),
-                    file_sig.clone(),
-                );
+                let genv =
+                    ty_normalizer_flow::mk_genv(options, Some(&cctx.typed_ast), file_sig.clone());
                 genv.imported_names.dupe()
             };
             log("scope info");
@@ -1938,7 +1933,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                     &scope_info,
                     file,
                     file_sig,
-                    &cctx.cx,
+                    &mut cctx.cx,
                     &loc_of_aloc,
                     &cctx.typed_ast,
                     ast,
@@ -1995,7 +1990,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                 root,
                 &config.write_root,
                 &loc_of_aloc,
-                &cctx.cx,
+                &mut cctx.cx,
                 &cctx.typed_ast,
                 file_sig,
                 &offset_table_of_file_key,
@@ -2005,7 +2000,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                 root,
                 &config.write_root,
                 &loc_of_aloc,
-                &cctx.cx,
+                &mut cctx.cx,
                 &cctx.typed_ast,
                 &offset_table_of_file_key,
             );

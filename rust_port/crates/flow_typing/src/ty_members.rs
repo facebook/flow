@@ -510,7 +510,7 @@ pub fn extract<'a, 'cx>(
     force_instance: bool,
     allowed_prop_names: Option<Vec<Name>>,
     imported_names: Option<ty_normalizer_flow::ImportedNames<'a, 'cx>>,
-    cx: &'a Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast_opt: Option<&'a flow_parser::ast::Program<ALoc, (ALoc, Type)>>,
     file_sig: std::sync::Arc<FileSig>,
     scheme: &Type,
@@ -530,14 +530,14 @@ pub fn extract<'a, 'cx>(
     let genv = match imported_names {
         Some(imported_names) => ty_normalizer_flow::mk_genv_with_imported_names(
             options,
-            cx,
             typed_ast_opt,
             file_sig,
             imported_names,
         ),
-        None => ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig),
+        None => ty_normalizer_flow::mk_genv(options, typed_ast_opt, file_sig),
     };
-    match ty_normalizer_flow::expand_members(force_instance, allowed_prop_names, &genv, scheme) {
+    match ty_normalizer_flow::expand_members(force_instance, allowed_prop_names, cx, &genv, scheme)
+    {
         Err(error) => Err(error.to_string()),
         Ok(ref this_ty) if matches!(this_ty.as_ref(), Ty::Any(_)) => {
             Err("not enough type information to extract members".to_string())

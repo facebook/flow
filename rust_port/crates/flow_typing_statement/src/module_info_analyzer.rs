@@ -152,9 +152,10 @@ mod module_info {
     // conflicts on a last-export-wins basis. Star exports are accumulated in
     // source order, so the head of each list is the last export. This helper
     // function interleaves the two reverse-sorted lists.
-    pub(super) fn fold_star2<A, X, Y>(
-        f: &impl Fn(A, &(ALoc, X)) -> A,
-        g: &impl Fn(A, &(ALoc, Y)) -> Result<A, flow_utils_concurrency::job_error::JobError>,
+    pub(super) fn fold_star2<S, A, X, Y>(
+        s: &mut S,
+        f: &impl Fn(&mut S, A, &(ALoc, X)) -> A,
+        g: &impl Fn(&mut S, A, &(ALoc, Y)) -> Result<A, flow_utils_concurrency::job_error::JobError>,
         mut acc: A,
         xs: &[(ALoc, X)],
         ys: &[(ALoc, Y)],
@@ -166,22 +167,22 @@ mod module_info {
                 (None, None) => return Ok(acc),
                 (Some(_), None) => {
                     for x in &xs[xi..] {
-                        acc = f(acc, x);
+                        acc = f(s, acc, x);
                     }
                     return Ok(acc);
                 }
                 (None, Some(_)) => {
                     for y in &ys[yi..] {
-                        acc = g(acc, y)?;
+                        acc = g(s, acc, y)?;
                     }
                     return Ok(acc);
                 }
                 (Some(x), Some(y)) => {
                     if x.0.cmp(&y.0) == std::cmp::Ordering::Greater {
-                        acc = f(acc, x);
+                        acc = f(s, acc, x);
                         xi += 1;
                     } else {
-                        acc = g(acc, y)?;
+                        acc = g(s, acc, y)?;
                         yi += 1;
                     }
                 }
@@ -191,7 +192,7 @@ mod module_info {
 }
 
 fn export_specifiers<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     info: &mut module_info::ModuleInfo,
     loc: &ALoc,
     source: &Option<((ALoc, Type), ast::StringLiteral<ALoc>)>,
@@ -199,38 +200,41 @@ fn export_specifiers<'a>(
     specifiers: &ast::statement::export_named_declaration::Specifier<ALoc, (ALoc, Type)>,
 ) {
     let is_ts_file = flow_common::files::has_ts_ext(cx.file());
-    let classify_ts_local_export =
-        |kind: ast::statement::ExportKind, loc: &ALoc| -> ast::statement::ExportKind {
-            if kind != ast::statement::ExportKind::ExportValue || !is_ts_file {
-                return kind;
-            }
-            let binding_info = type_env::local_export_binding_at_loc(cx, loc.dupe());
-            match binding_info {
-                Some(type_env::LocalExportBinding {
-                    val_kind: flow_env_builder::env_api::ValKind::Type { .. },
-                    ..
-                }) => ast::statement::ExportKind::ExportType,
-                Some(type_env::LocalExportBinding {
-                    def_loc: Some(def_loc),
-                    val_kind: flow_env_builder::env_api::ValKind::TsImport,
-                }) => {
-                    if flow_js_utils::import_export_utils::is_ts_import_type_only(cx, &def_loc) {
-                        ast::statement::ExportKind::ExportType
-                    } else {
-                        ast::statement::ExportKind::ExportValue
-                    }
+    let classify_ts_local_export = |cx: &mut Context<'a>,
+                                    kind: ast::statement::ExportKind,
+                                    loc: &ALoc|
+     -> ast::statement::ExportKind {
+        if kind != ast::statement::ExportKind::ExportValue || !is_ts_file {
+            return kind;
+        }
+        let binding_info = type_env::local_export_binding_at_loc(cx, loc.dupe());
+        match binding_info {
+            Some(type_env::LocalExportBinding {
+                val_kind: flow_env_builder::env_api::ValKind::Type { .. },
+                ..
+            }) => ast::statement::ExportKind::ExportType,
+            Some(type_env::LocalExportBinding {
+                def_loc: Some(def_loc),
+                val_kind: flow_env_builder::env_api::ValKind::TsImport,
+            }) => {
+                if flow_js_utils::import_export_utils::is_ts_import_type_only(cx, &def_loc) {
+                    ast::statement::ExportKind::ExportType
+                } else {
+                    ast::statement::ExportKind::ExportValue
                 }
-                _ => ast::statement::ExportKind::ExportValue,
             }
-        };
+            _ => ast::statement::ExportKind::ExportValue,
+        }
+    };
     // [declare] export [type] {[type] foo [as bar]};
-    let export_ref = |info: &mut module_info::ModuleInfo,
+    let export_ref = |cx: &mut Context<'a>,
+                      info: &mut module_info::ModuleInfo,
                       kind: ast::statement::ExportKind,
                       loc: ALoc,
                       local_type: Type,
                       remote_name: Name,
                       _source_local_name: FlowSmolStr| {
-        let kind = classify_ts_local_export(kind, &loc);
+        let kind = classify_ts_local_export(cx, kind, &loc);
         match kind {
             ast::statement::ExportKind::ExportType => {
                 module_info::export_type(info, remote_name, loc, local_type)
@@ -240,7 +244,8 @@ fn export_specifiers<'a>(
             }
         }
     };
-    let classify_ts_from_export = |kind: ast::statement::ExportKind,
+    let classify_ts_from_export = |cx: &mut Context<'a>,
+                                   kind: ast::statement::ExportKind,
                                    source_local_name: &FlowSmolStr|
      -> ast::statement::ExportKind {
         if kind != ast::statement::ExportKind::ExportValue || !is_ts_file {
@@ -258,7 +263,7 @@ fn export_specifiers<'a>(
                         module_specifier,
                     ),
                 ) {
-                    flow_typing_context::ResolvedRequire::TypedModule(f) => match f(cx, cx) {
+                    flow_typing_context::ResolvedRequire::TypedModule(f) => match f(cx, cx.id()) {
                         Ok(m) => {
                             match flow_js_utils::import_export_utils::classify_named_export(
                                 cx,
@@ -279,13 +284,14 @@ fn export_specifiers<'a>(
         }
     };
     // [declare] export [type] {[type] foo [as bar]} from 'module'
-    let export_from = |info: &mut module_info::ModuleInfo,
+    let export_from = |cx: &mut Context<'a>,
+                       info: &mut module_info::ModuleInfo,
                        kind: ast::statement::ExportKind,
                        loc: ALoc,
                        local_type: Type,
                        remote_name: Name,
                        source_local_name: FlowSmolStr| {
-        let kind = classify_ts_from_export(kind, &source_local_name);
+        let kind = classify_ts_from_export(cx, kind, &source_local_name);
         match kind {
             ast::statement::ExportKind::ExportType => {
                 module_info::export_type(info, remote_name, loc, local_type)
@@ -296,7 +302,9 @@ fn export_specifiers<'a>(
         }
     };
     let mut export_specifier =
-        |export: &dyn Fn(
+        |cx: &mut Context<'a>,
+         export: &dyn Fn(
+            &mut Context<'a>,
             &mut module_info::ModuleInfo,
             ast::statement::ExportKind,
             ALoc,
@@ -325,6 +333,7 @@ fn export_specifiers<'a>(
                 Some(exported_id) => Name::new(exported_id.name.dupe()),
             };
             export(
+                cx,
                 info,
                 kind,
                 local_loc.dupe(),
@@ -338,6 +347,7 @@ fn export_specifiers<'a>(
         // [declare] export [type] {[type] foo [as bar]} [from ...];
         ast::statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers) => {
             let export: &dyn Fn(
+                &mut Context<'a>,
                 &mut module_info::ModuleInfo,
                 ast::statement::ExportKind,
                 ALoc,
@@ -349,7 +359,7 @@ fn export_specifiers<'a>(
                 None => &export_ref,
             };
             for specifier in specifiers {
-                export_specifier(export, specifier);
+                export_specifier(cx, export, specifier);
             }
         }
         // [declare] export [type] * as id from "source";
@@ -381,7 +391,7 @@ fn export_specifiers<'a>(
             let value = &source_lit.value;
             let module_type_opt =
                 match cx.find_require(&FlowImportSpecifier::userland(value.dupe())) {
-                    ResolvedRequire::TypedModule(f) => f(cx, cx).ok(),
+                    ResolvedRequire::TypedModule(f) => f(cx, cx.id()).ok(),
                     _ => None,
                 };
             match export_kind {
@@ -397,7 +407,7 @@ fn export_specifiers<'a>(
 }
 
 fn visit_toplevel_statement<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     info: &mut module_info::ModuleInfo,
     in_declare_namespace: bool,
     stmt: &ast::statement::Statement<ALoc, (ALoc, Type)>,
@@ -1004,12 +1014,12 @@ fn module_exports_sig_loc(info: &module_info::ModuleInfo) -> Option<ALoc> {
 // Finally, both CJS and ES modules can export types, which also has a star
 // export variant. Conflicts are handled in the same way.
 fn mk_module_type<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     info: &module_info::ModuleInfo,
     self_reason: Reason,
     exports_reason: Reason,
 ) -> Result<ModuleType, flow_utils_concurrency::job_error::JobError> {
-    fn mk_esm_module_type<'a>(cx: &Context<'a>, module_reason: Reason) -> ModuleType {
+    fn mk_esm_module_type<'a>(cx: &mut Context<'a>, module_reason: Reason) -> ModuleType {
         ModuleType::new(ModuleTypeInner {
             module_reason,
             module_export_types: ExportTypes {
@@ -1031,7 +1041,7 @@ fn mk_module_type<'a>(
     //     CJSExtractNamedExportsT. (this is for convenience as part of our
     //     ES <-> CJS module interop semantics)
     fn mk_commonjs_module_t<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         reason_exports_module: Reason,
         reason: Reason,
         cjs_exports_state: &module_info::CjsExportsState,
@@ -1084,7 +1094,9 @@ fn mk_module_type<'a>(
             module_available_platforms: cx.available_platforms().cloned(),
         });
         let reason2 = reason.dupe();
-        let concretize = |t: Type| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+        let concretize = |cx: &mut Context<'_>,
+                          t: Type|
+         -> Result<Type, flow_utils_concurrency::job_error::JobError> {
             match flow_js::FlowJs::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
                 cx, &reason2, &t,
             ) {
@@ -1108,27 +1120,30 @@ fn mk_module_type<'a>(
     }
 
     fn copy_star_exports<'a>(
-        cx: &Context<'a>,
+        cx: &mut Context<'a>,
         reason: Reason,
         value_star: &[(ALoc, Option<ModuleType>)],
         type_star: &[(ALoc, Option<ModuleType>)],
         module_t: ModuleType,
     ) -> Result<ModuleType, flow_utils_concurrency::job_error::JobError> {
-        let copy_named_exports =
-            |target: ModuleType, (_, from_ns): &(ALoc, Option<ModuleType>)| -> ModuleType {
-                match from_ns {
-                    Some(src_module_type) => {
-                        flow_js_utils::copy_named_exports_t_kit::mod_module_t(
-                            cx,
-                            &target,
-                            src_module_type,
-                        );
-                        target
-                    }
-                    None => target,
+        let copy_named_exports = |cx: &mut Context<'a>,
+                                  target: ModuleType,
+                                  (_, from_ns): &(ALoc, Option<ModuleType>)|
+         -> ModuleType {
+            match from_ns {
+                Some(src_module_type) => {
+                    flow_js_utils::copy_named_exports_t_kit::mod_module_t(
+                        cx,
+                        &target,
+                        src_module_type,
+                    );
+                    target
                 }
-            };
-        let copy_type_exports = |target: ModuleType,
+                None => target,
+            }
+        };
+        let copy_type_exports = |cx: &mut Context<'a>,
+                                 target: ModuleType,
                                  (loc, from_ns): &(ALoc, Option<ModuleType>)|
          -> Result<
             ModuleType,
@@ -1165,6 +1180,7 @@ fn mk_module_type<'a>(
             }
         };
         module_info::fold_star2(
+            cx,
             &copy_named_exports,
             &copy_type_exports,
             module_t,
@@ -1214,7 +1230,7 @@ fn mk_module_type<'a>(
 }
 
 fn mk_namespace_t<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     info: &module_info::ModuleInfo,
     namespace_symbol: Symbol,
     reason: Reason,
@@ -1249,7 +1265,7 @@ fn mk_namespace_t<'a>(
 }
 
 pub fn analyze_program<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     program: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Result<(ALoc, ModuleType), flow_utils_concurrency::job_error::JobError> {
     let prog_aloc = &program.loc;
@@ -1273,7 +1289,7 @@ pub fn analyze_program<'a>(
 }
 
 pub fn analyze_declare_namespace<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     namespace_symbol: Symbol,
     reason: Reason,
     statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>],

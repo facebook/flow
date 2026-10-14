@@ -267,7 +267,7 @@ pub mod callee_finder {
     }
 
     pub fn simplify_fun_t(
-        cx: &Context,
+        cx: &mut Context,
         func_t: &Type,
     ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
         let reason = type_util::reason_of_t(func_t).dupe();
@@ -287,7 +287,7 @@ pub mod callee_finder {
     }
 
     pub fn get_func(
-        cx: &Context,
+        cx: &mut Context,
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
@@ -304,7 +304,7 @@ pub mod callee_finder {
     }
 
     pub fn get_func_no_union(
-        cx: &Context,
+        cx: &mut Context,
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
@@ -329,7 +329,7 @@ pub mod callee_finder {
     }
 
     pub fn get_prop_of_obj(
-        cx: &Context,
+        cx: &mut Context,
         name: &Name,
         reason: &Reason,
         t: &Type,
@@ -356,7 +356,7 @@ pub mod callee_finder {
     }
 
     pub fn get_prop_of_obj_no_union(
-        cx: &Context,
+        cx: &mut Context,
         name: &Name,
         reason: &Reason,
         t: &Type,
@@ -413,7 +413,7 @@ pub mod callee_finder {
     }
 
     pub fn get_prop_of_obj_toplevel(
-        cx: &Context,
+        cx: &mut Context,
         name: &Name,
         reason: &Reason,
         t: &Type,
@@ -467,7 +467,7 @@ pub mod callee_finder {
 
     struct Finder<'a, 'cx> {
         loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-        cx: &'a Context<'cx>,
+        cx: &'a mut Context<'cx>,
         cursor: Loc,
     }
 
@@ -493,7 +493,10 @@ pub mod callee_finder {
         fn find(
             &mut self,
             recurse: impl FnOnce(&mut Self) -> Result<(), Found>,
-            get_callee_type: impl FnOnce() -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+            get_callee_type: impl FnOnce(
+                &mut Context<'_>,
+            )
+                -> Result<Type, flow_utils_concurrency::job_error::JobError>,
             args_loc: &ALoc,
             args: &[ast::expression::ExpressionOrSpread<ALoc, (ALoc, Type)>],
             callee_loc: &ALoc,
@@ -513,7 +516,7 @@ pub mod callee_finder {
                 // so after this line we know we found the right call.
                 recurse(self)?;
                 let active_parameter = find_argument(self.loc_of_aloc, &self.cursor, args, 0);
-                let type_ = get_callee_type().map_err(Found::Job)?;
+                let type_ = get_callee_type(self.cx).map_err(Found::Job)?;
                 Err(Found::Done(Some(T::FunCallData {
                     type_,
                     active_parameter,
@@ -576,7 +579,7 @@ pub mod callee_finder {
             let arguments = &expr.arguments;
             self.find(
                 |this| ast_visitor::call_default(this, loc, expr),
-                || Ok(t),
+                |_cx| Ok(t),
                 &arguments.loc,
                 &arguments.arguments,
                 callee_loc,
@@ -592,53 +595,54 @@ pub mod callee_finder {
             let class_t = &expr.callee.loc().1;
             match &expr.arguments {
                 Some(arguments) => {
-                    let cx = self.cx;
                     let class_t = class_t.dupe();
                     let callee_loc_owned = callee_loc.dupe();
-                    let get_callee_type =
-                        move || -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-                            let desc = type_util::desc_of_t(&class_t).cloned();
-                            let ctor_reason = reason::mk_reason(desc, callee_loc_owned);
-                            let instance = flow_typing_tvar::mk_where::<
-                                flow_utils_concurrency::job_error::JobError,
-                            >(
-                                cx,
-                                ctor_reason.dupe(),
-                                |_cx, instance| {
-                                    let class_def = Type::new(TypeInner::DefT(
-                                        ctor_reason.dupe(),
-                                        flow_typing_type::type_::DefT::new(DefTInner::ClassT(
-                                            instance.dupe(),
-                                        )),
-                                    ));
-                                    flow_js::flow_t_non_speculating(cx, (&class_t, &class_def))?;
-                                    Ok(())
-                                },
-                            )?;
-                            let propref = type_util::mk_named_prop(
-                                ctor_reason.dupe(),
-                                false,
-                                Name::new("constructor"),
-                            );
-                            let collector = TypeCollector::create();
-                            let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-                                use_op: unknown_use(),
-                                reason: ctor_reason.dupe(),
-                                prop_reason: ctor_reason.dupe(),
-                                propref: Box::new(propref),
-                                method_action: Box::new(
-                                    flow_typing_type::type_::MethodAction::NoMethodAction(
-                                        collector.dupe(),
-                                    ),
+                    let get_callee_type = move |cx: &mut Context<'_>| -> Result<
+                        Type,
+                        flow_utils_concurrency::job_error::JobError,
+                    > {
+                        let desc = type_util::desc_of_t(&class_t).cloned();
+                        let ctor_reason = reason::mk_reason(desc, callee_loc_owned);
+                        let instance = flow_typing_tvar::mk_where::<
+                            flow_utils_concurrency::job_error::JobError,
+                        >(
+                            cx,
+                            ctor_reason.dupe(),
+                            |cx, instance| {
+                                let class_def = Type::new(TypeInner::DefT(
+                                    ctor_reason.dupe(),
+                                    flow_typing_type::type_::DefT::new(DefTInner::ClassT(
+                                        instance.dupe(),
+                                    )),
+                                ));
+                                flow_js::flow_t_non_speculating(cx, (&class_t, &class_def))?;
+                                Ok(())
+                            },
+                        )?;
+                        let propref = type_util::mk_named_prop(
+                            ctor_reason.dupe(),
+                            false,
+                            Name::new("constructor"),
+                        );
+                        let collector = TypeCollector::create();
+                        let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                            use_op: unknown_use(),
+                            reason: ctor_reason.dupe(),
+                            prop_reason: ctor_reason.dupe(),
+                            propref: Box::new(propref),
+                            method_action: Box::new(
+                                flow_typing_type::type_::MethodAction::NoMethodAction(
+                                    collector.dupe(),
                                 ),
-                            })));
-                            flow_js::flow_non_speculating(cx, (&instance, &use_t))?;
-                            Ok(type_util::union_of_ts(
-                                ctor_reason,
-                                collector.collect_to_vec(),
-                                Some(UnionKind::ResolvedKind),
-                            ))
-                        };
+                            ),
+                        })));
+                        flow_js::flow_non_speculating(cx, (&instance, &use_t))?;
+                        Ok(type_util::union_of_ts(
+                            ctor_reason,
+                            collector.collect_to_vec(),
+                            Some(UnionKind::ResolvedKind),
+                        ))
+                    };
                     self.find(
                         |this| ast_visitor::new_default(this, loc, expr),
                         get_callee_type,
@@ -724,7 +728,7 @@ pub mod callee_finder {
 
     pub fn find_opt(
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-        cx: &Context,
+        cx: &mut Context,
         typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
         loc: Loc,
     ) -> Result<Option<T>, flow_utils_concurrency::job_error::JobError> {
@@ -745,7 +749,7 @@ pub mod callee_finder {
 pub fn find_signatures<'a>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &dyn Fn(&flow_parser::file_key::FileKey) -> Option<ast::Program<Loc, Loc>>,
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     ast: &ast::Program<Loc, Loc>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -764,27 +768,28 @@ pub fn find_signatures<'a>(
             let norm_options = flow_typing_ty_normalizer::env::Options::default();
             let genv = flow_typing::ty_normalizer_flow::mk_genv(
                 norm_options,
-                cx,
                 Some(typed_ast),
                 file_sig.dupe(),
             );
 
-            let func_details_of_type =
-                |jsdoc: &Option<Jsdoc>, fn_t: &Type| -> Option<FuncDetailsResult> {
-                    let ty = flow_typing::ty_normalizer_flow::from_type(&genv, fn_t);
-                    match ty {
-                        Ok(flow_common_ty::ty::Elt::Type(ty)) => match ty.as_ref() {
-                            Ty::Fun(fun) => Some(func_details(
-                                jsdoc,
-                                &fun.fun_params,
-                                &fun.fun_rest_param,
-                                &fun.fun_return,
-                            )),
-                            _ => None,
-                        },
+            let func_details_of_type = |cx: &mut Context<'a>,
+                                        jsdoc: &Option<Jsdoc>,
+                                        fn_t: &Type|
+             -> Option<FuncDetailsResult> {
+                let ty = flow_typing::ty_normalizer_flow::from_type(cx, &genv, fn_t);
+                match ty {
+                    Ok(flow_common_ty::ty::Elt::Type(ty)) => match ty.as_ref() {
+                        Ty::Fun(fun) => Some(func_details(
+                            jsdoc,
+                            &fun.fun_params,
+                            &fun.fun_rest_param,
+                            &fun.fun_return,
+                        )),
                         _ => None,
-                    }
-                };
+                    },
+                    _ => None,
+                }
+            };
             let funs = match ts.as_slice() {
                 [] => vec![],
                 [t] => {
@@ -811,7 +816,7 @@ pub fn find_signatures<'a>(
                         }
                         _ => None,
                     };
-                    func_details_of_type(&jsdoc, t).into_iter().collect()
+                    func_details_of_type(cx, &jsdoc, t).into_iter().collect()
                 }
                 _ => {
                     // overloaded case: get-def does not distinguish between overloads, get the
@@ -822,7 +827,7 @@ pub fn find_signatures<'a>(
                                 let loc = loc_of_aloc(type_util::def_loc_of_t(fn_t));
                                 find_documentation::jsdoc_of_getdef_loc(ast, get_ast_from_heap, loc)
                             };
-                            func_details_of_type(&jsdoc, fn_t)
+                            func_details_of_type(cx, &jsdoc, fn_t)
                         })
                         .collect()
                 }
@@ -852,14 +857,13 @@ pub fn find_signatures<'a>(
             let norm_options = flow_typing_ty_normalizer::env::Options::default();
             let genv = flow_typing::ty_normalizer_flow::mk_genv(
                 norm_options,
-                cx,
                 Some(typed_ast),
                 file_sig.dupe(),
             );
             let tys = ts
                 .iter()
                 .filter_map(|(t, optional)| {
-                    match flow_typing::ty_normalizer_flow::from_type(&genv, t) {
+                    match flow_typing::ty_normalizer_flow::from_type(cx, &genv, t) {
                         Ok(flow_common_ty::ty::Elt::Type(ty)) => {
                             let ty_str = string_of_ty(ty.as_ref());
                             let loc = loc_of_aloc(type_util::loc_of_t(t));

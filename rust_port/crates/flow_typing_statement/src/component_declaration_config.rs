@@ -64,7 +64,7 @@ pub fn rest_type(rest: &Rest) -> Type {
 }
 
 fn destruct<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     use_op: &UseOp,
     name_loc: ALoc,
     name: &str,
@@ -92,7 +92,7 @@ fn destruct<'a>(
 }
 
 fn flow_default<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     annot_t: &Type,
     default_t: &Type,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
@@ -116,7 +116,7 @@ fn flow_default<'a>(
 }
 
 fn eval_default<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     always_flow_default: bool,
     annot_t: &Type,
     has_anno: bool,
@@ -142,7 +142,7 @@ fn eval_default<'a>(
 }
 
 pub fn eval_param<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     param: &Param,
 ) -> Result<ParamAst<(ALoc, Type)>, CheckExprError> {
     let Param {
@@ -204,7 +204,7 @@ pub fn eval_param<'a>(
             let mut init = destructuring::empty(None, None);
             let typed_properties = destructuring::object_properties(
                 cx,
-                &|use_op, name_loc, name, default, t| {
+                &|cx, use_op, name_loc, name, default, t| {
                     destruct(cx, use_op, name_loc, name, default, t)
                 },
                 ploc.dupe(),
@@ -239,7 +239,7 @@ pub fn eval_param<'a>(
             let mut init = destructuring::empty(None, None);
             let typed_elements = destructuring::array_elements(
                 cx,
-                &|use_op, name_loc, name, default, t| {
+                &|cx, use_op, name_loc, name, default, t| {
                     destruct(cx, use_op, name_loc, name, default, t)
                 },
                 &mut init,
@@ -267,7 +267,7 @@ pub fn eval_param<'a>(
 }
 
 pub fn eval_rest<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     rest: &Rest,
 ) -> Result<RestAst<(ALoc, Type)>, CheckExprError> {
     let Rest {
@@ -296,7 +296,7 @@ pub fn eval_rest<'a>(
             let mut init = destructuring::empty(None, None);
             let typed_properties = destructuring::object_properties(
                 cx,
-                &|use_op, name_loc, name, default, dest_t| {
+                &|cx, use_op, name_loc, name, default, dest_t| {
                     destruct(cx, use_op, name_loc, name, default, dest_t)
                 },
                 ploc.dupe(),
@@ -327,7 +327,7 @@ pub fn eval_rest<'a>(
             let mut init = destructuring::empty(None, None);
             let typed_elements = destructuring::array_elements(
                 cx,
-                &|use_op, name_loc, name, default, dest_t| {
+                &|cx, use_op, name_loc, name, default, dest_t| {
                     destruct(cx, use_op, name_loc, name, default, dest_t)
                 },
                 &mut init,

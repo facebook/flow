@@ -47,7 +47,7 @@ use crate::resolved_requires::DependencyTarget;
 use crate::resolved_requires::ResolvedModule;
 use crate::resolved_requires::ResolvedRequires;
 
-pub type BeforeCompact<'a> = &'a dyn Fn();
+pub type BeforeCompact<'a> = &'a mut dyn FnMut();
 
 /// A shared handle to the heap snapshot owned by an [`ActiveTransaction`].
 ///

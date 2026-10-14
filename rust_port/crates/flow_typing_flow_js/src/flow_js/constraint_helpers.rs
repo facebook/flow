@@ -16,7 +16,7 @@ use super::helpers::*;
 use super::*;
 
 pub(super) fn frozen_implicit_instantiation_tvar(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     env: &FlowJsEnv,
     t: &Type,
 ) -> Option<Type> {
@@ -29,18 +29,18 @@ struct FrozenConstraintNode {
     tvar: Type,
 }
 
-struct ActiveConstraintNode<'cx> {
+struct ActiveConstraintNode {
     root_id: i32,
-    constraints: constraint::Constraints<'cx, Context<'cx>>,
+    constraints: constraint::Constraints<Cx>,
 }
 
-enum ConstraintNodeState<'cx> {
-    Active(ActiveConstraintNode<'cx>),
+enum ConstraintNodeState {
+    Active(ActiveConstraintNode),
     Frozen(FrozenConstraintNode),
 }
 
 fn frozen_constraint_node(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     env: &FlowJsEnv,
     node: ConstraintNodeId,
 ) -> Option<FrozenConstraintNode> {
@@ -50,7 +50,7 @@ fn frozen_constraint_node(
 }
 
 pub(super) fn active_constraint_node(
-    cx: &Context<'_>,
+    cx: &mut Context<'_>,
     env: &FlowJsEnv,
     t: &Type,
 ) -> Option<ConstraintNodeId> {
@@ -61,17 +61,17 @@ pub(super) fn active_constraint_node(
 }
 
 pub(super) fn constraint_node_constraints<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     node: ConstraintNodeId,
-) -> (i32, constraint::Constraints<'cx, Context<'cx>>) {
+) -> (i32, constraint::Constraints<Cx>) {
     cx.find_constraints(node.id())
 }
 
 fn constraint_node_state<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     node: ConstraintNodeId,
-) -> ConstraintNodeState<'cx> {
+) -> ConstraintNodeState {
     let (root_id, constraints) = cx.find_constraints(node.id());
     match frozen_constraint_node(cx, env, node) {
         Some(frozen) => ConstraintNodeState::Frozen(frozen),
@@ -83,12 +83,9 @@ fn constraint_node_state<'cx>(
 }
 
 fn constraint_node_root<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     node: ConstraintNodeId,
-) -> (
-    ConstraintNodeId,
-    Root<constraint::Constraints<'cx, Context<'cx>>>,
-) {
+) -> (ConstraintNodeId, Root<constraint::Constraints<Cx>>) {
     let (root_id, root) = match node {
         ConstraintNodeId::OpenT(id) => cx.find_root(id),
         ConstraintNodeId::Inference(id) => cx.find_inference_root(id),
@@ -102,9 +99,9 @@ fn constraint_node_root<'cx>(
 }
 
 fn set_constraint_node_constraints<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     node: ConstraintNodeId,
-    constraints: constraint::Constraints<'cx, Context<'cx>>,
+    constraints: constraint::Constraints<Cx>,
 ) {
     match node {
         ConstraintNodeId::OpenT(id) => cx.set_root_constraints(id, constraints),
@@ -112,14 +109,18 @@ fn set_constraint_node_constraints<'cx>(
     }
 }
 
-fn set_constraint_node_rank(cx: &Context<'_>, node: ConstraintNodeId, rank: i32) {
+fn set_constraint_node_rank(cx: &mut Context<'_>, node: ConstraintNodeId, rank: i32) {
     match node {
         ConstraintNodeId::OpenT(id) => cx.set_root_rank(id, rank),
         ConstraintNodeId::Inference(id) => cx.set_inference_root_rank(id, rank),
     }
 }
 
-fn set_constraint_node_goto(cx: &Context<'_>, node: ConstraintNodeId, parent: ConstraintNodeId) {
+fn set_constraint_node_goto(
+    cx: &mut Context<'_>,
+    node: ConstraintNodeId,
+    parent: ConstraintNodeId,
+) {
     match node {
         ConstraintNodeId::OpenT(id) => match parent {
             ConstraintNodeId::OpenT(parent_id) => {
@@ -168,11 +169,11 @@ fn set_constraint_node_goto(cx: &Context<'_>, node: ConstraintNodeId, parent: Co
 
 /// for each l in ls: l => u
 pub(super) fn flows_to_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
-    u: &UseT<Context<'cx>>,
+    u: &UseT<Cx>,
 ) -> Result<(), FlowJsException> {
     for (l, (trace_l, use_op)) in ls.iter() {
         let u = flow_use_op(env, use_op.dupe(), u.dupe());
@@ -183,12 +184,12 @@ pub(super) fn flows_to_t<'cx>(
 
 /// for each u in us: l => u
 pub(super) fn flows_from_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     l: &Type,
-    us: &BTreeMap<constraint::UseTypeKey<Context<'cx>>, DepthTrace>,
+    us: &BTreeMap<constraint::UseTypeKey<Cx>, DepthTrace>,
 ) -> Result<(), FlowJsException> {
     for (use_type_key, trace_u) in us.iter() {
         let u = flow_use_op(env, new_use_op.dupe(), use_type_key.use_t.dupe());
@@ -199,12 +200,12 @@ pub(super) fn flows_from_t<'cx>(
 
 // for each l in ls, u in us: l => u
 pub(super) fn flows_across<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
-    us: &BTreeMap<constraint::UseTypeKey<Context<'cx>>, DepthTrace>,
+    us: &BTreeMap<constraint::UseTypeKey<Cx>, DepthTrace>,
 ) -> Result<(), FlowJsException> {
     for (l, (trace_l, use_op_prime)) in ls.iter() {
         for (use_type_key, trace_u) in us.iter() {
@@ -220,12 +221,12 @@ pub(super) fn flows_across<'cx>(
 }
 
 fn flow_active_constraint_nodes<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
-    (id1, constraints1): (i32, constraint::Constraints<'cx, Context<'cx>>),
-    (id2, constraints2): (i32, constraint::Constraints<'cx, Context<'cx>>),
+    (id1, constraints1): (i32, constraint::Constraints<Cx>),
+    (id2, constraints2): (i32, constraint::Constraints<Cx>),
 ) -> Result<(), FlowJsException> {
     match (constraints1, constraints2) {
         (
@@ -285,15 +286,8 @@ fn flow_active_constraint_nodes<'cx>(
             constraint::Constraints::FullyResolved(s1),
             constraint::Constraints::Unresolved(bounds2),
         ) => {
-            edges_and_flows_from_t(
-                cx,
-                env,
-                trace,
-                use_op,
-                false,
-                &cx.force_fully_resolved_tvar(&s1),
-                (id2, &bounds2),
-            )?;
+            let t1 = cx.force_fully_resolved_tvar(&s1);
+            edges_and_flows_from_t(cx, env, trace, use_op, false, &t1, (id2, &bounds2))?;
         }
         (constraint::Constraints::Resolved(t1), constraint::Constraints::Resolved(t2)) => {
             let t2_use = flow_use_op(
@@ -317,12 +311,8 @@ fn flow_active_constraint_nodes<'cx>(
                 unknown_use(),
                 UseT::new(UseTInner::UseT(use_op, t2.dupe())),
             );
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (&cx.force_fully_resolved_tvar(&s1), &t2_use),
-            )?;
+            let t1 = cx.force_fully_resolved_tvar(&s1);
+            rec_flow(cx, env, trace, (&t1, &t2_use))?;
         }
         (
             constraint::Constraints::FullyResolved(s1),
@@ -333,24 +323,20 @@ fn flow_active_constraint_nodes<'cx>(
                 unknown_use(),
                 UseT::new(UseTInner::UseT(use_op, cx.force_fully_resolved_tvar(&s2))),
             );
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (&cx.force_fully_resolved_tvar(&s1), &t2_use),
-            )?;
+            let t1 = cx.force_fully_resolved_tvar(&s1);
+            rec_flow(cx, env, trace, (&t1, &t2_use))?;
         }
     }
     Ok(())
 }
 
 pub(super) fn flow_active_constraint_node_to_use<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
-    (id, constraints): (i32, constraint::Constraints<'cx, Context<'cx>>),
-    u: &UseT<Context<'cx>>,
-) -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
+    (id, constraints): (i32, constraint::Constraints<Cx>),
+    u: &UseT<Cx>,
+) -> Result<Option<(Type, UseT<Cx>)>, FlowJsException> {
     match constraints {
         constraint::Constraints::Unresolved(bounds) => {
             edges_and_flows_to_t(cx, env, trace, false, (id, &bounds), u)?;
@@ -364,13 +350,13 @@ pub(super) fn flow_active_constraint_node_to_use<'cx>(
 }
 
 fn flow_type_to_active_constraint_node<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     l: &Type,
-    (id, constraints): (i32, constraint::Constraints<'cx, Context<'cx>>),
-) -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
+    (id, constraints): (i32, constraint::Constraints<Cx>),
+) -> Result<Option<(Type, UseT<Cx>)>, FlowJsException> {
     match constraints {
         constraint::Constraints::Unresolved(bounds) => {
             edges_and_flows_from_t(cx, env, trace, use_op, false, l, (id, &bounds))?;
@@ -387,7 +373,7 @@ fn flow_type_to_active_constraint_node<'cx>(
 }
 
 fn flow_type_to_frozen_constraint_node<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     l: &Type,
@@ -407,7 +393,7 @@ fn flow_type_to_frozen_constraint_node<'cx>(
 }
 
 pub(super) fn flow_constraint_nodes<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -480,13 +466,13 @@ pub(super) fn flow_constraint_nodes<'cx>(
 }
 
 pub(super) fn flow_type_to_constraint_node<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     l: &Type,
     node: ConstraintNodeId,
-) -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
+) -> Result<Option<(Type, UseT<Cx>)>, FlowJsException> {
     match constraint_node_state(cx, env, node) {
         ConstraintNodeState::Active(ActiveConstraintNode {
             root_id,
@@ -502,10 +488,10 @@ pub(super) fn flow_type_to_constraint_node<'cx>(
 }
 
 /// bounds.upper += u
-fn add_upper_to_bounds<'cx>(
+fn add_upper_to_bounds(
     env: &FlowJsEnv,
-    bounds: &constraint::BoundsRef<Context<'cx>>,
-    u: &UseT<Context<'cx>>,
+    bounds: &constraint::BoundsRef<Cx>,
+    u: &UseT<Cx>,
     trace: DepthTrace,
 ) {
     let key = constraint::UseTypeKey {
@@ -524,8 +510,8 @@ fn add_upper_to_bounds<'cx>(
 }
 
 /// bounds.lower += l
-fn add_lower_to_bounds<'cx>(
-    bounds: &constraint::BoundsRef<Context<'cx>>,
+fn add_lower_to_bounds(
+    bounds: &constraint::BoundsRef<Cx>,
     l: &Type,
     trace: DepthTrace,
     use_op: UseOp,
@@ -551,18 +537,18 @@ fn add_lower_to_bounds<'cx>(
 /// that has already been resolved, because the resolved type will be processed
 /// separately, too, as part of the bounds of skip_tvar.
 pub(super) fn iter_with_filter<'cx, F>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     bindings: &BTreeMap<i32, (DepthTrace, UseOp)>,
     skip_id: i32,
     each: F,
 ) where
-    F: Fn(i32, constraint::BoundsRef<Context<'cx>>, &DepthTrace, &UseOp),
+    F: Fn(&mut Context<'cx>, i32, constraint::BoundsRef<Cx>, &DepthTrace, &UseOp),
 {
     for (id, (trace, use_op)) in bindings.iter() {
         let (root_id, constraints) = cx.find_constraints(*id);
         match constraints {
             constraint::Constraints::Unresolved(bounds) if root_id != skip_id => {
-                each(root_id, bounds, trace, use_op);
+                each(cx, root_id, bounds, trace, use_op);
             }
             _ => {}
         }
@@ -575,12 +561,12 @@ pub(super) fn iter_with_filter<'cx, F>(
 /// As an optimization, skip [id1] when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
 pub(super) fn edges_to_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::BoundsRef<Context<'cx>>),
-    t2: &UseT<Context<'cx>>,
+    (id1, bounds1): (i32, &constraint::BoundsRef<Cx>),
+    t2: &UseT<Cx>,
 ) {
     if !opt {
         add_upper_to_bounds(env, bounds1, t2, trace);
@@ -590,7 +576,7 @@ pub(super) fn edges_to_t<'cx>(
         cx,
         &bounds1.lowertvars,
         id1,
-        |_root_id, bounds, trace_l, use_op| {
+        |_cx, _root_id, bounds, trace_l, use_op| {
             let t2 = flow_use_op(env, use_op.dupe(), t2.dupe());
             add_upper_to_bounds(
                 env,
@@ -608,13 +594,13 @@ pub(super) fn edges_to_t<'cx>(
 /// As an optimization, skip [id2] when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
 pub(super) fn edges_from_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
     t1: &Type,
-    (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
+    (id2, bounds2): (i32, &constraint::BoundsRef<Cx>),
 ) {
     if !opt {
         add_lower_to_bounds(bounds2, t1, trace, new_use_op.dupe());
@@ -624,7 +610,7 @@ pub(super) fn edges_from_t<'cx>(
         cx,
         &bounds2.uppertvars,
         id2,
-        |_root_id, bounds, trace_u, use_op| {
+        |_cx, _root_id, bounds, trace_u, use_op| {
             let use_op = pick_use_op(env, new_use_op, use_op);
             add_lower_to_bounds(
                 &bounds,
@@ -638,13 +624,13 @@ pub(super) fn edges_from_t<'cx>(
 
 /// for each [id'] in [id] + [bounds.lowertvars], [id'.bounds.upper += us]
 pub(super) fn edges_to_ts<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
-    (id, bounds): (i32, &constraint::BoundsRef<Context<'cx>>),
-    us: &BTreeMap<constraint::UseTypeKey<Context<'cx>>, DepthTrace>,
+    (id, bounds): (i32, &constraint::BoundsRef<Cx>),
+    us: &BTreeMap<constraint::UseTypeKey<Cx>, DepthTrace>,
 ) {
     for (use_type_key, trace_u) in us.iter() {
         let u = flow_use_op(env, new_use_op.dupe(), use_type_key.use_t.dupe());
@@ -661,13 +647,13 @@ pub(super) fn edges_to_ts<'cx>(
 
 /// for each [id'] in [id] + [bounds.uppertvars], [id'.bounds.lower += ls]
 pub(super) fn edges_from_ts<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
     ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
-    (id, bounds): (i32, &constraint::BoundsRef<Context<'cx>>),
+    (id, bounds): (i32, &constraint::BoundsRef<Cx>),
 ) {
     for (l, (trace_l, use_op)) in ls.iter() {
         let new_use_op = pick_use_op(env, use_op, new_use_op);
@@ -690,12 +676,12 @@ pub(super) fn edges_from_ts<'cx>(
 ///   As an invariant, [bounds1.lower] should already contain [id.bounds.lower] for
 ///   each id in [bounds1.lowertvars].
 pub(super) fn edges_and_flows_to_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::BoundsRef<Context<'cx>>),
-    t2: &UseT<Context<'cx>>,
+    (id1, bounds1): (i32, &constraint::BoundsRef<Cx>),
+    t2: &UseT<Cx>,
 ) -> Result<(), FlowJsException> {
     // Skip iff edge exists as part of the speculation path to the current branch
     let skip = {
@@ -728,13 +714,13 @@ pub(super) fn edges_and_flows_to_t<'cx>(
 /// As an invariant, [bounds2.upper] should already contain [id.bounds.upper] for
 /// each id in [bounds2.uppertvars].
 pub(super) fn edges_and_flows_from_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
     t1: &Type,
-    (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
+    (id2, bounds2): (i32, &constraint::BoundsRef<Cx>),
 ) -> Result<(), FlowJsException> {
     if !bounds2.borrow().lower.contains_key(t1) {
         let upper = bounds2.borrow().upper.clone();
@@ -745,8 +731,8 @@ pub(super) fn edges_and_flows_from_t<'cx>(
 }
 
 /// bounds.uppertvars += id
-fn add_uppertvar_to_bounds<'cx>(
-    bounds: &constraint::BoundsRef<Context<'cx>>,
+fn add_uppertvar_to_bounds(
+    bounds: &constraint::BoundsRef<Cx>,
     id: i32,
     trace: DepthTrace,
     use_op: UseOp,
@@ -765,8 +751,8 @@ fn add_uppertvar_to_bounds<'cx>(
 }
 
 /// bounds.lowertvars += id
-fn add_lowertvar_to_bounds<'cx>(
-    bounds: &constraint::BoundsRef<Context<'cx>>,
+fn add_lowertvar_to_bounds(
+    bounds: &constraint::BoundsRef<Cx>,
     id: i32,
     trace: DepthTrace,
     use_op: UseOp,
@@ -792,12 +778,12 @@ fn add_lowertvar_to_bounds<'cx>(
 /// As an optimization, skip id1 when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
 pub(super) fn edges_to_tvar<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::BoundsRef<Context<'cx>>),
+    (id1, bounds1): (i32, &constraint::BoundsRef<Cx>),
     id2: i32,
 ) {
     if !opt {
@@ -808,7 +794,7 @@ pub(super) fn edges_to_tvar<'cx>(
         cx,
         &bounds1.lowertvars,
         id1,
-        |_root_id, bounds, trace_l, use_op| {
+        |_cx, _root_id, bounds, trace_l, use_op| {
             let use_op = pick_use_op(env, use_op, new_use_op);
             add_uppertvar_to_bounds(
                 &bounds,
@@ -828,13 +814,13 @@ pub(super) fn edges_to_tvar<'cx>(
 /// As an optimization, skip id2 when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
 pub(super) fn edges_from_tvar<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
     id1: i32,
-    (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
+    (id2, bounds2): (i32, &constraint::BoundsRef<Cx>),
 ) {
     if !opt {
         add_lowertvar_to_bounds(bounds2, id1, trace, new_use_op.dupe());
@@ -844,7 +830,7 @@ pub(super) fn edges_from_tvar<'cx>(
         cx,
         &bounds2.uppertvars,
         id2,
-        |_root_id, bounds, trace_u, use_op| {
+        |_cx, _root_id, bounds, trace_u, use_op| {
             let use_op = pick_use_op(env, new_use_op, use_op);
             add_lowertvar_to_bounds(
                 &bounds,
@@ -861,23 +847,28 @@ pub(super) fn edges_from_tvar<'cx>(
 ///       id.bounds.uppertvars += id2
 ///       id.bounds.uppertvars += bounds2.uppertvars
 pub(super) fn add_upper_edges<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::BoundsRef<Context<'cx>>),
-    (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
+    (id1, bounds1): (i32, &constraint::BoundsRef<Cx>),
+    (id2, bounds2): (i32, &constraint::BoundsRef<Cx>),
 ) {
     let upper = bounds2.borrow().upper.clone();
     edges_to_ts(cx, env, trace, &new_use_op, opt, (id1, bounds1), &upper);
     edges_to_tvar(cx, env, trace, &new_use_op, opt, (id1, bounds1), id2);
     let uppertvars = bounds2.borrow().uppertvars.clone();
-    iter_with_filter(cx, &uppertvars, id2, |tvar, _bounds, trace_u, use_op| {
-        let new_use_op = pick_use_op(env, &new_use_op, use_op);
-        let trace = DepthTrace::concat_trace(&[trace, *trace_u]);
-        edges_to_tvar(cx, env, trace, &new_use_op, opt, (id1, bounds1), tvar);
-    });
+    iter_with_filter(
+        cx,
+        &uppertvars,
+        id2,
+        |cx, tvar, _bounds, trace_u, use_op| {
+            let new_use_op = pick_use_op(env, &new_use_op, use_op);
+            let trace = DepthTrace::concat_trace(&[trace, *trace_u]);
+            edges_to_tvar(cx, env, trace, &new_use_op, opt, (id1, bounds1), tvar);
+        },
+    );
 }
 
 /// for each id in id2 + bounds2.uppertvars:
@@ -885,23 +876,28 @@ pub(super) fn add_upper_edges<'cx>(
 ///       id.bounds.lowertvars += id1
 ///       id.bounds.lowertvars += bounds1.lowertvars
 pub(super) fn add_lower_edges<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::BoundsRef<Context<'cx>>),
-    (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
+    (id1, bounds1): (i32, &constraint::BoundsRef<Cx>),
+    (id2, bounds2): (i32, &constraint::BoundsRef<Cx>),
 ) {
     let lower = bounds1.borrow().lower.clone();
     edges_from_ts(cx, env, trace, &new_use_op, opt, &lower, (id2, bounds2));
     edges_from_tvar(cx, env, trace, &new_use_op, opt, id1, (id2, bounds2));
     let lowertvars = bounds1.borrow().lowertvars.clone();
-    iter_with_filter(cx, &lowertvars, id1, |tvar, _bounds, trace_l, use_op| {
-        let use_op = pick_use_op(env, use_op, &new_use_op);
-        let trace = DepthTrace::concat_trace(&[*trace_l, trace]);
-        edges_from_tvar(cx, env, trace, &use_op, opt, tvar, (id2, bounds2));
-    });
+    iter_with_filter(
+        cx,
+        &lowertvars,
+        id1,
+        |cx, tvar, _bounds, trace_l, use_op| {
+            let use_op = pick_use_op(env, use_op, &new_use_op);
+            let trace = DepthTrace::concat_trace(&[*trace_l, trace]);
+            edges_from_tvar(cx, env, trace, &use_op, opt, tvar, (id2, bounds2));
+        },
+    );
 }
 
 // unification
@@ -916,18 +912,12 @@ pub(super) fn unify_flip(use_op: UseOp) -> UseOp {
 /// both of the roots are resolved, they effectively act like the corresponding
 /// concrete types.
 pub(super) fn goto<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
-    (node1, root1): (
-        ConstraintNodeId,
-        Root<constraint::Constraints<'cx, Context<'cx>>>,
-    ),
-    (node2, root2): (
-        ConstraintNodeId,
-        Root<constraint::Constraints<'cx, Context<'cx>>>,
-    ),
+    (node1, root1): (ConstraintNodeId, Root<constraint::Constraints<Cx>>),
+    (node2, root2): (ConstraintNodeId, Root<constraint::Constraints<Cx>>),
 ) -> Result<(), FlowJsException> {
     let id1 = node1.id();
     let id2 = node2.id();
@@ -1126,7 +1116,7 @@ pub(super) fn goto<'cx>(
 /// point to the other. Ranks are used to keep chains short. A side root always
 /// points to a production root when the stores differ.
 pub(super) fn merge_constraint_nodes<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1184,7 +1174,7 @@ pub(super) fn merge_constraint_nodes<'cx>(
 /// Resolve a constraint node to a type. This involves finding its root,
 /// and resolving to that type.
 pub(super) fn resolve_constraint_node<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1232,7 +1222,7 @@ pub(super) fn resolve_constraint_node<'cx>(
 
 /// Resolve a production type variable to a type.
 pub(super) fn resolve_id<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,

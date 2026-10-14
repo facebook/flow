@@ -95,7 +95,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, Found> for Mapper {
 
 pub fn insert_render_type_at_loc<'a, 'cx>(
     remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'a>>,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,

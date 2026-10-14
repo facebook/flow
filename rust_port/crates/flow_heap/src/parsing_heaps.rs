@@ -1262,14 +1262,14 @@ mod tests {
         heap.state.load().read().gc_state.lock().new_alloc_size = 1;
 
         let transaction = ActiveTransaction::new(heap.dupe());
-        assert!(heap.collect_slice(1, &no_caches_to_drop));
+        assert!(heap.collect_slice(1, &mut no_caches_to_drop));
         assert_eq!(
             heap.state.load().read().gc_state.lock().phase,
             GcPhase::Idle
         );
         drop(transaction);
 
-        assert!(!heap.collect_slice(1, &no_caches_to_drop));
+        assert!(!heap.collect_slice(1, &mut no_caches_to_drop));
         assert_eq!(
             heap.state.load().read().gc_state.lock().phase,
             GcPhase::Mark
@@ -1287,7 +1287,7 @@ mod tests {
         delete.clear_file(file, None);
         delete.commit();
 
-        heap.compact(&no_caches_to_drop);
+        heap.compact(&mut no_caches_to_drop);
         assert_eq!(heap.heap_size(), 0);
     }
 

@@ -20,8 +20,6 @@
 //! so it's important that we don't double count a later operand being resolved as multiple
 //! lower bounds when it's just resolved twice because of the separate resolution jobs.
 
-use std::cell::RefCell;
-
 use dupe::Dupe;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_typing_errors::intermediate_error_types::ExponentialSpreadOperandGroup;
@@ -61,14 +59,13 @@ impl SpreadCache {
 }
 
 pub fn add_lower_bound(
-    cache: &RefCell<SpreadCache>,
+    cache: &mut SpreadCache,
     spread_id: i32,
     resolve_idx: i32,
     bound: LowerBound,
     objtypes: &Vec1<ObjectSlice>,
 ) {
     let state = cache
-        .borrow_mut()
         .0
         .remove(&spread_id)
         .unwrap_or_else(|| CacheState::Ok {
@@ -127,14 +124,11 @@ pub fn add_lower_bound(
             }
         }
     };
-    cache.borrow_mut().0.insert(spread_id, state_prime);
+    cache.0.insert(spread_id, state_prime);
 }
 
-pub fn get_error_groups(
-    cache: &RefCell<SpreadCache>,
-    spread_id: i32,
-) -> (LowerBoundGroup, LowerBoundGroup) {
-    match cache.borrow().0.get(&spread_id) {
+pub fn get_error_groups(cache: &SpreadCache, spread_id: i32) -> (LowerBoundGroup, LowerBoundGroup) {
+    match cache.0.get(&spread_id) {
         Some(CacheState::Error(group1, group2)) => (group1.clone(), group2.clone()),
         _ => panic!(
             "Invariant violation: make sure can_spread is false before calling get_error_groups"
@@ -142,8 +136,8 @@ pub fn get_error_groups(
     }
 }
 
-pub fn can_spread(cache: &RefCell<SpreadCache>, spread_id: i32) -> bool {
-    match cache.borrow().0.get(&spread_id) {
+pub fn can_spread(cache: &SpreadCache, spread_id: i32) -> bool {
+    match cache.0.get(&spread_id) {
         Some(CacheState::Error(_, _)) => false,
         _ => true,
     }

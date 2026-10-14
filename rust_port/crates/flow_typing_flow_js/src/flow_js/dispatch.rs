@@ -105,19 +105,19 @@ use crate::tvar_resolver;
 /// In OCaml, certain calls in __flow_impl are in tail position and are
 /// optimized by the compiler to reuse the stack frame. In Rust, we return
 /// these as continuations for the trampoline to process iteratively.
-enum TailCall<'cx> {
+enum TailCall {
     /// Continue by flowing the lower type into the upper use under a fresh
     /// trace. The `Reason` is not part of the flow itself; it is the diagnostic
     /// reason to report for the upper side if this continuation hits the
     /// recursion limit. `resolve_union` uses the reason of the union it is
     /// rebuilding here.
-    Flow(Type, UseT<Context<'cx>>, Reason),
+    Flow(Type, UseT<Cx>, Reason),
     /// Replaces a tail call to `rec_flow()` (e.g. from EvalT, OpenT handlers):
     /// uses given trace, propagates LimitExceeded.
-    RecFlow(Type, UseT<Context<'cx>>, DepthTrace),
+    RecFlow(Type, UseT<Cx>, DepthTrace),
 }
 
-fn upper_operation_reason_or<CX>(u: &UseT<CX>, fallback: &Reason) -> Reason {
+fn upper_operation_reason_or<CX: ContextFamily>(u: &UseT<CX>, fallback: &Reason) -> Reason {
     if let Some(reason) = use_op_of_use_t(u)
         .and_then(|use_op| flow_js_utils::primary_reason_of_use_op(&use_op).map(|r| r.dupe()))
     {
@@ -165,7 +165,7 @@ fn lookup_targets<'a>(
 /// property was ever required to exist, so recovery resolves to the indexer's value
 /// instead of `any` — and for a TS-related access there is nothing to report at all.
 fn strict_lookup_failed<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
@@ -248,7 +248,7 @@ fn strict_lookup_failed<'cx>(
 /// that is `any` resolves; anything else is either an internal error or a
 /// property that does not exist.
 fn strict_computed_lookup_failed<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
@@ -367,12 +367,12 @@ fn remaining_lookup(
 /// resolution from inside `GetKeysT` dispatch, which recurses without bound on a
 /// key type that reaches the object being keyed.
 fn flow_dict_key_to_keys<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     dict_key: &Type,
     reason_op: &Reason,
-    keys: &UseT<Context<'cx>>,
+    keys: &UseT<Cx>,
     include_symbols: bool,
 ) -> Result<(), FlowJsException> {
     rec_flow(
@@ -400,9 +400,9 @@ fn flow_dict_key_to_keys<'cx>(
 /// In Rust, we return these as TailCall continuations and process them in a
 /// loop to avoid stack overflow.
 pub(super) fn __flow<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
-    (l, u): (&Type, &UseT<Context<'cx>>),
+    (l, u): (&Type, &UseT<Cx>),
     trace: DepthTrace,
 ) -> Result<(), FlowJsException> {
     let mut tc = __flow_impl(cx, env, (l, u), trace)?;
@@ -435,20 +435,20 @@ pub(super) fn __flow<'cx>(
 }
 
 fn __flow_impl<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
-    (l, u): (&Type, &UseT<Context<'cx>>),
+    (l, u): (&Type, &UseT<Cx>),
     trace: DepthTrace,
-) -> Result<Option<TailCall<'cx>>, FlowJsException> {
+) -> Result<Option<TailCall>, FlowJsException> {
     if flow_typing_type::type_util::ground_subtype_use_t(
-        &|t| flow_js_utils::update_lit_type_from_annot(cx, env, t),
+        &mut |t| flow_js_utils::update_lit_type_from_annot(cx, env, t),
         l,
         u,
     ) {
         print_types_if_verbose(cx, &trace, None, l, u);
         return Ok(None);
     }
-    // Fast path: if l is pointer-equal to the Type inside UseT<Context<'cx>>, it's trivially l <: l.
+    // Fast path: if l is pointer-equal to the Type inside UseT<Cx>, it's trivially l <: l.
     // This must come after ground_subtype_use_t, which has a side effect of recording
     // singleton literal checks needed by implicit instantiation.
     if let UseTInner::UseT(_, t) = u.deref() {
@@ -946,7 +946,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        // Waits for a def type to become concrete, repositions it as an upper UseT<Context<'cx>>
+        // Waits for a def type to become concrete, repositions it as an upper UseT<Cx>
         // using the stored reason. This can be used to store a reason as it flows
         // through a tvar.
         (
@@ -1033,7 +1033,7 @@ fn __flow_impl<'cx>(
             let t0 = members.next().unwrap();
             let t1 = members.next().unwrap();
             let ts: Vec<&Type> = members.collect();
-            let f = |t: &Type| -> Result<Type, FlowJsException> {
+            let mut f = |t: &Type| -> Result<Type, FlowJsException> {
                 flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |cx, tvar_reason, tvar_id| {
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     rec_flow(
@@ -1224,7 +1224,7 @@ fn __flow_impl<'cx>(
         (TypeInner::UnionT(reason, rep), UseTInner::DeepReadOnlyT(tout, dro)) => {
             let ReactDro(dro_loc, dro_type) = dro;
             if !rep.is_optimized_finally() {
-                rep.optimize_enum_only(|ts| {
+                rep.optimize_enum_only(cx, |cx, ts| {
                     flow_typing_visitors::type_mapper::union_flatten(cx, ts.duped())
                 });
             }
@@ -1261,7 +1261,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::UnionT(reason, rep), UseTInner::HooklikeT(tout)) => {
             if !rep.is_optimized_finally() {
-                rep.optimize_enum_only(|ts| {
+                rep.optimize_enum_only(cx, |cx, ts| {
                     flow_typing_visitors::type_mapper::union_flatten(cx, ts.duped())
                 });
             }
@@ -1780,7 +1780,7 @@ fn __flow_impl<'cx>(
         // * maybe types *
         // ***************
 
-        // The type maybe(T) is the same as null | undefined | UseT<Context<'cx>>
+        // The type maybe(T) is the same as null | undefined | UseT<Cx>
         (TypeInner::DefT(r, def_t), UseTInner::FilterMaybeT(use_op, tout))
             if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
         {
@@ -1863,7 +1863,7 @@ fn __flow_impl<'cx>(
         // * optional types *
         // ******************
 
-        // The type optional(T) is the same as undefined | UseT<Context<'cx>>
+        // The type optional(T) is the same as undefined | UseT<Cx>
         (TypeInner::DefT(r, def_t), UseTInner::FilterOptionalT(use_op, tout))
             if matches!(def_t.deref(), DefTInner::VoidT) =>
         {
@@ -3018,8 +3018,8 @@ fn __flow_impl<'cx>(
             let void_t = void::why(reason.dupe());
             let null_t = null::why(reason.dupe());
             let filter_null_and_void = |t: &Type| -> bool {
-                type_util::quick_subtype(None::<&fn(&Type)>, t, &void_t)
-                    || type_util::quick_subtype(None::<&fn(&Type)>, t, &null_t)
+                type_util::quick_subtype(None::<&mut fn(&Type)>, t, &void_t)
+                    || type_util::quick_subtype(None::<&mut fn(&Type)>, t, &null_t)
             };
             match rep.check_enum() {
                 Some(_) => {
@@ -3179,7 +3179,7 @@ fn __flow_impl<'cx>(
                     }),
             }),
         ) => {
-            let distribute = || -> Result<(), FlowJsException> {
+            let distribute = |cx: &mut Context<'cx>| -> Result<(), FlowJsException> {
                 let reason = reason
                     .dupe()
                     .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
@@ -3187,7 +3187,7 @@ fn __flow_impl<'cx>(
                 let t0 = members.next().unwrap();
                 let t1 = members.next().unwrap();
                 let ts: Vec<_> = members.duped().collect();
-                let f = |t: &Type| -> Result<Type, FlowJsException> {
+                let mut f = |t: &Type| -> Result<Type, FlowJsException> {
                     flow_typing_tvar::mk_no_wrap_where(
                         cx,
                         reason.dupe(),
@@ -3279,11 +3279,11 @@ fn __flow_impl<'cx>(
                             }
                         }
                     } else {
-                        distribute()?;
+                        distribute(cx)?;
                     }
                 }
                 _ => {
-                    distribute()?;
+                    distribute(cx)?;
                 }
             }
         }
@@ -3322,17 +3322,19 @@ fn __flow_impl<'cx>(
                                     u.dupe(),
                                 ) {
                                     Err(FlowJsException::SpeculationSingletonError) => {
-                                        let u = type_util::mod_use_op_of_use_t(
-                                            |use_op| {
-                                                flow_js_utils::union_representative_use_op(
-                                                    cx,
-                                                    l,
-                                                    &representative,
-                                                    use_op.dupe(),
-                                                )
-                                            },
-                                            u,
-                                        );
+                                        let u = match type_util::use_op_of_use_t(u) {
+                                            None => u.dupe(),
+                                            Some(use_op) => {
+                                                let use_op =
+                                                    flow_js_utils::union_representative_use_op(
+                                                        cx,
+                                                        l,
+                                                        &representative,
+                                                        use_op,
+                                                    );
+                                                type_util::mod_use_op_of_use_t(|_| use_op.dupe(), u)
+                                            }
+                                        };
                                         rec_flow(cx, env, trace, (&representative, &u))?;
                                         true
                                     }
@@ -3883,7 +3885,7 @@ fn __flow_impl<'cx>(
                         cx,
                         *cfe_id,
                         (reason_elemt.dupe(), pos),
-                        |recursion_depth| -> Result<(), FlowJsException> {
+                        |cx, recursion_depth| -> Result<(), FlowJsException> {
                             match recursion_depth {
                                 0 => {
                                     // The first time we see this, we process it normally
@@ -3958,7 +3960,7 @@ fn __flow_impl<'cx>(
                         cx,
                         *cfe_id,
                         (reason_elemt.dupe(), pos),
-                        |recursion_depth| -> Result<(), FlowJsException> {
+                        |cx, recursion_depth| -> Result<(), FlowJsException> {
                             match recursion_depth {
                                 0 => {
                                     // The first time we see this, we process it normally
@@ -4125,7 +4127,7 @@ fn __flow_impl<'cx>(
                 .iter()
                 .map(|tparam| {
                     TypeParam::new(TypeParamInner {
-                        bound: subst(tparam.bound.dupe()),
+                        bound: subst(cx, tparam.bound.dupe()),
                         reason: tparam.reason.dupe(),
                         name: tparam.name.dupe(),
                         polarity: tparam.polarity,
@@ -4135,6 +4137,9 @@ fn __flow_impl<'cx>(
                     })
                 })
                 .collect();
+            let extends_t = subst(cx, extends_t.dupe());
+            let true_t = subst(cx, true_t.dupe());
+            let false_t = subst(cx, false_t.dupe());
             rec_flow(
                 cx,
                 env,
@@ -4146,9 +4151,9 @@ fn __flow_impl<'cx>(
                         reason: reason.dupe(),
                         distributive_tparam_name: None,
                         infer_tparams: new_infer_tparams.into(),
-                        extends_t: subst(extends_t.dupe()),
-                        true_t: subst(true_t.dupe()),
-                        false_t: subst(false_t.dupe()),
+                        extends_t,
+                        true_t,
+                        false_t,
                         tout: tout.clone(),
                     }))),
                 ),
@@ -4384,9 +4389,10 @@ fn __flow_impl<'cx>(
                 upper,
             }),
         ) if let DefTInner::InstanceT(instance) = def_t.deref() => {
-            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
-            };
+            let concretize =
+                |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                    helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
+                };
             let construct_ts = flow_js_utils::collect_construct_ts(&concretize, cx, l)?;
             let construct_t = flow_js_utils::combine_construct_ts(construct_ts);
             match construct_t {
@@ -4483,9 +4489,10 @@ fn __flow_impl<'cx>(
                 upper,
             }),
         ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
-            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
-            };
+            let concretize =
+                |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                    helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
+                };
             if !flow_js_utils::is_inheritable(&concretize, cx, l)? {
                 // Not inheritable. Report what the fallthrough would have.
                 flow_js_utils::add_output_with_env(
@@ -4591,7 +4598,7 @@ fn __flow_impl<'cx>(
         (TypeInner::DefT(reason_l, def_t), UseTInner::ThisSpecializeT(r, this, k))
             if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
         {
-            let concretize = |t: &Type, this_t: Option<&Type>| match this_t {
+            let concretize = |cx: &mut Context<'_>, t: &Type, this_t: Option<&Type>| match this_t {
                 Some(this_t) => helpers::possible_concrete_types_for_class_extends(
                     cx,
                     env,
@@ -4958,7 +4965,7 @@ fn __flow_impl<'cx>(
             let new_u = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
-                tool: Box::new(react::Tool::<Context<'cx>>::CreateElement(Box::new(
+                tool: Box::new(react::Tool::<Cx>::CreateElement(Box::new(
                     react::CreateElementData {
                         component: t_.dupe(),
                         jsx_props: jsx_props.dupe(),
@@ -5751,10 +5758,11 @@ fn __flow_impl<'cx>(
             // Reject [new C(...)] where [C] is an abstract class. We do not
             // short-circuit — let the constructor call proceed so downstream
             // typing still produces sensible results.
-            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
-            };
-            if flow_js_utils::is_class_abstract(&concretize, this)? {
+            let concretize =
+                |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                    helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
+                };
+            if flow_js_utils::is_class_abstract(cx, &concretize, this)? {
                 flow_js_utils::add_output_with_env(
                     cx,env,
                     ErrorMessage::EAbstractClass(Box::new(
@@ -5879,9 +5887,10 @@ fn __flow_impl<'cx>(
                     )),
                 )?;
             }
-            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
-            };
+            let concretize =
+                |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                    helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
+                };
             match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(
                 &concretize,
                 cx,
@@ -6686,7 +6695,7 @@ fn __flow_impl<'cx>(
             let props_tmap = o.props_tmap.dupe();
             let obj_kind = &o.flags.obj_kind;
             let reachable_targs = &o.reachable_targs;
-            const_fold_expansion::guard(cx, *id, (reason_obj.dupe(), 0), |count| {
+            const_fold_expansion::guard(cx, *id, (reason_obj.dupe(), 0), |cx, count| {
                 match count {
                     0 => {
                         let xs_smol: Vec<flow_data_structure_wrapper::smol_str::FlowSmolStr> =
@@ -7950,14 +7959,17 @@ fn __flow_impl<'cx>(
         {
             let mapped_type_variance = &mapped_type_flags.variance;
             let mapped_type_optionality = &mapped_type_flags.optional;
-            let filter_optional_t = |t: Type| -> Result<Type, FlowJsException> {
+            let filter_optional_t = |cx: &mut Context<'cx>,
+                                     t: Type|
+             -> Result<Type, FlowJsException> {
                 let filter_id = crate::flow_js::filter_optional_with_env(cx, env, reason_op, &t)?;
                 Ok(Type::new(TypeInner::OpenT(Tvar::new(
                     reason_op.dupe(),
                     filter_id,
                 ))))
             };
-            let f = |value_t: &Type,
+            let f = |cx: &mut Context<'cx>,
+                     value_t: &Type,
                      index: Option<usize>,
                      optional: bool|
              -> Result<Type, FlowJsException> {
@@ -7982,6 +7994,7 @@ fn __flow_impl<'cx>(
                     }
                 };
                 slice_utils::mk_mapped_prop_type(
+                    cx,
                     &filter_optional_t,
                     use_op,
                     mapped_type_optionality,
@@ -8019,12 +8032,12 @@ fn __flow_impl<'cx>(
                     },
                 )?;
             }
-            let array_elem = |t: Type| -> Result<Type, FlowJsException> {
+            let array_elem = |cx: &mut Context<'cx>, t: Type| -> Result<Type, FlowJsException> {
                 // For real arrays (no tuple shape) TS strips `undefined` from the element
                 // type under `-?`, since indexed access on an array is implicitly optional.
                 match mapped_type_optionality {
                     flow_typing_type::type_::MappedTypeOptionality::RemoveOptional => {
-                        filter_optional_t(t)
+                        filter_optional_t(cx, t)
                     }
                     flow_typing_type::type_::MappedTypeOptionality::MakeOptional
                     | flow_typing_type::type_::MappedTypeOptionality::KeepOptionality => Ok(t),
@@ -8037,7 +8050,7 @@ fn __flow_impl<'cx>(
                     react_dro,
                     strictness_kind,
                 }) => {
-                    let mapped_elem_t = f(elem_t, None, false)?;
+                    let mapped_elem_t = f(cx, elem_t, None, false)?;
                     let mapped_tuple_view = match tuple_view.as_ref() {
                         None => None,
                         Some(tv) => {
@@ -8048,7 +8061,7 @@ fn __flow_impl<'cx>(
                                 .map(|(i, elem)| {
                                     Ok::<TupleElement, FlowJsException>(TupleElement {
                                         name: elem.name.dupe(),
-                                        t: f(&elem.t, Some(i), elem.optional)?,
+                                        t: f(cx, &elem.t, Some(i), elem.optional)?,
                                         polarity: elem.polarity,
                                         optional: new_element_optional(elem.optional),
                                         reason: elem.reason.dupe(),
@@ -8061,7 +8074,10 @@ fn __flow_impl<'cx>(
                                 .as_ref()
                                 .map(|elem| {
                                     Ok::<TupleElement, FlowJsException>(TupleElement {
-                                        t: array_elem(f(&elem.t, None, false)?)?,
+                                        t: {
+                                            let mapped_t = f(cx, &elem.t, None, false)?;
+                                            array_elem(cx, mapped_t)?
+                                        },
                                         ..elem.clone()
                                     })
                                 })
@@ -8075,7 +8091,7 @@ fn __flow_impl<'cx>(
                         }
                     };
                     ArrType::ArrayAT(Box::new(ArrayATData {
-                        elem_t: array_elem(mapped_elem_t)?,
+                        elem_t: array_elem(cx, mapped_elem_t)?,
                         react_dro: react_dro.clone(),
                         tuple_view: mapped_tuple_view,
                         strictness_kind: *strictness_kind,
@@ -8089,38 +8105,43 @@ fn __flow_impl<'cx>(
                     rest,
                     react_dro,
                     strictness_kind,
-                }) => ArrType::TupleAT(Box::new(TupleATData {
-                    elem_t: array_elem(f(elem_t, None, false)?)?,
-                    react_dro: react_dro.clone(),
-                    elements: elements
-                        .iter()
-                        .enumerate()
-                        .map(|(i, elem)| {
-                            Ok::<TupleElement, FlowJsException>(TupleElement {
-                                name: elem.name.dupe(),
-                                t: f(&elem.t, Some(i), elem.optional)?,
-                                polarity: elem.polarity,
-                                optional: new_element_optional(elem.optional),
-                                reason: elem.reason.dupe(),
+                }) => {
+                    let mapped_elem_t = f(cx, elem_t, None, false)?;
+                    ArrType::TupleAT(Box::new(TupleATData {
+                        elem_t: array_elem(cx, mapped_elem_t)?,
+                        react_dro: react_dro.clone(),
+                        elements: elements
+                            .iter()
+                            .enumerate()
+                            .map(|(i, elem)| {
+                                Ok::<TupleElement, FlowJsException>(TupleElement {
+                                    name: elem.name.dupe(),
+                                    t: f(cx, &elem.t, Some(i), elem.optional)?,
+                                    polarity: elem.polarity,
+                                    optional: new_element_optional(elem.optional),
+                                    reason: elem.reason.dupe(),
+                                })
                             })
-                        })
-                        .collect::<Result<Vec<_>, _>>()?
-                        .into(),
-                    arity: new_arity(*arity),
-                    inexact: *inexact,
-                    rest: rest
-                        .as_ref()
-                        .map(|elem| {
-                            Ok::<TupleElement, FlowJsException>(TupleElement {
-                                t: array_elem(f(&elem.t, None, false)?)?,
-                                ..elem.clone()
+                            .collect::<Result<Vec<_>, _>>()?
+                            .into(),
+                        arity: new_arity(*arity),
+                        inexact: *inexact,
+                        rest: rest
+                            .as_ref()
+                            .map(|elem| {
+                                let mapped_t = f(cx, &elem.t, None, false)?;
+                                Ok::<TupleElement, FlowJsException>(TupleElement {
+                                    t: array_elem(cx, mapped_t)?,
+                                    ..elem.clone()
+                                })
                             })
-                        })
-                        .transpose()?,
-                    strictness_kind: *strictness_kind,
-                })),
+                            .transpose()?,
+                        strictness_kind: *strictness_kind,
+                    }))
+                }
                 ArrType::ROArrayAT(box (elemt, dro)) => {
-                    ArrType::ROArrayAT(Box::new((array_elem(f(elemt, None, false)?)?, dro.clone())))
+                    let mapped_elem_t = f(cx, elemt, None, false)?;
+                    ArrType::ROArrayAT(Box::new((array_elem(cx, mapped_elem_t)?, dro.clone())))
                 }
             };
             let t = {
@@ -8426,6 +8447,8 @@ fn __flow_impl<'cx>(
                                     let mut super_checked_names = checked_names.clone();
                                     super_checked_names.extend(own_props.keys().duped());
                                     super_checked_names.extend(proto_props.keys().duped());
+                                    let own_props = cx.generate_property_map(own_props);
+                                    let proto_props = cx.generate_property_map(proto_props);
                                     structural_subtype(
                                         cx,
                                         env,
@@ -8439,8 +8462,8 @@ fn __flow_impl<'cx>(
                                         t,
                                         &super_t,
                                         (
-                                            cx.generate_property_map(own_props),
-                                            cx.generate_property_map(proto_props),
+                                            own_props,
+                                            proto_props,
                                             super_inst.inst.inst_call_t,
                                             super_inst.inst.inst_construct_t,
                                             &super_inst.inst.inst_dict,
@@ -9766,7 +9789,7 @@ fn __flow_impl<'cx>(
                 .props
                 .iter()
                 .partition(|(propref, _)| prop_missing_from_lookup_terminal(l, propref));
-            let relookup = |props: Rc<[(PropRef, Property)]>| -> Result<(), FlowJsException> {
+            let mut relookup = |props: Rc<[(PropRef, Property)]>| -> Result<(), FlowJsException> {
                 let Some((propref, _)) = props.first() else {
                     return Ok(());
                 };
@@ -10258,7 +10281,7 @@ fn __flow_impl<'cx>(
             let inst_call_t = inst_t.inst.inst_call_t;
             let inst_construct_t = inst_t.inst.inst_construct_t;
             let inst_dict = &inst_t.inst.inst_dict;
-            let check_structural_interface = |cx: &Context<'cx>, env: &FlowJsEnv| {
+            let check_structural_interface = |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                 if matches!(inst_kind, InstanceKind::InterfaceKind { .. })
                     && let TypeInner::DefT(_, def_t) = ext_l.deref()
                     && matches!(def_t.deref(), DefTInner::ObjT(_))
@@ -10981,7 +11004,10 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             default_resolve::default_resolve_touts(
-                &|l_inner, u_inner| rec_flow(cx, env, trace, (l_inner, u_inner)),
+                cx,
+                &|cx: &mut Context<'cx>, l_inner, u_inner| {
+                    rec_flow(cx, env, trace, (l_inner, u_inner))
+                },
                 None,
                 env,
                 reason_of_t(l).loc().dupe(),
@@ -11063,7 +11089,10 @@ fn __flow_impl<'cx>(
                 _ => None,
             };
             default_resolve::default_resolve_touts(
-                &|l_inner, u_inner| rec_flow(cx, env, trace, (l_inner, u_inner)),
+                cx,
+                &|cx: &mut Context<'cx>, l_inner, u_inner| {
+                    rec_flow(cx, env, trace, (l_inner, u_inner))
+                },
                 resolve_callee.as_ref(),
                 env,
                 reason_of_t(l).loc().dupe(),

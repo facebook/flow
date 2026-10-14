@@ -6,7 +6,6 @@
  */
 
 use std::cell::LazyCell;
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
@@ -45,10 +44,16 @@ use flow_type_sig::type_sig;
 use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_type_sig::type_sig_utils;
 use flow_typing_builtins::Builtins;
+use flow_typing_builtins::LazyModule;
+use flow_typing_builtins::LazyVal;
 use flow_typing_context::BuiltinsGroup;
 use flow_typing_context::Context;
+use flow_typing_context::ContextArena;
+use flow_typing_context::ContextId;
+use flow_typing_context::Cx;
 use flow_typing_context::MasterContext;
 use flow_typing_context::Metadata;
+use flow_typing_context::MkBuiltins;
 use flow_typing_context::ResolvedRequire;
 use flow_typing_errors::error_message::EComparisonData;
 use flow_typing_errors::error_message::EConstantConditionData;
@@ -99,6 +104,7 @@ use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::constraint::Constraints;
+use flow_typing_type::type_::constraint::forcing_state::ForcingState;
 use flow_typing_type::type_::drop_generic;
 use flow_typing_type::type_::eval;
 use flow_typing_type::type_::exports;
@@ -121,14 +127,18 @@ use flow_typing_visitors::type_visitor::TypeVisitor;
 use flow_utils_concurrency::job_error::JobError;
 use flow_utils_union_find::Node;
 
-fn force_lazy_tvars<'cx>(cx: &Context<'cx>) {
+fn force_lazy_tvars<'cx>(cx: &mut Context<'cx>) {
     cx.force_post_component_tvars();
 }
 
-fn detect_sketchy_null_checks<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
+fn detect_sketchy_null_checks<'cx>(cx: &mut Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
     exists_marker::mark(cx, tast);
 
-    let add_error = |loc: &ALoc, null_loc: &ALoc, kind: SketchyNullKind, falsy_loc: &ALoc| {
+    let add_error = |cx: &mut Context<'cx>,
+                     loc: &ALoc,
+                     null_loc: &ALoc,
+                     kind: SketchyNullKind,
+                     falsy_loc: &ALoc| {
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::ESketchyNullLint(Box::new(ESketchyNullLintData {
@@ -140,70 +150,72 @@ fn detect_sketchy_null_checks<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, 
         );
     };
 
-    let detect_function =
-        |exists_excuses: &ALocMap<ExistsCheck>, loc: &ALoc, exists_check: &ExistsCheck| {
-            let exists_excuse = exists_excuses
-                .get(loc)
-                .cloned()
-                .unwrap_or_else(ExistsCheck::empty);
+    let detect_function = |cx: &mut Context<'cx>,
+                           exists_excuses: &ALocMap<ExistsCheck>,
+                           loc: &ALoc,
+                           exists_check: &ExistsCheck| {
+        let exists_excuse = exists_excuses
+            .get(loc)
+            .cloned()
+            .unwrap_or_else(ExistsCheck::empty);
 
-            match &exists_check.null_loc {
-                None => {}
-                Some(null_loc) => {
-                    if exists_excuse.bool_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.bool_loc {
-                            add_error(loc, null_loc, SketchyNullKind::Bool, falsy_loc);
-                        }
+        match &exists_check.null_loc {
+            None => {}
+            Some(null_loc) => {
+                if exists_excuse.bool_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.bool_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::Bool, falsy_loc);
                     }
-                    if exists_excuse.number_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.number_loc {
-                            add_error(loc, null_loc, SketchyNullKind::Number, falsy_loc);
-                        }
+                }
+                if exists_excuse.number_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.number_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::Number, falsy_loc);
                     }
-                    if exists_excuse.bigint_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.bigint_loc {
-                            add_error(loc, null_loc, SketchyNullKind::BigInt, falsy_loc);
-                        }
+                }
+                if exists_excuse.bigint_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.bigint_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::BigInt, falsy_loc);
                     }
-                    if exists_excuse.string_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.string_loc {
-                            add_error(loc, null_loc, SketchyNullKind::String, falsy_loc);
-                        }
+                }
+                if exists_excuse.string_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.string_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::String, falsy_loc);
                     }
-                    if exists_excuse.mixed_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.mixed_loc {
-                            add_error(loc, null_loc, SketchyNullKind::Mixed, falsy_loc);
-                        }
+                }
+                if exists_excuse.mixed_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.mixed_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::Mixed, falsy_loc);
                     }
-                    if exists_excuse.enum_bool_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.enum_bool_loc {
-                            add_error(loc, null_loc, SketchyNullKind::EnumBool, falsy_loc);
-                        }
+                }
+                if exists_excuse.enum_bool_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.enum_bool_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::EnumBool, falsy_loc);
                     }
-                    if exists_excuse.enum_number_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.enum_number_loc {
-                            add_error(loc, null_loc, SketchyNullKind::EnumNumber, falsy_loc);
-                        }
+                }
+                if exists_excuse.enum_number_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.enum_number_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::EnumNumber, falsy_loc);
                     }
-                    if exists_excuse.enum_bigint_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.enum_bigint_loc {
-                            add_error(loc, null_loc, SketchyNullKind::EnumBigInt, falsy_loc);
-                        }
+                }
+                if exists_excuse.enum_bigint_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.enum_bigint_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::EnumBigInt, falsy_loc);
                     }
-                    if exists_excuse.enum_string_loc.is_none() {
-                        if let Some(ref falsy_loc) = exists_check.enum_string_loc {
-                            add_error(loc, null_loc, SketchyNullKind::EnumString, falsy_loc);
-                        }
+                }
+                if exists_excuse.enum_string_loc.is_none() {
+                    if let Some(ref falsy_loc) = exists_check.enum_string_loc {
+                        add_error(cx, loc, null_loc, SketchyNullKind::EnumString, falsy_loc);
                     }
                 }
             }
-        };
+        }
+    };
 
     let exists_checks = {
-        let checks = cx.exists_checks();
+        let checks = cx.exists_checks().clone();
         if !checks.is_empty() {
             fn make_checks<'cx>(
-                cx: &Context<'cx>,
+                cx: &mut Context<'cx>,
                 seen: &mut TvarSeenSet<i32>,
                 cur_checks: ALocMap<ExistsCheck>,
                 loc: &ALoc,
@@ -432,13 +444,13 @@ fn detect_sketchy_null_checks<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, 
         }
     };
 
-    let exists_excuses = cx.exists_excuses();
+    let exists_excuses = cx.exists_excuses().clone();
     for (loc, exists_check) in exists_checks.iter() {
-        detect_function(&exists_excuses, loc, exists_check);
+        detect_function(cx, &exists_excuses, loc, exists_check);
     }
 }
 
-fn detect_test_prop_misses<'cx>(cx: &Context<'cx>) {
+fn detect_test_prop_misses<'cx>(cx: &mut Context<'cx>) {
     let misses = cx.test_prop_get_never_hit();
     for (prop_name, (reason_prop, obj_t), use_op, suggestion) in misses.iter() {
         flow_js::add_output_non_speculating(
@@ -470,7 +482,7 @@ enum TruthynessResult {
     ConstCondUnconcretized,
 }
 
-fn try_eval_concrete_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> TruthynessResult {
+fn try_eval_concrete_type_truthyness<'cx>(cx: &mut Context<'cx>, t: &Type) -> TruthynessResult {
     match t.deref() {
         TypeInner::OpenT(_)
         | TypeInner::ImplicitInstantiationTvar(_)
@@ -605,7 +617,7 @@ fn try_eval_concrete_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> Truthy
 }
 
 fn try_eval_type_truthyness<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     t: &Type,
 ) -> Result<TruthynessResult, JobError> {
     let reason = reason_of_t(t);
@@ -679,7 +691,7 @@ fn condition_allowed() -> CheckConditionResult {
 }
 
 fn use_type_to_check_conditional<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     ttype: &Type,
 ) -> Result<CheckConditionResult, JobError> {
     // We always show warning for errors generated from type inferrence
@@ -711,7 +723,7 @@ fn use_type_to_check_conditional<'cx>(
 
 fn check_conditional<'cx>(
     should_report_error: bool,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     e: &ast::expression::Expression<ALoc, (ALoc, Type)>,
     cached_results: &mut ALocMap<CheckConditionResult>,
 ) -> Result<CheckConditionResult, JobError> {
@@ -911,7 +923,7 @@ fn check_conditional<'cx>(
     Ok(check_condition_result)
 }
 
-fn detect_constant_conditions<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
+fn detect_constant_conditions<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
     let all_conditions = cx.get_all_conditions();
     let mut all_condition_results: ALocMap<CheckConditionResult> = ALocMap::new();
     for condition in all_conditions.iter() {
@@ -970,7 +982,7 @@ struct StrictComparisonResult {
 }
 
 fn check_strict_comparison<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     all_strict_comparisons: &[(
         ALoc,
         (
@@ -1000,7 +1012,7 @@ fn check_strict_comparison<'cx>(
             let l_singleton_reason = reason_of_t(&left_conc_t);
             let r_singleton_reason = reason_of_t(&right_conc_t);
 
-            fn has_null_type<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+            fn has_null_type<'cx>(cx: &mut Context<'cx>, t: &Type) -> bool {
                 match type_filter::not_null(cx, t.dupe()) {
                     type_filter::FilterResult { changed: true, .. } => true,
                     _ => false,
@@ -1010,7 +1022,7 @@ fn check_strict_comparison<'cx>(
             // emptyT is a subtype of any type, so we don't need to check the AST node
             // of `left` or `right`.
             fn filter_maybe_and_check_is_subtyping<'cx>(
-                cx: &Context<'cx>,
+                cx: &mut Context<'cx>,
                 left: &Type,
                 right: &Type,
             ) -> Result<bool, JobError> {
@@ -1108,7 +1120,7 @@ fn check_strict_comparison<'cx>(
         .collect())
 }
 
-fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
+fn detect_invalid_strict_comparison<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
     let all_strict_comparisons = cx.get_all_strict_comparisons();
     let all_strict_comparisons: Vec<_> = all_strict_comparisons.iter().cloned().collect();
     for result in check_strict_comparison(cx, &all_strict_comparisons)? {
@@ -1125,7 +1137,7 @@ fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) -> Result<(), JobErr
     Ok(())
 }
 
-fn detect_unnecessary_optional_chains<'cx>(cx: &Context<'cx>) {
+fn detect_unnecessary_optional_chains<'cx>(cx: &mut Context<'cx>) {
     for (loc, lhs_expression) in cx.unnecessary_optional_chains().iter() {
         flow_js::add_output_non_speculating(
             cx,
@@ -1134,7 +1146,7 @@ fn detect_unnecessary_optional_chains<'cx>(cx: &Context<'cx>) {
     }
 }
 
-fn detect_unused_promises<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
+fn detect_unused_promises<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
     for (loc, t, async_) in cx.maybe_unused_promises().iter() {
         let t = tvar_resolver::resolved_t(
             |r| any_t::make(AnySource::Untyped, r.dupe()),
@@ -1157,7 +1169,7 @@ fn detect_unused_promises<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     Ok(())
 }
 
-fn enforce_optimize<'cx>(cx: &Context<'cx>, loc: &ALoc, t: &Type) -> Result<(), JobError> {
+fn enforce_optimize<'cx>(cx: &mut Context<'cx>, loc: &ALoc, t: &Type) -> Result<(), JobError> {
     let reason = flow_common::reason::mk_reason(
         VirtualReasonDesc::RTypeApp(Arc::new(VirtualReasonDesc::RType(FlowSmolStr::new_inline(
             "$Flow$EnforceOptimized",
@@ -1182,9 +1194,9 @@ fn enforce_optimize<'cx>(cx: &Context<'cx>, loc: &ALoc, t: &Type) -> Result<(), 
     flow_js::flow_t_non_speculating(cx, (&internal_t, t))
 }
 
-fn check_union_opt<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
+fn check_union_opt<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
     let mut result = Ok(());
-    cx.iter_union_opt(|loc, t| {
+    cx.iter_union_opt(|cx, loc, t| {
         if result.is_ok() {
             result = enforce_optimize(cx, loc, t);
         }
@@ -1193,7 +1205,7 @@ fn check_union_opt<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
 }
 
 fn detect_import_export_errors<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     file_sig: &FileSig,
     program: &ast::Program<ALoc, ALoc>,
     metadata: &Metadata,
@@ -1204,12 +1216,12 @@ fn detect_import_export_errors<'cx>(
     }
 }
 
-fn detect_non_voidable_properties<'cx>(cx: &Context<'cx>) {
+fn detect_non_voidable_properties<'cx>(cx: &mut Context<'cx>) {
     // This function approximately checks whether VoidT can flow to the provided
     // type without actually creating the flow so as not to disturb type inference.
     // Even though this is happening post-merge, it is possible to encounter an
     // unresolved tvar, in which case it conservatively returns false.
-    fn is_voidable<'cx>(cx: &Context<'cx>, seen_ids: &mut TvarSeenSet<i32>, t: &Type) -> bool {
+    fn is_voidable<'cx>(cx: &mut Context<'cx>, seen_ids: &mut TvarSeenSet<i32>, t: &Type) -> bool {
         match t.deref() {
             TypeInner::OpenT(tvar) => {
                 let id = tvar.id() as i32;
@@ -1247,7 +1259,7 @@ fn detect_non_voidable_properties<'cx>(cx: &Context<'cx>) {
     }
 
     fn check_properties<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         property_map_id: properties::Id,
         errors: &BTreeMap<FlowSmolStr, Vec<property_assignment::Error<ALoc>>>,
     ) {
@@ -1273,7 +1285,7 @@ fn detect_non_voidable_properties<'cx>(cx: &Context<'cx>) {
         }
     }
 
-    for check in cx.voidable_checks().iter() {
+    for check in cx.voidable_checks().clone().iter() {
         check_properties(
             cx,
             check.public_property_map.dupe(),
@@ -1287,8 +1299,8 @@ fn detect_non_voidable_properties<'cx>(cx: &Context<'cx>) {
     }
 }
 
-fn check_polarity_fn<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
-    for (tparams, polarity, t) in cx.post_inference_polarity_checks().iter() {
+fn check_polarity_fn<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
+    for (tparams, polarity, t) in cx.post_inference_polarity_checks().clone().iter() {
         flow_js_utils::flow_js_result_to_job_error(check_polarity::check_polarity(
             cx, tparams, *polarity, t,
         ))?;
@@ -1296,17 +1308,17 @@ fn check_polarity_fn<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     Ok(())
 }
 
-fn check_general_post_inference_validations<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
-    for (t, use_t) in cx.post_inference_validation_flows().iter() {
+fn check_general_post_inference_validations<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
+    for (t, use_t) in cx.take_post_inference_validation_flows().iter() {
         flow_js::flow_non_speculating(cx, (t, use_t))?
     }
-    for f in cx.post_inference_validation_callbacks().iter() {
+    for f in cx.take_post_inference_validation_callbacks().iter() {
         f(cx)?
     }
     Ok(())
 }
 
-fn check_interface_merge_conflicts<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
+fn check_interface_merge_conflicts<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
     for (use_op, tparam_subst_map, bad_t, good_t) in cx.interface_merge_unify_tasks().iter() {
         let bad_t = type_subst::subst(
             cx,
@@ -1323,27 +1335,29 @@ fn check_interface_merge_conflicts<'cx>(cx: &Context<'cx>) -> Result<(), JobErro
 }
 
 fn check_react_rules_fn<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Result<(), JobError> {
     react_rules::check_react_rules(cx, tast)
 }
 
 fn check_multiplatform_conformance<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     ast: &ast::Program<ALoc, ALoc>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Result<(), JobError> {
     let prog_aloc = &ast.loc;
-    let filename = cx.file();
+    let filename = cx.file().dupe();
     let file_options = cx.file_options();
     let file_loc = ALoc::of_loc(Loc {
         source: Some(filename.dupe()),
         start: flow_parser::loc::Position { line: 0, column: 0 },
         end: flow_parser::loc::Position { line: 0, column: 0 },
     });
-    match files::relative_interface_mref_of_possibly_platform_specific_file(&file_options, filename)
-    {
+    match files::relative_interface_mref_of_possibly_platform_specific_file(
+        &file_options,
+        &filename,
+    ) {
         Some(imported_interface_module_name) => {
             let specifier =
                 FlowImportSpecifier::userland(FlowSmolStr::new(&imported_interface_module_name));
@@ -1354,7 +1368,8 @@ fn check_multiplatform_conformance<'cx>(
                 | ResolvedRequire::GlobalLibdefModule(_)
                 | ResolvedRequire::UncheckedModule(_) => {}
                 ResolvedRequire::TypedModule(interface_module_f) => {
-                    let get_exports_t = |is_common_interface_module: bool,
+                    let get_exports_t = |cx: &mut Context<'cx>,
+                                         is_common_interface_module: bool,
                                          reason: Reason,
                                          m_opt: Option<&ModuleType>|
                      -> Type {
@@ -1392,12 +1407,14 @@ fn check_multiplatform_conformance<'cx>(
                             VirtualReasonDesc::RCommonInterface,
                             prog_aloc.dupe(),
                         );
-                        let m_result = interface_module_f(cx, cx);
-                        get_exports_t(true, reason, m_result.ok().as_ref())
+                        let dst_cx = cx.id();
+                        let m_result = interface_module_f(cx, dst_cx);
+                        get_exports_t(cx, true, reason, m_result.ok().as_ref())
                     };
                     let (self_sig_loc, self_module_type) =
                         module_info_analyzer::analyze_program(cx, tast)?;
                     let self_t = get_exports_t(
+                        cx,
                         false,
                         self_module_type.module_reason.dupe(),
                         Some(&self_module_type),
@@ -1428,14 +1445,14 @@ fn check_multiplatform_conformance<'cx>(
             match platform_set::platform_specific_implementation_mrefs_of_possibly_interface_file(
                 &file_options,
                 cx.available_platforms(),
-                filename,
+                &filename,
             ) {
                 None => {}
                 Some((
                     unconditional_extensions,
                     grouped_extensions_with_conditional_extensions,
                 )) => {
-                    let module_exists = |mref: &str| -> bool {
+                    let module_exists = |cx: &mut Context<'cx>, mref: &str| -> bool {
                         match cx
                             .find_require(&FlowImportSpecifier::userland(FlowSmolStr::new(mref)))
                         {
@@ -1446,11 +1463,13 @@ fn check_multiplatform_conformance<'cx>(
                         }
                     };
                     if !cx.has_explicit_supports_platform()
-                        && unconditional_extensions.iter().all(|m| !module_exists(m))
+                        && unconditional_extensions
+                            .iter()
+                            .all(|m| !module_exists(cx, m))
                         && grouped_extensions_with_conditional_extensions.iter().all(
                             |(grouped, conditional)| {
-                                !module_exists(grouped)
-                                    && conditional.iter().all(|m| !module_exists(m))
+                                !module_exists(cx, grouped)
+                                    && conditional.iter().all(|m| !module_exists(cx, m))
                             },
                         )
                     {
@@ -1458,7 +1477,7 @@ fn check_multiplatform_conformance<'cx>(
                         // The .js.flow file might be declaring a builtin module.
                     } else {
                         for name in &unconditional_extensions {
-                            if !module_exists(name) {
+                            if !module_exists(cx, name) {
                                 flow_js_utils::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed(
@@ -1475,9 +1494,9 @@ fn check_multiplatform_conformance<'cx>(
                         for (grouped, conditional) in
                             &grouped_extensions_with_conditional_extensions
                         {
-                            if !module_exists(grouped) {
+                            if !module_exists(cx, grouped) {
                                 for name in conditional {
-                                    if !module_exists(name) {
+                                    if !module_exists(cx, name) {
                                         flow_js_utils::add_output_non_speculating(
                                             cx,
                                             ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed(Box::new(EPlatformSpecificImplementationModuleLookupFailedData {
@@ -1496,11 +1515,16 @@ fn check_multiplatform_conformance<'cx>(
     Ok(())
 }
 
-fn check_spread_prop_keys<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
+fn check_spread_prop_keys<'cx>(cx: &mut Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
     if !cx.ban_spread_key_props() {
         return;
     }
-    fn find_key_prop<'cx>(cx: &Context<'cx>, seen: &mut TvarSeenSet<i32>, spread: &ALoc, t: &Type) {
+    fn find_key_prop<'cx>(
+        cx: &mut Context<'cx>,
+        seen: &mut TvarSeenSet<i32>,
+        spread: &ALoc,
+        t: &Type,
+    ) {
         match t.deref() {
             TypeInner::OpenT(tvar) if seen.contains(&(tvar.id() as i32)) => {}
             TypeInner::OpenT(tvar) => {
@@ -1546,7 +1570,7 @@ fn check_spread_prop_keys<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALo
         }
     }
     struct SpreadPropKeyChecker<'a, 'cx> {
-        cx: &'a Context<'cx>,
+        cx: &'a mut Context<'cx>,
     }
     impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
         for SpreadPropKeyChecker<'_, '_>
@@ -1571,14 +1595,14 @@ fn check_spread_prop_keys<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALo
 }
 
 fn check_match_exhaustiveness<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Result<(), JobError> {
     if !cx.enable_pattern_matching() {
         return Ok(());
     }
     struct MatchExhaustivenessChecker<'a, 'cx> {
-        cx: &'a Context<'cx>,
+        cx: &'a mut Context<'cx>,
     }
     impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
         for MatchExhaustivenessChecker<'_, '_>
@@ -1604,7 +1628,7 @@ fn check_match_exhaustiveness<'cx>(
                 .collect();
             exhaustive::analyze(
                 self.cx,
-                &|loc| flow_typing_utils::type_env::is_global_var(self.cx, loc),
+                &|cx, loc| flow_typing_utils::type_env::is_global_var(cx, loc),
                 match_loc.dupe(),
                 &patterns,
                 arg_t,
@@ -1616,9 +1640,9 @@ fn check_match_exhaustiveness<'cx>(
     checker.program(tast)
 }
 
-fn emit_refinement_information_as_errors<'cx>(cx: &Context<'cx>) {
-    fn emit_refined_locations_info<'cx>(cx: &Context<'cx>) {
-        for (refined_loc, refining_locs) in cx.refined_locations().iter() {
+fn emit_refinement_information_as_errors<'cx>(cx: &mut Context<'cx>) {
+    fn emit_refined_locations_info<'cx>(cx: &mut Context<'cx>) {
+        for (refined_loc, refining_locs) in cx.refined_locations().clone().iter() {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EDevOnlyRefinedLocInfo(Box::new(EDevOnlyRefinedLocInfoData {
@@ -1628,8 +1652,9 @@ fn emit_refinement_information_as_errors<'cx>(cx: &Context<'cx>) {
             );
         }
     }
-    fn emit_invalidated_locations_info<'cx>(cx: &Context<'cx>) {
-        for (read_loc, invalidation_info) in cx.aggressively_invalidated_locations().iter() {
+    fn emit_invalidated_locations_info<'cx>(cx: &mut Context<'cx>) {
+        for (read_loc, invalidation_info) in cx.aggressively_invalidated_locations().clone().iter()
+        {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EDevOnlyInvalidatedRefinementInfo(Box::new(
@@ -1651,14 +1676,14 @@ fn emit_refinement_information_as_errors<'cx>(cx: &Context<'cx>) {
 }
 
 fn check_assert_operator<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Result<(), JobError> {
     if !cx.assert_operator_enabled() {
         return Ok(());
     }
     fn check_specialized_assert_operator<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         op_reason: &Reason,
         expr: &ast::expression::Expression<ALoc, (ALoc, Type)>,
     ) {
@@ -1737,7 +1762,7 @@ fn check_assert_operator<'cx>(
         }
     }
     fn check_assert_operator_useful<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         op_reason: &Reason,
         expr: &ast::expression::Expression<ALoc, (ALoc, Type)>,
     ) -> Result<(), JobError> {
@@ -1771,7 +1796,7 @@ fn check_assert_operator<'cx>(
         Ok(())
     }
     fn check<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         op_reason: &Reason,
         expr: &ast::expression::Expression<ALoc, (ALoc, Type)>,
     ) -> Result<(), JobError> {
@@ -1783,7 +1808,7 @@ fn check_assert_operator<'cx>(
     }
 
     struct AssertOperatorChecker<'a, 'cx> {
-        cx: &'a Context<'cx>,
+        cx: &'a mut Context<'cx>,
     }
     impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
         for AssertOperatorChecker<'_, '_>
@@ -1831,7 +1856,7 @@ fn check_assert_operator<'cx>(
 }
 
 fn convert_type_to_type_desc_in_errors<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) {
@@ -1847,20 +1872,19 @@ fn convert_type_to_type_desc_in_errors<'cx>(
             max_type_size: Some(ERROR_NORMALIZATION_MAX_SIZE),
             ..flow_typing_ty_normalizer::env::Options::default()
         },
-        cx,
         Some(typed_ast),
         file_sig,
     );
     type TypeOrTypeDesc = type_or_type_desc::TypeOrTypeDescT<ALoc>;
-    let convert = |tod: TypeOrTypeDesc| -> TypeOrTypeDesc {
+    let mut convert = |tod: TypeOrTypeDesc| -> TypeOrTypeDesc {
         match tod {
             TypeOrTypeDesc::Type(t) => TypeOrTypeDesc::TypeDesc(
-                flow_typing_ty_normalizer::no_flow::type_to_desc_for_errors(&genv, &t),
+                flow_typing_ty_normalizer::no_flow::type_to_desc_for_errors(cx, &genv, &t),
             ),
             TypeOrTypeDesc::TypeDesc(d) => TypeOrTypeDesc::TypeDesc(d),
         }
     };
-    let converted = errors.map(|err| FlowError::convert_type_to_type_desc(&convert, err));
+    let converted = errors.map(|err| FlowError::convert_type_to_type_desc(&mut convert, err));
     cx.reset_errors(converted);
 }
 
@@ -1887,7 +1911,7 @@ pub fn get_lint_severities(
 // which require complete knowledge of tvar bounds.
 
 pub fn post_merge_checks<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     file_sig: Arc<FileSig>,
     ast: &ast::Program<ALoc, ALoc>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -1939,146 +1963,159 @@ pub fn post_merge_checks<'cx>(
 // Crucially, this copying process is shallow. We only copy what is necessary to
 // interpret a given type.
 
-struct CopierVisitor<'b, 'a> {
-    src_cx: &'b Context<'a>,
-    dst_cx: &'b Context<'a>,
+// The visitor walks the type with the context switched to `src`, and switches to `dst` to copy
+// into it.
+struct CopierVisitor {
+    src: ContextId,
+    dst: ContextId,
 }
 
-impl<'b, 'a> CopierVisitor<'b, 'a> {
-    fn new(src_cx: &'b Context<'a>, dst_cx: &'b Context<'a>) -> Self {
-        CopierVisitor { src_cx, dst_cx }
+impl CopierVisitor {
+    fn new(src: ContextId, dst: ContextId) -> Self {
+        CopierVisitor { src, dst }
     }
 }
 
-impl<'b, 'a> type_visitor::TypeVisitor<()> for CopierVisitor<'b, 'a> {
+impl type_visitor::TypeVisitor<()> for CopierVisitor {
     // Copying a tvar produces a FullyResolved tvar in the dst cx, which
     // contains an unevaluated thunk. The laziness here makes the copying
     // shallow. Note that the visitor stops at root tvars here and only resumes
     // if the thunk is forced.
-    fn tvar<'cx>(&mut self, _cx: &Context<'cx>, pole: Polarity, _acc: (), _r: &Reason, id: u32) {
+    fn tvar<'cx>(&mut self, cx: &mut Context<'cx>, pole: Polarity, _acc: (), _r: &Reason, id: u32) {
         let id = id as i32;
-        let src_cx = self.src_cx;
-        let dst_cx = self.dst_cx;
-        if dst_cx.graph().borrow().get(&id).is_some() {
+        if cx.switch_to(self.dst).graph().get(&id).is_some() {
             return;
         }
-        let (root_id, constraints) = src_cx.find_constraints(id);
+        let (root_id, constraints) = cx.find_constraints(id);
         if id == root_id {
             let state = match constraints {
                 Constraints::Unresolved(_) | Constraints::Resolved(_) => {
                     panic!("unexpected unresolved constraint")
                 }
-                Constraints::FullyResolved(s) => s.copy(
-                    src_cx,
-                    move |src_cx, r| src_cx.on_cyclic_tvar_error(r.dupe()),
-                    move |src_cx, dst_cx, t| {
-                        let mut visitor = CopierVisitor::new(src_cx, dst_cx);
-                        visitor.type_(dst_cx, pole, (), t);
-                    },
-                ),
+                Constraints::FullyResolved(s) => {
+                    let src = self.src;
+                    s.copy(
+                        move |dst_cx: &mut Context<'_>, src_state: &ForcingState<Cx>| {
+                            let dst = dst_cx.id();
+                            let mut src_cx = dst_cx.switch_to(src);
+                            let t = src_state.force(&mut src_cx, |src_cx, r| {
+                                src_cx.on_cyclic_tvar_error(r.dupe())
+                            });
+                            CopierVisitor::new(src, dst).type_(&mut src_cx, pole, (), &t);
+                            t
+                        },
+                    )
+                }
             };
-            dst_cx
-                .graph()
-                .borrow_mut()
+            cx.switch_to(self.dst)
+                .graph_mut()
                 .insert_fresh(id, Node::create_root(Constraints::FullyResolved(state)));
         } else {
-            dst_cx
-                .graph()
-                .borrow_mut()
+            cx.switch_to(self.dst)
+                .graph_mut()
                 .insert_fresh(id, Node::create_goto(root_id));
-            self.tvar(_cx, pole, (), _r, root_id as u32);
+            self.tvar(cx, pole, (), _r, root_id as u32);
         }
     }
 
-    fn props<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, _acc: (), id: properties::Id) {
-        let dst_cx = self.dst_cx;
-        if dst_cx.has_property_map(&id) {
+    fn props<'cx>(&mut self, cx: &mut Context<'cx>, pole: Polarity, _acc: (), id: properties::Id) {
+        if cx.switch_to(self.dst).has_property_map(&id) {
             return;
         }
-        let props = self.src_cx.find_props(id.dupe());
-        dst_cx.add_property_map(id.dupe(), props.dupe());
+        let props = cx.find_props(id.dupe());
+        cx.switch_to(self.dst).add_property_map(id.dupe(), props);
         type_visitor::props_default(self, cx, pole, (), id);
     }
 
-    fn call_prop<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, _acc: (), id: i32) {
-        let dst_cx = self.dst_cx;
-        if dst_cx.has_call_prop(&id) {
+    fn call_prop<'cx>(&mut self, cx: &mut Context<'cx>, pole: Polarity, _acc: (), id: i32) {
+        if cx.switch_to(self.dst).has_call_prop(&id) {
             return;
         }
-        let t = self.src_cx.find_call(id);
-        dst_cx.add_call_prop(id, t.dupe());
+        let t = cx.find_call(id);
+        cx.switch_to(self.dst).add_call_prop(id, t);
         type_visitor::call_prop_default(self, cx, pole, (), id);
     }
 
-    fn exports<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, _acc: (), id: exports::Id) {
-        let dst_cx = self.dst_cx;
-        if dst_cx.has_export_map(&id) {
+    fn exports<'cx>(&mut self, cx: &mut Context<'cx>, pole: Polarity, _acc: (), id: exports::Id) {
+        if cx.switch_to(self.dst).has_export_map(&id) {
             return;
         }
-        let map = self.src_cx.find_exports(id);
-        dst_cx.add_export_map(id.dupe(), map.dupe());
+        let map = cx.find_exports(id.dupe());
+        cx.switch_to(self.dst).add_export_map(id.dupe(), map);
         type_visitor::exports_default(self, cx, pole, (), id);
     }
 
-    fn eval_id<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, _acc: (), id: eval::Id) {
-        let src_cx = self.src_cx;
-        let dst_cx = self.dst_cx;
-        match src_cx.evaluated().get(&id).duped() {
+    fn eval_id<'cx>(&mut self, cx: &mut Context<'cx>, pole: Polarity, _acc: (), id: eval::Id) {
+        match cx.evaluated().get(&id).duped() {
             None => {}
             Some(t) => {
-                if dst_cx.evaluated().contains_key(&id) {
-                    return;
+                {
+                    let mut dst_cx = cx.switch_to(self.dst);
+                    if dst_cx.evaluated().contains_key(&id) {
+                        return;
+                    }
+                    let mut evaluated = dst_cx.evaluated();
+                    evaluated.insert(id.dupe(), t);
+                    dst_cx.set_evaluated(evaluated);
                 }
-                let mut evaluated = dst_cx.evaluated();
-                evaluated.insert(id.dupe(), t.dupe());
-                dst_cx.set_evaluated(evaluated);
                 type_visitor::eval_id_default(self, cx, pole, (), id);
             }
         }
     }
 }
 
+/// `dst_cx` is the context the module is copied into, and `src` the one `f` computes it in.
 pub fn copy_into<'cx>(
-    src_cx: &Context<'cx>,
-    dst_cx: &Context<'cx>,
-    f: &dyn Fn(&Context<'cx>, &Context<'cx>) -> Result<ModuleType, Type>,
+    dst_cx: &mut Context<'cx>,
+    src: ContextId,
+    f: &dyn Fn(&mut Context<'cx>, ContextId) -> Result<ModuleType, Type>,
 ) -> Result<ModuleType, Type> {
+    let dst = dst_cx.id();
     // Chain the merge destination context: if dst_cx already has a
     // merge_dst_cx set (from an outer copy_into), use that as the ultimate
     // destination for error reporting. Otherwise use dst_cx itself.
     // This chaining preserves the original importing file's context through
     // nested star exports.
-    let effective_dst = dst_cx.merge_dst_cx().unwrap_or_else(|| dst_cx.dupe());
-    src_cx.set_merge_dst_cx(&effective_dst);
+    let effective_dst = dst_cx.merge_dst_cx().unwrap_or(dst);
+    let mut src_cx = dst_cx.switch_to(src);
+    src_cx.set_merge_dst_cx(effective_dst);
     // Pass effective_dst to f for error reporting. CopierVisitor below still
     // uses dst_cx for type copying (the immediate destination context).
-    let m = f(src_cx, &effective_dst);
+    let m = f(&mut src_cx, effective_dst);
     // Note: we do NOT clear merge_dst_cx after copy_into. Lazy closures
     // created during f() may be forced later (during the check phase) and
     // still need merge_dst_cx to route errors to the correct destination.
+    let mut copier = CopierVisitor::new(src, dst);
     match m {
         Ok(m) => {
-            let mut copier = CopierVisitor::new(src_cx, dst_cx);
-            copier.export_types(src_cx, Polarity::Positive, (), &m.module_export_types);
+            copier.export_types(&mut src_cx, Polarity::Positive, (), &m.module_export_types);
             Ok(m)
         }
-        Err(e) => Err(copied(dst_cx, src_cx, &e)),
+        Err(e) => {
+            copier.type_(&mut src_cx, Polarity::Positive, (), &e);
+            Err(e)
+        }
     }
 }
 
-pub fn copied<'cx>(dst_cx: &Context<'cx>, src_cx: &Context<'cx>, t: &Type) -> Type {
-    let mut copier = CopierVisitor::new(src_cx, dst_cx);
-    copier.type_(src_cx, Polarity::Positive, (), t);
+pub fn copied<'cx>(dst_cx: &mut Context<'cx>, src: ContextId, t: &Type) -> Type {
+    let mut copier = CopierVisitor::new(src, dst_cx.id());
+    copier.type_(&mut dst_cx.switch_to(src), Polarity::Positive, (), t);
     t.dupe()
 }
 
 pub fn module_type_copied<'cx>(
-    dst_cx: &Context<'cx>,
-    src_cx: &Context<'cx>,
+    dst_cx: &mut Context<'cx>,
+    src: ContextId,
     m: &ModuleType,
 ) -> ModuleType {
-    let mut copier = CopierVisitor::new(src_cx, dst_cx);
-    copier.export_types(src_cx, Polarity::Positive, (), &m.module_export_types);
+    let mut copier = CopierVisitor::new(src, dst_cx.id());
+    copier.export_types(
+        &mut dst_cx.switch_to(src),
+        Polarity::Positive,
+        (),
+        &m.module_export_types,
+    );
     m.dupe()
 }
 
@@ -2184,74 +2221,76 @@ pub fn merge_lib_files(
     }
 }
 
-pub fn mk_builtins<'cx>(
+/// Merges the builtins into a context of `arena`. Contexts made with the returned function read
+/// the builtins from that context, so they must belong to a store that contains `arena`.
+pub fn mk_builtins(
     metadata: &Metadata,
     master_cx: &MasterContext,
-) -> Rc<dyn Fn(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx> {
+    arena: &mut ContextArena,
+) -> MkBuiltins {
     match master_cx {
-        MasterContext::EmptyMasterContext => Rc::new(|_| Builtins::empty()),
+        MasterContext::EmptyMasterContext => Rc::new(|_cx: &mut Context<'_>| Builtins::empty()),
         MasterContext::NonEmptyMasterContext {
             builtin_leader_file_key,
             all_unordered_libs,
             global_libdefs: _,
             builtins,
         } => {
-            let builtin_leader_file_key = builtin_leader_file_key.dupe();
-            let all_unordered_libs = all_unordered_libs.dupe();
-            let metadata = metadata.clone();
-            let builtins = builtins.clone();
-            let builtins_ref: Rc<RefCell<Builtins<'cx, Context<'cx>>>> =
-                Rc::new(RefCell::new(Builtins::empty()));
-            let builtins_ref_clone = builtins_ref.dupe();
-            let cx = Context::make(
-                Rc::new(flow_typing_context::make_ccx()),
-                {
-                    let mut m = metadata;
-                    m.overridable.checked = false;
-                    m
-                },
-                builtin_leader_file_key.dupe(),
-                all_unordered_libs,
-                {
-                    let builtin_leader_file_key = builtin_leader_file_key.dupe();
-                    Rc::new(LazyCell::new(Box::new(move || {
-                        Rc::new(ALocTable::empty(builtin_leader_file_key))
-                    })
-                        as Box<dyn FnOnce() -> Rc<ALocTable>>))
-                },
-                Rc::new(move |_cx: &Context, _| ResolvedRequire::MissingModule),
-                Rc::new(move |_cx: &Context| -> Builtins<'_, Context<'_>> {
-                    builtins_ref_clone.replace(Builtins::empty())
-                }),
-                flow_utils_concurrency::check_budget::CheckBudget::new(None),
-            );
             let (values, types, modules) = type_sig_merge::merge_builtins(
-                &cx,
-                builtin_leader_file_key,
-                builtins.builtin_locs,
-                builtins.builtins,
+                arena,
+                builtin_leader_file_key.dupe(),
+                builtins.builtin_locs.dupe(),
+                builtins.builtins.dupe(),
             );
             let values: FlowOrdMap<_, _> = values.into_iter().collect();
             let types: FlowOrdMap<_, _> = types.into_iter().collect();
             let modules: FlowOrdMap<_, _> = modules.into_iter().collect();
-            let original_builtins = Builtins::of_name_map(
-                Rc::new(|_src_cx: &Context, _dst_cx: &Context, t: Type| t),
-                Rc::new(|_src_cx: &Context, _dst_cx: &Context, m: &ModuleType| m.dupe()),
-                values.dupe(),
-                types.dupe(),
-                modules.dupe(),
-            );
-            *builtins_ref.borrow_mut() = original_builtins;
-            let source_cx = cx.dupe();
-            Rc::new(move |_dst_cx: &Context| {
-                Builtins::of_name_map_with_source_cx(
-                    source_cx.dupe(),
-                    Rc::new(move |src_cx: &Context, dst_cx: &Context, t: Type| {
-                        copied(dst_cx, src_cx, &t)
+            let source_cx = {
+                let values = values.dupe();
+                let types = types.dupe();
+                let modules = modules.dupe();
+                let ccx = arena.add_component();
+                arena.add_context(
+                    ccx,
+                    {
+                        let mut m = metadata.clone();
+                        m.overridable.checked = false;
+                        m
+                    },
+                    builtin_leader_file_key.dupe(),
+                    all_unordered_libs.dupe(),
+                    {
+                        let builtin_leader_file_key = builtin_leader_file_key.dupe();
+                        Rc::new(LazyCell::new(Box::new(move || {
+                            Rc::new(ALocTable::empty(builtin_leader_file_key))
+                        })
+                            as Box<dyn FnOnce() -> Rc<ALocTable>>))
+                    },
+                    Rc::new(|_cx: &mut Context<'_>, _: &FlowImportSpecifier| {
+                        ResolvedRequire::MissingModule
                     }),
-                    Rc::new(move |src_cx: &Context, dst_cx: &Context, m: &ModuleType| {
-                        module_type_copied(dst_cx, src_cx, m)
+                    Rc::new(move |_cx: &mut Context<'_>| {
+                        Builtins::of_name_map(values.dupe(), types.dupe(), modules.dupe())
                     }),
+                    flow_utils_concurrency::check_budget::CheckBudget::new(None),
+                )
+            };
+            Rc::new(move |_dst_cx: &mut Context<'_>| {
+                Builtins::of_name_map_with_readers(
+                    Rc::new(move |dst_cx: &mut Context<'_>, lazy_val: &LazyVal<Cx>| {
+                        let (loc, t) = lazy_val.get_forced(&mut dst_cx.switch_to(source_cx));
+                        (loc.dupe(), copied(dst_cx, source_cx, t))
+                    }),
+                    Rc::new(
+                        move |dst_cx: &mut Context<'_>, lazy_module: &LazyModule<Cx>| {
+                            let (r, m) = {
+                                let mut src_cx = dst_cx.switch_to(source_cx);
+                                let (r, lazy_module_type) = lazy_module.get_forced(&mut src_cx);
+                                (r.dupe(), lazy_module_type.get_forced(&mut src_cx).dupe())
+                            };
+                            (r, module_type_copied(dst_cx, source_cx, &m))
+                        },
+                    ),
                     values.dupe(),
                     types.dupe(),
                     modules.dupe(),

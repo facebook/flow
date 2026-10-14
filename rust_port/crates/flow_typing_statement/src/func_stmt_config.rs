@@ -82,7 +82,7 @@ pub fn is_rest_type_annotated(rest: &Rest) -> bool {
 }
 
 pub fn subst_param<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     map: &FlowOrdMap<SubstName, Type>,
     param: &Param,
 ) -> Param {
@@ -97,7 +97,11 @@ pub fn subst_param<'a>(
     }
 }
 
-pub fn subst_rest<'a>(cx: &Context<'a>, map: &FlowOrdMap<SubstName, Type>, rest: &Rest) -> Rest {
+pub fn subst_rest<'a>(
+    cx: &mut Context<'a>,
+    map: &FlowOrdMap<SubstName, Type>,
+    rest: &Rest,
+) -> Rest {
     let t = flow_js::subst(cx, None, None, None, map, rest.t.dupe());
     Rest {
         t,
@@ -109,7 +113,7 @@ pub fn subst_rest<'a>(cx: &Context<'a>, map: &FlowOrdMap<SubstName, Type>, rest:
 }
 
 pub fn subst_this<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     map: &FlowOrdMap<SubstName, Type>,
     this: &ThisParam,
 ) -> ThisParam {
@@ -122,7 +126,7 @@ pub fn subst_this<'a>(
 }
 
 fn destruct<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     use_op: &UseOp,
     name_loc: ALoc,
     name: &str,
@@ -144,7 +148,7 @@ fn destruct<'a>(
 }
 
 fn flow_default<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     annot_t: &Type,
     default_t: &Type,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
@@ -163,7 +167,7 @@ fn flow_default<'a>(
 }
 
 fn eval_default<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     always_flow_default: bool,
     annot_t: &Type,
     has_anno: bool,
@@ -189,7 +193,7 @@ fn eval_default<'a>(
 }
 
 pub fn eval_param<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     param: &Param,
 ) -> Result<flow_typing_loc_env::func_stmt_config_types::ParamAst<(ALoc, Type)>, CheckExprError> {
     let Param {
@@ -226,7 +230,7 @@ pub fn eval_param<'a>(
             let mut init = destructuring::empty(None, None);
             let properties = destructuring::object_properties(
                 cx,
-                &|use_op, name_loc, name, default, t| {
+                &|cx, use_op, name_loc, name, default, t| {
                     destruct(cx, use_op, name_loc, name, default, t)
                 },
                 ploc.dupe(),
@@ -258,7 +262,7 @@ pub fn eval_param<'a>(
             let mut init = destructuring::empty(None, None);
             let elements = destructuring::array_elements(
                 cx,
-                &|use_op, name_loc, name, default, t| {
+                &|cx, use_op, name_loc, name, default, t| {
                     destruct(cx, use_op, name_loc, name, default, t)
                 },
                 &mut init,
@@ -287,7 +291,7 @@ pub fn eval_param<'a>(
 }
 
 pub fn eval_rest<'a>(
-    cx: &Context<'a>,
+    cx: &mut Context<'a>,
     rest: &Rest,
 ) -> flow_typing_loc_env::func_stmt_config_types::RestAst<(ALoc, Type)> {
     let Rest {
@@ -312,7 +316,7 @@ pub fn eval_rest<'a>(
 }
 
 pub fn eval_this<'a>(
-    _cx: &Context<'a>,
+    _cx: &mut Context<'a>,
     this: &ThisParam,
 ) -> flow_typing_loc_env::func_stmt_config_types::ThisAst<(ALoc, Type)> {
     ast::function::ThisParam {

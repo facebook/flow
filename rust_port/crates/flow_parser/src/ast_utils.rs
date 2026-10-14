@@ -1336,7 +1336,7 @@ impl<M: Dupe + Clone + std::hash::Hash + Eq + Ord, T: Dupe> NonnullReconstruct<M
     pub fn call<T2: Dupe + Clone + std::hash::Hash + Eq + Ord>(
         self,
         argument: expression::Expression<M, T2>,
-        filter_nullish: &dyn Fn(T) -> T2,
+        filter_nullish: &mut dyn FnMut(T) -> T2,
     ) -> expression::Expression<M, T2> {
         match self.0 {
             NonnullReconstructInner::Identity => argument,

@@ -86,8 +86,8 @@ pub fn unchanged_result(type_: Type) -> FilterResult {
 }
 
 fn recurse_into_union<'cx>(
-    cx: &Context<'cx>,
-    filter_fn: &dyn Fn(&Context<'cx>, Type) -> FilterResult,
+    cx: &mut Context<'cx>,
+    filter_fn: &dyn Fn(&mut Context<'cx>, Type) -> FilterResult,
     r: Reason,
     ts: Vec<Type>,
 ) -> FilterResult {
@@ -141,14 +141,14 @@ fn recurse_into_union<'cx>(
 }
 
 fn recurse_into_intersection<'cx>(
-    cx: &Context<'cx>,
-    filter_fn: &dyn Fn(Type) -> FilterResult,
+    cx: &mut Context<'cx>,
+    filter_fn: &dyn Fn(&mut Context<'cx>, Type) -> FilterResult,
     r: Reason,
     ts: Vec<Type>,
 ) -> FilterResult {
     fn helper<'cx>(
-        cx: &Context<'cx>,
-        filter_fn: &dyn Fn(Type) -> FilterResult,
+        cx: &mut Context<'cx>,
+        filter_fn: &dyn Fn(&mut Context<'cx>, Type) -> FilterResult,
         _r: &Reason,
         mut t_acc: Vec<Type>,
         mut changed_acc: bool,
@@ -170,7 +170,7 @@ fn recurse_into_intersection<'cx>(
             }
             _ => t,
         };
-        let FilterResult { type_, changed } = filter_fn(t);
+        let FilterResult { type_, changed } = filter_fn(cx, t);
         match type_.deref() {
             TypeInner::DefT(_, d) if matches!(&**d, DefTInner::EmptyT) => {
                 (Vec::new(), changed_acc || changed)
@@ -210,7 +210,7 @@ fn recurse_into_intersection<'cx>(
 }
 
 fn filter_opaque(
-    filter_fn: &dyn Fn(Type) -> FilterResult,
+    filter_fn: &mut dyn FnMut(Type) -> FilterResult,
     reason: Reason,
     nominal_type: &NominalType,
 ) -> FilterResult {
@@ -288,7 +288,7 @@ fn filter_opaque(
     }
 }
 
-fn map_poly(f: &dyn Fn(Type) -> FilterResult, t: Type) -> FilterResult {
+fn map_poly(f: &mut dyn FnMut(Type) -> FilterResult, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::DefT(r, d) => match d.deref() {
             DefTInner::PolyT(box PolyTData {
@@ -333,7 +333,7 @@ pub fn empty(t: Type) -> FilterResult {
     }
 }
 
-pub fn truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
+pub fn truthy<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
     if is_falsy(&t) {
         return changed_result(empty_t::why(reason_of_t(&t).dupe()));
     }
@@ -342,7 +342,7 @@ pub fn truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
         TypeInner::NominalT {
             reason,
             nominal_type,
-        } => filter_opaque(&|t| truthy(cx, t), reason.dupe(), nominal_type),
+        } => filter_opaque(&mut |t| truthy(cx, t), reason.dupe(), nominal_type),
         TypeInner::UnionT(r, rep) => {
             recurse_into_union(cx, &truthy, r.dupe(), rep.members_iter().duped().collect())
         }
@@ -369,29 +369,26 @@ pub fn truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
             _ => unchanged_result(t),
         },
         // an intersection passes through iff all of its members pass through
-        TypeInner::IntersectionT(r, rep) => recurse_into_intersection(
-            cx,
-            &|t| truthy(cx, t),
-            r.dupe(),
-            rep.members_iter().duped().collect(),
-        ),
+        TypeInner::IntersectionT(r, rep) => {
+            recurse_into_intersection(cx, &truthy, r.dupe(), rep.members_iter().duped().collect())
+        }
         _ => unchanged_result(t),
     }
 }
 
-pub fn not_truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
+pub fn not_truthy<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
     if is_falsy(&t) {
         // falsy things pass through
         return unchanged_result(t);
     }
     match t.deref() {
         TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => {
-            map_poly(&|t| not_truthy(cx, t), t)
+            map_poly(&mut |t| not_truthy(cx, t), t)
         }
         TypeInner::NominalT {
             reason,
             nominal_type,
-        } => filter_opaque(&|t| not_truthy(cx, t), reason.dupe(), nominal_type),
+        } => filter_opaque(&mut |t| not_truthy(cx, t), reason.dupe(), nominal_type),
         TypeInner::AnyT(r, _) => changed_result(empty_t::why(r.dupe())),
         TypeInner::UnionT(r, rep) => recurse_into_union(
             cx,
@@ -502,7 +499,7 @@ pub fn not_truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
         // an intersection passes through iff all of its members pass through
         TypeInner::IntersectionT(r, rep) => recurse_into_intersection(
             cx,
-            &|t| not_truthy(cx, t),
+            &not_truthy,
             r.dupe(),
             rep.members_iter().duped().collect(),
         ),
@@ -511,12 +508,12 @@ pub fn not_truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     }
 }
 
-pub fn maybe<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
+pub fn maybe<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::NominalT {
             reason,
             nominal_type,
-        } => filter_opaque(&|t| maybe(cx, t), reason.dupe(), nominal_type),
+        } => filter_opaque(&mut |t| maybe(cx, t), reason.dupe(), nominal_type),
         TypeInner::UnionT(r, rep) => {
             recurse_into_union(cx, &maybe, r.dupe(), rep.members_iter().duped().collect())
         }
@@ -559,12 +556,12 @@ pub fn maybe<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     }
 }
 
-pub fn not_maybe<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
+pub fn not_maybe<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::NominalT {
             reason,
             nominal_type,
-        } => filter_opaque(&|t| not_maybe(cx, t), reason.dupe(), nominal_type),
+        } => filter_opaque(&mut |t| not_maybe(cx, t), reason.dupe(), nominal_type),
         TypeInner::UnionT(r, rep) => recurse_into_union(
             cx,
             &not_maybe,
@@ -596,7 +593,7 @@ pub fn null_filter(t: Type) -> FilterResult {
         TypeInner::NominalT {
             reason,
             nominal_type,
-        } => filter_opaque(&null_filter, reason.dupe(), nominal_type),
+        } => filter_opaque(&mut null_filter, reason.dupe(), nominal_type),
         TypeInner::OptionalT { type_, .. } => match type_.deref() {
             TypeInner::MaybeT(r, _) => changed_result(null::why(r.dupe())),
             _ => changed_result(empty_t::why(reason_of_t(&t).dupe())),
@@ -613,12 +610,12 @@ pub fn null_filter(t: Type) -> FilterResult {
     }
 }
 
-pub fn not_null<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
+pub fn not_null<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::NominalT {
             reason,
             nominal_type,
-        } => filter_opaque(&|t| not_null(cx, t), reason.dupe(), nominal_type),
+        } => filter_opaque(&mut |t| not_null(cx, t), reason.dupe(), nominal_type),
         TypeInner::MaybeT(r, inner) => changed_result(Type::new(TypeInner::UnionT(
             r.dupe(),
             union_rep::make(
@@ -678,7 +675,7 @@ pub fn undefined(t: Type) -> FilterResult {
         TypeInner::NominalT {
             reason,
             nominal_type,
-        } => filter_opaque(&undefined, reason.dupe(), nominal_type),
+        } => filter_opaque(&mut undefined, reason.dupe(), nominal_type),
         TypeInner::MaybeT(r, _) => changed_result(void::why(r.dupe())),
         TypeInner::DefT(_, d) if matches!(&**d, DefTInner::VoidT) => unchanged_result(t),
         TypeInner::OptionalT {
@@ -694,12 +691,12 @@ pub fn undefined(t: Type) -> FilterResult {
     }
 }
 
-pub fn not_undefined<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
+pub fn not_undefined<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::NominalT {
             reason,
             nominal_type,
-        } => filter_opaque(&|t| not_undefined(cx, t), reason.dupe(), nominal_type),
+        } => filter_opaque(&mut |t| not_undefined(cx, t), reason.dupe(), nominal_type),
         TypeInner::MaybeT(r, inner) => changed_result(Type::new(TypeInner::UnionT(
             r.dupe(),
             union_rep::make(
@@ -1425,10 +1422,10 @@ pub fn not_bigint(t: Type) -> FilterResult {
     }
 }
 
-pub fn object_<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
+pub fn object_<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => {
-            map_poly(&|t| object_(cx, t), t)
+            map_poly(&mut |t| object_(cx, t), t)
         }
         TypeInner::DefT(r, d) => match d.deref() {
             DefTInner::MixedT(flavor) => {
@@ -1492,7 +1489,9 @@ pub fn object_<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
 
 pub fn not_object(t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => map_poly(&not_object, t),
+        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => {
+            map_poly(&mut not_object, t)
+        }
         TypeInner::AnyT(_, _) => changed_result(empty_t::why(reason_of_t(&t).dupe())),
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::ObjT(_)
@@ -1508,7 +1507,7 @@ pub fn not_object(t: Type) -> FilterResult {
 
 pub fn function_(t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => map_poly(&function_, t),
+        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => map_poly(&mut function_, t),
         TypeInner::DefT(r, d) => match d.deref() {
             DefTInner::MixedT(_) => changed_result(Type::new(TypeInner::DefT(
                 r.dupe().replace_desc_new(VirtualReasonDesc::RFunction(
@@ -1533,7 +1532,9 @@ pub fn function_(t: Type) -> FilterResult {
 
 pub fn not_function(t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => map_poly(&not_function, t),
+        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => {
+            map_poly(&mut not_function, t)
+        }
         TypeInner::AnyT(_, _) => changed_result(empty_t::why(reason_of_t(&t).dupe())),
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::FunT(_, _) | DefTInner::ClassT(_) => {
@@ -1920,7 +1921,7 @@ pub mod type_tag {
 
 pub type TypeTagSet = BTreeSet<type_tag::TypeTag>;
 
-fn tag_of_value<'cx>(cx: &Context<'cx>, type_: &Type) -> Option<type_tag::SentinelVal> {
+fn tag_of_value<'cx>(cx: &mut Context<'cx>, type_: &Type) -> Option<type_tag::SentinelVal> {
     match cx.find_resolved(type_) {
         Some(t) => match t.deref() {
             TypeInner::DefT(_, d) => match d.deref() {
@@ -1944,10 +1945,10 @@ fn tag_of_value<'cx>(cx: &Context<'cx>, type_: &Type) -> Option<type_tag::Sentin
     }
 }
 
-fn sentinel_of_obj<'cx>(cx: &Context<'cx>, id: properties::Id) -> type_tag::SentinelMap {
-    cx.fold_props(
-        id,
-        |name, prop, acc: type_tag::SentinelMap| {
+fn sentinel_of_obj<'cx>(cx: &mut Context<'cx>, id: properties::Id) -> type_tag::SentinelMap {
+    cx.find_props(id).iter().fold(
+        BTreeMap::new(),
+        |acc: type_tag::SentinelMap, (name, prop)| {
             // Sentinel keys are string-keyed; a symbol-typed key has no string
             // spelling, so skip it rather than collapse distinct symbols to a
             // shared placeholder (which would refine unsoundly).
@@ -1966,11 +1967,13 @@ fn sentinel_of_obj<'cx>(cx: &Context<'cx>, id: properties::Id) -> type_tag::Sent
                 _ => acc,
             }
         },
-        BTreeMap::new(),
     )
 }
 
-fn sentinel_of_tuple<'cx>(cx: &Context<'cx>, elements: &[TupleElement]) -> type_tag::SentinelMap {
+fn sentinel_of_tuple<'cx>(
+    cx: &mut Context<'cx>,
+    elements: &[TupleElement],
+) -> type_tag::SentinelMap {
     elements
         .iter()
         .enumerate()
@@ -1985,7 +1988,7 @@ fn sentinel_of_tuple<'cx>(cx: &Context<'cx>, elements: &[TupleElement]) -> type_
         })
 }
 
-fn tag_of_def_t<'cx>(cx: &Context<'cx>, d: &DefTInner) -> Option<TypeTagSet> {
+fn tag_of_def_t<'cx>(cx: &mut Context<'cx>, d: &DefTInner) -> Option<TypeTagSet> {
     use type_tag::TypeTag;
     use type_tag::TypeTagInner;
     match d {
@@ -2081,7 +2084,7 @@ fn tag_of_inst(inst: &InstType) -> Option<TypeTagSet> {
     Some(tags)
 }
 
-pub fn tag_of_t<'cx>(cx: &Context<'cx>, t: &Type) -> Option<TypeTagSet> {
+pub fn tag_of_t<'cx>(cx: &mut Context<'cx>, t: &Type) -> Option<TypeTagSet> {
     match t.deref() {
         TypeInner::DefT(_, d) => tag_of_def_t(cx, d.deref()),
         TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {

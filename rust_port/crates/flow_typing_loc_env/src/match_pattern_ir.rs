@@ -18,6 +18,7 @@ use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
 use flow_env_builder::selector::Selector;
+use flow_lazy::ContextFamily;
 use flow_parser::ast::match_pattern::MatchPattern;
 use flow_parser::loc::Loc;
 use flow_parser_utils_output::js_layout_generator;
@@ -854,36 +855,30 @@ pub mod value_object {
 
     use super::*;
 
-    pub type LazyValueUnion<'cx, CX> = Rc<
-        flow_lazy::Lazy<
-            CX,
-            value_union::ValueUnion<'cx, CX>,
-            Box<dyn FnOnce(&CX) -> value_union::ValueUnion<'cx, CX> + 'cx>,
-        >,
-    >;
+    pub type LazyValueUnion<CX> = Rc<flow_lazy::Lazy<CX, value_union::ValueUnion<CX>>>;
 
     #[derive(Debug, Clone, Dupe)]
-    pub struct Property<'cx, CX: Clone> {
+    pub struct Property<CX: ContextFamily + Clone> {
         pub loc: ALoc,
-        pub value: LazyValueUnion<'cx, CX>,
+        pub value: LazyValueUnion<CX>,
         pub optional: bool,
     }
 
     pub mod properties {
         use super::*;
 
-        pub type Properties<'cx, CX> = FlowOrdMap<FlowSmolStr, Option<Property<'cx, CX>>>;
+        pub type Properties<CX> = FlowOrdMap<FlowSmolStr, Option<Property<CX>>>;
 
-        pub fn is_empty<CX: Clone>(props: &Properties<'_, CX>) -> bool {
+        pub fn is_empty<CX: ContextFamily + Clone>(props: &Properties<CX>) -> bool {
             !props.values().any(|prop| prop.is_some())
         }
     }
 
     #[derive(Debug, Clone)]
-    pub struct ValueObjectInner<'cx, CX: Clone> {
+    pub struct ValueObjectInner<CX: ContextFamily + Clone> {
         pub kind: ObjKind,
         pub t: Type,
-        pub props: properties::Properties<'cx, CX>,
+        pub props: properties::Properties<CX>,
         pub class_info: Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>)>,
         /// The type that allows properties beyond `props`, if any.
         pub rest: Option<Type>,
@@ -891,15 +886,15 @@ pub mod value_object {
     }
 
     #[derive(Debug, Clone, Dupe)]
-    pub struct ValueObject<'cx, CX: Clone>(pub Reason, pub Rc<ValueObjectInner<'cx, CX>>);
+    pub struct ValueObject<CX: ContextFamily + Clone>(pub Reason, pub Rc<ValueObjectInner<CX>>);
 
-    impl<'cx, CX: Clone> ValueObject<'cx, CX> {
+    impl<CX: ContextFamily + Clone> ValueObject<CX> {
         pub fn to_original_type(&self) -> Type {
             let ValueObject(_, inner) = self;
             inner.t.dupe()
         }
 
-        pub fn to_pattern(&self, cx: &CX) -> pattern_object::PatternObject {
+        pub fn to_pattern(&self, cx: &mut CX::Context<'_>) -> pattern_object::PatternObject {
             let ValueObject(reason, inner) = self;
             let ValueObjectInner {
                 props,
@@ -1047,17 +1042,17 @@ pub mod value_union {
     use super::*;
 
     #[derive(Debug, Clone, Dupe)]
-    pub struct ValueUnion<'cx, CX: Clone> {
+    pub struct ValueUnion<CX: ContextFamily + Clone> {
         pub leafs: LeafSet,
-        pub tuples: FlowVector<value_object::ValueObject<'cx, CX>>,
-        pub arrays: FlowVector<value_object::ValueObject<'cx, CX>>,
-        pub objects: FlowVector<value_object::ValueObject<'cx, CX>>,
+        pub tuples: FlowVector<value_object::ValueObject<CX>>,
+        pub arrays: FlowVector<value_object::ValueObject<CX>>,
+        pub objects: FlowVector<value_object::ValueObject<CX>>,
         /// The enum's reason, its name, and its known members.
         pub enum_unknown_members: FlowVector<(Reason, FlowSmolStr, LeafSet)>,
         pub inexhaustible: FlowVector<Type>,
     }
 
-    impl<'cx, CX: Clone> ValueUnion<'cx, CX> {
+    impl<CX: ContextFamily + Clone> ValueUnion<CX> {
         pub fn empty() -> Self {
             Self {
                 leafs: FlowOrdSet::default(),
@@ -1140,7 +1135,7 @@ pub mod value_union {
             }
         }
 
-        pub fn to_pattern(&self, cx: &CX) -> pattern_union::PatternUnion {
+        pub fn to_pattern(&self, cx: &mut CX::Context<'_>) -> pattern_union::PatternUnion {
             let ValueUnion {
                 leafs,
                 tuples,
@@ -1249,7 +1244,11 @@ pub mod value_union {
             type_util::union_of_ts(r, all_possible_types, None)
         }
 
-        pub fn select(&self, cx: &CX, selector: &Selector<ALoc, ALoc>) -> Option<Self> {
+        pub fn select(
+            &self,
+            cx: &mut CX::Context<'_>,
+            selector: &Selector<ALoc, ALoc>,
+        ) -> Option<Self> {
             let Self {
                 tuples,
                 arrays,
@@ -1257,11 +1256,11 @@ pub mod value_union {
                 ..
             } = self;
 
-            fn conservative_find<'a, 'cx, CX: Clone>(
+            fn conservative_find<'a, CX: ContextFamily + Clone>(
                 key: &FlowSmolStr,
-                values: &'a FlowVector<value_object::ValueObject<'cx, CX>>,
-            ) -> Option<Vec<value_object::LazyValueUnion<'cx, CX>>> {
-                let mut acc: Vec<value_object::LazyValueUnion<'cx, CX>> = Vec::new();
+                values: &'a FlowVector<value_object::ValueObject<CX>>,
+            ) -> Option<Vec<value_object::LazyValueUnion<CX>>> {
+                let mut acc: Vec<value_object::LazyValueUnion<CX>> = Vec::new();
                 for value_object::ValueObject(_, inner) in values.iter() {
                     let value_object::ValueObjectInner { props, rest, .. } = inner.as_ref();
                     match props.get(key) {
@@ -1282,14 +1281,14 @@ pub mod value_union {
             }
 
             let conservative_find_all =
-                |key: &FlowSmolStr| -> Option<Vec<value_object::LazyValueUnion<'cx, CX>>> {
+                |key: &FlowSmolStr| -> Option<Vec<value_object::LazyValueUnion<CX>>> {
                     let tuple_candidates = conservative_find(key, tuples)?;
                     let array_candidates = conservative_find(key, arrays)?;
                     let object_candidates = conservative_find(key, objects)?;
                     Some([tuple_candidates, array_candidates, object_candidates].concat())
                 };
 
-            let vus_opt: Option<Vec<ValueUnion<'cx, CX>>> = match selector {
+            let vus_opt: Option<Vec<ValueUnion<CX>>> = match selector {
                 Selector::Elem { index, .. } => {
                     let key: FlowSmolStr = index.to_string().into();
                     conservative_find_all(&key).map(|lazy_cells| {

@@ -19,5 +19,6 @@ flow_services_export = { path = "../flow_services_export" }
 flow_services_inference = { path = "../flow_services_inference" }
 flow_services_inference_types = { path = "../flow_services_inference_types" }
 flow_typing = { path = "../flow_typing" }
+flow_typing_context = { path = "../flow_typing_context" }
 flow_typing_ty_normalizer = { path = "../flow_typing_ty_normalizer" }
 flow_typing_type = { path = "../flow_typing_type" }

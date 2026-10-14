@@ -186,7 +186,7 @@ fn prefix_with_this(ast: &ast::Program<Loc, Loc>, target: Loc) -> ast::Program<L
 }
 
 fn is_member(
-    cx: &Context,
+    cx: &mut Context,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     file_sig: Arc<FileSig>,
     type_: &Type,
@@ -207,7 +207,7 @@ fn is_member(
 }
 
 pub fn fix(
-    cx: &Context,
+    cx: &mut Context,
     file_sig: Arc<FileSig>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast: &ast::Program<Loc, Loc>,

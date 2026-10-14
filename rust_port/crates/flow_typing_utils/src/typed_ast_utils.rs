@@ -150,11 +150,11 @@ impl LocMapper<ALoc, ALoc, ALoc, (ALoc, Type)> for ErrorMapper {
 
 /// Used in skipped body due to placeholder function types.
 pub struct PlaceholderMapper<'a, 'cx> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
 }
 
 impl<'a, 'cx> PlaceholderMapper<'a, 'cx> {
-    pub fn new(cx: &'a Context<'cx>) -> Self {
+    pub fn new(cx: &'a mut Context<'cx>) -> Self {
         Self { cx }
     }
 }

@@ -112,7 +112,7 @@ impl<'ast, 'a> AstVisitor<'ast, Loc, Loc, &'ast Loc, !> for ImportedDefCollector
 }
 
 struct ImportInformationExtractor<'a, 'cx> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     relevant_imported_defs: &'a [(String, Vec1<Loc>)],
     import_items: Vec<ImportItem>,
@@ -145,10 +145,10 @@ impl<'a> ImportInformationExtractor<'a, '_> {
             default,
             ..
         } = decl;
-        let lazy_import_source_info = std::cell::OnceCell::new();
+        let mut lazy_import_source_info = None;
         let source_loc = &source.0.0;
         let source_value = &source.1.value;
-        let compute_import_source_info = || -> (FlowSmolStr, bool) {
+        let mut compute_import_source_info = || -> (FlowSmolStr, bool) {
             let mref = Userland::from_smol_str(source_value.dupe());
             match flow_js_utils::import_export_utils::get_module_type_or_any(
                 self.cx,
@@ -175,7 +175,7 @@ impl<'a> ImportInformationExtractor<'a, '_> {
                 Ok(Err(_)) => (source_value.dupe(), false),
             }
         };
-        let collect =
+        let mut collect =
             |import_items: &mut Vec<ImportItem>,
              import_type: ImportType,
              remote: &ast::Identifier<ALoc, (ALoc, Type)>,
@@ -190,7 +190,7 @@ impl<'a> ImportInformationExtractor<'a, '_> {
                     .any(|(n, locs)| name.as_str() == n && locs.contains(&loc))
                 {
                     let (import_source, import_source_is_resolved) =
-                        lazy_import_source_info.get_or_init(&compute_import_source_info);
+                        lazy_import_source_info.get_or_insert_with(&mut compute_import_source_info);
                     let import_item = ImportItem {
                         remote_name: remote.name.to_string(),
                         local_name: local_opt.map(|id| id.name.to_string()),
@@ -263,7 +263,7 @@ impl<'a> ImportInformationExtractor<'a, '_> {
 }
 
 pub fn prepare_document_paste(
-    cx: &Context,
+    cx: &mut Context,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     file_sig: &FileSig,
     ast: &ast::Program<Loc, Loc>,

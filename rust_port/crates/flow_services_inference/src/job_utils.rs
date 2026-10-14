@@ -95,8 +95,7 @@ pub fn mk_job<A, B, C>(
 /// observing the cancel via the global flag and rolling back the in-progress
 /// recheck.
 pub fn mk_job_stealing<B>(
-    check: &mut dyn FnMut(FileKey) -> crate::merge_service::CheckJobOutcome,
-    extract_acc: impl Fn(crate::merge_service::CheckFileResult) -> B,
+    check: &mut dyn FnMut(FileKey) -> crate::merge_service::CheckJobOutcome<B>,
     options: &Options,
     deque: &crossbeam::deque::Worker<FileKey>,
 ) -> Result<
@@ -124,11 +123,8 @@ pub fn mk_job_stealing<B>(
             return Ok(acc);
         };
         match check(file.dupe()) {
-            CheckJobOutcome::Ok(Some(r)) => {
-                acc.push((file, Ok(Some(extract_acc(r)))));
-            }
-            CheckJobOutcome::Ok(None) => {
-                acc.push((file, Ok(None)));
+            CheckJobOutcome::Ok(r) => {
+                acc.push((file, Ok(r)));
             }
             CheckJobOutcome::PerFileError(e) => {
                 acc.push((file, Err(e)));

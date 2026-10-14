@@ -32,9 +32,13 @@ use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing::type_inference;
 use flow_typing_builtins::builtins::Builtins;
 use flow_typing_context::Context;
+use flow_typing_context::ContextArena;
+use flow_typing_context::ContextId;
+use flow_typing_context::ContextStore;
+use flow_typing_context::Cx;
 use flow_typing_context::Metadata;
+use flow_typing_context::ResolveRequire;
 use flow_typing_context::ResolvedRequire;
-use flow_typing_context::make_ccx;
 use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::Type;
@@ -90,12 +94,10 @@ fn mk_loc(start: (i32, i32), end_: (i32, i32)) -> Loc {
     }
 }
 
-fn dummy_context() -> Context<'static> {
+fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
     let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
-    let mut builtins_values: FlowOrdMap<
-        FlowSmolStr,
-        flow_typing_builtins::LazyVal<'_, Context<'_>>,
-    > = FlowOrdMap::new();
+    let mut builtins_values: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+        FlowOrdMap::new();
     for name in &[
         "console",
         "Object",
@@ -109,13 +111,12 @@ fn dummy_context() -> Context<'static> {
             r.dupe(),
             AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
         ));
-        let val = Rc::new(flow_lazy::Lazy::new(
-            Box::new(move |_cx: &Context| (ALoc::none(), t))
-                as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-        ));
+        let val = Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+            (ALoc::none(), t)
+        }));
         builtins_values.insert(FlowSmolStr::from(*name), val);
     }
-    let mut builtin_types: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<'_, Context<'_>>> =
+    let mut builtin_types: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
         FlowOrdMap::new();
     for name in &[
         "AsyncIterable",
@@ -130,13 +131,11 @@ fn dummy_context() -> Context<'static> {
             r.dupe(),
             AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
         ));
-        let val = Rc::new(flow_lazy::Lazy::new(
-            Box::new(move |_cx: &Context| (ALoc::none(), t))
-                as Box<dyn FnOnce(&Context<'static>) -> (ALoc, Type)>,
-        ));
+        let val = Rc::new(flow_lazy::Lazy::new(move |_cx: &mut Context<'_>| {
+            (ALoc::none(), t)
+        }));
         builtin_types.insert(FlowSmolStr::from(*name), val);
     }
-    let ccx = Rc::new(make_ccx());
     let frozen = flow_typing_context::FrozenMetadata {
         component_syntax: false,
         ..Default::default()
@@ -155,58 +154,55 @@ fn dummy_context() -> Context<'static> {
     })
         as Box<dyn FnOnce() -> Rc<ALocTable>>));
     let resolve_reason = reason.dupe();
-    let resolve_require: Rc<
-        dyn Fn(
-            &Context,
-            &flow_common::flow_import_specifier::FlowImportSpecifier,
-        ) -> ResolvedRequire<'static>,
-    > = Rc::new(move |_cx, _| {
-        let r = resolve_reason.dupe();
-        ResolvedRequire::TypedModule(Rc::new(move |_cx, _dst_cx| {
-            Err(Type::new(TypeInner::AnyT(
-                r.dupe(),
-                AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-            )))
-        }))
-    });
+    let resolve_require: ResolveRequire = Rc::new(
+        move |_cx: &mut Context<'_>,
+              _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
+            let r = resolve_reason.dupe();
+            ResolvedRequire::TypedModule(Rc::new(
+                move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
+                    Err(Type::new(TypeInner::AnyT(
+                        r.dupe(),
+                        AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+                    )))
+                },
+            ))
+        },
+    );
     let builtins_values_clone = builtins_values.dupe();
     let builtin_types_clone = builtin_types.dupe();
-    Context::make(
+    let ccx = arena.add_component();
+    let cx_id = arena.add_context(
         ccx,
         metadata,
         file,
         Arc::default(),
         aloc_table,
         resolve_require,
-        Rc::new(move |_cx: &Context| {
+        Rc::new(move |_cx: &mut Context<'_>| {
             Builtins::of_name_map(
-                Rc::new(|_src_cx: &Context, _dst_cx: &Context, t: Type| t),
-                Rc::new(
-                    |_src_cx: &Context,
-                     _dst_cx: &Context,
-                     m: &flow_typing_type::type_::ModuleType| m.dupe(),
-                ),
                 builtins_values_clone.dupe(),
                 builtin_types_clone.dupe(),
                 FlowOrdMap::new(),
             )
         }),
         flow_utils_concurrency::check_budget::CheckBudget::new(None),
-    )
+    );
+    Context::new(ContextStore::new(vec![arena]), cx_id)
 }
 
 fn typed_ast_of_ast(
-    cx: &Context,
+    cx: &mut Context,
     ast: &ast::Program<Loc, Loc>,
 ) -> ast::Program<ALoc, (ALoc, Type)> {
     let comments = &ast.all_comments;
     let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
+    let metadata = cx.metadata().clone();
     type_inference::infer_ast(
         &LintSettings::<Severity>::empty_severities(),
         cx,
         &dummy_filename(),
         Arc::new(FileSig::empty()),
-        cx.metadata(),
+        &metadata,
         comments,
         ast,
         aloc_ast,
@@ -235,13 +231,14 @@ fn assert_refactored(
         Some(dummy_filename()),
         source,
     );
-    let cx = dummy_context();
-    let typed_ast = typed_ast_of_ast(&cx, &ast);
+    let mut arena = ContextArena::new();
+    let mut cx = dummy_context(&mut arena);
+    let typed_ast = typed_ast_of_ast(&mut cx, &ast);
     let file_sig = file_sig_of_ast(&ast);
     let actual: Vec<(String, String)> = refactor_extract::provide_available_refactors(
         &tokens,
         &ast,
-        &cx,
+        &mut cx,
         &dummy_filename(),
         Arc::new(file_sig),
         &typed_ast,

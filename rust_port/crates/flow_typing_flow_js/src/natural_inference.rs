@@ -24,6 +24,7 @@ use flow_common::reason::is_literal_object_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::VariableKind;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_context::TypingMode;
 use flow_typing_flow_common::type_subst;
 use flow_typing_tvar;
@@ -59,18 +60,17 @@ use flow_typing_type::type_util::mod_reason_of_t;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_visitors::type_mapper;
 use flow_typing_visitors::type_mapper::TypeMapper;
-pub type LazyBool<'cx> =
-    Rc<flow_lazy::Lazy<Context<'cx>, bool, Box<dyn FnOnce(&Context<'cx>) -> bool + 'cx>>>;
+pub type LazyBool = Rc<flow_lazy::Lazy<Cx, bool>>;
 
-pub struct SyntacticFlags<'cx> {
+pub struct SyntacticFlags {
     pub encl_ctx: EnclosingContext,
     pub decl: Option<VariableKind>,
     pub as_const: bool,
     pub frozen: FrozenKind,
-    pub has_hint: LazyBool<'cx>,
+    pub has_hint: LazyBool,
 }
 
-pub fn empty_syntactic_flags<'cx>() -> SyntacticFlags<'cx> {
+pub fn empty_syntactic_flags() -> SyntacticFlags {
     SyntacticFlags {
         encl_ctx: EnclosingContext::NoContext,
         decl: None,
@@ -80,13 +80,13 @@ pub fn empty_syntactic_flags<'cx>() -> SyntacticFlags<'cx> {
     }
 }
 
-pub fn mk_syntactic_flags<'cx>(
+pub fn mk_syntactic_flags(
     encl_ctx: Option<EnclosingContext>,
     decl: Option<VariableKind>,
     as_const: Option<bool>,
     frozen: Option<FrozenKind>,
-    has_hint: Option<LazyBool<'cx>>,
-) -> SyntacticFlags<'cx> {
+    has_hint: Option<LazyBool>,
+) -> SyntacticFlags {
     SyntacticFlags {
         encl_ctx: encl_ctx.unwrap_or(EnclosingContext::NoContext),
         decl,
@@ -96,8 +96,8 @@ pub fn mk_syntactic_flags<'cx>(
     }
 }
 
-fn is_builtin_promise<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
-    fn loop_<'cx>(cx: &Context<'cx>, seen: &mut BTreeSet<i32>, t: &Type) -> bool {
+fn is_builtin_promise<'cx>(cx: &mut Context<'cx>, t: &Type) -> bool {
+    fn loop_<'cx>(cx: &mut Context<'cx>, seen: &mut BTreeSet<i32>, t: &Type) -> bool {
         match t.deref() {
             TypeInner::OpenT(tvar) => {
                 let (root_id, constraints) = cx.find_constraints(tvar.id() as i32);
@@ -305,8 +305,8 @@ fn template_literal_action(action: SingletonAction, t: Type, r: &Reason) -> Type
 }
 
 fn literal_type_mapper_tvar<'cx>(
-    type_fn: &mut dyn FnMut(&Context<'cx>, &LiteralMapCx, Type) -> Type,
-    cx: &Context<'cx>,
+    type_fn: &mut dyn FnMut(&mut Context<'cx>, &LiteralMapCx, Type) -> Type,
+    cx: &mut Context<'cx>,
     map_cx: &LiteralMapCx,
     id: u32,
 ) -> u32 {
@@ -340,8 +340,8 @@ enum LiteralMapAction {
 
 // Both LiteralTypeMapper and ConvertLiteralTypeToConstMapper delegate to this.
 fn literal_type_mapper_type_dispatch<'cx>(
-    singleton_action: &dyn Fn(&ALoc) -> SingletonAction,
-    cx: &Context<'cx>,
+    singleton_action: &dyn Fn(&Context<'_>, &ALoc) -> SingletonAction,
+    cx: &mut Context<'cx>,
     t: &Type,
 ) -> LiteralMapAction {
     match t.deref() {
@@ -383,32 +383,32 @@ fn literal_type_mapper_type_dispatch<'cx>(
                 from_annot: false,
                 value,
             } => {
-                let action = singleton_action(r.loc());
+                let action = singleton_action(cx, r.loc());
                 LiteralMapAction::Done(singleton_str_action(action, t.dupe(), r, value))
             }
             DefTInner::SingletonNumT {
                 from_annot: false,
                 value,
             } => {
-                let action = singleton_action(r.loc());
+                let action = singleton_action(cx, r.loc());
                 LiteralMapAction::Done(singleton_num_action(action, t.dupe(), r, value))
             }
             DefTInner::SingletonBoolT {
                 from_annot: false,
                 value,
             } => {
-                let action = singleton_action(r.loc());
+                let action = singleton_action(cx, r.loc());
                 LiteralMapAction::Done(singleton_bool_action(action, t.dupe(), r, *value))
             }
             DefTInner::SingletonBigIntT {
                 from_annot: false,
                 value,
             } => {
-                let action = singleton_action(r.loc());
+                let action = singleton_action(cx, r.loc());
                 LiteralMapAction::Done(singleton_bigint_action(action, t.dupe(), r, value))
             }
             DefTInner::UniqueSymbolT(data) if !data.from_annot => {
-                let action = singleton_action(r.loc());
+                let action = singleton_action(cx, r.loc());
                 LiteralMapAction::Done(unique_symbol_action(action, t.dupe(), r, data))
             }
             _ => LiteralMapAction::Done(t.dupe()),
@@ -418,7 +418,7 @@ fn literal_type_mapper_type_dispatch<'cx>(
             from_annot: false,
             ..
         } => {
-            let action = singleton_action(reason.loc());
+            let action = singleton_action(cx, reason.loc());
             LiteralMapAction::Done(template_literal_action(action, t.dupe(), reason))
         }
         _ => LiteralMapAction::Done(t.dupe()),
@@ -433,14 +433,16 @@ fn literal_type_mapper_type_dispatch<'cx>(
 // expression. This allows us to keep the cost of this visit low, by only
 // descending into types that are considered literals (for now we use reasons to
 // determine this.)
-struct LiteralTypeMapper<F: Fn(&ALoc) -> SingletonAction> {
+struct LiteralTypeMapper<F: Fn(&Context<'_>, &ALoc) -> SingletonAction> {
     singleton_action: F,
 }
 
-impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx> for LiteralTypeMapper<F> {
+impl<'cx, F: Fn(&Context<'_>, &ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx>
+    for LiteralTypeMapper<F>
+{
     fn exports(
         &mut self,
-        _cx: &Context<'cx>,
+        _cx: &mut Context<'cx>,
         _map_cx: &LiteralMapCx,
         id: exports::Id,
     ) -> exports::Id {
@@ -449,7 +451,7 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx> for Lit
 
     fn props(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &LiteralMapCx,
         id: properties::Id,
     ) -> properties::Id {
@@ -464,15 +466,20 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx> for Lit
         }
     }
 
-    fn eval_id(&mut self, _cx: &Context<'cx>, _map_cx: &LiteralMapCx, id: eval::Id) -> eval::Id {
+    fn eval_id(
+        &mut self,
+        _cx: &mut Context<'cx>,
+        _map_cx: &LiteralMapCx,
+        id: eval::Id,
+    ) -> eval::Id {
         id
     }
 
-    fn call_prop(&mut self, _cx: &Context<'cx>, _map_cx: &LiteralMapCx, id: i32) -> i32 {
+    fn call_prop(&mut self, _cx: &mut Context<'cx>, _map_cx: &LiteralMapCx, id: i32) -> i32 {
         id
     }
 
-    fn tvar(&mut self, cx: &Context<'cx>, map_cx: &LiteralMapCx, _r: &Reason, id: u32) -> u32 {
+    fn tvar(&mut self, cx: &mut Context<'cx>, map_cx: &LiteralMapCx, _r: &Reason, id: u32) -> u32 {
         literal_type_mapper_tvar(
             &mut |cx, map_cx, t| self.type_(cx, map_cx, t),
             cx,
@@ -481,7 +488,7 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx> for Lit
         )
     }
 
-    fn type_(&mut self, cx: &Context<'cx>, map_cx: &LiteralMapCx, t: Type) -> Type {
+    fn type_(&mut self, cx: &mut Context<'cx>, map_cx: &LiteralMapCx, t: Type) -> Type {
         match literal_type_mapper_type_dispatch(&self.singleton_action, cx, &t) {
             LiteralMapAction::Done(t) => t,
             LiteralMapAction::TypeDefault(t) => type_mapper::type_default(self, cx, map_cx, t),
@@ -492,15 +499,15 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx> for Lit
 /// Walk a literal type and replaces singleton types that originate from literals
 /// according to `singleton_action`
 pub fn convert_literal_type<'cx>(
-    cx: &Context<'cx>,
-    singleton_action: impl Fn(&ALoc) -> SingletonAction,
+    cx: &mut Context<'cx>,
+    singleton_action: impl Fn(&Context<'_>, &ALoc) -> SingletonAction,
     t: Type,
 ) -> Type {
     let mut mapper = LiteralTypeMapper { singleton_action };
     mapper.type_(cx, &LiteralMapCx::new(), t)
 }
 
-fn is_literal_type<'cx>(cx: &Context<'cx>, seen: &mut BTreeSet<i32>, t: &Type) -> bool {
+fn is_literal_type<'cx>(cx: &mut Context<'cx>, seen: &mut BTreeSet<i32>, t: &Type) -> bool {
     match t.deref() {
         TypeInner::OpenT(tvar) => match cx.find_constraints(tvar.id() as i32) {
             (root_id, constraint::Constraints::FullyResolved(s)) => {
@@ -542,30 +549,30 @@ fn is_literal_type<'cx>(cx: &Context<'cx>, seen: &mut BTreeSet<i32>, t: &Type) -
     }
 }
 
-struct ImplicitInstantiationLiteralMapper<F: Fn(&ALoc) -> SingletonAction> {
+struct ImplicitInstantiationLiteralMapper<F: Fn(&Context<'_>, &ALoc) -> SingletonAction> {
     singleton_action: F,
 }
 
-impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, ()>
+impl<'cx, F: Fn(&Context<'_>, &ALoc) -> SingletonAction> TypeMapper<'cx, ()>
     for ImplicitInstantiationLiteralMapper<F>
 {
-    fn tvar(&mut self, _cx: &Context<'cx>, _map_cx: &(), _r: &Reason, id: u32) -> u32 {
+    fn tvar(&mut self, _cx: &mut Context<'cx>, _map_cx: &(), _r: &Reason, id: u32) -> u32 {
         id
     }
 
-    fn call_prop(&mut self, cx: &Context<'cx>, map_cx: &(), id: i32) -> i32 {
+    fn call_prop(&mut self, cx: &mut Context<'cx>, map_cx: &(), id: i32) -> i32 {
         type_subst::call_prop(self, cx, map_cx, id)
     }
 
-    fn props(&mut self, cx: &Context<'cx>, map_cx: &(), id: properties::Id) -> properties::Id {
+    fn props(&mut self, cx: &mut Context<'cx>, map_cx: &(), id: properties::Id) -> properties::Id {
         type_subst::props(self, cx, map_cx, id)
     }
 
-    fn exports(&mut self, cx: &Context<'cx>, map_cx: &(), id: exports::Id) -> exports::Id {
+    fn exports(&mut self, cx: &mut Context<'cx>, map_cx: &(), id: exports::Id) -> exports::Id {
         type_subst::exports(self, cx, map_cx, id)
     }
 
-    fn type_(&mut self, cx: &Context<'cx>, map_cx: &(), t: Type) -> Type {
+    fn type_(&mut self, cx: &mut Context<'cx>, map_cx: &(), t: Type) -> Type {
         if is_literal_type(cx, &mut BTreeSet::new(), &t) {
             return convert_literal_type(cx, &self.singleton_action, t);
         }
@@ -616,14 +623,14 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, ()>
 
     // The EvalT case is the only case that calls this function. We've explicitly
     // overrided it in all cases, so this should never be called
-    fn eval_id(&mut self, _cx: &Context<'cx>, _map_cx: &(), _id: eval::Id) -> eval::Id {
+    fn eval_id(&mut self, _cx: &mut Context<'cx>, _map_cx: &(), _id: eval::Id) -> eval::Id {
         unreachable!("eval_id should never be called on implicit_instantiation_literal_mapper")
     }
 }
 
 pub fn convert_implicit_instantiation_literal_type<'cx>(
-    cx: &Context<'cx>,
-    singleton_action: impl Fn(&ALoc) -> SingletonAction,
+    cx: &mut Context<'cx>,
+    singleton_action: impl Fn(&Context<'_>, &ALoc) -> SingletonAction,
     t: Type,
 ) -> Type {
     let mut mapper = ImplicitInstantiationLiteralMapper { singleton_action };
@@ -653,22 +660,27 @@ impl ConvertLiteralTypeToConstMapper {
 impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
     fn exports(
         &mut self,
-        _cx: &Context<'cx>,
+        _cx: &mut Context<'cx>,
         _map_cx: &LiteralMapCx,
         id: exports::Id,
     ) -> exports::Id {
         id
     }
 
-    fn eval_id(&mut self, _cx: &Context<'cx>, _map_cx: &LiteralMapCx, id: eval::Id) -> eval::Id {
+    fn eval_id(
+        &mut self,
+        _cx: &mut Context<'cx>,
+        _map_cx: &LiteralMapCx,
+        id: eval::Id,
+    ) -> eval::Id {
         id
     }
 
-    fn call_prop(&mut self, _cx: &Context<'cx>, _map_cx: &LiteralMapCx, id: i32) -> i32 {
+    fn call_prop(&mut self, _cx: &mut Context<'cx>, _map_cx: &LiteralMapCx, id: i32) -> i32 {
         id
     }
 
-    fn tvar(&mut self, cx: &Context<'cx>, map_cx: &LiteralMapCx, _r: &Reason, id: u32) -> u32 {
+    fn tvar(&mut self, cx: &mut Context<'cx>, map_cx: &LiteralMapCx, _r: &Reason, id: u32) -> u32 {
         literal_type_mapper_tvar(
             &mut |cx, map_cx, t| self.type_(cx, map_cx, t),
             cx,
@@ -677,7 +689,7 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
         )
     }
 
-    fn type_(&mut self, cx: &Context<'cx>, map_cx: &LiteralMapCx, t: Type) -> Type {
+    fn type_(&mut self, cx: &mut Context<'cx>, map_cx: &LiteralMapCx, t: Type) -> Type {
         match t.deref() {
             TypeInner::DefT(r, def_t) if let DefTInner::ArrT(arr) = def_t.deref() => {
                 match arr.deref() {
@@ -744,7 +756,7 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
     // This method is only reachable through a literal object argument to this call.
     fn props(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &LiteralMapCx,
         id: properties::Id,
     ) -> properties::Id {
@@ -776,24 +788,24 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
 impl ConvertLiteralTypeToConstMapper {
     fn type_as_literal_type_mapper<'cx>(
         &mut self,
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         map_cx: &LiteralMapCx,
         t: Type,
     ) -> Type {
-        match literal_type_mapper_type_dispatch(&|_| SingletonAction::KeepAsConst, cx, &t) {
+        match literal_type_mapper_type_dispatch(&|_, _| SingletonAction::KeepAsConst, cx, &t) {
             LiteralMapAction::Done(t) => t,
             LiteralMapAction::TypeDefault(t) => type_mapper::type_default(self, cx, map_cx, t),
         }
     }
 }
 
-pub fn convert_literal_type_to_const<'cx>(loc_range: ALoc, cx: &Context<'cx>, t: Type) -> Type {
+pub fn convert_literal_type_to_const<'cx>(loc_range: ALoc, cx: &mut Context<'cx>, t: Type) -> Type {
     let mut mapper = ConvertLiteralTypeToConstMapper { loc_range };
     mapper.type_(cx, &LiteralMapCx::new(), t)
 }
 
 fn is_generalization_candidate_inner<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     seen: &mut TvarSeenSet<i32>,
     t: &Type,
 ) -> bool {
@@ -823,11 +835,8 @@ fn is_generalization_candidate_inner<'cx>(
                     false
                 } else {
                     seen.with_added(root_id, |seen| {
-                        is_generalization_candidate_inner(
-                            cx,
-                            seen,
-                            &cx.force_fully_resolved_tvar(&s),
-                        )
+                        let t = cx.force_fully_resolved_tvar(&s);
+                        is_generalization_candidate_inner(cx, seen, &t)
                     })
                 }
             }
@@ -843,14 +852,14 @@ fn is_generalization_candidate_inner<'cx>(
     }
 }
 
-pub fn is_generalization_candidate<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+pub fn is_generalization_candidate<'cx>(cx: &mut Context<'cx>, t: &Type) -> bool {
     is_generalization_candidate_inner(cx, &mut TvarSeenSet::new(), t)
 }
 
 /// Whether the given location has any non-best-effort hint, based only on the
 /// hint's kind. Unlike `has_ast_syntactic_hint` below, checker-synthesized
 /// hints count.
-pub fn loc_has_hint<'cx>(cx: &Context<'cx>, loc: &ALoc) -> bool {
+pub fn loc_has_hint<'cx>(cx: &mut Context<'cx>, loc: &ALoc) -> bool {
     let env = cx.environment();
     match env.ast_hint_map.get(loc) {
         None => false,
@@ -868,7 +877,7 @@ pub fn loc_has_hint<'cx>(cx: &Context<'cx>, loc: &ALoc) -> bool {
 /// Whether any AST hint at the given location originates from a user-written
 /// type annotation. Unlike `loc_has_hint` above, which is kind-based,
 /// checker-synthesized hints do not count.
-pub fn has_ast_syntactic_hint<'cx>(cx: &Context<'cx>, loc: &ALoc) -> bool {
+pub fn has_ast_syntactic_hint<'cx>(cx: &mut Context<'cx>, loc: &ALoc) -> bool {
     cx.environment().ast_hint_map.get(loc).is_some_and(|hints| {
         hints.iter().any(|hint| match hint {
             Hint::HintT(node, _) | Hint::HintDecomp(_, node, _) => node.is_syntactic(),
@@ -919,12 +928,12 @@ pub fn enclosing_context_needs_precise(encl_ctx: &EnclosingContext) -> bool {
 /// `TemplateLiteral` branch in `flow_typing_statement`), so they stay
 /// precise under exactly the same conditions as primitive literals.
 pub fn needs_precise_type<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     encl_ctx: &EnclosingContext,
     decl: &Option<VariableKind>,
     as_const: bool,
     frozen: &FrozenKind,
-    has_hint: &LazyBool<'cx>,
+    has_hint: &LazyBool,
     loc: &ALoc,
 ) -> bool {
     enclosing_context_needs_precise(encl_ctx)
@@ -936,36 +945,37 @@ pub fn needs_precise_type<'cx>(
 }
 
 fn choose_precision<'cx>(
-    cx: &Context<'cx>,
-    precise: impl FnOnce() -> Type,
-    general: impl FnOnce() -> Type,
+    cx: &mut Context<'cx>,
+    precise: impl FnOnce(&mut Context<'cx>) -> Type,
+    general: impl FnOnce(&mut Context<'cx>) -> Type,
     loc: &ALoc,
-    needs_precise: impl FnOnce() -> bool,
+    needs_precise: impl FnOnce(&mut Context<'cx>) -> bool,
 ) -> Type {
-    let typing_mode = cx.typing_mode();
+    let typing_mode = cx.typing_mode().dupe();
     if matches!(
-        &*typing_mode,
+        &typing_mode,
         TypingMode::SynthesisMode {
             target_loc: Some(target_loc),
         } if aloc_contains(target_loc, loc)
     ) {
-        return cx.mk_placeholder(reason_of_t(&general()).dupe());
+        let general_t = general(cx);
+        return cx.mk_placeholder(reason_of_t(&general_t).dupe());
     }
-    if matches!(&*typing_mode, TypingMode::SynthesisMode { .. }) {
+    if matches!(&typing_mode, TypingMode::SynthesisMode { .. }) {
         cx.set_synthesis_produced_uncacheable_result();
     }
-    if needs_precise() {
-        precise()
+    if needs_precise(cx) {
+        precise(cx)
     } else {
-        general()
+        general(cx)
     }
 }
 
 pub fn adjust_precision<'cx>(
-    cx: &Context<'cx>,
-    syntactic_flags: &SyntacticFlags<'cx>,
-    precise: impl FnOnce() -> Type,
-    general: impl FnOnce() -> Type,
+    cx: &mut Context<'cx>,
+    syntactic_flags: &SyntacticFlags,
+    precise: impl FnOnce(&mut Context<'cx>) -> Type,
+    general: impl FnOnce(&mut Context<'cx>) -> Type,
     loc: &ALoc,
 ) -> Type {
     let SyntacticFlags {
@@ -975,7 +985,7 @@ pub fn adjust_precision<'cx>(
         frozen,
         has_hint,
     } = syntactic_flags;
-    choose_precision(cx, precise, general, loc, || {
+    choose_precision(cx, precise, general, loc, |cx| {
         needs_precise_type(cx, encl_ctx, decl, *as_const, frozen, has_hint, loc)
     })
 }
@@ -985,28 +995,30 @@ pub fn adjust_precision<'cx>(
 /// binding, ordinary natural inference decides whether a later use should keep
 /// it or widen it to `symbol`.
 pub fn adjust_unique_symbol_precision<'cx>(
-    cx: &Context<'cx>,
-    syntactic_flags: &SyntacticFlags<'cx>,
-    precise: impl FnOnce() -> Type,
-    general: impl FnOnce() -> Type,
+    cx: &mut Context<'cx>,
+    syntactic_flags: &SyntacticFlags,
+    precise: impl FnOnce(&mut Context<'cx>) -> Type,
+    general: impl FnOnce(&mut Context<'cx>) -> Type,
     loc: &ALoc,
 ) -> Type {
-    choose_precision(cx, precise, general, loc, || {
+    choose_precision(cx, precise, general, loc, |_| {
         syntactic_flags.decl == Some(VariableKind::Const)
     })
 }
 
 pub fn try_generalize<'cx>(
-    cx: &Context<'cx>,
-    syntactic_flags: &SyntacticFlags<'cx>,
+    cx: &mut Context<'cx>,
+    syntactic_flags: &SyntacticFlags,
     loc: &ALoc,
     t: Type,
 ) -> Type {
     if is_generalization_candidate(cx, &t) {
         let t_clone = t.dupe();
-        let general = || convert_literal_type(cx, |_| SingletonAction::DoNotKeep, t_clone);
+        let general = |cx: &mut Context<'cx>| {
+            convert_literal_type(cx, |_, _| SingletonAction::DoNotKeep, t_clone)
+        };
         let t_precise = t;
-        let precise = || t_precise;
+        let precise = |_: &mut Context<'cx>| t_precise;
         adjust_precision(cx, syntactic_flags, precise, general, loc)
     } else {
         t

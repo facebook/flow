@@ -50,7 +50,7 @@ pub mod signature_verification {
     use super::*;
 
     pub fn supported_error_kind<'a, 'cx>(
-        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
         max_type_size: i32,
         mut acc: BTreeMap<Loc, TyResult>,
         loc: Loc,
@@ -79,7 +79,7 @@ pub mod signature_verification {
     }
 
     pub fn collect_annotations<'a, 'cx>(
-        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
         default_any: bool,
         max_type_size: i32,
         ast: &ast::Program<Loc, Loc>,
@@ -236,7 +236,6 @@ pub mod signature_verification_error_stats {
 use signature_verification_error_stats::SignatureVerificationErrorStats;
 
 pub struct AnnotateExportsMapper<'a, 'cx> {
-    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     max_type_size: i32,
     default_any: bool,
     sig_verification_loc_tys: BTreeMap<Loc, TyResult>,
@@ -248,11 +247,10 @@ impl<'a, 'cx> AnnotateExportsMapper<'a, 'cx> {
     pub fn new(
         max_type_size: i32,
         default_any: bool,
-        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &'a mut codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> Self {
         let lint_severities = codemod_context::typed::lint_severities(cctx);
         Self {
-            cctx,
             max_type_size,
             default_any,
             sig_verification_loc_tys: BTreeMap::new(),
@@ -411,7 +409,7 @@ impl<'a, 'cx> AnnotateExportsMapper<'a, 'cx> {
     pub fn program(&mut self, prog: &ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
         let (total_errors_, sig_verification_loc_tys_) =
             signature_verification::collect_annotations(
-                self.cctx,
+                self.mapper.cctx,
                 self.default_any,
                 self.max_type_size,
                 prog,
@@ -491,7 +489,7 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
         &mut self,
         expr: &'ast expression::Expression<Loc, Loc>,
     ) -> expression::Expression<Loc, Loc> {
-        let _options = &self.cctx.options;
+        let _options = &self.mapper.cctx.options;
         let expr = ast_visitor::map_expression_default(self, expr);
         let loc = expr.loc().clone();
         match self.sig_verification_loc_tys.get(&loc) {
@@ -988,7 +986,7 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
     fn map_program(&mut self, prog: &'ast ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
         let (total_errors_, sig_verification_loc_tys_) =
             signature_verification::collect_annotations(
-                self.cctx,
+                self.mapper.cctx,
                 self.default_any,
                 self.max_type_size,
                 prog,

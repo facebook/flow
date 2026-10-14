@@ -223,7 +223,7 @@ struct Inference;
 
 impl Inference {
     fn typed_opening_of_jsx_element(
-        cx: &Context,
+        cx: &mut Context,
         loc: &ALoc,
         expr: &ast::jsx::Element<ALoc, ALoc>,
     ) -> Result<ast::jsx::Opening<ALoc, (ALoc, Type)>, Found> {
@@ -249,7 +249,7 @@ impl Inference {
     }
 
     fn type_of_component_name_of_jsx_element(
-        cx: &Context,
+        cx: &mut Context,
         loc: &ALoc,
         expr: &ast::jsx::Element<ALoc, ALoc>,
     ) -> Result<Type, Found> {
@@ -258,7 +258,7 @@ impl Inference {
     }
 
     fn type_of_props_of_jsx_element(
-        cx: &Context,
+        cx: &mut Context,
         loc: &ALoc,
         expr: &ast::jsx::Element<ALoc, ALoc>,
     ) -> Result<Type, Found> {
@@ -267,7 +267,7 @@ impl Inference {
     }
 
     fn type_of_expression(
-        cx: &Context,
+        cx: &mut Context,
         expr: &expression::Expression<ALoc, ALoc>,
     ) -> Result<Type, Found> {
         let typed = typing_statement::expression(None, None, None, cx, expr)
@@ -276,7 +276,7 @@ impl Inference {
     }
 
     fn type_of_class_id(
-        cx: &Context,
+        cx: &mut Context,
         loc: &ALoc,
         cls: &ast::class::Class<ALoc, ALoc>,
     ) -> Result<Type, Found> {
@@ -302,7 +302,7 @@ impl Inference {
     }
 
     fn type_of_identifier(
-        cx: &Context,
+        cx: &mut Context,
         loc: &ALoc,
         id: &ast::Identifier<ALoc, ALoc>,
     ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
@@ -310,7 +310,7 @@ impl Inference {
     }
 
     fn type_of_match_member_pattern(
-        cx: &Context,
+        cx: &mut Context,
         mem: &ast::match_pattern::MemberPattern<ALoc, ALoc>,
     ) -> Result<Type, Found> {
         match_pattern::type_of_member_pattern(
@@ -344,7 +344,7 @@ enum EnclosingClass {
 }
 
 struct ProcessRequestSearcher<'a, 'cx> {
-    cx: &'a Context<'cx>,
+    cx: &'a mut Context<'cx>,
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     from_trigger_character: bool,
     cursor: &'a Loc,
@@ -356,7 +356,7 @@ struct ProcessRequestSearcher<'a, 'cx> {
 
 impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
     fn new(
-        cx: &'a Context<'cx>,
+        cx: &'a mut Context<'cx>,
         file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
         from_trigger_character: bool,
         cursor: &'a Loc,
@@ -381,7 +381,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
         tparam.name.name.to_string()
     }
 
-    fn get_enclosing_class(&self) -> Result<Option<Type>, Found> {
+    fn get_enclosing_class(&mut self) -> Result<Option<Type>, Found> {
         match self.enclosing_classes.last() {
             None => Ok(None),
             Some(EnclosingClass::ClassId { loc, class_ }) => {
@@ -400,7 +400,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
         }
     }
 
-    fn check_closest_enclosing_statement(&self) -> Result<(), Found> {
+    fn check_closest_enclosing_statement(&mut self) -> Result<(), Found> {
         let stmt = self
             .enclosing_node_stack
             .iter()
@@ -426,18 +426,13 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
                 comments: None,
                 all_comments: vec![].into(),
             };
-            merge::post_merge_checks(
-                self.cx,
-                self.file_sig.dupe(),
-                &ast,
-                &tast,
-                self.cx.metadata(),
-            )?;
+            let metadata = self.cx.metadata().clone();
+            merge::post_merge_checks(self.cx, self.file_sig.dupe(), &ast, &tast, &metadata)?;
         }
         Ok(())
     }
 
-    fn type_from_enclosing_node(&self, loc: &ALoc) -> Result<Type, Found> {
+    fn type_from_enclosing_node(&mut self, loc: &ALoc) -> Result<Type, Found> {
         let node = self
             .enclosing_node_stack
             .last()
@@ -459,7 +454,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
         }
     }
 
-    fn default_ac_id(&self, type_: Type) -> Result<AutocompleteType, Found> {
+    fn default_ac_id(&mut self, type_: Type) -> Result<AutocompleteType, Found> {
         Ok(AutocompleteType::AcId {
             include_super: false,
             include_this: false,
@@ -528,7 +523,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
     }
 
     fn member_with_annot(
-        &self,
+        &mut self,
         expr_loc: &ALoc,
         obj: &expression::Expression<ALoc, ALoc>,
         property: &expression::member::Property<ALoc, ALoc>,
@@ -628,7 +623,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
     }
 
     fn ac_key_for_object(
-        &self,
+        &mut self,
         loc: &ALoc,
         obj: &expression::Object<ALoc, ALoc>,
     ) -> Result<AutocompleteType, Found> {
@@ -664,7 +659,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
     }
 
     fn indexed_access_type_with_annot(
-        &self,
+        &mut self,
         expr_loc: &ALoc,
         obj: &types::Type<ALoc, ALoc>,
         index: &types::Type<ALoc, ALoc>,
@@ -791,11 +786,8 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
     fn identifier(&mut self, ident: &'ast ast::Identifier<ALoc, ALoc>) -> Result<(), Found> {
         if self.covers_target(&ident.loc) {
             let t = self.type_from_enclosing_node(&ident.loc)?;
-            self.find(
-                ident.loc.dupe(),
-                ident.name.to_string(),
-                self.default_ac_id(t)?,
-            )
+            let autocomplete_type = self.default_ac_id(t)?;
+            self.find(ident.loc.dupe(), ident.name.to_string(), autocomplete_type)
         } else {
             ast_visitor::identifier_default(self, ident)
         }
@@ -807,11 +799,8 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
     ) -> Result<(), Found> {
         if self.covers_target(&ident.loc) {
             let t = self.type_from_enclosing_node(&ident.loc)?;
-            self.find(
-                ident.loc.dupe(),
-                ident.name.to_string(),
-                self.default_ac_id(t)?,
-            )
+            let autocomplete_type = self.default_ac_id(t)?;
+            self.find(ident.loc.dupe(), ident.name.to_string(), autocomplete_type)
         } else {
             ast_visitor::jsx_element_name_identifier_default(self, ident)
         }
@@ -1022,12 +1011,11 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
         id: &'ast ast::Identifier<ALoc, ALoc>,
     ) -> Result<(), Found> {
         if self.class_key_depth > 0 && self.covers_target(&id.loc) {
+            let enclosing_class_t = self.get_enclosing_class()?;
             self.find(
                 id.loc.dupe(),
                 id.name.to_string(),
-                AutocompleteType::AcClassKey {
-                    enclosing_class_t: self.get_enclosing_class()?,
-                },
+                AutocompleteType::AcClassKey { enclosing_class_t },
             )
         } else {
             Ok(())
@@ -1039,34 +1027,31 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
             expression::object::Key::Identifier(id)
                 if self.class_key_depth > 0 && self.covers_target(&id.loc) =>
             {
+                let enclosing_class_t = self.get_enclosing_class()?;
                 self.find(
                     id.loc.dupe(),
                     id.name.to_string(),
-                    AutocompleteType::AcClassKey {
-                        enclosing_class_t: self.get_enclosing_class()?,
-                    },
+                    AutocompleteType::AcClassKey { enclosing_class_t },
                 )
             }
             expression::object::Key::StringLiteral((loc, lit))
                 if self.class_key_depth > 0 && self.covers_target(loc) =>
             {
+                let enclosing_class_t = self.get_enclosing_class()?;
                 self.find(
                     loc.dupe(),
                     lit.raw.to_string(),
-                    AutocompleteType::AcClassKey {
-                        enclosing_class_t: self.get_enclosing_class()?,
-                    },
+                    AutocompleteType::AcClassKey { enclosing_class_t },
                 )
             }
             expression::object::Key::PrivateName(name)
                 if self.class_key_depth > 0 && self.covers_target(&name.loc) =>
             {
+                let enclosing_class_t = self.get_enclosing_class()?;
                 self.find(
                     name.loc.dupe(),
                     format!("#{}", name.name),
-                    AutocompleteType::AcClassKey {
-                        enclosing_class_t: self.get_enclosing_class()?,
-                    },
+                    AutocompleteType::AcClassKey { enclosing_class_t },
                 )
             }
             expression::object::Key::StringLiteral((loc, lit)) if self.covers_target(loc) => {
@@ -1287,7 +1272,8 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
         match &typeof_.argument {
             types::typeof_::Target::Unqualified(id) if self.covers_target(&id.loc) => {
                 let t = self.type_from_enclosing_node(&id.loc)?;
-                self.find(id.loc.dupe(), id.name.to_string(), self.default_ac_id(t)?)
+                let autocomplete_type = self.default_ac_id(t)?;
+                self.find(id.loc.dupe(), id.name.to_string(), autocomplete_type)
             }
             types::typeof_::Target::Qualified(q) if self.covers_target(&q.id.loc) => {
                 let obj_type = self.type_from_enclosing_node(&loc_of_typeof(&q.qualification))?;
@@ -1693,24 +1679,24 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
     }
 }
 
-pub fn autocomplete_id(cursor: &Loc, _cx: &Context, _ac_name: &str, ac_loc: &ALoc) -> bool {
+pub fn autocomplete_id(cursor: &Loc, _ac_name: &str, ac_loc: &ALoc) -> bool {
     covers_target(cursor, ac_loc)
 }
 
-pub fn autocomplete_literal(cursor: &Loc, _cx: &Context, ac_loc: &ALoc) -> bool {
+pub fn autocomplete_literal(cursor: &Loc, ac_loc: &ALoc) -> bool {
     covers_target(cursor, ac_loc)
 }
 
-pub fn autocomplete_object_key(cursor: &Loc, _cx: &Context, _ac_name: &str, ac_loc: &ALoc) -> bool {
+pub fn autocomplete_object_key(cursor: &Loc, _ac_name: &str, ac_loc: &ALoc) -> bool {
     covers_target(cursor, ac_loc)
 }
 
-pub fn autocomplete_jsx(cursor: &Loc, _cx: &Context, _ac_name: &str, ac_loc: &ALoc) -> bool {
+pub fn autocomplete_jsx(cursor: &Loc, _ac_name: &str, ac_loc: &ALoc) -> bool {
     covers_target(cursor, ac_loc)
 }
 
 pub fn process_location(
-    cx: &Context,
+    cx: &mut Context,
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     trigger_character: Option<&str>,
     cursor: &Loc,
@@ -1733,39 +1719,39 @@ pub fn process_location(
     }
 }
 
-fn autocomplete_id_hook(cx: &Context, ac_name: &str, ac_loc: ALoc) -> bool {
+fn autocomplete_id_hook(ac_name: &str, ac_loc: ALoc) -> bool {
     AUTOCOMPLETE_CURSOR.with(|cursor| {
         cursor
             .borrow()
             .as_ref()
-            .is_some_and(|cursor| autocomplete_id(cursor, cx, ac_name, &ac_loc))
+            .is_some_and(|cursor| autocomplete_id(cursor, ac_name, &ac_loc))
     })
 }
 
-fn autocomplete_literal_hook(cx: &Context, ac_loc: ALoc) -> bool {
+fn autocomplete_literal_hook(ac_loc: ALoc) -> bool {
     AUTOCOMPLETE_CURSOR.with(|cursor| {
         cursor
             .borrow()
             .as_ref()
-            .is_some_and(|cursor| autocomplete_literal(cursor, cx, &ac_loc))
+            .is_some_and(|cursor| autocomplete_literal(cursor, &ac_loc))
     })
 }
 
-fn autocomplete_object_key_hook(cx: &Context, ac_name: &str, ac_loc: ALoc) -> bool {
+fn autocomplete_object_key_hook(ac_name: &str, ac_loc: ALoc) -> bool {
     AUTOCOMPLETE_CURSOR.with(|cursor| {
         cursor
             .borrow()
             .as_ref()
-            .is_some_and(|cursor| autocomplete_object_key(cursor, cx, ac_name, &ac_loc))
+            .is_some_and(|cursor| autocomplete_object_key(cursor, ac_name, &ac_loc))
     })
 }
 
-fn autocomplete_jsx_hook(cx: &Context, ac_name: &str, ac_loc: ALoc) -> bool {
+fn autocomplete_jsx_hook(ac_name: &str, ac_loc: ALoc) -> bool {
     AUTOCOMPLETE_CURSOR.with(|cursor| {
         cursor
             .borrow()
             .as_ref()
-            .is_some_and(|cursor| autocomplete_jsx(cursor, cx, ac_name, &ac_loc))
+            .is_some_and(|cursor| autocomplete_jsx(cursor, ac_name, &ac_loc))
     })
 }
 

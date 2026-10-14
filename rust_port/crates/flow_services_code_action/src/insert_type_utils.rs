@@ -1280,7 +1280,7 @@ pub mod graphql {
     }
 
     fn get_imported_ident(
-        cx: &flow_typing_context::Context,
+        cx: &mut flow_typing_context::Context,
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
         item: (
             flow_data_structure_wrapper::smol_str::FlowSmolStr,
@@ -1304,7 +1304,7 @@ pub mod graphql {
     }
 
     pub fn extract_graphql_fragment(
-        cx: &flow_typing_context::Context,
+        cx: &mut flow_typing_context::Context,
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
         get_ast_from_heap: &dyn Fn(
             &flow_parser::file_key::FileKey,
@@ -1345,7 +1345,7 @@ pub mod graphql {
 }
 
 pub struct TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
-    pub cx: &'a flow_typing_context::Context<'cx>,
+    pub cx: &'a mut flow_typing_context::Context<'cx>,
     pub loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
     pub get_ast_from_heap:
         &'a dyn Fn(&flow_parser::file_key::FileKey) -> Option<flow_parser::ast::Program<Loc, Loc>>,
@@ -1362,7 +1362,7 @@ pub struct TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
 
 impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
     pub fn new(
-        cx: &'a flow_typing_context::Context<'cx>,
+        cx: &'a mut flow_typing_context::Context<'cx>,
         loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
         get_ast_from_heap: &'a dyn Fn(
             &flow_parser::file_key::FileKey,
@@ -1423,7 +1423,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
         ty2: ALocTy,
         tys: &[ALocTy],
     ) -> ALocTy {
-        let metadata = self.cx.metadata();
+        let frozen_metadata = self.cx.metadata().frozen.dupe();
         // Move `any`/dynamic members to the front of the union as a single sanitized `any`.
         // This is a heuristic that helps union resolution later on.
         let (ty1, ty2, tys) = match (ty1.as_ref(), ty2.as_ref()) {
@@ -1561,8 +1561,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                                                 &symbol.sym_provenance,
                                                 flow_common_ty::ty_symbol::Provenance::Library(_)
                                             )
-                                            && metadata
-                                                .frozen
+                                            && frozen_metadata
                                                 .facebook_fbt
                                                 .as_deref()
                                                 .is_some() =>
@@ -1625,7 +1624,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                                         &symbol.sym_provenance,
                                         flow_common_ty::ty_symbol::Provenance::Library(_)
                                     )
-                                    && metadata.frozen.facebook_fbt.as_deref().is_some() =>
+                                    && frozen_metadata.facebook_fbt.as_deref().is_some() =>
                             {
                                 false
                             }
@@ -1650,7 +1649,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
     }
 
     pub fn on_t(&mut self, env: &Loc, t: ALocTy) -> ALocTy {
-        let metadata = self.cx.metadata();
+        let frozen_metadata = self.cx.metadata().frozen.dupe();
         let loc = env.dupe();
         match t.as_ref() {
             ty::Ty::Bot(ty::BotKind::NoLowerWithUpper(ty::UpperBoundKind::NoUpper)) => {
@@ -1710,7 +1709,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                 ) && matches!(
                     &symbol.sym_provenance,
                     flow_common_ty::ty_symbol::Provenance::Library(_)
-                ) && metadata.frozen.facebook_fbt.as_deref() == Some("FbtElement") =>
+                ) && frozen_metadata.facebook_fbt.as_deref() == Some("FbtElement") =>
             {
                 let new_symbol = Symbol {
                     sym_name: FlowSmolStr::new_inline("Fbt"),
@@ -1805,7 +1804,7 @@ pub mod make_hardcoded_fixes {
     }
 
     pub fn run<Extra: BaseStats>(
-        cx: &flow_typing_context::Context,
+        cx: &mut flow_typing_context::Context,
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
         get_ast_from_heap: &dyn Fn(
             &flow_parser::file_key::FileKey,

@@ -23,6 +23,7 @@ use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::ETupleElementNotReadableData;
 use flow_typing_errors::error_message::ErrorMessage;
@@ -163,14 +164,14 @@ impl ConcretizedType {
     }
 
     fn for_all_concrete_ts<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         t: &Type,
-        f: &dyn Fn(&ConcretizedType) -> bool,
+        f: &dyn Fn(&mut Context<'cx>, &ConcretizedType) -> bool,
     ) -> Result<bool, FlowJsException> {
         let ts =
             FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason_of_t(t), t)?;
-        Ok(ts.iter().all(|t| f(&ConcretizedType(t.dupe()))))
+        Ok(ts.iter().all(|t| f(cx, &ConcretizedType(t.dupe()))))
     }
 
     fn wrap_unsafe(t: Type) -> ConcretizedType {
@@ -229,7 +230,7 @@ fn report_changed_filtering_result_to_predicate_result(
 fn run_predicate_over_union_members(
     ts: &[Type],
     result_collector: &PredicateResultCollector,
-    process_one: &dyn Fn(&Type, &PredicateResultCollector) -> Result<(), FlowJsException>,
+    process_one: &mut dyn FnMut(&Type, &PredicateResultCollector) -> Result<(), FlowJsException>,
 ) -> Result<(), FlowJsException> {
     let disjoint_fallback = TypeCollector::create();
     let mut any_survived = false;
@@ -265,14 +266,14 @@ fn run_predicate_over_union_members(
 }
 
 fn concretize_and_run_predicate<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
     variant: PredicateConcretetizerVariant,
     result_collector: &PredicateResultCollector,
     predicate_no_concretization: &dyn Fn(
-        &Context<'cx>,
+        &mut Context<'cx>,
         DepthTrace,
         &PredicateResultCollector,
         &Type,
@@ -281,65 +282,66 @@ fn concretize_and_run_predicate<'cx>(
     let reason = reason_of_t(l);
     let ts = FlowJs::possible_concrete_types_for_predicate(variant, cx, env, reason, l)?;
     // Runs the predicate on a single concretized member `t`, reporting into `rc`.
-    let process_one = |t: &Type, rc: &PredicateResultCollector| -> Result<(), FlowJsException> {
-        match t.deref() {
-            TypeInner::GenericT(box GenericTData {
-                bound,
-                name,
-                reason,
-                id,
-                no_infer,
-            }) => {
-                let bound_type_collector = TypeCollector::create();
-                let changed = Rc::new(RefCell::new(false));
-                let bound_result_collector = PredicateResultCollector {
-                    collector: bound_type_collector,
-                    changed: changed.dupe(),
-                    from_union: Cell::new(rc.from_union.get()),
-                    disjoint_fallback: rc.disjoint_fallback.dupe(),
-                };
-                let repositioned_bound =
-                    FlowJs::reposition_reason(cx, env, Some(trace), reason, None, bound)?;
-                concretize_and_run_predicate(
-                    cx,
-                    env,
-                    trace,
-                    &repositioned_bound,
-                    variant.clone(),
-                    &bound_result_collector,
-                    predicate_no_concretization,
-                )?;
-                let changed_val = *changed.borrow();
-                if changed_val {
-                    report_changes_to_input(rc);
-                }
-                let name = name.dupe();
-                let no_infer = *no_infer;
-                let id = id.clone();
-                bound_result_collector.collector.iter(|bound| {
-                    let type_ = Type::new(TypeInner::GenericT(Box::new(GenericTData {
-                        reason: reason_of_t(bound).dupe(),
-                        name: name.dupe(),
-                        bound: bound.dupe(),
-                        no_infer,
-                        id: id.clone(),
-                    })));
-                    report_filtering_result_to_predicate_result(
-                        FilterResult {
-                            type_,
-                            changed: changed_val,
-                        },
-                        rc,
-                    );
+    let mut process_one =
+        |t: &Type, rc: &PredicateResultCollector| -> Result<(), FlowJsException> {
+            match t.deref() {
+                TypeInner::GenericT(box GenericTData {
+                    bound,
+                    name,
+                    reason,
+                    id,
+                    no_infer,
+                }) => {
+                    let bound_type_collector = TypeCollector::create();
+                    let changed = Rc::new(RefCell::new(false));
+                    let bound_result_collector = PredicateResultCollector {
+                        collector: bound_type_collector,
+                        changed: changed.dupe(),
+                        from_union: Cell::new(rc.from_union.get()),
+                        disjoint_fallback: rc.disjoint_fallback.dupe(),
+                    };
+                    let repositioned_bound =
+                        FlowJs::reposition_reason(cx, env, Some(trace), reason, None, bound)?;
+                    concretize_and_run_predicate(
+                        cx,
+                        env,
+                        trace,
+                        &repositioned_bound,
+                        variant.clone(),
+                        &bound_result_collector,
+                        predicate_no_concretization,
+                    )?;
+                    let changed_val = *changed.borrow();
+                    if changed_val {
+                        report_changes_to_input(rc);
+                    }
+                    let name = name.dupe();
+                    let no_infer = *no_infer;
+                    let id = id.clone();
+                    bound_result_collector.collector.iter(|bound| {
+                        let type_ = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                            reason: reason_of_t(bound).dupe(),
+                            name: name.dupe(),
+                            bound: bound.dupe(),
+                            no_infer,
+                            id: id.clone(),
+                        })));
+                        report_filtering_result_to_predicate_result(
+                            FilterResult {
+                                type_,
+                                changed: changed_val,
+                            },
+                            rc,
+                        );
+                        Ok(())
+                    })?;
                     Ok(())
-                })?;
-                Ok(())
+                }
+                _ => predicate_no_concretization(cx, trace, rc, t),
             }
-            _ => predicate_no_concretization(cx, trace, rc, t),
-        }
-    };
+        };
     if ts.len() > 1 {
-        run_predicate_over_union_members(&ts, result_collector, &process_one)?;
+        run_predicate_over_union_members(&ts, result_collector, &mut process_one)?;
     } else {
         for t in ts.iter() {
             process_one(t, result_collector)?;
@@ -349,7 +351,7 @@ fn concretize_and_run_predicate<'cx>(
 }
 
 fn concretize_binary_rhs_and_run_binary_predicate<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
@@ -380,7 +382,7 @@ fn concretize_binary_rhs_and_run_binary_predicate<'cx>(
 // result - guard result in case of success
 // p - predicate
 fn predicate_no_concretization<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     result_collector: &PredicateResultCollector,
@@ -909,7 +911,7 @@ fn predicate_no_concretization<'cx>(
 /// function's formal parameters, [idx] is the index of the argument that gets
 /// refined.
 fn call_latent_pred<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     fun_t: &Type,
@@ -939,7 +941,10 @@ fn call_latent_pred<'cx>(
                 let argts_c = argts.to_vec();
                 let tin_c = tin.dupe();
                 let cases: Vec<
-                    Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + '_>,
+                    Box<
+                        dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>
+                            + '_,
+                    >,
                 > = members
                     .into_iter()
                     .map(|member_t| {
@@ -948,7 +953,7 @@ fn call_latent_pred<'cx>(
                         let targs_inner = targs_c.dupe();
                         let argts_inner = argts_c.clone();
                         let tin_inner = tin_c.dupe();
-                        Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                        Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                             call_latent_pred(
                                 cx,
                                 env,
@@ -965,7 +970,11 @@ fn call_latent_pred<'cx>(
                             )
                         })
                             as Box<
-                                dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>
+                                dyn FnOnce(
+                                        &mut Context<'cx>,
+                                        &FlowJsEnv,
+                                    )
+                                        -> Result<(), FlowJsException>
                                     + '_,
                             >
                     })
@@ -1131,7 +1140,7 @@ fn call_latent_pred<'cx>(
 }
 
 fn call_latent_param_pred<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     fun_t: &Type,
@@ -1167,7 +1176,7 @@ fn call_latent_param_pred<'cx>(
 }
 
 fn call_latent_this_pred<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     fun_t: &Type,
@@ -1196,12 +1205,12 @@ fn call_latent_this_pred<'cx>(
 }
 
 fn intersect<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t1: Type,
     t2: Type,
 ) -> Result<Type, JobError> {
-    fn is_any<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -> Result<bool, JobError> {
+    fn is_any<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t: &Type) -> Result<bool, JobError> {
         let ts =
             FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason_of_t(t), t);
         match ts {
@@ -1228,13 +1237,13 @@ fn intersect<'cx>(
     }
 
     fn tags_of_t<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         t: &ConcretizedType,
     ) -> Option<crate::type_filter::TypeTagSet> {
         crate::type_filter::tag_of_t(cx, t.unwrap())
     }
 
-    fn tags_differ<'cx>(cx: &Context<'cx>, t1: &ConcretizedType, t2: &ConcretizedType) -> bool {
+    fn tags_differ<'cx>(cx: &mut Context<'cx>, t1: &ConcretizedType, t2: &ConcretizedType) -> bool {
         match (tags_of_t(cx, t1), tags_of_t(cx, t2)) {
             (Some(ref t1_tags), Some(ref t2_tags)) => {
                 !crate::type_filter::tags_overlap(t1_tags, t2_tags)
@@ -1267,7 +1276,7 @@ fn intersect<'cx>(
     }
 
     fn type_tags_differ<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         depth: i32,
         ts1: &[Type],
@@ -1276,7 +1285,7 @@ fn intersect<'cx>(
         match (ts1, ts2) {
             ([t1, rest1 @ ..], [t2, rest2 @ ..]) => {
                 let t2_c = t2.dupe();
-                let all_differ = ConcretizedType::for_all_concrete_ts(cx, env, t1, &|ct1| {
+                let all_differ = ConcretizedType::for_all_concrete_ts(cx, env, t1, &|cx, ct1| {
                     types_differ(cx, env, depth, ct1, &t2_c)
                 })
                 .unwrap_or(false);
@@ -1288,7 +1297,7 @@ fn intersect<'cx>(
 
     // C<T> has no overlap with C<S> iff T and S have no overlap
     fn instance_tags_differ<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         depth: i32,
         t1: &ConcretizedType,
@@ -1333,7 +1342,7 @@ fn intersect<'cx>(
     }
 
     fn types_differ<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         depth: i32,
         t1: &ConcretizedType,
@@ -1344,7 +1353,7 @@ fn intersect<'cx>(
             return false;
         }
         let depth = depth + 1;
-        ConcretizedType::for_all_concrete_ts(cx, env, t2, &|ct2| {
+        ConcretizedType::for_all_concrete_ts(cx, env, t2, &|cx, ct2| {
             tags_differ(cx, t1, ct2)
                 || ground_types_differ(t1, ct2)
                 || instance_tags_differ(cx, env, depth, t1, ct2)
@@ -1353,7 +1362,7 @@ fn intersect<'cx>(
     }
 
     fn try_intersect<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         reason1: &Reason,
         t1_conc: &ConcretizedType,
@@ -1367,7 +1376,8 @@ fn intersect<'cx>(
         if let TypeInner::UnionT(_, rep) = quick_t2.deref() {
             if matches!(
                 union_rep::quick_mem_enum(
-                    |l, u| type_util::quick_subtype(None::<&fn(&Type)>, l, u),
+                    cx,
+                    |_, l, u| type_util::quick_subtype(None::<&mut fn(&Type)>, l, u),
                     t1,
                     rep,
                 ),
@@ -1400,11 +1410,11 @@ fn intersect<'cx>(
             } else {
                 Ok(Some(t1.dupe()))
             }
-        } else if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
+        } else if type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2)
             || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t1, t2)?
         {
             Ok(Some(t1.dupe()))
-        } else if type_util::quick_subtype(None::<&fn(&Type)>, t2, t1)
+        } else if type_util::quick_subtype(None::<&mut fn(&Type)>, t2, t1)
             || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t2, t1)?
         {
             Ok(Some(t2.dupe()))
@@ -1516,13 +1526,13 @@ fn intersect<'cx>(
 /// This means that the positive branch will always be taken, and so we are left with
 /// `empty` in the negated case.
 fn type_guard_diff<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t1: &Type,
     t2: &Type,
 ) -> Result<FilterResult, JobError> {
     let reason1 = reason_of_t(t1);
-    if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
+    if type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2)
         || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t1, t2)?
     {
         let r = reason1
@@ -1550,7 +1560,7 @@ fn type_guard_diff<'cx>(
         let mut ts: Vec<Type> = Vec::new();
         let mut changed = false;
         for t1_inner in t1s_conc {
-            if type_util::quick_subtype(None::<&fn(&Type)>, &t1_inner, t2)
+            if type_util::quick_subtype(None::<&mut fn(&Type)>, &t1_inner, t2)
                 || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, &t1_inner, t2)?
             {
                 continue;
@@ -1569,7 +1579,7 @@ fn type_guard_diff<'cx>(
 }
 
 fn prop_exists_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     key: &str,
     sense: bool,
@@ -1595,7 +1605,7 @@ fn prop_exists_test<'cx>(
 /// Returns `None` if it is unknown whether the object has the prop (for example
 /// due to inexact objects)
 fn has_prop<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     key: &Name,
     obj: &Type,
@@ -1642,7 +1652,7 @@ fn has_prop<'cx>(
     }
 
     fn find_key<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         exact: bool,
         super_t: &Type,
@@ -1725,7 +1735,7 @@ fn has_prop<'cx>(
 }
 
 fn prop_truthy_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     key: &str,
     reason: &Reason,
@@ -1747,7 +1757,7 @@ fn prop_truthy_test<'cx>(
 }
 
 fn prop_non_maybe_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     key: &str,
     reason: &Reason,
@@ -1769,7 +1779,7 @@ fn prop_non_maybe_test<'cx>(
 }
 
 fn prop_is_exactly_null_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     key: &str,
     reason: &Reason,
@@ -1791,7 +1801,7 @@ fn prop_is_exactly_null_test<'cx>(
 }
 
 fn prop_non_void_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     key: &str,
     reason: &Reason,
@@ -1815,7 +1825,7 @@ fn prop_non_void_test<'cx>(
 fn prop_exists_test_generic<'cx>(
     key: &str,
     reason: &Reason,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     result_collector: &PredicateResultCollector,
     orig_obj: &Type,
@@ -1998,7 +2008,7 @@ fn prop_exists_test_generic<'cx>(
 }
 
 fn binary_predicate<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     sense: bool,
@@ -2030,7 +2040,7 @@ fn binary_predicate<'cx>(
 // instead, handing back from one signature what the previous one pruned, so the
 // survivors of each signature become the input of the next.
 fn refine_away_construct_returns<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     result_collector: &PredicateResultCollector,
@@ -2067,7 +2077,7 @@ fn refine_away_construct_returns<'cx>(
 }
 
 fn instanceof_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     result_collector: &PredicateResultCollector,
@@ -2081,18 +2091,19 @@ fn instanceof_test<'cx>(
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ClassT(_))
         )
     {
-        let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+        let concretize = |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
             FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
         };
-        let concretize_sig = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-            FlowJs::possible_concrete_types_for_predicate(
-                PredicateConcretetizerVariant::ConcretizeRHSForInstanceOfPredicateTest,
-                cx,
-                env,
-                reason_of_t(t),
-                t,
-            )
-        };
+        let concretize_sig =
+            |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                FlowJs::possible_concrete_types_for_predicate(
+                    PredicateConcretetizerVariant::ConcretizeRHSForInstanceOfPredicateTest,
+                    cx,
+                    env,
+                    reason_of_t(t),
+                    t,
+                )
+            };
         let mut construct_returns =
             flow_js_utils::collect_construct_return_ts(&concretize, &concretize_sig, cx, right_t)?;
         // Like TypeScript, narrow to the type of `prototype` when there is no
@@ -2106,7 +2117,7 @@ fn instanceof_test<'cx>(
         if !construct_returns.is_empty() {
             let mut classes = Vec::new();
             for return_t in construct_returns {
-                for instance_t in concretize(&return_t)? {
+                for instance_t in concretize(cx, &return_t)? {
                     classes.push(InstanceofRhs::TypeOperand(Type::new(TypeInner::DefT(
                         reason_of_t(right_t).dupe(),
                         DefT::new(DefTInner::ClassT(instance_t)),
@@ -2263,7 +2274,7 @@ fn instanceof_test<'cx>(
             TypeInner::IntersectionT(_, _),
             right @ InstanceofRhs::InternalExtendsOperand { reason, c, a, .. },
         ) => {
-            let extends_use: UseT<Context<'cx>> =
+            let extends_use: UseT<Cx> =
                 UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
                     use_op: unknown_use(),
                     reason: reason.dupe(),
@@ -2485,7 +2496,7 @@ fn instanceof_test<'cx>(
 
 fn sentinel_prop_test<'cx>(
     key: &str,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     result_collector: &PredicateResultCollector,
     sense: bool,
@@ -2497,7 +2508,7 @@ fn sentinel_prop_test<'cx>(
 
 fn sentinel_prop_test_generic<'cx>(
     key: &str,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     result_collector: &PredicateResultCollector,
     orig_obj: &Type,
@@ -2551,7 +2562,8 @@ fn sentinel_prop_test_generic<'cx>(
     // the predicate function and its callers to understand how the context is
     // set up so that filtering ultimately only depends on what flows to
     // result.
-    let flow_sentinel_obj = |sense: bool,
+    let flow_sentinel_obj = |cx: &mut Context<'cx>,
+                             sense: bool,
                              props_tmap: properties::Id,
                              obj: &Type,
                              sentinel: &UnionEnumStar|
@@ -2606,7 +2618,8 @@ fn sentinel_prop_test_generic<'cx>(
         Ok(())
     };
 
-    let flow_sentinel_tuple = |sense: bool,
+    let flow_sentinel_tuple = |cx: &mut Context<'cx>,
+                               sense: bool,
                                elements: &[TupleElement],
                                tuple: &Type,
                                sentinel: &UnionEnumStar|
@@ -2694,11 +2707,17 @@ fn sentinel_prop_test_generic<'cx>(
                     match def_t.deref() {
                         // obj.key ===/!== literal value
                         DefTInner::ObjT(obj_t) => {
-                            flow_sentinel_obj(sense, obj_t.props_tmap.dupe(), obj, &s)?;
+                            flow_sentinel_obj(cx, sense, obj_t.props_tmap.dupe(), obj, &s)?;
                         }
                         // instance.key ===/!== literal value
                         DefTInner::InstanceT(instance_t) => {
-                            flow_sentinel_obj(sense, instance_t.inst.own_props.dupe(), obj, &s)?;
+                            flow_sentinel_obj(
+                                cx,
+                                sense,
+                                instance_t.inst.own_props.dupe(),
+                                obj,
+                                &s,
+                            )?;
                         }
                         // tuple.length ===/!== literal value
                         DefTInner::ArrT(arr_t)
@@ -2733,7 +2752,7 @@ fn sentinel_prop_test_generic<'cx>(
                                 arr_t.deref()
                                 && flow_js_utils::is_str_intlike(key) =>
                         {
-                            flow_sentinel_tuple(sense, elements, obj, &s)?;
+                            flow_sentinel_tuple(cx, sense, elements, obj, &s)?;
                         }
                         _ => {
                             report_unchanged_filtering_result_to_predicate_result(
@@ -2786,7 +2805,7 @@ fn sentinel_prop_test_generic<'cx>(
 }
 
 fn concretize_and_run_sentinel_prop_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     reason: &Reason,
     orig_obj: &Type,
@@ -2829,8 +2848,9 @@ fn concretize_and_run_sentinel_prop_test<'cx>(
                         UnionEnumStar::One(one_enum) => {
                             let def = enum_to_def(one_enum);
                             match union_rep::quick_mem_enum(
-                                |t1: &Type, t2: &Type| {
-                                    type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
+                                cx,
+                                |_, t1: &Type, t2: &Type| {
+                                    type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2)
                                 },
                                 &Type::new(TypeInner::DefT(r.dupe(), DefT::new(def))),
                                 rep,
@@ -2867,8 +2887,9 @@ fn concretize_and_run_sentinel_prop_test<'cx>(
                                 let def = enum_to_def(one_enum);
                                 let check_t = Type::new(TypeInner::DefT(r.dupe(), DefT::new(def)));
                                 let qm_result = union_rep::quick_mem_enum(
-                                    |t1: &Type, t2: &Type| {
-                                        type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
+                                    cx,
+                                    |_, t1: &Type, t2: &Type| {
+                                        type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2)
                                     },
                                     &check_t,
                                     rep,
@@ -2930,7 +2951,7 @@ fn concretize_and_run_sentinel_prop_test<'cx>(
 }
 
 fn eq_test<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     result_collector: &PredicateResultCollector,
     sense: bool,
     left: &Type,
@@ -3010,7 +3031,7 @@ fn eq_test<'cx>(
 
 // guards
 fn concretize_and_guard_prop<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     source: &Type,
     pred: &PropGuard,
@@ -3032,7 +3053,7 @@ fn concretize_and_guard_prop<'cx>(
     Ok(())
 }
 
-fn guard_prop<'cx>(cx: &Context<'cx>, source: &Type, pred: &PropGuard) -> bool {
+fn guard_prop<'cx>(cx: &mut Context<'cx>, source: &Type, pred: &PropGuard) -> bool {
     fn is_empty_and_changed(result: FilterResult) -> bool {
         match result.type_.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
@@ -3069,7 +3090,7 @@ pub enum PredicateResult {
 }
 
 pub(crate) fn run_predicate_track_changes<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     t: &Type,
     p: &Predicate,
     result_reason: Reason,
@@ -3078,7 +3099,7 @@ pub(crate) fn run_predicate_track_changes<'cx>(
 }
 
 fn run_predicate_track_changes_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t: &Type,
     p: &Predicate,
@@ -3125,7 +3146,7 @@ fn run_predicate_track_changes_with_env<'cx>(
 
 /// Collects the types that survive predicate filtering.
 pub(crate) fn collect_predicate_for_filtering<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     t: &Type,
     p: &Predicate,
 ) -> Result<TypeCollector, JobError> {
@@ -3133,11 +3154,11 @@ pub(crate) fn collect_predicate_for_filtering<'cx>(
 }
 
 pub(super) fn run_predicate_for_filtering_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t: &Type,
     p: &Predicate,
-    tout: &UseT<Context<'cx>>,
+    tout: &UseT<Cx>,
 ) -> Result<(), JobError> {
     let collector = collect_predicate_for_filtering_with_env(cx, env, t, p)?;
     for t in collector.collect_to_vec().iter() {
@@ -3148,7 +3169,7 @@ pub(super) fn run_predicate_for_filtering_with_env<'cx>(
 
 /// Collects the types that survive predicate filtering in the given environment.
 pub(super) fn collect_predicate_for_filtering_with_env<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t: &Type,
     p: &Predicate,

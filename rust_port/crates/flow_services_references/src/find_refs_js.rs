@@ -50,14 +50,16 @@ pub fn sort_and_dedup(refs: FindRefsFound) -> FindRefsFound {
 pub fn local_refs_of_find_ref_request<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast_info: &AstInfo,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &FileKey,
     request: &Request,
 ) -> Result<Result<FindRefsOk, String>, flow_utils_concurrency::job_error::JobError> {
     let def_info = &request.def_info;
-    let var_refs = |prop_refs: &[find_refs_types::SingleRef]| -> Result<
+    let var_refs = |cx: &mut Context<'cx>,
+                    prop_refs: &[find_refs_types::SingleRef]|
+     -> Result<
         Vec<find_refs_types::SingleRef>,
         flow_utils_concurrency::job_error::JobError,
     > {
@@ -92,7 +94,8 @@ pub fn local_refs_of_find_ref_request<'cx>(
         result.extend(local_refs);
         Ok(result)
     };
-    let merge_with_var_refs = |prop_refs_result: Result<
+    let merge_with_var_refs = |cx: &mut Context<'cx>,
+                               prop_refs_result: Result<
         Vec<find_refs_types::SingleRef>,
         String,
     >|
@@ -102,13 +105,13 @@ pub fn local_refs_of_find_ref_request<'cx>(
     > {
         match prop_refs_result {
             Ok(prop_refs) => {
-                let vr = var_refs(&prop_refs)?;
+                let vr = var_refs(cx, &prop_refs)?;
                 let mut all_refs = prop_refs;
                 all_refs.extend(vr);
                 Ok(Ok(FindRefsOk::FoundReferences(all_refs)))
             }
             Err(e) => {
-                let vr = var_refs(&[])?;
+                let vr = var_refs(cx, &[])?;
                 if vr.is_empty() {
                     Ok(Err(e))
                 } else {
@@ -144,7 +147,7 @@ pub fn local_refs_of_find_ref_request<'cx>(
                     )?
                 }
             };
-            merge_with_var_refs(prop_refs)
+            merge_with_var_refs(cx, prop_refs)
         }
         DefInfo::PropertyDefinition(props_info) => {
             let prop_refs = property_find_refs::property_find_refs_in_file(
@@ -156,7 +159,7 @@ pub fn local_refs_of_find_ref_request<'cx>(
                 file_key,
                 props_info,
             )?;
-            merge_with_var_refs(prop_refs)
+            merge_with_var_refs(cx, prop_refs)
         }
         DefInfo::NoDefinition(no_def_reason) => {
             Ok(Ok(FindRefsOk::NoDefinition(no_def_reason.clone())))
@@ -168,7 +171,7 @@ pub fn find_local_refs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     file_key: &FileKey,
     ast_info: &AstInfo,
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     kind: Kind,

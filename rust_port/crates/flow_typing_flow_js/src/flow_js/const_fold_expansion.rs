@@ -19,16 +19,16 @@ use flow_common::reason::Reason;
 use flow_typing_context::Context;
 
 pub(crate) fn guard<'cx, T, F>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     id: i32,
     reason_with_pos: (Reason, i32),
     f: F,
 ) -> T
 where
-    F: FnOnce(i32) -> T,
+    F: FnOnce(&mut Context<'cx>, i32) -> T,
 {
     let key = (id, reason_with_pos.0, reason_with_pos.1);
     let count = cx.const_fold_cache().get(&key).copied().unwrap_or(0);
     cx.const_fold_cache_mut().insert(key, count + 1);
-    f(count)
+    f(cx, count)
 }

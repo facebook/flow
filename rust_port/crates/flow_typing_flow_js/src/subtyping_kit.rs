@@ -19,6 +19,7 @@ use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_context::Cx;
 use flow_typing_errors::error_message::EClassToObjectData;
 use flow_typing_errors::error_message::EConstructSignatureMissingInSubtypingData;
 use flow_typing_errors::error_message::EExpectedBigIntLitData;
@@ -151,11 +152,11 @@ use crate::template_literal_type;
 use crate::type_inference_hooks_js;
 
 fn flow_all_in_union<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: &DepthTrace,
     rep: &union_rep::UnionRep,
-    u: &UseT<Context<'cx>>,
+    u: &UseT<Cx>,
 ) -> Result<(), FlowJsException> {
     flow_js_utils::iter_union(
         |cx, trace, (t, u)| FlowJs::rec_flow_with_env(cx, env, *trace, t, u),
@@ -169,7 +170,7 @@ fn flow_all_in_union<'cx>(
 }
 
 fn add_output_prop_polarity_mismatch<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     lower: PropPolarityMismatchObject<&Type, ALoc>,
@@ -240,7 +241,7 @@ fn property_type_for_subtyping(
 }
 
 fn try_property_method_bivariant<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -290,7 +291,7 @@ fn try_property_method_bivariant<'cx>(
 }
 
 fn rec_flow_p_inner<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
@@ -429,7 +430,7 @@ fn index_of_param(params: &[(Option<Name>, Type)], x: &Name) -> Option<usize> {
 }
 
 fn func_type_guard_compat<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -525,7 +526,7 @@ fn func_type_guard_compat<'cx>(
 }
 
 fn funt_to_funt_check_this_contravariant<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     lreason: &Reason,
@@ -578,7 +579,7 @@ fn funt_to_funt_check_this_ignore(_use_op: &UseOp) -> Result<(), FlowJsException
 // `multiflow_subtype` for the standard path, a bivariant pairwise walk for
 // the TS-mode path).
 fn funt_to_funt_check<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -588,8 +589,8 @@ fn funt_to_funt_check<'cx>(
     ft1: &flow_typing_type::type_::FunType,
     ureason: &Reason,
     ft2: &flow_typing_type::type_::FunType,
-    check_this: &dyn Fn(&UseOp) -> Result<(), FlowJsException>,
-    check_params: &dyn Fn(&UseOp) -> Result<(), FlowJsException>,
+    check_this: &dyn Fn(&mut Context<'cx>, &UseOp) -> Result<(), FlowJsException>,
+    check_params: &dyn Fn(&mut Context<'cx>, &UseOp) -> Result<(), FlowJsException>,
 ) -> Result<(), FlowJsException> {
     let inner_use_op = if let VirtualUseOp::Frame(ref frame, ref inner) = use_op {
         if let VirtualFrameUseOp::PropertyCompatibility(box PropertyCompatibilityData {
@@ -618,8 +619,8 @@ fn funt_to_funt_check<'cx>(
         Arc::new(inner_use_op),
     );
 
-    check_this(&use_op)?;
-    check_params(&use_op)?;
+    check_this(cx, &use_op)?;
+    check_params(cx, &use_op)?;
     match (&ft1.effect_, &ft2.effect_) {
         (ReactEffectType::AnyEffect, _)
         | (_, ReactEffectType::AnyEffect)
@@ -804,7 +805,7 @@ fn funt_to_funt_check<'cx>(
 // and similar subtypes. The regular callback argument and return checks still
 // run in the chosen direction.
 fn bivariant_param_flow<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -812,7 +813,7 @@ fn bivariant_param_flow<'cx>(
     target: &Type,
 ) -> Result<(), FlowJsException> {
     fn flow_param<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
@@ -837,8 +838,8 @@ fn bivariant_param_flow<'cx>(
                             ft1,
                             ureason,
                             ft2,
-                            &|use_op| funt_to_funt_check_this_ignore(use_op),
-                            &|use_op| {
+                            &|_, use_op| funt_to_funt_check_this_ignore(use_op),
+                            &|cx, use_op| {
                                 funt_to_funt_check_params_contravariant(
                                     cx, env, trace, ureason, ft1, ft2, use_op,
                                 )
@@ -886,7 +887,7 @@ fn bivariant_param_flow<'cx>(
 // ft2's params + rest, then routes it through `multiflow_subtype` so it
 // flows into ft1's params.
 fn funt_to_funt_check_params_contravariant<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     ureason: &Reason,
@@ -925,7 +926,7 @@ fn funt_to_funt_check_params_contravariant<'cx>(
 // these by building a tuple literal and flowing it; replicating that
 // here was deferred since method-syntax with rest is uncommon.
 fn funt_to_funt_check_params_bivariant<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     lreason: &Reason,
@@ -1038,7 +1039,7 @@ fn funt_to_funt_check_params_bivariant<'cx>(
 }
 
 fn funt_to_funt_method_bivariant<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1060,12 +1061,12 @@ fn funt_to_funt_method_bivariant<'cx>(
         ft1,
         ureason,
         ft2,
-        &|use_op| {
+        &|cx, use_op| {
             funt_to_funt_check_this_contravariant(
                 cx, env, trace, lreason, ft1, ureason, ft2, use_op,
             )
         },
-        &|use_op| {
+        &|cx, use_op| {
             funt_to_funt_check_params_bivariant(cx, env, trace, lreason, ureason, ft1, ft2, use_op)
         },
     )
@@ -1084,7 +1085,7 @@ fn funt_to_funt_method_bivariant<'cx>(
 // swap is the per-signature compatibility predicate, from contravariant params
 // to TS-style bivariant method params.
 fn try_method_bivariant<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -1092,7 +1093,7 @@ fn try_method_bivariant<'cx>(
     ut: &Type,
 ) -> Result<bool, FlowJsException> {
     fn direct_method_bivariant<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
@@ -1281,7 +1282,7 @@ fn try_method_bivariant<'cx>(
     }
 
     fn apply_method_bivariant<'cx>(
-        cx: &Context<'cx>,
+        cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
@@ -1297,7 +1298,7 @@ fn try_method_bivariant<'cx>(
             }
             (TypeInner::IntersectionT(_, rep), _) => {
                 let mut cases: Vec<
-                    Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>>,
+                    Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>>,
                 > = vec![];
                 for lt in rep
                     .members_iter()
@@ -1306,7 +1307,7 @@ fn try_method_bivariant<'cx>(
                     let lt = lt.dupe();
                     let ut = ut.dupe();
                     let use_op = use_op.dupe();
-                    cases.push(Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                    cases.push(Box::new(move |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                         apply_method_bivariant(cx, env, trace, use_op, &lt, &ut)
                     }));
                 }
@@ -1334,7 +1335,7 @@ fn try_method_bivariant<'cx>(
 }
 
 fn recover_missing_props<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
@@ -1404,33 +1405,35 @@ fn recover_missing_props<'cx>(
 /// one get their own error carrying the suggestion; the rest are named together
 /// in a single error.
 pub(crate) fn add_output_missing_props_from_lookup<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     data: &LookupPropsForSubtypingData,
     ids: Option<&properties::Set>,
 ) -> Result<(), FlowJsException> {
     let ids = ids.map(|ids| ids.iter().duped().collect::<Vec<_>>());
     let mut missing = vec![];
-    let add_output_one =
-        |prop_name: Option<Name>, suggestion: Option<FlowSmolStr>| -> Result<(), FlowJsException> {
-            flow_js_utils::add_output_with_env(
-                cx,
-                env,
-                ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
-                    lower: flow_js_utils::type_reference_with_reason_for_error(
-                        &data.lower,
-                        type_util::reason_of_t(&data.lower).dupe(),
-                    ),
-                    upper: flow_js_utils::type_reference_with_reason_for_error(
-                        &data.upper,
-                        type_util::reason_of_t(&data.upper).dupe(),
-                    ),
-                    prop_name,
-                    use_op: data.use_op.dupe(),
-                    suggestion,
-                })),
-            )
-        };
+    let add_output_one = |cx: &mut Context<'cx>,
+                          prop_name: Option<Name>,
+                          suggestion: Option<FlowSmolStr>|
+     -> Result<(), FlowJsException> {
+        flow_js_utils::add_output_with_env(
+            cx,
+            env,
+            ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
+                lower: flow_js_utils::type_reference_with_reason_for_error(
+                    &data.lower,
+                    type_util::reason_of_t(&data.lower).dupe(),
+                ),
+                upper: flow_js_utils::type_reference_with_reason_for_error(
+                    &data.upper,
+                    type_util::reason_of_t(&data.upper).dupe(),
+                ),
+                prop_name,
+                use_op: data.use_op.dupe(),
+                suggestion,
+            })),
+        )
+    };
     for (propref, _) in data.props.iter() {
         let name = name_of_propref(propref);
         let suggestion = name
@@ -1439,7 +1442,7 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
             .and_then(|(name, ids)| prop_typo_suggestion_for_name(cx, ids, name));
         match (&name, suggestion) {
             (Some(name), None) => missing.push(name.dupe()),
-            (_, suggestion) => add_output_one(name.dupe(), suggestion)?,
+            (_, suggestion) => add_output_one(cx, name.dupe(), suggestion)?,
         }
     }
     match Vec1::try_from_vec(missing) {
@@ -1447,7 +1450,7 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
         // A lone missing property reads better as its own error, and that is all
         // an unbatched lookup ever has.
         Ok(prop_names) if prop_names.len() == 1 => {
-            add_output_one(Some(prop_names.first().dupe()), None)
+            add_output_one(cx, Some(prop_names.first().dupe()), None)
         }
         Ok(prop_names) => flow_js_utils::add_output_with_env(
             cx,
@@ -1468,8 +1471,7 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
     }
 }
 
-pub(super) struct PropsToIndexerContext<'a, 'cx> {
-    pub(super) cx: &'a Context<'cx>,
+pub(super) struct PropsToIndexerContext<'a> {
     pub(super) env: &'a FlowJsEnv,
     pub(super) trace: DepthTrace,
     pub(super) use_op: UseOp,
@@ -1480,14 +1482,14 @@ pub(super) struct PropsToIndexerContext<'a, 'cx> {
     pub(super) lower_upper_subtyping_obj_ts: Option<(Type, Type)>,
 }
 
-impl PropsToIndexerContext<'_, '_> {
-    pub(super) fn flow_props_to_indexer(
+impl PropsToIndexerContext<'_> {
+    pub(super) fn flow_props_to_indexer<'cx>(
         &self,
+        cx: &mut Context<'cx>,
         lower_props: &properties::PropertiesMap,
         upper_props: &[&properties::PropertiesMap],
         upper_dict: &DictType,
     ) -> Result<(), FlowJsException> {
-        let cx = self.cx;
         let env = self.env;
         let trace = self.trace;
         let use_op = &self.use_op;
@@ -1501,85 +1503,86 @@ impl PropsToIndexerContext<'_, '_> {
             dict_polarity,
             ..
         } = upper_dict;
-        let flow_prop_to_indexer = |lp: &Property, name: &Name| -> Result<(), FlowJsException> {
-            let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
-                    PropertyCompatibilityData {
-                        prop: Some(name.dupe()),
-                        lower: lreason.dupe(),
-                        upper: ureason.dupe(),
-                    },
-                ))),
-                Arc::new(use_op.dupe()),
-            );
-            let lp_type = match lp.deref() {
-                PropertyInner::Field(fd)
-                    if let TypeInner::OptionalT { type_: lt, .. } = fd.type_.deref() =>
-                {
-                    PropertyType::OrdinaryField {
-                        type_: lt.dupe(),
-                        polarity: fd.polarity,
-                    }
-                }
-                _ => property_type_for_subtyping(lp, strictness_kind),
-            };
-            let up_type = PropertyType::OrdinaryField {
-                type_: value.dupe(),
-                polarity: *dict_polarity,
-            };
-            if lit {
-                match (
-                    property::read_t_of_property_type(&lp_type),
-                    property::read_t_of_property_type(&up_type),
-                ) {
-                    (Some(lt), Some(ut)) => {
-                        FlowJs::rec_flow_with_env(
-                            cx,
-                            env,
-                            trace,
-                            &lt,
-                            &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
-                        )?;
-                    }
-                    _ => {}
-                }
-            } else {
-                let propref = type_util::mk_named_prop(
-                    lreason
-                        .dupe()
-                        .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
-                    false,
-                    name.dupe(),
+        let flow_prop_to_indexer =
+            |cx: &mut Context<'cx>, lp: &Property, name: &Name| -> Result<(), FlowJsException> {
+                let use_op = VirtualUseOp::Frame(
+                    Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                        PropertyCompatibilityData {
+                            prop: Some(name.dupe()),
+                            lower: lreason.dupe(),
+                            upper: ureason.dupe(),
+                        },
+                    ))),
+                    Arc::new(use_op.dupe()),
                 );
-                let lower_upper_subtyping_obj_ts = self
-                    .lower_upper_subtyping_obj_ts
-                    .as_ref()
-                    .map(|(lower, upper)| (lower, upper));
-                let errs = rec_flow_p_inner(
-                    cx,
-                    env,
-                    Some(trace),
-                    use_op.dupe(),
-                    None,
-                    lower_upper_subtyping_obj_ts,
-                    strictness_kind,
-                    true,
-                    &propref,
-                    &lp_type,
-                    &up_type,
-                )?;
-                add_output_prop_polarity_mismatch(
-                    cx,
-                    env,
-                    use_op,
-                    PropPolarityMismatchObject::Type(&self.lower),
-                    PropPolarityMismatchObject::Type(&self.upper),
-                    errs,
-                    strictness_kind,
-                )?;
-            }
-            Ok(())
-        };
+                let lp_type = match lp.deref() {
+                    PropertyInner::Field(fd)
+                        if let TypeInner::OptionalT { type_: lt, .. } = fd.type_.deref() =>
+                    {
+                        PropertyType::OrdinaryField {
+                            type_: lt.dupe(),
+                            polarity: fd.polarity,
+                        }
+                    }
+                    _ => property_type_for_subtyping(lp, strictness_kind),
+                };
+                let up_type = PropertyType::OrdinaryField {
+                    type_: value.dupe(),
+                    polarity: *dict_polarity,
+                };
+                if lit {
+                    match (
+                        property::read_t_of_property_type(&lp_type),
+                        property::read_t_of_property_type(&up_type),
+                    ) {
+                        (Some(lt), Some(ut)) => {
+                            FlowJs::rec_flow_with_env(
+                                cx,
+                                env,
+                                trace,
+                                &lt,
+                                &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                            )?;
+                        }
+                        _ => {}
+                    }
+                } else {
+                    let propref = type_util::mk_named_prop(
+                        lreason
+                            .dupe()
+                            .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
+                        false,
+                        name.dupe(),
+                    );
+                    let lower_upper_subtyping_obj_ts = self
+                        .lower_upper_subtyping_obj_ts
+                        .as_ref()
+                        .map(|(lower, upper)| (lower, upper));
+                    let errs = rec_flow_p_inner(
+                        cx,
+                        env,
+                        Some(trace),
+                        use_op.dupe(),
+                        None,
+                        lower_upper_subtyping_obj_ts,
+                        strictness_kind,
+                        true,
+                        &propref,
+                        &lp_type,
+                        &up_type,
+                    )?;
+                    add_output_prop_polarity_mismatch(
+                        cx,
+                        env,
+                        use_op,
+                        PropPolarityMismatchObject::Type(&self.lower),
+                        PropPolarityMismatchObject::Type(&self.upper),
+                        errs,
+                        strictness_kind,
+                    )?;
+                }
+                Ok(())
+            };
         if !env.in_implicit_instantiation() {
             for (name, lp) in lower_props.iter() {
                 if upper_props.iter().any(|props| props.contains_key(name)) {
@@ -1588,7 +1591,7 @@ impl PropsToIndexerContext<'_, '_> {
                 let key_type = flow_js_utils::type_of_key_name_with_env(env, name.dupe(), lreason);
                 if FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, env, &key_type, key)?
                 {
-                    flow_prop_to_indexer(lp, name)?;
+                    flow_prop_to_indexer(cx, lp, name)?;
                 } else {
                     // Without object types (`inst_structural_subtype`), the caller only passes
                     // props whose key already passed this check.
@@ -1622,7 +1625,7 @@ impl PropsToIndexerContext<'_, '_> {
                 if upper_props.iter().any(|props| props.contains_key(name)) {
                     continue;
                 }
-                flow_prop_to_indexer(lp, name)?;
+                flow_prop_to_indexer(cx, lp, name)?;
                 keys_list.push(flow_js_utils::type_of_key_name_with_env(
                     env,
                     name.dupe(),
@@ -1652,7 +1655,7 @@ impl PropsToIndexerContext<'_, '_> {
 }
 
 fn flow_obj_to_obj<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -2118,48 +2121,51 @@ fn flow_obj_to_obj<'cx>(
                         _ => property::property_type(up),
                     };
                     let subtype_against_indexer =
-                        |polarity_mismatch_errs: &mut PolMismatchErrs|
+                        |cx: &mut Context<'cx>,
+                         polarity_mismatch_errs: &mut PolMismatchErrs|
                          -> Result<(), FlowJsException> {
-                        if lit {
-                            match (
-                                property::read_t_of_property_type(&lp_for_idx),
-                                property::read_t_of_property_type(&up_for_idx),
-                            ) {
-                                (Some(lt), Some(ut)) => {
-                                    FlowJs::rec_flow_with_env(
-                                        cx, env,
-                                        trace,
-                                        &lt,
-                                        &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
-                                    )?;
+                            if lit {
+                                match (
+                                    property::read_t_of_property_type(&lp_for_idx),
+                                    property::read_t_of_property_type(&up_for_idx),
+                                ) {
+                                    (Some(lt), Some(ut)) => {
+                                        FlowJs::rec_flow_with_env(
+                                            cx,
+                                            env,
+                                            trace,
+                                            &lt,
+                                            &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
+                                        )?;
+                                    }
+                                    _ => {}
                                 }
-                                _ => {}
+                            } else {
+                                let l_t = Type::new(TypeInner::DefT(
+                                    lreason.dupe(),
+                                    DefT::new(DefTInner::ObjT(l_obj.dupe())),
+                                ));
+                                let u_t = Type::new(TypeInner::DefT(
+                                    ureason.dupe(),
+                                    DefT::new(DefTInner::ObjT(u_obj.dupe())),
+                                ));
+                                let additional = rec_flow_p_inner(
+                                    cx,
+                                    env,
+                                    Some(trace),
+                                    mk_use_op(),
+                                    None,
+                                    Some((&l_t, &u_t)),
+                                    strictness_kind,
+                                    true,
+                                    &mk_propref(),
+                                    &lp_for_idx,
+                                    &up_for_idx,
+                                )?;
+                                polarity_mismatch_errs.extend(additional);
                             }
-                        } else {
-                            let l_t = Type::new(TypeInner::DefT(
-                                lreason.dupe(),
-                                DefT::new(DefTInner::ObjT(l_obj.dupe())),
-                            ));
-                            let u_t = Type::new(TypeInner::DefT(
-                                ureason.dupe(),
-                                DefT::new(DefTInner::ObjT(u_obj.dupe())),
-                            ));
-                            let additional = rec_flow_p_inner(
-                                cx, env,
-                                Some(trace),
-                                mk_use_op(),
-                                None,
-                                Some((&l_t, &u_t)),
-                                strictness_kind,
-                                true,
-                                &mk_propref(),
-                                &lp_for_idx,
-                                &up_for_idx,
-                            )?;
-                            polarity_mismatch_errs.extend(additional);
-                        }
-                        Ok(())
-                    };
+                            Ok(())
+                        };
                     match up.deref() {
                         PropertyInner::Field(fd)
                             if matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
@@ -2185,7 +2191,7 @@ fn flow_obj_to_obj<'cx>(
                             if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
                                 cx, env, &key_type, key,
                             )? {
-                                subtype_against_indexer(&mut polarity_mismatch_errs)?;
+                                subtype_against_indexer(cx, &mut polarity_mismatch_errs)?;
                             }
                         }
                         _ => {
@@ -2212,7 +2218,7 @@ fn flow_obj_to_obj<'cx>(
                                     key.dupe(),
                                 )),
                             )?;
-                            subtype_against_indexer(&mut polarity_mismatch_errs)?;
+                            subtype_against_indexer(cx, &mut polarity_mismatch_errs)?;
                         }
                     }
                 }
@@ -2526,8 +2532,9 @@ fn flow_obj_to_obj<'cx>(
                 ureason.dupe(),
                 DefT::new(DefTInner::ObjT(u_obj.dupe())),
             ));
+            let lower_props = cx.find_props(lflds.dupe());
+            let upper_props = cx.find_props(uflds.dupe());
             PropsToIndexerContext {
-                cx,
                 env,
                 trace,
                 use_op: use_op.dupe(),
@@ -2537,11 +2544,7 @@ fn flow_obj_to_obj<'cx>(
                 lit,
                 lower_upper_subtyping_obj_ts: Some((lower, upper)),
             }
-            .flow_props_to_indexer(
-                &cx.find_props(lflds.dupe()),
-                &[&cx.find_props(uflds.dupe())],
-                ud,
-            )?;
+            .flow_props_to_indexer(cx, &lower_props, &[&upper_props], ud)?;
             // If the left is inexact and the right is indexed, Flow mixed to the indexer
             // value. Mixed represents the possibly unknown properties on the inexact object
             match &lflags.obj_kind {
@@ -2677,7 +2680,7 @@ fn flow_obj_to_obj<'cx>(
 // will break if the subtyped child value is replaced by a
 // non-subtyped value
 fn flow_to_mutable_child<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -2743,7 +2746,7 @@ fn flow_to_mutable_child<'cx>(
 //    * [T1] ~> Array<Y>[U1, U2] checks T1 ~> U1
 //    * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
 fn array_flow<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -2874,7 +2877,7 @@ fn take_n_from_set(n: usize, set: &UnionEnumSet) -> Vec<UnionEnum> {
 }
 
 pub fn union_to_union<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -2884,7 +2887,7 @@ pub fn union_to_union<'cx>(
 ) -> Result<(), FlowJsException> {
     let guard_result = flow_js_utils::union_optimization_guard(
         cx,
-        |t1, t2| type_util::quick_subtype(None::<&fn(&Type)>, t1, t2),
+        |t1, t2| type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2),
         l,
         u,
     );
@@ -2936,7 +2939,7 @@ pub fn union_to_union<'cx>(
 }
 
 pub fn rec_sub_t<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     l: &Type,
@@ -3272,7 +3275,7 @@ pub fn rec_sub_t<'cx>(
                             let ureason = ureason.dupe();
                             let ltargs = lnom.nominal_type_args.dupe();
                             let utargs = unom.nominal_type_args.dupe();
-                            move |cx: &Context, env: &FlowJsEnv| {
+                            move |cx: &mut Context, env: &FlowJsEnv| {
                                 FlowJs::flow_type_args_with_env(
                                     cx, env, trace, use_op, &lreason, &ureason, ltargs, utargs,
                                 )
@@ -4099,7 +4102,7 @@ pub fn rec_sub_t<'cx>(
                 && matches!(
                     flow_js_utils::union_optimization_guard(
                         cx,
-                        |t1, t2| type_util::quick_subtype(None::<&fn(&Type)>, t1, t2),
+                        |t1, t2| type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2),
                         upper,
                         u,
                     ),
@@ -4121,12 +4124,14 @@ pub fn rec_sub_t<'cx>(
             // then everything in it must be upper-bounded by maybe
             match (
                 union_rep::quick_mem_enum(
-                    |t1, t2| type_util::quick_subtype(None::<&fn(&Type)>, t1, t2),
+                    cx,
+                    |_, t1, t2| type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2),
                     &void,
                     rep,
                 ),
                 union_rep::quick_mem_enum(
-                    |t1, t2| type_util::quick_subtype(None::<&fn(&Type)>, t1, t2),
+                    cx,
+                    |_, t1, t2| type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2),
                     &null,
                     rep,
                 ),
@@ -4138,7 +4143,7 @@ pub fn rec_sub_t<'cx>(
                     let filtered = flow_js_utils::remove_predicate_from_union(
                         reason.dupe(),
                         cx,
-                        |t| type_util::quick_subtype(None::<&fn(&Type)>, t, &void),
+                        |t| type_util::quick_subtype(None::<&mut fn(&Type)>, t, &void),
                         rep,
                     );
                     FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &filtered, &maybe)
@@ -4147,7 +4152,7 @@ pub fn rec_sub_t<'cx>(
                     let filtered = flow_js_utils::remove_predicate_from_union(
                         reason.dupe(),
                         cx,
-                        |t| type_util::quick_subtype(None::<&fn(&Type)>, t, &null),
+                        |t| type_util::quick_subtype(None::<&mut fn(&Type)>, t, &null),
                         rep,
                     );
                     FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &filtered, &maybe)
@@ -4157,8 +4162,8 @@ pub fn rec_sub_t<'cx>(
                         reason.dupe(),
                         cx,
                         |t| {
-                            type_util::quick_subtype(None::<&fn(&Type)>, t, &void)
-                                || type_util::quick_subtype(None::<&fn(&Type)>, t, &null)
+                            type_util::quick_subtype(None::<&mut fn(&Type)>, t, &void)
+                                || type_util::quick_subtype(None::<&mut fn(&Type)>, t, &null)
                         },
                         rep,
                     );
@@ -4183,7 +4188,8 @@ pub fn rec_sub_t<'cx>(
             let void = void::why_with_use_desc(*opt_use_desc, r.dupe());
             // if the union doesn't contain void, then everything in it must be upper-bounded by u
             match union_rep::quick_mem_enum(
-                |t1, t2| type_util::quick_subtype(None::<&fn(&Type)>, t1, t2),
+                cx,
+                |_, t1, t2| type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2),
                 &void,
                 rep,
             ) {
@@ -4192,7 +4198,7 @@ pub fn rec_sub_t<'cx>(
                     let filtered = flow_js_utils::remove_predicate_from_union(
                         reason.dupe(),
                         cx,
-                        |t| type_util::quick_subtype(None::<&fn(&Type)>, t, &void),
+                        |t| type_util::quick_subtype(None::<&mut fn(&Type)>, t, &void),
                         rep,
                     );
                     FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &filtered, opt)
@@ -4230,7 +4236,7 @@ pub fn rec_sub_t<'cx>(
                 }
             }
             if !rep.is_optimized_finally() {
-                rep.optimize_enum_only(|t| type_mapper::union_flatten(cx, t.duped()));
+                rep.optimize_enum_only(cx, |cx, t| type_mapper::union_flatten(cx, t.duped()));
             }
             match rep.check_enum_with_tag() {
                 Some((enums, Some(tag))) => {
@@ -4262,7 +4268,7 @@ pub fn rec_sub_t<'cx>(
                                 }
                                 Ok(()) => {
                                     let singleton_check =
-                                        |elt: UnionEnum| -> Result<(), FlowJsException> {
+                                        |cx: &mut Context<'cx>, elt: UnionEnum| -> Result<(), FlowJsException> {
                                             if Some(tag) == union_rep::tag_of_member(u) {
                                                 if !enums.iter().all(|e| *e == elt) {
                                                     flow_js_utils::add_output_with_env(
@@ -4294,21 +4300,21 @@ pub fn rec_sub_t<'cx>(
                                                 value: x, ..
                                             } = ud.deref() =>
                                         {
-                                            singleton_check(UnionEnum::Str(x.dupe()))?;
+                                            singleton_check(cx, UnionEnum::Str(x.dupe()))?;
                                         }
                                         TypeInner::DefT(_, ud)
                                             if let DefTInner::SingletonBoolT {
                                                 value: x, ..
                                             } = ud.deref() =>
                                         {
-                                            singleton_check(UnionEnum::Bool(*x))?;
+                                            singleton_check(cx, UnionEnum::Bool(*x))?;
                                         }
                                         TypeInner::DefT(_, ud)
                                             if let DefTInner::SingletonNumT {
                                                 value: x, ..
                                             } = ud.deref() =>
                                         {
-                                            singleton_check(UnionEnum::Num(x.dupe()))?;
+                                            singleton_check(cx, UnionEnum::Num(x.dupe()))?;
                                         }
                                         _ => {
                                             flow_all_in_union(
@@ -4381,7 +4387,7 @@ pub fn rec_sub_t<'cx>(
                 let ts: Vec<Type> = type_mapper::union_flatten(cx, rep.members_iter().duped());
                 ts.iter().any(|t| {
                     type_util::quick_subtype(
-                        Some(&|t: &Type| flow_js_utils::update_lit_type_from_annot(cx,env,  t)),
+                        Some(&mut |t: &Type| flow_js_utils::update_lit_type_from_annot(cx,env,  t)),
                         l,
                         t,
                     )
@@ -4497,7 +4503,7 @@ pub fn rec_sub_t<'cx>(
             // correct branch. This process is reused for intersections as well. See
             // comments on try_union and try_intersection.
             let l_for_annot = l.dupe();
-            let on_success: Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv)> =
+            let on_success: Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv)> =
                 Box::new(move |cx, env| {
                     flow_js_utils::update_lit_type_from_annot(cx, env, &l_for_annot);
                 });
@@ -4691,7 +4697,9 @@ pub fn rec_sub_t<'cx>(
             match arg_concretized {
                 Some(arg_prime) => {
                     let resolved = string_case_transform::resolve(
-                        Some(&|r, t| FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)),
+                        Some(&|cx: &mut Context<'_>, r: &Reason, t: &Type| {
+                            FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)
+                        }),
                         cx,
                         *kind,
                         arg_loc,
@@ -5152,7 +5160,7 @@ pub fn rec_sub_t<'cx>(
                 &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                     use_op: use_op.dupe(),
                     reason: reasonl.dupe(),
-                    tool: Box::new(react::Tool::<Context<'cx>>::ConfigCheck {
+                    tool: Box::new(react::Tool::<Cx>::ConfigCheck {
                         props: config.dupe(),
                     }),
                 }))),
@@ -5178,7 +5186,7 @@ pub fn rec_sub_t<'cx>(
                 &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                     use_op: use_op.dupe(),
                     reason: reasonl.dupe(),
-                    tool: Box::new(react::Tool::<Context<'cx>>::ConfigCheck {
+                    tool: Box::new(react::Tool::<Cx>::ConfigCheck {
                         props: config.dupe(),
                     }),
                 }))),
@@ -5354,12 +5362,12 @@ pub fn rec_sub_t<'cx>(
                 ft1,
                 ureason,
                 ft2,
-                &|use_op| {
+                &|cx, use_op| {
                     funt_to_funt_check_this_contravariant(
                         cx, env, trace, lreason, ft1, ureason, ft2, use_op,
                     )
                 },
-                &|use_op| {
+                &|cx, use_op| {
                     funt_to_funt_check_params_contravariant(cx, env, trace, ureason, ft1, ft2, use_op)
                 },
             )
@@ -5375,7 +5383,7 @@ pub fn rec_sub_t<'cx>(
                 && let DefTInner::ObjT(u_obj) = ud.deref() =>
         {
             let u_deft = u;
-            type_inference_hooks_js::dispatch_obj_to_obj_hook(cx, l, u_deft);
+            type_inference_hooks_js::dispatch_obj_to_obj_hook(l, u_deft);
             let print_fast_path = cx.is_verbose();
             if l_obj.props_tmap == u_obj.props_tmap && l_obj.call_t == u_obj.call_t {
                 if print_fast_path {
@@ -5874,7 +5882,7 @@ pub fn rec_sub_t<'cx>(
                 )?;
             } else {
                 let mut n: i32 = 0;
-                let tuple_element_compat = |n: i32,
+                let mut tuple_element_compat = |n: i32,
                                             t1: &Type,
                                             t2: &Type,
                                             p1: Polarity,
@@ -6209,7 +6217,7 @@ pub fn rec_sub_t<'cx>(
                 && matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. })
                 && let DefTInner::ClassT(class_instance) = ud.deref() =>
         {
-            let concretize = |t: &Type| {
+            let concretize = |cx: &mut Context<'_>, t: &Type| {
                 FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, type_util::reason_of_t(t), t)
             };
             match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(
@@ -6602,7 +6610,7 @@ pub fn rec_sub_t<'cx>(
                 None,
                 opaque_l_reason.loc().clone(),
                 vec![
-                    Box::new(move |cx: &Context, env: &FlowJsEnv| {
+                    Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeLowerBound {
                                 opaque_t_reason: opaque_u_reason_c,
@@ -6611,7 +6619,7 @@ pub fn rec_sub_t<'cx>(
                         );
                         FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &l_clone, &upper_lower)
                     }),
-                    Box::new(move |cx: &Context, env: &FlowJsEnv| {
+                    Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeUpperBound {
                                 opaque_t_reason: opaque_l_reason_c,
@@ -6669,7 +6677,7 @@ pub fn rec_sub_t<'cx>(
                 None,
                 reason.loc().clone(),
                 vec![
-                    Box::new(move |cx: &Context, env: &FlowJsEnv| {
+                    Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeLowerBound {
                                 opaque_t_reason: opaque_u_reason_c,
@@ -6678,7 +6686,7 @@ pub fn rec_sub_t<'cx>(
                         );
                         FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &l_clone, &upper_lower)
                     }),
-                    Box::new(move |cx: &Context, env: &FlowJsEnv| {
+                    Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
                         let repositioned = FlowJs::reposition_reason(
                             cx, env,
                             Some(trace),
@@ -6914,7 +6922,7 @@ pub fn rec_sub_t<'cx>(
                     EnumInfoInner::ConcreteEnum(c) => &c.representation_t,
                     EnumInfoInner::AbstractEnum { representation_t } => representation_t,
                 }
-                && type_util::quick_subtype(None::<&fn(&Type)>, repr, u) =>
+                && type_util::quick_subtype(None::<&mut fn(&Type)>, repr, u) =>
         {
             let representation_type = match repr.deref() {
                 TypeInner::DefT(_, d)
@@ -7174,7 +7182,7 @@ pub fn rec_sub_t<'cx>(
 }
 
 pub fn rec_flow_p<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
@@ -7202,7 +7210,7 @@ pub fn rec_flow_p<'cx>(
 }
 
 pub fn rec_flow_p_with_lower_upper_property<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,

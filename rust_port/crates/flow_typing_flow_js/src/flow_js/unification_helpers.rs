@@ -42,7 +42,7 @@ pub(super) fn ok_unify(unify_any: bool, t: &Type) -> bool {
 }
 
 pub(super) fn __unify<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     unify_cause: UnifyCause,
@@ -161,7 +161,7 @@ pub(super) fn __unify<'cx>(
 
 // Should only be called by __unify
 fn __unify_inner<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
     unify_any: bool,
@@ -625,19 +625,18 @@ fn __unify_inner<'cx>(
             //
             // On the other hand, if the tvars are already resolved, then we can do something
             // interesting...
-            let aloc_tables = cx.aloc_tables();
             match (cx.find_graph(id1), cx.find_graph(id2)) {
                 (
                     constraint::Constraints::Resolved(rt1),
                     constraint::Constraints::Resolved(rt2),
-                ) if reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), &aloc_tables) => {
+                ) if reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), cx.aloc_tables()) => {
                     naive_unify(cx, env, trace, use_op, &rt1, &rt2)?;
                 }
                 (
                     constraint::Constraints::Resolved(rt1),
                     constraint::Constraints::FullyResolved(s2),
                 ) if let rt2 = cx.force_fully_resolved_tvar(&s2)
-                    && reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), &aloc_tables) =>
+                    && reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), cx.aloc_tables()) =>
                 {
                     naive_unify(cx, env, trace, use_op, &rt1, &rt2)?;
                 }
@@ -645,7 +644,7 @@ fn __unify_inner<'cx>(
                     constraint::Constraints::FullyResolved(s1),
                     constraint::Constraints::Resolved(rt2),
                 ) if let rt1 = cx.force_fully_resolved_tvar(&s1)
-                    && reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), &aloc_tables) =>
+                    && reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), cx.aloc_tables()) =>
                 {
                     naive_unify(cx, env, trace, use_op, &rt1, &rt2)?;
                 }
@@ -654,7 +653,7 @@ fn __unify_inner<'cx>(
                     constraint::Constraints::FullyResolved(s2),
                 ) if let rt1 = cx.force_fully_resolved_tvar(&s1)
                     && let rt2 = cx.force_fully_resolved_tvar(&s2)
-                    && reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), &aloc_tables) =>
+                    && reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), cx.aloc_tables()) =>
                 {
                     // Can we unify these types? Tempting, again, but annotations can refer to recursive type
                     // definitions, and we might get into an infinite loop (which could perhaps be avoided by
@@ -684,7 +683,7 @@ fn __unify_inner<'cx>(
 }
 
 pub(super) fn unify_props<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -787,7 +786,7 @@ pub(super) fn unify_props<'cx>(
 // If some property `x` exists in one object but not another, ensure the
 // property is compatible with a dictionary, or error if none.
 pub(super) fn unify_prop_with_dict<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -873,7 +872,7 @@ pub(super) fn unify_prop_with_dict<'cx>(
 // bidirectional flows. This means that the destructuring work is duplicated,
 // and we're missing some opportunities for nested unification.
 pub(super) fn naive_unify<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
@@ -887,7 +886,7 @@ pub(super) fn naive_unify<'cx>(
 // TODO: either ensure that array_unify is the same as array_flow both ways, or
 // document why not.
 pub(super) fn array_unify<'cx>(
-    cx: &Context<'cx>,
+    cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
