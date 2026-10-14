@@ -11,7 +11,6 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
-use std::sync::Arc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
@@ -1553,13 +1552,7 @@ pub fn array(t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::DefT(r, d) => match d.deref() {
             DefTInner::MixedT(_) => {
-                let r = r.dupe().update_desc_new(|desc| match &desc {
-                    // If we always wrapped the reason desc in `RRefinedElement`, we may diverge
-                    // when typechecking loops instead of being caught by the constraint cache. Instead
-                    // we only wrap one element deep.
-                    Some(VirtualReasonDesc::RRefinedElement(_)) => desc,
-                    _ => desc.map(|desc| VirtualReasonDesc::RRefinedElement(Arc::new(desc))),
-                });
+                let r = r.dupe().replace_desc_new(None);
                 changed_result(Type::new(TypeInner::DefT(
                     r.dupe().replace_desc_new(VirtualReasonDesc::RROArrayType),
                     DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((

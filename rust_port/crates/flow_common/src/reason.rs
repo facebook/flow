@@ -448,7 +448,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RStatics(Arc<VirtualReasonDesc<L>>),
     RFrozen(Arc<VirtualReasonDesc<L>>),
     RRefined(Arc<VirtualReasonDesc<L>>),
-    RRefinedElement(Arc<VirtualReasonDesc<L>>),
     RPartialOf(Arc<VirtualReasonDesc<L>>),
     RRequiredOf(Arc<VirtualReasonDesc<L>>),
     RModule(Userland),
@@ -659,7 +658,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RStatics(d) => RStatics(Arc::new(d.map_locs(f))),
             RFrozen(d) => RFrozen(Arc::new(d.map_locs(f))),
             RRefined(d) => RRefined(Arc::new(d.map_locs(f))),
-            RRefinedElement(d) => RRefinedElement(Arc::new(d.map_locs(f))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
             RRequiredOf(d) => RRequiredOf(Arc::new(d.map_locs(f))),
             RMatchingProp(s, d) => RMatchingProp(s.dupe(), Arc::new(d.map_locs(f))),
@@ -1670,7 +1668,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RStatics(d) => format!("statics of {}", string_of_desc(d)),
         RFrozen(d) => format!("frozen {}", string_of_desc(d)),
         RRefined(d) => format!("refined {}", string_of_desc(d)),
-        RRefinedElement(d) => format!("array element of refined {}", string_of_desc(d)),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),
         RRequiredOf(d) => format!("required of {}", string_of_desc(d)),
 
