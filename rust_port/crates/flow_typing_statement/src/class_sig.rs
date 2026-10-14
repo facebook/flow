@@ -1218,11 +1218,7 @@ pub fn mk_this<'a>(self_: Type, cx: &mut Context<'a>, reason: Reason) -> (TypePa
 }
 
 fn supertype<'a, C: ConfigTypes>(cx: &mut Context<'a>, x: &class_types::Class<C>) -> (Type, Type) {
-    let super_reason = x
-        .instance
-        .reason
-        .dupe()
-        .update_desc(|d| d.map(|d| VirtualReasonDesc::RSuperOf(Arc::new(d))));
+    let super_reason = x.instance.reason.dupe().replace_desc(None);
     let static_reason = x.static_.reason.dupe();
     match &x.super_ {
         class_types::Super::Interface(iface) => {
@@ -2673,11 +2669,7 @@ pub fn make_thises<'a, C: ConfigTypes>(
     cx: &mut Context<'a>,
     x: &class_types::Class<C>,
 ) -> (Type, Type, Type, Type) {
-    let super_reason = x
-        .instance
-        .reason
-        .dupe()
-        .update_desc(|d| d.map(|d| VirtualReasonDesc::RSuperOf(Arc::new(d))));
+    let super_reason = x.instance.reason.dupe().replace_desc(None);
     match &x.super_ {
         class_types::Super::Interface(_) => {
             panic!("tried to evaluate toplevel of interface")

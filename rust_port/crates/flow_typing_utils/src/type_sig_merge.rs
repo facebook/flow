@@ -4200,8 +4200,7 @@ fn merge_interface<'cx>(
         let reason_for_super = reason.dupe();
         let make_super: Box<dyn FnOnce(Option<Type>) -> Type + 'cx> =
             Box::new(move |this_opt: Option<Type>| {
-                let super_reason =
-                    reason_for_super.update_desc(|d| d.map(|d| RSuperOf(Arc::new(d))));
+                let super_reason = reason_for_super.replace_desc(None);
                 let mut ts: Vec<Type> = extends_resolved
                     .into_iter()
                     .map(
@@ -4419,9 +4418,7 @@ fn merge_class_extends<'cx>(
 ) -> (Type, Type) {
     use flow_common::reason::VirtualReasonDesc::*;
 
-    let super_reason = reason
-        .dupe()
-        .update_desc(|d| d.map(|d| RSuperOf(Arc::new(d))));
+    let super_reason = reason.dupe().replace_desc(None);
     let (super_, static_proto) = match extends {
         ClassExtends::ObjectPrototypeExtendsNull => (
             Type::new(type_::TypeInner::NullProtoT(super_reason.dupe())),
