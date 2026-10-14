@@ -291,7 +291,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RObject,
     RObjectLit,
     RObjectLitUnsound,
-    RConstObjectLit,
     RObjectType,
     RMappedType,
     RInterfaceType,
@@ -493,7 +492,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RBigIntLit(s) => RBigIntLit(s.dupe()),
             RBooleanLit(b) => RBooleanLit(*b),
             RObject => RObject,
-            RConstObjectLit => RConstObjectLit,
             RObjectLit => RObjectLit,
             RObjectLitUnsound => RObjectLitUnsound,
             RObjectType => RObjectType,
@@ -1342,10 +1340,8 @@ pub fn mk_obj_lit_reason(
     use_unsound_fallback: impl FnOnce() -> bool,
     loc: ALoc,
 ) -> Reason {
-    let desc = if frozen {
+    let desc = if frozen || as_const {
         VirtualReasonDesc::RObject
-    } else if as_const {
-        VirtualReasonDesc::RConstObjectLit
     } else if use_unsound_fallback() {
         VirtualReasonDesc::RObjectLitUnsound
     } else {
@@ -1408,7 +1404,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Objects
         RObject => "object".to_string(),
         RObjectLit | RObjectLitUnsound => "object literal".to_string(),
-        RConstObjectLit => "const object literal".to_string(),
         RObjectType => "object type".to_string(),
         RMappedType => "mapped type".to_string(),
         RInterfaceType => "interface type".to_string(),
