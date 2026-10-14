@@ -73,6 +73,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         LIB_ES2015_SYMBOL_WELLKNOWN_JS,
     ),
     ("lib.es2016.array.include.js", LIB_ES2016_ARRAY_INCLUDE_JS),
+    ("lib.es2016.intl.js", tslib_contents::LIB_ES2016_INTL_D_TS),
     (
         "lib.es2017.arraybuffer.js",
         tslib_contents::LIB_ES2017_ARRAYBUFFER_D_TS,

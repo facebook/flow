@@ -29,6 +29,7 @@ pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asyn
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
 pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
 pub(super) const LIB_ES2015_SYMBOL_D_TS: &str = include_tslib!("lib.es2015.symbol.d.ts");
+pub(super) const LIB_ES2016_INTL_D_TS: &str = include_tslib!("lib.es2016.intl.d.ts");
 pub(super) const LIB_ES2017_ARRAYBUFFER_D_TS: &str = include_tslib!("lib.es2017.arraybuffer.d.ts");
 pub(super) const LIB_ES2017_DATE_D_TS: &str = include_tslib!("lib.es2017.date.d.ts");
 pub(super) const LIB_ES2017_OBJECT_D_TS: &str = include_tslib!("lib.es2017.object.d.ts");
@@ -124,10 +125,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2016.full.d.ts",
         include_tslib!("lib.es2016.full.d.ts"),
     ),
-    (
-        "lib.es2016.intl.d.ts",
-        include_tslib!("lib.es2016.intl.d.ts"),
-    ),
+    ("lib.es2016.intl.d.ts", LIB_ES2016_INTL_D_TS),
     ("lib.es2017.arraybuffer.d.ts", LIB_ES2017_ARRAYBUFFER_D_TS),
     ("lib.es2017.d.ts", include_tslib!("lib.es2017.d.ts")),
     ("lib.es2017.date.d.ts", LIB_ES2017_DATE_D_TS),
