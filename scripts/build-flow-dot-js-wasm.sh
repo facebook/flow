@@ -77,7 +77,7 @@ case "$PROFILE" in
     ;;
 esac
 
-INTERNAL_RUST_BIN="$REPO_DIR/xplat/rust/toolchain/current/basic/bin"
+INTERNAL_RUST_BIN="$REPO_DIR/third-party/rust-toolchain/rustup/current/basic/bin"
 if [[ -d "$INTERNAL_RUST_BIN" ]]; then
   export PATH="$INTERNAL_RUST_BIN:$PATH"
 fi
