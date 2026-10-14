@@ -1721,7 +1721,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:81:7
 
-Cannot get `x.foo` because property `foo` is missing in unknown function [1]. [prop-missing]
+Cannot get `x.foo` because property `foo` is missing in `Function` [1]. [prop-missing]
 
    fn.js:81:7
    81|     x.foo; // error

@@ -180,7 +180,7 @@ fn lookup_member_in_obj_props<L: Dupe>(
         } if *name == target => {
             let t = match prop {
                 ty::NamedProp::Field { t, .. } => t.dupe(),
-                ty::NamedProp::Method(ft) => Arc::new(Ty::Fun(Box::new(ft.clone()))),
+                ty::NamedProp::Method { fun: ft, .. } => Arc::new(Ty::Fun(Box::new(ft.clone()))),
                 ty::NamedProp::Get(t) => t.dupe(),
                 ty::NamedProp::Set(t) => t.dupe(),
             };

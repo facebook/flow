@@ -18,6 +18,7 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocFuzzyMap;
+use flow_aloc::ALocId;
 use flow_common_ty::ty_symbol::ALocImportedIdent;
 use flow_common_ty::ty_symbol::ALocSymbol;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -27,7 +28,6 @@ use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::Type;
-use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::eval;
 use flow_utils_concurrency::job_error::JobError;
 
@@ -161,7 +161,7 @@ pub type SymbolSet = BTreeSet<ALocSymbol>;
 pub struct Env<'a, 'cx> {
     /// Does not change. Set once in the beginning.
     pub genv: Genv<'a, 'cx>,
-    pub infer_tparams: Rc<[TypeParam]>,
+    pub infer_tparam_ids: Rc<Vec<ALocId>>,
     /// For debugging purposes mostly
     pub depth: u32,
     pub keep_only_namespace_name: bool,
@@ -177,7 +177,7 @@ impl<'a, 'cx> Env<'a, 'cx> {
         Env {
             genv,
             depth: 0,
-            infer_tparams: Rc::from([]),
+            infer_tparam_ids: Rc::new(Vec::new()),
             keep_only_namespace_name: false,
             seen_tvar_ids: Self::empty_tvar_ids(),
             seen_eval_ids: Self::empty_eval_ids(),

@@ -113,6 +113,14 @@ impl GenericBound {
 }
 
 impl GenericId {
+    /// The definition site of a bound generic; operations have no definition site.
+    pub fn definition_id(&self) -> Option<&ALocId> {
+        match self {
+            GenericId::Bound(bound) => Some(&bound.generic.id),
+            GenericId::Op(_, _) => None,
+        }
+    }
+
     fn all_subst_names(&self) -> Vec<SubstName> {
         match self {
             GenericId::Bound(bound) => bound.all_subst_names(),

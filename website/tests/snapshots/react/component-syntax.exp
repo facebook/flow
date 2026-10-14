@@ -80,7 +80,7 @@ References:
 
 Error --------------------------------------------------------------------- -:16:8
 
-Cannot assign `3` to `this.foo` because property `foo` is missing in global object [1]. [prop-missing]
+Cannot assign `3` to `this.foo` because property `foo` is missing in `Object` [1]. [prop-missing]
 
    -:16:8
    16|   this.foo = 3; // ERROR: Accessing `this`

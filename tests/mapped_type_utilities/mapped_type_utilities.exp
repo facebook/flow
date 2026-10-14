@@ -221,11 +221,11 @@ References:
 
 Error -------------------------------------------------------------------------------------------- omit_inference.js:5:1
 
-Cannot call `projectWithoutA` because in type argument `T` > property `a`: `Omit` [1] is not exactly the same as
+Cannot call `projectWithoutA` because in type argument `T` > property `a`: `unknown` [1] is not exactly the same as
 `number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `a` is invariantly typed. To fix the error,
-- Either make `Omit` [1] and `{a: number, b: string}` [3] exactly the same
+- Either make `{a: unknown, b: string}` [1] and `{a: number, b: string}` [3] exactly the same
 - Or make property `a` in `{a: number, b: string}` [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 

@@ -112,7 +112,15 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                 )),
                 true,
             ),
-            NamedProp::Method(ft) => (Arc::new(Ty::Fun(Box::new(ft.clone()))), false),
+            NamedProp::Method { fun, optional } => {
+                let t = Arc::new(Ty::Fun(Box::new(fun.clone())));
+                let t = if *optional {
+                    Arc::new(Ty::Union(false, t, Arc::new(Ty::Void), Arc::from([])))
+                } else {
+                    t
+                };
+                (t, *optional)
+            }
         }
     }
 

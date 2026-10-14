@@ -67,7 +67,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:22:3
 
-Cannot cast `x` to empty because enum [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to empty because `EnumValue<string>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    abstract-enum-value.js:22:3
    22|   x as empty; // ERROR
@@ -84,7 +84,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:23:3
 
-Cannot cast `x` to `E` because enum [1] is incompatible with `E` [2]. [incompatible-type]
+Cannot cast `x` to `E` because `EnumValue<string>` [1] is incompatible with `E` [2]. [incompatible-type]
 
    abstract-enum-value.js:23:3
    23|   x as E; // ERROR
@@ -101,7 +101,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:24:3
 
-Cannot cast `x` to number because enum [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to number because `EnumValue<string>` [1] is incompatible with `number` [2]. [incompatible-type]
 
    abstract-enum-value.js:24:3
    24|   x as number; // ERROR
@@ -118,7 +118,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:34:3
 
-Cannot cast `x` to boolean because enum [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x` to boolean because `EnumValue<T>` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    abstract-enum-value.js:34:3
    34|   x as boolean; // ERROR
@@ -171,7 +171,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:44:3
 
-Cannot cast `x` to `EnumValue` because `void` [1] is incompatible with enum [2]. [incompatible-type]
+Cannot cast `x` to `EnumValue` because `void` [1] is incompatible with `EnumValue<string>` [2]. [incompatible-type]
 
    abstract-enum-value.js:44:3
    44|   x as EnumValue<string>; // ERROR
@@ -226,8 +226,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- abstract-enum.js:10:15
 
-Cannot instantiate `Enum` because in type argument `TEnumValue`: `boolean` [1] is incompatible with enum [2].
-[incompatible-type]
+Cannot instantiate `Enum` because in type argument `TEnumValue`: `boolean` [1] is incompatible with
+`EnumValue<EnumRepresentationTypes>` [2]. [incompatible-type]
 
    abstract-enum.js:10:15
     10| type T = Enum<boolean>; // ERROR
@@ -282,8 +282,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:20:3
 
-Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1]: enum [2] is incompatible with `E` [3].
-[incompatible-type]
+Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1]: `EnumValue<string>` [2] is incompatible with
+`E` [3]. [incompatible-type]
 
    abstract-enum.js:20:3
     20|   x as Enum<E>; // ERROR
@@ -303,7 +303,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:36:5
 
-Cannot get `e.A` because property `A` is missing in enum [1]. [incompatible-use]
+Cannot get `e.A` because property `A` is missing in `Enum<TEnumValue>` [1]. [incompatible-use]
 
    abstract-enum.js:36:5
    36|   e.A; // ERROR
@@ -332,7 +332,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:42:3
 
-Cannot call `f` because in type argument `TEnumValue`: `true` [1] is incompatible with enum [2]. [incompatible-type]
+Cannot call `f` because in type argument `TEnumValue`: `true` [1] is incompatible with
+`EnumValue<EnumRepresentationTypes>` [2]. [incompatible-type]
 
    abstract-enum.js:42:3
     42| f(true); // ERROR
@@ -346,7 +347,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:42:3
 
-Cannot call `f` because in type argument `TEnumValue`: `true` [1] is incompatible with enum [2]. [incompatible-type]
+Cannot call `f` because in type argument `TEnumValue`: `true` [1] is incompatible with
+`EnumValue<EnumRepresentationTypes>` [2]. [incompatible-type]
 
    abstract-enum.js:42:3
    42| f(true); // ERROR

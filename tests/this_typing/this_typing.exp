@@ -1172,8 +1172,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:19:7
 
-Cannot call `myFun.bind` because a call signature declaring the expected parameter / return type is missing in function
-prototype [1]. [prop-missing]
+Cannot call `myFun.bind` because a call signature declaring the expected parameter / return type is missing in
+`Function` [1]. [prop-missing]
 
    declare_function.js:19:7
    19| myFun.bind(); // Error - void ~> number
@@ -1272,7 +1272,7 @@ References:
 Error ---------------------------------------------------------------------------------------- declare_function.js:22:11
 
 Cannot call `myPolyFun.bind` because a call signature declaring the expected parameter / return type is missing in
-function prototype [1]. [prop-missing]
+`Function` [1]. [prop-missing]
 
    declare_function.js:22:11
    22| myPolyFun.bind(); // Error - void ~> number

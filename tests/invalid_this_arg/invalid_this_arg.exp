@@ -305,8 +305,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:13:5
 
-Cannot call `o.m.bind` because a call signature declaring the expected parameter / return type is missing in function
-prototype [1]. [prop-missing]
+Cannot call `o.m.bind` because a call signature declaring the expected parameter / return type is missing in
+`Function` [1]. [prop-missing]
 
    rejected.js:13:5
    13| o.m.bind(); // error: no first argument

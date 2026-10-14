@@ -758,7 +758,7 @@ impl Serializer {
                     comments: None,
                 }
             }
-            NamedProp::Method(f) => {
+            NamedProp::Method { fun: f, optional } => {
                 let fun_t = self.function_(f);
                 ast::types::object::NormalProperty {
                     loc: LOC_NONE,
@@ -769,7 +769,7 @@ impl Serializer {
                             inner: Arc::new(fun_t),
                         },
                     ))),
-                    optional: false,
+                    optional: *optional,
                     static_: false,
                     proto: false,
                     method: true,

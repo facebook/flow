@@ -26,8 +26,10 @@ use flow_lazy::Lazy;
 use flow_parser::ast;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
+use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::eval;
 
 use crate::env::Env;
@@ -99,8 +101,6 @@ impl NormalizerInput for NoFlowInput {
         reason: Reason,
         name: &str,
     ) -> Result<A, Error> {
-        use flow_typing_type::type_::DefTInner;
-        use flow_typing_type::type_::TypeInner;
         let t = flow_typing_flow_common::flow_js_utils::lookup_builtin_type(cx, name, reason);
         let t = match t.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {

@@ -444,7 +444,7 @@ fn binder_of_member_reference(
         // are expanded into, so being a field is what separates the two.
         NamedProp::Field { .. } if receiver_is_enum => BinderKind::EnumMember,
         NamedProp::Field { .. } => BinderKind::Property,
-        NamedProp::Method(_) => BinderKind::Method,
+        NamedProp::Method { .. } => BinderKind::Method,
         NamedProp::Get(_) => BinderKind::Getter,
         NamedProp::Set(_) => BinderKind::Setter,
     };

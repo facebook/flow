@@ -855,8 +855,16 @@ fn type_object_property<L: Dupe>(
                 layout::pretty_space(),
                 type_(opts, depth, t.as_ref(), size),
             ]),
-            NamedProp::Method(func) => layout::fuse(vec![
+            NamedProp::Method {
+                fun: func,
+                optional,
+            } => layout::fuse(vec![
                 to_key(name),
+                if *optional {
+                    LayoutNode::atom("?".to_string())
+                } else {
+                    LayoutNode::empty()
+                },
                 type_function(opts, depth, &LayoutNode::atom(":".to_string()), func, size),
             ]),
             NamedProp::Get(t) => layout::group(vec![layout::fuse(vec![

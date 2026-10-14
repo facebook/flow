@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- arrow.js:2:3
 
-Cannot cast `this` to number because global object [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `this` to number because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
 
    arrow.js:2:3
    2|   this as number; // ERROR

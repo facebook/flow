@@ -1113,7 +1113,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- misc.js:68:28
 
 Cannot call `Object.keys(...).reduce` because: [incompatible-type]
- - Either object literal [1] is incompatible with mapped type [2].
+ - Either object literal [1] is incompatible with `{...}` [2].
  - Or no more than 1 argument is expected by function type [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1590,7 +1590,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:14:10
 
-Cannot return `x` because `{readonly [string]: unknown}` [1] is incompatible with partial `T` [2]. [incompatible-type]
+Cannot return `x` because `{readonly [string]: unknown}` [1] is incompatible with `Partial<T>` [2]. [incompatible-type]
 
    synthetic.js:14:10
    14|   return x; // error S incompatible with T
@@ -1607,8 +1607,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:18:10
 
-Cannot return `x` because `{readonly [string]: unknown}` [1] is incompatible with required of `T` [2].
-[incompatible-type]
+Cannot return `x` because `{readonly [string]: unknown}` [1] is incompatible with `Required<T>` [2]. [incompatible-type]
 
    synthetic.js:18:10
    18|   return x; // error S incompatible with T

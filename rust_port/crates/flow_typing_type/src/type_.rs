@@ -7290,7 +7290,7 @@ pub mod nominal {
         StuckEvalForPartialType,
         StuckEvalForRequiredType,
         StuckEvalForValuesType,
-        StuckEvalForConditionalType,
+        StuckEvalForConditionalType { infer_tparam_ids: Rc<Vec<ALocId>> },
         StuckEvalForKeyMirrorType,
         StuckEvalForEnumType,
         StuckEvalForPropertyType { name: Box<Name> },
@@ -7344,7 +7344,7 @@ pub mod nominal {
                     StuckEvalKind::StuckEvalForPartialType => write!(f, "StuckEvalForPartialType"),
                     StuckEvalKind::StuckEvalForRequiredType => write!(f, "StuckEvalForRequiredType"),
                     StuckEvalKind::StuckEvalForValuesType => write!(f, "StuckEvalForValuesType"),
-                    StuckEvalKind::StuckEvalForConditionalType => {
+                    StuckEvalKind::StuckEvalForConditionalType { .. } => {
                         write!(f, "StuckEvalForConditionalType")
                     }
                     StuckEvalKind::StuckEvalForGenericallyMappedObject(n) => {

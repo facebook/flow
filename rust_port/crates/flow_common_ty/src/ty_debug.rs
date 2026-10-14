@@ -423,7 +423,11 @@ fn dump_named_prop<L: Debug + Clone + Dupe>(depth: i32, x: &str, prop: &NamedPro
             polarity,
             optional,
         } => dump_field(depth, x, t, *polarity, *optional),
-        NamedProp::Method(f) => dump_fun_t(depth, f),
+        NamedProp::Method { fun, optional } => format!(
+            "{}{}",
+            if *optional { "optional " } else { "" },
+            dump_fun_t(depth, fun)
+        ),
         NamedProp::Get(t) => format!("get {}", dump_t(depth, t)),
         NamedProp::Set(t) => format!("set {}", dump_t(depth, t)),
     }
@@ -1138,8 +1142,9 @@ fn json_of_named_prop<L: Debug + Clone + Dupe>(
             ("polarity".to_string(), json_of_polarity(*polarity)),
             ("optional".to_string(), Json::Bool(*optional)),
         ])),
-        NamedProp::Method(f) => Json::Object(serde_json::Map::from_iter(vec![
+        NamedProp::Method { fun: f, optional } => Json::Object(serde_json::Map::from_iter(vec![
             ("kind".to_string(), Json::String("Method".to_string())),
+            ("optional".to_string(), Json::Bool(*optional)),
             (
                 "funtype".to_string(),
                 Json::Object(serde_json::Map::from_iter(json_of_fun_t(

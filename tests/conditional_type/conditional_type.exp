@@ -557,7 +557,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:12
 
-Cannot return `true` because `true` [1] is incompatible with conditional type [2]. [incompatible-type]
+Cannot return `true` because `true` [1] is incompatible with
+`[T] extends Readonly<[_K: string]> ? boolean : number` [2]. [incompatible-type]
 
    generic.js:4:12
    4|     return true; // error
@@ -571,7 +572,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:6:12
 
-Cannot return `1` because `1` [1] is incompatible with conditional type [2]. [incompatible-type]
+Cannot return `1` because `1` [1] is incompatible with `[T] extends Readonly<[_K: string]> ? boolean : number` [2].
+[incompatible-type]
 
    generic.js:6:12
    6|     return 1; // error
@@ -621,7 +623,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generic.js:17:12
 
-Cannot return `true` because `true` [1] is incompatible with conditional type [2]. [incompatible-type]
+Cannot return `true` because `true` [1] is incompatible with `[string] extends [T] ? boolean : number` [2].
+[incompatible-type]
 
    generic.js:17:12
    17|     return true; // error
@@ -635,7 +638,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generic.js:19:12
 
-Cannot return `1` because `1` [1] is incompatible with conditional type [2]. [incompatible-type]
+Cannot return `1` because `1` [1] is incompatible with `[string] extends [T] ? boolean : number` [2].
+[incompatible-type]
 
    generic.js:19:12
    19|     return 1; // error
@@ -719,7 +723,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:41:7
 
-Cannot assign `y` to `x` because conditional type [1] is incompatible with conditional type [2]. [incompatible-type]
+Cannot assign `y` to `x` because `string extends S ? boolean : number` [1] is incompatible with
+`string extends T ? boolean : number` [2]. [incompatible-type]
 
    generic.js:41:7
    41|   x = y; // expected error
@@ -773,7 +778,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- generic.js:76:31
 
 Cannot return `getConditionalWithInfer(...)` because: [incompatible-type]
- - Either `unknown` [1] is incompatible with indexed access [2].
+ - Either `unknown` [1] is incompatible with `T[0]` [2].
  - Or `unknown` [1] is incompatible with `"other"` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

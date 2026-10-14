@@ -85,7 +85,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- opaque_bound.js:24:35
 
-Cannot assign `single_callable` to `sc` because `{a: number}` [1] is incompatible with function prototype [2].
+Cannot assign `single_callable` to `sc` because `{a: number}` [1] is incompatible with `Function` [2].
 [incompatible-type]
 
    opaque_bound.js:24:35

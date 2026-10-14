@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ call.js:2:1
 
-Cannot cast `y` to object type because `{[string]: boolean}` [1] is incompatible with function prototype [2].
+Cannot cast `y` to object type because `{[string]: boolean}` [1] is incompatible with `Function` [2].
 [incompatible-type]
 
    call.js:2:1

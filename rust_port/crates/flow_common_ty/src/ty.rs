@@ -446,7 +446,10 @@ pub enum NamedProp<L> {
         polarity: Polarity,
         optional: bool,
     },
-    Method(FunT<L>),
+    Method {
+        fun: FunT<L>,
+        optional: bool,
+    },
     Get(Arc<Ty<L>>),
     Set(Arc<Ty<L>>),
 }
@@ -1554,7 +1557,7 @@ where
             } => {
                 self.on_t(env, t);
             }
-            NamedProp::Method(fun_t) => {
+            NamedProp::Method { fun: fun_t, .. } => {
                 self.on_fun_t(env, fun_t);
             }
             NamedProp::Get(t) | NamedProp::Set(t) => {
@@ -2258,7 +2261,19 @@ where
                 self.on_bool(env, *o1, *o2)?;
                 self.on_t(env, t1, t2)
             }
-            (NamedProp::Method(f1), NamedProp::Method(f2)) => self.on_fun_t(env, f1, f2),
+            (
+                NamedProp::Method {
+                    fun: f1,
+                    optional: o1,
+                },
+                NamedProp::Method {
+                    fun: f2,
+                    optional: o2,
+                },
+            ) => {
+                self.on_bool(env, *o1, *o2)?;
+                self.on_fun_t(env, f1, f2)
+            }
             (NamedProp::Get(t1), NamedProp::Get(t2)) | (NamedProp::Set(t1), NamedProp::Set(t2)) => {
                 self.on_t(env, t1, t2)
             }
@@ -3107,7 +3122,7 @@ where
                 polarity: _,
                 optional: _,
             } => self.on_t(env, t),
-            NamedProp::Method(fun_t) => self.on_fun_t(env, fun_t),
+            NamedProp::Method { fun: fun_t, .. } => self.on_fun_t(env, fun_t),
             NamedProp::Get(t) | NamedProp::Set(t) => self.on_t(env, t),
         }
     }
@@ -3780,9 +3795,15 @@ where
                     optional,
                 }
             }
-            NamedProp::Method(fun_t) => {
+            NamedProp::Method {
+                fun: fun_t,
+                optional,
+            } => {
                 let fun_t_new = self.on_fun_t(env, fun_t);
-                NamedProp::Method(fun_t_new)
+                NamedProp::Method {
+                    fun: fun_t_new,
+                    optional,
+                }
             }
             NamedProp::Get(t) => {
                 let t_new = self.on_t(env, t);
@@ -4578,7 +4599,10 @@ impl<L: Dupe> NamedProp<L> {
                 polarity: *polarity,
                 optional: *optional,
             },
-            NamedProp::Method(fun) => NamedProp::Method(fun.map_locs(f)),
+            NamedProp::Method { fun, optional } => NamedProp::Method {
+                fun: fun.map_locs(f),
+                optional: *optional,
+            },
             NamedProp::Get(arc_ty) => NamedProp::Get(Arc::new(arc_ty.as_ref().map_locs(f))),
             NamedProp::Set(arc_ty) => NamedProp::Set(Arc::new(arc_ty.as_ref().map_locs(f))),
         }

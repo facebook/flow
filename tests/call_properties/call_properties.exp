@@ -290,8 +290,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- internal_slot.js:5:2
 
-Cannot cast object literal to `O` because object literal [1] is incompatible with function prototype [2].
-[incompatible-type]
+Cannot cast object literal to `O` because object literal [1] is incompatible with `Function` [2]. [incompatible-type]
 
    internal_slot.js:5:2
    5| ({}) as O; // err: no callable property

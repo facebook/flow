@@ -3786,7 +3786,9 @@ pub mod kit {
                                         nominal_type: std::rc::Rc::new(NominalType::new(
                                             NominalTypeInner {
                                                 nominal_id: nominal::Id::StuckEval(
-                                                    nominal::StuckEvalKind::StuckEvalForConditionalType,
+                                                    nominal::StuckEvalKind::StuckEvalForConditionalType {
+                                                        infer_tparam_ids: Rc::new(tparams.iter().map(|tp| cx.make_aloc_id(tp.reason.loc())).collect()),
+                                                    },
                                                 ),
                                                 underlying_t: nominal::UnderlyingT::FullyOpaque,
                                                 lower_t,

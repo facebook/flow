@@ -20,11 +20,13 @@ use std::collections::VecDeque;
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::Deref;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocFuzzy;
+use flow_aloc::ALocId;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -55,8 +57,10 @@ use flow_typing_type::type_::DestructorConditionalTypeData;
 use flow_typing_type::type_::DestructorMappedTypeData;
 use flow_typing_type::type_::DestructorSpreadTupleTypeData;
 use flow_typing_type::type_::DestructorSpreadTypeData;
+use flow_typing_type::type_::EnumInfoInner;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ModuleType;
+use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::OptionalIndexedAccessIndex;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
@@ -68,6 +72,7 @@ use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::TypeMap;
 use flow_typing_type::type_::UnresolvedArgData;
 use flow_typing_type::type_::eval as type_eval;
 use flow_typing_type::type_::nominal;
@@ -342,12 +347,7 @@ pub struct State {
 
 impl State {
     pub fn empty() -> Self {
-        State {
-            rec_tvar_ids: BTreeSet::new(),
-            rec_eval_ids: BTreeSet::new(),
-            found_computed_type: false,
-            remaining_type_size: None,
-        }
+        Self::default()
     }
 
     pub fn found_computed_type(&self) -> bool {
@@ -1224,13 +1224,17 @@ mod reason_utils {
     pub fn instance_symbol<'cx>(
         env: &mut Env<'_, 'cx>,
         reason: &Reason,
+        inst: &flow_typing_type::type_::InstType,
     ) -> Result<ALocSymbol, Error> {
+        if matches!(reason.desc(true), ReasonDesc::RThisType) {
+            return symbol_from_reason(env, reason, FlowSmolStr::new_inline("this"));
+        }
+        if let Some(name) = &inst.class_name {
+            return symbol_from_loc(env, inst.class_id.0.dupe(), name.dupe());
+        }
         match reason.desc(true) {
             ReasonDesc::RType(name) | ReasonDesc::RIdentifier(name) => {
                 symbol_from_reason(env, reason, name.dupe())
-            }
-            ReasonDesc::RThisType => {
-                symbol_from_reason(env, reason, FlowSmolStr::new_inline("this"))
             }
             _ => Err(terr(
                 ErrorKind::BadInstanceT,
@@ -1415,12 +1419,7 @@ mod type_converter {
             TypeInner::ImplicitInstantiationTvar(data) => {
                 constraint_node::<I>(env, state, id, data.id)
             }
-            TypeInner::GenericT(box GenericTData {
-                reason,
-                name,
-                bound,
-                ..
-            }) => generic_t::<I>(env, state, bound, reason, name, t),
+            TypeInner::GenericT(generic) => generic_t::<I>(env, state, generic, t),
             TypeInner::AnnotT(_, inner_t, _) => type__::<I>(env, state, id, inner_t),
             TypeInner::AnyT(reason, kind) => Ok(Arc::new(ty::Ty::Any(any_t(reason, kind)))),
             TypeInner::EvalT {
@@ -1603,12 +1602,40 @@ mod type_converter {
                         }
                     }
                 }
+                DefTInner::EnumObjectT {
+                    enum_value_t,
+                    enum_info,
+                } if matches!(
+                    enum_info.deref().deref(),
+                    EnumInfoInner::AbstractEnum { .. }
+                ) =>
+                {
+                    builtin_application::<I>(
+                        env,
+                        state,
+                        reason,
+                        "Enum",
+                        std::slice::from_ref(enum_value_t),
+                    )
+                }
                 DefTInner::EnumObjectT { .. } => {
                     let symbol = reason_utils::local_type_alias_symbol(env, reason)?;
                     Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                         ty::BuiltinOrSymbol::TSymbol(symbol),
                         None,
                     )))))
+                }
+                DefTInner::EnumValueT(enum_info)
+                    if let EnumInfoInner::AbstractEnum { representation_t } =
+                        enum_info.deref().deref() =>
+                {
+                    builtin_application::<I>(
+                        env,
+                        state,
+                        reason,
+                        "EnumValue",
+                        std::slice::from_ref(representation_t),
+                    )
                 }
                 DefTInner::EnumValueT(_) => {
                     let symbol = reason_utils::local_type_alias_symbol(env, reason)?;
@@ -1966,13 +1993,17 @@ mod type_converter {
                 }])
             }
             PropertyInner::Method { type_, .. } => {
-                let tys = method_ty::<I>(env, state, type_)?;
+                let (method_t, optional) = match type_.deref() {
+                    TypeInner::OptionalT { type_, .. } => (type_, true),
+                    _ => (type_, false),
+                };
+                let tys = method_ty::<I>(env, state, method_t)?;
                 let dl = def_locs(type_, prop);
                 Ok(tys
                     .into_iter()
                     .map(|ft| ty::Prop::NamedProp {
                         name: name.clone(),
-                        prop: ty::NamedProp::Method(ft),
+                        prop: ty::NamedProp::Method { fun: ft, optional },
                         inherited,
                         source: source.clone(),
                         def_locs: Arc::from(dl.clone()),
@@ -2160,7 +2191,7 @@ mod type_converter {
         reason: &Reason,
         inst: &flow_typing_type::type_::InstType,
     ) -> Result<ALocTy, Error> {
-        let symbol = reason_utils::instance_symbol(env, reason)?;
+        let symbol = reason_utils::instance_symbol(env, reason, inst)?;
         let mut tys = Vec::new();
         for (_, _, t, _) in inst.type_args.iter() {
             tys.push(type__::<I>(env, state, None, t)?);
@@ -2260,7 +2291,10 @@ mod type_converter {
                         .into_iter()
                         .map(|ft| ty::Prop::NamedProp {
                             name: Name::new(FlowSmolStr::new_inline("new")),
-                            prop: ty::NamedProp::Method(ft),
+                            prop: ty::NamedProp::Method {
+                                fun: ft,
+                                optional: false,
+                            },
                             inherited: false,
                             source: ty::PropSource::Interface,
                             def_locs: Vec::new().into(),
@@ -2459,7 +2493,7 @@ mod type_converter {
         use flow_typing_type::type_::InstanceKind;
         match &inst_t.inst.inst_kind {
             InstanceKind::ClassKind | InstanceKind::RecordKind { .. } => {
-                let symbol = reason_utils::instance_symbol(env, reason)?;
+                let symbol = reason_utils::instance_symbol(env, reason, &inst_t.inst)?;
                 Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                     ty::BuiltinOrSymbol::TSymbol(symbol),
                     None,
@@ -2567,7 +2601,7 @@ mod type_converter {
             tparams: &[flow_typing_type::type_::TypeParam],
             targs: Option<&[Type]>,
         ) -> Result<ALocTy, Error> {
-            let symbol = reason_utils::instance_symbol(env, r)?;
+            let symbol = reason_utils::instance_symbol(env, r, inst)?;
             let kind = match &inst.inst_kind {
                 flow_typing_type::type_::InstanceKind::InterfaceKind { .. } => {
                     ty::GenKind::InterfaceKind
@@ -2757,27 +2791,22 @@ mod type_converter {
             targs: Option<&[Type]>,
             t: &Type,
         ) -> Result<ALocTy, Error> {
+            if from_value && let Some(targs) = targs {
+                return I::typeapp(
+                    env.genv.cx,
+                    env,
+                    state,
+                    &mut |env, state, t| type__::<I>(env, state, None, t),
+                    &mut |env, state, t| type__::<I>(env, state, None, t),
+                    app_on_generic,
+                    from_value,
+                    type_util::reason_of_t(t).dupe(),
+                    t.dupe(),
+                    targs,
+                );
+            }
             match t.deref() {
                 TypeInner::AnyT(_, _) => type__::<I>(env, state, None, t),
-                // e.g. typeof functionDef<targ1, targ2>
-                TypeInner::DefT(reason, def_t)
-                    if from_value
-                        && targs.is_some()
-                        && matches!(def_t.deref(), DefTInner::PolyT(_)) =>
-                {
-                    I::typeapp(
-                        env.genv.cx,
-                        env,
-                        state,
-                        &mut |env, state, t| type__::<I>(env, state, None, t),
-                        &mut |env, state, t| type__::<I>(env, state, None, t),
-                        app_on_generic,
-                        from_value,
-                        reason.dupe(),
-                        t.clone(),
-                        targs.unwrap(),
-                    )
-                }
                 TypeInner::DefT(_, def_t) => match def_t.deref() {
                     DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) => {
                         singleton_poly::<I>(env, state, targs, tparams, t_out)
@@ -2867,11 +2896,26 @@ mod type_converter {
         }
     }
 
+    fn builtin_application<'cx, I: NormalizerInput>(
+        env: &mut Env<'_, 'cx>,
+        state: &mut State,
+        reason: &Reason,
+        name: &str,
+        args: &[Type],
+    ) -> Result<ALocTy, Error> {
+        let builtin = flow_typing_flow_common::flow_js_utils::lookup_builtin_type(
+            env.genv.cx,
+            name,
+            reason.dupe(),
+        );
+        type_app::<I>(env, state, false, &builtin, Some(args))
+    }
+
     fn nominal_t<'cx, I: NormalizerInput>(
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         reason: &Reason,
-        nominal: &flow_typing_type::type_::NominalType,
+        nominal: &NominalType,
     ) -> Result<ALocTy, Error> {
         use flow_typing_type::type_::nominal::Id as NominalId;
         match &nominal.nominal_id {
@@ -2898,15 +2942,102 @@ mod type_converter {
                 Some("Special InternalEnforceUnionOptimized upper bound"),
                 None,
             )),
-            // If we are under the mode when we never evaluate EvalT, then we will never get here.
-            // When we do evaluate EvalT, there is no good way to show that the EvalT is stuck,
-            // so it's better to error, so that only the unevaluated form is shown.
-            NominalId::StuckEval(_) => Err(terr(
-                ErrorKind::UnsupportedTypeCtor,
-                Some("Stuck EvalT"),
-                None,
-            )),
+            NominalId::StuckEval(kind) => stuck_eval::<I>(env, state, reason, kind, nominal),
         }
+    }
+
+    fn stuck_eval<'cx, I: NormalizerInput>(
+        env: &mut Env<'_, 'cx>,
+        state: &mut State,
+        reason: &Reason,
+        kind: &nominal::StuckEvalKind,
+        nominal: &NominalType,
+    ) -> Result<ALocTy, Error> {
+        use flow_typing_type::type_::Destructor as D;
+        use nominal::StuckEvalKind as K;
+
+        let args: Vec<&Type> = nominal
+            .nominal_type_args
+            .iter()
+            .map(|(_, _, t, _)| t)
+            .collect();
+        if let (K::StuckEvalForGenericallyMappedObject(name), [bound]) = (kind, args.as_slice()) {
+            use flow_common::subst_name::OpKind;
+            use flow_common::subst_name::SubstNameInner;
+            return match name.deref() {
+                SubstNameInner::Synthetic {
+                    op_kind: Some(OpKind::MappedObject | OpKind::MappedArray),
+                    ..
+                } => type__::<I>(env, state, None, bound),
+                _ => subst_name::<I>(env, state, reason.def_loc().dupe(), bound, bound, name),
+            };
+        }
+        if let (
+            K::StuckEvalForConditionalType { infer_tparam_ids },
+            [check_t, extends_t, true_t, false_t],
+        ) = (kind, args.as_slice())
+        {
+            let check_type = type__::<I>(env, state, None, check_t)?;
+            return conditional_type::<I>(
+                env,
+                state,
+                ConditionalTypeInput {
+                    check_type,
+                    infer_tparam_ids: infer_tparam_ids.dupe(),
+                    extends_t,
+                    true_t,
+                    false_t,
+                },
+            );
+        }
+        let (input, destructor) = match (kind, args.as_slice()) {
+            (K::StuckEvalForNonMaybeType, [t]) => (*t, D::NonMaybeType),
+            (K::StuckEvalForExactType, [t]) => (*t, D::ExactType),
+            (K::StuckEvalForReadOnlyType, [t]) => (*t, D::ReadOnlyType),
+            (K::StuckEvalForPartialType, [t]) => (*t, D::PartialType),
+            (K::StuckEvalForRequiredType, [t]) => (*t, D::RequiredType),
+            (K::StuckEvalForValuesType, [t]) => (*t, D::ValuesType),
+            (K::StuckEvalForKeyMirrorType, [t]) => (*t, D::TypeMap(TypeMap::ObjectKeyMirror)),
+            (K::StuckEvalForEnumType, [t]) => (*t, D::EnumType),
+            (K::StuckEvalForPropertyType { name }, [t]) => (
+                *t,
+                D::PropertyType {
+                    name: name.deref().dupe(),
+                },
+            ),
+            (K::StuckEvalForElementType, [t, index]) => (
+                *t,
+                D::ElementType {
+                    index_type: (*index).dupe(),
+                },
+            ),
+            (K::StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType { name }, [t]) => (
+                *t,
+                D::OptionalIndexedAccessNonMaybeType {
+                    index: OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(
+                        name.deref().dupe(),
+                    ),
+                },
+            ),
+            (K::StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType, [t, index]) => (
+                *t,
+                D::OptionalIndexedAccessNonMaybeType {
+                    index: OptionalIndexedAccessIndex::OptionalIndexedAccessTypeIndex(
+                        (*index).dupe(),
+                    ),
+                },
+            ),
+            (K::StuckEvalForOptionalIndexedAccessResultType, [t])
+            | (K::StuckEvalForReactDRO(_), [t]) => return type__::<I>(env, state, None, t),
+            _ => {
+                return Err(terr(
+                    ErrorKind::BadEvalT,
+                    Some("invalid stuck evaluation arguments"),
+                    None,
+                ));
+            }
+        };
+        type_destructor_unevaluated::<I>(env, state, input, &destructor)
     }
 
     fn subst_name<'cx, I: NormalizerInput>(
@@ -2975,28 +3106,64 @@ mod type_converter {
     fn generic_t<'cx, I: NormalizerInput>(
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        bound: &Type,
-        reason: &Reason,
-        name: &flow_common::subst_name::SubstName,
+        generic: &GenericTData,
         t: &Type,
     ) -> Result<ALocTy, Error> {
-        let loc = reason.def_loc().clone();
-        let found = env
-            .infer_tparams
-            .iter()
-            .find(|tp| tp.name == *name && loc == *tp.reason.def_loc());
+        let GenericTData {
+            reason,
+            name,
+            bound,
+            id,
+            ..
+        } = generic;
         // GenericT normalizes to Ty.Bound, except for conditional "infer" types.
-        match found {
-            Some(tp) => {
-                let tp_name = FlowSmolStr::new(tp.name.string_of_subst_name());
-                let tp_reason = tp.reason.clone();
-                let tp_bound = tp.bound.clone();
-                let symbol = symbol_from_reason(env, &tp_reason, tp_name)?;
-                let bound = param_bound::<I>(env, state, &tp_bound)?;
-                Ok(Arc::new(ty::Ty::Infer(Box::new((symbol, bound)))))
-            }
-            None => subst_name::<I>(env, state, loc, t, bound, name),
+        if id
+            .definition_id()
+            .is_some_and(|id| env.infer_tparam_ids.contains(id))
+        {
+            let symbol = symbol_from_reason(env, reason, name.string_of_subst_name().dupe())?;
+            let bound = param_bound::<I>(env, state, bound)?;
+            Ok(Arc::new(ty::Ty::Infer(Box::new((symbol, bound)))))
+        } else {
+            let loc = id
+                .definition_id()
+                .map_or_else(|| reason.def_loc().dupe(), |id| id.0.dupe());
+            subst_name::<I>(env, state, loc, t, bound, name)
         }
+    }
+
+    struct ConditionalTypeInput<'a> {
+        check_type: ALocTy,
+        infer_tparam_ids: Rc<Vec<ALocId>>,
+        extends_t: &'a Type,
+        true_t: &'a Type,
+        false_t: &'a Type,
+    }
+
+    fn conditional_type<'cx, I: NormalizerInput>(
+        env: &mut Env<'_, 'cx>,
+        state: &mut State,
+        input: ConditionalTypeInput<'_>,
+    ) -> Result<ALocTy, Error> {
+        let ConditionalTypeInput {
+            check_type,
+            infer_tparam_ids,
+            extends_t,
+            true_t,
+            false_t,
+        } = input;
+        let old_infer = std::mem::replace(&mut env.infer_tparam_ids, infer_tparam_ids);
+        let extends_type = type__::<I>(env, state, None, extends_t);
+        env.infer_tparam_ids = old_infer;
+        let extends_type = extends_type?;
+        let true_type = type__::<I>(env, state, None, true_t)?;
+        let false_type = type__::<I>(env, state, None, false_t)?;
+        Ok(Arc::new(ty::Ty::Conditional {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+        }))
     }
 
     fn param_bound<'cx, I: NormalizerInput>(
@@ -3440,21 +3607,23 @@ mod type_converter {
                 true_t,
                 false_t,
                 ..
-            }) => {
-                let check_type = ty;
-                let old_infer = std::mem::replace(&mut env.infer_tparams, infer_tparams.dupe());
-                let extends_type = type__::<I>(env, state, None, extends_t)?;
-                env.infer_tparams = old_infer;
-                let true_type = type__::<I>(env, state, None, true_t)?;
-                let false_type = type__::<I>(env, state, None, false_t)?;
-                Ok(Arc::new(ty::Ty::Conditional {
-                    check_type,
-                    extends_type,
-                    true_type,
-                    false_type,
-                }))
-            }
-            D::TypeMap(flow_typing_type::type_::TypeMap::ObjectKeyMirror) => {
+            }) => conditional_type::<I>(
+                env,
+                state,
+                ConditionalTypeInput {
+                    check_type: ty,
+                    infer_tparam_ids: Rc::new(
+                        infer_tparams
+                            .iter()
+                            .map(|tp| env.genv.cx.make_aloc_id(tp.reason.loc()))
+                            .collect(),
+                    ),
+                    extends_t,
+                    true_t,
+                    false_t,
+                },
+            ),
+            D::TypeMap(TypeMap::ObjectKeyMirror) => {
                 Ok(Arc::new(ty::Ty::Utility(ty::Utility::ObjKeyMirror(ty))))
             }
             D::PropertyType { name } => {
@@ -3656,7 +3825,7 @@ pub mod element_converter {
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         reason: &Reason,
-        nominal_type: &flow_typing_type::type_::NominalType,
+        nominal_type: &NominalType,
         tparams: Option<Vec<ty::TypeParam<ALoc>>>,
     ) -> Result<ty::Decl<ALoc>, Error> {
         let name_str = match &nominal_type.nominal_id {
@@ -3893,7 +4062,7 @@ pub mod element_converter {
 
             match inst_kind {
                 InstanceKind::InterfaceKind { inline: false, .. } => {
-                    let symbol = reason_utils::instance_symbol(env, r)?;
+                    let symbol = reason_utils::instance_symbol(env, r, inst)?;
                     Ok(ty::Elt::Decl(ty::Decl::InterfaceDecl(Box::new((
                         symbol,
                         ps.map(Into::into),
@@ -3912,14 +4081,14 @@ pub mod element_converter {
                     Ok(ty::Elt::Type(ty))
                 }
                 InstanceKind::ClassKind => {
-                    let symbol = reason_utils::instance_symbol(env, r)?;
+                    let symbol = reason_utils::instance_symbol(env, r, inst)?;
                     Ok(ty::Elt::Decl(ty::Decl::ClassDecl(Box::new((
                         symbol,
                         ps.map(Into::into),
                     )))))
                 }
                 InstanceKind::RecordKind { .. } => {
-                    let symbol = reason_utils::instance_symbol(env, r)?;
+                    let symbol = reason_utils::instance_symbol(env, r, inst)?;
                     Ok(ty::Elt::Decl(ty::Decl::RecordDecl(Box::new((
                         symbol,
                         ps.map(Into::into),
@@ -3978,7 +4147,7 @@ pub mod element_converter {
                     let max_enum_members = 50;
                     match enum_info_opt {
                         Some(enum_info) => match &***enum_info {
-                            flow_typing_type::type_::EnumInfoInner::ConcreteEnum(concrete) => {
+                            EnumInfoInner::ConcreteEnum(concrete) => {
                                 let mut all_members: Vec<_> =
                                     concrete.members.keys().cloned().collect();
                                 all_members.sort();
@@ -4312,7 +4481,12 @@ pub mod element_converter {
                             }
                         },
                         // Enums
-                        DefTInner::EnumObjectT { enum_info, .. } => {
+                        DefTInner::EnumObjectT { enum_info, .. }
+                            if matches!(
+                                enum_info.deref().deref(),
+                                EnumInfoInner::ConcreteEnum(_)
+                            ) =>
+                        {
                             return enum_decl(env, r, Some(enum_info));
                         }
                         DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
@@ -4929,7 +5103,7 @@ mod expand_members {
         force_instance: bool,
         allowed_prop_names: Option<&[Name]>,
         r: &Reason,
-        nominal_type: &flow_typing_type::type_::NominalType,
+        nominal_type: &NominalType,
     ) -> Result<ALocTy, Error> {
         let current_source = env.genv.cx.file();
         let opaque_source = r.def_loc().source();

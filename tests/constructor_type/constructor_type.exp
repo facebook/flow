@@ -172,8 +172,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- object_construct_sig.js:17:5
 
-Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
-[invalid-constructor]
+Cannot use `new` on `{new?(): {x: number}}` [1]. Only classes and interfaces with a construct signature can be
+constructed. [invalid-constructor]
 
    object_construct_sig.js:17:5
    17| new optionalMethod(); // ERROR: invalid-constructor
