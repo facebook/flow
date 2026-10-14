@@ -79,6 +79,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         tslib_contents::LIB_ES2017_ARRAYBUFFER_D_TS,
     ),
     ("lib.es2017.date.js", tslib_contents::LIB_ES2017_DATE_D_TS),
+    ("lib.es2017.intl.js", tslib_contents::LIB_ES2017_INTL_D_TS),
     (
         "lib.es2017.object.js",
         tslib_contents::LIB_ES2017_OBJECT_D_TS,
