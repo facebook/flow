@@ -910,6 +910,7 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             }
         }
         DefTInner::PolyT(box PolyTData {
+            kind: poly_kind,
             tparams_loc,
             tparams,
             t_out,
@@ -932,6 +933,7 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 t.dupe()
             } else {
                 DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                    kind: *poly_kind,
                     tparams_loc: tparams_loc.clone(),
                     tparams: tparams_prime,
                     t_out: t_out_prime,

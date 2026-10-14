@@ -125,7 +125,7 @@ impl NormalizerInput for FlowInput {
         }
     }
 
-    fn typeapp<'cx, A>(
+    fn typeapp_regular<'cx, A>(
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,

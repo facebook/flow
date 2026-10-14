@@ -56,6 +56,7 @@ use crate::type_::MixedFlavor;
 use crate::type_::OpaqueTypeCustomErrorCompatibilityData;
 use crate::type_::OptionalIndexedAccessTData;
 use crate::type_::PolyTData;
+use crate::type_::PolyTKind;
 use crate::type_::PositiveTypeGuardConsistencyData;
 use crate::type_::PrivateMethodTData;
 use crate::type_::PropertyCompatibilityData;
@@ -2229,6 +2230,7 @@ pub fn poly_type(
     tparams: vec1::Vec1<crate::type_::TypeParam>,
     t: Type,
     strictness_kind: crate::type_::TypeStrictnessKind,
+    poly_kind: PolyTKind,
 ) -> Type {
     use crate::type_::DefT;
     use crate::type_::DefTInner;
@@ -2241,6 +2243,7 @@ pub fn poly_type(
     Type::new(TypeInner::DefT(
         reason,
         DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+            kind: poly_kind,
             tparams_loc,
             tparams: tparams.into_vec().into(),
             t_out: t,
@@ -2256,10 +2259,11 @@ pub fn poly_type_of_tparam_list(
     tparams: Rc<[crate::type_::TypeParam]>,
     t: Type,
     strictness_kind: crate::type_::TypeStrictnessKind,
+    poly_kind: PolyTKind,
 ) -> Type {
     match vec1::Vec1::try_from_vec(tparams.to_vec()) {
         Err(_) => t,
-        Ok(tparams_nel) => poly_type(id, tparams_loc, tparams_nel, t, strictness_kind),
+        Ok(tparams_nel) => poly_type(id, tparams_loc, tparams_nel, t, strictness_kind, poly_kind),
     }
 }
 
@@ -2268,11 +2272,12 @@ pub fn poly_type_of_tparams(
     tparams: crate::type_::TypeParams,
     t: Type,
     strictness_kind: crate::type_::TypeStrictnessKind,
+    poly_kind: PolyTKind,
 ) -> Type {
     match tparams {
         None => t,
         Some((tparams_loc, tparams_nel)) => {
-            poly_type(id, tparams_loc, tparams_nel, t, strictness_kind)
+            poly_type(id, tparams_loc, tparams_nel, t, strictness_kind, poly_kind)
         }
     }
 }
@@ -2847,6 +2852,7 @@ pub fn normalize_construct_sig(override_return_t: Option<Type>, t: Type) -> Type
                 // normalized body; reusing the id lets repeated reads share those
                 // entries. Regenerating it would be correct but defeat the cache.
                 DefTInner::PolyT(box PolyTData {
+                    kind: poly_kind,
                     tparams_loc,
                     tparams,
                     t_out,
@@ -2855,6 +2861,7 @@ pub fn normalize_construct_sig(override_return_t: Option<Type>, t: Type) -> Type
                 }) => Type::new(TypeInner::DefT(
                     r.dupe(),
                     DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                        kind: *poly_kind,
                         tparams_loc: tparams_loc.dupe(),
                         tparams: tparams.dupe(),
                         t_out: go(t_out.dupe(), override_return_t),

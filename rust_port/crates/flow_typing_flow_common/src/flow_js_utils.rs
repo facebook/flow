@@ -698,6 +698,7 @@ pub fn extract_class_ctor_t<'cx>(
                 // memoization on the original id would be wrong.
                 TypeInner::DefT(r, def_t)
                     if let DefTInner::PolyT(box PolyTData {
+                        kind: poly_kind,
                         tparams_loc,
                         tparams,
                         t_out,
@@ -709,6 +710,7 @@ pub fn extract_class_ctor_t<'cx>(
                         Type::new(TypeInner::DefT(
                             r.dupe(),
                             DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                kind: *poly_kind,
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: tparams.dupe(),
                                 t_out: ctor,
@@ -4121,6 +4123,7 @@ pub mod value_to_type_reference_transform {
                 }
 
                 DefTInner::PolyT(box PolyTData {
+                    kind: poly_kind,
                     tparams_loc,
                     tparams: ids,
                     t_out,
@@ -4142,11 +4145,13 @@ pub mod value_to_type_reference_transform {
                         ids.dupe(),
                         t_out_mono.dupe(),
                         *strictness_kind,
+                        *poly_kind,
                     );
                     run_on_concrete_type_with_env(cx, env, use_op, reason_op, kind, poly)
                 }
 
                 DefTInner::PolyT(box PolyTData {
+                    kind: poly_kind,
                     tparams_loc,
                     tparams: ids,
                     t_out,
@@ -4168,6 +4173,7 @@ pub mod value_to_type_reference_transform {
                         ids.dupe(),
                         t_out_mono.dupe(),
                         *strictness_kind,
+                        *poly_kind,
                     );
                     Ok(type_util::typeof_annotation(reason_op.dupe(), poly, None))
                 }
@@ -4476,6 +4482,7 @@ pub mod import_type_t_kit {
                 // delay fixing a polymorphic this-abstracted class until it is specialized,
                 // by transforming the instance type to a type application
                 DefTInner::PolyT(box PolyTData {
+                    kind: poly_kind,
                     tparams_loc,
                     tparams: typeparams,
                     t_out,
@@ -4510,6 +4517,7 @@ pub mod import_type_t_kit {
                                     typeparams.dupe(),
                                     inner,
                                     *strictness_kind,
+                                    *poly_kind,
                                 ))
                             }
                             _ => {
@@ -4526,6 +4534,7 @@ pub mod import_type_t_kit {
                                     typeparams.dupe(),
                                     type_t,
                                     *strictness_kind,
+                                    *poly_kind,
                                 ))
                             }
                         },
@@ -4617,6 +4626,7 @@ pub mod import_typeof_t_kit {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::PolyT(box PolyTData {
                     tparams_loc,
+                    kind: poly_kind,
                     tparams: typeparams,
                     t_out,
                     strictness_kind,
@@ -4651,6 +4661,7 @@ pub mod import_typeof_t_kit {
                                     )),
                                 )),
                                 *strictness_kind,
+                                *poly_kind,
                             )
                         }
                         DefTInner::TypeT(_, _) => {

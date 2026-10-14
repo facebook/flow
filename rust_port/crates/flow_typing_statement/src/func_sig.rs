@@ -37,6 +37,7 @@ use flow_typing_loc_env::func_class_sig_types::param;
 use flow_typing_type::type_;
 use flow_typing_type::type_::AnnotatedOrInferred;
 use flow_typing_type::type_::FunParam;
+use flow_typing_type::type_::PolyTKind;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_util;
@@ -419,6 +420,7 @@ pub fn functiontype<'a, C: crate::func_params_intf::Config>(
         tparams.clone(),
         t,
         cx.type_strictness_kind(),
+        PolyTKind::Regular,
     )
 }
 
@@ -478,6 +480,7 @@ pub fn methodtype<'a, C: crate::func_params_intf::Config>(
         tparams.clone(),
         t,
         cx.type_strictness_kind(),
+        PolyTKind::Regular,
     )
 }
 

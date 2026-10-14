@@ -42,8 +42,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ satisfies.js:55:4
 
-Cannot cast object literal to mapped type because property `blue` is missing in object literal [1] but exists in mapped
-type [2]. [incompatible-type]
+Cannot cast object literal to mapped type because property `blue` is missing in object literal [1] but exists in
+`{blue: string, green: string, red: string}` [2]. [incompatible-type]
 
    satisfies.js:55:4
           v

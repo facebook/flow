@@ -425,8 +425,18 @@ impl Type {
     }
 }
 
+/// The kind of expression represented by `PolyT`.
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PolyTKind {
+    /// A function, class, component, type alias, or opaque type.
+    Regular,
+    /// A mapped type's property or key expression.
+    MappedType,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PolyTData {
+    pub kind: PolyTKind,
     pub tparams_loc: ALoc,
     pub tparams: Rc<[TypeParam]>,
     pub t_out: Type,
@@ -7235,6 +7245,7 @@ pub mod properties {
                     ))
                 }
                 DefTInner::PolyT(box PolyTData {
+                    kind: poly_kind,
                     tparams_loc,
                     tparams,
                     t_out,
@@ -7248,6 +7259,7 @@ pub mod properties {
                         Type::new(TypeInner::DefT(
                             r.dupe(),
                             DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                kind: *poly_kind,
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: tparams.dupe(),
                                 t_out: new_t_out,

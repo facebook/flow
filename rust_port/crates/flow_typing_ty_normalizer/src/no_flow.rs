@@ -76,7 +76,7 @@ impl NormalizerInput for NoFlowInput {
         default(env, state)
     }
 
-    fn typeapp<'cx, A>(
+    fn typeapp_regular<'cx, A>(
         _cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,

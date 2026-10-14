@@ -1872,6 +1872,7 @@ pub fn opaque_type<'a>(
                     DefT::new(DefTInner::TypeT(TypeTKind::OpaqueKind, nominal_t)),
                 )),
                 cx.type_strictness_kind(),
+                PolyTKind::Regular,
             );
             if let (Some(l), Some(u)) = (&lower_bound_t, &underlying_t) {
                 cx.add_post_inference_subtyping_check(l.dupe(), unknown_use(), u.dupe());
@@ -4577,6 +4578,7 @@ pub fn type_alias<'a>(
                 DefT::new(DefTInner::TypeT(type_::TypeTKind::TypeAliasKind, alias_t)),
             )),
             cx.type_strictness_kind(),
+            PolyTKind::Regular,
         )
     };
     let type_ = if cx.enable_custom_error() {
@@ -4635,6 +4637,7 @@ pub fn type_alias<'a>(
                         DefT::new(DefTInner::TypeT(type_::TypeTKind::TypeAliasKind, nominal_t)),
                     )),
                     cx.type_strictness_kind(),
+                    PolyTKind::Regular,
                 )
             }
             _ => normal_type_alias(),

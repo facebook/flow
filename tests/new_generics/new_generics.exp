@@ -1539,7 +1539,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ synthetic.js:2:10
 
-Cannot return `x` because mapped type [1] is incompatible with mapped type [2]. [incompatible-type]
+Cannot return `x` because `{readonly [string]: S[string]}` [1] is incompatible with
+`{readonly [string]: T[string]}` [2]. [incompatible-type]
 
    synthetic.js:2:10
    2|   return x; // error S incompatible with T
@@ -1573,7 +1574,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:10:10
 
-Cannot return `x` because object type [1] is incompatible with object type [2]. [incompatible-type]
+Cannot return `x` because `{a: S["a"]}` [1] is incompatible with `{a: T["a"]}` [2]. [incompatible-type]
 
    synthetic.js:10:10
    10|   return x; // error S incompatible with T

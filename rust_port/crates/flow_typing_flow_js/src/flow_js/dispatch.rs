@@ -1449,6 +1449,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::DefT(rp, def_t), UseTInner::HooklikeT(tout))
             if let DefTInner::PolyT(box PolyTData {
+                kind: poly_kind,
                 tparams_loc,
                 tparams,
                 t_out,
@@ -1470,6 +1471,7 @@ fn __flow_impl<'cx>(
             let new_l = Type::new(TypeInner::DefT(
                 rp.dupe(),
                 DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                    kind: *poly_kind,
                     tparams_loc: tparams_loc.dupe(),
                     tparams: tparams.dupe(),
                     t_out: new_t_out,
@@ -1511,6 +1513,7 @@ fn __flow_impl<'cx>(
                 }
                 TypeInner::DefT(rp, inner_def)
                     if let DefTInner::PolyT(box PolyTData {
+                        kind: poly_kind,
                         tparams_loc,
                         tparams,
                         t_out,
@@ -1532,6 +1535,7 @@ fn __flow_impl<'cx>(
                     let call = Type::new(TypeInner::DefT(
                         rp.dupe(),
                         DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                            kind: *poly_kind,
                             tparams_loc: tparams_loc.dupe(),
                             tparams: tparams.dupe(),
                             t_out: new_t_out,
@@ -2082,6 +2086,7 @@ fn __flow_impl<'cx>(
                 false,
             ),
         ) if let DefTInner::PolyT(box PolyTData {
+            kind: _,
             tparams_loc,
             tparams,
             id: id1,
@@ -2090,6 +2095,7 @@ fn __flow_impl<'cx>(
         }) = def_t.deref()
             && let TypeInner::DefT(_, c2_def) = c2.deref()
             && let DefTInner::PolyT(box PolyTData {
+                kind: _,
                 tparams_loc: _,
                 tparams: _,
                 id: id2,
@@ -2130,6 +2136,7 @@ fn __flow_impl<'cx>(
                 false,
             ),
         ) if let DefTInner::PolyT(box PolyTData {
+            kind: _,
             tparams_loc: tparams_loc1,
             tparams: xs1,
             t_out: t1,
@@ -2138,6 +2145,7 @@ fn __flow_impl<'cx>(
         }) = def_t.deref()
             && let TypeInner::DefT(_, c2_def) = c2.deref()
             && let DefTInner::PolyT(box PolyTData {
+                kind: _,
                 tparams_loc: tparams_loc2,
                 tparams: xs2,
                 t_out: t2,
@@ -2369,6 +2377,7 @@ fn __flow_impl<'cx>(
                 ..
             }),
         ) if let DefTInner::PolyT(box PolyTData {
+            kind: _,
             tparams_loc,
             tparams: ids,
             t_out,
@@ -4235,6 +4244,7 @@ fn __flow_impl<'cx>(
 
         (TypeInner::DefT(_, def_t), UseTInner::MixinT(r, collector))
             if let DefTInner::PolyT(box PolyTData {
+                kind: poly_kind,
                 tparams_loc,
                 tparams: xs,
                 t_out,
@@ -4275,6 +4285,7 @@ fn __flow_impl<'cx>(
                 Vec1::try_from_vec(xs.to_vec()).unwrap(),
                 class_t,
                 *strictness_kind,
+                *poly_kind,
             );
             collector.add(poly_t);
         }
@@ -4304,6 +4315,7 @@ fn __flow_impl<'cx>(
                 upper,
             }),
         ) if let DefTInner::PolyT(box PolyTData {
+            kind: _,
             tparams_loc,
             tparams: xs,
             t_out: t,

@@ -55,6 +55,7 @@ use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::ModuleTypeInner;
 use flow_typing_type::type_::NamedSymbol;
+use flow_typing_type::type_::PolyTKind;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
@@ -3055,6 +3056,7 @@ fn merge_annot<'cx>(
                 Type::new(type_::TypeInner::DefT(
                     prop_reason,
                     type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
+                        kind: PolyTKind::MappedType,
                         tparams_loc: loc.dupe(),
                         tparams: vec![tp.clone()].into(),
                         t_out: prop_type,
@@ -3073,6 +3075,7 @@ fn merge_annot<'cx>(
                 Type::new(type_::TypeInner::DefT(
                     name_reason.dupe(),
                     type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
+                        kind: PolyTKind::MappedType,
                         tparams_loc: loc.dupe(),
                         tparams: vec![tp.clone()].into(),
                         t_out: name_t,
@@ -3994,6 +3997,7 @@ fn merge_tparams_targs<'cx>(
             Type::new(type_::TypeInner::DefT(
                 poly_reason,
                 type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
+                    kind: PolyTKind::Regular,
                     tparams_loc: poly.loc.dupe(),
                     tparams: tparams_vec.into(),
                     t_out,

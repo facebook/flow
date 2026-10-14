@@ -91,7 +91,7 @@ References:
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:49:3
 
 Cannot cast `mapped` to object type because an index signature declaring the expected key / value type is read-only in
-mapped type [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
+`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:49:3
    49|   mapped as {[string]: number}; // ERROR
@@ -181,7 +181,7 @@ References:
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:70:3
 
 Cannot cast `mapped` to object type because an index signature declaring the expected key / value type is write-only in
-mapped type [1] but readable in `{[string]: number}` [2]. [incompatible-variance]
+`{writeonly [string]: number}` [1] but readable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:70:3
    70|   mapped as {[string]: number}; // ERROR

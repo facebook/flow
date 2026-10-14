@@ -2654,6 +2654,7 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
             merged_tparams.clone(),
             t,
             cx.type_strictness_kind(),
+            PolyTKind::Regular,
         )
     };
     (t_inner, poly(t_outer), inst_prop_ids)

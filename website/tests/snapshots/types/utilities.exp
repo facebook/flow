@@ -184,7 +184,8 @@ Found 1 error
 === block 15 ===
 Error ---------------------------------------------------------------------------- -:6:11
 
-Cannot get `fooAndBar.baz` because property `baz` (did you mean `bar`?) is missing in object type [1]. [prop-missing]
+Cannot get `fooAndBar.baz` because property `baz` (did you mean `bar`?) is missing in
+`{bar: O["bar"], foo: O["foo"]}` [1]. [prop-missing]
 
    -:6:11
    6| fooAndBar.baz; // error: baz is missing
@@ -231,7 +232,8 @@ Found 2 errors
 === block 17 ===
 Error ---------------------------------------------------------------------------- -:6:14
 
-Cannot get `numberRecord.baz` because property `baz` (did you mean `bar`?) is missing in object type [1]. [prop-missing]
+Cannot get `numberRecord.baz` because property `baz` (did you mean `bar`?) is missing in
+`{bar: number, foo: number}` [1]. [prop-missing]
 
    -:6:14
    6| numberRecord.baz; // error
@@ -249,7 +251,7 @@ Found 1 error
 Error ---------------------------------------------------------------------------- -:6:27
 
 Cannot assign object literal to `rec` because properties `bar` and `foo` are missing in object literal [1] but exist in
-object type [2]. [incompatible-type]
+`{bar: number, foo: number}` [2]. [incompatible-type]
 
    -:6:27
    6| const rec: NumberRecord = {}; // error

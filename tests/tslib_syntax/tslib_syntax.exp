@@ -846,7 +846,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- mapped_type_as.js:13:3
 
-Cannot get `w.b` because property `b` is missing in mapped type [1]. [prop-missing]
+Cannot get `w.b` because property `b` is missing in `{a: O["a"]}` [1]. [prop-missing]
 
    mapped_type_as.js:13:3
    13| w.b; // ERROR - missing
@@ -860,7 +860,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- mapped_type_as.js:20:3
 
-Cannot get `s.a` because property `a` is missing in mapped type [1]. [prop-missing]
+Cannot get `s.a` because property `a` is missing in
+`{b: {a: number, b: string, c: string}["b"], c: {a: number, b: string, c: string}["c"]}` [1]. [prop-missing]
 
    mapped_type_as.js:20:3
    20| s.a; // ERROR - missing
@@ -891,7 +892,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- mapped_type_as.js:33:4
 
-Cannot get `ra.a` because property `a` is missing in mapped type [1]. [prop-missing]
+Cannot get `ra.a` because property `a` is missing in `{AA: O["a"], b: O["b"]}` [1]. [prop-missing]
 
    mapped_type_as.js:33:4
    33| ra.a; // ERROR - renamed away
@@ -905,7 +906,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- mapped_type_as.js:41:4
 
-Cannot get `ix.a` because property `a` is missing in mapped type [1]. [prop-missing]
+Cannot get `ix.a` because property `a` is missing in `{X: O["a"], Y: O["b"]}` [1]. [prop-missing]
 
    mapped_type_as.js:41:4
    41| ix.a; // ERROR - renamed away
@@ -949,7 +950,7 @@ Cannot assign `1` to `cro.X` because property `X` is not writable. [cannot-write
 
 Error ------------------------------------------------------------------------------------------- mapped_type_as.js:88:4
 
-Cannot get `nh.a` because property `a` is missing in mapped type [1]. [prop-missing]
+Cannot get `nh.a` because property `a` is missing in `{A: "a", b: "b"}` [1]. [prop-missing]
 
    mapped_type_as.js:88:4
    88| nh.a; // ERROR - renamed
@@ -977,8 +978,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- mapped_type_as.js:108:51
 
-Cannot assign `ii` to `_ii_exact_bad` because inexact mapped type [1] is incompatible with exact
-`{a: number, b: string}` [2]. [incompatible-exact]
+Cannot assign `ii` to `_ii_exact_bad` because inexact `{a: InexactSrc["a"], b: InexactSrc["b"], ...}` [1] is
+incompatible with exact `{a: number, b: string}` [2]. [incompatible-exact]
 
    mapped_type_as.js:108:51
    108| const _ii_exact_bad: {| a: number, b: string |} = ii; // ERROR - source was inexact
@@ -995,7 +996,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mapped_type_as.js:116:4
 
-Cannot get `ci.notThere` because property `notThere` is missing in mapped type [1]. [prop-missing]
+Cannot get `ci.notThere` because property `notThere` is missing in `{X: InexactSrc["a"] | InexactSrc["b"]}` [1].
+[prop-missing]
 
    mapped_type_as.js:116:4
    116| ci.notThere; // ERROR - source's open shape did not propagate

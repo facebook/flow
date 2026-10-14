@@ -303,7 +303,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- pick.js:24:10
 
-Cannot get `picked.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot get `picked.bar` because property `bar` is missing in `interface {foo: I["foo"]}` [1]. [prop-missing]
 
    pick.js:24:10
    24|   picked.bar; // ERROR: wasn't picked
@@ -317,7 +317,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- pick.js:36:10
 
-Cannot get `picked.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot get `picked.bar` because property `bar` is missing in `interface {foo: C["foo"]}` [1]. [prop-missing]
 
    pick.js:36:10
    36|   picked.bar; // ERROR: wasn't picked
@@ -331,7 +331,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- record.js:5:1
 
-Cannot cast `exact` to object type because property `bar` is extra in object type [1] but missing in
+Cannot cast `exact` to object type because property `bar` is extra in `{bar: number, foo: number}` [1] but missing in
 `{foo: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    record.js:5:1
@@ -349,8 +349,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:10:1
 
-Cannot cast `indexed` to object type because indexed object type [1] is incompatible with exact `{foo: number}` [2].
-[incompatible-indexer]
+Cannot cast `indexed` to object type because indexed `{[string]: number, foo: number}` [1] is incompatible with exact
+`{foo: number}` [2]. [incompatible-indexer]
 
    record.js:10:1
    10| indexed as {foo: number}; // ERROR, missing indexer
@@ -367,8 +367,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:16:1
 
-Cannot cast `numIndexed` to object type because indexed object type [1] is incompatible with exact `{"1": string}` [2].
-[incompatible-indexer]
+Cannot cast `numIndexed` to object type because indexed `{[number]: string}` [1] is incompatible with exact
+`{"1": string}` [2]. [incompatible-indexer]
 
    record.js:16:1
    16| numIndexed as {1: string}; // ERROR, missing indexer
@@ -385,8 +385,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:22:1
 
-Cannot cast `symIndexed` to object type because indexed object type [1] is incompatible with exact `{foo: boolean}` [2].
-[incompatible-indexer]
+Cannot cast `symIndexed` to object type because indexed `{[symbol]: boolean}` [1] is incompatible with exact
+`{foo: boolean}` [2]. [incompatible-indexer]
 
    record.js:22:1
    22| symIndexed as {foo: boolean}; // ERROR, missing indexer

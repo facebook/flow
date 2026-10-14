@@ -628,6 +628,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
             }
             TypeInner::DefT(reason, def_t) => {
                 if let DefTInner::PolyT(box PolyTData {
+                    kind: poly_kind,
                     tparams_loc,
                     tparams: xs,
                     t_out: inner,
@@ -732,6 +733,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                         Type::new(TypeInner::DefT(
                             reason.dupe(),
                             DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                kind: *poly_kind,
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: xs_new.map_or_else(|| xs.dupe(), Into::into),
                                 t_out: inner_prime,

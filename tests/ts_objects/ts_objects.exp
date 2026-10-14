@@ -33,7 +33,7 @@ References:
 
 Error --------------------------------------------------------------------------------- class_implements_object.ts:66:28
 
-Cannot implement object type [1] because it is not an interface. [cannot-implement]
+Cannot implement `{[string]: number}` [1] because it is not an interface. [cannot-implement]
 
    66| class NoIndexer implements Record<string, number> { // ERROR: indexed ObjT not accepted
                                   ^^^^^^^^^^^^^^^^^^^^^^ [1]

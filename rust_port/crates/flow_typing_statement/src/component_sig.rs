@@ -21,6 +21,7 @@ use flow_typing_loc_env::component_sig_types::component_sig::ComponentParamsTast
 use flow_typing_loc_env::component_sig_types::component_sig::ComponentSig;
 use flow_typing_loc_env::component_sig_types::declaration_body_config;
 use flow_typing_type::type_;
+use flow_typing_type::type_::PolyTKind;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_util;
@@ -277,5 +278,6 @@ pub fn component_type<'a, C: crate::component_params_intf::Config>(
         tparams,
         t,
         cx.type_strictness_kind(),
+        PolyTKind::Regular,
     ))
 }

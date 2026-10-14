@@ -31,6 +31,7 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc as ReasonDesc;
+use flow_common::subst_name::SubstName;
 use flow_common_ty::ty;
 use flow_common_ty::ty::ALocDecl;
 use flow_common_ty::ty::ALocElt;
@@ -43,6 +44,7 @@ use flow_common_ty::ty_symbol::Provenance;
 use flow_common_ty::ty_symbol::Symbol;
 use flow_common_ty::ty_utils::simplify_elt;
 use flow_common_ty::ty_utils::size_of_type;
+use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_lazy::Lazy;
 use flow_parser::file_key::FileKeyInner;
@@ -63,6 +65,7 @@ use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::OptionalIndexedAccessIndex;
 use flow_typing_type::type_::PolyTData;
+use flow_typing_type::type_::PolyTKind;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ResolvedArgData;
 use flow_typing_type::type_::ResolvedSpreadArgData;
@@ -296,7 +299,59 @@ pub trait NormalizerInput {
         t: Type,
     ) -> Result<A, Error>;
 
+    /// Reduce mapped type property and key expressions before normalizing their bodies.
     fn typeapp<'cx, A>(
+        cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
+        state: &mut State,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
+        type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
+        app: impl FnOnce(Result<A, Error>, Vec<Result<A, Error>>) -> Result<A, Error>,
+        from_value: bool,
+        reason: Reason,
+        t: Type,
+        targs: &[Type],
+    ) -> Result<A, Error> {
+        match cx.find_resolved(&t).as_deref() {
+            Some(TypeInner::DefT(_, def_t))
+                if let DefTInner::PolyT(box PolyTData {
+                    kind: PolyTKind::MappedType,
+                    tparams,
+                    t_out,
+                    ..
+                }) = def_t.deref() =>
+            {
+                if tparams.len() != targs.len() {
+                    return Err(terr(
+                        ErrorKind::BadTypeApp,
+                        Some("unsaturated type function"),
+                        Some(&t),
+                    ));
+                }
+                let bindings: FlowOrdMap<SubstName, Type> = tparams
+                    .iter()
+                    .zip(targs)
+                    .map(|(parameter, argument)| (parameter.name.dupe(), argument.dupe()))
+                    .collect();
+                let body = type_subst::subst(
+                    cx,
+                    None,
+                    true,
+                    false,
+                    type_subst::Purpose::Normal,
+                    &bindings,
+                    t_out.dupe(),
+                );
+                cont(env, state, &body)
+            }
+            _ => Self::typeapp_regular(
+                cx, env, state, cont, type_, app, from_value, reason, t, targs,
+            ),
+        }
+    }
+
+    /// Normalize regular applications through the backend's instantiation policy.
+    fn typeapp_regular<'cx, A>(
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,

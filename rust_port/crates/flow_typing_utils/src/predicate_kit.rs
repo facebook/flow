@@ -1051,6 +1051,7 @@ fn call_latent_pred<'cx>(
                         }
                     }
                     DefTInner::PolyT(box PolyTData {
+                        kind: _,
                         tparams_loc,
                         tparams: ids,
                         t_out: t_out_inner,

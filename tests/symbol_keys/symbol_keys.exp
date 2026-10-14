@@ -267,7 +267,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- class_operations.js:27:3
 
-Cannot get `p[b]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot get `p[b]` because property `[symbol]` is missing in `interface {[symbol]: C[symbol]}` [1]. [prop-missing]
 
    class_operations.js:27:3
    27| p[b]; // ERROR: [b] not picked
@@ -836,7 +836,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:19:3
 
-Cannot get `p[Keys.b]` because property `[b]` is missing in mapped type [1]. [prop-missing]
+Cannot get `p[Keys.b]` because property `[b]` is missing in `{[a]: number}` [1]. [prop-missing]
 
    omit.js:19:3
    19| p[Keys.b]; // ERROR: only `[a]` is a key of P (would pass if it were an indexer)
@@ -1367,7 +1367,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- symbol_index_signature.js:72:29
 
-Cannot get `mapped['x']` because property `x` is missing in mapped type [1]. [prop-missing]
+Cannot get `mapped['x']` because property `x` is missing in `{[symbol]: boolean}` [1]. [prop-missing]
 
    symbol_index_signature.js:72:29
    72| const mv2: boolean = mapped['x']; // ERROR: a string is not a key

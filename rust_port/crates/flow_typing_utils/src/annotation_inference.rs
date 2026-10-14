@@ -1210,6 +1210,7 @@ fn elab_t_concrete<'cx>(
                     elab_t(cx, env, dst_cx, Some(seen), t_, op)
                 }
                 DefTInner::PolyT(box PolyTData {
+                    kind: poly_kind,
                     tparams_loc,
                     tparams,
                     t_out,
@@ -1231,10 +1232,12 @@ fn elab_t_concrete<'cx>(
                         tparams.dupe(),
                         t_out_mono.dupe(),
                         *strictness_kind,
+                        *poly_kind,
                     );
                     elab_t(cx, env, dst_cx, Some(seen), poly, op)
                 }
                 DefTInner::PolyT(box PolyTData {
+                    kind: poly_kind,
                     tparams_loc,
                     tparams,
                     t_out,
@@ -1256,10 +1259,12 @@ fn elab_t_concrete<'cx>(
                         tparams.dupe(),
                         t_out_mono.dupe(),
                         *strictness_kind,
+                        *poly_kind,
                     );
                     type_util::typeof_annotation(reason.dupe(), poly, None)
                 }
                 DefTInner::PolyT(box PolyTData {
+                    kind: _,
                     tparams_loc,
                     tparams: ids,
                     t_out,
@@ -1842,6 +1847,7 @@ fn elab_t_concrete<'cx>(
                     }
                     DefTInner::PolyT(box PolyTData {
                         tparams_loc,
+                        kind: poly_kind,
                         tparams: xs,
                         t_out,
                         strictness_kind,
@@ -1866,6 +1872,7 @@ fn elab_t_concrete<'cx>(
                                             .expect("tparams should be non-empty"),
                                         t_out,
                                         *strictness_kind,
+                                        *poly_kind,
                                     )
                                 } else {
                                     error_unsupported(cx, dst_cx, &t, &op)
@@ -1889,6 +1896,7 @@ fn elab_t_concrete<'cx>(
         // ********************
         (TypeInner::DefT(_, def_t), OpInner::AnnotSpecializeT(data))
             if let DefTInner::PolyT(box PolyTData {
+                kind: _,
                 tparams_loc,
                 tparams: xs,
                 t_out,

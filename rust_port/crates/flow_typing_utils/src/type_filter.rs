@@ -292,6 +292,7 @@ fn map_poly(f: &dyn Fn(Type) -> FilterResult, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::DefT(r, d) => match d.deref() {
             DefTInner::PolyT(box PolyTData {
+                kind: poly_kind,
                 tparams_loc,
                 tparams,
                 t_out,
@@ -307,6 +308,7 @@ fn map_poly(f: &dyn Fn(Type) -> FilterResult, t: Type) -> FilterResult {
                         type_: Type::new(TypeInner::DefT(
                             r.dupe(),
                             DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                kind: *poly_kind,
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: tparams.dupe(),
                                 t_out: type_,

@@ -532,8 +532,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objmap.js:13:35
 
-Cannot assign object literal to `shouldntWork` because property `b` is extra in object literal [1] but missing in mapped
-type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot assign object literal to `shouldntWork` because property `b` is extra in object literal [1] but missing in
+`{a: Map1To2<ExactThing["a"]>}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    objmap.js:13:35
    13| const shouldntWork: MappedThing = {a: 2, b: 1};

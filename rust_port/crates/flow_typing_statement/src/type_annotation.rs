@@ -3183,6 +3183,7 @@ fn convert_inner<'a>(
                         tparams_nel.clone(),
                         ft,
                         cx.type_strictness_kind(),
+                        PolyTKind::Regular,
                     )
                 }
             };
@@ -3412,6 +3413,7 @@ fn convert_inner<'a>(
                     Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam_for_prop))),
                     prop_type_t,
                     cx.type_strictness_kind(),
+                    PolyTKind::MappedType,
                 );
                 let (poly_name_type, name_type_ast) = match name_type {
                     None => (None, None),
@@ -3425,6 +3427,7 @@ fn convert_inner<'a>(
                             Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam.clone()))),
                             name_t,
                             cx.type_strictness_kind(),
+                            PolyTKind::MappedType,
                         );
                         (Some(poly_nt.dupe()), Some(nt_ast))
                     }

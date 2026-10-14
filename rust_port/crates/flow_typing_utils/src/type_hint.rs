@@ -535,6 +535,7 @@ fn instantiate_callee<'cx>(
                         )
                     }
                     DefTInner::PolyT(box PolyTData {
+                        kind: _,
                         tparams_loc,
                         tparams,
                         t_out,
@@ -750,6 +751,7 @@ fn instantiate_component<'cx>(
     match component_resolved.deref() {
         TypeInner::DefT(_, def) => match def.deref() {
             DefTInner::PolyT(box PolyTData {
+                kind: _,
                 tparams_loc,
                 tparams,
                 t_out,
@@ -953,6 +955,7 @@ fn type_of_hint_decomposition<'cx>(
         };
         if let TypeInner::DefT(_, def) = get_t(cx, t.dupe()).deref()
             && let DefTInner::PolyT(box PolyTData {
+                kind: poly_kind,
                 tparams_loc,
                 tparams,
                 t_out: instance_type,
@@ -969,6 +972,7 @@ fn type_of_hint_decomposition<'cx>(
                 &|t_inner: &Type| -> Result<Type, SandboxError> {
                     if let TypeInner::DefT(_, inner_def) = t_inner.deref()
                         && let DefTInner::PolyT(box PolyTData {
+                            kind: poly_kind2,
                             tparams_loc: tparams_loc2,
                             tparams: tparams2,
                             t_out,
@@ -982,6 +986,7 @@ fn type_of_hint_decomposition<'cx>(
                         Ok(Type::new(TypeInner::DefT(
                             reason.dupe(),
                             DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                kind: *poly_kind2,
                                 tparams_loc: tparams_loc2.dupe(),
                                 tparams: combined_tparams.into(),
                                 t_out,
@@ -994,6 +999,7 @@ fn type_of_hint_decomposition<'cx>(
                         Ok(Type::new(TypeInner::DefT(
                             reason.dupe(),
                             DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                kind: *poly_kind,
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: tparams.dupe(),
                                 t_out,
@@ -1211,6 +1217,7 @@ fn type_of_hint_decomposition<'cx>(
                         let this_t = match get_t(cx, t.dupe()).deref() {
                             TypeInner::DefT(poly_reason, def) => match def.deref() {
                                 DefTInner::PolyT(box PolyTData {
+                                    kind: poly_kind,
                                     tparams_loc,
                                     tparams,
                                     t_out,
@@ -1219,6 +1226,7 @@ fn type_of_hint_decomposition<'cx>(
                                 }) => Type::new(TypeInner::DefT(
                                     poly_reason.dupe(),
                                     DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                        kind: *poly_kind,
                                         tparams_loc: tparams_loc.dupe(),
                                         tparams: tparams.dupe(),
                                         t_out: get_this_t(t_out)?,

@@ -1035,6 +1035,7 @@ fn replace_function_statics(function_t: Type, statics_t: &Type) -> Type {
                 DefT::new(DefTInner::FunT(statics_t.dupe(), fun_t.dupe())),
             )),
             DefTInner::PolyT(box type_::PolyTData {
+                kind: poly_kind,
                 tparams_loc,
                 tparams,
                 t_out,
@@ -1051,6 +1052,7 @@ fn replace_function_statics(function_t: Type, statics_t: &Type) -> Type {
                     Type::new(TypeInner::DefT(
                         reason.dupe(),
                         DefT::new(DefTInner::PolyT(Box::new(type_::PolyTData {
+                            kind: *poly_kind,
                             tparams_loc: tparams_loc.dupe(),
                             tparams: tparams.dupe(),
                             t_out: new_t_out,

@@ -837,6 +837,7 @@ fn def_t_to_json<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, def_t: &DefT) -> Jso
             ],
         ),
         DefTInner::PolyT(box PolyTData {
+            kind: _,
             tparams_loc: _,
             tparams,
             t_out,

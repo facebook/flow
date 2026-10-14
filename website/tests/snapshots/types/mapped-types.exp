@@ -46,8 +46,8 @@ No errors!
 === block 11 ===
 Error -------------------------------------------------------------------------- -:4:2
 
-Cannot cast object literal to `RequiredO` because property `bar` is missing in object literal [1] but exists in mapped
-type [2]. [incompatible-type]
+Cannot cast object literal to `RequiredO` because property `bar` is missing in object literal [1] but exists in
+`{bar: string, foo: O["foo"]}` [2]. [incompatible-type]
 
    -:4:2
    4| ({foo: 1}) as RequiredO; // ERROR: bar is now required
@@ -84,8 +84,8 @@ Found 1 error
 === block 13 ===
 Error -------------------------------------------------------------------------- -:4:2
 
-Cannot cast array literal to `AllRequired` because array literal [1] has 1 element but array type [2] has 3 elements.
-[invalid-tuple-arity]
+Cannot cast array literal to `AllRequired` because array literal [1] has 1 element but
+`[a: Tuple[0], b: number, c: boolean]` [2] has 3 elements. [invalid-tuple-arity]
 
    -:4:2
    4| (['']) as AllRequired; // ERROR: elements 1 and 2 are now required
