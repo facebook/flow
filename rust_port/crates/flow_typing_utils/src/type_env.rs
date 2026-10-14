@@ -1525,10 +1525,7 @@ fn possibly_refined_write_state_of_state<'cx>(
                         base(any_t::at(AnySource::AnnotatedAny, loc.dupe()), vec![])
                     }
                     (WriteLoc::Unreachable(uloc), _) => {
-                        let r = mk_reason(
-                            VirtualReasonDesc::RCustom("unreachable value".into()),
-                            uloc.dupe(),
-                        );
+                        let r = mk_reason(None, uloc.dupe());
                         base(flow_typing_type::type_::empty_t::make(r), vec![])
                     }
                     (WriteLoc::Projection(ploc), _) => base(
@@ -2810,10 +2807,7 @@ pub fn discriminant_after_negated_cases<'cx>(
 ) -> Result<Option<Type>, JobError> {
     use flow_common::reason::mk_reason;
 
-    let reason_desc = match refinement_key_opt {
-        None => VirtualReasonDesc::RCustom("discriminant of switch".into()),
-        Some(refinement_key) => refinement_key.reason_desc::<ALoc>(),
-    };
+    let reason_desc = refinement_key_opt.map(|refinement_key| refinement_key.reason_desc::<ALoc>());
     Ok(read_entry(
         LookupMode::ForValue,
         cx,

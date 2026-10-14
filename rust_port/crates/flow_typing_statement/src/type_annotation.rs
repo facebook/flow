@@ -830,7 +830,6 @@ fn convert_value_object_type_key<'a>(
     let (value_t, id_ast) = convert_qualification_with_lookup_mode(
         cx,
         Some(type_env::LookupMode::ForTypeof),
-        "typeof-annotation",
         &generic.id,
     )?;
     let name = resolve_key_type_name(cx, &value_t)?;
@@ -1281,8 +1280,7 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::Typeof { loc, inner } => {
-            let (valtype, qualification_ast) =
-                convert_typeof(cx, "typeof-annotation", &inner.argument)?;
+            let (valtype, qualification_ast) = convert_typeof(cx, &inner.argument)?;
             let desc =
                 reason::VirtualReasonDesc::RTypeof(FlowSmolStr::new(typeof_name(&inner.argument)));
             let reason = reason::mk_reason(desc, loc.dupe());
@@ -1787,8 +1785,7 @@ fn convert_inner<'a>(
                 let targs = &inner.targs;
                 let comments = &inner.comments;
 
-                let (m, qualification_ast) =
-                    convert_qualification(cx, "type-annotation", &q.qualification)?;
+                let (m, qualification_ast) = convert_qualification(cx, &q.qualification)?;
                 let id_loc = q.id.loc.dupe();
                 let id_name = &q.id;
                 let name = &id_name.name;
@@ -1843,7 +1840,7 @@ fn convert_inner<'a>(
                 let targs = &inner.targs;
                 let comments = &inner.comments;
 
-                let (m, import_ast) = convert_qualification(cx, "type-annotation", import_id)?;
+                let (m, import_ast) = convert_qualification(cx, import_id)?;
                 let (t, targs_ast) = {
                     let import_id_name = qualified_name(import_id);
                     let reason = reason::mk_reason(
@@ -3903,19 +3900,17 @@ pub fn convert_opt<'a>(
 
 pub fn convert_qualification<'a>(
     cx: &Context<'a>,
-    reason_prefix: &str,
     id: &ast::types::generic::Identifier<ALoc, ALoc>,
 ) -> Result<
     (Type, ast::types::generic::Identifier<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
 > {
-    convert_qualification_with_lookup_mode(cx, None, reason_prefix, id)
+    convert_qualification_with_lookup_mode(cx, None, id)
 }
 
 fn convert_qualification_with_lookup_mode<'a>(
     cx: &Context<'a>,
     lookup_mode: Option<type_env::LookupMode>,
-    reason_prefix: &str,
     id: &ast::types::generic::Identifier<ALoc, ALoc>,
 ) -> Result<
     (Type, ast::types::generic::Identifier<ALoc, (ALoc, Type)>),
@@ -3925,25 +3920,18 @@ fn convert_qualification_with_lookup_mode<'a>(
     let lookup_mode = lookup_mode.unwrap_or(type_env::LookupMode::ForType);
     Ok(match id {
         Identifier::Qualified(q) => {
-            let (m, qualification_ast) = convert_qualification_with_lookup_mode(
-                cx,
-                Some(lookup_mode),
-                reason_prefix,
-                &q.qualification,
-            )?;
+            let (m, qualification_ast) =
+                convert_qualification_with_lookup_mode(cx, Some(lookup_mode), &q.qualification)?;
             let id_loc = q.id.loc.dupe();
             let id_name = &q.id;
             let name = &id_name.name;
-            let qname = qualified_name(id);
-            let desc = reason::VirtualReasonDesc::RCustom(FlowSmolStr::new(format!(
-                "{} `{}`",
-                reason_prefix, qname
-            )));
-            let id_reason = reason::mk_reason(desc, id_loc.dupe());
-            let op_reason = reason::mk_reason(
-                reason::VirtualReasonDesc::RType(FlowSmolStr::new(&qname)),
-                q.loc.dupe(),
+            let qname = FlowSmolStr::from(qualified_name(id));
+            let id_reason = reason::mk_reason(
+                reason::VirtualReasonDesc::RType(qname.dupe()),
+                id_loc.dupe(),
             );
+            let op_reason =
+                reason::mk_reason(reason::VirtualReasonDesc::RType(qname), q.loc.dupe());
             let use_op =
                 type_::UseOp::Op(Arc::new(type_::RootUseOp::GetProperty(op_reason.dupe())));
             let t = if lookup_mode == type_env::LookupMode::ForType {
@@ -4073,7 +4061,6 @@ fn convert_qualification_with_lookup_mode<'a>(
 
 fn convert_typeof<'a>(
     cx: &Context<'a>,
-    reason_prefix: &str,
     target: &ast::types::typeof_::Target<ALoc, ALoc>,
 ) -> Result<
     (Type, ast::types::typeof_::Target<ALoc, (ALoc, Type)>),
@@ -4082,16 +4069,12 @@ fn convert_typeof<'a>(
     use flow_parser::ast::types::typeof_::Target;
     Ok(match target {
         Target::Qualified(q) => {
-            let (m, qualification_ast) = convert_typeof(cx, reason_prefix, &q.qualification)?;
+            let (m, qualification_ast) = convert_typeof(cx, &q.qualification)?;
             let id_loc = q.id.loc.dupe();
             let id_name = &q.id;
             let name = &id_name.name;
             let tname = typeof_name(target);
-            let desc = reason::VirtualReasonDesc::RCustom(FlowSmolStr::new(format!(
-                "{} `{}`",
-                reason_prefix, tname
-            )));
-            let id_reason = reason::mk_reason(desc, id_loc.dupe());
+            let id_reason = reason::mk_reason(None, id_loc.dupe());
             let use_op =
                 type_::UseOp::Op(Arc::new(type_::RootUseOp::GetProperty(reason::mk_reason(
                     reason::VirtualReasonDesc::RType(FlowSmolStr::new(&tname)),
@@ -6853,7 +6836,7 @@ fn mk_interface_super<'a>(
     let targs = &generic.targs;
     let comments = &generic.comments;
     let id_pre_convert = id;
-    let (c, id_typed) = convert_qualification(cx, "extends", id)?;
+    let (c, id_typed) = convert_qualification(cx, id)?;
     let binding_kind = binding_kind_of_generic_id_post_convert(cx, id_pre_convert, &c)?;
     let (typeapp, targs_typed) = match targs {
         None => ((loc.dupe(), c, None), None),
@@ -9403,7 +9386,6 @@ pub fn mk_declare_class_sig<'a>(
         let (i, id_ast) = convert_qualification_with_lookup_mode(
             cx,
             Some(type_env::LookupMode::ForValue),
-            "mixins",
             &generic.id,
         )?;
         let props_bag = crate::type_annotation_cons_gen::mixin(cx, r, i);
@@ -9505,7 +9487,6 @@ pub fn mk_declare_class_sig<'a>(
                     let (i, id_ast) = convert_qualification_with_lookup_mode(
                         cx,
                         Some(type_env::LookupMode::ForValue),
-                        "mixins",
                         &generic.id,
                     )?;
                     let (t, targs_ast) =
@@ -9568,7 +9549,7 @@ pub fn mk_declare_class_sig<'a>(
                             _ => {}
                         }
                         let id_pre_convert = id;
-                        let (c, id) = convert_qualification(cx, "implements", id)?;
+                        let (c, id) = convert_qualification(cx, id)?;
                         let binding_kind =
                             binding_kind_of_generic_id_post_convert(cx, id_pre_convert, &c)?;
                         let (typeapp, targs_ast) = match &iface.targs {

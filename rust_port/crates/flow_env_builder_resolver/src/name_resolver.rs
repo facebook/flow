@@ -1516,8 +1516,7 @@ fn initialize_globals(
     // this has to come later, since this can be thought to be unbound names
     // in SSA builder when it's used as a type.
     {
-        let desc = VirtualReasonDesc::RCustom(FlowSmolStr::new("global object"));
-        let reason = VirtualReason::new(desc, program_loc.dupe());
+        let reason = VirtualReason::new(VirtualReasonDesc::RGlobalObject, program_loc.dupe());
         let v = ssa_val::global_this(cache, reason);
         let entry = EnvVal::new(EnvValInner {
             val_ref: Rc::new(RefCell::new(v.dupe())),
@@ -5411,10 +5410,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
     fn switch_completeness(&mut self, loc: ALoc) {
         use flow_common::reason::VirtualReason;
-        use flow_common::reason::VirtualReasonDesc;
-
-        let desc = VirtualReasonDesc::RCustom(FlowSmolStr::new_inline("switch"));
-        let reason = VirtualReason::new(desc, loc);
+        let reason = VirtualReason::new(None, loc);
         let var_name = MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR.dupe();
         let env_val = self.env_read(&var_name);
         let new_val = ssa_val::one(&mut *self.cache.borrow_mut(), reason);

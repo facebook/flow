@@ -551,12 +551,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
 
     let (yield_t, next_t) = match kind {
         Kind::Generator { .. } | Kind::AsyncGenerator { .. } => {
-            let yield_t = flow_typing_tvar::mk(
-                cx,
-                reason
-                    .dupe()
-                    .replace_desc(reason::VirtualReasonDesc::RCustom("yield".into())),
-            );
+            let yield_t = flow_typing_tvar::mk(cx, reason.dupe().replace_desc(None));
             let next_t = match return_t {
                 AnnotatedOrInferred::Annotated(_) => flow_typing_tvar::mk(
                     cx,
@@ -618,17 +613,13 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
         }
         _ => (
             Type::new(type_::TypeInner::DefT(
-                reason
-                    .dupe()
-                    .replace_desc(reason::VirtualReasonDesc::RCustom("no yield".into())),
+                reason.dupe().replace_desc(None),
                 type_::DefT::new(type_::DefTInner::MixedT(
                     type_::MixedFlavor::MixedEverything,
                 )),
             )),
             Type::new(type_::TypeInner::DefT(
-                reason
-                    .dupe()
-                    .replace_desc(reason::VirtualReasonDesc::RCustom("no next".into())),
+                reason.dupe().replace_desc(None),
                 type_::DefT::new(type_::DefTInner::MixedT(
                     type_::MixedFlavor::MixedEverything,
                 )),

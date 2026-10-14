@@ -1142,10 +1142,7 @@ fn detect_unused_promises<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
             cx,
             t.dupe(),
         );
-        let reason = flow_common::reason::mk_reason(
-            VirtualReasonDesc::RCustom("unused promise lint".into()),
-            loc.dupe(),
-        );
+        let reason = flow_common::reason::mk_reason(None, loc.dupe());
         flow_js::flow_non_speculating(
             cx,
             (

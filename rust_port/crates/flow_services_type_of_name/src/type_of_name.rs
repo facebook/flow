@@ -299,7 +299,7 @@ fn compute_ref_summary(genv: &Genv<'_, '_>, body_type: &Type) -> Option<String> 
     let stripped = type_util::mod_reason_of_t(
         &|r| {
             if matches!(r.desc(false), Some(VirtualReasonDesc::RTypeAlias(_))) {
-                r.replace_desc(VirtualReasonDesc::RCustom("ref_expansion".into()))
+                r.replace_desc(None)
             } else {
                 r
             }

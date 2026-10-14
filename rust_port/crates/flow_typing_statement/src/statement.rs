@@ -39,7 +39,6 @@ use flow_common::reason::mk_initial_arguments_reason;
 use flow_common::reason::mk_obj_lit_reason;
 use flow_common::reason::mk_pattern_reason;
 use flow_common::reason::mk_reason;
-use flow_common::reason::string_of_desc;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -2742,10 +2741,7 @@ fn statement_<'a>(
         }
         StatementInner::Switch { inner, .. } => {
             let discriminant_ast = expression(None, None, None, cx, &inner.discriminant)?;
-            let exhaustive_check_incomplete_out_reason = mk_reason(
-                VirtualReasonDesc::RCustom("exhaustive check incomplete out".into()),
-                loc.dupe(),
-            );
+            let exhaustive_check_incomplete_out_reason = mk_reason(None, loc.dupe());
             let exhaustive_check_incomplete_out = TypeCollector::create();
             if cx.enable_pattern_matching()
                 && crate::switch_to_match::convert_switch(&ALoc::none(), loc.dupe(), inner)
@@ -8155,10 +8151,7 @@ fn expression_<'a>(
             })
         }
         ExpressionInner::Yield { inner, .. } => {
-            let reason = mk_reason(
-                VirtualReasonDesc::RCustom("yield* delegate".into()),
-                loc.dupe(),
-            );
+            let reason = mk_reason(None, loc.dupe());
             let next = type_env::get_next(cx, loc.dupe())?;
             let (t, argument_ast) = match &inner.argument {
                 Some(expr) => {
@@ -8168,10 +8161,7 @@ fn expression_<'a>(
                 }
                 None => panic!("delegate yield without argument"),
             };
-            let ret_reason = mk_reason(
-                VirtualReasonDesc::RCustom("return of child generator in yield* delegate".into()),
-                reason.loc().dupe(),
-            );
+            let ret_reason = mk_reason(None, reason.loc().dupe());
             let ret = flow_typing_tvar::mk(cx, ret_reason);
             let yield_t = flow_typing_tvar::mk(cx, reason.dupe());
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::GeneratorYield {
@@ -12396,10 +12386,7 @@ fn op_assignment<'a>(
     ),
     CheckExprError,
 > {
-    let reason = mk_reason(
-        VirtualReasonDesc::RCustom(FlowSmolStr::from(op.as_str())),
-        loc.dupe(),
-    );
+    let reason = mk_reason(None, loc.dupe());
     let rhs_reason = mk_expression_reason(rhs);
     let update_env = |result_t: &Type| -> Result<(), CheckExprError> {
         let (lhs, _) = flow_parser::ast_utils::unwrap_nonnull_lhs(lhs);
@@ -14454,7 +14441,7 @@ fn static_method_call_object<'a>(
     CheckExprError,
 > {
     use ast::expression::ExpressionOrSpread;
-    let reason = mk_reason(RCustom(format!("`Object.{}`", m).into()), loc.dupe());
+    let reason = mk_reason(RCode(format!("Object.{}", m).into()), loc.dupe());
     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
         FunCallMethodData {
             op: reason.dupe(),
@@ -14471,9 +14458,7 @@ fn static_method_call_object<'a>(
         let reason_clone = reason.dupe();
         let use_op_clone = use_op.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(cx, arr_reason, |cx, tvar| {
-            let keys_reason = reason_clone.dupe().update_desc_new(|desc| {
-                desc.map(|desc| RCustom(format!("element of {}", string_of_desc(&desc)).into()))
-            });
+            let keys_reason = reason_clone.dupe().replace_desc_new(RKeySet);
             flow_js::flow_non_speculating(
                 cx,
                 (
@@ -14714,11 +14699,7 @@ fn static_method_call_object<'a>(
                         );
                     }
                     Some(spec) => {
-                        let prop_reason = reason.dupe().update_desc_new(|desc| {
-                            desc.map(|desc| {
-                                RCustom(format!(".{} of {}", x, string_of_desc(&desc)).into())
-                            })
-                        });
+                        let prop_reason = reason.dupe().replace_desc_new(None);
                         let propdesc_type_clone = propdesc_type.dupe();
                         let use_op_clone = use_op.dupe();
                         let t = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
@@ -15020,11 +15001,7 @@ fn static_method_call_object<'a>(
                         );
                     }
                     Some(spec) => {
-                        let prop_reason = reason.dupe().update_desc_new(|desc| {
-                            desc.map(|desc| {
-                                RCustom(format!(".{} of {}", x, string_of_desc(&desc)).into())
-                            })
-                        });
+                        let prop_reason = reason.dupe().replace_desc_new(None);
                         let tvar = flow_typing_tvar::mk(cx, prop_reason.dupe());
                         let annot_loc = prop_reason.loc().dupe();
                         let propdesc = implicit_typeapp(
@@ -16073,11 +16050,8 @@ pub fn mk_class_sig<'a>(
                                         _ => {}
                                     }
                                             let id_pre_convert = id;
-                                            let (c, id) = type_annotation::convert_qualification(
-                                                cx,
-                                                "implements",
-                                                id,
-                                            )?;
+                                            let (c, id) =
+                                                type_annotation::convert_qualification(cx, id)?;
                                             let binding_kind =
                                         type_annotation::binding_kind_of_generic_id_post_convert(
                                             cx,
@@ -18930,11 +18904,8 @@ pub fn mk_record_sig<'a>(
                                             _ => {}
                                         }
                                             let id_pre_convert = id;
-                                            let (c, id) = type_annotation::convert_qualification(
-                                                cx,
-                                                "implements",
-                                                id,
-                                            )?;
+                                            let (c, id) =
+                                                type_annotation::convert_qualification(cx, id)?;
                                             let binding_kind =
                                                 type_annotation::binding_kind_of_generic_id_post_convert(
                                                     cx,

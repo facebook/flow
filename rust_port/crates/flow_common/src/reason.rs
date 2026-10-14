@@ -444,7 +444,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RImportStar(FlowSmolStr),
     RDefaultImportedType(FlowSmolStr, Userland),
     RCode(FlowSmolStr),
-    RCustom(FlowSmolStr),
     RPolyType(Arc<VirtualReasonDesc<L>>),
     RExactType(Arc<VirtualReasonDesc<L>>),
     ROptional(Arc<VirtualReasonDesc<L>>),
@@ -598,7 +597,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RDefaultImportedType(s, u) => RDefaultImportedType(s.dupe(), u.clone()),
             RAsyncImport => RAsyncImport,
             RCode(s) => RCode(s.dupe()),
-            RCustom(s) => RCustom(s.dupe()),
             RNonnullAssert => RNonnullAssert,
             RGlobalObject => RGlobalObject,
             RProviders => RProviders,
@@ -1655,7 +1653,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         }
         RAsyncImport => "async import".to_string(),
         RCode(x) => format!("`{}`", x),
-        RCustom(desc) => desc.to_string(),
 
         // Misc operations
         RNonnullAssert => "!".to_string(),

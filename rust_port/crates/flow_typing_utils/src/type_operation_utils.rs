@@ -2861,12 +2861,7 @@ pub mod type_assertions {
                 }
                 _ => {
                     let (reason, name) = if is_async {
-                        let reason = flow_common::reason::mk_reason(
-                            flow_common::reason::VirtualReasonDesc::RCustom(
-                                "async iteration expected on AsyncIterable".into(),
-                            ),
-                            loc.dupe(),
-                        );
+                        let reason = flow_common::reason::mk_reason(None, loc.dupe());
                         let any = type_::any_t::why(type_::AnySource::Untyped, reason.dupe());
                         let async_iterable = FlowJs::get_builtin_typeapp_with_env(
                             cx,
@@ -2890,12 +2885,7 @@ pub mod type_assertions {
                         };
                         (reason, name)
                     } else {
-                        let reason = flow_common::reason::mk_reason(
-                            flow_common::reason::VirtualReasonDesc::RCustom(
-                                "iteration expected on Iterable".into(),
-                            ),
-                            loc.dupe(),
-                        );
+                        let reason = flow_common::reason::mk_reason(None, loc.dupe());
                         (reason, "Iterable")
                     };
                     let iterable = FlowJs::get_builtin_typeapp_with_env(

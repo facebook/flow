@@ -87,10 +87,7 @@ pub mod insertion_point_collectors {
                 t.dupe()
             }
             None => {
-                let reason = reason::mk_reason(
-                    VirtualReasonDesc::RCustom(FlowSmolStr::new("<<anonymous class>>")),
-                    body_loc.dupe(),
-                );
+                let reason = reason::mk_reason(None, body_loc.dupe());
                 mixed_t::make(reason)
             }
         };

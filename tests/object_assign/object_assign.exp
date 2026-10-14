@@ -191,8 +191,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- maybe.js:12:12
 
-Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in at least one member of element of
-`Object.keys` [1] > the indexer property: `?string` [2] is not exactly the same as `?number` [3]. [incompatible-type]
+Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in at least one member of key set [1] > the
+indexer property: `?string` [2] is not exactly the same as `?number` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: ?string}` [4] and `{[string]: ?number}` [5] exactly the same

@@ -1262,10 +1262,7 @@ pub fn analyze_program<'a>(
         visit_toplevel_statement(cx, &mut info, false, stmt);
     }
     let module_sig_loc = module_exports_sig_loc(&info).unwrap_or_else(|| prog_aloc.dupe());
-    let self_reason = mk_reason(
-        VirtualReasonDesc::RCustom(FlowSmolStr::new("self")),
-        prog_aloc.dupe(),
-    );
+    let self_reason = mk_reason(None, prog_aloc.dupe());
     let file_loc = ALoc::of_loc(Loc {
         source: Some(cx.file().dupe()),
         ..Loc::default()

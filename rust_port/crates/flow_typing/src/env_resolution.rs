@@ -2252,10 +2252,7 @@ fn resolve_op_assign<'cx>(
     op: ast::expression::AssignmentOperator,
     rhs: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
-    let reason = reason::mk_reason(
-        reason::VirtualReasonDesc::RCustom(ast_utils::string_of_assignment_operator(op).into()),
-        exp_loc.dupe(),
-    );
+    let reason = reason::mk_reason(None, exp_loc.dupe());
     match op {
         ast::expression::AssignmentOperator::PlusAssign
         | ast::expression::AssignmentOperator::MinusAssign

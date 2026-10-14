@@ -3797,15 +3797,11 @@ fn __flow_impl<'cx>(
                                 unsoundness::why(UnsoundnessKind::ResolveSpread, reason.dupe()),
                                 unsoundness::why(UnsoundnessKind::ResolveSpread, reason.dupe()),
                             ];
-                            let iterable_reason = reason.dupe().replace_desc_new(
-                                VirtualReasonDesc::RCustom("Iterable expected for spread".into()),
-                            );
+                            let iterable_reason = reason.dupe().replace_desc_new(None);
                             get_builtin_typeapp(cx, env, &iterable_reason, None, "Iterable", targs)
                         }
                         ResolveTo::Array => {
-                            let arr_reason = reason.dupe().replace_desc_new(
-                                VirtualReasonDesc::RCustom("Array expected for spread".into()),
-                            );
+                            let arr_reason = reason.dupe().replace_desc_new(None);
                             Type::new(TypeInner::DefT(
                                 arr_reason,
                                 DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
