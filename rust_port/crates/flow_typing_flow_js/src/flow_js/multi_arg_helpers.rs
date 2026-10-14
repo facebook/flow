@@ -626,7 +626,10 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 (args, seen_opt, inexact_spread || inexact)
                             }
                             ArrType::TupleAT(box TupleATData {
-                                elements, inexact, ..
+                                elements,
+                                inexact,
+                                rest: None,
+                                ..
                             }) if elements.is_empty() => {
                                 args.push(arg.clone());
                                 (args, seen_opt, inexact_spread || *inexact)
@@ -653,9 +656,13 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 (args, seen_opt, inexact_spread || inexact)
                             }
                             ArrType::TupleAT(box TupleATData {
-                                elements, inexact, ..
+                                elements,
+                                inexact,
+                                rest,
+                                strictness_kind,
+                                ..
                             }) => {
-                                let (args, seen_opt) = elements.iter().fold(
+                                let (mut args, seen_opt) = elements.iter().fold(
                                     (args, seen_opt),
                                     |(mut args, seen_opt), elem| {
                                         let new_elem = TupleElement {
@@ -668,6 +675,27 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         (args, seen_opt || elem.optional)
                                     },
                                 );
+                                // The rest element is spread as an array.
+                                if let Some(rest) = rest {
+                                    let elem_t = propagate_dro(cx, rest.t.dupe(), arrtype);
+                                    let rest_arrtype = if rest.polarity == Polarity::Positive {
+                                        ArrType::ROArrayAT(Box::new((elem_t, None)))
+                                    } else {
+                                        ArrType::ArrayAT(Box::new(ArrayATData {
+                                            elem_t,
+                                            tuple_view: None,
+                                            react_dro: None,
+                                            strictness_kind: *strictness_kind,
+                                        }))
+                                    };
+                                    args.push(ResolvedParam::ResolvedSpreadArg(Box::new(
+                                        ResolvedSpreadArgData(
+                                            rest.reason.dupe(),
+                                            rest_arrtype,
+                                            generic.clone(),
+                                        ),
+                                    )));
+                                }
                                 (args, seen_opt, inexact_spread || *inexact)
                             }
                             ArrType::ROArrayAT(box (_, _)) => {
@@ -750,12 +778,13 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     SpreadArrayResolveTo::ResolveToTupleType { .. }
                     | SpreadArrayResolveTo::ResolveToArray => false,
                 };
+                let mut rest = None;
                 let tuple_elements: Option<Vec<TupleElement>> = match resolve_to {
                     SpreadArrayResolveTo::ResolveToArrayLiteral { .. }
                     | SpreadArrayResolveTo::ResolveToTupleType { .. } => {
                         let mut early_break = false;
                         let mut tuple_elements = Vec::new();
-                        for elem in &elems {
+                        for (index, elem) in elems.iter().enumerate() {
                             match elem {
                                 ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                                     _,
@@ -772,6 +801,39 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 )) if elements.is_empty() => {
                                     // Spread of empty array/tuple results
                                     // in same tuple elements as before.
+                                }
+                                // The last spread of a tuple type can be an array, which becomes
+                                // its rest element.
+                                ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                                    reason,
+                                    arrtype @ (ArrType::ArrayAT(box ArrayATData {
+                                        tuple_view: None,
+                                        ..
+                                    })
+                                    | ArrType::ROArrayAT(_)),
+                                    generic,
+                                )) if index == elems.len() - 1
+                                    && matches!(
+                                        resolve_to,
+                                        SpreadArrayResolveTo::ResolveToTupleType { .. }
+                                    ) =>
+                                {
+                                    // Like the generic itself, the rest element of a spread of a
+                                    // generic with a read-only bound is read-only.
+                                    let polarity = if generic.is_some()
+                                        && matches!(arrtype, ArrType::ROArrayAT(_))
+                                    {
+                                        Polarity::Positive
+                                    } else {
+                                        Polarity::Neutral
+                                    };
+                                    rest = Some(TupleElement {
+                                        t: propagate_dro(cx, elemt_of_arrtype(arrtype), arrtype),
+                                        name: None,
+                                        polarity,
+                                        optional: false,
+                                        reason: reason.dupe(),
+                                    });
                                 }
                                 ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                                     _,
@@ -923,20 +985,38 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         )?;
                         let arity = (arity.0 as i32, arity.1 as i32);
                         let inexact = inexact || inexact_spread;
-                        Ok(if valid {
+                        // A tuple with a rest element after an inexact spread was reported by
+                        // `flatten_spread_args`.
+                        Ok(if valid && !(inexact && rest.is_some()) {
+                            let arrtype = match &rest {
+                                // A tuple type with only a rest element is an array.
+                                Some(TupleElement {
+                                    polarity: Polarity::Positive,
+                                    ..
+                                }) if elements.is_empty() => {
+                                    ArrType::ROArrayAT(Box::new((elem_t.dupe(), None)))
+                                }
+                                Some(_) if elements.is_empty() => {
+                                    ArrType::ArrayAT(Box::new(ArrayATData {
+                                        elem_t: elem_t.dupe(),
+                                        tuple_view: None,
+                                        react_dro: None,
+                                        strictness_kind: cx.type_strictness_kind(),
+                                    }))
+                                }
+                                _ => ArrType::TupleAT(Box::new(TupleATData {
+                                    elem_t: elem_t.dupe(),
+                                    elements: elements.into(),
+                                    arity,
+                                    inexact,
+                                    rest: rest.dupe(),
+                                    react_dro: None,
+                                    strictness_kind: Default::default(),
+                                })),
+                            };
                             Type::new(TypeInner::DefT(
                                 reason_op.dupe(),
-                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
-                                    TupleATData {
-                                        elem_t: elem_t.dupe(),
-                                        elements: elements.into(),
-                                        arity,
-                                        inexact,
-                                        rest: None,
-                                        react_dro: None,
-                                        strictness_kind: Default::default(),
-                                    },
-                                ))))),
+                                DefT::new(DefTInner::ArrT(Rc::new(arrtype))),
                             ))
                         } else {
                             any_t::error(reason_op.dupe())
@@ -1070,6 +1150,45 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                             let mut rest = resolved.dupe();
                             rest.drop_first();
                             flatten(cx, args, None, rest)
+                        }
+                        // The fixed elements of a tuple with a rest element are arguments, and the
+                        // remaining arguments have the rest element's type.
+                        ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                            _,
+                            ArrType::TupleAT(box TupleATData {
+                                elements,
+                                rest: Some(rest_elem),
+                                ..
+                            }),
+                            generic,
+                        )) => {
+                            args.extend(
+                                elements.iter().map(|elem| (elem.t.dupe(), generic.clone())),
+                            );
+                            let mut tset = type_ex_set::empty();
+                            type_ex_set::add(rest_elem.t.dupe(), &mut tset);
+                            let ro = if rest_elem.polarity == Polarity::Positive {
+                                array_spread::RoStatus::ROSpread
+                            } else {
+                                array_spread::RoStatus::NonROSpread
+                            };
+                            let generic = array_spread::merge(
+                                &|msgs: &[String]| {
+                                    flow_typing_debug::verbose::print_if_verbose_lazy(
+                                        cx,
+                                        None,
+                                        None,
+                                        None,
+                                        || msgs.to_vec(),
+                                    );
+                                },
+                                array_spread::T::Bottom,
+                                generic.as_ref(),
+                                ro,
+                            );
+                            let mut rest = resolved.dupe();
+                            rest.drop_first();
+                            flatten(cx, args, Some((tset, None, generic)), rest)
                         }
                         ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                             _,

@@ -1893,11 +1893,19 @@ fn prop_exists_test_generic<'cx>(
                     }
                 }
                 DefTInner::ArrT(arr_t)
-                    if let ArrType::TupleAT(box TupleATData { elements, .. }) = arr_t.deref()
+                    if let ArrType::TupleAT(box TupleATData { elements, rest, .. }) =
+                        arr_t.deref()
                         && flow_js_utils::is_str_intlike(key) =>
                 {
                     let i: usize = key.parse().unwrap();
                     match elements.get(i) {
+                        // An element of the rest element may or may not exist.
+                        None if rest.is_some() => {
+                            report_unchanged_filtering_result_to_predicate_result(
+                                orig_obj.dupe(),
+                                result_collector,
+                            );
+                        }
                         Some(TupleElement {
                             t, polarity, name, ..
                         }) => {
@@ -2694,13 +2702,21 @@ fn sentinel_prop_test_generic<'cx>(
                         }
                         // tuple.length ===/!== literal value
                         DefTInner::ArrT(arr_t)
-                            if let ArrType::TupleAT(box TupleATData { arity, inexact, .. }) =
-                                arr_t.deref()
+                            if let ArrType::TupleAT(box TupleATData {
+                                arity,
+                                inexact,
+                                rest,
+                                ..
+                            }) = arr_t.deref()
                                 && key == "length" =>
                         {
                             let reason = reason_of_t(obj).dupe();
-                            let input =
-                                type_util::tuple_length(reason.dupe(), *inexact, arity.0, arity.1);
+                            let input = type_util::tuple_length(
+                                reason.dupe(),
+                                *inexact || rest.is_some(),
+                                arity.0,
+                                arity.1,
+                            );
                             concretize_and_run_sentinel_prop_test(
                                 cx,
                                 env,

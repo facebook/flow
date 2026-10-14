@@ -49,15 +49,17 @@ type InvalidSpread2 = [1, ...Alias]; // ERROR
   declare const x: InvalidSpread2;
   x as empty; // OK
 }
-type ArraySpread = [...Array<unknown>]; // ERROR
+
+// Array spread
+type ArraySpread = [...Array<unknown>]; // OK: an array
 {
   declare const x: ArraySpread;
-  x as empty; // OK
+  x as Array<unknown>; // OK
 }
-type ROArraySpread = [...ReadonlyArray<unknown>]; // ERROR
+type ROArraySpread = [...ReadonlyArray<unknown>]; // OK: an array
 {
   declare const x: ROArraySpread;
-  x as empty; // OK
+  x as Array<unknown>; // OK
 }
 
 // Spreading `any`

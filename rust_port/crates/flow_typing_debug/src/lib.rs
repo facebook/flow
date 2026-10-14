@@ -2564,15 +2564,17 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             lower,
             lower_arity,
             lower_inexact,
+            lower_rest,
             upper,
             upper_arity,
             upper_inexact,
+            upper_rest,
             unify,
         }) => {
             let (num_req1, num_total1) = lower_arity;
             let (num_req2, num_total2) = upper_arity;
             format!(
-                "ETupleArityMismatch ({}, {}, {}-{} inexact:{}, {}-{} inexact:{}, unify:{}, {})",
+                "ETupleArityMismatch ({}, {}, {}-{} inexact:{} rest:{}, {}-{} inexact:{} rest:{}, unify:{}, {})",
                 match &lower.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
@@ -2584,9 +2586,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 num_req1,
                 num_total1,
                 lower_inexact,
+                lower_rest,
                 num_req2,
                 num_total2,
                 upper_inexact,
+                upper_rest,
                 unify,
                 string_of_use_op(use_op)
             )
@@ -2724,6 +2728,12 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 },
                 polarity_upper.string(),
                 string_of_use_op(use_op)
+            )
+        }
+        ErrorMessage::ETupleElementAfterRestSpread(loc) => {
+            format!(
+                "ETupleElementAfterRestSpread ({})",
+                string_of_aloc(None, loc)
             )
         }
         ErrorMessage::ETupleElementAfterInexactSpread(loc) => {

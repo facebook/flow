@@ -1903,9 +1903,10 @@ pub mod special_cased_functions {
                                 &default_kind,
                             )
                         }
-                        ArrType::TupleAT(box TupleATData { elements, .. }) => {
+                        ArrType::TupleAT(box TupleATData { elements, rest, .. }) => {
                             // Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z)
-                            for (n, elem) in elements.iter().enumerate() {
+                            // Object.assign(o, ...[x, ...Array<y>]) -> Object.assign(o, x, y)
+                            for (n, elem) in elements.iter().chain(rest).enumerate() {
                                 if !Polarity::compat(elem.polarity, Polarity::Positive) {
                                     flow_js_utils::add_output_with_env(
                                         cx,

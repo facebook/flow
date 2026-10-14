@@ -443,3 +443,63 @@
     [[999], 999] => {}
   }
 }
+
+// Tuple rest elements
+{
+  declare const x: [boolean, ...Array<number>];
+
+  match (x) { // OK
+    [...] => {}
+  }
+
+  match (x) { // OK
+    [true, ...] => {}
+    [false, ...] => {}
+  }
+
+  match (x) { // ERROR: longer tuples are missing
+    [true] => {} // OK
+    [false] => {} // OK
+  }
+
+  match (x) { // ERROR: tuples with no rest elements are missing
+    [_, _, ...] => {} // OK
+  }
+
+  match (x) { // ERROR: missing `[false, ...]`
+    [true, ...] => {}
+  }
+
+  match (x) { // OK
+    [] => {} // ERROR: unnecessary pattern
+    [true, ...] => {}
+    [false, ...] => {}
+  }
+}
+
+// Optional element before a tuple rest element
+{
+  declare const x: [a: boolean, b?: boolean, ...Array<number>];
+
+  match (x) { // OK
+    [_, ...] => {}
+  }
+
+  match (x) { // ERROR: tuples without the optional element are missing
+    [_, _, ...] => {}
+  }
+}
+
+// Union of a fixed tuple and a tuple with a rest element
+{
+  declare const x: ['empty'] | ['values', ...Array<number>];
+
+  match (x) { // OK
+    ['empty'] => {}
+    ['values', ...] => {}
+  }
+
+  match (x) { // ERROR: missing `['values', ...]`
+    ['empty'] => {}
+  }
+}

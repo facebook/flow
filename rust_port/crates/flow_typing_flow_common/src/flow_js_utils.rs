@@ -8105,9 +8105,10 @@ pub fn array_elem_check<'cx>(
         }
     };
 
-    let (elem_t, elements, is_index_restricted, is_tuple, tuple_is_inexact, react_dro): (
+    let (elem_t, elements, rest, is_index_restricted, is_tuple, tuple_is_inexact, react_dro): (
         Type,
         Option<std::rc::Rc<[TupleElement]>>,
+        Option<TupleElement>,
         bool,
         bool,
         bool,
@@ -8121,21 +8122,39 @@ pub fn array_elem_check<'cx>(
         }) => {
             let elements = tuple_view.as_ref().map(|tv| tv.elements.dupe());
             let elem_t = union_void_if_instructed(elem_t.dupe());
-            (elem_t, elements, false, false, false, react_dro.clone())
+            (
+                elem_t,
+                elements,
+                None,
+                false,
+                false,
+                false,
+                react_dro.clone(),
+            )
         }
         ArrType::TupleAT(box TupleATData {
             elem_t,
             elements,
             arity: _,
             inexact,
-            rest: _,
+            rest,
             react_dro,
             strictness_kind: _,
         }) => {
             let elem_t = union_void_if_instructed(elem_t.dupe());
+            // An index past the fixed elements accesses the rest element, which may not exist.
+            let rest = rest.as_ref().map(|rest| TupleElement {
+                t: if write_action {
+                    rest.t.dupe()
+                } else {
+                    union_void_if_instructed(rest.t.dupe())
+                },
+                ..rest.clone()
+            });
             (
                 elem_t,
                 Some(elements.dupe()),
+                rest,
                 true,
                 true,
                 *inexact,
@@ -8144,7 +8163,7 @@ pub fn array_elem_check<'cx>(
         }
         ArrType::ROArrayAT(box (elem_t, react_dro)) => {
             let elem_t = union_void_if_instructed(elem_t.dupe());
-            (elem_t, None, true, false, false, react_dro.clone())
+            (elem_t, None, None, true, false, false, react_dro.clone())
         }
     };
 
@@ -8160,8 +8179,9 @@ pub fn array_elem_check<'cx>(
 
                         match index_string.parse::<i64>() {
                             Ok(index) => {
-                                let value_opt =
-                                    usize::try_from(index).ok().and_then(|i| elements.get(i));
+                                let value_opt = usize::try_from(index)
+                                    .ok()
+                                    .and_then(|i| elements.get(i).or(rest.as_ref()));
 
                                 match value_opt {
                                     Some(TupleElement {

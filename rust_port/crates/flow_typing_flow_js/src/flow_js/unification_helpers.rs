@@ -227,7 +227,7 @@ fn __unify_inner<'cx>(
                                 elements: elements1,
                                 arity: lower_arity,
                                 inexact: lower_inexact,
-                                rest: _,
+                                rest: rest1,
                                 react_dro: _,
                                 strictness_kind: lower_strictness_kind,
                             }),
@@ -236,7 +236,7 @@ fn __unify_inner<'cx>(
                                 elements: elements2,
                                 arity: upper_arity,
                                 inexact: upper_inexact,
-                                rest: _,
+                                rest: rest2,
                                 react_dro: _,
                                 strictness_kind: upper_strictness_kind,
                             }),
@@ -244,6 +244,7 @@ fn __unify_inner<'cx>(
                             let (num_req1, num_total1) = lower_arity;
                             let (num_req2, num_total2) = upper_arity;
                             if lower_inexact != upper_inexact
+                                || rest1.is_some() != rest2.is_some()
                                 || num_req1 != num_req2
                                 || num_total1 != num_total2
                             {
@@ -260,6 +261,7 @@ fn __unify_inner<'cx>(
                                                 ),
                                             lower_arity: *lower_arity,
                                             lower_inexact: *lower_inexact,
+                                            lower_rest: rest1.is_some(),
                                             upper:
                                                 flow_js_utils::type_reference_with_reason_for_error(
                                                     t2,
@@ -267,6 +269,7 @@ fn __unify_inner<'cx>(
                                                 ),
                                             upper_arity: *upper_arity,
                                             upper_inexact: *upper_inexact,
+                                            upper_rest: rest2.is_some(),
                                             unify: true,
                                         },
                                     )),
@@ -274,8 +277,8 @@ fn __unify_inner<'cx>(
                             }
                             let mut n: i32 = 0;
                             {
-                                let mut iter1 = elements1.iter();
-                                let mut iter2 = elements2.iter();
+                                let mut iter1 = elements1.iter().chain(rest1);
+                                let mut iter2 = elements2.iter().chain(rest2);
                                 loop {
                                     let e1 = iter1.next();
                                     let e2 = iter2.next();

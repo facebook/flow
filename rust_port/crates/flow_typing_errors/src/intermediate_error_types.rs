@@ -1538,9 +1538,11 @@ pub struct MessageIncompatibleTupleArityData<L: Dupe> {
     pub lower: MessageTypeReferenceData<L>,
     pub lower_arity: (i32, i32),
     pub lower_inexact: bool,
+    pub lower_rest: bool,
     pub upper: MessageTypeReferenceData<L>,
     pub upper_arity: (i32, i32),
     pub upper_inexact: bool,
+    pub upper_rest: bool,
     pub unify: bool,
 }
 
@@ -2500,6 +2502,7 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidTupleTypeSpread(Box<MessageTypeReferenceData<L>>),
     MessageTupleElementAfterInexactSpread,
+    MessageTupleElementAfterRestSpread,
 
     MessageInternalType(InternalType),
 

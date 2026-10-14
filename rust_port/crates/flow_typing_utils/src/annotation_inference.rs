@@ -2705,6 +2705,7 @@ fn elab_t_concrete<'cx>(
                         && let flow_typing_type::type_::ArrType::TupleAT(box TupleATData {
                             arity,
                             inexact,
+                            rest,
                             ..
                         }) = arr.deref()
                         && let type_::PropRef::Named { name, .. } = propref
@@ -2716,7 +2717,7 @@ fn elab_t_concrete<'cx>(
                         env,
                         &trace,
                         reason.dupe(),
-                        *inexact,
+                        *inexact || rest.is_some(),
                         *arity,
                         reason_op.loc().dupe(),
                     )

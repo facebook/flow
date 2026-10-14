@@ -7526,35 +7526,41 @@ where
                 lower,
                 lower_arity,
                 lower_inexact,
+                lower_rest,
                 upper,
                 upper_arity,
                 upper_inexact,
+                upper_rest,
                 ..
             }) => {
-                let str_of_arity = |inexact: bool, (num_req, num_total): &(i32, i32)| {
-                    let suffix = if inexact {
-                        "or more elements (inexact tuple)"
-                    } else {
-                        "elements"
-                    };
-                    if num_req == num_total {
-                        if *num_total == 1 && !inexact {
-                            format!("{} element", num_total)
-                        } else {
-                            format!("{} {}", num_total, suffix)
+                let str_of_arity =
+                    |inexact: bool, rest: bool, (num_req, num_total): &(i32, i32)| {
+                        if rest {
+                            return format!("{} or more elements", num_req);
                         }
-                    } else {
-                        format!("{}-{} {}", num_req, num_total, suffix)
-                    }
-                };
+                        let suffix = if inexact {
+                            "or more elements (inexact tuple)"
+                        } else {
+                            "elements"
+                        };
+                        if num_req == num_total {
+                            if *num_total == 1 && !inexact {
+                                format!("{} element", num_total)
+                            } else {
+                                format!("{} {}", num_total, suffix)
+                            }
+                        } else {
+                            format!("{}-{} {}", num_req, num_total, suffix)
+                        }
+                    };
                 friendly::Message(vec![
                     ref_of_type_desc(&lower.loc, &lower.desc),
                     text(" has "),
-                    text(&str_of_arity(*lower_inexact, lower_arity)),
+                    text(&str_of_arity(*lower_inexact, *lower_rest, lower_arity)),
                     text(" but "),
                     ref_of_type_desc(&upper.loc, &upper.desc),
                     text(" has "),
-                    text(&str_of_arity(*upper_inexact, upper_arity)),
+                    text(&str_of_arity(*upper_inexact, *upper_rest, upper_arity)),
                 ])
             }
             MessageIncompatibleClassToObject {
@@ -7999,6 +8005,9 @@ where
             ]),
             MessageTupleElementAfterInexactSpread => friendly::Message(vec![text(
                 "Cannot have element after spread of inexact tuple.",
+            )]),
+            MessageTupleElementAfterRestSpread => friendly::Message(vec![text(
+                "Cannot have element after spread of tuple with a rest element.",
             )]),
             MessageInvalidRendersTypeArgument(box MessageInvalidRendersTypeArgumentData {
                 renders_variant,

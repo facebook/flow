@@ -1609,11 +1609,17 @@ pub fn array_length(sense: bool, op: &ArrayLengthOp, n: i32, t: Type) -> FilterR
                     }),
                 ..
             }) => {
+                // A tuple with a rest element has no maximum length, like an inexact tuple.
+                let inexact = *inexact
+                    || matches!(
+                        arr.deref(),
+                        ArrType::TupleAT(box TupleATData { rest: Some(_), .. })
+                    );
                 let matches = match op {
                     ArrayLengthOp::ArrLenEqual => {
                         if n == *num_req && n == *num_total && !inexact {
                             Some(true)
-                        } else if n >= *num_req && (n <= *num_total || *inexact) {
+                        } else if n >= *num_req && (n <= *num_total || inexact) {
                             None
                         } else {
                             Some(false)
@@ -1622,7 +1628,7 @@ pub fn array_length(sense: bool, op: &ArrayLengthOp, n: i32, t: Type) -> FilterR
                     ArrayLengthOp::ArrLenGreaterThanEqual => {
                         if n <= *num_req {
                             Some(true)
-                        } else if n <= *num_total || *inexact {
+                        } else if n <= *num_total || inexact {
                             None
                         } else {
                             Some(false)

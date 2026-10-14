@@ -75,6 +75,7 @@ use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeStrictnessKind;
+use flow_typing_type::type_::UnresolvedArgData;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::WriteElemData;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
@@ -3715,17 +3716,29 @@ fn __flow_impl<'cx>(
                     // Arrays
                     match (&resolve_spread.rrt_resolve_to, arrtype.as_ref()) {
                         (
-                            SpreadResolve::ResolveSpreadsToTupleType { .. },
+                            SpreadResolve::ResolveSpreadsToTupleType { inexact, .. },
                             ArrType::ArrayAT(box ArrayATData {
                                 tuple_view: None, ..
                             })
-                            | ArrType::ROArrayAT(box (_, _)),
-                        ) => {
-                            // Only tuples can be spread into tuple types.
-                            flow_js_utils::add_output_with_env(
-                                cx,
-                                env,
-                                ErrorMessage::ETupleInvalidTypeSpread(Box::new(
+                            | ArrType::ROArrayAT(box (_, _))
+                            | ArrType::TupleAT(box TupleATData { rest: Some(_), .. }),
+                        ) if *inexact || !resolve_spread.rrt_unresolved.is_empty() => {
+                            // Only the last spread of a tuple type can have an unknown number of
+                            // elements, which become its rest element.
+                            let error = match arrtype.as_ref() {
+                                ArrType::TupleAT(_) => {
+                                    let loc = match resolve_spread.rrt_unresolved.first() {
+                                        Some(UnresolvedParam::UnresolvedArg(
+                                            box UnresolvedArgData(elem, _),
+                                        )) => elem.reason.loc().dupe(),
+                                        Some(UnresolvedParam::UnresolvedSpreadArg(t)) => {
+                                            reason_of_t(t).loc().dupe()
+                                        }
+                                        None => reason_op.loc().dupe(),
+                                    };
+                                    ErrorMessage::ETupleElementAfterRestSpread(loc)
+                                }
+                                _ => ErrorMessage::ETupleInvalidTypeSpread(Box::new(
                                     ETupleInvalidTypeSpreadData {
                                         spread_loc: reason_op.loc().dupe(),
                                         argument:
@@ -3735,13 +3748,14 @@ fn __flow_impl<'cx>(
                                             ),
                                     },
                                 )),
-                            )?;
-                            ArrType::ArrayAT(Box::new(ArrayATData {
-                                elem_t: any_t::error(reason.dupe()),
-                                tuple_view: None,
-                                react_dro: None,
-                                strictness_kind: cx.type_strictness_kind(),
-                            }))
+                            };
+                            flow_js_utils::add_output_with_env(cx, env, error)?;
+                            // Continue as if `any` was spread, which makes the tuple type `any`.
+                            return Ok(Some(TailCall::RecFlow(
+                                any_t::error(reason.dupe()),
+                                u.dupe(),
+                                DepthTrace::rec_trace(trace),
+                            )));
                         }
                         _ => (**arrtype).clone(),
                     }
@@ -3814,7 +3828,12 @@ fn __flow_impl<'cx>(
                                     },
                                 )),
                             )?;
-                            any_t::error(reason.dupe())
+                            // Continue as if `any` was spread, which makes the tuple type `any`.
+                            return Ok(Some(TailCall::RecFlow(
+                                any_t::error(reason.dupe()),
+                                u.dupe(),
+                                DepthTrace::rec_trace(trace),
+                            )));
                         }
                     };
                     rec_flow_t(cx, env, trace, unknown_use(), (l, &resolve_to_type))?;
@@ -7678,22 +7697,35 @@ fn __flow_impl<'cx>(
                             reason
                                 .dupe()
                                 .replace_desc(VirtualReasonDesc::RTupleElement { name: None }),
-                            type_util::tuple_ts_of_elements(elements),
+                            elements
+                                .iter()
+                                .chain(rest)
+                                .map(|elem| elem.t.dupe())
+                                .collect(),
                             None,
                         )
                     };
-                    ArrType::TupleAT(Box::new(TupleATData {
-                        elem_t,
-                        elements: elements.to_vec().into(),
-                        arity: (
-                            (*num_req as i64 - i as i64).max(0) as i32,
-                            (*num_total as i64 - i as i64).max(0) as i32,
-                        ),
-                        inexact: *inexact,
-                        rest: rest.dupe(),
-                        react_dro: react_dro.clone(),
-                        strictness_kind: *strictness_kind,
-                    }))
+                    match rest {
+                        // A tuple with only a rest element is an array.
+                        Some(_) if elements.is_empty() => ArrType::ArrayAT(Box::new(ArrayATData {
+                            elem_t,
+                            tuple_view: None,
+                            react_dro: react_dro.clone(),
+                            strictness_kind: *strictness_kind,
+                        })),
+                        _ => ArrType::TupleAT(Box::new(TupleATData {
+                            elem_t,
+                            elements: elements.to_vec().into(),
+                            arity: (
+                                (*num_req as i64 - i as i64).max(0) as i32,
+                                (*num_total as i64 - i as i64).max(0) as i32,
+                            ),
+                            inexact: *inexact,
+                            rest: rest.dupe(),
+                            react_dro: react_dro.clone(),
+                            strictness_kind: *strictness_kind,
+                        })),
+                    }
                 }
             };
             let a = Type::new(TypeInner::DefT(
@@ -10689,7 +10721,12 @@ fn __flow_impl<'cx>(
         // *************************
         (TypeInner::DefT(reason, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::ArrT(arr) = def_t.deref()
-                && let ArrType::TupleAT(box TupleATData { arity, inexact, .. }) = arr.deref()
+                && let ArrType::TupleAT(box TupleATData {
+                    arity,
+                    inexact,
+                    rest,
+                    ..
+                }) = arr.deref()
                 && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name == &Name::new("length")) =>
         {
             flow_js_utils::get_prop_t_kit::on_array_length::<FlowJs>(
@@ -10697,7 +10734,7 @@ fn __flow_impl<'cx>(
                 env,
                 &trace,
                 reason.dupe(),
-                *inexact,
+                *inexact || rest.is_some(),
                 *arity,
                 data.reason.loc().dupe(),
             )?(cx, (*data.tout).dupe())?;

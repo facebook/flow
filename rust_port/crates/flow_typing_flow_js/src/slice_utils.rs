@@ -90,6 +90,7 @@ use flow_typing_type::type_::str_module_t;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::unknown_use;
+use flow_typing_type::type_::void;
 use flow_typing_type::type_util;
 use vec1::Vec1;
 
@@ -2595,13 +2596,26 @@ fn resolve_with_env<'cx, A>(
                             }
                         })
                         .collect();
+                    // Each element of the rest element may be `undefined`.
+                    let rest = rest.as_ref().map(|elem| TupleElement {
+                        t: type_util::union_of_ts(
+                            elem.reason.dupe(),
+                            vec![elem.t.dupe(), void::why(elem.reason.dupe())],
+                            None,
+                        ),
+                        ..elem.clone()
+                    });
                     let def_reason = match reason.desc(false) {
                         Some(VirtualReasonDesc::RPartialOf(_)) => r.dupe(),
                         _ => reason.dupe(),
                     };
                     let elem_t = type_util::union_of_ts(
                         type_util::reason_of_t(elem_t).dupe(),
-                        type_util::tuple_ts_of_elements(&elements),
+                        elements
+                            .iter()
+                            .chain(&rest)
+                            .map(|elem| elem.t.dupe())
+                            .collect(),
                         None,
                     );
                     let (_, num_total) = arity;
@@ -2617,7 +2631,7 @@ fn resolve_with_env<'cx, A>(
                                     elements: elements.into(),
                                     arity,
                                     inexact: *inexact,
-                                    rest: rest.dupe(),
+                                    rest,
                                     react_dro: react_dro.clone(),
                                     strictness_kind: *strictness_kind,
                                 },
@@ -2656,7 +2670,11 @@ fn resolve_with_env<'cx, A>(
                     };
                     let elem_t = type_util::union_of_ts(
                         type_util::reason_of_t(elem_t).dupe(),
-                        type_util::tuple_ts_of_elements(&elements),
+                        elements
+                            .iter()
+                            .chain(rest)
+                            .map(|elem| elem.t.dupe())
+                            .collect(),
                         None,
                     );
                     let (_, num_total) = arity;

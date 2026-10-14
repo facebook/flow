@@ -2706,5 +2706,89 @@ References:
           ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- tuples.js:460:3
 
-Found 196 errors
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[false | true, ...]` to
+match `[boolean, ...Array<number>]` [1]. [match-not-exhaustive]
+
+   tuples.js:460:3
+   460|   match (x) { // ERROR: longer tuples are missing
+          ^^^^^
+
+References:
+   tuples.js:449:20
+   449|   declare const x: [boolean, ...Array<number>];
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:465:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, ...]` to match
+`[boolean, ...Array<number>]` [1]. [match-not-exhaustive]
+
+   tuples.js:465:3
+   465|   match (x) { // ERROR: tuples with no rest elements are missing
+          ^^^^^
+
+References:
+   tuples.js:449:20
+   449|   declare const x: [boolean, ...Array<number>];
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:469:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[false, ...]` to match
+`[boolean, ...Array<number>]` [1]. [match-not-exhaustive]
+
+   tuples.js:469:3
+   469|   match (x) { // ERROR: missing `[false, ...]`
+          ^^^^^
+
+References:
+   tuples.js:449:20
+   449|   declare const x: [boolean, ...Array<number>];
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:474:5
+
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   474|     [] => {} // ERROR: unnecessary pattern
+            ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:488:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, ...]` to match
+`[a: boolean, b?: boolean, ...Array<number>]` [1]. [match-not-exhaustive]
+
+   tuples.js:488:3
+   488|   match (x) { // ERROR: tuples without the optional element are missing
+          ^^^^^
+
+References:
+   tuples.js:482:20
+   482|   declare const x: [a: boolean, b?: boolean, ...Array<number>];
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:502:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['values', ...]` to match
+`["values", ...Array<number>]` [1]. [match-not-exhaustive]
+
+   tuples.js:502:3
+   502|   match (x) { // ERROR: missing `['values', ...]`
+          ^^^^^
+
+References:
+   tuples.js:495:32
+   495|   declare const x: ['empty'] | ['values', ...Array<number>];
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 202 errors

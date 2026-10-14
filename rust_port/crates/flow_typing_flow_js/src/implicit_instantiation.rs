@@ -894,6 +894,7 @@ fn resolved_elements_count(
             ArrType::TupleAT(box TupleATData {
                 elements,
                 inexact: false,
+                rest: None,
                 ..
             })
             | ArrType::ArrayAT(box ArrayATData {

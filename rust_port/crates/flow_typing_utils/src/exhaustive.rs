@@ -1091,10 +1091,17 @@ mod value_union_builder {
                             elements,
                             arity: (num_req, num_total),
                             inexact,
+                            rest: rest_elem,
                             ..
                         }) => {
                             let reason = enum_reason;
-                            let rest = if *inexact { Some(t.dupe()) } else { None };
+                            // A tuple with a rest element has no maximum length, like an inexact
+                            // tuple.
+                            let rest = if *inexact || rest_elem.is_some() {
+                                Some(t.dupe())
+                            } else {
+                                None
+                            };
                             let props_list: Vec<_> = elements
                                 .iter()
                                 .map(|elem| {

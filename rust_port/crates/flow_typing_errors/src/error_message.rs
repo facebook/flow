@@ -1665,9 +1665,11 @@ pub struct ETupleArityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub lower: ErrorTypeReferenceWithLocData<L>,
     pub lower_arity: (i32, i32),
     pub lower_inexact: bool,
+    pub lower_rest: bool,
     pub upper: ErrorTypeReferenceWithLocData<L>,
     pub upper_arity: (i32, i32),
     pub upper_inexact: bool,
+    pub upper_rest: bool,
     pub unify: bool,
 }
 
@@ -3530,6 +3532,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETupleElementAfterInexactSpread(L),
 
+    ETupleElementAfterRestSpread(L),
+
     EROArrayWrite(L, VirtualUseOp<L>),
 
     EUnionSpeculationFailed(Box<EUnionSpeculationFailedData<L>>),
@@ -4883,18 +4887,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 lower_arity,
                 lower_inexact,
+                lower_rest,
                 upper,
                 upper_arity,
                 upper_inexact,
+                upper_rest,
                 unify,
             }) => ETupleArityMismatch(Box::new(ETupleArityMismatchData {
                 use_op: map_use_op(use_op),
                 lower: map_error_type_ref_with_reason(lower),
                 lower_arity,
                 lower_inexact,
+                lower_rest,
                 upper: map_error_type_ref_with_reason(upper),
                 upper_arity,
                 upper_inexact,
+                upper_rest,
                 unify,
             })),
 
@@ -5008,6 +5016,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ETupleElementAfterInexactSpread(loc) => ETupleElementAfterInexactSpread(f(loc)),
+
+            ETupleElementAfterRestSpread(loc) => ETupleElementAfterRestSpread(f(loc)),
 
             EROArrayWrite(loc, op) => EROArrayWrite(f(loc), map_use_op(op)),
 
@@ -7225,18 +7235,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 lower_arity,
                 lower_inexact,
+                lower_rest,
                 upper,
                 upper_arity,
                 upper_inexact,
+                upper_rest,
                 unify,
             }) => ETupleArityMismatch(Box::new(ETupleArityMismatchData {
                 use_op,
                 lower: map_error_type_ref_with_reason(lower),
                 lower_arity,
                 lower_inexact,
+                lower_rest,
                 upper: map_error_type_ref_with_reason(upper),
                 upper_arity,
                 upper_inexact,
+                upper_rest,
                 unify,
             })),
 
@@ -8464,6 +8478,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 ..
             })
             | Self::ETupleElementAfterInexactSpread(loc)
+            | Self::ETupleElementAfterRestSpread(loc)
             | Self::ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
                 loc,
                 ..
@@ -10827,9 +10842,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 lower_arity,
                 lower_inexact,
+                lower_rest,
                 upper,
                 upper_arity,
                 upper_inexact,
+                upper_rest,
                 unify,
             }) => {
                 let loc = lower.loc.dupe();
@@ -10843,12 +10860,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             },
                             lower_arity,
                             lower_inexact,
+                            lower_rest,
                             upper: MessageTypeReferenceData {
                                 loc: upper.reference_loc,
                                 desc: expect_type_desc(upper.type_desc),
                             },
                             upper_arity,
                             upper_inexact,
+                            upper_rest,
                             unify,
                         },
                     )),
@@ -10879,6 +10898,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ETupleElementAfterInexactSpread(_) => {
                 Normal(Message::MessageTupleElementAfterInexactSpread)
+            }
+            ErrorMessage::ETupleElementAfterRestSpread(_) => {
+                Normal(Message::MessageTupleElementAfterRestSpread)
             }
 
             ErrorMessage::ENonLitArrayToTuple((lower, upper), use_op) => {
@@ -12719,6 +12741,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::ETupleElementAfterInexactSpread { .. } => {
                 Some(ElementAfterInexactTupleSpread)
             }
+            ErrorMessage::ETupleElementAfterRestSpread { .. } => Some(ElementAfterTupleRestSpread),
             ErrorMessage::ETupleElementNotReadable(box ETupleElementNotReadableData { .. }) => {
                 Some(CannotRead)
             }

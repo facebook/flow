@@ -5777,12 +5777,14 @@ pub fn rec_sub_t<'cx>(
                         elements: elements1,
                         arity: lower_arity,
                         inexact: lower_inexact,
+                        rest: rest1,
                         ..
                     }),
                     ArrType::TupleAT(box TupleATData {
                         elements: elements2,
                         arity: upper_arity,
                         inexact: upper_inexact,
+                        rest: rest2,
                         ..
                     }),
                 ) = (arr1.as_ref(), arr2.as_ref()) =>
@@ -5790,9 +5792,13 @@ pub fn rec_sub_t<'cx>(
             let fresh = flow_common::reason::is_literal_array_reason(r1);
             let (num_req1, num_total1) = *lower_arity;
             let (num_req2, num_total2) = *upper_arity;
+            // A tuple with a rest element has no maximum length, like an inexact tuple.
+            let lower_open = *lower_inexact || rest1.is_some();
+            let upper_open = *upper_inexact || rest2.is_some();
             if !((*upper_inexact || !lower_inexact)
+                && (upper_open || !lower_open)
                 && num_req1 >= num_req2
-                && (num_total1 <= num_total2 || *upper_inexact))
+                && (num_total1 <= num_total2 || upper_open))
             {
                 flow_js_utils::add_output_with_env(
                     cx,env,
@@ -5801,9 +5807,11 @@ pub fn rec_sub_t<'cx>(
                         lower: flow_js_utils::type_reference_with_reason_for_error(l, r1.dupe()),
                         lower_arity: *lower_arity,
                         lower_inexact: *lower_inexact,
+                        lower_rest: rest1.is_some(),
                         upper: flow_js_utils::type_reference_with_reason_for_error(u, r2.dupe()),
                         upper_arity: *upper_arity,
                         upper_inexact: *upper_inexact,
+                        upper_rest: rest2.is_some(),
                         unify: false,
                     })),
                 )?;
@@ -5918,6 +5926,19 @@ pub fn rec_sub_t<'cx>(
                             tuple_element_compat(n, t1, t2, *p1, *p2, *optional1, *optional2)?;
                             n += 1;
                         }
+                        // The lower rest element supplies the remaining optional elements.
+                        (
+                            None,
+                            Some(TupleElement {
+                                t: t2,
+                                polarity: p2,
+                                optional: optional2,
+                                ..
+                            }),
+                        ) if let Some(TupleElement { t: t1, polarity: p1, .. }) = rest1 => {
+                            tuple_element_compat(n, t1, t2, *p1, *p2, false, *optional2)?;
+                            n += 1;
+                        }
                         (
                             None,
                             Some(TupleElement {
@@ -5936,8 +5957,28 @@ pub fn rec_sub_t<'cx>(
                             tuple_element_compat(n, &t1, t2, p1, *p2, optional1, *optional2)?;
                             n += 1;
                         }
+                        // The remaining lower elements go to the upper rest element.
+                        (
+                            Some(TupleElement {
+                                t: t1,
+                                polarity: p1,
+                                optional: optional1,
+                                ..
+                            }),
+                            None,
+                        ) if let Some(TupleElement { t: t2, polarity: p2, .. }) = rest2 => {
+                            tuple_element_compat(n, t1, t2, *p1, *p2, *optional1, false)?;
+                            n += 1;
+                        }
                         _ => {}
                     }
+                }
+                if let (
+                    Some(TupleElement { t: t1, polarity: p1, .. }),
+                    Some(TupleElement { t: t2, polarity: p2, .. }),
+                ) = (rest1, rest2)
+                {
+                    tuple_element_compat(n, t1, t2, *p1, *p2, false, false)?;
                 }
             }
             Ok(())
