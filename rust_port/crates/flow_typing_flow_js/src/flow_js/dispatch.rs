@@ -5751,9 +5751,7 @@ fn __flow_impl<'cx>(
             let t = &ctor_data.tout;
             let return_hint = &ctor_data.return_hint;
             let specialized_ctor = &ctor_data.specialized_ctor;
-            let reason_o = reason
-                .dupe()
-                .replace_desc(VirtualReasonDesc::RConstructorVoidReturn);
+            let reason_o = reason.dupe().replace_desc(None);
             let annot_loc = reason_op.loc().dupe();
             // Reject [new C(...)] where [C] is an abstract class. We do not
             // short-circuit — let the constructor call proceed so downstream

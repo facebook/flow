@@ -20438,10 +20438,7 @@ pub fn mk_func_sig<'a>(
             )
         }
         (ast::function::ReturnAnnot::Missing(loc), _) if matches!(kind, func::Kind::Ctor) => {
-            let t = type_::void::make(mk_reason(
-                VirtualReasonDesc::RConstructorVoidReturn,
-                ret_loc.dupe(),
-            ));
+            let t = type_::void::make(mk_reason(None, ret_loc.dupe()));
             (
                 AnnotatedOrInferred::Inferred(t.dupe()),
                 ast::function::ReturnAnnot::Missing((loc.dupe(), t)),
@@ -20576,10 +20573,7 @@ pub fn mk_func_sig<'a>(
             cx.add_post_inference_subtyping_check(
                 return_type.dupe(),
                 use_op,
-                type_::void::make(mk_reason(
-                    VirtualReasonDesc::RConstructorVoidReturn,
-                    ret_loc.dupe(),
-                )),
+                type_::void::make(mk_reason(None, ret_loc.dupe())),
             );
         }
         _ => {}
