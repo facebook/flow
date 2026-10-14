@@ -5644,8 +5644,10 @@ pub fn rec_sub_t<'cx>(
         // object is a subtype. We use `ExtendsUseT` to walk the proto chain of the
         // object, in case it includes a nominal type.
         (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if matches!(ld.deref(), DefTInner::ObjT(_))
-                && matches!(ud.deref(), DefTInner::InstanceT(_)) =>
+            if let DefTInner::InstanceT(inst) = ud.deref()
+                && (matches!(ld.deref(), DefTInner::ObjT(_))
+                    || (matches!(ld.deref(), DefTInner::ClassT(_))
+                        && matches!(inst.inst.inst_kind, InstanceKind::ClassKind))) =>
         {
             FlowJs::rec_flow_with_env(
                 cx, env,
@@ -6329,6 +6331,13 @@ pub fn rec_sub_t<'cx>(
                 FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, statics, u)?;
             }
             Ok(())
+        }
+
+        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+            if let DefTInner::FunT(statics, _) = ld.deref()
+                && matches!(ud.deref(), DefTInner::InstanceT(_)) =>
+        {
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, statics, u)
         }
 
         // ***************************************************

@@ -339,8 +339,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:35:1
 
-Cannot cast `add` to `C` because `(x: number, y: number) => number` [1] is incompatible with `C` [2].
-[incompatible-type]
+Cannot cast `add` to `C` because `{...}` [1] is incompatible with `C` [2]. [incompatible-type]
 
    used_as_callable_object.js:35:1
    35| add as C; // error object incompatible with class instance
@@ -395,8 +394,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:40:1
 
-Cannot cast `addWithBar` to `C` because `(x: number, y: number) => number` [1] is incompatible with `C` [2].
-[incompatible-type]
+Cannot cast `addWithBar` to `C` because `{bar: string, ...}` [1] is incompatible with `C` [2]. [incompatible-type]
 
    used_as_callable_object.js:40:1
    40| addWithBar as C; // error object incompatible with class instance

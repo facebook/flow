@@ -1,0 +1,79 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:17:1
+
+Cannot cast `fn` to `D` because `{...}` [1] is incompatible with `D` [2]. [incompatible-type]
+
+   test.js:17:1
+   17| fn as D; // ERROR
+       ^^
+
+References:
+   test.js:1:12
+    1| const fn = (x: number): number => x;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:17:7
+   17| fn as D; // ERROR
+             ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
+
+Cannot cast `C` to `D` because class `C` [1] is incompatible with `D` [2]. [incompatible-type]
+
+   test.js:18:1
+   18| C as D; // ERROR
+       ^
+
+References:
+   test.js:11:7
+   11| class C {}
+             ^ [1]
+   test.js:18:6
+   18| C as D; // ERROR
+            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
+
+Cannot cast `new C()` to `Function` because `C` [1] is incompatible with `Function` [2]. [incompatible-type]
+
+   test.js:19:1
+   19| new C() as Function; // ERROR
+       ^^^^^^^ [1]
+
+References:
+   test.js:19:12
+   19| new C() as Function; // ERROR
+                  ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:2
+
+Cannot cast object literal to `Function` because object literal [1] is incompatible with `Function` [2].
+[incompatible-type]
+
+   test.js:20:2
+   20| ({}) as Function; // ERROR
+        ^^ [1]
+
+References:
+   test.js:20:9
+   20| ({}) as Function; // ERROR
+               ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:1
+
+Cannot cast `42` to `Function` because `42` [1] is incompatible with `Function` [2]. [incompatible-type]
+
+   test.js:21:1
+   21| 42 as Function; // ERROR
+       ^^ [1]
+
+References:
+   test.js:21:7
+   21| 42 as Function; // ERROR
+             ^^^^^^^^ [2]
+
+
+
+Found 5 errors
