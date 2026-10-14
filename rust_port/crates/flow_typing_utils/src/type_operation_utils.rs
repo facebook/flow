@@ -1734,14 +1734,9 @@ pub mod special_cased_functions {
                     cx.try_iter_props(mapr.dupe(), |cx, name, p| -> Result<(), FlowJsException> {
                         let reason_prop = lreason
                             .dupe()
-                            .update_desc(|desc| {
-                                desc.map(|desc| {
-                                    flow_common::reason::VirtualReasonDesc::RPropertyOf(
-                                        name.dupe(),
-                                        Arc::new(desc),
-                                    )
-                                })
-                            })
+                            .replace_desc(flow_common::reason::VirtualReasonDesc::RProperty(Some(
+                                name.dupe(),
+                            )))
                             .reposition(reason_op.loc().dupe());
                         match type_::property::read_t(p) {
                             Some(prop_t) => {

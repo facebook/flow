@@ -398,5 +398,26 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error -------------------------------------------------------------------------------------- union_representative.js:4:1
 
-Found 21 errors
+Incorrect arguments passed to `Object.assign` because in at least one member of property `a` [1]: `"A"` [2] is
+incompatible with `En` [3]. [incompatible-type]
+
+   union_representative.js:4:1
+   4| Object.assign(tgt, src); // error: "A" ~> En, in at least one member of property `a`
+      ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   union_representative.js:3:18
+   3| declare var src: {a: 'A' | 'B'};
+                       ^^^^^^^^^^^^^^ [1]
+   union_representative.js:3:22
+   3| declare var src: {a: 'A' | 'B'};
+                           ^^^ [2]
+   union_representative.js:2:22
+   2| declare var tgt: {a: En};
+                           ^^ [3]
+
+
+
+Found 22 errors

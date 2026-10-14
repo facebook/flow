@@ -371,14 +371,7 @@ pub(super) fn inst_structural_subtype<'cx>(
         match p.deref() {
             PropertyInner::Field(fd) if matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) => {
                 let t = &fd.type_;
-                let reason = reason_struct.dupe().update_desc(|desc| {
-                    desc.map(|desc| {
-                        VirtualReasonDesc::ROptional(Arc::new(VirtualReasonDesc::RPropertyOf(
-                            name.dupe(),
-                            Arc::new(desc),
-                        )))
-                    })
-                });
+                let reason = reason_struct.dupe().replace_desc(None);
                 let propref = mk_named_prop(reason.dupe(), false, name.dupe());
                 let polarity = if lit { Polarity::Positive } else { fd.polarity };
                 let nonstrict_returning = inst_dict
@@ -423,9 +416,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                 )?;
             }
             _ => {
-                let reason = reason_struct.dupe().update_desc(|desc| {
-                    desc.map(|desc| VirtualReasonDesc::RPropertyOf(name.dupe(), Arc::new(desc)))
-                });
+                let reason = reason_struct.dupe().replace_desc(None);
                 let propref = mk_named_prop(reason.dupe(), false, name.dupe());
                 rec_flow(
                     cx,
@@ -458,9 +449,7 @@ pub(super) fn inst_structural_subtype<'cx>(
         }
     }
     for (name, p) in proto_props.iter() {
-        let reason = reason_struct.dupe().update_desc(|desc| {
-            desc.map(|desc| VirtualReasonDesc::RPropertyOf(name.dupe(), Arc::new(desc)))
-        });
+        let reason = reason_struct.dupe().replace_desc(None);
         let propref = mk_named_prop(reason.dupe(), false, name.dupe());
         rec_flow(
             cx,

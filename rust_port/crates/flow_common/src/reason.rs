@@ -428,7 +428,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
         object_: FlowSmolStr,
         property: FlowSmolStr,
     },
-    RPropertyOf(Name, Arc<VirtualReasonDesc<L>>),
     RMissingProperty(Option<Name>),
     RUnknownUnspecifiedProperty(Arc<VirtualReasonDesc<L>>),
     RNamedImportedType(Userland, FlowSmolStr),
@@ -648,7 +647,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RTypeParam(box (s, l1, l2)) => RTypeParam(Box::new((s.clone(), f(l1), f(l2)))),
             RTypeParamBound(d) => RTypeParamBound(Arc::new(d.map_locs(f))),
             RTypeParamDefault(d) => RTypeParamDefault(Arc::new(d.map_locs(f))),
-            RPropertyOf(n, d) => RPropertyOf(n.dupe(), Arc::new(d.map_locs(f))),
             RPolyType(d) => RPolyType(Arc::new(d.map_locs(f))),
             RExactType(d) => RExactType(Arc::new(d.map_locs(f))),
             ROptional(d) => ROptional(Arc::new(d.map_locs(f))),
@@ -1601,9 +1599,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RProperty(None) => "computed property".to_string(),
         RPrivateProperty(x) => format!("property `#{}`", x),
         RMember { object_, property } => format!("`{}{}`", object_, property),
-        RPropertyOf(x, d) => {
-            format!("property `{}` of {}", x, string_of_desc(d))
-        }
         RMissingProperty(Some(x)) => {
             format!("`void` (due to access of non-existent property `{}`)", x)
         }
