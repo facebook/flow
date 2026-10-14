@@ -325,9 +325,7 @@ fn lookup_defaults<'cx>(
     pole: Polarity,
 ) -> Result<(), FlowJsException> {
     let name = Name::new("defaultProps");
-    let reason_missing = type_util::reason_of_t(component)
-        .dupe()
-        .replace_desc(VirtualReasonDesc::RReactDefaultProps);
+    let reason_missing = type_util::reason_of_t(component).dupe().replace_desc(None);
     let reason_prop = reason_op
         .dupe()
         .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
