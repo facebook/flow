@@ -67,3 +67,39 @@ function laterArgWritesOtherBindingFromAsserted(y: unknown, x: unknown) {
   x as string; // error: x copies y's pre-refinement value; copies don't inherit narrowing
   x as number; // error: x holds y's earlier value, which is not a number
 }
+
+declare function assertCondition(condition: boolean, message: string): asserts condition;
+
+function laterMessageReadsNullableValue(value: ?{name: string}): string {
+  assertCondition(value != null, value.name); // ERROR
+  return value.name;
+}
+
+type JSXProp = {
+  value: null | {type: 'Literal', value: string} | {
+    type: 'JSXExpressionContainer',
+    expression: {type: 'Identifier', name: string} | {
+      type: 'Literal', value: boolean | string,
+    },
+  },
+};
+
+function laterMessageReadsUnrefinedDiscriminatedUnion(prop: JSXProp): boolean {
+  assertCondition(
+    prop.value?.type === 'JSXExpressionContainer' &&
+      prop.value.expression.type === 'Literal' &&
+      typeof prop.value.expression.value === 'boolean',
+    typeof prop.value.expression.value, // ERROR
+  );
+  return prop.value.expression.value;
+}
+
+function guardedMessageArgumentStillRefines(prop: JSXProp): boolean {
+  const value =
+    prop.value?.type === 'JSXExpressionContainer' &&
+    prop.value.expression.type === 'Literal'
+      ? prop.value.expression.value
+      : undefined;
+  assertCondition(typeof value === 'boolean', typeof value);
+  return value;
+}

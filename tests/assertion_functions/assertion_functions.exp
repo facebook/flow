@@ -205,6 +205,62 @@ References:
               ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- arg_order.js:74:40
+
+Cannot get `value.name` because property `name` is missing in `null` [1]. [incompatible-use]
+
+   arg_order.js:74:40
+   74|   assertCondition(value != null, value.name); // ERROR
+                                              ^^^^
+
+References:
+   arg_order.js:73:48
+   73| function laterMessageReadsNullableValue(value: ?{name: string}): string {
+                                                      ^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- arg_order.js:74:40
+
+Cannot get `value.name` because property `name` is missing in `void` [1]. [incompatible-use]
+
+   arg_order.js:74:40
+   74|   assertCondition(value != null, value.name); // ERROR
+                                              ^^^^
+
+References:
+   arg_order.js:73:48
+   73| function laterMessageReadsNullableValue(value: ?{name: string}): string {
+                                                      ^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- arg_order.js:92:23
+
+Cannot get `prop.value.expression` because property `expression` is missing in `null` [1]. [incompatible-use]
+
+   arg_order.js:92:23
+   92|     typeof prop.value.expression.value, // ERROR
+                             ^^^^^^^^^^
+
+References:
+   arg_order.js:79:10
+   79|   value: null | {type: 'Literal', value: string} | {
+                ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- arg_order.js:92:34
+
+Cannot get `prop.value.expression.value` because property `value` is missing in `void` [1]. [incompatible-use]
+
+   arg_order.js:92:34
+   92|     typeof prop.value.expression.value, // ERROR
+                                        ^^^^^
+
+References:
+   arg_order.js:92:12
+   92|     typeof prop.value.expression.value, // ERROR
+                  ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- consistency.js:95:37
 
 Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
@@ -2500,4 +2556,4 @@ as `a.b.c`. [unrecognized-assertion-call]
 
 
 
-Found 155 errors
+Found 159 errors
