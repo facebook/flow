@@ -90,9 +90,11 @@ use flow_typing_type::type_::ReposUseTData;
 use flow_typing_type::type_::ResolveSpreadTData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::ResolvedParam;
+use flow_typing_type::type_::ResolvedSpreadArgData;
 use flow_typing_type::type_::SpreadResolve;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::TupleATData;
+use flow_typing_type::type_::TupleView;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -744,6 +746,31 @@ fn t_of_use_t<'cx>(
                         Some(solution) => Ok(UseTResult::UpperT(solution)),
                     }
                 }
+                // The spread receives what the tuple does, minus the elements before it.
+                SpreadResolve::ResolveSpreadsToTupleType {
+                    inexact: false,
+                    tout,
+                    ..
+                } => {
+                    let Some(n) = resolved_elements_count(&resolve_spread_type.rrt_resolved) else {
+                        return Ok(UseTResult::UpperNonT(u.dupe()));
+                    };
+                    let result = merge_lower_or_upper_bounds(cx, env, seen, tout)?;
+                    bind_use_t_result(result, &|t: Type| {
+                        let arr_rest_result =
+                            flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, t_prime| {
+                                let u_inner = UseTInner::ArrRestT(Box::new(ArrRestTData {
+                                    use_op: unknown_use(),
+                                    reason: reason.dupe(),
+                                    index: n as i32,
+                                    tout: t_prime.dupe(),
+                                }));
+                                FlowJs::flow_with_env(cx, env, &t, &UseT::new(u_inner))?;
+                                Ok::<(), FlowJsException>(())
+                            })?;
+                        use_t_result_of_t_option(merge_lower_bounds(cx, env, &arr_rest_result))
+                    })
+                }
                 SpreadResolve::ResolveSpreadsToTupleType { .. }
                 | SpreadResolve::ResolveSpreadsToArrayLiteral { .. }
                 | SpreadResolve::ResolveSpreadsToArray(..)
@@ -856,6 +883,33 @@ fn t_of_use_t<'cx>(
             }
         },
     }
+}
+
+fn resolved_elements_count(
+    resolved: &flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
+) -> Option<usize> {
+    resolved.iter().try_fold(0, |n, param| match param {
+        ResolvedParam::ResolvedArg(_) => Some(n + 1),
+        ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+            _,
+            ArrType::TupleAT(box TupleATData {
+                elements,
+                inexact: false,
+                ..
+            })
+            | ArrType::ArrayAT(box ArrayATData {
+                tuple_view:
+                    Some(TupleView {
+                        elements,
+                        inexact: false,
+                        ..
+                    }),
+                ..
+            }),
+            _,
+        )) => Some(n + elements.len()),
+        ResolvedParam::ResolvedSpreadArg(_) | ResolvedParam::ResolvedAnySpreadArg(..) => None,
+    })
 }
 
 fn identity_reverse_upper_bound<'cx>(
