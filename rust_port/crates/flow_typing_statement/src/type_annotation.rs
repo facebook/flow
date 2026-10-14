@@ -9617,7 +9617,7 @@ pub fn mk_declare_class_sig<'a>(
             && decl.extends.is_none()
             && decl.mixins.is_empty()
         {
-            let ctor_reason = reason.replace_desc(reason::VirtualReasonDesc::RDefaultConstructor);
+            let ctor_reason = reason.replace_desc(None);
             class_sig::add_default_constructor(ctor_reason, &mut iface_sig);
         }
         // Flag this sig as built from a [declare class] form so the

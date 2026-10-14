@@ -324,7 +324,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RDestructuring,
     RDefaultValue,
     RConstructor,
-    RDefaultConstructor,
     RRecordProperties,
     RReturn,
     RRegExp,
@@ -563,7 +562,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RRecordProperties => RRecordProperties,
             RRecordType(s) => RRecordType(s.dupe()),
             RReturn => RReturn,
-            RDefaultConstructor => RDefaultConstructor,
             RRegExp => RRegExp,
             RSuper => RSuper,
             RDummyPrototype => RDummyPrototype,
@@ -1549,7 +1547,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Constructors
         RConstructor => "constructor".to_string(),
-        RDefaultConstructor => "default constructor".to_string(),
         RConstructorCall(d) => match d.as_deref() {
             Some(poly @ RPolyType(inner)) => match &**inner {
                 RClass(innermost) => string_of_desc(innermost),

@@ -526,7 +526,7 @@ fn add_default_constructor<T>(
             if props.contains_key(&key) {
                 return;
             }
-            let reason = reason.replace_desc(reason::VirtualReasonDesc::RDefaultConstructor);
+            let reason = reason.replace_desc(None);
             let return_t = type_::void::why(reason.dupe());
             let statics = type_::dummy_static(reason.dupe());
             let funtype = type_::mk_boundfunctiontype(

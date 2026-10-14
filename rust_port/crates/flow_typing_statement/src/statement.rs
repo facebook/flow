@@ -16351,9 +16351,7 @@ pub fn mk_class_sig<'a>(
                             class_sig::add_constructor(None, func_sig, None, None, &mut class_sig);
                         }
                         _ => {
-                            let default_reason = reason
-                                .dupe()
-                                .replace_desc(VirtualReasonDesc::RDefaultConstructor);
+                            let default_reason = reason.dupe().replace_desc(None);
                             class_sig::add_default_constructor(default_reason, &mut class_sig);
                         }
                     }
