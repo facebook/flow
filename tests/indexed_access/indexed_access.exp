@@ -680,6 +680,43 @@ References:
                ^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------ reentrant_alias.js:1:16
+
+`number` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   reentrant_alias.js:1:16
+   1| type Get<M> = [M['x'], null];
+                     ^^^^^^ [2]
+
+References:
+   reentrant_alias.js:6:6
+   6|   x: number = 0;
+           ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- reentrant_alias_def.js:1:16
+
+`number` [1] is incompatible with `empty` [2]. (FLOW BUG: This is a misplaced error. The original error was raised in
+file `reentrant_alias_use.js`). [incompatible-type]
+
+   reentrant_alias_def.js:1:16
+   1| type Get<M> = [M['x'], null];
+                     ^^^^^^ [2]
+
+References:
+   reentrant_alias_def.js:6:6
+   6|   x: number = 0;
+           ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- reentrant_direct.js:1:14
+
+Invalid trivially recursive definition of indexed access.  [recursive-definition]
+
+   1| type Args = [C['x'], null]; // ERROR
+                   ^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
 Cannot cast `'hello world'` to `ArrElem` because `"hello world"` [1] is incompatible with `number` [2].
@@ -964,4 +1001,4 @@ References:
 
 
 
-Found 56 errors
+Found 59 errors
