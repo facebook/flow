@@ -733,18 +733,17 @@ fn t_of_use_t<'cx>(
         }) if resolve_spread_type.rrt_unresolved.is_empty() => {
             match &resolve_spread_type.rrt_resolve_to {
                 SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(_, funtype) => {
-                    match reverse_resolve_spread_multiflow_subtype_full_partial_resolution(
-                        cx,
-                        env,
-                        tvar,
-                        reason,
-                        &resolve_spread_type.rrt_resolved,
-                        &funtype.params,
-                        &funtype.rest_param,
-                    )? {
-                        None => Ok(UseTResult::UpperNonT(u.dupe())),
-                        Some(solution) => Ok(UseTResult::UpperT(solution)),
-                    }
+                    let solution =
+                        reverse_resolve_spread_multiflow_subtype_full_partial_resolution(
+                            cx,
+                            env,
+                            tvar,
+                            reason,
+                            &resolve_spread_type.rrt_resolved,
+                            &funtype.params,
+                            &funtype.rest_param,
+                        )?;
+                    Ok(UseTResult::UpperT(solution))
                 }
                 // The spread receives what the tuple does, minus the elements before it.
                 SpreadResolve::ResolveSpreadsToTupleType {
@@ -1204,35 +1203,19 @@ fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
     resolved: &flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     params: &[FunParam],
     rest_param: &Option<FunRestParam>,
-) -> Result<Option<Type>, FlowJsException> {
+) -> Result<Type, FlowJsException> {
     // We remove resolved params one by one from the start.
     // When we run out of params but we still have resolved_params,
-    // we record the number of rest_param we need to remove,
-    // and later perform an ArrayRest to remove them.
-    let resolved_len = resolved.len();
-    let params_len = params.len();
-    match if resolved_len <= params_len {
-        Some((params_len - resolved_len, 0))
-    } else if rest_param.is_some() {
-        Some((0, resolved_len - params_len))
-    } else {
-        None
-    } {
-        None => Ok(None),
-        Some((remaining_params_count, _rest_index)) => {
-            let remaining_params = &params[params.len() - remaining_params_count..];
-            Ok(Some(
-                reverse_resolve_spread_multiflow_subtype_full_no_resolution(
-                    cx,
-                    env,
-                    tvar,
-                    reason,
-                    remaining_params,
-                    rest_param,
-                )?,
-            ))
-        }
-    }
+    // they go to the rest param, or are ignored if there is no rest param.
+    let remaining_params = params.get(resolved.len()..).unwrap_or_default();
+    reverse_resolve_spread_multiflow_subtype_full_no_resolution(
+        cx,
+        env,
+        tvar,
+        reason,
+        remaining_params,
+        rest_param,
+    )
 }
 
 enum PinningSource<'cx> {

@@ -1389,6 +1389,24 @@ References:
             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- reversed_rest_params.js:10:1
+
+Cannot cast `no_rest_after_second` to tuple type because `Readonly<[]>` [1] has 0 elements but `[number]` [2] has 1
+element. [invalid-tuple-arity]
+
+   reversed_rest_params.js:10:1
+   10| no_rest_after_second as [number]; // error: arity
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   reversed_rest_params.js:8:37
+    8| declare const no_rest_after_second: AfterSecond<typeof no_rest>;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   reversed_rest_params.js:10:25
+   10| no_rest_after_second as [number]; // error: arity
+                               ^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- subst.js:4:3
 
 Cannot cast `num` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1530,4 +1548,4 @@ References:
 
 
 
-Found 98 errors
+Found 99 errors
