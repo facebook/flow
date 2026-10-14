@@ -680,33 +680,38 @@ References:
                ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ reentrant_alias.js:1:16
+Error ------------------------------------------------------------------------------------------ reentrant_alias.js:13:1
 
-`number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a[0]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   reentrant_alias.js:1:16
-   1| type Get<M> = [M['x'], null];
-                     ^^^^^^ [2]
+   reentrant_alias.js:13:1
+   13| a[0] as string; // ERROR
+       ^^^^
 
 References:
    reentrant_alias.js:6:6
-   6|   x: number = 0;
-           ^^^^^^ [1]
+    6|   x: number = 0;
+            ^^^^^^ [1]
+   reentrant_alias.js:13:9
+   13| a[0] as string; // ERROR
+               ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- reentrant_alias_def.js:1:16
+Error --------------------------------------------------------------------------------------- reentrant_alias_use.js:5:1
 
-`number` [1] is incompatible with `empty` [2]. (FLOW BUG: This is a misplaced error. The original error was raised in
-file `reentrant_alias_use.js`). [incompatible-type]
+Cannot cast `a[0]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   reentrant_alias_def.js:1:16
-   1| type Get<M> = [M['x'], null];
-                     ^^^^^^ [2]
+   reentrant_alias_use.js:5:1
+   5| a[0] as string; // ERROR
+      ^^^^
 
 References:
    reentrant_alias_def.js:6:6
    6|   x: number = 0;
            ^^^^^^ [1]
+   reentrant_alias_use.js:5:9
+   5| a[0] as string; // ERROR
+              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- reentrant_direct.js:1:14

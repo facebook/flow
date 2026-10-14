@@ -9,4 +9,5 @@ class B<T extends ReadonlyArray<unknown>> {
 class C extends B<Args> {}
 
 declare const a: Args;
-a[0]; // ok
+a[0] as number;
+a[0] as string; // ERROR

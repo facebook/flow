@@ -429,7 +429,8 @@ pub(super) fn mk_type_destructor<'cx>(
                 )?
             }
         };
-        if !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, t)
+        if cached.is_none()
+            && !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, t)
             && !flow_js_utils::tvar_visitors::has_unresolved_tvars_in_destructors(cx, d)
         {
             crate::tvar_resolver::resolve(

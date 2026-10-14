@@ -18,4 +18,4 @@ declare function makeBoxes<T>(value: () => T): ReadonlyArray<Box<T>>;
 declare function getNumber(): number;
 const values = makeBoxes(getNumber);
 declare const flag: boolean;
-<Wrapper render={flag ? Wide : Generic} values={values} />; // TODO: Error: `string` in `render.values` is incompatible with `number` from `values`.
+<Wrapper render={flag ? Wide : Generic} values={values} />; // Error: `string` in `render.values` is incompatible with `number` from `values`.
