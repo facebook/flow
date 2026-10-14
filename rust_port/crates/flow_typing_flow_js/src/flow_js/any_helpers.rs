@@ -41,20 +41,19 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                     elements,
                     arity,
                     inexact,
+                    rest,
                     react_dro,
                     strictness_kind,
                     elem_t: _,
                 }) => {
-                    let new_elements = elements
-                        .iter()
-                        .map(|te| TupleElement {
-                            name: te.name.dupe(),
-                            t: only_any(&te.t),
-                            polarity: te.polarity,
-                            optional: te.optional,
-                            reason: te.reason.dupe(),
-                        })
-                        .collect();
+                    let only_any_element = |te: &TupleElement| TupleElement {
+                        name: te.name.dupe(),
+                        t: only_any(&te.t),
+                        polarity: te.polarity,
+                        optional: te.optional,
+                        reason: te.reason.dupe(),
+                    };
+                    let new_elements = elements.iter().map(only_any_element).collect();
                     return Type::new(TypeInner::DefT(
                         r.dupe(),
                         DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
@@ -64,6 +63,7 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                                 elements: new_elements,
                                 arity: arity.clone(),
                                 inexact: *inexact,
+                                rest: rest.as_ref().map(only_any_element),
                                 strictness_kind: *strictness_kind,
                             },
                         ))))),

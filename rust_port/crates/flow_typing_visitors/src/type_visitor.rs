@@ -932,11 +932,15 @@ pub fn arr_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
                 .fold(acc, |acc, el| visitor.tuple_element(cx, pole, acc, el))
         }
         ArrType::TupleAT(box TupleATData {
-            elem_t, elements, ..
+            elem_t,
+            elements,
+            rest,
+            ..
         }) => {
             let acc = visitor.type_(cx, Polarity::Neutral, acc, elem_t);
             elements
                 .iter()
+                .chain(rest)
                 .fold(acc, |acc, el| visitor.tuple_element(cx, pole, acc, el))
         }
         ArrType::ROArrayAT(box (t, _)) => visitor.type_(cx, pole, acc, t),

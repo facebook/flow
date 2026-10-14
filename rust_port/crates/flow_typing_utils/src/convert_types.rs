@@ -948,16 +948,21 @@ fn arrtype_to_json<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, arrtype: &ArrType)
             elements,
             arity: (min_arity, max_arity),
             inexact,
+            rest,
             strictness_kind: _,
         }) => {
-            json!({
+            let mut json = json!({
                 "kind": "TupleAT",
                 "elem_t": type_to_json(cx, depth - 1, elem_t),
                 "elements": Json::Array(elements.iter().map(|e| json_of_tuple_element(cx, depth, e)).collect()),
                 "min_arity": min_arity,
                 "max_arity": max_arity,
                 "inexact": inexact,
-            })
+            });
+            if let Some(rest) = rest {
+                json["rest"] = json_of_tuple_element(cx, depth, rest);
+            }
+            json
         }
         ArrType::ROArrayAT(box (elem_t, _)) => {
             json!({"kind": "ROArrayAT", "elem_t": type_to_json(cx, depth - 1, elem_t)})

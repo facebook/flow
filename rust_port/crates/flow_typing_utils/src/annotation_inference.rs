@@ -2402,6 +2402,7 @@ fn elab_t_concrete<'cx>(
                             elements,
                             arity,
                             inexact,
+                            rest,
                             react_dro: _,
                             strictness_kind,
                         }) => Type::new(TypeInner::DefT(
@@ -2413,6 +2414,7 @@ fn elab_t_concrete<'cx>(
                                     elements: elements.dupe(),
                                     arity: *arity,
                                     inexact: *inexact,
+                                    rest: rest.dupe(),
                                     strictness_kind: *strictness_kind,
                                 },
                             ))))),

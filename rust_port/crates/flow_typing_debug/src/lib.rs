@@ -491,17 +491,23 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
         )
     };
 
-    let tuple_elements =
-        |tvars: &mut BTreeSet<i32>, elements: &[TupleElement], inexact: bool| -> String {
-            let mut elems: Vec<String> = elements
-                .iter()
-                .map(|TupleElement { t, .. }| kid(tvars, t))
-                .collect();
-            if inexact {
-                elems.push("...".to_string());
-            }
-            elems.join(", ")
-        };
+    let tuple_elements = |tvars: &mut BTreeSet<i32>,
+                          elements: &[TupleElement],
+                          rest: Option<&TupleElement>,
+                          inexact: bool|
+     -> String {
+        let mut elems: Vec<String> = elements
+            .iter()
+            .map(|TupleElement { t, .. }| kid(tvars, t))
+            .collect();
+        if let Some(TupleElement { t, .. }) = rest {
+            elems.push(format!("...{}", kid(tvars, t)));
+        }
+        if inexact {
+            elems.push("...".to_string());
+        }
+        elems.join(", ")
+    };
 
     match t.deref() {
         TypeInner::OpenT(tv) => {
@@ -631,14 +637,17 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
                         tuple_view: Some(tv),
                         ..
                     }) => {
-                        let elems_str = tuple_elements(tvars, &tv.elements, tv.inexact);
+                        let elems_str = tuple_elements(tvars, &tv.elements, None, tv.inexact);
                         let extra = format!("Array {}, [{}]", kid(tvars, elem_t), elems_str);
                         p(cx, t, true, &extra)
                     }
                     ArrType::TupleAT(box TupleATData {
-                        elements, inexact, ..
+                        elements,
+                        inexact,
+                        rest,
+                        ..
                     }) => {
-                        let elems_str = tuple_elements(tvars, elements, *inexact);
+                        let elems_str = tuple_elements(tvars, elements, rest.as_ref(), *inexact);
                         let extra = format!("Tuple [{}]", elems_str);
                         p(cx, t, true, &extra)
                     }

@@ -3437,6 +3437,7 @@ fn merge_value<'cx>(
                 react_dro: None,
                 arity: (0, 0),
                 inexact: false,
+                rest: None,
                 strictness_kind: inner.strictness_kind,
             }));
             Type::new(type_::TypeInner::DefT(
@@ -3498,6 +3499,7 @@ fn merge_value<'cx>(
                     react_dro: None,
                     arity: (num_elts, num_elts),
                     inexact: false,
+                    rest: None,
                     strictness_kind: inner.strictness_kind,
                 }))
             } else {

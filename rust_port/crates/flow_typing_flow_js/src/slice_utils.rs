@@ -2538,19 +2538,18 @@ fn resolve_with_env<'cx, A>(
                     elements,
                     arity,
                     inexact,
+                    rest,
                     react_dro,
                     strictness_kind,
                 }) if matches!(tool, object::Tool::ReadOnly) => {
-                    let elements: Vec<TupleElement> = elements
-                        .iter()
-                        .map(|elem| TupleElement {
-                            t: elem.t.dupe(),
-                            name: elem.name.clone(),
-                            polarity: Polarity::Positive,
-                            optional: elem.optional,
-                            reason: elem.reason.dupe(),
-                        })
-                        .collect();
+                    let read_only = |elem: &TupleElement| TupleElement {
+                        t: elem.t.dupe(),
+                        name: elem.name.clone(),
+                        polarity: Polarity::Positive,
+                        optional: elem.optional,
+                        reason: elem.reason.dupe(),
+                    };
+                    let elements: Vec<TupleElement> = elements.iter().map(read_only).collect();
                     let def_reason = match reason.desc(false) {
                         Some(VirtualReasonDesc::RReadOnlyType) => r.dupe(),
                         _ => reason.dupe(),
@@ -2566,6 +2565,7 @@ fn resolve_with_env<'cx, A>(
                                     elements: elements.into(),
                                     arity: *arity,
                                     inexact: *inexact,
+                                    rest: rest.as_ref().map(read_only),
                                     react_dro: react_dro.clone(),
                                     strictness_kind: *strictness_kind,
                                 },
@@ -2578,6 +2578,7 @@ fn resolve_with_env<'cx, A>(
                     elements,
                     arity,
                     inexact,
+                    rest,
                     react_dro,
                     strictness_kind,
                 }) if matches!(tool, object::Tool::Partial) => {
@@ -2616,6 +2617,7 @@ fn resolve_with_env<'cx, A>(
                                     elements: elements.into(),
                                     arity,
                                     inexact: *inexact,
+                                    rest: rest.dupe(),
                                     react_dro: react_dro.clone(),
                                     strictness_kind: *strictness_kind,
                                 },
@@ -2628,6 +2630,7 @@ fn resolve_with_env<'cx, A>(
                     elements,
                     arity,
                     inexact,
+                    rest,
                     react_dro,
                     strictness_kind,
                 }) if matches!(tool, object::Tool::Required) => {
@@ -2669,6 +2672,7 @@ fn resolve_with_env<'cx, A>(
                                     elements: elements.into(),
                                     arity,
                                     inexact: *inexact,
+                                    rest: rest.dupe(),
                                     react_dro: react_dro.clone(),
                                     strictness_kind: *strictness_kind,
                                 },

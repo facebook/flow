@@ -1129,6 +1129,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                 elements: tuple_elements.into(),
                 arity: (len, len),
                 inexact: false,
+                rest: None,
                 react_dro: None,
                 strictness_kind: Default::default(),
             }));

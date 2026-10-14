@@ -6007,6 +6007,7 @@ pub fn rec_sub_t<'cx>(
                                 elements: tv.elements.dupe(),
                                 arity: tv.arity,
                                 inexact: tv.inexact,
+                                rest: None,
                                 react_dro: react_dro.clone(),
                                 strictness_kind: *strictness_kind,
                             },

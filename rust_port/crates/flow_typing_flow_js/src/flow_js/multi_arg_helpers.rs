@@ -932,6 +932,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         elements: elements.into(),
                                         arity,
                                         inexact,
+                                        rest: None,
                                         react_dro: None,
                                         strictness_kind: Default::default(),
                                     },

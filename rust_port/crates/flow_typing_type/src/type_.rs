@@ -5139,12 +5139,16 @@ pub struct ArrayATData {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TupleATData {
     pub react_dro: Option<ReactDro>,
+    /// The union of the types of `elements` and `rest`.
     pub elem_t: Type,
     pub elements: Rc<[TupleElement]>,
-    /// Arity represents the range of valid arities, considering optional elements.
+    /// Arity represents the range of valid arities of `elements`, considering optional elements.
     /// It ranges from the number of required elements, to the total number of elements.
     pub arity: (i32, i32),
     pub inexact: bool,
+    /// A trailing rest element, as `...Array<T>` in `[string, ...Array<T>]`. Its `t` is the
+    /// element type `T`, and it is never `optional`. A tuple with a rest element is not `inexact`.
+    pub rest: Option<TupleElement>,
     pub strictness_kind: TypeStrictnessKind,
 }
 

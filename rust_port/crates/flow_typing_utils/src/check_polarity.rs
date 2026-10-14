@@ -447,8 +447,8 @@ fn check_polarity_impl<'cx>(
                             elem_t,
                         )?;
                     }
-                    ArrType::TupleAT(box TupleATData { elements, .. }) => {
-                        for elem in elements.iter() {
+                    ArrType::TupleAT(box TupleATData { elements, rest, .. }) => {
+                        for elem in elements.iter().chain(rest) {
                             check_polarity_impl(
                                 cx,
                                 env,

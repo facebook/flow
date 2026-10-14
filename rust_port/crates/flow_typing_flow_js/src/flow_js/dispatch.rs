@@ -1344,6 +1344,7 @@ fn __flow_impl<'cx>(
                     elements,
                     arity,
                     inexact,
+                    rest,
                     react_dro: _,
                     strictness_kind,
                 }) = arr.as_ref() =>
@@ -1358,6 +1359,7 @@ fn __flow_impl<'cx>(
                         elements: elements.dupe(),
                         arity: *arity,
                         inexact: *inexact,
+                        rest: rest.dupe(),
                         strictness_kind: *strictness_kind,
                     },
                 ))))),
@@ -7663,6 +7665,7 @@ fn __flow_impl<'cx>(
                     elements,
                     arity: (num_req, num_total),
                     inexact,
+                    rest,
                     react_dro,
                     strictness_kind,
                 }) => {
@@ -7687,6 +7690,7 @@ fn __flow_impl<'cx>(
                             (*num_total as i64 - i as i64).max(0) as i32,
                         ),
                         inexact: *inexact,
+                        rest: rest.dupe(),
                         react_dro: react_dro.clone(),
                         strictness_kind: *strictness_kind,
                     }))
@@ -8037,6 +8041,7 @@ fn __flow_impl<'cx>(
                     elements,
                     arity,
                     inexact,
+                    rest,
                     react_dro,
                     strictness_kind,
                 }) => ArrType::TupleAT(Box::new(TupleATData {
@@ -8058,6 +8063,15 @@ fn __flow_impl<'cx>(
                         .into(),
                     arity: new_arity(*arity),
                     inexact: *inexact,
+                    rest: rest
+                        .as_ref()
+                        .map(|elem| {
+                            Ok::<TupleElement, FlowJsException>(TupleElement {
+                                t: array_elem(f(&elem.t, None, false)?)?,
+                                ..elem.clone()
+                            })
+                        })
+                        .transpose()?,
                     strictness_kind: *strictness_kind,
                 })),
                 ArrType::ROArrayAT(box (elemt, dro)) => {

@@ -7137,6 +7137,7 @@ fn expression_<'a>(
                         react_dro: None,
                         arity: (0, 0),
                         inexact: false,
+                        rest: None,
                         strictness_kind: cx.type_strictness_kind(),
                     }));
                     let t = Type::new(TypeInner::DefT(
@@ -14879,6 +14880,7 @@ fn static_method_call_object<'a>(
                         .into(),
                         arity: (2, 2),
                         inexact: false,
+                        rest: None,
                         strictness_kind: cx.type_strictness_kind(),
                     },
                 ))))),

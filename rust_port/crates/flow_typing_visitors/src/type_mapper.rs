@@ -1854,6 +1854,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             elements,
             arity,
             inexact,
+            rest,
             strictness_kind,
         }) => {
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
@@ -1862,7 +1863,20 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 |a, b| a.t.ptr_eq(&b.t),
                 elements.dupe(),
             );
-            if elem_t.ptr_eq(&elem_t_prime) && Rc::ptr_eq(elements, &elements_prime) {
+            let rest_prime = option_utils::ident_map(
+                |el: &TupleElement| mapper.tuple_element(cx, map_cx, el.clone()),
+                |a, b| a.t.ptr_eq(&b.t),
+                rest.clone(),
+            );
+            let rest_unchanged = match (rest, &rest_prime) {
+                (None, None) => true,
+                (Some(a), Some(b)) => a.t.ptr_eq(&b.t),
+                _ => false,
+            };
+            if elem_t.ptr_eq(&elem_t_prime)
+                && Rc::ptr_eq(elements, &elements_prime)
+                && rest_unchanged
+            {
                 t
             } else {
                 Rc::new(ArrType::TupleAT(Box::new(TupleATData {
@@ -1871,6 +1885,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                     elements: elements_prime,
                     arity: *arity,
                     inexact: *inexact,
+                    rest: rest_prime,
                     strictness_kind: *strictness_kind,
                 })))
             }

@@ -8128,6 +8128,7 @@ pub fn array_elem_check<'cx>(
             elements,
             arity: _,
             inexact,
+            rest: _,
             react_dro,
             strictness_kind: _,
         }) => {
@@ -9419,6 +9420,7 @@ where
                             elements: elements.into(),
                             arity,
                             inexact,
+                            rest: None,
                             react_dro: None,
                             strictness_kind,
                         }),

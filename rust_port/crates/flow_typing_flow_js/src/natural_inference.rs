@@ -712,6 +712,7 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
                                         react_dro: None,
                                         arity: tv.arity,
                                         inexact: false,
+                                        rest: None,
                                         strictness_kind: cx.type_strictness_kind(),
                                     },
                                 ))))),

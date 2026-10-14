@@ -2190,19 +2190,25 @@ mod type_converter {
                 Some(VirtualReasonDesc::RRestArrayLit(_)),
             )
             | (ArrType::TupleAT(box TupleATData { .. }), _) => {
-                let (elements, inexact) = match arr {
+                let (elements, inexact, rest) = match arr {
                     ArrType::ArrayAT(box ArrayATData {
                         tuple_view: Some(tv),
                         ..
-                    }) => (&tv.elements, tv.inexact),
+                    }) => (&tv.elements, tv.inexact, None),
                     ArrType::TupleAT(box TupleATData {
-                        elements, inexact, ..
-                    }) => (elements, *inexact),
+                        elements,
+                        inexact,
+                        rest,
+                        ..
+                    }) => (elements, *inexact, rest.as_ref()),
                     _ => unreachable!(),
                 };
                 // Heuristic to use $ReadOnly<> instead of repeating the polarity symbol
                 // and a made up label in each element.
-                let readonly = elements.iter().all(|e| e.polarity == Polarity::Positive);
+                let readonly = elements
+                    .iter()
+                    .chain(rest)
+                    .all(|e| e.polarity == Polarity::Positive);
                 let mut ty_elements = Vec::new();
                 for elem in elements.iter() {
                     let inner_t = match elem.t.deref() {
@@ -2220,6 +2226,16 @@ mod type_converter {
                         t,
                         polarity,
                         optional: elem.optional,
+                    });
+                }
+                if let Some(rest) = rest {
+                    let arr_elt_t = type__::<I>(env, state, None, &rest.t)?;
+                    ty_elements.push(ty::TupleElement::TupleSpread {
+                        name: rest.name.clone(),
+                        t: Arc::new(ty::Ty::Arr(ty::ArrT {
+                            arr_readonly: !readonly && rest.polarity == Polarity::Positive,
+                            arr_elt_t,
+                        })),
                     });
                 }
                 let tup = ty::Ty::Tup {
@@ -3456,7 +3472,7 @@ mod type_converter {
                 }
                 ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(r, arr, _)) => match arr
                 {
-                    ArrType::TupleAT(box TupleATData { elements, .. }) => {
+                    ArrType::TupleAT(box TupleATData { elements, rest, .. }) => {
                         for elem in elements.iter() {
                             let t = type__::<I>(env, state, None, &elem.t)?;
                             head.push(ty::TupleElement::TupleElement {
@@ -3464,6 +3480,16 @@ mod type_converter {
                                 t,
                                 polarity: type_polarity(elem.polarity),
                                 optional: elem.optional,
+                            });
+                        }
+                        if let Some(rest) = rest {
+                            let arr_elt_t = type__::<I>(env, state, None, &rest.t)?;
+                            head.push(ty::TupleElement::TupleSpread {
+                                name: rest.name.clone(),
+                                t: Arc::new(ty::Ty::Arr(ty::ArrT {
+                                    arr_readonly: false,
+                                    arr_elt_t,
+                                })),
                             });
                         }
                     }
