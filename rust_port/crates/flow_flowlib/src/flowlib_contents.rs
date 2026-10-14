@@ -108,6 +108,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         tslib_contents::LIB_ES2018_REGEXP_D_TS,
     ),
     ("lib.es2019.array.js", LIB_ES2019_ARRAY_JS),
+    ("lib.es2019.intl.js", tslib_contents::LIB_ES2019_INTL_D_TS),
     (
         "lib.es2019.object.js",
         tslib_contents::LIB_ES2019_OBJECT_D_TS,

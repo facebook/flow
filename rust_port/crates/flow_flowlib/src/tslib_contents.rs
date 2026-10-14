@@ -41,6 +41,7 @@ pub(super) const LIB_ES2017_TYPEDARRAYS_D_TS: &str = include_tslib!("lib.es2017.
 pub(super) const LIB_ES2018_INTL_D_TS: &str = include_tslib!("lib.es2018.intl.d.ts");
 pub(super) const LIB_ES2018_PROMISE_D_TS: &str = include_tslib!("lib.es2018.promise.d.ts");
 pub(super) const LIB_ES2018_REGEXP_D_TS: &str = include_tslib!("lib.es2018.regexp.d.ts");
+pub(super) const LIB_ES2019_INTL_D_TS: &str = include_tslib!("lib.es2019.intl.d.ts");
 pub(super) const LIB_ES2019_STRING_D_TS: &str = include_tslib!("lib.es2019.string.d.ts");
 pub(super) const LIB_ES2019_OBJECT_D_TS: &str = include_tslib!("lib.es2019.object.d.ts");
 pub(super) const LIB_ES2019_SYMBOL_D_TS: &str = include_tslib!("lib.es2019.symbol.d.ts");
@@ -165,10 +166,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2019.full.d.ts",
         include_tslib!("lib.es2019.full.d.ts"),
     ),
-    (
-        "lib.es2019.intl.d.ts",
-        include_tslib!("lib.es2019.intl.d.ts"),
-    ),
+    ("lib.es2019.intl.d.ts", LIB_ES2019_INTL_D_TS),
     ("lib.es2019.object.d.ts", LIB_ES2019_OBJECT_D_TS),
     ("lib.es2019.string.d.ts", LIB_ES2019_STRING_D_TS),
     ("lib.es2019.symbol.d.ts", LIB_ES2019_SYMBOL_D_TS),
