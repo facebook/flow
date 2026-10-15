@@ -52,6 +52,16 @@ pub enum UnicodeMode {
     Auto,
 }
 
+/// Report malformed command-line args and exit with `CommandlineUsageError`.
+///
+/// Telemetry is initialized first when it isn't already, so the failure is
+/// recorded even on paths that run before the normal init. Mirrors Hack's
+/// `Die.bad_args`.
+pub fn die_bad_args(msg: &str) -> ! {
+    flow_event_logger::init_flow_command_if_needed();
+    flow_common_exit::exit(FlowExitStatus::CommandlineUsageError, Some(msg));
+}
+
 pub fn run_command(command: &Command, argv: &[String]) {
     match flow_command_spec::parse_or_show_help(command, argv) {
         Ok(Err(_)) => {
@@ -73,7 +83,7 @@ pub fn run_command(command: &Command, argv: &[String]) {
                 flow_common_exit::set_json_mode(pretty);
             }
             let msg = flow_command_spec::error_message(&error);
-            flow_common_exit::exit(FlowExitStatus::CommandlineUsageError, Some(&msg));
+            die_bad_args(&msg);
         }
     }
 }

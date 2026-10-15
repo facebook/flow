@@ -188,9 +188,7 @@ fn prepare_codemod_impl(
         filenames.push(".".to_string());
     }
     if filenames.is_empty() {
-        eprintln!("Error: filenames or --input-file are required");
-        // EX_USAGE
-        std::process::exit(64);
+        flow_command_utils::die_bad_args("Error: filenames or --input-file are required");
     }
     if !write && repeat {
         eprintln!("Error: cannot run codemod with --repeat flag unless --write is also passed");

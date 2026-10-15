@@ -458,6 +458,8 @@ mod stub {
 
     pub fn init_flow_command(_init_id: &str) {}
 
+    pub fn init_flow_command_if_needed() {}
+
     pub fn init_worker(_init_id: &str, _arg: &serde_json::Value) {}
 
     pub fn register_scuba_entry() {}
@@ -1063,6 +1065,11 @@ mod fb_facade {
     // SHIM: clones init_id from &str to the String FB-internal expects.
     pub fn init_flow_command(init_id: &str) {
         fb::init_flow_command(init_id.to_string());
+    }
+
+    // SHIM: forwards directly; FB and OSS share identical signature.
+    pub fn init_flow_command_if_needed() {
+        fb::init_flow_command_if_needed();
     }
 
     // SHIM: discards the OSS-stub's unused `_arg: &serde_json::Value` parameter
