@@ -137,6 +137,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         "lib.es2020.symbol.wellknown.js",
         tslib_contents::LIB_ES2020_SYMBOL_WELLKNOWN_D_TS,
     ),
+    ("lib.es2021.intl.js", tslib_contents::LIB_ES2021_INTL_D_TS),
     (
         "lib.es2021.promise.js",
         tslib_contents::LIB_ES2021_PROMISE_D_TS,
