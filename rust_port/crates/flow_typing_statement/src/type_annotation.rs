@@ -2719,34 +2719,6 @@ fn convert_inner<'a>(
                             ))
                         })?
                     }
-                    "Function" if !cx.function_and_object_type_is_no_longer_any() => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |cx| {
-                            add_unclear_type_error_if_not_lib_file(cx, loc.dupe());
-                            let reason = reason::mk_annot_reason(
-                                reason::VirtualReasonDesc::RFunctionType,
-                                loc.dupe(),
-                            );
-                            Ok(reconstruct_ast(
-                                type_::any_t::make(type_::AnySource::AnnotatedAny, reason),
-                                None,
-                                None,
-                            ))
-                        })?
-                    }
-                    "Object" if !cx.function_and_object_type_is_no_longer_any() => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |cx| {
-                            add_unclear_type_error_if_not_lib_file(cx, loc.dupe());
-                            let reason = reason::mk_annot_reason(
-                                reason::VirtualReasonDesc::RObjectType,
-                                loc.dupe(),
-                            );
-                            Ok(reconstruct_ast(
-                                type_::any_t::make(type_::AnySource::AnnotatedAny, reason),
-                                None,
-                                None,
-                            ))
-                        })?
-                    }
                     "$EnumValue" => {
                         if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(

@@ -4,7 +4,7 @@ slug: /strict
 description: Learn how to enable stricter type checking on a file-by-file basis.
 ---
 
-You can enable stronger safety guarantees in Flow (such as banning `any`/`Object`/`Function` types and requiring all dependencies to be typed) by adding **`@flow strict`** to your files.
+You can enable stronger safety guarantees in Flow (such as banning `any` types and requiring all dependencies to be typed) by adding **`@flow strict`** to your files.
 
 ### Overview {#toc-overview}
 Flow was designed for easy adoption, so it allows you opt-out of type checking in certain situations, permitting unsafe behaviors. But since many codebases now have a high adoption of Flow types, this trade-off can be flipped.  You can use *Flow Strict* to disallow previously-allowed unsafe patterns. This gives you improved safety guarantees that catch more bugs and make refactoring easier. And you can implement these stronger guarantees incrementally, on a file-by-file basis.
@@ -13,7 +13,7 @@ Flow was designed for easy adoption, so it allows you opt-out of type checking i
 Enabling Flow Strict for a file means that several previously-allowed patterns will now trigger a Flow error. Each disallowed pattern has a corresponding [Flow Lint](../linting/index.md) rule which triggers the error. The list of rules enabled for `@flow strict` is configured in each `.flowconfig`. Here are the recommended rules:
 
  - [`nonstrict-import`](../linting/rule-reference.md#toc-nonstrict-import): Triggers an error when importing from a module which is not also `@flow strict`. This is very important, because it means that when a file is marked as strict, all of its dependencies are strict as well.
- - [`unclear-type`](../linting/rule-reference.md#toc-unclear-type): Triggers an error when using `Object`, `Function`, or `any` in a type annotation.
+ - [`unclear-type`](../linting/rule-reference.md#toc-unclear-type): Triggers an error when using `any` in a type annotation.
  - [`untyped-import`](../linting/rule-reference.md#toc-untyped-import): Triggers an error when importing from an untyped module.
  - [`untyped-type-import`](../linting/rule-reference.md#toc-untyped-type-import): Triggers an error when importing a type from an untyped module.
  - [`unsafe-getters-setters`](../linting/rule-reference.md#toc-unsafe-getters-setters): Triggers an error when using getters and setters, which can be unsafe.

@@ -7,4 +7,3 @@
 [options]
 all=true
 builtin_lib=core-only
-experimental.function_and_object_type_is_no_longer_any=true

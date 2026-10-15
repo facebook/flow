@@ -182,27 +182,13 @@ Found 1 error
 === block 17 ===
 Error --------------------------------------------------------------------- -:4:18
 
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+Unclear type. Using `any` is not safe! [unclear-type]
 
    4| declare const a: any; // Error
                        ^^^
 
-Error --------------------------------------------------------------------- -:5:18
 
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
-
-   5| declare const c: Object; // Error
-                       ^^^^^^
-
-Error --------------------------------------------------------------------- -:6:18
-
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
-
-   6| declare const d: Function; // Error
-                       ^^^^^^^^
-
-
-Found 3 errors
+Found 1 error
 
 === block 18 ===
 Error ---------------------------------------------------------------------- -:6:1

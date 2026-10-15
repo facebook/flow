@@ -33,7 +33,7 @@ function anyfun(x: number | Function): number {
   if (typeof x === 'function') {
     return 0;
   }
-  return x; // OK, x refined to `number`
+  return x; // ERROR, `Function` instances are not necessarily callable
 }
 
 function anyobj(x: number | Object): number {

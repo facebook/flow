@@ -16,11 +16,14 @@ any (implicit)
 any.js:9:5,9:7
 
 At any.js:13:3
-any (explicit)
+Object
+
+'Object' defined at (lib) lib.es5.js:83:14
+
 any.js:13:1,13:7
 
 At any.js:15:10
-any (explicit)
+any (implicit)
 any.js:15:9,15:11
 
 At any.js:17:10

@@ -1,74 +1,46 @@
 Error ---------------------------------------------------------------------------------------------------- index.js:3:10
 
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+Unclear type. Using `any` is not safe! [unclear-type]
 
    3| const a: any = 5;
                ^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- index.js:7:10
-
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
-
-   7| const c: Object = {a: 5};
-               ^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- index.js:9:10
-
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
-
-   9| const d: Function = () => 0;
-               ^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------------------- index.js:11:16
 
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+Unclear type. Using `any` is not safe! [unclear-type]
 
    11| const e: () => any = () => 0;
                       ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- index.js:13:10
-
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
-
-   13| const f: Object => Function = ({}) => function () {};
-                ^^^^^^
-
-
-Error --------------------------------------------------------------------------------------------------- index.js:13:20
-
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
-
-   13| const f: Object => Function = ({}) => function () {};
-                          ^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------------------- index.js:15:22
-
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
-
-   15| type f2 = <T extends Object>(x: T) => T;
-                            ^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------------- index.js:18:9
 
-Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
+Cannot instantiate `Object` because class `Object` [1] is not a polymorphic type. [incompatible-use]
 
+   index.js:18:9
    18| null as Object<unknown>;
                ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/prelude.js:12:15
+   12| declare class Object {}
+                     ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- index.js:19:9
 
-Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
+Cannot instantiate `Function` because class `Function` [1] is not a polymorphic type. [incompatible-use]
 
+   index.js:19:9
    19| null as Function<unknown>;
                ^^^^^^^^^^^^^^^^^
 
+References:
+   <BUILTINS>/prelude.js:14:15
+   14| declare class Function {}
+                     ^^^^^^^^ [1]
 
 
-Found 9 errors
+
+Found 4 errors

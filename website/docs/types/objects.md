@@ -516,8 +516,9 @@ func({}); // Works!
 func({a: 1, b: "foo"}); // Works!
 ```
 
-The type `Object` is just an alias for [`any`](./any.md), and is unsafe.
-You can ban its use in your code with the [unclear-type lint](../linting/rule-reference.md#toc-unclear-type).
+The type `Object` refers to the global `Object` class. It does not allow arbitrary
+property access. Use an object type with declared properties or an indexer when
+you need to access those properties.
 
 ## Common Issues
 

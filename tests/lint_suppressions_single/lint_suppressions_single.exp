@@ -177,7 +177,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- unclear.js:1:35
 
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+Unclear type. Using `any` is not safe! [unclear-type]
 
    1| declare function bar(x: unknown): any; // error
                                         ^^^

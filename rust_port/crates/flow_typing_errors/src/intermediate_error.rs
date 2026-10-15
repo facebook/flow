@@ -9024,11 +9024,7 @@ where
             MessageUnclearType => friendly::Message(vec![
                 text("Unclear type. Using "),
                 code("any"),
-                text(", "),
-                code("Object"),
-                text(", or "),
-                code("Function"),
-                text(" types is not safe!"),
+                text(" is not safe!"),
             ]),
             MessageUnderconstrainedImplicitInstantiaton {
                 call,

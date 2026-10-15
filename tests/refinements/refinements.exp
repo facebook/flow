@@ -16028,16 +16028,19 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:36:10
 
-Refined at [1] [InferError]
+Cannot return `x` because `Function` [1] is incompatible with `number` [2]. [incompatible-type]
 
    typeof.js:36:10
-   36|   return x; // OK, x refined to `number`
+   36|   return x; // ERROR, `Function` instances are not necessarily callable
                 ^
 
 References:
-   typeof.js:33:7
-   33|   if (typeof x === 'function') {
-             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typeof.js:32:29
+   32| function anyfun(x: number | Function): number {
+                                   ^^^^^^^^ [1]
+   typeof.js:32:40
+   32| function anyfun(x: number | Function): number {
+                                              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:43:10

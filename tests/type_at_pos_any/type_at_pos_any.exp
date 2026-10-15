@@ -2,13 +2,25 @@ typed.js:2:7 = const untyped: any (implicit)
 typed.js:2:7,2:13
 typed.js:4:5 = let x: any (explicit)
 typed.js:4:5,4:5
-typed.js:5:5 = let y: any (explicit)
+typed.js:5:5 = let y: Function
+
+'Function' defined at (lib) prelude.js:14:14
+
 typed.js:5:5,5:5
-typed.js:5:9 = any (explicit)
+typed.js:5:9 = class Function
+
+'Function' defined at (lib) prelude.js:14:14
+
 typed.js:5:9,5:16
-typed.js:6:5 = let z: any (explicit)
+typed.js:6:5 = let z: Object
+
+'Object' defined at (lib) prelude.js:12:14
+
 typed.js:6:5,6:5
-typed.js:6:9 = any (explicit)
+typed.js:6:9 = class Object
+
+'Object' defined at (lib) prelude.js:12:14
+
 typed.js:6:9,6:14
 typed.js:8:5 = let a: any (explicit)
 typed.js:8:5,8:5
@@ -16,13 +28,16 @@ typed.js:8:9 = let x: any (explicit)
 typed.js:8:9,8:9
 typed.js:9:5 = let b: any (implicit)
 typed.js:9:5,9:5
-typed.js:9:9 = let z: any (explicit)
+typed.js:9:9 = let z: Object
+
+'Object' defined at (lib) prelude.js:12:14
+
 typed.js:9:9,9:9
 typed.js:9:12 = any (implicit)
 typed.js:9:11,9:12
 typed.js:10:5 = let c: any (implicit)
 typed.js:10:5,10:5
-typed.js:10:9 = let y: any (explicit)
+typed.js:10:9 = let y: any (implicit)
 typed.js:10:9,10:9
 typed.js:12:5 = let u: any (implicit)
 typed.js:12:5,12:5

@@ -189,7 +189,6 @@ pub struct FrozenMetadata {
     pub facebook_fbs: Option<FlowSmolStr>,
     pub facebook_fbt: Option<FlowSmolStr>,
     pub facebook_module_interop: bool,
-    pub function_and_object_type_is_no_longer_any: bool,
     pub file_options: Arc<FileOptions>,
     pub global_libdefs: Arc<BTreeSet<FileKey>>,
     pub haste_disallow_dynamic_import: bool,
@@ -248,7 +247,6 @@ impl Default for FrozenMetadata {
             facebook_fbs: None,
             facebook_fbt: None,
             facebook_module_interop: false,
-            function_and_object_type_is_no_longer_any: false,
             file_options: Arc::new(FileOptions::default()),
             global_libdefs: Arc::new(BTreeSet::new()),
             haste_disallow_dynamic_import: false,
@@ -904,8 +902,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             facebook_fbs: options.facebook_fbs.dupe(),
             facebook_fbt: options.facebook_fbt.dupe(),
             facebook_module_interop: options.facebook_module_interop,
-            function_and_object_type_is_no_longer_any: options
-                .function_and_object_type_is_no_longer_any,
             file_options: options.file_options.dupe(),
             global_libdefs,
             haste_disallow_dynamic_import: options.haste_disallow_dynamic_import,
@@ -1598,13 +1594,6 @@ impl<'a> Context<'a> {
 
     pub fn facebook_module_interop(&self) -> bool {
         self.inner().metadata.frozen.facebook_module_interop
-    }
-
-    pub fn function_and_object_type_is_no_longer_any(&self) -> bool {
-        self.inner()
-            .metadata
-            .frozen
-            .function_and_object_type_is_no_longer_any
     }
 
     pub fn should_ignore_non_literal_requires(&self) -> bool {

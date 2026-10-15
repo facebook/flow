@@ -313,8 +313,9 @@ const f: (boolean, string, number) => Array<string> =
   func((x: string, y: number) => x.slice(y)); // OK
 ```
 
-The type `Function` is just an alias for [`any`](./any.md), and is unsafe.
-You can ban its use in your code with the [unclear-type lint](../linting/rule-reference.md#toc-unclear-type).
+The type `Function` refers to the global `Function` class. It exposes function
+properties such as `name` and `length`, but has no call signature. Use a function
+type with explicit parameters and a return type when you need to call the function.
 
 ## See Also {#toc-see-also}
 
