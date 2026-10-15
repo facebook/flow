@@ -37,7 +37,6 @@ flowlib_file!(LIB_ES2018_ASYNCGENERATOR_JS, "lib.es2018.asyncgenerator.js");
 flowlib_file!(LIB_ES2018_ASYNCITERABLE_JS, "lib.es2018.asynciterable.js");
 flowlib_file!(LIB_ES2019_ARRAY_JS, "lib.es2019.array.js");
 flowlib_file!(LIB_ES2020_BIGINT_JS, "lib.es2020.bigint.js");
-flowlib_file!(LIB_ES2020_INTL_JS, "lib.es2020.intl.js");
 flowlib_file!(LIB_ES2020_PROMISE_JS, "lib.es2020.promise.js");
 flowlib_file!(LIB_ES2020_STRING_JS, "lib.es2020.string.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
@@ -122,7 +121,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         tslib_contents::LIB_ES2019_SYMBOL_D_TS,
     ),
     ("lib.es2020.bigint.js", LIB_ES2020_BIGINT_JS),
-    ("lib.es2020.intl.js", LIB_ES2020_INTL_JS),
+    ("lib.es2020.intl.js", tslib_contents::LIB_ES2020_INTL_D_TS),
     ("lib.es2020.promise.js", LIB_ES2020_PROMISE_JS),
     (
         "lib.es2020.sharedmemory.js",
