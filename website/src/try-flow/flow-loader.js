@@ -87,6 +87,7 @@ const SPLIT_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.esnext.disposable.js',
   'lib.esnext.error.js',
   'lib.esnext.float16.js',
+  'lib.esnext.intl.js',
   'lib.esnext.iterator.js',
   'lib.esnext.promise.js',
   'lib.esnext.sharedmemory.js',
@@ -144,6 +145,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.esnext.decorators.js',
   'lib.esnext.disposable.js',
   'lib.esnext.error.js',
+  'lib.esnext.intl.js',
   'lib.esnext.promise.js',
   'lib.esnext.sharedmemory.js',
 ];

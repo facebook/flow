@@ -208,6 +208,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.esnext.error.js", tslib_contents::LIB_ESNEXT_ERROR_D_TS),
     ("lib.esnext.float16.js", LIB_ESNEXT_FLOAT16_JS),
+    ("lib.esnext.intl.js", tslib_contents::LIB_ESNEXT_INTL_D_TS),
     ("lib.esnext.iterator.js", LIB_ESNEXT_ITERATOR_JS),
     (
         "lib.esnext.promise.js",

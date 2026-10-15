@@ -80,6 +80,7 @@ pub(super) const LIB_ESNEXT_ARRAY_D_TS: &str = include_tslib!("lib.esnext.array.
 pub(super) const LIB_ESNEXT_DECORATORS_D_TS: &str = include_tslib!("lib.esnext.decorators.d.ts");
 pub(super) const LIB_ESNEXT_DISPOSABLE_D_TS: &str = include_tslib!("lib.esnext.disposable.d.ts");
 pub(super) const LIB_ESNEXT_ERROR_D_TS: &str = include_tslib!("lib.esnext.error.d.ts");
+pub(super) const LIB_ESNEXT_INTL_D_TS: &str = include_tslib!("lib.esnext.intl.d.ts");
 pub(super) const LIB_ESNEXT_PROMISE_D_TS: &str = include_tslib!("lib.esnext.promise.d.ts");
 pub(super) const LIB_ESNEXT_SHAREDMEMORY_D_TS: &str =
     include_tslib!("lib.esnext.sharedmemory.d.ts");
@@ -263,10 +264,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.esnext.full.d.ts",
         include_tslib!("lib.esnext.full.d.ts"),
     ),
-    (
-        "lib.esnext.intl.d.ts",
-        include_tslib!("lib.esnext.intl.d.ts"),
-    ),
+    ("lib.esnext.intl.d.ts", LIB_ESNEXT_INTL_D_TS),
     (
         "lib.esnext.iterator.d.ts",
         include_tslib!("lib.esnext.iterator.d.ts"),
