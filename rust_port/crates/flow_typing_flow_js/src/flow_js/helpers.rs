@@ -2968,20 +2968,6 @@ pub(super) fn add_specialized_callee_method_action(
         }
     }
 }
-pub(super) fn possible_concrete_types_for_imports_exports<'cx>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    reason: &Reason,
-    t: &Type,
-) -> Result<Vec<Type>, FlowJsException> {
-    possible_concrete_types(
-        ConcretizationKind::ConcretizeForImportsExports,
-        cx,
-        env,
-        reason,
-        t,
-    )
-}
 
 pub(super) fn possible_concrete_types_for_predicate<'cx>(
     predicate_concretizer_variant: PredicateConcretetizerVariant,

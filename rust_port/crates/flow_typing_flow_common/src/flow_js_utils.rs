@@ -2183,13 +2183,6 @@ pub fn ordered_types<'a>(cx: &Context<'_>, types: (&'a Type, &'a Type)) -> (&'a 
     }
 }
 
-pub fn add_output<'cx>(
-    cx: &mut Context<'cx>,
-    msg: ErrorMessage<ALoc>,
-) -> Result<(), FlowJsException> {
-    add_output_with_env(cx, &FlowJsEnv::entry(), msg)
-}
-
 pub fn add_output_with_env<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
@@ -2200,7 +2193,7 @@ pub fn add_output_with_env<'cx>(
 }
 
 pub fn add_output_non_speculating<'cx>(cx: &mut Context<'cx>, msg: ErrorMessage<ALoc>) {
-    if let Err(err) = add_output(cx, msg) {
+    if let Err(err) = add_output_with_env(cx, &FlowJsEnv::entry(), msg) {
         panic!("Non speculating: {:?}", err);
     }
 }
