@@ -142,8 +142,8 @@ References:
    <BUILTINS>/lib.es2020.intl.js:99:59
      99|     type LocalesArgument = UnicodeBCP47LocaleIdentifier | Locale | readonly (UnicodeBCP47LocaleIdentifier | Locale)[] | undefined;
                                                                    ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1028:32
-   1028|     toLocaleLowerCase(locale?: string | Array<string>): string;
+   <BUILTINS>/lib.es5.js:1030:32
+   1030|     toLocaleLowerCase(locale?: string | Array<string>): string;
                                         ^^^^^^ [3]
 
 
