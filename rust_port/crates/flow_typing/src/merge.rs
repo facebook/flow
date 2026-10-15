@@ -2071,20 +2071,11 @@ pub fn copy_into<'cx>(
     f: &dyn Fn(&mut Context<'cx>, ContextId) -> Result<ModuleType, Type>,
 ) -> Result<ModuleType, Type> {
     let dst = dst_cx.id();
-    // Chain the merge destination context: if dst_cx already has a
-    // merge_dst_cx set (from an outer copy_into), use that as the ultimate
-    // destination for error reporting. Otherwise use dst_cx itself.
-    // This chaining preserves the original importing file's context through
-    // nested star exports.
+    // f reports errors on the file being checked, while CopierVisitor below
+    // copies into the immediate destination.
     let effective_dst = dst_cx.merge_dst_cx().unwrap_or(dst);
     let mut src_cx = dst_cx.switch_to(src);
-    src_cx.set_merge_dst_cx(effective_dst);
-    // Pass effective_dst to f for error reporting. CopierVisitor below still
-    // uses dst_cx for type copying (the immediate destination context).
     let m = f(&mut src_cx, effective_dst);
-    // Note: we do NOT clear merge_dst_cx after copy_into. Lazy closures
-    // created during f() may be forced later (during the check phase) and
-    // still need merge_dst_cx to route errors to the correct destination.
     let mut copier = CopierVisitor::new(src, dst);
     match m {
         Ok(m) => {

@@ -562,12 +562,6 @@ struct ContextInner {
     aloc_table: LazyALocTable,
     metadata: Metadata,
     budget: CheckBudget,
-    /// During cross-file merge (copy_into), annotation inference errors must be
-    /// reported on the destination context, not the source. This field names the
-    /// destination context, set only during merge and None otherwise. It resolves
-    /// to None once the destination is gone. When None, callers should use cx
-    /// itself as dst_cx.
-    merge_dst_cx: Option<ContextId>,
     resolve_require: ResolveRequire,
     builtins: Rc<flow_lazy::Lazy<Cx, Rc<Builtins<Cx>>>>,
     // The builtins read into this context so far.
@@ -726,7 +720,6 @@ impl ContextArena {
             aloc_table,
             metadata,
             budget,
-            merge_dst_cx: None,
             resolve_require,
             builtins: Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
                 Rc::new(mk_builtins(cx))
@@ -841,6 +834,10 @@ pub struct Context<'a> {
     id: ContextId,
     /// The position in `store` of the arena that owns the current context.
     position: usize,
+    /// The context annotation inference reports errors on: the file being checked. Switching to
+    /// a dependency keeps it, so errors raised while forcing a dependency's signature reach the
+    /// file whose check forced it, however long the dependency context is cached.
+    merge_dst: Option<ContextId>,
 }
 
 /// A [Context] switched to another context until this is dropped.
@@ -1111,6 +1108,7 @@ impl<'a> Context<'a> {
             store,
             id,
             position,
+            merge_dst: None,
         }
     }
 
@@ -1181,18 +1179,16 @@ impl<'a> Context<'a> {
         self.store.arenas[self.position].add_sig_file(mk_sig_file)
     }
 
-    /// Returns the merge-phase destination context if set, otherwise None.
-    /// During cross-file merge, errors should be reported on the destination
-    /// context. Outside of merge, callers should use cx itself as dst_cx.
+    /// The context to report annotation inference errors on, or None to report them on the
+    /// current context.
     pub fn merge_dst_cx(&self) -> Option<ContextId> {
-        self.inner()
-            .merge_dst_cx
-            .filter(|id| self.store.has_context(*id))
+        self.merge_dst.filter(|id| self.store.has_context(*id))
     }
 
-    /// Set the merge-phase destination context.
+    /// Reports annotation inference errors raised through this context, in whatever context it
+    /// switches to, on `dst_cx`.
     pub fn set_merge_dst_cx(&mut self, dst_cx: ContextId) {
-        self.inner_mut().merge_dst_cx = Some(dst_cx);
+        self.merge_dst = Some(dst_cx);
     }
 
     /// Replaces how this context resolves its requires, for a context whose requires can only be
@@ -3522,29 +3518,35 @@ mod tests {
     }
 
     #[test]
-    fn merge_destination_resolves_only_while_its_arena_lives() {
+    fn merge_destination_belongs_to_the_checking_context() {
         let mut dependencies = ContextArena::new();
         let dependency = add_context(&mut dependencies, "/dependency.js");
-        let mut checked = ContextArena::new();
-        let checked_id = add_context(&mut checked, "/checked.js");
+        let mut first = ContextArena::new();
+        let first_id = add_context(&mut first, "/first.js");
         {
             let mut cx = Context::new(
-                ContextStore::new(vec![&mut checked, &mut dependencies]),
-                checked_id,
+                ContextStore::new(vec![&mut first, &mut dependencies]),
+                first_id,
             );
-            let mut dependency_cx = cx.switch_to(dependency);
-            dependency_cx.set_merge_dst_cx(checked_id);
-            assert_eq!(dependency_cx.merge_dst_cx(), Some(checked_id));
+            cx.set_merge_dst_cx(first_id);
+            assert_eq!(
+                cx.switch_to(dependency).merge_dst_cx(),
+                Some(first_id),
+                "a dependency reports to the file whose check switched to it"
+            );
         }
-        checked.clear();
-        let cx = Context::new(
-            ContextStore::new(vec![&mut checked, &mut dependencies]),
-            dependency,
+        let mut second = ContextArena::new();
+        let second_id = add_context(&mut second, "/second.js");
+        let mut cx = Context::new(
+            ContextStore::new(vec![&mut second, &mut dependencies]),
+            second_id,
         );
         assert!(
-            cx.merge_dst_cx().is_none(),
-            "the checked context is gone with its arena"
+            cx.switch_to(dependency).merge_dst_cx().is_none(),
+            "a cached dependency does not keep reporting to an earlier file"
         );
+        cx.set_merge_dst_cx(second_id);
+        assert_eq!(cx.switch_to(dependency).merge_dst_cx(), Some(second_id));
     }
 
     #[test]

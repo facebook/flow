@@ -14,10 +14,9 @@
 printf "\nFocus-check user2.js alone reports the error in dep_a.js:\n"
 assert_errors "$FLOW" focus-check --max-workers 1 user2.js
 
-# BUG: checking user1.js first in the same batch leaves dep_a's merge_dst_cx
-# pointing at user1.js, so the error raised while checking user2.js is lost.
-# This should report the same error as above.
-printf "\nFocus-check user1.js and user2.js in one batch:\n"
-assert_ok "$FLOW" focus-check --max-workers 1 user1.js user2.js
+# Checking user1.js first in the same batch must not keep dep_a reporting to
+# user1.js after its check is over.
+printf "\nFocus-check user1.js and user2.js in one batch reports the same error:\n"
+assert_errors "$FLOW" focus-check --max-workers 1 user1.js user2.js
 
 printf "\nDone!\n"

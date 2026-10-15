@@ -823,9 +823,8 @@ pub fn mk_check_file(
                   ast: &ast::Program<Loc, Loc>,
                   aloc_ast: &ast::Program<ALoc, ALoc>,
                   current_type_sig: Option<Arc<PackedTypeSigModule<Loc>>>| {
-                // Set merge_dst_cx to self to establish the chain for copy_into:
-                // nested copy_into calls read this to find the ultimate error
-                // destination (the file being checked).
+                // Dependency contexts this check switches to, including ones cached
+                // from earlier files, report annotation inference errors here.
                 let id = cx.id();
                 cx.set_merge_dst_cx(id);
                 let lint_severities = get_lint_severities(metadata, &options);
