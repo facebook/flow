@@ -38,7 +38,6 @@ flowlib_file!(LIB_ES2018_ASYNCITERABLE_JS, "lib.es2018.asynciterable.js");
 flowlib_file!(LIB_ES2019_ARRAY_JS, "lib.es2019.array.js");
 flowlib_file!(LIB_ES2020_BIGINT_JS, "lib.es2020.bigint.js");
 flowlib_file!(LIB_ES2020_PROMISE_JS, "lib.es2020.promise.js");
-flowlib_file!(LIB_ES2020_STRING_JS, "lib.es2020.string.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
 flowlib_file!(LIB_ESNEXT_FLOAT16_JS, "lib.esnext.float16.js");
 flowlib_file!(LIB_ESNEXT_ITERATOR_JS, "lib.esnext.iterator.js");
@@ -132,7 +131,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         "lib.es2020.sharedmemory.js",
         tslib_contents::LIB_ES2020_SHAREDMEMORY_D_TS,
     ),
-    ("lib.es2020.string.js", LIB_ES2020_STRING_JS),
+    (
+        "lib.es2020.string.js",
+        tslib_contents::LIB_ES2020_STRING_D_TS,
+    ),
     (
         "lib.es2020.symbol.wellknown.js",
         tslib_contents::LIB_ES2020_SYMBOL_WELLKNOWN_D_TS,

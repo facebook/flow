@@ -33,7 +33,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- regexp.js:13:1
 
 Cannot cast `matches` to `RegExpStringIterator` because in type argument `T` [1]: `null` [2] is incompatible with
-`RegExpMatchArray` [3]. [incompatible-type]
+`RegExpExecArray` [3]. [incompatible-type]
 
    regexp.js:13:1
    13| matches as RegExpStringIterator<RegExpMatchArray | null>; // error: invariant
@@ -46,9 +46,9 @@ References:
    regexp.js:13:52
    13| matches as RegExpStringIterator<RegExpMatchArray | null>; // error: invariant
                                                           ^^^^ [2]
-   <BUILTINS>/lib.es2020.string.js:29:61
-   29|     matchAll(regexp: string | RegExp): RegExpStringIterator<RegExpMatchArray>;
-                                                                   ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2020.string.js:30:52
+   30|     matchAll(regexp: RegExp): RegExpStringIterator<RegExpExecArray>;
+                                                          ^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- regexp.js:14:1
@@ -67,9 +67,9 @@ References:
    regexp.js:14:33
    14| matches as RegExpStringIterator<Array<string>>; // error: invariant, so `Array<string>` needs `index` and `input`
                                        ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2020.string.js:29:61
-   29|     matchAll(regexp: string | RegExp): RegExpStringIterator<RegExpMatchArray>;
-                                                                   ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2020.string.js:30:52
+   30|     matchAll(regexp: RegExp): RegExpStringIterator<RegExpExecArray>;
+                                                          ^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- regexp.js:14:1
@@ -88,10 +88,64 @@ References:
    regexp.js:14:33
    14| matches as RegExpStringIterator<Array<string>>; // error: invariant, so `Array<string>` needs `index` and `input`
                                        ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2020.string.js:29:61
-   29|     matchAll(regexp: string | RegExp): RegExpStringIterator<RegExpMatchArray>;
-                                                                   ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2020.string.js:30:52
+   30|     matchAll(regexp: RegExp): RegExpStringIterator<RegExpExecArray>;
+                                                          ^^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- regexp.js:20:7
+
+Cannot call `"abc".matchAll` because: [incompatible-type]
+ - Either `1` [1], a primitive, cannot be used as a subtype of `RegExp` [2]. You can wrap it in `new Number(...))` to
+   turn it into an object and attempt to use it as a subtype of an interface.
+ - Or `1` [1] is incompatible with `string` [3].
+ - Or `1` [1], a primitive, cannot be used as a subtype of `RegExp` [4]. You can wrap it in `new Number(...))` to turn
+   it into an object and attempt to use it as a subtype of an interface.
+
+   regexp.js:20:7
+    20| "abc".matchAll(1); // error
+              ^^^^^^^^
+
+References:
+   regexp.js:20:16
+    20| "abc".matchAll(1); // error
+                       ^ [1]
+   <BUILTINS>/lib.es2020.string.js:30:22
+    30|     matchAll(regexp: RegExp): RegExpStringIterator<RegExpExecArray>;
+                             ^^^^^^ [2]
+   <BUILTINS>/misc.js:221:20
+   221|   matchAll(regexp: string | RegExp): RegExpStringIterator<RegExpMatchArray>;
+                           ^^^^^^ [3]
+   <BUILTINS>/misc.js:221:29
+   221|   matchAll(regexp: string | RegExp): RegExpStringIterator<RegExpMatchArray>;
+                                    ^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- regexp.js:26:5
+
+Cannot call `"a".toLocaleLowerCase` because: [incompatible-type]
+ - Either `1` [1], a primitive, cannot be used as a subtype of `Locale` [2]. You can wrap it in `new Number(...))` to
+   turn it into an object and attempt to use it as a subtype of an interface.
+ - Or `1` [1] is incompatible with `string` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   regexp.js:26:5
+     26| "a".toLocaleLowerCase(1); // error
+             ^^^^^^^^^^^^^^^^^
+
+References:
+   regexp.js:26:23
+     26| "a".toLocaleLowerCase(1); // error
+                               ^ [1]
+   <BUILTINS>/lib.es2020.intl.js:99:59
+     99|     type LocalesArgument = UnicodeBCP47LocaleIdentifier | Locale | readonly (UnicodeBCP47LocaleIdentifier | Locale)[] | undefined;
+                                                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1028:32
+   1028|     toLocaleLowerCase(locale?: string | Array<string>): string;
+                                        ^^^^^^ [3]
 
 
 
-Found 5 errors
+Found 7 errors
