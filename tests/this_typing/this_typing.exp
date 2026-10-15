@@ -973,15 +973,18 @@ References:
        ^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- declare_function.js:12:19
+Error ----------------------------------------------------------------------------------------- declare_function.js:12:7
 
 Cannot call `myFun.bind` because in property `prop`: `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
+   declare_function.js:12:7
+   12| myFun.bind({prop: true}); // Error - boolean ~> number
+             ^^^^
+
+References:
    declare_function.js:12:19
    12| myFun.bind({prop: true}); // Error - boolean ~> number
                          ^^^^ [1]
-
-References:
    declare_function.js:1:46
     1| declare function myFun(this: {readonly prop: number, ...}): string;
                                                     ^^^^^^ [2]
@@ -1071,16 +1074,19 @@ References:
        ^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- declare_function.js:15:23
+Error ---------------------------------------------------------------------------------------- declare_function.js:15:11
 
 Cannot call `myPolyFun.bind` because in property `prop`: `true` [1] is incompatible with `number` [2].
 [incompatible-type]
 
+   declare_function.js:15:11
+   15| myPolyFun.bind({prop: true}); // Error - boolean ~> number
+                 ^^^^
+
+References:
    declare_function.js:15:23
    15| myPolyFun.bind({prop: true}); // Error - boolean ~> number
                              ^^^^ [1]
-
-References:
    declare_function.js:2:53
     2| declare function myPolyFun<T>(this: {readonly prop: number, ...}, x: T): T;
                                                            ^^^^^^ [2]
@@ -1172,17 +1178,24 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:19:7
 
-Cannot call `myFun.bind` because a call signature declaring the expected parameter / return type is missing in
-`Function` [1]. [prop-missing]
+Cannot call `myFun.bind` because: [incompatible-type]
+ - Either function type [1] requires another argument from call of method `bind` [2].
+ - Or function type [3] requires another argument from call of method `bind` [2].
 
    declare_function.js:19:7
-   19| myFun.bind(); // Error - void ~> number
-             ^^^^
+    19| myFun.bind(); // Error - void ~> number
+              ^^^^
 
 References:
+   <BUILTINS>/lib.es5.js:247:12
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:19:1
-   19| myFun.bind(); // Error - void ~> number
-       ^^^^^^^^^^ [1]
+    19| myFun.bind(); // Error - void ~> number
+        ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:248:12
+   248|         & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(this: (this: T, ...args: [...A, ...B]) => R, thisArg: T, ...args: A) => (...args: B) => R);
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:19:7
@@ -1271,17 +1284,24 @@ References:
 
 Error ---------------------------------------------------------------------------------------- declare_function.js:22:11
 
-Cannot call `myPolyFun.bind` because a call signature declaring the expected parameter / return type is missing in
-`Function` [1]. [prop-missing]
+Cannot call `myPolyFun.bind` because: [incompatible-type]
+ - Either function type [1] requires another argument from call of method `bind` [2].
+ - Or function type [3] requires another argument from call of method `bind` [2].
 
    declare_function.js:22:11
-   22| myPolyFun.bind(); // Error - void ~> number
-                 ^^^^
+    22| myPolyFun.bind(); // Error - void ~> number
+                  ^^^^
 
 References:
+   <BUILTINS>/lib.es5.js:247:12
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:22:1
-   22| myPolyFun.bind(); // Error - void ~> number
-       ^^^^^^^^^^^^^^ [1]
+    22| myPolyFun.bind(); // Error - void ~> number
+        ^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:248:12
+   248|         & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(this: (this: T, ...args: [...A, ...B]) => R, thisArg: T, ...args: A) => (...args: B) => R);
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- declare_function.js:22:11
@@ -1384,18 +1404,26 @@ References:
        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- function_type.js:5:9
+Error --------------------------------------------------------------------------------------------- function_type.js:5:4
 
-Cannot call `x.bind` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot call `x.bind` because: [incompatible-type]
+ - Either `""` [1] is incompatible with `number` [2].
+ - Or `""` [1] is incompatible with `number` [3].
 
-   function_type.js:5:9
-   5| (x.bind("")()); // error: number incompatible with string
-              ^^ [1]
+   function_type.js:5:4
+     5| (x.bind("")()); // error: number incompatible with string
+           ^^^^
 
 References:
+   function_type.js:5:9
+     5| (x.bind("")()); // error: number incompatible with string
+                ^^ [1]
+   <BUILTINS>/lib.es5.js:247:34
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                                         ^^^^^^^^^^^^^^^^^^^^ [2]
    function_type.js:2:27
-   2| declare const x : (this : number) => void;
-                                ^^^^^^ [2]
+     2| declare const x : (this : number) => void;
+                                  ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- function_type.js:5:4
@@ -1430,18 +1458,26 @@ References:
        ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:12:8
+Error -------------------------------------------------------------------------------------------- function_type.js:12:3
 
-Cannot call `y.bind` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot call `y.bind` because: [incompatible-type]
+ - Either `""` [1] is incompatible with `number` [2].
+ - Or `""` [1] is incompatible with `number` [3].
 
-   function_type.js:12:8
-   12| y.bind(""); // error: number incompatible with string
-              ^^ [1]
+   function_type.js:12:3
+    12| y.bind(""); // error: number incompatible with string
+          ^^^^
 
 References:
+   function_type.js:12:8
+    12| y.bind(""); // error: number incompatible with string
+               ^^ [1]
+   <BUILTINS>/lib.es5.js:247:34
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                                         ^^^^^^^^^^^^^^^^^^^^ [2]
    function_type.js:10:21
-   10| declare const y : F<number>;
-                           ^^^^^^ [2]
+    10| declare const y : F<number>;
+                            ^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- function_type.js:12:3
@@ -1481,6 +1517,20 @@ References:
               ^^^^^^ [3]
 
 
+Error -------------------------------------------------------------------------------------------- function_type.js:18:1
+
+Cannot cast `z.bind(...)()` to number because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   function_type.js:18:1
+   18| z.bind(3)() as number;
+       ^^^^^^^^^^^ [1]
+
+References:
+   function_type.js:18:16
+   18| z.bind(3)() as number;
+                      ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- function_type.js:18:3
 
 Cannot use `bind` because `z` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
@@ -1495,6 +1545,20 @@ References:
    function_type.js:18:1
    18| z.bind(3)() as number;
        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- function_type.js:19:1
+
+Cannot cast `z.bind(...)()` to string because `Object` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   function_type.js:19:1
+   19| z.bind("")() as string;
+       ^^^^^^^^^^^^ [1]
+
+References:
+   function_type.js:19:17
+   19| z.bind("")() as string;
+                       ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- function_type.js:19:3
@@ -1515,16 +1579,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:20:1
 
-Cannot cast `z.bind(...)()` to string because `3` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `z.bind(...)()` to string because `Object` [1] is incompatible with `string` [2]. [incompatible-type]
 
    function_type.js:20:1
    20| z.bind(3)() as string; // error: number incompatible with string
-       ^^^^^^^^^^^
+       ^^^^^^^^^^^ [1]
 
 References:
-   function_type.js:20:8
-   20| z.bind(3)() as string; // error: number incompatible with string
-              ^ [1]
    function_type.js:20:16
    20| z.bind(3)() as string; // error: number incompatible with string
                       ^^^^^^ [2]
@@ -1548,16 +1609,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:21:1
 
-Cannot cast `z.bind(...)()` to number because `""` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `z.bind(...)()` to number because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_type.js:21:1
    21| z.bind("")() as number; // error: number incompatible with string
-       ^^^^^^^^^^^^
+       ^^^^^^^^^^^^ [1]
 
 References:
-   function_type.js:21:8
-   21| z.bind("")() as number; // error: number incompatible with string
-              ^^ [1]
    function_type.js:21:17
    21| z.bind("")() as number; // error: number incompatible with string
                        ^^^^^^ [2]
@@ -2384,22 +2442,26 @@ References:
        ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:17:10
+Error ----------------------------------------------------------------------------------------------------- test.js:17:5
 
-Cannot call `bar.bind` because property `f` is missing in `{y: string, ...}` [1] but exists in `{f: number, ...}` [2].
-[incompatible-type]
+Cannot call `bar.bind` because: [incompatible-type]
+ - Either property `f` is missing in `{y: string, ...}` [1] but exists in `{f: number, ...}` [2].
+ - Or property `f` is missing in `{y: string, ...}` [1] but exists in `{f: number, ...}` [3].
 
-   test.js:17:10
-   17| bar.bind(y)(); // error : number incompatible with string
-                ^
+   test.js:17:5
+    17| bar.bind(y)(); // error : number incompatible with string
+            ^^^^
 
 References:
    test.js:3:19
-    3| declare const y : { y : string, ...};
-                         ^^^^^^^^^^^^^^^^^^ [1]
+     3| declare const y : { y : string, ...};
+                          ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:247:34
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                                         ^^^^^^^^^^^^^^^^^^^^ [2]
    test.js:12:22
-   12| function bar (this : {f : number, ...}) : number {
-                            ^^^^^^^^^^^^^^^^^ [2]
+    12| function bar (this : {f : number, ...}) : number {
+                             ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:5
@@ -2509,26 +2571,32 @@ References:
        ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:45:13
+Error ----------------------------------------------------------------------------------------------------- test.js:45:8
 
-Cannot call `o3.foo.bind` because property `foo` is extra in object literal [1] but missing in `{y: number}` [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot call `o3.foo.bind` because: [incompatible-type]
+ - Either property `foo` is extra in object literal [1] but missing in `{y: number}` [2]. Exact objects do not accept
+   extra props.
+ - Or property `foo` is extra in object literal [1] but missing in `{y: number}` [3]. Exact objects do not accept extra
+   props.
 
-   test.js:45:13
-   45| o3.foo.bind(o2)(); // error, foo is missing in type of o2 this
-                   ^^
+   test.js:45:8
+    45| o3.foo.bind(o2)(); // error, foo is missing in type of o2 this
+               ^^^^
 
 References:
    test.js:30:10
-                v
-   30| let o2 = {
-   31|     foo(this : {y : number , ...}) {},
-   32|     y : 3
-   33| }
-       ^ [1]
+                 v
+    30| let o2 = {
+    31|     foo(this : {y : number , ...}) {},
+    32|     y : 3
+    33| }
+        ^ [1]
+   <BUILTINS>/lib.es5.js:247:34
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                                         ^^^^^^^^^^^^^^^^^^^^ [2]
    test.js:39:16
-   39|     foo(this : {y : number}) {},
-                      ^^^^^^^^^^^^ [2]
+    39|     foo(this : {y : number}) {},
+                       ^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:8
@@ -2547,6 +2615,23 @@ References:
        ^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:53:1
+
+Cannot cast `baz.bind(...)()` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:53:1
+   53| baz.bind({f : 3})() as number;
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:49:14
+   49| function baz<T> (this : { f : T ,... }) : T {
+                    ^ [1]
+   test.js:53:24
+   53| baz.bind({f : 3})() as number;
+                              ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:53:5
 
 Cannot use `bind` because `baz` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
@@ -2561,6 +2646,23 @@ References:
    test.js:53:1
    53| baz.bind({f : 3})() as number;
        ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:54:1
+
+Cannot cast `baz.bind(...)()` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:54:1
+   54| baz.bind({f : ""})() as string;
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:49:14
+   49| function baz<T> (this : { f : T ,... }) : T {
+                    ^ [1]
+   test.js:54:25
+   54| baz.bind({f : ""})() as string;
+                               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:5
@@ -2581,16 +2683,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:55:1
 
-Cannot cast `baz.bind(...)()` to string because `3` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `baz.bind(...)()` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:55:1
    55| baz.bind({f : 3})() as string; // error : number incompatible with string
        ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:55:15
-   55| baz.bind({f : 3})() as string; // error : number incompatible with string
-                     ^ [1]
+   test.js:49:14
+   49| function baz<T> (this : { f : T ,... }) : T {
+                    ^ [1]
    test.js:55:24
    55| baz.bind({f : 3})() as string; // error : number incompatible with string
                               ^^^^^^ [2]
@@ -2614,16 +2716,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:1
 
-Cannot cast `baz.bind(...)()` to number because `""` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `baz.bind(...)()` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:56:1
    56| baz.bind({f : ""})() as number; // error : number incompatible with string
        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:56:15
-   56| baz.bind({f : ""})() as number; // error : number incompatible with string
-                     ^^ [1]
+   test.js:49:14
+   49| function baz<T> (this : { f : T ,... }) : T {
+                    ^ [1]
    test.js:56:25
    56| baz.bind({f : ""})() as number; // error : number incompatible with string
                                ^^^^^^ [2]
@@ -2643,6 +2745,20 @@ References:
    test.js:56:1
    56| baz.bind({f : ""})() as number; // error : number incompatible with string
        ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:60:1
+
+Cannot cast `baz2.bind(...)(...)` to number because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:60:1
+   60| baz2.bind(3)(3) as number;
+       ^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:60:20
+   60| baz2.bind(3)(3) as number;
+                          ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:60:6
@@ -2711,4 +2827,4 @@ References:
 
 
 
-Found 155 errors
+Found 160 errors

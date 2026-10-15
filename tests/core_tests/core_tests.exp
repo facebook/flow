@@ -8,8 +8,8 @@ Cannot use `new` on `JSON` [1]. Only classes and interfaces with a construct sig
              ^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1386:19
-   1386| declare var JSON: JSON;
+   <BUILTINS>/lib.es5.js:1388:19
+   1388| declare var JSON: JSON;
                            ^^^^ [1]
 
 
@@ -30,8 +30,8 @@ Cannot cast `JSON.stringify(...)` to string because `void` [1] is incompatible w
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1383:21
-   1383|       ) => string | void,
+   <BUILTINS>/lib.es5.js:1385:21
+   1385|       ) => string | void,
                              ^^^^ [1]
    json_stringify.js:7:25
       7| JSON.stringify(bad1) as string;
@@ -325,8 +325,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3660:13
-   3660|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3662:13
+   3662|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -348,8 +348,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3660:13
-   3660|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3662:13
+   3662|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -371,8 +371,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3660:13
-   3660|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3662:13
+   3662|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -394,8 +394,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                 ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3660:13
-   3660|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3662:13
+   3662|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -417,8 +417,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                    ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3660:13
-   3660|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3662:13
+   3662|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -440,8 +440,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                       ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3660:13
-   3660|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3662:13
+   3662|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -466,8 +466,8 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:3660:13
-   3660|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3662:13
+   3662|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;

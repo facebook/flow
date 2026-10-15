@@ -18,7 +18,13 @@ export function foo(): {
     thisArg: T,
     args?: A
   ) => R,
-  funProtoBind: typeof Function.prototype.bind,
+  funProtoBind: 
+    & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+    & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(
+      this: (this: T, ...args: [...A, ...B]) => R,
+      thisArg: T,
+      ...args: A
+    ) => (...args: B) => R),
   funProtoCall: <T, R, A extends ArrayLike<unknown> = Readonly<[]>>(
     this: (this: T, ...args: A) => R,
     thisArg: T,
@@ -40,7 +46,7 @@ export function foo(): {
 Stats:
   Files changed:                            1
   Number of annotations added:              1
-  Total size of annotations:               32
+  Total size of annotations:               58
   Number of sig. ver. errors:               1
   Number of annotations required:           1
   Number of annotations skipped:            0
@@ -67,7 +73,7 @@ Warnings:
 
 === Diff between codemod-ed & autofix-ed ===
 >>> ./test.js
-10,24c10
+10,30c10
 < export function foo(): {
 <   funProto: typeof Object.prototype,
 <   funProtoApply: <T, R, A extends ArrayLike<unknown> = Readonly<[]>>(
@@ -75,7 +81,13 @@ Warnings:
 <     thisArg: T,
 <     args?: A
 <   ) => R,
-<   funProtoBind: typeof Function.prototype.bind,
+<   funProtoBind: 
+<     & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+<     & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(
+<       this: (this: T, ...args: [...A, ...B]) => R,
+<       thisArg: T,
+<       ...args: A
+<     ) => (...args: B) => R),
 <   funProtoCall: <T, R, A extends ArrayLike<unknown> = Readonly<[]>>(
 <     this: (this: T, ...args: A) => R,
 <     thisArg: T,

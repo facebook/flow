@@ -28,8 +28,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
@@ -45,25 +45,26 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ iterables.js:4:17
+Error ------------------------------------------------------------------------------------------------- iterables.js:4:3
 
-`Iterable<number, void, void>` [1] is incompatible with `ReadonlyArray<empty>` [2]. [incompatible-type]
+Cannot call `f.bind` because `Iterable<number, void, void>` [1] is incompatible with `ReadonlyArray<empty>` [2].
+[incompatible-type]
 
-   iterables.js:4:17
+   iterables.js:4:3
      4| f.bind(null, ...it); // Error
-                        ^^
+          ^^^^
 
 References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
@@ -79,8 +80,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
@@ -96,25 +97,26 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- iterables.js:14:17
+Error ------------------------------------------------------------------------------------------------ iterables.js:14:3
 
-`Iterable<number, void, void>` [1] is incompatible with `ReadonlyArray<empty>` [2]. [incompatible-type]
+Cannot call `f.bind` because `Iterable<number, void, void>` [1] is incompatible with `ReadonlyArray<empty>` [2].
+[incompatible-type]
 
-   iterables.js:14:17
+   iterables.js:14:3
     14| f.bind(null, ...oit); // Error
-                        ^^^
+          ^^^^
 
 References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
@@ -130,8 +132,8 @@ References:
    <BUILTINS>/lib.es2015.collection.js:48:76
     48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                                                                    ^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
@@ -147,8 +149,8 @@ References:
    <BUILTINS>/lib.es2015.collection.js:48:76
     48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                                                                    ^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
@@ -164,8 +166,8 @@ References:
    <BUILTINS>/lib.es2015.collection.js:48:76
     48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                                                                    ^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 
@@ -181,8 +183,8 @@ References:
    <BUILTINS>/lib.es2015.collection.js:48:76
     48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                                                                    ^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:440:15
-   440| declare class ReadonlyArray<out T> {
+   <BUILTINS>/lib.es5.js:442:15
+   442| declare class ReadonlyArray<out T> {
                       ^^^^^^^^^^^^^ [2]
 
 

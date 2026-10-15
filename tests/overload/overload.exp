@@ -29,8 +29,8 @@ Cannot assign `"".match(...)[0]` to `x1` because `string` [1] is incompatible wi
                          ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:731:42
-   731| interface RegExpMatchArray extends Array<string> {
+   <BUILTINS>/lib.es5.js:733:42
+   733| interface RegExpMatchArray extends Array<string> {
                                                  ^^^^^^ [1]
    overload.js:7:9
      7| var x1: number = "".match(0)[0];
@@ -46,8 +46,8 @@ Cannot get `"".match(...)[0]` because `null` [1] does not have properties. [inco
                                      ^
 
 References:
-   <BUILTINS>/lib.es5.js:989:56
-   989|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:991:56
+   991|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                                                ^^^^ [1]
 
 
@@ -63,11 +63,11 @@ Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-type]
                                   ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:989:19
-   989|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:991:19
+   991|     match(regexp: string | RegExp): RegExpMatchArray | null;
                           ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:989:28
-   989|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:991:28
+   991|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                    ^^^^^^ [3]
 
 
@@ -80,8 +80,8 @@ Cannot assign `"".match(...)[0]` to `x2` because `string` [1] is incompatible wi
                          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:731:42
-   731| interface RegExpMatchArray extends Array<string> {
+   <BUILTINS>/lib.es5.js:733:42
+   733| interface RegExpMatchArray extends Array<string> {
                                                  ^^^^^^ [1]
    overload.js:8:9
      8| var x2: number = "".match(/pattern/)[0];
@@ -97,8 +97,8 @@ Cannot get `"".match(...)[0]` because `null` [1] does not have properties. [inco
                                              ^
 
 References:
-   <BUILTINS>/lib.es5.js:989:56
-   989|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:991:56
+   991|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                                                ^^^^ [1]
 
 
@@ -111,8 +111,8 @@ Cannot assign `"".split(...)[0]` to `x4` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1013:63
-   1013|     split(separator?: string | RegExp, limit?: number): Array<string>;
+   <BUILTINS>/lib.es5.js:1015:63
+   1015|     split(separator?: string | RegExp, limit?: number): Array<string>;
                                                                        ^^^^^^ [1]
    overload.js:10:9
      10| var x4: number = "".split(/pattern/)[0];

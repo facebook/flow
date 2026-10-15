@@ -24,8 +24,8 @@ Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
                            ^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:301:39
-   301|     toFixed(fractionDigits?: number): string;
+   <BUILTINS>/lib.es5.js:303:39
+   303|     toFixed(fractionDigits?: number): string;
                                               ^^^^^^ [1]
 
 

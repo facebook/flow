@@ -488,7 +488,10 @@ Flags: --pretty
       "type":"<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R"
     },
     {"name":"arguments","type":"any"},
-    {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
+    {
+      "name":"bind",
+      "type":"(<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>) & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(this: (this: T, ...args: [...A, ...B]) => R, thisArg: T, ...args: A) => (...args: B) => R)"
+    },
     {
       "name":"call",
       "type":"<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R"
@@ -513,7 +516,10 @@ Flags: --pretty
       "type":"<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R"
     },
     {"name":"arguments","type":"any"},
-    {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
+    {
+      "name":"bind",
+      "type":"(<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>) & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(this: (this: T, ...args: [...A, ...B]) => R, thisArg: T, ...args: A) => (...args: B) => R)"
+    },
     {
       "name":"call",
       "type":"<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R"

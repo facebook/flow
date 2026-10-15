@@ -53,8 +53,8 @@ References:
    array_lib.js:13:14
     13| var e: Array<string> = a.reverse();
                      ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:673:16
-   673|     reverse(): Array<T>;
+   <BUILTINS>/lib.es5.js:675:16
+   675|     reverse(): Array<T>;
                        ^^^^^^^^ [3]
    array_lib.js:13:8
     13| var e: Array<string> = a.reverse();
@@ -76,14 +76,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:454:53
-   454|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/lib.es5.js:456:53
+   456|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                             ^^^^^ [1]
    array_lib.js:26:14
     26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                      ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:454:47
-   454|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/lib.es5.js:456:47
+   456|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                       ^^^^^^^^^^^^ [3]
    array_lib.js:26:8
     26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
@@ -102,8 +102,8 @@ References:
    array_lib.js:58:4
      58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/lib.es5.js:1042:13
-   1042|     length: number;
+   <BUILTINS>/lib.es5.js:1044:13
+   1044|     length: number;
                      ^^^^^^ [2]
 
 
@@ -119,8 +119,8 @@ References:
    array_lib.js:59:4
      59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/lib.es5.js:1042:13
-   1042|     length: number;
+   <BUILTINS>/lib.es5.js:1044:13
+   1044|     length: number;
                      ^^^^^^ [2]
 
 
@@ -139,14 +139,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
           ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:716:37
-   716|     static from(str: string): Array<string>;
+   <BUILTINS>/lib.es5.js:718:37
+   718|     static from(str: string): Array<string>;
                                             ^^^^^^ [1]
    array_lib.js:71:31
     71|   Array.from('abcd') as Array<empty>; // ERROR
                                       ^^^^^ [2]
-   <BUILTINS>/lib.es5.js:716:31
-   716|     static from(str: string): Array<string>;
+   <BUILTINS>/lib.es5.js:718:31
+   718|     static from(str: string): Array<string>;
                                       ^^^^^^^^^^^^^ [3]
    array_lib.js:71:25
     71|   Array.from('abcd') as Array<empty>; // ERROR
@@ -167,8 +167,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                 ^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:725:25
-   725| interface ArrayLike<out T> {
+   <BUILTINS>/lib.es5.js:727:25
+   727| interface ArrayLike<out T> {
                                 ^ [1]
    array_lib.js:75:30
     75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
@@ -179,8 +179,8 @@ References:
    array_lib.js:75:20
     75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
                            ^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es5.js:711:31
-   711|     static from<A, This>(str: string, mapFn: (this: This, elem: string, index: number) => A, thisArg: This): Array<A>;
+   <BUILTINS>/lib.es5.js:713:31
+   713|     static from<A, This>(str: string, mapFn: (this: This, elem: string, index: number) => A, thisArg: This): Array<A>;
                                       ^^^^^^ [5]
 
 
@@ -316,11 +316,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                  ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1042:13
-   1042|     length: number;
+   <BUILTINS>/lib.es5.js:1044:13
+   1044|     length: number;
                      ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:610:109
-    610|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+   <BUILTINS>/lib.es5.js:612:109
+    612|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
                                                                                                                      ^^^^^^^^^^^^^^^^^^ [2]
    filter_error_msg_quality_test.js:2:30
       2| declare const str_arr: Array<string>;
@@ -353,8 +353,8 @@ References:
    filter_error_msg_quality_test.js:7:25
      7| nullable_str_arr.filter(s => !!s) as Array<string>;
                                 ^^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:603:24
-   603|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
+   <BUILTINS>/lib.es5.js:605:24
+   605|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
                                ^^^^^^^^^^^^^^ [4]
 
 

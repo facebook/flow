@@ -50,40 +50,48 @@ References:
        ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- lint_settings.js:18:10
+Error -------------------------------------------------------------------------------------------- lint_settings.js:18:5
 
-Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
-[incompatible-type]
+Cannot call `o.m.bind` because: [incompatible-type]
+ - Either property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
+ - Or property `x` is missing in `O` [1] but exists in `{x: number, ...}` [3].
 
-   lint_settings.js:18:10
-   18| o.m.bind(other); // error: lint disabled, `this` incompatibility still reported
-                ^^^^^
-
-References:
-   lint_settings.js:9:22
-    9| declare const other: O;
-                            ^ [1]
-   lint_settings.js:5:13
-    5|   m: (this: {x: number, ...}, y: number) => void,
-                   ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- lint_settings.js:20:10
-
-Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
-[incompatible-type]
-
-   lint_settings.js:20:10
-   20| o.m.bind(other); // error
-                ^^^^^
+   lint_settings.js:18:5
+    18| o.m.bind(other); // error: lint disabled, `this` incompatibility still reported
+            ^^^^
 
 References:
    lint_settings.js:9:22
-    9| declare const other: O;
-                            ^ [1]
+     9| declare const other: O;
+                             ^ [1]
+   <BUILTINS>/lib.es5.js:247:34
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                                         ^^^^^^^^^^^^^^^^^^^^ [2]
    lint_settings.js:5:13
-    5|   m: (this: {x: number, ...}, y: number) => void,
-                   ^^^^^^^^^^^^^^^^ [2]
+     5|   m: (this: {x: number, ...}, y: number) => void,
+                    ^^^^^^^^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- lint_settings.js:20:5
+
+Cannot call `o.m.bind` because: [incompatible-type]
+ - Either property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
+ - Or property `x` is missing in `O` [1] but exists in `{x: number, ...}` [3].
+
+   lint_settings.js:20:5
+    20| o.m.bind(other); // error
+            ^^^^
+
+References:
+   lint_settings.js:9:22
+     9| declare const other: O;
+                             ^ [1]
+   <BUILTINS>/lib.es5.js:247:34
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                                         ^^^^^^^^^^^^^^^^^^^^ [2]
+   lint_settings.js:5:13
+     5|   m: (this: {x: number, ...}, y: number) => void,
+                    ^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- lint_settings.js:20:5
@@ -218,22 +226,26 @@ References:
       ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rejected.js:10:10
+Error ------------------------------------------------------------------------------------------------- rejected.js:10:5
 
-Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
-[incompatible-type]
+Cannot call `o.m.bind` because: [incompatible-type]
+ - Either property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
+ - Or property `x` is missing in `O` [1] but exists in `{x: number, ...}` [3].
 
-   rejected.js:10:10
-   10| o.m.bind(other); // error: receiver mismatch
-                ^^^^^
+   rejected.js:10:5
+    10| o.m.bind(other); // error: receiver mismatch
+            ^^^^
 
 References:
    rejected.js:6:22
-    6| declare const other: O;
-                            ^ [1]
+     6| declare const other: O;
+                             ^ [1]
+   <BUILTINS>/lib.es5.js:247:34
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                                         ^^^^^^^^^^^^^^^^^^^^ [2]
    rejected.js:2:13
-    2|   m: (this: {x: number, ...}, y: number) => void,
-                   ^^^^^^^^^^^^^^^^ [2]
+     2|   m: (this: {x: number, ...}, y: number) => void,
+                    ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:10:5
@@ -264,8 +276,8 @@ References:
    rejected.js:2:6
      2|   m: (this: {x: number, ...}, y: number) => void,
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:247:65
-   247|     proto call: <T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+   <BUILTINS>/lib.es5.js:249:65
+   249|     proto call: <T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -305,17 +317,24 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:13:5
 
-Cannot call `o.m.bind` because a call signature declaring the expected parameter / return type is missing in
-`Function` [1]. [prop-missing]
+Cannot call `o.m.bind` because: [incompatible-type]
+ - Either function type [1] requires another argument from call of method `bind` [2].
+ - Or function type [3] requires another argument from call of method `bind` [2].
 
    rejected.js:13:5
-   13| o.m.bind(); // error: no first argument
-           ^^^^
+    13| o.m.bind(); // error: no first argument
+            ^^^^
 
 References:
+   <BUILTINS>/lib.es5.js:247:12
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    rejected.js:13:1
-   13| o.m.bind(); // error: no first argument
-       ^^^^^^^^ [1]
+    13| o.m.bind(); // error: no first argument
+        ^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:248:12
+   248|         & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(this: (this: T, ...args: [...A, ...B]) => R, thisArg: T, ...args: A) => (...args: B) => R);
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:13:5
@@ -469,22 +488,26 @@ References:
        ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- rejected.js:25:8
+Error ------------------------------------------------------------------------------------------------- rejected.js:25:3
 
-Cannot call `f.bind` because property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
-[incompatible-type]
+Cannot call `f.bind` because: [incompatible-type]
+ - Either property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
+ - Or property `x` is missing in `O` [1] but exists in `{x: number, ...}` [3].
 
-   rejected.js:25:8
-   25| f.bind(o); // error: `f` is not a member access
-              ^
+   rejected.js:25:3
+    25| f.bind(o); // error: `f` is not a member access
+          ^^^^
 
 References:
    rejected.js:5:18
-    5| declare const o: O;
-                        ^ [1]
+     5| declare const o: O;
+                         ^ [1]
+   <BUILTINS>/lib.es5.js:247:34
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                                         ^^^^^^^^^^^^^^^^^^^^ [2]
    rejected.js:21:26
-   21| declare function f(this: {x: number, ...}, y: number): void;
-                                ^^^^^^^^^^^^^^^^ [2]
+    21| declare function f(this: {x: number, ...}, y: number): void;
+                                 ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:25:3

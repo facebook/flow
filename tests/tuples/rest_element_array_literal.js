@@ -36,11 +36,14 @@ type T = [string, ...Array<number>];
   b = [...inexact]; // ERROR: unknown elements of an inexact tuple
 }
 
-// Partial application with a spread
+// Partial application with a spread (a method's `bind`)
 {
-  declare function f(...args: T): void;
+  declare class C {
+    m(...args: T): void;
+  }
+  declare const c: C;
   declare const arr: Array<number>;
-  const g = f.bind(null, 'a', ...arr); // OK
+  const g = c.m.bind(c, 'a', ...arr); // OK
   g(1); // OK
   g('x'); // ERROR: string ~> number
 }

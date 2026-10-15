@@ -711,8 +711,8 @@ Cannot call `123.toString` with `'foo'` bound to `radix` because `"foo"` [1] is 
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:317:22
-   317|     toString(radix?: number): string;
+   <BUILTINS>/lib.es5.js:319:22
+   319|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -726,8 +726,8 @@ Cannot call `123.toString` with `null` bound to `radix` because `null` [1] is in
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:317:22
-   317|     toString(radix?: number): string;
+   <BUILTINS>/lib.es5.js:319:22
+   319|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -923,8 +923,8 @@ Cannot assign `x.valueOf` to `xValueOf` because `(this: Date) => number` [1] is 
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1248:5
-   1248|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:1250:5
+   1250|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -983,8 +983,8 @@ References:
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1236:5
-   1236|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/lib.es5.js:1238:5
+   1238|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -999,8 +999,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because: [incompatible-ty
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1089:11
-   1089| interface Date {
+   <BUILTINS>/lib.es5.js:1091:11
+   1091| interface Date {
                    ^^^^ [1]
 
 
@@ -1293,16 +1293,26 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- proto.js:13:1
 
-Cannot cast `C1_proto.bind` to empty because `Function` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `C1_proto.bind` to empty because: [incompatible-type]
+ - Either `(this: empty, thisArg: ThisParameterType<empty>) => OmitThisParameter<empty>` [1] is incompatible with
+   `empty` [2].
+ - Or `(this: (this: empty, ...args: [...empty, ...empty]) => empty, thisArg: empty, ...args: empty) => (.....` [3] is
+   incompatible with `empty` [2].
 
    proto.js:13:1
-   13| C1_proto.bind as empty; // error: function ~> empty
-       ^^^^^^^^^^^^^ [1]
+    13| C1_proto.bind as empty; // error: function ~> empty
+        ^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/lib.es5.js:247:12
+   247|         & (<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proto.js:13:18
-   13| C1_proto.bind as empty; // error: function ~> empty
-                        ^^^^^ [2]
+    13| C1_proto.bind as empty; // error: function ~> empty
+                         ^^^^^ [2]
+   <BUILTINS>/lib.es5.js:248:12
+   248|         & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(this: (this: T, ...args: [...A, ...B]) => R, thisArg: T, ...args: A) => (...args: B) => R);
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- proto.js:17:13

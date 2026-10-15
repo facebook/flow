@@ -6500,9 +6500,10 @@ b.te
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     title: '',
                   },
-                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  detail:
+                    '(<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>) & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(this: (this: T, ...args: [...A, ...B]) => R, thisArg: T, ...args: A) => (...args: B) => R)',
                   insertTextFormat: 1,
-                  kind: 3,
+                  kind: 6,
                   label: 'bind',
                   sortText: '00000000000000000006',
                   textEdit: {
@@ -6967,9 +6968,10 @@ b.te
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     title: '',
                   },
-                  detail: '(thisArg: any, ...argArray: Array<any>) => any',
+                  detail:
+                    '(<T>(this: T, thisArg: ThisParameterType<T>) => OmitThisParameter<T>) & (<T, A extends ReadonlyArray<any>, B extends ReadonlyArray<any>, R>(this: (this: T, ...args: [...A, ...B]) => R, thisArg: T, ...args: A) => (...args: B) => R)',
                   insertTextFormat: 1,
-                  kind: 3,
+                  kind: 6,
                   label: 'bind',
                   sortText: '00000000000000000006',
                   textEdit: {
