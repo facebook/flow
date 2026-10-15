@@ -83,7 +83,7 @@ match (<arg>) {} //  This is a match statement, not a match expression
 
 If no pattern matches, Flow will error due to a non-exhaustive match, and an exception will be thrown at runtime. You can use a [wildcard](./patterns.md#wildcard-patterns) (`_`) or [variable declaration pattern](./patterns.md#variable-declaration-patterns) (`const x`) as the last case of a match to catch all remaining possible matches.
 
-To throw an exception in a `match` expression case body you can't use `throw` as it is a statement, and `match` expressions require expression bodies. Instead, you can use `invariant(false, <msg>)`, which Flow understands will always throw (with the supplied message).
+To throw an exception in a `match` expression case body you can't use `throw` as it is a statement, and `match` expressions require expression bodies. Instead, call a helper that throws the exception and has a return type of `empty`.
 
 Match expression case bodies do not yet support usage of `yield`, `yield*`, or `await`. Unlike match expressions, [match statements](#match-statements) do support these keywords.
 

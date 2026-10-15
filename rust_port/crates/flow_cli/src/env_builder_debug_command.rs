@@ -84,10 +84,6 @@ impl Context for TestCx {
         false
     }
 
-    fn invariant_special_casing_disabled(&self) -> bool {
-        false
-    }
-
     fn stylex_shorthand_prop(&self) -> Option<&str> {
         None
     }
@@ -175,7 +171,6 @@ pub fn main(path: Option<String>, filename: Option<String>) {
         let Ok((inits, _)) = name_def::find_defs(
             &autocomplete_hooks,
             true,
-            false,
             Default::default(),
             &env,
             ScopeKind::Module,

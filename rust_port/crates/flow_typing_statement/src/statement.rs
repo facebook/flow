@@ -2572,9 +2572,7 @@ fn statement_<'a>(
                     type_env::in_async_scope(cx),
                 );
             }
-            if cx.assertion_functions_enabled() {
-                check_unrecognized_assertion_calls(cx, &expr);
-            }
+            check_unrecognized_assertion_calls(cx, &expr);
             statement::Statement::new(StatementInner::Expression {
                 loc,
                 inner: (statement::Expression {
@@ -4486,7 +4484,7 @@ fn statement_list_from_iter<'a, 'b>(
     stmts
         .map(|stmt| {
             let (stmt, _abnormal) =
-                flow_typing_utils::abnormal::catch_stmt_control_flow_exception(|| {
+                flow_typing_utils::abnormal::catch_stmt_control_flow_exception(stmt, || {
                     statement(cx, stmt)
                 })?;
             Ok(stmt)
@@ -9262,171 +9260,6 @@ pub fn optional_chain<'a>(
             {
                 return Err(CheckExprError::DebugThrow { loc: loc.dupe() });
             }
-            // See ~/www/static_upstream/core/
-            ExpressionInner::Call { inner, .. }
-                if !cx.invariant_special_casing_disabled()
-                    && flow_parser::ast_utils::is_call_to_invariant(&inner.callee) =>
-            {
-                // TODO: require
-                let callee_ast = expression(None, None, None, cx, &inner.callee)?;
-                let callee_t = callee_ast.loc().1.dupe();
-                let targs = inner
-                    .targs
-                    .as_ref()
-                    .map(|targs| -> Result<_, CheckExprError> {
-                        let (_, tast) = convert_call_targs(cx, &FlowOrdMap::default(), targs)?;
-                        Ok(tast)
-                    })
-                    .transpose()?;
-                // NOTE: if an invariant expression throws abnormal control flow, the
-                // entire statement it was in is reconstructed in the typed AST as an
-                // expression statement containing just the invariant call. This should
-                // be ok for the most part since this is the most common way to call
-                // invariant. It's worth experimenting with whether people use invariant
-                // in other ways, and if not, restricting it to this pattern.
-                let args = &inner.arguments;
-                let (t, arguments) = match (inner.targs.as_ref(), args.arguments.first()) {
-                    (None, None) => {
-                        let t = empty_t::at(loc.dupe());
-                        // invariant() is treated like a throw
-                        let ast_expr = expression::Expression::new(ExpressionInner::Call {
-                            loc: (loc.dupe(), t.dupe()),
-                            inner: (expression::Call {
-                                callee: callee_ast.dupe(),
-                                targs: targs.clone(),
-                                arguments: expression::ArgList {
-                                    loc: args.loc.dupe(),
-                                    arguments: std::sync::Arc::from([]),
-                                    comments: args.comments.dupe(),
-                                },
-                                comments: inner.comments.dupe(),
-                            })
-                            .into(),
-                        });
-                        return Err(AbnormalControlFlow(loc.dupe(), ast_expr).into());
-                    }
-                    (None, Some(expression::ExpressionOrSpread::Expression(lit_exp_src)))
-                        if matches!(
-                            lit_exp_src.deref(),
-                            ExpressionInner::BooleanLiteral { inner, .. }
-                                if !inner.value
-                        ) =>
-                    {
-                        // invariant(false, ...) is treated like a throw
-                        let rest_arguments: Vec<_> = args
-                            .arguments
-                            .iter()
-                            .skip(1)
-                            .map(|a| Ok(expression_or_spread(cx, a)?.1))
-                            .collect::<Result<_, CheckExprError>>()?;
-                        let lit_exp = expression(None, None, None, cx, lit_exp_src)?;
-                        let t = empty_t::at(loc.dupe());
-                        let mut all_arguments = Vec::with_capacity(1 + rest_arguments.len());
-                        all_arguments.push(expression::ExpressionOrSpread::Expression(lit_exp));
-                        all_arguments.extend(rest_arguments);
-                        let ast_expr = expression::Expression::new(ExpressionInner::Call {
-                            loc: (loc.dupe(), t.dupe()),
-                            inner: (expression::Call {
-                                callee: callee_ast.dupe(),
-                                targs: targs.clone(),
-                                arguments: expression::ArgList {
-                                    loc: args.loc.dupe(),
-                                    arguments: all_arguments.into(),
-                                    comments: args.comments.dupe(),
-                                },
-                                comments: inner.comments.dupe(),
-                            })
-                            .into(),
-                        });
-                        return Err(AbnormalControlFlow(loc.dupe(), ast_expr).into());
-                    }
-                    (None, Some(expression::ExpressionOrSpread::Expression(cond_src))) => {
-                        let rest_arguments: Vec<_> = args
-                            .arguments
-                            .iter()
-                            .skip(1)
-                            .map(|a| Ok(expression_or_spread(cx, a)?.1))
-                            .collect::<Result<_, CheckExprError>>()?;
-                        let cond = condition(
-                            cx,
-                            EnclosingContext::OtherTestContext,
-                            None,
-                            None,
-                            cond_src,
-                        )?;
-                        check_unnecessary_assertion(
-                            cx,
-                            loc.dupe(),
-                            FlowSmolStr::new_inline("invariant"),
-                            &cond.loc().1,
-                        )?;
-                        let t = type_::void::at(loc.dupe());
-                        let mut all_arguments = Vec::with_capacity(1 + rest_arguments.len());
-                        all_arguments.push(expression::ExpressionOrSpread::Expression(cond));
-                        all_arguments.extend(rest_arguments);
-                        (
-                            t,
-                            expression::ArgList {
-                                loc: args.loc.dupe(),
-                                arguments: all_arguments.into(),
-                                comments: args.comments.dupe(),
-                            },
-                        )
-                    }
-                    (_, Some(expression::ExpressionOrSpread::Spread(_))) => {
-                        arg_list(cx, &inner.arguments)?;
-                        flow_js::add_output_non_speculating(
-                            cx,
-                            ErrorMessage::EUnsupportedSyntax(Box::new((
-                                loc.dupe(),
-                                UnsupportedSyntax::InvariantSpreadArgument,
-                            ))),
-                        );
-                        let t = any_t::at(AnySource::AnyError(None), loc.dupe());
-                        (t, {
-                            let Ok(v) = polymorphic_ast_mapper::arg_list(
-                                &mut typed_ast_utils::ErrorMapper,
-                                &inner.arguments,
-                            );
-                            v
-                        })
-                    }
-                    (Some(_), _) => {
-                        arg_list(cx, &inner.arguments)?;
-                        flow_js::add_output_non_speculating(
-                            cx,
-                            ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
-                                call_loc: loc.dupe(),
-                                is_new: false,
-                                callee: CallTypeArityCallee::Function,
-                                expected_arity: 0,
-                            })),
-                        );
-                        let t = any_t::at(AnySource::AnyError(None), loc.dupe());
-                        (t, {
-                            let Ok(v) = polymorphic_ast_mapper::arg_list(
-                                &mut typed_ast_utils::ErrorMapper,
-                                &inner.arguments,
-                            );
-                            v
-                        })
-                    }
-                };
-                Some((
-                    (loc.dupe(), t.dupe()),
-                    call_ast(
-                        cx,
-                        t.dupe(),
-                        callee_t,
-                        expression::Call {
-                            callee: callee_ast,
-                            targs,
-                            arguments,
-                            comments: inner.comments.dupe(),
-                        },
-                    ),
-                ))
-            }
             ExpressionInner::Member { inner, .. }
                 if let ExpressionInner::Super {
                     loc: super_loc,
@@ -9825,7 +9658,7 @@ pub fn optional_chain<'a>(
         specialized_callee: &type_::SpecializedCallee,
     ) -> expression::Expression<ALoc, (ALoc, Type)> {
         let finalized = specialized_callee.finalized.borrow();
-        if cx.assertion_functions_enabled() && is_single_assertion_function(&finalized) {
+        if is_single_assertion_function(&finalized) {
             cx.add_assertion_call_candidate(callee.loc().0.dupe());
         }
         if finalized.is_empty() {
@@ -20356,7 +20189,6 @@ pub fn mk_func_sig<'a>(
     let has_nonvoid_return = flow_env_builder::nonvoid_return::might_have_nonvoid_return(
         &loc,
         func,
-        cx.invariant_special_casing_disabled(),
         &cx.environment().var_info.assertion_calls,
     ) || (!matches!(
         kind,
@@ -20485,11 +20317,8 @@ pub fn mk_func_sig<'a>(
             let (ref id_name, ref guard_type_opt) = guard_annot.guard.guard;
             let guard_comments = guard_annot.guard.comments.as_ref();
             // A bare `asserts x` needs no guard type; every other kind does.
-            let representable = if guard_kind == ast::types::TypeGuardKind::Asserts {
-                cx.assertion_functions_enabled()
-            } else {
-                guard_type_opt.is_some()
-            };
+            let representable =
+                guard_kind == ast::types::TypeGuardKind::Asserts || guard_type_opt.is_some();
             match (guard_kind, representable) {
                 (kind, true) => {
                     let fparams_value = crate::func_params::value::<

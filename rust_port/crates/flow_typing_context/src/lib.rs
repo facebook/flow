@@ -171,7 +171,6 @@ pub struct FrozenMetadata {
     pub slow_to_check_logging: SlowToCheckLogging,
     pub verbose: Option<Arc<Verbose>>,
     pub assert_operator: AssertOperator,
-    pub assertion_functions: bool,
     pub automatic_require_default: bool,
     pub babel_loose_array_spread: bool,
     pub ban_spread_key_props: bool,
@@ -180,7 +179,6 @@ pub struct FrozenMetadata {
     pub async_component_syntax_includes: Arc<[Regex]>,
     pub declare_global_support: bool,
     pub dev_only_refinement_info_as_errors: bool,
-    pub disable_invariant_special_casing: bool,
     pub enable_const_params: bool,
     pub enable_custom_error: bool,
     pub enable_enums: bool,
@@ -232,7 +230,6 @@ impl Default for FrozenMetadata {
             slow_to_check_logging: SlowToCheckLogging::default(),
             verbose: None,
             assert_operator: AssertOperator::Disabled,
-            assertion_functions: false,
             automatic_require_default: false,
             babel_loose_array_spread: false,
             ban_spread_key_props: false,
@@ -241,7 +238,6 @@ impl Default for FrozenMetadata {
             async_component_syntax_includes: Arc::from([]),
             declare_global_support: true,
             dev_only_refinement_info_as_errors: false,
-            disable_invariant_special_casing: false,
             enable_const_params: false,
             enable_custom_error: false,
             enable_enums: true,
@@ -898,7 +894,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
                 .collect::<Vec<_>>()
                 .into(),
             dev_only_refinement_info_as_errors: options.dev_only_refinement_info_as_errors,
-            disable_invariant_special_casing: options.disable_invariant_special_casing,
             enable_const_params: options.enable_const_params,
             enable_custom_error: options.enable_custom_error,
             enable_enums: options.enums,
@@ -939,7 +934,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             tslib_syntax: options.tslib_syntax,
             typescript_library_definition_support: options.typescript_library_definition_support,
             assert_operator: options.assert_operator,
-            assertion_functions: options.assertion_functions,
             type_expansion_recursion_limit: options.type_expansion_recursion_limit,
             use_unknown_in_catch_variables: options.use_unknown_in_catch_variables,
             ban_spread_key_props: options.ban_spread_key_props,
@@ -1013,7 +1007,6 @@ pub fn docblock_overrides(
         frozen.ts_syntax = true;
         frozen.tslib_syntax = true;
         frozen.ts_utility_syntax = true;
-        frozen.assertion_functions = true;
         // TS `enum`s are a distinct feature from Flow Enums and are always available
         // in .ts files, regardless of the `enums` option (which gates Flow Enums).
         frozen.enable_enums = true;
@@ -1672,17 +1665,6 @@ impl<'a> Context<'a> {
 
     pub fn assert_operator_specialized(&self) -> bool {
         self.inner().metadata.frozen.assert_operator.specialized()
-    }
-
-    pub fn assertion_functions_enabled(&self) -> bool {
-        self.inner().metadata.frozen.assertion_functions
-    }
-
-    pub fn invariant_special_casing_disabled(&self) -> bool {
-        self.inner()
-            .metadata
-            .frozen
-            .disable_invariant_special_casing
     }
 
     pub fn type_expansion_recursion_limit(&self) -> i32 {

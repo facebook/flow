@@ -254,8 +254,6 @@ pub mod opts {
         pub typescript_library_definition_support: bool,
         pub enable_custom_error: bool,
         pub assert_operator: AssertOperator,
-        pub assertion_functions: Option<bool>,
-        pub disable_invariant_special_casing: Option<bool>,
         pub type_expansion_recursion_limit: u32,
         pub unsuppressable_error_codes: HashSet<String>,
         pub use_unknown_in_catch_variables: Option<bool>,
@@ -407,8 +405,6 @@ pub mod opts {
             typescript_library_definition_support: false,
             enable_custom_error: false,
             assert_operator: AssertOperator::Disabled,
-            assertion_functions: None,
-            disable_invariant_special_casing: None,
             type_expansion_recursion_limit: 3,
             unsuppressable_error_codes: HashSet::new(),
             use_unknown_in_catch_variables: None,
@@ -2039,9 +2035,12 @@ pub mod opts {
             }),
             ("experimental.assertion_functions", |values, config| {
                 parse_boolean(
-                    |opts, v| {
-                        opts.assertion_functions = Some(v);
-                        Ok(())
+                    |_opts, v| {
+                        if v {
+                            Ok(())
+                        } else {
+                            Err("This option can only be set to `true`.".to_owned())
+                        }
                     },
                     values,
                     config,
@@ -2051,9 +2050,12 @@ pub mod opts {
                 "experimental.disable_invariant_special_casing",
                 |values, config| {
                     parse_boolean(
-                        |opts, v| {
-                            opts.disable_invariant_special_casing = Some(v);
-                            Ok(())
+                        |_opts, v| {
+                            if v {
+                                Ok(())
+                            } else {
+                                Err("This option can only be set to `true`.".to_owned())
+                            }
                         },
                         values,
                         config,

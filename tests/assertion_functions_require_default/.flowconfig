@@ -1,5 +1,4 @@
 [options]
 all=true
 builtin_lib=core-only
-experimental.assertion_functions=true
 experimental.module.automatic_require_default=true

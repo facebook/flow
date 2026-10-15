@@ -19,7 +19,6 @@ use flow_parser::ast;
 use flow_parser::ast::function::Body as FunctionBody;
 use flow_parser::ast::function::Function;
 use flow_parser::ast::function::ReturnAnnot;
-use flow_parser::ast_utils;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
@@ -156,35 +155,6 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
             _ => {}
         }
         ast_visitor::statement_default(self, stmt)
-    }
-
-    fn call(
-        &mut self,
-        loc: &'ast (ALoc, Type),
-        expr: &'ast ast::expression::Call<ALoc, (ALoc, Type)>,
-    ) -> Result<(), JobError> {
-        if !self.cx.invariant_special_casing_disabled()
-            && ast_utils::is_call_to_invariant(&expr.callee)
-        {
-            match expr.arguments.arguments.as_ref() {
-                [] => {
-                    self.has_throw = true;
-                }
-                [ast::expression::ExpressionOrSpread::Expression(e), ..]
-                    if matches!(
-                        &**e,
-                        ast::expression::ExpressionInner::BooleanLiteral {
-                            inner,
-                            ..
-                        } if !inner.value
-                    ) =>
-                {
-                    self.has_throw = true;
-                }
-                _ => {}
-            }
-        }
-        ast_visitor::call_default(self, loc, expr)
     }
 }
 

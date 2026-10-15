@@ -6,5 +6,4 @@
 
 [options]
 all=true
-experimental.assertion_functions=true
 jest_integration=true

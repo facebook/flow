@@ -2,8 +2,6 @@
 builtin_lib=core-only
 all=true
 dev_only.refinement_info_as_errors=true
-experimental.assertion_functions=true
-experimental.disable_invariant_special_casing=true
 
 [libs]
 lib.js

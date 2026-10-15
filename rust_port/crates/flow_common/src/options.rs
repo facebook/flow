@@ -121,7 +121,6 @@ pub struct LogSaving {
 pub struct Options {
     pub all: bool,
     pub assert_operator: AssertOperator,
-    pub assertion_functions: bool,
     pub autoimports: bool,
     pub autoimports_min_characters: i32,
     pub autoimports_ranked_by_usage: bool,
@@ -136,7 +135,6 @@ pub struct Options {
     pub debug: bool,
     pub declare_global_support: bool,
     pub dev_only_refinement_info_as_errors: bool,
-    pub disable_invariant_special_casing: bool,
     pub distributed: bool,
     pub enable_const_params: bool,
     pub enable_custom_error: bool,

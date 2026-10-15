@@ -240,7 +240,6 @@ pub enum UnsupportedSyntax {
     MetaPropertyExpression,
     ObjectPropertyGetSet,
     ObjectPropertyComputedGetSet,
-    InvariantSpreadArgument,
     ClassPropertyLiteral,
     ClassStaticBlock,
     ClassDeclareMethod,

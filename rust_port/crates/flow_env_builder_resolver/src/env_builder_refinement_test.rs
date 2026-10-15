@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
+
 use flow_aloc::ALoc;
 use flow_analysis::test_utils::parse;
 use flow_analysis::test_utils::parse_with_alocs;
@@ -16,6 +18,9 @@ use flow_common::refinement_invalidation::string_of_reason;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_env_builder::assertion_call_target;
+use flow_env_builder::assertion_call_target::AssertionInfo;
+use flow_env_builder::assertion_call_target::AssertionKind;
 use flow_env_builder::env_api::Refinement;
 use flow_env_builder::env_api::Values;
 use flow_env_builder::env_api::WriteLoc;
@@ -63,10 +68,6 @@ impl Context for TestCx {
     }
 
     fn enable_const_params(&self) -> bool {
-        false
-    }
-
-    fn invariant_special_casing_disabled(&self) -> bool {
         false
     }
 
@@ -218,6 +219,47 @@ fn print_ssa_test(
     let file_sig = FileSig::from_program(&cx.file(), &parse(contents), &FileSigOptions::default());
     let result =
         name_resolver::program::<TestCx, TestFlow>(&mut cx, is_lib, exclude, &file_sig, &aloc_ast);
+    print_values(|id| result.refinement_of_id.get(id))(
+        &result.env_values,
+        &result.env_refinement_invalidation_info,
+    )
+}
+
+/// Models a proven `asserts condition` callee named `invariant`.
+fn print_ssa_assertion_test(contents: &str) -> String {
+    let mut cx = TestCx::default();
+    let ast = parse_with_alocs(contents);
+    let file_sig = FileSig::from_program(&cx.file(), &parse(contents), &FileSigOptions::default());
+    let (loc, scopes, ssa_values, unbound_names, providers) =
+        name_resolver::prepass(&cx, &file_sig, &ast);
+    let assertion_name = FlowSmolStr::new("invariant");
+    let assertion_calls =
+        assertion_call_target::collect(&ast, &scopes, &providers, BTreeMap::new())
+            .into_iter()
+            .filter(|target| target.root_name == assertion_name && target.property_path.is_empty())
+            .map(|target| {
+                (
+                    target.callee_loc,
+                    AssertionInfo {
+                        parameter_index: 0,
+                        kind: AssertionKind::Bare,
+                    },
+                )
+            })
+            .collect();
+    let (_, result) = name_resolver::walk_with_prepass::<TestCx, TestFlow>(
+        &mut cx,
+        false,
+        FlowOrdSet::new(),
+        loc,
+        scopes,
+        ssa_values,
+        unbound_names,
+        providers,
+        assertion_calls,
+        &file_sig,
+        &ast,
+    );
     print_values(|id| result.refinement_of_id.get(id))(
         &result.env_values,
         &result.env_refinement_invalidation_info,
@@ -523,72 +565,6 @@ x ??= x;"#,
   };
   (2, 6) to (2, 7) => {
     {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
-fn test_logical_assignment_and_throws() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = null;
-x &&= invariant(false);"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (2, 0) to (2, 1) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 6) to (2, 15) => {
-    Global invariant
-  }]"#
-    );
-}
-
-#[test]
-fn test_logical_assignment_or_throws() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = null;
-x ||= invariant(false);"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (2, 0) to (2, 1) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 6) to (2, 15) => {
-    Global invariant
-  }]"#
-    );
-}
-
-#[test]
-fn test_logical_assignment_nullish_throws() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = null;
-x ??= invariant(false);"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (2, 0) to (2, 1) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 6) to (2, 15) => {
-    Global invariant
   }]"#
     );
 }
@@ -2423,283 +2399,6 @@ fn test_conditional_expression() {
   };
   (2, 14) to (2, 15) => {
     (1, 4) to (1, 5): (`x`)
-  }]"#
-    );
-}
-
-#[test]
-fn test_conditional_throw() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-(x ? invariant() : x) && x"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 1) to (2, 2) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 5) to (2, 14) => {
-    Global invariant
-  };
-  (2, 19) to (2, 20) => {
-    {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}
-  };
-  (2, 25) to (2, 26) => {
-    {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
-fn test_conditional_throw2() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-(x ? x : invariant()) && x"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 1) to (2, 2) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 5) to (2, 6) => {
-    {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
-  };
-  (2, 9) to (2, 18) => {
-    Global invariant
-  };
-  (2, 25) to (2, 26) => {
-    {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
-fn test_logical_throw_and() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-x && invariant();
-x"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 0) to (2, 1) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 5) to (2, 14) => {
-    Global invariant
-  };
-  (3, 0) to (3, 1) => {
-    {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
-fn test_logical_throw_or() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-x || invariant();
-x"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 0) to (2, 1) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 5) to (2, 14) => {
-    Global invariant
-  };
-  (3, 0) to (3, 1) => {
-    {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
-fn test_logical_throw_nc() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-x ?? invariant();
-x"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 0) to (2, 1) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 5) to (2, 14) => {
-    Global invariant
-  };
-  (3, 0) to (3, 1) => {
-    {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
-fn test_logical_throw_reassignment() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-try {
-  x ?? invariant(false, x = 3);
-} finally {
-  x;
-}"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (3, 2) to (3, 3) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (3, 7) to (3, 16) => {
-    Global invariant
-  };
-  (5, 2) to (5, 3) => {
-    (1, 4) to (1, 5): (`x`)
-  }]"#
-    );
-}
-
-#[test]
-fn test_nested_logical_throw_and() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-(x && invariant()) && x;
-x;"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 1) to (2, 2) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 6) to (2, 15) => {
-    Global invariant
-  };
-  (2, 22) to (2, 23) => {
-    {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
-  };
-  (3, 0) to (3, 1) => {
-    {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
-fn test_nested_logical_throw_or() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-(x || invariant()) && x;
-x;"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 1) to (2, 2) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 6) to (2, 15) => {
-    Global invariant
-  };
-  (2, 22) to (2, 23) => {
-    {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
-  };
-  (3, 0) to (3, 1) => {
-    {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
-fn test_nested_logical_throw_nc() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-(x ?? invariant()) && x;
-x;"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 1) to (2, 2) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (2, 6) to (2, 15) => {
-    Global invariant
-  };
-  (2, 22) to (2, 23) => {
-    {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
-  };
-  (3, 0) to (3, 1) => {
-    {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
   }]"#
     );
 }
@@ -4909,12 +4608,38 @@ stuff;"#,
 }
 
 #[test]
-fn test_invariant() {
+fn test_invariant_name_without_classification() {
     let result = print_ssa_test(
         None,
         false,
         None,
         None,
+        r#"let x = undefined;
+invariant(x != null, "other arg");
+x;
+"#,
+    );
+    assert_eq!(
+        result,
+        r#"[
+  (1, 8) to (1, 17) => {
+    Global undefined
+  };
+  (2, 0) to (2, 9) => {
+    Global invariant
+  };
+  (2, 10) to (2, 11) => {
+    (1, 4) to (1, 5): (`x`)
+  };
+  (3, 0) to (3, 1) => {
+    (1, 4) to (1, 5): (`x`)
+  }]"#
+    );
+}
+
+#[test]
+fn test_invariant() {
+    let result = print_ssa_assertion_test(
         r#"let x = undefined;
 invariant(x != null, "other arg");
 x;
@@ -4940,11 +4665,7 @@ x;
 
 #[test]
 fn test_invariant_false() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
+    let result = print_ssa_assertion_test(
         r#"let x = undefined;
 if (x === 3) {
   invariant(false);
@@ -4971,44 +4692,8 @@ x;
 }
 
 #[test]
-fn test_invariant_no_args() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
-        r#"let x = undefined;
-if (x === 3) {
-  invariant();
-}
-x;
-"#,
-    );
-    assert_eq!(
-        result,
-        r#"[
-  (1, 8) to (1, 17) => {
-    Global undefined
-  };
-  (2, 4) to (2, 5) => {
-    (1, 4) to (1, 5): (`x`)
-  };
-  (3, 2) to (3, 11) => {
-    Global invariant
-  };
-  (5, 0) to (5, 1) => {
-    {refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)}
-  }]"#
-    );
-}
-
-#[test]
 fn test_invariant_reassign() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
+    let result = print_ssa_assertion_test(
         r#"let x = undefined;
 if (true) {
   invariant(false, x = 3);
@@ -5033,11 +4718,7 @@ x;
 
 #[test]
 fn test_try_catch_invariant_reassign() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
+    let result = print_ssa_assertion_test(
         r#"let x = undefined;
 
 try {
@@ -6206,11 +5887,7 @@ hi;
 
 #[test]
 fn test_heap_refinement_merge_branches() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
+    let result = print_ssa_assertion_test(
         r#"
 declare var invariant: any;
 let x = {};
@@ -6320,11 +5997,7 @@ if (x.foo === 3 || x.foo === 4) {
 
 #[test]
 fn test_heap_refinement_one_branch() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
+    let result = print_ssa_assertion_test(
         r#"
 declare var invariant: any;
 let x = {};
@@ -6386,12 +6059,56 @@ x.foo;
 }
 
 #[test]
-fn test_heap_refinement_while_loop_projection_changed() {
+fn test_heap_refinement_while_loop_call_invalidates_projection() {
     let result = print_ssa_test(
         None,
         false,
         None,
         None,
+        r#"
+declare var mutateObj: any;
+let x = {};
+while (x.foo === 3) {
+  mutateObj(x.foo === 4);
+  x.foo;
+  break;
+}
+x.foo;
+"#,
+    );
+    assert_eq!(
+        result,
+        r#"[
+  (4, 7) to (4, 8) => {
+    (3, 4) to (3, 5): (`x`)
+  };
+  (5, 2) to (5, 11) => {
+    (2, 12) to (2, 21): (`mutateObj`)
+  };
+  (5, 12) to (5, 13) => {
+    {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+  };
+  (5, 12) to (5, 17) => {
+    {refinement = 3; writes = projection at (4, 7) to (4, 12)}
+  };
+  (6, 2) to (6, 3) => {
+    {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+  };
+  (9, 0) to (9, 1) => {
+    (3, 4) to (3, 5): (`x`)
+  };
+  (6, 2) to (6, 7) => invalidated refinement by {
+    function call at (5, 2) to (5, 24)
+  };
+  (9, 0) to (9, 5) => invalidated refinement by {
+    function call at (5, 2) to (5, 24)
+  }]"#
+    );
+}
+
+#[test]
+fn test_heap_refinement_while_loop_projection_changed() {
+    let result = print_ssa_assertion_test(
         r#"
 declare var invariant: any;
 let x = {};
@@ -10481,11 +10198,7 @@ fn test_dead_component_declaration() {
 
 #[test]
 fn test_component_refinement_scope() {
-    let result = print_ssa_test(
-        None,
-        false,
-        None,
-        None,
+    let result = print_ssa_assertion_test(
         r#"
   let x = null;
   invariant(x == null);

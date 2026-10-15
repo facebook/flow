@@ -3,7 +3,7 @@
 
 declare function assertString(value: unknown): asserts value is string;
 declare function assertTruthy(value: unknown): asserts value;
-declare function invariant(cond: unknown, message?: string): void;
+declare function invariant(cond: unknown, message?: string): asserts cond;
 
 function throwsWhenNotString(value: unknown): asserts value is string {
   if (typeof value !== 'string') {

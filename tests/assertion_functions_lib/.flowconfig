@@ -3,4 +3,3 @@ libs
 
 [options]
 all=true
-experimental.assertion_functions=true

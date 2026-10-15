@@ -9630,11 +9630,6 @@ where
                         code("import"),
                         text(" must be a string literal."),
                     ]),
-                    InvariantSpreadArgument => friendly::Message(vec![
-                        text("Unsupported arguments in call to "),
-                        code("invariant"),
-                        text("."),
-                    ]),
                     MatchExpression => friendly::Message(vec![
                         code("match"),
                         text(" expressions are not supported."),

@@ -79,10 +79,6 @@ impl Context for TestCx {
         false
     }
 
-    fn invariant_special_casing_disabled(&self) -> bool {
-        false
-    }
-
     fn stylex_shorthand_prop(&self) -> Option<&str> {
         None
     }
@@ -226,7 +222,6 @@ fn print_init_test(contents: &str) -> String {
     let (inits, _) = name_def::find_defs(
         &hooks,
         true,
-        false,
         Default::default(),
         &env,
         ScopeKind::Module,
@@ -267,7 +262,6 @@ fn print_order_test(
     let (inits, _) = name_def::find_defs(
         &hooks,
         true,
-        false,
         Default::default(),
         &env,
         ScopeKind::Module,

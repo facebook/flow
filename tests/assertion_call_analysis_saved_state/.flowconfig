@@ -1,3 +1,2 @@
 [options]
 all=false
-experimental.assertion_functions=true

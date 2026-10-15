@@ -2281,8 +2281,6 @@ pub fn make_options(
                 typescript_library_definition_support,
                 enable_custom_error,
                 assert_operator,
-                assertion_functions,
-                disable_invariant_special_casing,
                 type_expansion_recursion_limit,
                 unsuppressable_error_codes,
                 use_unknown_in_catch_variables,
@@ -2301,20 +2299,6 @@ pub fn make_options(
     let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
 
     let all = all_override || all.unwrap_or(false);
-    let assertion_functions = match std::env::var("FLOW_ASSERTION_FUNCTIONS").ok().as_deref() {
-        Some("1" | "true") => true,
-        Some("0" | "false") => false,
-        _ => assertion_functions.unwrap_or(false),
-    };
-    let disable_invariant_special_casing =
-        match std::env::var("FLOW_DISABLE_INVARIANT_SPECIAL_CASING")
-            .ok()
-            .as_deref()
-        {
-            Some("1" | "true") => true,
-            Some("0" | "false") => false,
-            _ => disable_invariant_special_casing.unwrap_or(false),
-        };
     let function_and_object_type_is_no_longer_any =
         function_and_object_type_is_no_longer_any.unwrap_or(false);
     let autoimports = !no_autoimports_override && autoimports.unwrap_or(true);
@@ -2536,7 +2520,6 @@ pub fn make_options(
     Options {
         all,
         assert_operator,
-        assertion_functions,
         autoimports,
         autoimports_min_characters,
         autoimports_ranked_by_usage,
@@ -2551,7 +2534,6 @@ pub fn make_options(
         debug: debug_override,
         declare_global_support,
         dev_only_refinement_info_as_errors,
-        disable_invariant_special_casing,
         distributed: distributed_override,
         enable_const_params,
         enable_custom_error,

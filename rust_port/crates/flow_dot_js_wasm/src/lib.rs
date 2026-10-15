@@ -138,9 +138,19 @@ fn bool_config(config: &Value, key: &str, default: bool) -> bool {
     config.get(key).and_then(Value::as_bool).unwrap_or(default)
 }
 
-fn config_options(config: Option<&Value>) -> Options {
+fn config_options(config: Option<&Value>) -> Result<Options, String> {
     let empty = Value::Object(Default::default());
     let config = config.unwrap_or(&empty);
+    for key in [
+        "experimental.assertion_functions",
+        "experimental.disable_invariant_special_casing",
+    ] {
+        if let Some(value) = config.get(key)
+            && value != &Value::Bool(true)
+        {
+            return Err(format!("{key} can only be set to `true`."));
+        }
+    }
 
     let mut lint_severities = LintSettings::<Severity>::empty_severities();
     for lint in [
@@ -172,21 +182,15 @@ fn config_options(config: Option<&Value>) -> Options {
         other => panic!("Unsupported config option react.runtime={}", other),
     };
 
-    Options {
+    Ok(Options {
         all: true,
         assert_operator: if bool_config(config, "experimental.assert_operator", false) {
             AssertOperator::Enabled
         } else {
             AssertOperator::Disabled
         },
-        assertion_functions: bool_config(config, "experimental.assertion_functions", false),
         babel_loose_array_spread: bool_config(config, "babel_loose_array_spread", false),
         component_syntax: true,
-        disable_invariant_special_casing: bool_config(
-            config,
-            "experimental.disable_invariant_special_casing",
-            false,
-        ),
         enable_const_params: bool_config(config, "experimental.const_params", false),
         enable_pattern_matching: true,
         enable_records: true,
@@ -214,7 +218,7 @@ fn config_options(config: Option<&Value>) -> Options {
             false,
         ),
         ..Default::default()
-    }
+    })
 }
 
 fn builtin_sig_options() -> TypeSigOptions {
@@ -321,7 +325,7 @@ fn prepare_file<'cx>(
     config: Option<&Value>,
     master_cx: Arc<MasterContext>,
 ) -> Result<PreparedFile<'cx>, String> {
-    let options = config_options(config);
+    let options = config_options(config)?;
     let file_key = FileKey::new(FileKeyInner::SourceFile(filename.to_string()));
     let parsed = parse_file(file_key.dupe(), content, &options);
     let type_sig_options = TypeSigOptions::of_options(
@@ -593,7 +597,7 @@ fn init_builtins(params: &Value) -> Result<Value, String> {
         .get("filenames")
         .and_then(Value::as_array)
         .ok_or_else(|| "missing array parameter `filenames`".to_string())?;
-    let options = config_options(None);
+    let options = config_options(None)?;
     let asts = STATE.with(|state| {
         let state = state.borrow();
         filenames
@@ -1415,7 +1419,7 @@ mod tests {
              declare const value: unknown;\n\
              assertString(value);\n\
              value as string;\n",
-            json!({"experimental.assertion_functions": true}),
+            json!({}),
         );
 
         assert!(

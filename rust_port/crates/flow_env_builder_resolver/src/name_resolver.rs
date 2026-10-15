@@ -7740,20 +7740,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             return Ok(());
         }
 
-        if !self.cx.invariant_special_casing_disabled()
-            && ast_utils::is_call_to_invariant(&call.callee)
-        {
-            return self.call(&loc, call);
-        }
-
         let callee = &call.callee;
         let arguments = &call.arguments;
         let targs = &call.targs;
 
-        // This case handles predicate functions. We ensure that this
-        // is not a call to invariant.
-        // The only other criterion that must be met for this call to produce
-        // a refinement is that the arguments cannot contain a spread.
+        // Predicate calls can produce refinements when their arguments contain no spreads.
         //
         // Assuming there are no spreads we create a mapping from each argument
         // index to the refinement key at that index.
@@ -10877,7 +10868,6 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
     ) -> Result<(), AbruptCompletion> {
         use flow_common::reason::mk_expression_reason;
         use flow_common::refinement_invalidation::Reason;
-        use flow_parser::ast::expression::ExpressionOrSpread;
 
         let callee = &expr.callee;
         let targs = &expr.targs;
@@ -10901,50 +10891,16 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             }
             None => {
                 ast_visitor::call_default(self, loc, expr)?;
-                if !self.cx.invariant_special_casing_disabled()
-                    && ast_utils::is_call_to_invariant(callee)
+                let assertion = self.assertion_calls.get(callee.loc()).copied();
+                if let Some(assertion) = assertion
+                    && bare_assertion_call_always_throws(assertion, &expr.arguments.arguments)
                 {
-                    let args = &arguments.arguments;
-                    match (targs, args.first()) {
-                        // invariant() with no args - treated like throw
-                        (None, None) => {
-                            self.raise_abrupt_completion(AbruptCompletion::Throw)?;
-                        }
-                        (None, Some(ExpressionOrSpread::Expression(bool_lit))) if matches!(bool_lit.deref() , flow_parser::ast::expression::ExpressionInner::BooleanLiteral { inner, .. } if !inner.value) =>
-                        {
-                            for arg in args.iter().skip(1) {
-                                self.expression_or_spread(arg)?;
-                            }
-                            self.raise_abrupt_completion(AbruptCompletion::Throw)?;
-                        }
-                        (None, Some(ExpressionOrSpread::Expression(cond))) => {
-                            self.with_persistent_refinement_scope(|this| {
-                                this.expression_refinement(cond)?;
-                                // TODO: re-traversing later args re-records their reads in the
-                                // refined env (e.g. `invariant(typeof x === "string",
-                                // takesString(x))` records the inner `x` as `string`),
-                                // suppressing real errors. Replay should apply only
-                                // invalidation effects and skip read-recording.
-                                for arg in args.iter().skip(1) {
-                                    this.expression_or_spread(arg)?;
-                                }
-                                Ok(())
-                            })?;
-                        }
-                        _ => {}
-                    }
-                } else {
-                    let assertion = self.assertion_calls.get(callee.loc()).copied();
-                    if let Some(assertion) = assertion
-                        && bare_assertion_call_always_throws(assertion, &expr.arguments.arguments)
-                    {
-                        self.raise_abrupt_completion(AbruptCompletion::Throw)?;
-                    }
-                    // Proven assertion calls (e.g. a userland `invariant`) are assumed
-                    // pure: unlike ordinary calls they do not invalidate refinements.
-                    if assertion.is_none() {
-                        self.havoc_current_env(Reason::FunctionCall, loc.dupe());
-                    }
+                    self.raise_abrupt_completion(AbruptCompletion::Throw)?;
+                }
+                // Proven assertion calls (e.g. a userland `invariant`) are assumed
+                // pure: unlike ordinary calls they do not invalidate refinements.
+                if assertion.is_none() {
+                    self.havoc_current_env(Reason::FunctionCall, loc.dupe());
                 }
             }
         }

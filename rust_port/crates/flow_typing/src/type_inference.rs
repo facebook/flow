@@ -678,10 +678,6 @@ impl<'a, 'cx> dependency_sigs::Context for DepSigsContext<'a, 'cx> {
         self.0.enable_const_params()
     }
 
-    fn invariant_special_casing_disabled(&self) -> bool {
-        self.0.invariant_special_casing_disabled()
-    }
-
     fn stylex_shorthand_prop(&self) -> Option<&str> {
         self.0.stylex_shorthand_prop()
     }
@@ -741,28 +737,24 @@ fn initialize_env_with_mode<'cx>(
             name_resolver::prepass(&DepSigsContext(cx), file_sig, aloc_ast);
         // The targeted callee analysis runs between the prepass and the
         // resolver walk; files without candidates return early from packing.
-        let resolved_declared_types = if cx.assertion_functions_enabled() {
-            match declared_types_mode {
-                DeclaredTypesMode::Skip => None,
-                DeclaredTypesMode::Compute {
-                    ast,
-                    type_sig_options,
-                    current_type_sig,
-                    file_sig,
-                } => declared_types::pack(
-                    type_sig_options,
-                    cx,
-                    ast,
-                    aloc_ast,
-                    &scopes,
-                    &providers,
-                    current_type_sig,
-                    file_sig,
-                )
-                .map(|analysis| declared_types::resolve(cx, analysis)),
-            }
-        } else {
-            None
+        let resolved_declared_types = match declared_types_mode {
+            DeclaredTypesMode::Skip => None,
+            DeclaredTypesMode::Compute {
+                ast,
+                type_sig_options,
+                current_type_sig,
+                file_sig,
+            } => declared_types::pack(
+                type_sig_options,
+                cx,
+                ast,
+                aloc_ast,
+                &scopes,
+                &providers,
+                current_type_sig,
+                file_sig,
+            )
+            .map(|analysis| declared_types::resolve(cx, analysis)),
         };
         let assertion_calls = resolved_declared_types
             .as_ref()
@@ -798,7 +790,6 @@ fn initialize_env_with_mode<'cx>(
         let (name_def_graph, ast_hint_map) = match name_def::find_defs(
             &autocomplete_hooks,
             react_jsx,
-            cx.invariant_special_casing_disabled(),
             assertion_calls,
             &info,
             toplevel_scope_kind,

@@ -417,13 +417,6 @@ pub fn extract_bigint_literal<M: Dupe, T: Dupe>(
     }
 }
 
-pub fn is_call_to_invariant<M: Dupe, T: Dupe>(callee: &expression::Expression<M, T>) -> bool {
-    match callee.deref() {
-        ExpressionInner::Identifier { inner, .. } => inner.name == "invariant",
-        _ => false,
-    }
-}
-
 pub fn is_call_to_require<M: Dupe, T: Dupe>(callee: &expression::Expression<M, T>) -> bool {
     match callee.deref() {
         ExpressionInner::Identifier { inner, .. } => inner.name == "require",

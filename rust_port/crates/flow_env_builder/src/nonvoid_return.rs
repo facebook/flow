@@ -12,13 +12,10 @@
 //! might return a non-void value (explicit return with argument, throw, or body expression).
 
 use std::collections::BTreeMap;
-use std::ops::Deref;
 
 use dupe::Dupe;
 use flow_parser::ast;
-use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::function;
-use flow_parser::ast_utils::is_call_to_invariant;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 
@@ -27,18 +24,13 @@ use crate::assertion_call_target::bare_assertion_call_always_throws;
 
 struct ReturnFinder<'a, L> {
     acc: bool,
-    invariant_special_casing_disabled: bool,
     assertion_calls: &'a BTreeMap<L, AssertionInfo>,
 }
 
 impl<'a, L> ReturnFinder<'a, L> {
-    fn new(
-        invariant_special_casing_disabled: bool,
-        assertion_calls: &'a BTreeMap<L, AssertionInfo>,
-    ) -> Self {
+    fn new(assertion_calls: &'a BTreeMap<L, AssertionInfo>) -> Self {
         Self {
             acc: false,
-            invariant_special_casing_disabled,
             assertion_calls,
         }
     }
@@ -81,21 +73,6 @@ impl<'ast, Loc: Dupe + Ord> AstVisitor<'ast, Loc> for ReturnFinder<'_, Loc> {
             })
         {
             self.set_acc(true);
-        }
-        if !self.invariant_special_casing_disabled && is_call_to_invariant(&expr.callee) {
-            // invariant() and invariant(false, ...) are treated like throw
-            match &expr.arguments.arguments[..] {
-                [] => self.set_acc(true),
-                [first, ..] => {
-                    if let ast::expression::ExpressionOrSpread::Expression(e) = first {
-                        if let ExpressionInner::BooleanLiteral { inner, .. } = e.deref() {
-                            if !inner.value {
-                                self.set_acc(true);
-                            }
-                        }
-                    }
-                }
-            }
         }
         Ok(())
     }
@@ -165,10 +142,9 @@ impl<'ast, Loc: Dupe + Ord> AstVisitor<'ast, Loc> for ReturnFinder<'_, Loc> {
 pub fn might_have_nonvoid_return<'ast, L: Clone + Dupe + Ord>(
     loc: &'ast L,
     function: &'ast function::Function<L, L>,
-    invariant_special_casing_disabled: bool,
     assertion_calls: &BTreeMap<L, AssertionInfo>,
 ) -> bool {
-    let mut finder = ReturnFinder::new(invariant_special_casing_disabled, assertion_calls);
+    let mut finder = ReturnFinder::new(assertion_calls);
     let Ok(()) = finder.function_(loc, function);
     finder.acc
 }

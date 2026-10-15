@@ -190,7 +190,7 @@ impl<'ast, 'cx: 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for Ma
     ) -> Result<(), !> {
         let expression::Call {
             callee,
-            targs,
+            targs: _,
             arguments,
             comments: _,
         } = expr;
@@ -206,21 +206,6 @@ impl<'ast, 'cx: 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for Ma
                 }
             }
             return Ok(());
-        }
-        // Builtin `invariant` without an `asserts` annotation: visit the first
-        // argument as a condition, preserving the old behavior (and its
-        // sketchy-null errors). Annotated callees are handled above.
-        if ast_utils::is_call_to_invariant(callee) && targs.is_none() {
-            if let Some((expression::ExpressionOrSpread::Expression(conditional), rest_args)) =
-                arguments.arguments.split_first()
-            {
-                self.expression(callee)?;
-                self.base_expression(true, conditional);
-                for arg in rest_args {
-                    self.expression_or_spread(arg)?;
-                }
-                return Ok(());
-            }
         }
         let Ok(()) = ast_visitor::call_default(self, loc, expr);
         Ok(())

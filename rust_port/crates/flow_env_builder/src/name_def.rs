@@ -835,7 +835,6 @@ pub fn pattern_has_annot(p: &ast::pattern::Pattern<ALoc, ALoc>) -> bool {
 }
 
 fn func_is_synthesizable_from_annotation(
-    invariant_special_casing_disabled: bool,
     assertion_calls: &BTreeMap<ALoc, AssertionInfo>,
     f: &ast::function::Function<ALoc, ALoc>,
 ) -> FunctionSynthKind {
@@ -845,12 +844,8 @@ fn func_is_synthesizable_from_annotation(
             FunctionSynthKind::FunctionSynthesizable
         }
         ReturnAnnot::Missing(loc) => {
-            if nonvoid_return::might_have_nonvoid_return(
-                &ALoc::none(),
-                f,
-                invariant_special_casing_disabled,
-                assertion_calls,
-            ) || f.generator
+            if nonvoid_return::might_have_nonvoid_return(&ALoc::none(), f, assertion_calls)
+                || f.generator
             {
                 FunctionSynthKind::MissingReturn(loc.dupe())
             } else {
@@ -900,7 +895,6 @@ fn obj_this_write_locs(obj: &ast::expression::Object<ALoc, ALoc>) -> EnvSet<ALoc
 }
 
 fn obj_properties_synthesizable(
-    invariant_special_casing_disabled: bool,
     assertion_calls: &BTreeMap<ALoc, AssertionInfo>,
     this_write_locs: EnvSet<ALoc>,
     obj: &ast::expression::Object<ALoc, ALoc>,
@@ -919,7 +913,6 @@ fn obj_properties_synthesizable(
     }
 
     fn synthesizable_expression(
-        invariant_special_casing_disabled: bool,
         assertion_calls: &BTreeMap<ALoc, AssertionInfo>,
         acc: &mut Vec<ObjectMissingAnnot>,
         this_write_locs: &mut EnvSet<ALoc>,
@@ -957,15 +950,10 @@ fn obj_properties_synthesizable(
             ExpressionInner::ArrowFunction { inner, .. }
             | ExpressionInner::Function { inner, .. } => handle_fun(
                 acc,
-                func_is_synthesizable_from_annotation(
-                    invariant_special_casing_disabled,
-                    assertion_calls,
-                    inner,
-                ),
+                func_is_synthesizable_from_annotation(assertion_calls, inner),
             ),
             ExpressionInner::Object { inner, .. } => {
                 match obj_properties_synthesizable(
-                    invariant_special_casing_disabled,
                     assertion_calls,
                     obj_this_write_locs(inner),
                     inner,
@@ -997,15 +985,10 @@ fn obj_properties_synthesizable(
 
                 for elem in inner.elements.iter() {
                     let recursion_result = match elem {
-                        ArrayElement::Expression(exp) => synthesizable_expression(
-                            invariant_special_casing_disabled,
-                            assertion_calls,
-                            acc,
-                            this_write_locs,
-                            exp,
-                        ),
+                        ArrayElement::Expression(exp) => {
+                            synthesizable_expression(assertion_calls, acc, this_write_locs, exp)
+                        }
                         ArrayElement::Spread(spread) => synthesizable_expression(
-                            invariant_special_casing_disabled,
                             assertion_calls,
                             acc,
                             this_write_locs,
@@ -1056,7 +1039,6 @@ fn obj_properties_synthesizable(
                     }
                     if let object::Key::Identifier(_) = key {
                         if synthesizable_expression(
-                            invariant_special_casing_disabled,
                             assertion_calls,
                             &mut acc,
                             &mut current_this_write_locs,
@@ -1078,11 +1060,7 @@ fn obj_properties_synthesizable(
                     let (_, fn_inner) = value;
                     if handle_fun(
                         &mut acc,
-                        func_is_synthesizable_from_annotation(
-                            invariant_special_casing_disabled,
-                            assertion_calls,
-                            fn_inner,
-                        ),
+                        func_is_synthesizable_from_annotation(assertion_calls, fn_inner),
                     )
                     .is_err()
                     {
@@ -1401,7 +1379,6 @@ pub fn expression_is_definitely_synthesizable(
 }
 
 fn def_of_function(
-    invariant_special_casing_disabled: bool,
     assertion_calls: &BTreeMap<ALoc, AssertionInfo>,
     tparams_map: TparamsMap,
     hints: AstHints,
@@ -1415,7 +1392,6 @@ fn def_of_function(
     Def::Function(Box::new(FunctionDefData {
         hints,
         synthesizable_from_annotation: func_is_synthesizable_from_annotation(
-            invariant_special_casing_disabled,
             assertion_calls,
             &function_,
         ),
@@ -1662,7 +1638,6 @@ fn definition_reference_kind(def: &Def) -> DefinitionReferenceKind {
 struct DefFinder<'a> {
     autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
     react_jsx: bool,
-    invariant_special_casing_disabled: bool,
     assertion_calls: BTreeMap<ALoc, AssertionInfo>,
     env_info: &'a crate::env_api::EnvInfo<ALoc>,
 
@@ -1680,7 +1655,6 @@ impl<'a> DefFinder<'a> {
     fn new(
         autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
         react_jsx: bool,
-        invariant_special_casing_disabled: bool,
         assertion_calls: BTreeMap<ALoc, AssertionInfo>,
         env_info: &'a crate::env_api::EnvInfo<ALoc>,
         toplevel_scope: ScopeKind,
@@ -1688,7 +1662,6 @@ impl<'a> DefFinder<'a> {
         Self {
             autocomplete_hooks,
             react_jsx,
-            invariant_special_casing_disabled,
             assertion_calls,
             env_info,
             env_map: EnvMap::empty(),
@@ -2463,7 +2436,6 @@ impl<'a> DefFinder<'a> {
                 let binding = Binding::Root(Root::FunctionValue(Box::new(FunctionValueData {
                     hints: func_hints_clone.clone(),
                     synthesizable_from_annotation: func_is_synthesizable_from_annotation(
-                        this.invariant_special_casing_disabled,
                         &this.assertion_calls,
                         expr,
                     ),
@@ -2493,7 +2465,6 @@ impl<'a> DefFinder<'a> {
                 };
                 let reason = func_reason(async_, generator, reason_loc);
                 let def = def_of_function(
-                    this_ref.invariant_special_casing_disabled,
                     &this_ref.assertion_calls,
                     this_ref.tparams.clone(),
                     func_hints_clone.clone(),
@@ -2548,7 +2519,6 @@ impl<'a> DefFinder<'a> {
             this.visit_function(&scope_kind, &vec![], &vec![], expr)?;
             let reason = func_reason(async_, generator, sig_loc.dupe());
             let def = def_of_function(
-                this.invariant_special_casing_disabled,
                 &this.assertion_calls,
                 this.tparams.clone(),
                 vec![],
@@ -3383,7 +3353,6 @@ impl<'a> DefFinder<'a> {
         expr: &ast::expression::Call<ALoc, ALoc>,
     ) -> Result<(), EnvInvariant<ALoc>> {
         use flow_common::reason::mk_expression_reason;
-        use flow_parser::ast_utils::is_call_to_invariant;
         use flow_parser::ast_utils::is_call_to_is_array;
         use flow_parser::ast_utils::is_call_to_object_dot_freeze;
         use flow_parser::ast_utils::is_call_to_object_static_method;
@@ -3415,31 +3384,6 @@ impl<'a> DefFinder<'a> {
 
         if let Some(targs) = targs {
             self.call_type_args(targs)?;
-        }
-
-        if !self.invariant_special_casing_disabled && is_call_to_invariant(callee) {
-            // In invariant(...) call, the first argument is under conditional context
-            for (i, arg) in arguments.iter().enumerate() {
-                match arg {
-                    ast::expression::ExpressionOrSpread::Expression(expr) => {
-                        let arg_cond = if i == 0 {
-                            EnclosingContext::OtherTestContext
-                        } else {
-                            EnclosingContext::NoContext
-                        };
-                        self.visit_expression(arg_cond, &vec![], expr)?;
-                    }
-                    ast::expression::ExpressionOrSpread::Spread(spread) => {
-                        let spread_tuple = (spread.argument.loc().dupe(), spread.argument.clone());
-                        self.visit_expression(
-                            EnclosingContext::NoContext,
-                            &vec![],
-                            &spread_tuple.1,
-                        )?;
-                    }
-                }
-            }
-            return Ok(());
         }
 
         // A proven bare assertion call checks the asserted argument as a
@@ -3960,7 +3904,6 @@ impl<'a> DefFinder<'a> {
                         this.env_info.env_entries.get_ordinary(&loc)
                     {
                         let def = def_of_function(
-                            this.invariant_special_casing_disabled,
                             &this.assertion_calls,
                             this.tparams.clone(),
                             hints_clone.clone(),
@@ -5691,7 +5634,6 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
         {
             let this_write_locs = obj_this_write_locs(obj_inner.as_ref());
             match obj_properties_synthesizable(
-                self.invariant_special_casing_disabled,
                 &self.assertion_calls,
                 this_write_locs,
                 obj_inner.as_ref(),
@@ -7230,7 +7172,6 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
 pub fn find_defs(
     autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
     react_jsx: bool,
-    invariant_special_casing_disabled: bool,
     assertion_calls: BTreeMap<ALoc, AssertionInfo>,
     env_info: &crate::env_api::EnvInfo<ALoc>,
     toplevel_scope_kind: ScopeKind,
@@ -7239,7 +7180,6 @@ pub fn find_defs(
     let mut finder = DefFinder::new(
         autocomplete_hooks,
         react_jsx,
-        invariant_special_casing_disabled,
         assertion_calls,
         env_info,
         toplevel_scope_kind,

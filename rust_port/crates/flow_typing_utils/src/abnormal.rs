@@ -5,12 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::sync::Arc;
+
+use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_parser::ast::expression::Expression as AstExpression;
 use flow_parser::ast::statement;
 use flow_parser::ast::statement::Statement;
 use flow_parser::ast::statement::StatementInner;
 use flow_typing_type::type_::Type;
+use flow_typing_type::type_::empty_t;
 use flow_utils_concurrency::job_error::CheckTimeout;
 use flow_utils_concurrency::job_error::JobError;
 use flow_utils_concurrency::worker_cancel::WorkerCanceled;
@@ -67,8 +71,13 @@ fn catch_control_flow_exception<T>(
     }
 }
 
-#[allow(clippy::arc_with_non_send_sync)]
+/// Preserve expression and return statements when their expressions exit abnormally.
+#[expect(
+    clippy::arc_with_non_send_sync,
+    reason = "Typed AST nodes share structure within a single checker thread"
+)]
 pub fn catch_stmt_control_flow_exception<F>(
+    stmt: &Statement<ALoc, ALoc>,
     f: F,
 ) -> Result<(Statement<ALoc, (ALoc, Type)>, bool), JobError>
 where
@@ -76,12 +85,31 @@ where
 {
     catch_control_flow_exception(
         |AbnormalControlFlow(loc, e)| {
+            if let StatementInner::Return { loc, inner } = &**stmt {
+                return Statement::new(StatementInner::Return {
+                    loc: loc.dupe(),
+                    inner: Arc::new(statement::Return {
+                        argument: Some(e),
+                        comments: inner.comments.dupe(),
+                        return_out: (
+                            inner.return_out.dupe(),
+                            empty_t::at(inner.return_out.dupe()),
+                        ),
+                    }),
+                });
+            }
+            let (loc, directive, comments) = match &**stmt {
+                StatementInner::Expression { loc, inner } => {
+                    (loc.dupe(), inner.directive.clone(), inner.comments.dupe())
+                }
+                _ => (loc, None, None),
+            };
             Statement::new(StatementInner::Expression {
                 loc,
-                inner: std::sync::Arc::new(statement::Expression {
+                inner: Arc::new(statement::Expression {
                     expression: e,
-                    directive: None,
-                    comments: None,
+                    directive,
+                    comments,
                 }),
             })
         },

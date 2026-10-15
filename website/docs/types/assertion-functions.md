@@ -162,6 +162,21 @@ experimental.assertion_functions=true
 
 Starting in Flow 0.337, assertion functions are enabled by default and you do not need this flag.
 
+:::note Migrating `invariant`
+
+Starting in Flow 0.337, Flow no longer gives functions named `invariant` special narrowing or control-flow behavior. If you relied on that behavior, annotate the function or its [library definition](../libdefs/creation.md) with `asserts condition`:
+
+```js flow-check
+declare function invariant(condition?: unknown, message?: string): asserts condition;
+
+function check(value: ?string): string {
+  invariant(value != null);
+  return value; // OK: value is a string
+}
+```
+
+:::
+
 ## See Also {#toc-see-also}
 
 - [Type Guards](./type-guards.md) — narrow values in conditional branches
