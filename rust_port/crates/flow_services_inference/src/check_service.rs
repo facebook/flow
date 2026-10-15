@@ -291,7 +291,7 @@ pub fn mk_check_file(
                     .leader()
                     .unwrap_or_else(|| file_key_for_leader.dupe())
             }));
-        Rc::new(move |cx: &mut Context<'_>, _dst_cx: ContextId| {
+        Rc::new(move |cx: &mut Context<'_>| {
             cx.add_reachable_dep(file_key.dupe());
             let (dep_cx, file) = match dependency_arena(cx, dependencies).dependency(&file_key) {
                 Some(dependency) => dependency,
@@ -826,7 +826,7 @@ pub fn mk_check_file(
                 // Dependency contexts this check switches to, including ones cached
                 // from earlier files, report annotation inference errors here.
                 let id = cx.id();
-                cx.set_merge_dst_cx(id);
+                cx.set_annot_error_dst(id);
                 let lint_severities = get_lint_severities(metadata, &options);
                 type_inference::infer_file(
                     &lint_severities,
@@ -851,7 +851,7 @@ pub fn mk_check_file(
               aloc_ast: &ast::Program<ALoc, ALoc>,
               file_sig: &FileSig| {
             let id = cx.id();
-            cx.set_merge_dst_cx(id);
+            cx.set_annot_error_dst(id);
             type_inference::initialize_env(cx, type_sig_options, None, ast, aloc_ast, file_sig)
         },
     );

@@ -263,7 +263,7 @@ fn export_specifiers<'a>(
                         module_specifier,
                     ),
                 ) {
-                    flow_typing_context::ResolvedRequire::TypedModule(f) => match f(cx, cx.id()) {
+                    flow_typing_context::ResolvedRequire::TypedModule(f) => match f(cx) {
                         Ok(m) => {
                             match flow_js_utils::import_export_utils::classify_named_export(
                                 cx,
@@ -391,7 +391,7 @@ fn export_specifiers<'a>(
             let value = &source_lit.value;
             let module_type_opt =
                 match cx.find_require(&FlowImportSpecifier::userland(value.dupe())) {
-                    ResolvedRequire::TypedModule(f) => f(cx, cx.id()).ok(),
+                    ResolvedRequire::TypedModule(f) => f(cx).ok(),
                     _ => None,
                 };
             match export_kind {

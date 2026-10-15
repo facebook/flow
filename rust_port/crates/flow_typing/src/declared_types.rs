@@ -291,8 +291,7 @@ fn imported_assertion_info(
     else {
         return None;
     };
-    let dst_cx = cx.id();
-    let Ok(module) = module(cx, dst_cx) else {
+    let Ok(module) = module(cx) else {
         return None;
     };
     // Mirror checking's ESM default-import typing

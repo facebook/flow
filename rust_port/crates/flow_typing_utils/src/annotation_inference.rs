@@ -77,14 +77,12 @@ use crate::avar;
 /// once it resolves, mirroring the dispatch (`GetKeysDictKeyT`) path.
 fn elab_dict_key<'cx>(
     cx: &mut Context<'cx>,
-    dst_cx: ContextId,
     seen: &FlowOrdSet<i32>,
     reason_op: &Reason,
     dict_key: Type,
 ) -> Type {
     elab_t(
         cx,
-        dst_cx,
         Some(seen.dupe()),
         dict_key,
         Op::new(OpInner::AnnotGetKeysDictKeyT(reason_op.dupe())),
@@ -145,10 +143,10 @@ fn get_fully_resolved_type_state<'cx>(cx: &mut Context<'cx>, id: i32) -> Forcing
         }
     }
 }
-fn get_fully_resolved_type_helper<'cx>(dst_cx: ContextId, cx: &mut Context<'cx>, id: i32) -> Type {
+fn get_fully_resolved_type<'cx>(cx: &mut Context<'cx>, id: i32) -> Type {
     let s = get_fully_resolved_type_state(cx, id);
     let t = cx.force_fully_resolved_tvar(&s);
-    flow_js_utils::invalid_cyclic_type_validation::validate_type_sig_type(dst_cx, cx, &t);
+    flow_js_utils::invalid_cyclic_type_validation::validate_type_sig_type(cx, &t);
     t
 }
 
@@ -164,15 +162,14 @@ fn get_builtin_typeapp<'cx>(
 
 // Errors created with [error_unsupported] are actually reported. Compare this to
 // errors created with Flow_js_utils.add_output which are recorded in the context
-// of the source of the annotations, and are therefore ignored. This function checks
-// that dst_cx_ref has been set and uses that as the target context.
+// of the source of the annotations, and are therefore ignored. This function reports
+// them on [Context::annot_error_dst].
 //
 // The only kind of errors that are reported here are "unsupported" cases. These
 // are mostly cases that rely on subtyping, which is not implemented here; most
 // commonly evaluating call-like EvalTs and speculation.
 fn error_unsupported_operation(
     cx: &mut Context,
-    dst_cx: ContextId,
     target: &Type,
     operation: AnnotationInferenceOperation,
     operation_reason: Reason,
@@ -196,21 +193,21 @@ fn error_unsupported_operation(
         target_loc,
         target_desc,
     }));
-    flow_js_utils::add_annot_inference_error(cx, dst_cx, msg);
+    flow_js_utils::add_annot_inference_error(cx, msg);
     type_::any_t::error(operation_reason)
 }
 
-fn error_unsupported(cx: &mut Context, dst_cx: ContextId, target: &Type, op: &Op<Cx>) -> Type {
-    error_unsupported_operation(cx, dst_cx, target, op.error_operation(), op.reason())
+fn error_unsupported(cx: &mut Context, target: &Type, op: &Op<Cx>) -> Type {
+    error_unsupported_operation(cx, target, op.error_operation(), op.reason())
 }
 
-pub(crate) fn error_recursive(cx: &mut Context, dst_cx: ContextId, reason: &Reason) -> Type {
+pub(crate) fn error_recursive(cx: &mut Context, reason: &Reason) -> Type {
     let loc = reason.loc().dupe();
     let msg = ErrorMessage::ETrivialRecursiveDefinition(ErrorReference::new(
         loc.dupe(),
         reason.desc(false).cloned(),
     ));
-    flow_js_utils::add_annot_inference_error(cx, dst_cx, msg);
+    flow_js_utils::add_annot_inference_error(cx, msg);
     type_::any_t::error(reason.dupe())
 }
 
@@ -218,11 +215,9 @@ pub fn force_module_type_thunk(
     src_id: ContextId,
     s: ModuleTypeForcingState<Cx>,
 ) -> flow_typing_context::ModuleTypeThunk {
-    Rc::new(move |cx: &mut Context<'_>, dst_cx: ContextId| {
+    Rc::new(move |cx: &mut Context<'_>| {
         let mut src_cx = cx.switch_to(src_id);
-        s.force(&mut src_cx, |src_cx, r| {
-            Err(error_recursive(src_cx, dst_cx, r))
-        })
+        s.force(&mut src_cx, |src_cx, r| Err(error_recursive(src_cx, r)))
     })
 }
 
@@ -237,9 +232,7 @@ fn get_lazy_module_type_or_any_src(
         ResolvedRequire::TypedModule(f) => {
             let f = f.clone();
             Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
-                // Use merge_dst_cx if set (during cross-file merge), otherwise cx.
-                let dst_cx = effective_dst_cx(cx);
-                match f(cx, dst_cx) {
+                match f(cx) {
                     Err(_) => Err(AnySource::AnyError(None)),
                     Ok(module_type) => Ok(module_type),
                 }
@@ -258,24 +251,19 @@ fn get_lazy_module_type_or_any_src(
     }
 }
 
-fn error_internal_reason(
-    cx: &mut Context,
-    dst_cx: ContextId,
-    msg: &str,
-    reason_op: Reason,
-) -> Type {
+fn error_internal_reason(cx: &mut Context, msg: &str, reason_op: Reason) -> Type {
     let loc = reason_op.loc().dupe();
     let err_msg = ErrorMessage::EInternal(Box::new((
         loc,
         flow_typing_errors::error_message::InternalError::UnexpectedAnnotationInference(msg.into()),
     )));
-    flow_js_utils::add_annot_inference_error(cx, dst_cx, err_msg);
+    flow_js_utils::add_annot_inference_error(cx, err_msg);
     type_::any_t::error(reason_op)
 }
 
-fn error_internal(cx: &mut Context, dst_cx: ContextId, msg: &str, op: &Op<Cx>) -> Type {
+fn error_internal(cx: &mut Context, msg: &str, op: &Op<Cx>) -> Type {
     let reason_op = op.reason();
-    error_internal_reason(cx, dst_cx, msg, reason_op)
+    error_internal_reason(cx, msg, reason_op)
 }
 
 fn dummy_trace() -> DepthTrace {
@@ -287,13 +275,6 @@ fn dummy_trace() -> DepthTrace {
 // here, we just return the same type intact.
 pub fn reposition(_cx: &Context, _loc: ALoc, t: Type) -> Type {
     t
-}
-
-/// Returns the effective destination context for error reporting.
-/// During cross-file merge, errors should go to the importing file (stored
-/// in merge_dst_cx). Otherwise, errors go to cx itself.
-fn effective_dst_cx(cx: &Context<'_>) -> ContextId {
-    cx.merge_dst_cx().unwrap_or_else(|| cx.id())
 }
 
 // Instantiation
@@ -408,7 +389,6 @@ fn with_concretized_type<'cx>(
 ) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotConcretizeForImportsExports(r, f)),
@@ -441,7 +421,6 @@ fn cg_lookup_<'cx>(
 ) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotLookupT(Box::new(AnnotLookupTData {
@@ -600,7 +579,6 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         let (use_op, access_reason, _, (prop_reason, name)) = args;
         Ok(elab_t(
             cx,
-            effective_dst_cx(cx),
             None,
             t,
             Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
@@ -623,7 +601,6 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         let reason = type_util::reason_of_t(&t).dupe();
         elab_t(
             cx,
-            effective_dst_cx(cx),
             None,
             t,
             Op::new(OpInner::AnnotDeepReadOnlyT(Box::new(
@@ -654,18 +631,13 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
 /// [AnnotOp] constraint that depends on [dep_id] we also update the "dependents" set
 /// of [dep_id], so that we don't attempt to resolve [id] once again when [dep_id]
 /// gets resolved.
-fn ensure_annot_resolved<'cx>(
-    cx: &mut Context<'cx>,
-    dst_cx: ContextId,
-    reason: Reason,
-    id: i32,
-) -> Type {
+fn ensure_annot_resolved<'cx>(cx: &mut Context<'cx>, reason: Reason, id: i32) -> Type {
     match cx.find_avar_opt(id) {
-        None => get_fully_resolved_type(cx, dst_cx, id),
+        None => get_fully_resolved_type(cx, id),
         Some(constraint) => match constraint.deref() {
             AConstraintInner::AnnotUnresolved { .. } => {
-                let t = error_recursive(cx, dst_cx, &reason);
-                resolve_id(cx, dst_cx, reason, id, t.dupe());
+                let t = error_recursive(cx, &reason);
+                resolve_id(cx, reason, id, t.dupe());
                 t
             }
             AConstraintInner::AnnotOp { id: dep_id, .. } => {
@@ -675,16 +647,12 @@ fn ensure_annot_resolved<'cx>(
                     deps.remove(&id);
                     deps
                 });
-                let t = error_recursive(cx, dst_cx, &reason);
-                resolve_id(cx, dst_cx, reason, id, t.dupe());
+                let t = error_recursive(cx, &reason);
+                resolve_id(cx, reason, id, t.dupe());
                 t
             }
         },
     }
-}
-
-fn get_fully_resolved_type<'cx>(cx: &mut Context<'cx>, dst_cx: ContextId, id: i32) -> Type {
-    get_fully_resolved_type_helper(dst_cx, cx, id)
 }
 
 fn mk_lazy_tvar<'cx>(
@@ -703,7 +671,7 @@ fn mk_lazy_tvar<'cx>(
         // Before forcing the type constraint of [id] we need to make sure the
         // respective annotation constraint has been processed. If not we infer
         // the empty type.
-        ensure_annot_resolved(cx2, effective_dst_cx(cx2), reason2.dupe(), id)
+        ensure_annot_resolved(cx2, reason2.dupe(), id)
     };
     let forcing_state = ForcingState::<Cx>::of_lazy_t(reason.dupe(), lazy_fn);
     let node = flow_utils_union_find::Node::create_root(Constraints::FullyResolved(forcing_state));
@@ -715,7 +683,7 @@ pub fn mk_sig_tvar<'cx>(cx: &mut Context<'cx>, reason: Reason, resolved: LazyTyp
     let reason2 = reason.dupe();
     mk_lazy_tvar(cx, reason.dupe(), move |cx: &mut Context<'_>, id| {
         let t = resolved.get_forced(cx).dupe();
-        resolve_id(cx, effective_dst_cx(cx), reason2, id, t);
+        resolve_id(cx, reason2, id, t);
     })
 }
 
@@ -724,7 +692,7 @@ pub fn mk_sig_tvar<'cx>(cx: &mut Context<'cx>, reason: Reason, resolved: LazyTyp
 ///   record it as fully resolved in the type graph.
 /// - If [t] is an `OpenT` with id [id2], we first ensure [id2] is resolved, then
 ///   resolve [id] to the resulting type.
-fn resolve_id<'cx>(cx: &mut Context<'cx>, dst_cx: ContextId, reason: Reason, id: i32, t: Type) {
+fn resolve_id<'cx>(cx: &mut Context<'cx>, reason: Reason, id: i32, t: Type) {
     match cx.find_avar_opt(id) {
         None => {
             // The avar is already resolved. This happens when the avar is recursively
@@ -733,7 +701,7 @@ fn resolve_id<'cx>(cx: &mut Context<'cx>, dst_cx: ContextId, reason: Reason, id:
         Some(constraints1) => {
             let t = match t.deref() {
                 TypeInner::OpenT(tvar) => {
-                    ensure_annot_resolved(cx, dst_cx, reason.dupe(), tvar.id() as i32)
+                    ensure_annot_resolved(cx, reason.dupe(), tvar.id() as i32)
                 }
                 _ => t,
             };
@@ -758,22 +726,21 @@ fn resolve_id<'cx>(cx: &mut Context<'cx>, dst_cx: ContextId, reason: Reason, id:
                 );
             }
             let dependents1 = constraints1.deps();
-            resolve_dependent_set(cx, dst_cx, reason, &dependents1.borrow(), t);
+            resolve_dependent_set(cx, reason, &dependents1.borrow(), t);
         }
     }
 }
 
 fn resolve_dependent_set<'cx>(
     cx: &mut Context<'cx>,
-    dst_cx: ContextId,
     reason: Reason,
     dependents: &FlowOrdSet<i32>,
     t: Type,
 ) {
     cx.iter_annot_dependent_set(
         |cx, id, op| {
-            let result = elab_t(cx, dst_cx, None, t.dupe(), op.dupe());
-            resolve_id(cx, dst_cx, reason.dupe(), id, result);
+            let result = elab_t(cx, None, t.dupe(), op.dupe());
+            resolve_id(cx, reason.dupe(), id, result);
         },
         dependents,
     );
@@ -781,14 +748,13 @@ fn resolve_dependent_set<'cx>(
 
 fn elab_open<'cx>(
     cx: &mut Context<'cx>,
-    dst_cx: ContextId,
     seen: &FlowOrdSet<i32>,
     reason: Reason,
     id: i32,
     op: Op<Cx>,
 ) -> Type {
     if seen.contains(&id) {
-        return error_recursive(cx, dst_cx, &reason);
+        return error_recursive(cx, &reason);
     }
     match cx.find_avar_opt(id) {
         None => {
@@ -816,10 +782,8 @@ fn elab_open<'cx>(
             let seen2 = FlowOrdSet::singleton(id);
             let op2 = op.dupe();
             let resolved: LazyType = Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
-                // Use merge_dst_cx if set (during cross-file merge), otherwise cx.
-                let dst_cx = effective_dst_cx(cx);
-                let t = get_fully_resolved_type(cx, dst_cx, id);
-                elab_t(cx, dst_cx, Some(seen2.dupe()), t, op2.dupe())
+                let t = get_fully_resolved_type(cx, id);
+                elab_t(cx, Some(seen2.dupe()), t, op2.dupe())
             }));
             let t = mk_sig_tvar(cx, op.reason(), resolved);
             if let Some(key) = memo_key {
@@ -838,7 +802,6 @@ fn elab_open<'cx>(
 
 pub fn elab_t<'cx>(
     cx: &mut Context<'cx>,
-    dst_cx: ContextId,
     seen: Option<FlowOrdSet<i32>>,
     t: Type,
     op: Op<Cx>,
@@ -858,12 +821,11 @@ pub fn elab_t<'cx>(
             match defer_use_t.2.deref() {
                 Destructor::ReadOnlyType => {
                     let t = make_readonly(cx, use_op, reason, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::ReactDRO(box react_dro) => {
                     let t = elab_t(
                         cx,
-                        dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotDeepReadOnlyT(Box::new(
@@ -874,19 +836,19 @@ pub fn elab_t<'cx>(
                             },
                         ))),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::ExactType => {
                     let t = make_exact(cx, reason, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::PartialType => {
                     let t = make_partial(cx, use_op, reason, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::RequiredType => {
                     let t = make_required(cx, use_op, reason, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::SpreadType(box DestructorSpreadTypeData(
                     target,
@@ -912,7 +874,7 @@ pub fn elab_t<'cx>(
                     };
                     let t =
                         object_spread(cx, use_op, reason, target.clone(), state, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::RestType(options, r) => {
                     let state = type_::object::rest::State::One(r.dupe());
@@ -924,27 +886,25 @@ pub fn elab_t<'cx>(
                         state,
                         inner_t.dupe(),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::TypeMap(TypeMap::ObjectKeyMirror) => {
                     let t = elab_t(
                         cx,
-                        dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotObjKeyMirror(reason)),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::ValuesType => {
                     let t = elab_t(
                         cx,
-                        dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotGetValuesT(reason)),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::PropertyType { name } => {
                     let reason_op = reason.dupe().replace_desc(
@@ -952,7 +912,6 @@ pub fn elab_t<'cx>(
                     );
                     let t = elab_t(
                         cx,
-                        dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
@@ -966,12 +925,11 @@ pub fn elab_t<'cx>(
                             },
                         }))),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::ElementType { index_type } => {
                     let t = elab_t(
                         cx,
-                        dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotGetElemT {
@@ -980,19 +938,18 @@ pub fn elab_t<'cx>(
                             key: index_type.dupe(),
                         }),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
                 Destructor::EnumType => {
                     let t = elab_t(
                         cx,
-                        dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotGetEnumT(reason)),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, None, t, op)
                 }
-                _ => error_unsupported(cx, dst_cx, &t, &op),
+                _ => error_unsupported(cx, &t, &op),
             }
         }
         (
@@ -1000,39 +957,27 @@ pub fn elab_t<'cx>(
             OpInner::AnnotConcretizeForInspection { .. }
             | OpInner::AnnotConcretizeForClassExtends { .. },
         ) => {
-            let t = elab_open(
-                cx,
-                dst_cx,
-                &seen,
-                tvar.reason().dupe(),
-                tvar.id() as i32,
-                op,
-            );
+            let t = elab_open(cx, &seen, tvar.reason().dupe(), tvar.id() as i32, op);
             if let TypeInner::OpenT(tvar2) = t.deref() {
                 // Force the type so that the concretized results are eagarly added to the collector
-                get_fully_resolved_type(cx, dst_cx, tvar2.id() as i32);
+                get_fully_resolved_type(cx, tvar2.id() as i32);
             }
             t
         }
-        (TypeInner::OpenT(tvar), _) => elab_open(
-            cx,
-            dst_cx,
-            &seen,
-            tvar.reason().dupe(),
-            tvar.id() as i32,
-            op,
-        ),
+        (TypeInner::OpenT(tvar), _) => {
+            elab_open(cx, &seen, tvar.reason().dupe(), tvar.id() as i32, op)
+        }
         (TypeInner::AnnotT(r, inner_t, _), _) => {
             let t = reposition(cx, r.loc().dupe(), inner_t.dupe());
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, Some(seen), t, op)
         }
         // The remaining cases are dispatched to elab_t_concrete.
         // This split avoids an extremely long match expression.
-        _ => elab_t_concrete(cx, dst_cx, seen, t, op),
+        _ => elab_t_concrete(cx, seen, t, op),
     }
 }
 
-fn general_error<'cx>(cx: &mut Context<'cx>, _dst_cx: ContextId, t: &Type, op: &Op<Cx>) -> Type {
+fn general_error<'cx>(cx: &mut Context<'cx>, t: &Type, op: &Op<Cx>) -> Type {
     use flow_typing_type::type_::any_t;
 
     let reason_op = op.reason();
@@ -1050,13 +995,7 @@ fn general_error<'cx>(cx: &mut Context<'cx>, _dst_cx: ContextId, t: &Type, op: &
     any_t::error(reason_op)
 }
 
-fn elab_t_concrete<'cx>(
-    cx: &mut Context<'cx>,
-    dst_cx: ContextId,
-    seen: FlowOrdSet<i32>,
-    t: Type,
-    op: Op<Cx>,
-) -> Type {
+fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, op: Op<Cx>) -> Type {
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::EnumInfoInner;
     use flow_typing_type::type_::PolyTData;
@@ -1069,7 +1008,7 @@ fn elab_t_concrete<'cx>(
         // First handle catch-all cases of subtyping_kit.rs
         (TypeInner::MaybeT(_, _), OpInner::AnnotUseTTypeT { .. })
         | (TypeInner::OptionalT { .. }, OpInner::AnnotUseTTypeT { .. }) => {
-            error_unsupported(cx, dst_cx, &t, &op)
+            error_unsupported(cx, &t, &op)
         }
         (
             TypeInner::ThisTypeAppT(box ThisTypeAppTData {
@@ -1091,7 +1030,7 @@ fn elab_t_concrete<'cx>(
                 op.error_operation(),
             );
             let t = this_specialize(cx, reason_tapp, this_t.dupe(), tc);
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, Some(seen), t, op)
         }
         (
             TypeInner::TypeAppT(box TypeAppTData {
@@ -1116,7 +1055,7 @@ fn elab_t_concrete<'cx>(
                 targs.clone(),
                 op.error_operation(),
             );
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, Some(seen), t, op)
         }
         (TypeInner::DefT(def_reason, def_t), OpInner::AnnotUseTTypeT { reason, kind }) => {
             match def_t.deref() {
@@ -1140,7 +1079,7 @@ fn elab_t_concrete<'cx>(
                         &subst_map,
                         t_out.dupe(),
                     );
-                    elab_t(cx, dst_cx, Some(seen), t_, op)
+                    elab_t(cx, Some(seen), t_, op)
                 }
                 DefTInner::PolyT(box PolyTData {
                     kind: poly_kind,
@@ -1167,7 +1106,7 @@ fn elab_t_concrete<'cx>(
                         *strictness_kind,
                         *poly_kind,
                     );
-                    elab_t(cx, dst_cx, Some(seen), poly, op)
+                    elab_t(cx, Some(seen), poly, op)
                 }
                 DefTInner::PolyT(box PolyTData {
                     kind: poly_kind,
@@ -1218,7 +1157,7 @@ fn elab_t_concrete<'cx>(
                         t_out.dupe(),
                         Rc::from([]),
                     );
-                    elab_t(cx, dst_cx, Some(seen), t, op)
+                    elab_t(cx, Some(seen), t, op)
                 }
                 DefTInner::PolyT(box PolyTData {
                     tparams_loc,
@@ -1262,7 +1201,7 @@ fn elab_t_concrete<'cx>(
                             def_reason.dupe(),
                             type_::DefT::new(DefTInner::ClassT(fixed)),
                         ));
-                        elab_t(cx, dst_cx, Some(seen), c, op)
+                        elab_t(cx, Some(seen), c, op)
                     }
                     //  a class value annotation becomes the instance type
                     _ => reposition(cx, reason.loc().dupe(), instance.dupe()),
@@ -1385,7 +1324,7 @@ fn elab_t_concrete<'cx>(
         // **********************************
         (TypeInner::MaybeT(_, _), _) | (TypeInner::OptionalT { .. }, _) => {
             // These are rare in practice. Will consider adding support if we hit this error case.
-            error_unsupported(cx, dst_cx, &t, &op)
+            error_unsupported(cx, &t, &op)
         }
         // *******************
         //  Type applications
@@ -1410,7 +1349,7 @@ fn elab_t_concrete<'cx>(
                 op.error_operation(),
             );
             let t = this_specialize(cx, reason_tapp, this_t.dupe(), tc);
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, Some(seen), t, op)
         }
         (
             TypeInner::ThisTypeAppT(box ThisTypeAppTData {
@@ -1432,7 +1371,7 @@ fn elab_t_concrete<'cx>(
                 op.error_operation(),
             );
             let t = this_specialize(cx, reason_tapp, this_t.dupe(), tc);
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, Some(seen), t, op)
         }
         (
             TypeInner::TypeAppT(box TypeAppTData {
@@ -1456,7 +1395,7 @@ fn elab_t_concrete<'cx>(
                 targs.clone(),
                 op.error_operation(),
             );
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, Some(seen), t, op)
         }
         (_, OpInner::AnnotConcretizeForImportsExports(_, f)) => f(cx, t),
         // **************
@@ -1468,7 +1407,6 @@ fn elab_t_concrete<'cx>(
             let upper_t = nominal_type.upper_t.as_ref().unwrap().dupe();
             elab_t(
                 cx,
-                dst_cx,
                 Some(seen),
                 upper_t,
                 Op::new(OpInner::AnnotToStringT {
@@ -1487,14 +1425,14 @@ fn elab_t_concrete<'cx>(
             &nominal_type.underlying_t
             && reason.loc().source() == reason.def_loc().source() =>
         {
-            elab_t(cx, dst_cx, Some(seen), inner_t.dupe(), op)
+            elab_t(cx, Some(seen), inner_t.dupe(), op)
         }
         (TypeInner::NominalT { nominal_type, .. }, _)
             if let type_::nominal::UnderlyingT::CustomError(
                 box type_::nominal::CustomErrorData { t: inner_t, .. },
             ) = &nominal_type.underlying_t =>
         {
-            elab_t(cx, dst_cx, Some(seen), inner_t.dupe(), op)
+            elab_t(cx, Some(seen), inner_t.dupe(), op)
         }
         // ******
         //  Keys
@@ -1506,12 +1444,11 @@ fn elab_t_concrete<'cx>(
         (TypeInner::KeysT(reason, inner), _) => {
             let keys_t = elab_t(
                 cx,
-                dst_cx,
                 Some(seen.dupe()),
                 inner.dupe(),
                 Op::new(OpInner::AnnotGetKeysT(reason.dupe())),
             );
-            elab_t(cx, dst_cx, Some(seen), keys_t, op)
+            elab_t(cx, Some(seen), keys_t, op)
         }
         (TypeInner::DefT(_, def_t), OpInner::AnnotGetKeysT(reason_op))
             if let DefTInner::ObjT(obj) = def_t.deref() =>
@@ -1522,7 +1459,7 @@ fn elab_t_concrete<'cx>(
             let mut keylist =
                 flow_js_utils::keylist_of_props(&FlowJsEnv::entry(), &props, reason_op, true);
             if let Some(dict) = dict_t {
-                keylist.push(elab_dict_key(cx, dst_cx, &seen, reason_op, dict.key.dupe()));
+                keylist.push(elab_dict_key(cx, &seen, reason_op, dict.key.dupe()));
             }
             type_util::union_of_ts(reason_op.dupe(), keylist, None)
         }
@@ -1534,7 +1471,6 @@ fn elab_t_concrete<'cx>(
                     let collector = TypeCollector::create();
                     elab_t(
                         cx,
-                        dst_cx,
                         Some(seen.dupe()),
                         t.dupe(),
                         Op::new(OpInner::AnnotConcretizeForInspection {
@@ -1555,7 +1491,7 @@ fn elab_t_concrete<'cx>(
                 true,
             );
             let keylist = dict_keys.into_iter().fold(keylist, |mut keylist, key| {
-                keylist.push(elab_dict_key(cx, dst_cx, &seen, reason_op, key));
+                keylist.push(elab_dict_key(cx, &seen, reason_op, key));
                 keylist
             });
             type_util::union_of_ts(reason_op.dupe(), keylist, None)
@@ -1596,7 +1532,6 @@ fn elab_t_concrete<'cx>(
         // ******************************
         (TypeInner::UnionT(_, _), OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
-            dst_cx,
             data.use_op.dupe(),
             &op,
             data.reason.dupe(),
@@ -1608,13 +1543,12 @@ fn elab_t_concrete<'cx>(
             let reason = op.reason();
             let ts: Vec<Type> = rep
                 .members_iter()
-                .map(|member| elab_t(cx, dst_cx, Some(seen.dupe()), member.dupe(), op.dupe()))
+                .map(|member| elab_t(cx, Some(seen.dupe()), member.dupe(), op.dupe()))
                 .collect();
             type_util::union_of_ts(reason, ts, None)
         }
         (TypeInner::IntersectionT(_, _), OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
-            dst_cx,
             data.use_op.dupe(),
             &op,
             data.reason.dupe(),
@@ -1630,7 +1564,7 @@ fn elab_t_concrete<'cx>(
             collector.add(t.dupe());
             t
         }
-        (TypeInner::IntersectionT(_, _), _) => error_unsupported(cx, dst_cx, &t, &op),
+        (TypeInner::IntersectionT(_, _), _) => error_unsupported(cx, &t, &op),
         // *************************
         //  ConcretizeForInspection
         // *************************
@@ -1757,7 +1691,7 @@ fn elab_t_concrete<'cx>(
                         {
                             make_mixin_instance(inst_r, i, *is_this, subst_name, class_r, r)
                         } else {
-                            error_unsupported(cx, dst_cx, &t, &op)
+                            error_unsupported(cx, &t, &op)
                         }
                     }
                     DefTInner::PolyT(box PolyTData {
@@ -1790,19 +1724,19 @@ fn elab_t_concrete<'cx>(
                                         *poly_kind,
                                     )
                                 } else {
-                                    error_unsupported(cx, dst_cx, &t, &op)
+                                    error_unsupported(cx, &t, &op)
                                 }
                             } else {
-                                error_unsupported(cx, dst_cx, &t, &op)
+                                error_unsupported(cx, &t, &op)
                             }
                         } else {
-                            error_unsupported(cx, dst_cx, &t, &op)
+                            error_unsupported(cx, &t, &op)
                         }
                     }
-                    _ => error_unsupported(cx, dst_cx, &t, &op),
+                    _ => error_unsupported(cx, &t, &op),
                 }
             } else {
-                error_unsupported(cx, dst_cx, &t, &op)
+                error_unsupported(cx, &t, &op)
             }
         }
 
@@ -1855,7 +1789,6 @@ fn elab_t_concrete<'cx>(
                     let collector = TypeCollector::create();
                     elab_t(
                         cx,
-                        dst_cx,
                         Some(seen.dupe()),
                         t.dupe(),
                         Op::new(OpInner::AnnotConcretizeForInspection {
@@ -1870,7 +1803,7 @@ fn elab_t_concrete<'cx>(
             if inheritable {
                 t
             } else {
-                general_error(cx, dst_cx, &t, &op)
+                general_error(cx, &t, &op)
             }
         }
         (
@@ -1976,13 +1909,7 @@ fn elab_t_concrete<'cx>(
                         collector: collector.clone(),
                     },
                 };
-                elab_t(
-                    cx,
-                    dst_cx,
-                    Some(seen.dupe()),
-                    t.dupe(),
-                    Op::new(concretize_op),
-                );
+                elab_t(cx, Some(seen.dupe()), t.dupe(), Op::new(concretize_op));
                 Ok(collector.collect_to_vec())
             };
             let base = flow_js_utils::construct_base_instance(&concretize, cx, &t, this)
@@ -2020,7 +1947,7 @@ fn elab_t_concrete<'cx>(
                 ids.to_vec(),
                 t_out.dupe(),
             );
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, Some(seen), t, op)
         }
         (
             TypeInner::ThisInstanceT(box ThisInstanceTData {
@@ -2040,7 +1967,7 @@ fn elab_t_concrete<'cx>(
                 *is_this,
                 subst_name.dupe(),
             );
-            elab_t(cx, dst_cx, Some(seen), fixed, op)
+            elab_t(cx, Some(seen), fixed, op)
         }
         // ***************************
         //  React Abstract Components
@@ -2057,7 +1984,7 @@ fn elab_t_concrete<'cx>(
                 "React$AbstractComponentStatics",
                 reason.dupe(),
             );
-            elab_t(cx, dst_cx, Some(seen), statics, op)
+            elab_t(cx, Some(seen), statics, op)
         }
         // ***************
         //  ObjTestProtoT
@@ -2167,7 +2094,7 @@ fn elab_t_concrete<'cx>(
                                 ),
                             }
                         }
-                        type_::PropRef::Computed(_) => error_unsupported(cx, dst_cx, &t, &op),
+                        type_::PropRef::Computed(_) => error_unsupported(cx, &t, &op),
                     }
                 }
                 TypeInner::DefT(_, def_t) if let DefTInner::ObjT(o) = def_t.deref() => {
@@ -2270,7 +2197,7 @@ fn elab_t_concrete<'cx>(
                         indexer_fallback.as_deref(),
                     )
                 }
-                _ => elab_t_wildcard_op(cx, dst_cx, seen, t, op),
+                _ => elab_t_wildcard_op(cx, seen, t, op),
             }
         }
 
@@ -2378,7 +2305,7 @@ fn elab_t_concrete<'cx>(
                 TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
                     // This implementation relies on unsealed objects and set-prop logic that is
                     // hard to implement in annotation inference.
-                    error_unsupported(cx, dst_cx, &t, &op)
+                    error_unsupported(cx, &t, &op)
                 }
                 TypeInner::ObjProtoT(_) => flow_typing_flow_common::obj_type::mk_with_proto(
                     cx,
@@ -2399,9 +2326,7 @@ fn elab_t_concrete<'cx>(
                         reason_op.dupe(),
                     )
                 }
-                TypeInner::NamespaceT(ns) => {
-                    elab_t(cx, dst_cx, Some(seen), ns.values_type.dupe(), op)
-                }
+                TypeInner::NamespaceT(ns) => elab_t(cx, Some(seen), ns.values_type.dupe(), op),
                 _ => {
                     let reason_op_catch = op.reason();
                     let upper = IncompatibleUpperData {
@@ -2439,7 +2364,6 @@ fn elab_t_concrete<'cx>(
                 Some(prop) => prop,
                 None => elab_t(
                     cx,
-                    dst_cx,
                     Some(seen),
                     ns.values_type.dupe(),
                     Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
@@ -2455,7 +2379,7 @@ fn elab_t_concrete<'cx>(
                 ),
             }
         }
-        (TypeInner::NamespaceT(ns), _) => elab_t(cx, dst_cx, Some(seen), ns.values_type.dupe(), op),
+        (TypeInner::NamespaceT(ns), _) => elab_t(cx, Some(seen), ns.values_type.dupe(), op),
         (_, OpInner::AnnotGetTypeFromNamespaceT(data)) => {
             let AnnotGetTypeFromNamespaceTData {
                 reason,
@@ -2465,7 +2389,6 @@ fn elab_t_concrete<'cx>(
             let (prop_ref_reason, prop_name) = prop_ref;
             elab_t(
                 cx,
-                dst_cx,
                 Some(seen),
                 t,
                 Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
@@ -2520,7 +2443,7 @@ fn elab_t_concrete<'cx>(
                             // Annotation inference is never speculative
                             .unwrap()
                         }
-                        type_::PropRef::Computed(_) => error_unsupported(cx, dst_cx, &t, &op),
+                        type_::PropRef::Computed(_) => error_unsupported(cx, &t, &op),
                     }
                 }
                 TypeInner::DefT(reason_obj, def_t) if let DefTInner::ObjT(o) = def_t.deref() => {
@@ -2629,7 +2552,7 @@ fn elab_t_concrete<'cx>(
                                 "Array",
                                 vec![elem_t.dupe()],
                             );
-                            elab_t(cx, dst_cx, Some(seen), arr_t, op)
+                            elab_t(cx, Some(seen), arr_t, op)
                         }
                         ArrType::TupleAT(box TupleATData { .. })
                         | ArrType::ROArrayAT(box (_, _)) => {
@@ -2640,11 +2563,11 @@ fn elab_t_concrete<'cx>(
                                 "ReadonlyArray",
                                 vec![elem_t],
                             );
-                            elab_t(cx, dst_cx, Some(seen), arr_t, op)
+                            elab_t(cx, Some(seen), arr_t, op)
                         }
                     }
                 }
-                _ => elab_t_wildcard_op(cx, dst_cx, seen, t, op),
+                _ => elab_t_wildcard_op(cx, seen, t, op),
             }
         }
         // ************
@@ -2652,7 +2575,6 @@ fn elab_t_concrete<'cx>(
         // ************
         (_, OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
-            dst_cx,
             data.use_op.dupe(),
             &op,
             data.reason.dupe(),
@@ -2683,7 +2605,6 @@ fn elab_t_concrete<'cx>(
             let key_type = key.dupe();
             elab_t(
                 cx,
-                dst_cx,
                 Some(seen),
                 key_type,
                 Op::new(OpInner::AnnotElemT {
@@ -2709,7 +2630,6 @@ fn elab_t_concrete<'cx>(
             let key_type = key.dupe();
             elab_t(
                 cx,
-                dst_cx,
                 Some(seen),
                 key_type,
                 Op::new(OpInner::AnnotElemT {
@@ -2740,7 +2660,6 @@ fn elab_t_concrete<'cx>(
                     let prop_ref = flow_js_utils::propref_for_elem_t(cx, &t);
                     elab_t(
                         cx,
-                        dst_cx,
                         Some(seen),
                         source_type,
                         Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
@@ -2783,7 +2702,7 @@ fn elab_t_concrete<'cx>(
                     .unwrap();
                     reposition(cx, reason_op.loc().dupe(), value)
                 }
-                _ => general_error(cx, dst_cx, &t, &op),
+                _ => general_error(cx, &t, &op),
             }
         }
         (TypeInner::DefT(_, def_t), OpInner::AnnotObjKeyMirror(reason_op))
@@ -2791,7 +2710,7 @@ fn elab_t_concrete<'cx>(
         {
             flow_js_utils::obj_key_mirror(cx, &FlowJsEnv::entry(), o, reason_op)
         }
-        (_, OpInner::AnnotObjKeyMirror(_)) => error_unsupported(cx, dst_cx, &t, &op),
+        (_, OpInner::AnnotObjKeyMirror(_)) => error_unsupported(cx, &t, &op),
         (TypeInner::DefT(_, def_t), OpInner::AnnotGetEnumT(reason))
             if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
         {
@@ -2803,13 +2722,12 @@ fn elab_t_concrete<'cx>(
                 }),
             ))
         }
-        (_, OpInner::AnnotGetEnumT(_)) => error_unsupported(cx, dst_cx, &t, &op),
+        (_, OpInner::AnnotGetEnumT(_)) => error_unsupported(cx, &t, &op),
         // *********************
         //  Opaque types (pt 2)
         // *********************
         (TypeInner::NominalT { nominal_type, .. }, _) if nominal_type.upper_t.is_some() => elab_t(
             cx,
-            dst_cx,
             Some(seen),
             nominal_type.upper_t.as_ref().unwrap().dupe(),
             op,
@@ -2828,7 +2746,6 @@ fn elab_t_concrete<'cx>(
             if flow_js_utils::needs_resolution(&rhs_type) || flow_js_utils::is_generic(&rhs_type) {
                 elab_t(
                     cx,
-                    dst_cx,
                     Some(seen),
                     rhs_type,
                     Op::new(OpInner::AnnotArithT(Box::new(AnnotArithTData {
@@ -2884,14 +2801,14 @@ fn elab_t_concrete<'cx>(
                     from_annot: false,
                 }),
             ));
-            elab_t(cx, dst_cx, Some(seen), new_t, op)
+            elab_t(cx, Some(seen), new_t, op)
         }
         (TypeInner::NullProtoT(reason), _) => {
             let new_t = Type::new(TypeInner::DefT(
                 reason.dupe(),
                 type_::DefT::new(DefTInner::NullT),
             ));
-            elab_t(cx, dst_cx, Some(seen), new_t, op)
+            elab_t(cx, Some(seen), new_t, op)
         }
         // ******************
         //  Function Statics
@@ -2901,7 +2818,7 @@ fn elab_t_concrete<'cx>(
                 && object_like_op(op.deref()) =>
         {
             let static_ = reposition(cx, reason.loc().dupe(), static_.dupe());
-            elab_t(cx, dst_cx, Some(seen), static_, op)
+            elab_t(cx, Some(seen), static_, op)
         }
         // ***************
         //  Class statics
@@ -2911,7 +2828,7 @@ fn elab_t_concrete<'cx>(
                 && object_like_op(op.deref()) =>
         {
             let statics = get_statics(cx, reason.dupe(), instance.dupe());
-            elab_t(cx, dst_cx, Some(seen), statics, op)
+            elab_t(cx, Some(seen), statics, op)
         }
         (
             TypeInner::DefT(_, def_t),
@@ -2947,11 +2864,11 @@ fn elab_t_concrete<'cx>(
         // **************************************
         (TypeInner::ObjProtoT(reason), _) => {
             let obj_proto = get_builtin_type(cx, reason.dupe(), Some(true), "Object");
-            elab_t(cx, dst_cx, Some(seen), obj_proto, op)
+            elab_t(cx, Some(seen), obj_proto, op)
         }
         (TypeInner::FunProtoT(reason), _) => {
             let fun_proto = get_builtin_type(cx, reason.dupe(), Some(true), "Function");
-            elab_t(cx, dst_cx, Some(seen), fun_proto, op)
+            elab_t(cx, Some(seen), fun_proto, op)
         }
         // ***********
         //  ToStringT
@@ -2980,7 +2897,6 @@ fn elab_t_concrete<'cx>(
         }
         (_, OpInner::AnnotGetKeysDictKeyT(reason)) => elab_t(
             cx,
-            dst_cx,
             Some(seen),
             t,
             Op::new(OpInner::AnnotToStringT {
@@ -3013,7 +2929,7 @@ fn elab_t_concrete<'cx>(
                 _ => unreachable!(),
             };
             let builtin = get_builtin_type(cx, reason.dupe(), Some(true), name);
-            elab_t(cx, dst_cx, Some(seen), builtin, op)
+            elab_t(cx, Some(seen), builtin, op)
         }
         (TypeInner::DefT(reason, def_t), _)
             if matches!(
@@ -3026,19 +2942,17 @@ fn elab_t_concrete<'cx>(
         {
             elab_t(
                 cx,
-                dst_cx,
                 Some(seen),
                 Type::new(TypeInner::FunProtoT(reason.dupe())),
                 op,
             )
         }
-        (_, _) => general_error(cx, dst_cx, &t, &op),
+        (_, _) => general_error(cx, &t, &op),
     }
 }
 
 fn elab_t_wildcard_op<'cx>(
     cx: &mut Context<'cx>,
-    dst_cx: ContextId,
     seen: FlowOrdSet<i32>,
     t: Type,
     op: Op<Cx>,
@@ -3053,7 +2967,7 @@ fn elab_t_wildcard_op<'cx>(
         && object_like_op(op.deref())
     {
         let static_ = reposition(cx, reason.loc().dupe(), static_.dupe());
-        return elab_t(cx, dst_cx, Some(seen), static_, op);
+        return elab_t(cx, Some(seen), static_, op);
     }
     // ***************
     //  Class statics
@@ -3063,18 +2977,18 @@ fn elab_t_wildcard_op<'cx>(
         && object_like_op(op.deref())
     {
         let statics = get_statics(cx, reason.dupe(), instance.dupe());
-        return elab_t(cx, dst_cx, Some(seen), statics, op);
+        return elab_t(cx, Some(seen), statics, op);
     }
     // **************************************
     //  Object, function, etc. library calls
     // **************************************
     if let TypeInner::ObjProtoT(reason) = t.deref() {
         let obj_proto = get_builtin_type(cx, reason.dupe(), Some(true), "Object");
-        return elab_t(cx, dst_cx, Some(seen), obj_proto, op);
+        return elab_t(cx, Some(seen), obj_proto, op);
     }
     if let TypeInner::FunProtoT(reason) = t.deref() {
         let fun_proto = get_builtin_type(cx, reason.dupe(), Some(true), "Function");
-        return elab_t(cx, dst_cx, Some(seen), fun_proto, op);
+        return elab_t(cx, Some(seen), fun_proto, op);
     }
     // **********************
     //  Promoting primitives
@@ -3091,7 +3005,7 @@ fn elab_t_wildcard_op<'cx>(
         };
         if let Some(name) = name {
             let builtin = get_builtin_type(cx, reason.dupe(), Some(true), name);
-            return elab_t(cx, dst_cx, Some(seen), builtin, op);
+            return elab_t(cx, Some(seen), builtin, op);
         }
     }
     if let TypeInner::DefT(reason, def_t) = t.deref()
@@ -3106,13 +3020,12 @@ fn elab_t_wildcard_op<'cx>(
     {
         return elab_t(
             cx,
-            dst_cx,
             Some(seen),
             Type::new(TypeInner::FunProtoT(reason.dupe())),
             op,
         );
     }
-    general_error(cx, dst_cx, &t, &op)
+    general_error(cx, &t, &op)
 }
 
 pub fn get_builtin_type<'cx>(
@@ -3138,7 +3051,6 @@ pub fn specialize<'cx>(
 ) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotSpecializeT(Box::new(AnnotSpecializeTData {
@@ -3154,7 +3066,6 @@ pub fn specialize<'cx>(
 fn this_specialize<'cx>(cx: &mut Context<'cx>, reason: Reason, this: Type, t: Type) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotThisSpecializeT {
@@ -3196,10 +3107,8 @@ pub(crate) fn mk_type_reference<'cx>(
     let type_t_kind2 = type_t_kind;
     let c2 = c.dupe();
     let tvar = mk_lazy_tvar(cx, reason.dupe(), move |cx, id| {
-        let dst_cx = effective_dst_cx(cx);
         let t = elab_t(
             cx,
-            dst_cx,
             None,
             c2.dupe(),
             Op::new(OpInner::AnnotUseTTypeT {
@@ -3207,7 +3116,7 @@ pub(crate) fn mk_type_reference<'cx>(
                 kind: type_t_kind2,
             }),
         );
-        resolve_id(cx, dst_cx, reason2.dupe(), id, t);
+        resolve_id(cx, reason2.dupe(), id, t);
     });
     Type::new(TypeInner::AnnotT(reason, tvar, false))
 }
@@ -3241,7 +3150,6 @@ fn mk_instance_raw<'cx>(
     let use_desc = use_desc.unwrap_or(false);
     let source = elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         c,
         Op::new(OpInner::AnnotUseTTypeT {
@@ -3280,13 +3188,7 @@ fn mk_typeapp_instance<'cx>(
 }
 
 fn get_statics<'cx>(cx: &mut Context<'cx>, reason: Reason, t: Type) -> Type {
-    elab_t(
-        cx,
-        effective_dst_cx(cx),
-        None,
-        t,
-        Op::new(OpInner::AnnotGetStaticsT(reason)),
-    )
+    elab_t(cx, None, t, Op::new(OpInner::AnnotGetStaticsT(reason)))
 }
 
 pub fn get_prop<'cx>(
@@ -3300,7 +3202,6 @@ pub fn get_prop<'cx>(
     let op_reason = op_reason.unwrap_or_else(|| reason.dupe());
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
@@ -3321,7 +3222,6 @@ pub(crate) fn get_elem<'cx>(
 ) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotGetElemT {
@@ -3346,10 +3246,8 @@ pub fn qualify_type<'cx>(
     let prop_name2 = prop_name.dupe();
     let t2 = t.dupe();
     mk_lazy_tvar(cx, op_reason.dupe(), move |cx, id| {
-        let dst_cx = effective_dst_cx(cx);
         let t = elab_t(
             cx,
-            dst_cx,
             None,
             t2.dupe(),
             Op::new(OpInner::AnnotGetTypeFromNamespaceT(Box::new(
@@ -3360,7 +3258,7 @@ pub fn qualify_type<'cx>(
                 },
             ))),
         );
-        resolve_id(cx, dst_cx, op_reason2, id, t);
+        resolve_id(cx, op_reason2, id, t);
     })
 }
 
@@ -3374,10 +3272,8 @@ pub fn assert_export_is_type<'cx>(
     let name2 = Name::new(name);
     let t2 = t.dupe();
     mk_lazy_tvar(cx, reason.dupe(), move |cx, id| {
-        let dst_cx = effective_dst_cx(cx);
         let t = elab_t(
             cx,
-            dst_cx,
             None,
             t2.dupe(),
             Op::new(OpInner::AnnotAssertExportIsTypeT {
@@ -3385,7 +3281,7 @@ pub fn assert_export_is_type<'cx>(
                 name: name2.dupe(),
             }),
         );
-        resolve_id(cx, dst_cx, reason2, id, t);
+        resolve_id(cx, reason2, id, t);
     })
 }
 
@@ -3440,7 +3336,6 @@ pub(crate) fn lazy_cjs_extract_named_exports(
          -> Result<Type, flow_utils_concurrency::job_error::JobError> {
             let result = elab_t(
                 cx,
-                effective_dst_cx(cx),
                 None,
                 t,
                 Op::new(
@@ -3448,9 +3343,7 @@ pub(crate) fn lazy_cjs_extract_named_exports(
                 ),
             );
             Ok(match result.deref() {
-                TypeInner::OpenT(tvar) => {
-                    get_fully_resolved_type(cx, effective_dst_cx(cx), tvar.id() as i32)
-                }
+                TypeInner::OpenT(tvar) => get_fully_resolved_type(cx, tvar.id() as i32),
                 _ => result,
             })
         };
@@ -3480,7 +3373,6 @@ pub(crate) fn import_typeof<'cx>(
 ) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotImportTypeofT {
@@ -3708,7 +3600,6 @@ pub fn copy_type_exports<'cx>(
                  -> Result<Type, flow_utils_concurrency::job_error::JobError> {
                     let result = elab_t(
                         cx,
-                        effective_dst_cx(cx),
                         None,
                         t,
                         Op::new(
@@ -3718,9 +3609,7 @@ pub fn copy_type_exports<'cx>(
                         ),
                     );
                     Ok(match result.deref() {
-                        TypeInner::OpenT(tvar) => {
-                            get_fully_resolved_type(cx, effective_dst_cx(cx), tvar.id() as i32)
-                        }
+                        TypeInner::OpenT(tvar) => get_fully_resolved_type(cx, tvar.id() as i32),
                         _ => result,
                     })
                 };
@@ -3754,7 +3643,6 @@ pub fn mk_non_generic_render_type<'cx>(
         let c = TypeCollector::create();
         elab_t(
             cx,
-            effective_dst_cx(cx),
             None,
             t.dupe(),
             Op::new(OpInner::AnnotConcretizeForInspection {
@@ -3788,7 +3676,6 @@ pub fn arith<'cx>(
 ) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         lhs_t,
         Op::new(OpInner::AnnotArithT(Box::new(AnnotArithTData {
@@ -3808,7 +3695,6 @@ pub fn unary_arith<'cx>(
 ) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotUnaryArithT { reason, kind }),
@@ -3816,29 +3702,16 @@ pub fn unary_arith<'cx>(
 }
 
 pub fn unary_not<'cx>(cx: &mut Context<'cx>, reason: Reason, t: Type) -> Type {
-    elab_t(
-        cx,
-        effective_dst_cx(cx),
-        None,
-        t,
-        Op::new(OpInner::AnnotNotT(reason)),
-    )
+    elab_t(cx, None, t, Op::new(OpInner::AnnotNotT(reason)))
 }
 
 pub fn mixin<'cx>(cx: &mut Context<'cx>, reason: Reason, t: Type) -> Type {
-    elab_t(
-        cx,
-        effective_dst_cx(cx),
-        None,
-        t,
-        Op::new(OpInner::AnnotMixinT(reason)),
-    )
+    elab_t(cx, None, t, Op::new(OpInner::AnnotMixinT(reason)))
 }
 
 pub fn obj_rest<'cx>(cx: &mut Context<'cx>, reason: Reason, xs: Vec<FlowSmolStr>, t: Type) -> Type {
     elab_t(
         cx,
-        effective_dst_cx(cx),
         None,
         t,
         Op::new(OpInner::AnnotObjRestT {
@@ -3855,18 +3728,11 @@ pub fn arr_rest<'cx>(
     _i: i32,
     t: Type,
 ) -> Type {
-    error_unsupported_operation(
-        cx,
-        effective_dst_cx(cx),
-        &t,
-        AnnotationInferenceOperation::ArrayRest,
-        reason,
-    )
+    error_unsupported_operation(cx, &t, AnnotationInferenceOperation::ArrayRest, reason)
 }
 
 fn object_kit_concrete<'cx>(
     cx: &mut Context<'cx>,
-    dst_cx: ContextId,
     use_op: UseOp,
     op: &Op<Cx>,
     reason: Reason,
@@ -3900,7 +3766,6 @@ fn object_kit_concrete<'cx>(
      -> Result<Type, FlowJsException> {
         Ok(object_kit(
             cx,
-            dst_cx,
             use_op,
             reason.dupe(),
             resolve_tool,
@@ -3979,7 +3844,7 @@ fn object_kit_concrete<'cx>(
             )),
             object::Tool::ReadOnly => Ok(slice_utils::object_read_only(cx, reason, x)),
             object::Tool::ReactConfig(box ObjectToolReactConfigData { .. }) => {
-                Ok(error_internal(cx, dst_cx, "ReactConfig", &op2))
+                Ok(error_internal(cx, "ReactConfig", &op2))
             }
             object::Tool::ReactCheckComponentConfig { props } => {
                 slice_utils::check_component_config(
@@ -3993,10 +3858,10 @@ fn object_kit_concrete<'cx>(
                     x,
                 )
             }
-            object::Tool::ObjectRep => Ok(error_internal(cx, dst_cx, "ObjectRep", &op2)),
+            object::Tool::ObjectRep => Ok(error_internal(cx, "ObjectRep", &op2)),
             // TODO(jmbrown): Annotation inference for Mapped Types
             object::Tool::ObjectMap(box ObjectToolObjectMapData { .. }) => {
-                Ok(error_internal(cx, dst_cx, "ObjectMap", &op2))
+                Ok(error_internal(cx, "ObjectMap", &op2))
             }
         }
     };
@@ -4018,7 +3883,6 @@ fn object_kit_concrete<'cx>(
 
 fn object_kit<'cx>(
     cx: &mut Context<'cx>,
-    dst_cx: ContextId,
     use_op: UseOp,
     reason: Reason,
     resolve_tool: type_::object::ResolveTool,
@@ -4027,7 +3891,6 @@ fn object_kit<'cx>(
 ) -> Type {
     elab_t(
         cx,
-        dst_cx,
         None,
         t,
         Op::new(OpInner::AnnotObjKitT(Box::new(AnnotObjKitTData {
@@ -4049,15 +3912,7 @@ pub fn object_spread<'cx>(
 ) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     let tool = type_::object::Tool::Spread(Box::new((target, state)));
-    object_kit(
-        cx,
-        effective_dst_cx(cx),
-        use_op,
-        reason,
-        resolve_tool,
-        tool,
-        t,
-    )
+    object_kit(cx, use_op, reason, resolve_tool, tool, t)
 }
 
 fn object_rest_internal<'cx>(
@@ -4070,22 +3925,13 @@ fn object_rest_internal<'cx>(
 ) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     let tool = type_::object::Tool::Rest(Box::new((target, state)));
-    object_kit(
-        cx,
-        effective_dst_cx(cx),
-        use_op,
-        reason,
-        resolve_tool,
-        tool,
-        t,
-    )
+    object_kit(cx, use_op, reason, resolve_tool, tool, t)
 }
 
 fn make_readonly<'cx>(cx: &mut Context<'cx>, use_op: UseOp, reason: Reason, t: Type) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     object_kit(
         cx,
-        effective_dst_cx(cx),
         use_op,
         reason,
         resolve_tool,
@@ -4098,7 +3944,6 @@ fn make_partial<'cx>(cx: &mut Context<'cx>, use_op: UseOp, reason: Reason, t: Ty
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     object_kit(
         cx,
-        effective_dst_cx(cx),
         use_op,
         reason,
         resolve_tool,
@@ -4111,7 +3956,6 @@ fn make_required<'cx>(cx: &mut Context<'cx>, use_op: UseOp, reason: Reason, t: T
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     object_kit(
         cx,
-        effective_dst_cx(cx),
         use_op,
         reason,
         resolve_tool,
@@ -4124,7 +3968,6 @@ fn make_exact<'cx>(cx: &mut Context<'cx>, reason: Reason, t: Type) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     object_kit(
         cx,
-        effective_dst_cx(cx),
         type_::unknown_use(),
         reason,
         resolve_tool,
@@ -4134,11 +3977,5 @@ fn make_exact<'cx>(cx: &mut Context<'cx>, reason: Reason, t: Type) -> Type {
 }
 
 pub fn obj_test_proto<'cx>(cx: &mut Context<'cx>, reason: Reason, t: Type) -> Type {
-    elab_t(
-        cx,
-        effective_dst_cx(cx),
-        None,
-        t,
-        Op::new(OpInner::AnnotObjTestProtoT(reason)),
-    )
+    elab_t(cx, None, t, Op::new(OpInner::AnnotObjTestProtoT(reason)))
 }

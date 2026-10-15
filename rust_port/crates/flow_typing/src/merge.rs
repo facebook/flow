@@ -1407,8 +1407,7 @@ fn check_multiplatform_conformance<'cx>(
                             VirtualReasonDesc::RCommonInterface,
                             prog_aloc.dupe(),
                         );
-                        let dst_cx = cx.id();
-                        let m_result = interface_module_f(cx, dst_cx);
+                        let m_result = interface_module_f(cx);
                         get_exports_t(cx, true, reason, m_result.ok().as_ref())
                     };
                     let (self_sig_loc, self_module_type) =
@@ -2068,14 +2067,11 @@ impl type_visitor::TypeVisitor<()> for CopierVisitor {
 pub fn copy_into<'cx>(
     dst_cx: &mut Context<'cx>,
     src: ContextId,
-    f: &dyn Fn(&mut Context<'cx>, ContextId) -> Result<ModuleType, Type>,
+    f: &dyn Fn(&mut Context<'cx>) -> Result<ModuleType, Type>,
 ) -> Result<ModuleType, Type> {
     let dst = dst_cx.id();
-    // f reports errors on the file being checked, while CopierVisitor below
-    // copies into the immediate destination.
-    let effective_dst = dst_cx.merge_dst_cx().unwrap_or(dst);
     let mut src_cx = dst_cx.switch_to(src);
-    let m = f(&mut src_cx, effective_dst);
+    let m = f(&mut src_cx);
     let mut copier = CopierVisitor::new(src, dst);
     match m {
         Ok(m) => {

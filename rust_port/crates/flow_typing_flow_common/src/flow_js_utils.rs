@@ -834,7 +834,6 @@ pub mod invalid_cyclic_type_validation {
     use flow_common::polarity::Polarity;
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
-    use flow_typing_context::ContextId;
     use flow_typing_context::Cx;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::Type;
@@ -848,7 +847,7 @@ pub mod invalid_cyclic_type_validation {
 
     enum TvarVisitingVariant {
         ValidateLocalType,
-        ValidateTypeSigType { dst_cx: ContextId },
+        ValidateTypeSigType,
     }
 
     struct TvarForcingVisitor {
@@ -973,7 +972,7 @@ pub mod invalid_cyclic_type_validation {
                         (seen, in_lazy_tvar)
                     }
                 }
-                TvarVisitingVariant::ValidateTypeSigType { dst_cx } => {
+                TvarVisitingVariant::ValidateTypeSigType => {
                     let (mut seen, in_lazy_tvar) = acc;
                     let (root_id, constraints) = cx.find_constraints(id as i32);
                     let s = get_fully_resolved_state(cx, r, id as i32, constraints);
@@ -981,7 +980,7 @@ pub mod invalid_cyclic_type_validation {
                         seen.insert(root_id);
                         let forced_t = s.force(cx, |cx, reason| {
                             let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(reason.to_error_reference());
-                            super::add_annot_inference_error(cx, dst_cx, msg);
+                            super::add_annot_inference_error(cx, msg);
                             flow_typing_type::type_::any_t::error(reason.dupe())
                         });
                         self.type_(cx, pole, (seen, in_lazy_tvar), &forced_t)
@@ -1027,9 +1026,9 @@ pub mod invalid_cyclic_type_validation {
     }
 
     /// Validates the type `t` of `cx`, reporting errors to `dst_cx`.
-    pub fn validate_type_sig_type<'cx>(dst_cx: ContextId, cx: &mut Context<'cx>, t: &Type) {
+    pub fn validate_type_sig_type<'cx>(cx: &mut Context<'cx>, t: &Type) {
         let mut visitor = TvarForcingVisitor {
-            variant: TvarVisitingVariant::ValidateTypeSigType { dst_cx },
+            variant: TvarVisitingVariant::ValidateTypeSigType,
         };
         visitor.type_(cx, Polarity::Positive, (BTreeSet::new(), false), t);
     }
@@ -2206,10 +2205,11 @@ pub fn add_output_non_speculating<'cx>(cx: &mut Context<'cx>, msg: ErrorMessage<
     }
 }
 
-// In annotation inference, errors are created in the exporting side (src_cx), and
-// are recorded in the importing one (dst_cx).
-pub fn add_annot_inference_error(src_cx: &mut Context, dst_cx: ContextId, msg: ErrorMessage<ALoc>) {
-    add_output_generic(src_cx, dst_cx, &FlowJsEnv::entry(), msg).unwrap()
+// In annotation inference, errors are created in the exporting side (cx), and
+// are recorded on the file being checked (cx.annot_error_dst()).
+pub fn add_annot_inference_error(cx: &mut Context, msg: ErrorMessage<ALoc>) {
+    let dst_cx = cx.annot_error_dst();
+    add_output_generic(cx, dst_cx, &FlowJsEnv::entry(), msg).unwrap()
 }
 
 pub fn exact_obj_error<'cx>(
@@ -6273,10 +6273,7 @@ pub mod import_export_utils {
         } else {
             let module_type_or_any =
                 match cx.find_require(&FlowImportSpecifier::Userland(mref.dupe())) {
-                    ResolvedRequire::TypedModule(f) => {
-                        let dst_cx = cx.id();
-                        f(cx, dst_cx)
-                    }
+                    ResolvedRequire::TypedModule(f) => f(cx),
                     ResolvedRequire::UncheckedModule(module_def_loc) => {
                         if let Some(import_kind) = &import_kind_for_untyped_import_validation {
                             match import_kind {
@@ -6943,10 +6940,7 @@ pub mod import_export_utils {
                     }
                 } else {
                     match cx.find_require(&source) {
-                        ResolvedRequire::TypedModule(f) => {
-                            let dst_cx = cx.id();
-                            f(cx, dst_cx).ok()
-                        }
+                        ResolvedRequire::TypedModule(f) => f(cx).ok(),
                         _ => None,
                     }
                 };

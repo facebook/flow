@@ -538,10 +538,8 @@ impl TypingMode {
     }
 }
 
-/// The exports of a typed module. The closure runs in the context the module belongs to and
-/// reports errors to the destination context it is given.
-pub type ModuleTypeThunk =
-    Rc<dyn for<'a> Fn(&mut Context<'a>, ContextId) -> Result<ModuleType, Type>>;
+/// The exports of a typed module. The closure runs in the context the module belongs to.
+pub type ModuleTypeThunk = Rc<dyn for<'a> Fn(&mut Context<'a>) -> Result<ModuleType, Type>>;
 
 #[derive(Clone, Dupe)]
 pub enum ResolvedRequire {
@@ -837,7 +835,7 @@ pub struct Context<'a> {
     /// The context annotation inference reports errors on: the file being checked. Switching to
     /// a dependency keeps it, so errors raised while forcing a dependency's signature reach the
     /// file whose check forced it, however long the dependency context is cached.
-    merge_dst: Option<ContextId>,
+    annot_error_dst: Option<ContextId>,
 }
 
 /// A [Context] switched to another context until this is dropped.
@@ -1108,7 +1106,7 @@ impl<'a> Context<'a> {
             store,
             id,
             position,
-            merge_dst: None,
+            annot_error_dst: None,
         }
     }
 
@@ -1179,16 +1177,18 @@ impl<'a> Context<'a> {
         self.store.arenas[self.position].add_sig_file(mk_sig_file)
     }
 
-    /// The context to report annotation inference errors on, or None to report them on the
-    /// current context.
-    pub fn merge_dst_cx(&self) -> Option<ContextId> {
-        self.merge_dst.filter(|id| self.store.has_context(*id))
+    /// The context to report annotation inference errors on: the one set with
+    /// [Context::set_annot_error_dst], or else the current context.
+    pub fn annot_error_dst(&self) -> ContextId {
+        self.annot_error_dst
+            .filter(|id| self.store.has_context(*id))
+            .unwrap_or(self.id)
     }
 
     /// Reports annotation inference errors raised through this context, in whatever context it
     /// switches to, on `dst_cx`.
-    pub fn set_merge_dst_cx(&mut self, dst_cx: ContextId) {
-        self.merge_dst = Some(dst_cx);
+    pub fn set_annot_error_dst(&mut self, dst_cx: ContextId) {
+        self.annot_error_dst = Some(dst_cx);
     }
 
     /// Replaces how this context resolves its requires, for a context whose requires can only be
@@ -3518,7 +3518,7 @@ mod tests {
     }
 
     #[test]
-    fn merge_destination_belongs_to_the_checking_context() {
+    fn annot_error_destination_belongs_to_the_checking_context() {
         let mut dependencies = ContextArena::new();
         let dependency = add_context(&mut dependencies, "/dependency.js");
         let mut first = ContextArena::new();
@@ -3528,10 +3528,10 @@ mod tests {
                 ContextStore::new(vec![&mut first, &mut dependencies]),
                 first_id,
             );
-            cx.set_merge_dst_cx(first_id);
+            cx.set_annot_error_dst(first_id);
             assert_eq!(
-                cx.switch_to(dependency).merge_dst_cx(),
-                Some(first_id),
+                cx.switch_to(dependency).annot_error_dst(),
+                first_id,
                 "a dependency reports to the file whose check switched to it"
             );
         }
@@ -3541,12 +3541,13 @@ mod tests {
             ContextStore::new(vec![&mut second, &mut dependencies]),
             second_id,
         );
-        assert!(
-            cx.switch_to(dependency).merge_dst_cx().is_none(),
+        assert_eq!(
+            cx.switch_to(dependency).annot_error_dst(),
+            dependency,
             "a cached dependency does not keep reporting to an earlier file"
         );
-        cx.set_merge_dst_cx(second_id);
-        assert_eq!(cx.switch_to(dependency).merge_dst_cx(), Some(second_id));
+        cx.set_annot_error_dst(second_id);
+        assert_eq!(cx.switch_to(dependency).annot_error_dst(), second_id);
     }
 
     #[test]

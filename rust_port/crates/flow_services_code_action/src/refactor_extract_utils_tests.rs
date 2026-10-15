@@ -524,7 +524,6 @@ mod collect_function_method_inserting_points_tests {
     use flow_typing_builtins::builtins::Builtins;
     use flow_typing_context::Context;
     use flow_typing_context::ContextArena;
-    use flow_typing_context::ContextId;
     use flow_typing_context::ContextStore;
     use flow_typing_context::Cx;
     use flow_typing_context::Metadata;
@@ -593,14 +592,12 @@ mod collect_function_method_inserting_points_tests {
             move |_cx: &mut Context<'_>,
                   _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
                 let r = resolve_reason.dupe();
-                ResolvedRequire::TypedModule(Rc::new(
-                    move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
-                        Err(Type::new(TypeInner::AnyT(
-                            r.dupe(),
-                            AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-                        )))
-                    },
-                ))
+                ResolvedRequire::TypedModule(Rc::new(move |_cx: &mut Context<'_>| {
+                    Err(Type::new(TypeInner::AnyT(
+                        r.dupe(),
+                        AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+                    )))
+                }))
             },
         );
         let builtins_values_clone = builtins_values.dupe();
@@ -771,7 +768,6 @@ mod find_closest_enclosing_class_tests {
     use flow_typing_builtins::builtins::Builtins;
     use flow_typing_context::Context;
     use flow_typing_context::ContextArena;
-    use flow_typing_context::ContextId;
     use flow_typing_context::ContextStore;
     use flow_typing_context::Cx;
     use flow_typing_context::Metadata;
@@ -840,14 +836,12 @@ mod find_closest_enclosing_class_tests {
             move |_cx: &mut Context<'_>,
                   _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
                 let r = resolve_reason.dupe();
-                ResolvedRequire::TypedModule(Rc::new(
-                    move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
-                        Err(Type::new(TypeInner::AnyT(
-                            r.dupe(),
-                            AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-                        )))
-                    },
-                ))
+                ResolvedRequire::TypedModule(Rc::new(move |_cx: &mut Context<'_>| {
+                    Err(Type::new(TypeInner::AnyT(
+                        r.dupe(),
+                        AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+                    )))
+                }))
             },
         );
         let builtins_values_clone = builtins_values.dupe();
@@ -1407,7 +1401,6 @@ mod type_synthesizer_tests {
     use flow_typing_builtins::builtins::Builtins;
     use flow_typing_context::Context;
     use flow_typing_context::ContextArena;
-    use flow_typing_context::ContextId;
     use flow_typing_context::ContextStore;
     use flow_typing_context::Cx;
     use flow_typing_context::Metadata;
@@ -1478,14 +1471,12 @@ mod type_synthesizer_tests {
             move |_cx: &mut Context<'_>,
                   _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
                 let r = resolve_reason.dupe();
-                ResolvedRequire::TypedModule(Rc::new(
-                    move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
-                        Err(Type::new(TypeInner::AnyT(
-                            r.dupe(),
-                            AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-                        )))
-                    },
-                ))
+                ResolvedRequire::TypedModule(Rc::new(move |_cx: &mut Context<'_>| {
+                    Err(Type::new(TypeInner::AnyT(
+                        r.dupe(),
+                        AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+                    )))
+                }))
             },
         );
         let builtins_values_clone = builtins_values.dupe();

@@ -47,7 +47,6 @@ mod tests {
     use flow_type_sig::type_sig_options::TypeSigOptions;
     use flow_typing_context::Context;
     use flow_typing_context::ContextArena;
-    use flow_typing_context::ContextId;
     use flow_typing_context::ContextStore;
     use flow_typing_context::MasterContext;
     use flow_typing_context::Metadata;
@@ -425,11 +424,11 @@ mod tests {
         let resolve_require: ResolveRequire = Rc::new(
             |cx: &mut Context<'_>, spec: &FlowImportSpecifier| match spec {
                 FlowImportSpecifier::Userland(mref) => match cx.builtin_module_opt(mref) {
-                    Some((_reason, m)) => ResolvedRequire::TypedModule(Rc::new(
-                        move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
+                    Some((_reason, m)) => {
+                        ResolvedRequire::TypedModule(Rc::new(move |_cx: &mut Context<'_>| {
                             Ok(m.as_already_forced().dupe())
-                        },
-                    )),
+                        }))
+                    }
                     None => ResolvedRequire::MissingModule,
                 },
             },

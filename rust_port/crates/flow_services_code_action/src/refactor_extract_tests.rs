@@ -33,7 +33,6 @@ use flow_typing::type_inference;
 use flow_typing_builtins::builtins::Builtins;
 use flow_typing_context::Context;
 use flow_typing_context::ContextArena;
-use flow_typing_context::ContextId;
 use flow_typing_context::ContextStore;
 use flow_typing_context::Cx;
 use flow_typing_context::Metadata;
@@ -158,14 +157,12 @@ fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
         move |_cx: &mut Context<'_>,
               _: &flow_common::flow_import_specifier::FlowImportSpecifier| {
             let r = resolve_reason.dupe();
-            ResolvedRequire::TypedModule(Rc::new(
-                move |_cx: &mut Context<'_>, _dst_cx: ContextId| {
-                    Err(Type::new(TypeInner::AnyT(
-                        r.dupe(),
-                        AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
-                    )))
-                },
-            ))
+            ResolvedRequire::TypedModule(Rc::new(move |_cx: &mut Context<'_>| {
+                Err(Type::new(TypeInner::AnyT(
+                    r.dupe(),
+                    AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),
+                )))
+            }))
         },
     );
     let builtins_values_clone = builtins_values.dupe();

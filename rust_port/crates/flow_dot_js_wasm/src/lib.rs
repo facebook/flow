@@ -391,7 +391,7 @@ fn prepare_file<'cx>(
         CheckBudget::new(None),
     );
     let mut cx = Context::new(ContextStore::new(vec![arena]), cx_id);
-    cx.set_merge_dst_cx(cx_id);
+    cx.set_annot_error_dst(cx_id);
     Ok(PreparedFile {
         parsed,
         cx,

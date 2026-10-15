@@ -43,7 +43,6 @@ use flow_type_sig::type_sig::*;
 use flow_type_sig::type_sig_pack as Pack;
 use flow_typing_context::Context;
 use flow_typing_context::ContextArena;
-use flow_typing_context::ContextId;
 use flow_typing_context::Cx;
 use flow_typing_context::LazyType;
 use flow_typing_context::LocalDefBindingKind;
@@ -273,7 +272,7 @@ fn merge_targeted_module_impl<'cx, L: Ord>(
 
         SigFile {
             dependencies,
-            exports: Rc::new(|_cx: &mut Context<'_>, _dst_cx: ContextId| {
+            exports: Rc::new(|_cx: &mut Context<'_>| {
                 Err(type_::any_t::annot(reason::locationless_reason(RExports)))
             }),
             local_defs,
@@ -1355,10 +1354,7 @@ pub fn merge_exports<'cx>(
         match from_ns {
             None => (),
             Some(f) => {
-                // Use merge_dst_cx to chain the destination context through
-                // nested star exports (e.g., `export * from './cycle'`).
-                let dst_cx = cx.merge_dst_cx().unwrap_or_else(|| cx.id());
-                let source = f(cx, dst_cx);
+                let source = f(cx);
                 annotation_inference::copy_named_exports(cx, source, target_module_type);
             }
         }
@@ -1373,9 +1369,8 @@ pub fn merge_exports<'cx>(
         match from_ns {
             None => (),
             Some(f) => {
-                let dst_cx = cx.merge_dst_cx().unwrap_or_else(|| cx.id());
                 let reason = reason.dupe().reposition(loc.dupe());
-                let source = f(cx, dst_cx);
+                let source = f(cx);
                 annotation_inference::copy_type_exports(cx, source, reason, target_module_type);
             }
         }
@@ -2506,7 +2501,7 @@ fn merge_annot<'cx>(
                     )
                     .unwrap();
                     ResolvedRequire::TypedModule(Rc::new(
-                        move |_cx: &mut Context, _dst_cx: ContextId| Err(err_t.dupe()),
+                        move |_cx: &mut Context| Err(err_t.dupe()),
                     ))
                 }
             };
@@ -5940,9 +5935,8 @@ pub fn classify_ts_pending_export<'cx>(
      -> flow_js_utils::ExportClassification {
         let lazy_resolved = file.dependencies.get(mref_index.clone()).1.dupe();
         let resolved = lazy_resolved.get_forced(cx).dupe();
-        let dst_cx = cx.id();
         match resolved {
-            ResolvedRequire::TypedModule(f) => match f(cx, dst_cx) {
+            ResolvedRequire::TypedModule(f) => match f(cx) {
                 Ok(m) => {
                     flow_js_utils::import_export_utils::classify_named_export(cx, &m, remote_name)
                 }
@@ -6411,7 +6405,7 @@ pub fn merge_builtins(
         };
 
         use flow_common::reason::VirtualReasonDesc::*;
-        let exports: ModuleTypeThunk = Rc::new(|_cx: &mut Context<'_>, _dst_cx: ContextId| {
+        let exports: ModuleTypeThunk = Rc::new(|_cx: &mut Context<'_>| {
             Err(type_::any_t::annot(reason::locationless_reason(RExports)))
         });
 
