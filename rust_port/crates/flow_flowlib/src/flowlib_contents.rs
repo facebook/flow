@@ -170,6 +170,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         "lib.es2023.collection.js",
         tslib_contents::LIB_ES2023_COLLECTION_D_TS,
     ),
+    ("lib.es2023.intl.js", tslib_contents::LIB_ES2023_INTL_D_TS),
     (
         "lib.es2024.collection.js",
         tslib_contents::LIB_ES2024_COLLECTION_D_TS,
