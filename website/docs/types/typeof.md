@@ -84,12 +84,7 @@ let str2: typeof str1 = 'world'; // Error!
 
 ## `typeof` inherits behaviors of other types {#toc-typeof-inherits-behaviors-of-other-types}
 
-There are many different types in Flow, some of these types behave differently
-than others. These differences make sense for that particular type but not for
-others.
-
-When you use `typeof`, you're inserting another type with all of its behaviors.
-This can make `typeof` seem inconsistent where it is not.
+`typeof` preserves the behavior of the type it returns.
 
 For example, if you use `typeof` with a class you need to remember that classes
 are [*nominally* typed instead of *structurally* typed](../lang/nominal-structural.md). So that two classes with

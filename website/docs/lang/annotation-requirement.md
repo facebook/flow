@@ -104,7 +104,7 @@ information for `Array.find`, Flow can determine that the type of `x => x % 2 ==
 needs to be `number => unknown`. This type acts as a *hint* for Flow and provides enough
 information to determine the type of `x` as `number`.
 
-Any attendant annotation can potentially act as a hint to a function parameter, for example
+A surrounding type annotation can also help Flow infer a function parameter's type. For example:
 ```js flow-check
 const fn1: (x: number) => number = x => x + 1;
 ```

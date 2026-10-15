@@ -185,13 +185,8 @@ should correspond to the same string you'd use to `require` or `import` the
 third-party module into your project. For defining modules that are accessed via
 a relative `require`/`import` path, please see the docs on the [`.flow` files](../declarations/index.md).
 
-Within the body of a `declare module` block, you can specify the set of exports
-for that module. However, before we start talking about exports we have to talk
-about the two kinds of modules that Flow supports: CommonJS and ES modules.
-
-Flow can handle both CommonJS and ES modules, but there are some relevant
-differences between the two that need to be considered when using
-`declare module`.
+A `declare module` block describes a module's exports.
+The declaration syntax differs for CommonJS and ES modules, as shown below.
 
 #### Declaring An ES Module {#toc-declaring-an-es-module}
 

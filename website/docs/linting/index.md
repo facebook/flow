@@ -61,7 +61,7 @@ sketchy-null=warn
 sketchy-null-bool=off
 ```
 
-The lint settings parser is fairly intelligent and will stop you if you write a redundant rule, a rule that gets completely overwritten, or an unused flowlint suppression. This should prevent most accidental misconfigurations of lint rules.
+Flow reports redundant or overwritten lint rules and unused `flowlint` suppressions.
 
 ### Severity Levels and Meanings {#toc-severity-levels-and-meanings}
 

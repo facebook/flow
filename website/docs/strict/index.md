@@ -48,7 +48,7 @@ Be liberal with enabling Flow Strict. Unlike adding or removing `@flow`, adding 
 Library definitions are considered strict (as they can be included in many different projects with contradicting strict configurations).
 
 ### Strict Local {#toc-strict-local}
-If you enable the `nonstrict-import` rule in your Flow Strict configuration (recommended), then all dependencies of a strict file must also be strict. While this the optimal goal, for large pre-existing codebases it may be beneficial to allow some of the benefits of Flow Strict to be put in use before all dependencies are strict.
+If you enable the `nonstrict-import` rule in your Flow Strict configuration (recommended), then all dependencies of a strict file must also be strict. In a large existing codebase, `@flow strict-local` lets you check a file before all its dependencies are strict.
 
 `@flow strict-local` is the same as `@flow strict`, except it does not require its dependencies to also be strict (i.e. it is "locally" strict). It does not have a separate configuration: it uses the same configuration as Flow Strict, just without the `nonstrict-import` rule.
 

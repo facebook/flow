@@ -251,7 +251,7 @@ The standard fix when you hit this in Flow is to switch the parameter type from 
 
 A further consequence of the kind distinction concerns `this`: Flow rejects `this` inside object-literal methods with `[object-this-reference]`, so those methods have no implicit receiver requirement. Class instance and interface methods do have one, and an extracted method [preserves it](#toc-method-extraction). Allowing a class or interface value to flow into an object type would erase that requirement, so Flow keeps the kinds distinct.
 
-One more note: TypeScript's structural treatment of classes is *almost* total: `const c: C = {x: 1}` type-checks in TS even though `c` is annotated as a class instance. TS has a handful of nominal carve-outs on top of the structural default: ECMAScript `#private` fields, the `private` / `protected` access modifiers (both of which block assignability across distinct declarations), and `unique symbol` - but they're exceptions to an otherwise structural model. Flow's class nominalism is total: no nominal opt-in is *required* because the class identity itself is the nominal channel. This is why Flow's class/object error is a frequent surprise for TS users.
+One more note: TypeScript's structural treatment of classes is *almost* total: `const c: C = {x: 1}` type-checks in TS even though `c` is annotated as a class instance. TS has a handful of nominal carve-outs on top of the structural default: ECMAScript `#private` fields, the `private` / `protected` access modifiers (both of which block assignability across distinct declarations), and `unique symbol` - but they're exceptions to an otherwise structural model. Classes are nominal in Flow by default; you don't need an additional marker to make distinct classes incompatible. This is why Flow's class/object error is a frequent surprise for TS users.
 
 #### `implements` and `extends` clauses must name an interface or class {#toc-implements-extends-rhs}
 
@@ -570,7 +570,7 @@ const o: {readonly value: number} = {
 f(o);
 ```
 
-TypeScript allows the call; the mutation through `f` succeeds at runtime. TypeScript enforces `readonly` at direct write sites, but assignability can drop the readonly constraint. Flow treats `readonly` / `writeonly` as load-bearing for static safety and rejects:
+TypeScript allows the call; the mutation through `f` succeeds at runtime. TypeScript enforces `readonly` at direct write sites, but assignability can drop the readonly constraint. Flow enforces these property modifiers during type assignment and rejects this call:
 
 ```js flow-check
 // Flow:
@@ -946,14 +946,14 @@ export function getUser(id: string): {
 }
 ```
 
-#### Type-only bindings cannot cross the value/type seam {#toc-type-export-validation}
+#### Use type-only imports and exports for type-only bindings {#toc-type-export-validation}
 
 TypeScript's `import type` and `export type` are, by default, erasable annotations: the underlying classification happens at use site, so a value-position `import {Foo}` of a type-only export silently resolves as a type. (Under `--verbatimModuleSyntax`, TS does require `import type` at the import site and errors otherwise - but that's an opt-in mode, not the default.) Flow validates the value/type kind at the import and export site unconditionally, with two distinct diagnostics:
 
 - A value-position `import {Foo}` from a module that only `export type`d `Foo` errors `[import-type-as-value]` "Cannot import the type `Foo` as a value. Use `import type` instead."
 - A value-position `export {Foo}` where `Foo` is a type-only binding in the current module errors `[type-as-value]` "Cannot use type `Foo` as a value. Types are erased and don't exist at runtime."
 
-The fix in both cases is the explicit type form: `import type {Foo}` or `export type {Foo}`. This is load-bearing for Flow's signature-extraction model: the typed interface a module exposes has to be unambiguous about which exports are types and which are values, since dependents are checked against that interface in parallel without analyzing the module body.
+The fix in both cases is the explicit type form: `import type {Foo}` or `export type {Foo}`. Flow needs this distinction when extracting a module's signature: the typed interface a module exposes has to be unambiguous about which exports are types and which are values, since dependents are checked against that interface in parallel without analyzing the module body.
 
 ```js
 // Flow:
@@ -1452,7 +1452,7 @@ if (isPositive(n)) {
 
 ### `import typeof` {#toc-import-typeof}
 
-`import typeof` is the Flow-only form. `import type Foo from './m'` (which Flow shares with TypeScript: both languages support it) brings in the type of a *type* export; `import typeof Foo from './m'` is Flow-specific and brings in the type *of a value* export so it can be used as a type annotation.
+Both Flow and TypeScript support `import type` for importing a type export. Flow also supports `import typeof`, which imports the type of a value export so you can use it in a type annotation.
 
 TypeScript's nearest equivalent for `import typeof` is `typeof import('./m')`, but the binding shape differs: TypeScript produces the namespace shape and is usually combined with indexed access (`typeof import('./m')['Foo']`), while `import typeof Foo from './m'` binds a single value's type as a top-level type binding.
 
@@ -1720,7 +1720,7 @@ TypeScript's `.d.ts` files cover two distinct concerns: typing third-party npm p
 | A sibling declaration file next to a JavaScript implementation. | [**Declaration files**](./declarations/index.md). | Colocated `.js.flow` or `.json.flow` files (for example, `Misc.js.flow` next to `Misc.js`) that shadow the implementation file. |
 | Source-level module augmentation with `declare module 'pkg' { ... }` from arbitrary project files. | No source-level equivalent. | Flow's `declare module 'pkg' { ... }` form is for libdefs under `flow-typed/`, not for reopening modules from ordinary source files or colocated `.js.flow` declaration files. |
 
-The two Flow mechanisms share much of TypeScript's ambient declaration syntax, but placement is load-bearing. `declare class`, `declare function`, `declare const`, and related forms can describe ambient values in libdefs, declaration files, or inline declarations; `declare module 'name' { ... }` is the named-package form used by libdefs. Declaration files usually describe the colocated module's exports directly, for example with `declare export ...` or `declare module.exports`.
+The two Flow mechanisms share much of TypeScript's ambient declaration syntax, but where you put the declarations matters. `declare class`, `declare function`, `declare const`, and related forms can describe ambient values in libdefs, declaration files, or inline declarations; `declare module 'name' { ... }` is the named-package form used by libdefs. Declaration files usually describe the colocated module's exports directly, for example with `declare export ...` or `declare module.exports`.
 
 See [User-side module augmentation](#toc-module-augmentation) for the declaration-file pattern TypeScript supports that Flow does not.
 

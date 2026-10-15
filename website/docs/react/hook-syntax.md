@@ -4,9 +4,8 @@ slug: /react/hook-syntax
 description: "How to use Flow's hook syntax for first-class React hook declarations with built-in Rules of React enforcement."
 ---
 
-Hook Syntax is first-class syntax and typechecking support for React hooks, bringing hooks into
-the React language as their own entities that are syntactically and semantically distinct from
-regular functions, and using Flow to enforce that the [Rules of React](https://react.dev/reference/rules) aren’t violated.
+Hook Syntax gives React hooks their own syntax and types, separate from regular functions.
+Flow uses this distinction to enforce the [Rules of React](https://react.dev/reference/rules).
 
 ## Basic Usage
 
