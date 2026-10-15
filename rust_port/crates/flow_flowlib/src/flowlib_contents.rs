@@ -152,6 +152,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2022.array.js", tslib_contents::LIB_ES2022_ARRAY_D_TS),
     ("lib.es2022.error.js", tslib_contents::LIB_ES2022_ERROR_D_TS),
+    ("lib.es2022.intl.js", tslib_contents::LIB_ES2022_INTL_D_TS),
     (
         "lib.es2022.object.js",
         tslib_contents::LIB_ES2022_OBJECT_D_TS,
