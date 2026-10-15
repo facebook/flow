@@ -5197,7 +5197,7 @@ pub fn rec_sub_t<'cx>(
                 Some(FunRestParam(
                     None,
                     reasonu.loc().dupe(),
-                    empty_t::why(reasonu.dupe().replace_desc(VirtualReasonDesc::REmpty)),
+                    empty_t::why(reasonu.dupe()),
                 )),
                 reasonl.dupe(),
                 flow_common::error_ref::FunctionReferenceKind::FunctionType,
@@ -6230,7 +6230,7 @@ pub fn rec_sub_t<'cx>(
                         Some(FunRestParam(
                             None,
                             reason_u.loc().dupe(),
-                            empty_t::why(reason_u.dupe().replace_desc(VirtualReasonDesc::REmpty)),
+                            empty_t::why(reason_u.dupe()),
                         )),
                         reason_l.dupe(),
                         flow_common::error_ref::FunctionReferenceKind::FunctionType,

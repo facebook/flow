@@ -575,7 +575,7 @@ pub(super) fn write_obj_prop<'cx>(
                 let rest_param = Some(FunRestParam(
                     None,
                     reason.loc().dupe(),
-                    empty_t::why(reason.dupe().replace_desc_new(VirtualReasonDesc::REmpty)),
+                    empty_t::make(reason.dupe().replace_desc_new(VirtualReasonDesc::REmpty)),
                 ));
                 let funtype = mk_boundfunctiontype(
                     global_this(reason.dupe()),

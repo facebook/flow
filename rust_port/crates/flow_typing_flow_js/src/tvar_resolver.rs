@@ -11,7 +11,6 @@ use std::ops::Deref;
 use dupe::Dupe;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
-use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_type::type_::AnySource;
@@ -26,7 +25,7 @@ use flow_typing_visitors::type_visitor;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 
 pub fn default_no_lowers(r: &Reason) -> Type {
-    empty_t::make(r.dupe().replace_desc(VirtualReasonDesc::REmpty))
+    empty_t::why(r.dupe())
 }
 
 struct Resolver<F>
