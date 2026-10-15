@@ -3471,7 +3471,6 @@ pub(crate) fn import_default_for_extends<'cx>(
     let on_module = move |cx: &mut Context<'_>, m: &type_::ModuleType| -> Type {
         let (_name_loc_opt, t) = flow_js_utils::import_default_t_kit::on_module_t_for_extends(
             cx,
-            &FlowJsEnv::entry(),
             reason2.dupe(),
             import_kind.clone(),
             local_name.as_str(),
@@ -3509,7 +3508,6 @@ pub(crate) fn import_named_for_extends<'cx>(
     let on_module = move |cx: &mut Context<'_>, m: &type_::ModuleType| -> Type {
         let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t_for_extends(
             cx,
-            &FlowJsEnv::entry(),
             reason2.dupe(),
             import_kind.clone(),
             &export_name2,

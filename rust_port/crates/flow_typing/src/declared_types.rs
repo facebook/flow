@@ -321,7 +321,7 @@ fn imported_assertion_info(
         }
         ImportedName::CommonJS => {
             // Mirror checking's `require()` typing
-            // (`cjs_require_t_kit::on_module_t_with_env`): without
+            // (`cjs_require_t_kit::on_module_t`): without
             // `cjs_export` (handled above) the value is the namespace
             // object, unless `automatic_require_default` applies to a
             // non-lib module that has a default export.

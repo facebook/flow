@@ -2653,18 +2653,9 @@ pub fn poly_minimum_arity(tparams: &Vec1<TypeParam>) -> usize {
         .count()
 }
 
+// This typing
 pub fn default_this_type<'cx>(
     cx: &mut Context<'cx>,
-    needs_this_param: bool,
-    func: &flow_parser::ast::function::Function<ALoc, ALoc>,
-) -> Result<Type, FlowJsException> {
-    default_this_type_with_env(cx, &FlowJsEnv::entry(), needs_this_param, func)
-}
-
-// This typing
-fn default_this_type_with_env<'cx>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
     needs_this_param: bool,
     func: &flow_parser::ast::function::Function<ALoc, ALoc>,
 ) -> Result<Type, FlowJsException> {
@@ -2675,6 +2666,7 @@ fn default_this_type_with_env<'cx>(
     use flow_typing_type::type_::any_t;
     use flow_typing_type::type_::mixed_t;
 
+    let env = &FlowJsEnv::entry();
     let params = &func.params;
     let body = &func.body;
     let reason = Reason::new(
@@ -2867,18 +2859,10 @@ pub fn lookup_builtin_module_error<'cx>(
     module_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
     loc: ALoc,
 ) -> Result<Type, FlowJsException> {
-    lookup_builtin_module_error_with_env(cx, &FlowJsEnv::entry(), module_name, loc)
-}
-
-fn lookup_builtin_module_error_with_env<'cx>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    module_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
-    loc: ALoc,
-) -> Result<Type, FlowJsException> {
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_type::type_::AnySource;
 
+    let env = &FlowJsEnv::entry();
     let module_name_str = module_name.dupe();
     let potential_generator = cx
         .missing_module_generators()
@@ -2908,7 +2892,6 @@ fn lookup_builtin_module_error_with_env<'cx>(
 /// the misleading cannot-resolve-module.
 pub fn cannot_import_global_libdef_error<'cx>(
     cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
     module_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
     libdef_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
     loc: ALoc,
@@ -2919,7 +2902,7 @@ pub fn cannot_import_global_libdef_error<'cx>(
 
     add_output_with_env(
         cx,
-        env,
+        &FlowJsEnv::entry(),
         ErrorMessage::ECannotImportGlobalLibdef(Box::new(ECannotImportGlobalLibdefData {
             loc: loc.dupe(),
             module_name: module_name.dupe(),
@@ -3022,15 +3005,7 @@ fn apply_errors<'cx>(
 }
 
 pub fn lookup_builtin_value<'cx>(cx: &mut Context<'cx>, x: &str, reason: Reason) -> Type {
-    lookup_builtin_value_with_env(cx, &FlowJsEnv::entry(), x, reason)
-}
-
-pub fn lookup_builtin_value_with_env<'cx>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    x: &str,
-    reason: Reason,
-) -> Type {
+    let env = &FlowJsEnv::entry();
     let result = lookup_builtin_value_result(cx, x, reason.dupe());
     apply_errors(cx, env, reason, result)
 }
@@ -4766,6 +4741,7 @@ pub mod cjs_require_t_kit {
     use super::check_nonstrict_import;
     use super::lookup_builtin_typeapp_with_env;
 
+    // require('SomeModule')
     pub fn on_module_t<'cx, R>(
         cx: &mut Context<'cx>,
         reposition: R,
@@ -4778,32 +4754,7 @@ pub mod cjs_require_t_kit {
     where
         R: Fn(&mut Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
     {
-        on_module_t_with_env::<R>(
-            cx,
-            &FlowJsEnv::entry(),
-            reposition,
-            reason,
-            module_symbol,
-            is_strict,
-            standard_cjs_esm_interop,
-            module_,
-        )
-    }
-
-    // require('SomeModule')
-    pub fn on_module_t_with_env<'cx, R>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        reposition: R,
-        reason: Reason,
-        module_symbol: Symbol,
-        is_strict: bool,
-        standard_cjs_esm_interop: bool,
-        module_: &ModuleType,
-    ) -> Result<(Type, ALoc), FlowJsException>
-    where
-        R: Fn(&mut Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
-    {
+        let env = &FlowJsEnv::entry();
         let ModuleTypeInner {
             module_reason,
             module_export_types: exports,
@@ -4957,24 +4908,7 @@ pub mod import_module_ns_t_kit {
         is_strict: bool,
         module_: &ModuleType,
     ) -> Result<(Type, properties::Id), FlowJsException> {
-        on_module_t_with_env(
-            cx,
-            &FlowJsEnv::entry(),
-            is_common_interface_module,
-            reason_op,
-            is_strict,
-            module_,
-        )
-    }
-
-    pub fn on_module_t_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        is_common_interface_module: bool,
-        reason_op: Reason,
-        is_strict: bool,
-        module_: &ModuleType,
-    ) -> Result<(Type, properties::Id), FlowJsException> {
+        let env = &FlowJsEnv::entry();
         let ModuleTypeInner {
             module_reason,
             module_export_types: exports,
@@ -5245,7 +5179,6 @@ pub mod import_default_t_kit {
 
     pub fn on_module_t_for_extends<'cx>(
         cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
         reason: Reason,
         _import_kind: ImportKind,
         local_name: &str,
@@ -5253,6 +5186,7 @@ pub mod import_default_t_kit {
         is_strict: bool,
         module_: &ModuleType,
     ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        let env = &FlowJsEnv::entry();
         let ModuleTypeInner {
             module_reason,
             module_export_types: exports,
@@ -5581,7 +5515,6 @@ pub mod import_named_t_kit {
 
     pub fn on_module_t_for_extends<'cx>(
         cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
         reason: Reason,
         import_kind: ImportKind,
         export_name: &FlowSmolStr,
@@ -5596,7 +5529,13 @@ pub mod import_named_t_kit {
             module_available_platforms: _ignored_todo,
         } = &**module_;
 
-        check_nonstrict_import(cx, env, is_strict, *imported_is_strict, &reason)?;
+        check_nonstrict_import(
+            cx,
+            &FlowJsEnv::entry(),
+            is_strict,
+            *imported_is_strict,
+            &reason,
+        )?;
 
         let mut value_exports_tmap = cx.find_exports(exports.value_exports_tmap);
         if let Some((def_loc_opt, type_)) = &exports.cjs_export {
@@ -5825,15 +5764,7 @@ pub mod assert_export_is_type_t_kit {
         name: Name,
         l: Type,
     ) -> Result<Type, FlowJsException> {
-        on_concrete_type_with_env(cx, &FlowJsEnv::entry(), name, l)
-    }
-
-    pub fn on_concrete_type_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        name: Name,
-        l: Type,
-    ) -> Result<Type, FlowJsException> {
+        let env = &FlowJsEnv::entry();
         if is_type(&l) {
             Ok(l)
         } else {
@@ -6188,11 +6119,10 @@ pub mod import_export_utils {
     use super::import_module_ns_t_kit;
     use super::import_named_t_kit;
     use super::import_typeof_t_kit;
-    use super::lookup_builtin_module_error_with_env;
+    use super::lookup_builtin_module_error;
 
     fn check_platform_availability<'cx>(
         cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
         error_loc: ALoc,
         imported_module_available_platforms: Option<&PlatformSet>,
     ) -> Result<(), FlowJsException> {
@@ -6218,7 +6148,7 @@ pub mod import_export_utils {
                             required_platforms,
                         }),
                     );
-                    add_output_with_env(cx, env, message)?;
+                    add_output_with_env(cx, &FlowJsEnv::entry(), message)?;
                 }
                 Ok(())
             }
@@ -6232,34 +6162,13 @@ pub mod import_export_utils {
         loc: ALoc,
         mref: Userland,
     ) -> Result<Result<ModuleType, Type>, FlowJsException> {
-        get_module_type_or_any_with_env(
-            cx,
-            &FlowJsEnv::entry(),
-            perform_platform_validation,
-            import_kind_for_untyped_import_validation,
-            loc,
-            mref,
-        )
-    }
-
-    fn get_module_type_or_any_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        perform_platform_validation: bool,
-        import_kind_for_untyped_import_validation: Option<ImportKind>,
-        loc: ALoc,
-        mref: Userland,
-    ) -> Result<Result<ModuleType, Type>, FlowJsException> {
+        let env = &FlowJsEnv::entry();
         if cx.in_declare_module() {
             match cx.builtin_module_opt(&mref) {
                 Some((_reason, m)) => Ok(Ok(m.get_forced(cx).dupe())),
                 None => {
-                    let err_t = lookup_builtin_module_error_with_env(
-                        cx,
-                        env,
-                        &FlowSmolStr::new(mref.as_str()),
-                        loc,
-                    )?;
+                    let err_t =
+                        lookup_builtin_module_error(cx, &FlowSmolStr::new(mref.as_str()), loc)?;
                     Ok(Err(err_t))
                 }
             }
@@ -6291,16 +6200,14 @@ pub mod import_export_utils {
                             mk_reason(VirtualReasonDesc::RModule(mref.dupe()), module_def_loc),
                         ))
                     }
-                    ResolvedRequire::MissingModule => Err(lookup_builtin_module_error_with_env(
+                    ResolvedRequire::MissingModule => Err(lookup_builtin_module_error(
                         cx,
-                        env,
                         &FlowSmolStr::new(mref.as_str()),
                         loc.dupe(),
                     )?),
                     ResolvedRequire::GlobalLibdefModule(libdef) => {
                         Err(cannot_import_global_libdef_error(
                             cx,
-                            env,
                             &FlowSmolStr::new(mref.as_str()),
                             &FlowSmolStr::new(libdef.as_str()),
                             loc.dupe(),
@@ -6315,7 +6222,6 @@ pub mod import_export_utils {
                         if need_platform_validation {
                             check_platform_availability(
                                 cx,
-                                env,
                                 loc.dupe(),
                                 m.module_available_platforms.as_ref(),
                             )?;
@@ -6400,28 +6306,11 @@ pub mod import_export_utils {
         namespace_symbol: Symbol,
         source_module: &Result<ModuleType, Type>,
     ) -> Result<Type, FlowJsException> {
-        get_module_namespace_type_with_env(
-            cx,
-            &FlowJsEnv::entry(),
-            reason,
-            namespace_symbol,
-            source_module,
-        )
-    }
-
-    fn get_module_namespace_type_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        reason: Reason,
-        namespace_symbol: Symbol,
-        source_module: &Result<ModuleType, Type>,
-    ) -> Result<Type, FlowJsException> {
         let is_strict = cx.is_strict();
         Ok(match source_module {
             Ok(m) => {
-                let (values_type, types_tmap) = import_module_ns_t_kit::on_module_t_with_env(
-                    cx, env, false, reason, is_strict, m,
-                )?;
+                let (values_type, types_tmap) =
+                    import_module_ns_t_kit::on_module_t(cx, false, reason, is_strict, m)?;
                 Type::new(TypeInner::NamespaceT(Rc::new(NamespaceType {
                     namespace_symbol,
                     values_type,
@@ -6441,40 +6330,13 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
         local_loc: ALoc,
     ) -> Result<Type, FlowJsException> {
-        import_namespace_specifier_type_with_env(
-            cx,
-            &FlowJsEnv::entry(),
-            import_reason,
-            import_kind,
-            module_name,
-            namespace_symbol,
-            source_module,
-            local_loc,
-        )
-    }
-
-    fn import_namespace_specifier_type_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        import_reason: Reason,
-        import_kind: &AstImportKind,
-        module_name: Userland,
-        namespace_symbol: Symbol,
-        source_module: &Result<ModuleType, Type>,
-        local_loc: ALoc,
-    ) -> Result<Type, FlowJsException> {
         match import_kind {
-            AstImportKind::ImportType => get_module_namespace_type_with_env(
-                cx,
-                env,
-                import_reason,
-                namespace_symbol,
-                source_module,
-            ),
+            AstImportKind::ImportType => {
+                get_module_namespace_type(cx, import_reason, namespace_symbol, source_module)
+            }
             AstImportKind::ImportTypeof => {
-                let module_ns_t = get_module_namespace_type_with_env(
+                let module_ns_t = get_module_namespace_type(
                     cx,
-                    env,
                     import_reason.dupe(),
                     namespace_symbol,
                     source_module,
@@ -6494,7 +6356,7 @@ pub mod import_export_utils {
                 );
                 let namespace_symbol =
                     Symbol::mk_module_symbol(FlowSmolStr::new(module_name.as_str()), local_loc);
-                get_module_namespace_type_with_env(cx, env, reason, namespace_symbol, source_module)
+                get_module_namespace_type(cx, reason, namespace_symbol, source_module)
             }
         }
     }
@@ -6522,35 +6384,7 @@ pub mod import_export_utils {
         remote_name: &FlowSmolStr,
         local_name: &FlowSmolStr,
     ) -> Result<(Option<ALoc>, Type), FlowJsException> {
-        import_named_specifier_type_with_env(
-            cx,
-            &FlowJsEnv::entry(),
-            import_reason,
-            singleton_concretize_type_for_imports_exports,
-            import_kind,
-            module_name,
-            source_module,
-            remote_name,
-            local_name,
-        )
-    }
-
-    fn import_named_specifier_type_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        import_reason: Reason,
-        singleton_concretize_type_for_imports_exports: &dyn Fn(
-            &mut Context<'cx>,
-            Reason,
-            Type,
-        )
-            -> Result<Type, FlowJsException>,
-        import_kind: &AstImportKind,
-        module_name: Userland,
-        source_module: &Result<ModuleType, Type>,
-        remote_name: &FlowSmolStr,
-        local_name: &FlowSmolStr,
-    ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        let env = &FlowJsEnv::entry();
         let import_kind = type_kind_of_kind(import_kind);
         get_imported_type(
             cx,
@@ -6579,33 +6413,7 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
         local_name: &FlowSmolStr,
     ) -> Result<(Option<ALoc>, Type), FlowJsException> {
-        import_default_specifier_type_with_env(
-            cx,
-            &FlowJsEnv::entry(),
-            import_reason,
-            singleton_concretize_type_for_imports_exports,
-            import_kind,
-            module_name,
-            source_module,
-            local_name,
-        )
-    }
-
-    fn import_default_specifier_type_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        import_reason: Reason,
-        singleton_concretize_type_for_imports_exports: &dyn Fn(
-            &mut Context<'cx>,
-            Reason,
-            Type,
-        )
-            -> Result<Type, FlowJsException>,
-        import_kind: &AstImportKind,
-        module_name: Userland,
-        source_module: &Result<ModuleType, Type>,
-        local_name: &FlowSmolStr,
-    ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        let env = &FlowJsEnv::entry();
         let import_kind = type_kind_of_kind(import_kind);
         get_imported_type(
             cx,
@@ -6628,33 +6436,12 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
         remote_name: &FlowSmolStr,
     ) -> Result<Type, FlowJsException> {
-        import_named_specifier_type_for_extends_with_env(
-            cx,
-            &FlowJsEnv::entry(),
-            import_reason,
-            import_kind,
-            module_name,
-            source_module,
-            remote_name,
-        )
-    }
-
-    fn import_named_specifier_type_for_extends_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        import_reason: Reason,
-        import_kind: &AstImportKind,
-        module_name: Userland,
-        source_module: &Result<ModuleType, Type>,
-        remote_name: &FlowSmolStr,
-    ) -> Result<Type, FlowJsException> {
         let import_kind = type_kind_of_kind(import_kind);
         let is_strict = cx.is_strict();
         match source_module {
             Ok(m) => {
                 let (_name_loc_opt, t) = import_named_t_kit::on_module_t_for_extends(
                     cx,
-                    env,
                     import_reason,
                     import_kind,
                     remote_name,
@@ -6676,33 +6463,12 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
         local_name: &FlowSmolStr,
     ) -> Result<Type, FlowJsException> {
-        import_default_specifier_type_for_extends_with_env(
-            cx,
-            &FlowJsEnv::entry(),
-            import_reason,
-            import_kind,
-            module_name,
-            source_module,
-            local_name,
-        )
-    }
-
-    fn import_default_specifier_type_for_extends_with_env<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        import_reason: Reason,
-        import_kind: &AstImportKind,
-        module_name: Userland,
-        source_module: &Result<ModuleType, Type>,
-        local_name: &FlowSmolStr,
-    ) -> Result<Type, FlowJsException> {
         let import_kind = type_kind_of_kind(import_kind);
         let is_strict = cx.is_strict();
         match source_module {
             Ok(m) => {
                 let (_name_loc_opt, t) = import_default_t_kit::on_module_t_for_extends(
                     cx,
-                    env,
                     import_reason,
                     import_kind,
                     local_name.as_str(),
@@ -6727,35 +6493,11 @@ pub mod import_export_utils {
     where
         R: Fn(&mut Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
     {
-        cjs_require_type_with_env::<R>(
-            cx,
-            &FlowJsEnv::entry(),
-            reason,
-            reposition,
-            namespace_symbol,
-            standard_cjs_esm_interop,
-            source_module,
-        )
-    }
-
-    fn cjs_require_type_with_env<'cx, R>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        reason: Reason,
-        reposition: R,
-        namespace_symbol: Symbol,
-        standard_cjs_esm_interop: bool,
-        source_module: &Result<ModuleType, Type>,
-    ) -> Result<(Option<ALoc>, Type), FlowJsException>
-    where
-        R: Fn(&mut Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
-    {
         let is_strict = cx.is_strict();
         Ok(match source_module {
             Ok(m) => {
-                let (t, def_loc) = super::cjs_require_t_kit::on_module_t_with_env(
+                let (t, def_loc) = super::cjs_require_t_kit::on_module_t(
                     cx,
-                    env,
                     reposition,
                     reason,
                     namespace_symbol,
@@ -9343,38 +9085,6 @@ where
         flow_typing_type::type_::eval::Id,
     ) -> Result<Type, FlowJsException>,
 {
-    mk_tuple_type_with_env::<F>(
-        cx,
-        &FlowJsEnv::entry(),
-        strictness_kind,
-        id,
-        mk_type_destructor,
-        inexact,
-        reason,
-        elements,
-    )
-}
-
-fn mk_tuple_type_with_env<'cx, F>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    strictness_kind: TypeStrictnessKind,
-    id: flow_typing_type::type_::eval::Id,
-    mk_type_destructor: F,
-    inexact: bool,
-    reason: Reason,
-    elements: Vec<flow_typing_type::type_::UnresolvedParam>,
-) -> Result<Type, FlowJsException>
-where
-    F: FnOnce(
-        &mut Context<'cx>,
-        UseOp,
-        Reason,
-        Type,
-        flow_typing_type::type_::Destructor,
-        flow_typing_type::type_::eval::Id,
-    ) -> Result<Type, FlowJsException>,
-{
     use flow_typing_type::type_::ArrType;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
@@ -9392,6 +9102,7 @@ where
     use flow_typing_type::type_util::tuple_ts_of_elements;
     use flow_typing_type::type_util::union_of_ts;
 
+    let env = &FlowJsEnv::entry();
     let mut resolved_rev: flow_data_structure_wrapper::list::FlowOcamlList<(
         TupleElement,
         Option<flow_typing_generics::GenericId>,

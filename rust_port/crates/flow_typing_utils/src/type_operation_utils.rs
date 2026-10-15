@@ -2422,12 +2422,7 @@ pub mod type_assertions {
             ),
         )?;
         flow_js_utils::flow_js_result_to_job_error(
-            flow_js_utils::assert_export_is_type_t_kit::on_concrete_type_with_env(
-                cx,
-                env,
-                name.dupe(),
-                t,
-            ),
+            flow_js_utils::assert_export_is_type_t_kit::on_concrete_type(cx, name.dupe(), t),
         )
     }
 
