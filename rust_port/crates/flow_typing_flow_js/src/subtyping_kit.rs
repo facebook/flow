@@ -512,8 +512,9 @@ fn func_type_guard_compat<'cx>(
                     kind: TypeGuardReferenceKind::TypeGuard,
                 }),
             };
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::ETypeGuardFuncIncompatibility {
                     use_op,
                     lower: reference(t1, reason1),
@@ -734,8 +735,9 @@ fn funt_to_funt_check<'cx>(
         }
         (Some(tg1), Some(tg2)) => {
             if tg1.is_asserts() != tg2.is_asserts() {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::ETypeGuardFuncIncompatibility {
                         use_op: use_op.dupe(),
                         lower: TypeGuardFuncReference::Type(

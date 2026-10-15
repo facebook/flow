@@ -29,3 +29,6 @@ declare var second: AssertsSecond;
 
 second as AssertsFirst; // error: asserted parameter positions differ
 
+// Only the second member matches; the first member's mismatch is speculative.
+assertion as ((x: string) => x is string) | ((x: string) => asserts x is string);
+bare as ((x: string) => asserts x is string) | ((x: string) => asserts x);
