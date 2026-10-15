@@ -923,8 +923,8 @@ Cannot assign `x.valueOf` to `xValueOf` because `(this: Date) => number` [1] is 
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1227:5
-   1227|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:1248:5
+   1248|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -975,8 +975,8 @@ with `number` [2]. [incompatible-type]
                                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1215:5
-   1215|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/lib.es5.js:1236:5
+   1236|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
@@ -993,8 +993,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the `this` par
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1068:11
-   1068| interface Date {
+   <BUILTINS>/lib.es5.js:1089:11
+   1089| interface Date {
                    ^^^^ [1]
 
 
@@ -1008,8 +1008,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return val
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1215:93
-   1215|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/lib.es5.js:1236:93
+   1236|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                      ^^^^^^ [1]
    object_prototype.js:151:30
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error

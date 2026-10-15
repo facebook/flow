@@ -46,8 +46,8 @@ Cannot get `"".match(...)[0]` because `null` [1] does not have properties. [inco
                                      ^
 
 References:
-   <BUILTINS>/lib.es5.js:968:56
-   968|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:989:56
+   989|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                                                ^^^^ [1]
 
 
@@ -63,11 +63,11 @@ Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-type]
                                   ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:968:19
-   968|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:989:19
+   989|     match(regexp: string | RegExp): RegExpMatchArray | null;
                           ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:968:28
-   968|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:989:28
+   989|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                    ^^^^^^ [3]
 
 
@@ -97,8 +97,8 @@ Cannot get `"".match(...)[0]` because `null` [1] does not have properties. [inco
                                              ^
 
 References:
-   <BUILTINS>/lib.es5.js:968:56
-   968|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:989:56
+   989|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                                                ^^^^ [1]
 
 
@@ -107,16 +107,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `"".split(...)[0]` to `x4` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    overload.js:10:18
-    10| var x4: number = "".split(/pattern/)[0];
-                         ^^^^^^^^^^^^^^^^^^^^^^
+     10| var x4: number = "".split(/pattern/)[0];
+                          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:992:63
-   992|     split(separator?: string | RegExp, limit?: number): Array<string>;
-                                                                      ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1013:63
+   1013|     split(separator?: string | RegExp, limit?: number): Array<string>;
+                                                                       ^^^^^^ [1]
    overload.js:10:9
-    10| var x4: number = "".split(/pattern/)[0];
-                ^^^^^^ [2]
+     10| var x4: number = "".split(/pattern/)[0];
+                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- overload.js:24:3
