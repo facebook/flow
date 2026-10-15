@@ -1970,8 +1970,7 @@ fn merge_annot<'cx>(
                         polarity,
                         optional,
                     }) => {
-                        let reason =
-                            reason::mk_reason(RTupleElement { name: name.dupe() }, loc.dupe());
+                        let reason = reason::mk_reason(None, loc.dupe());
                         let t = merge_impl(env, cx, file, t, false, false);
                         let elem = type_::TupleElement {
                             name: name.dupe(),

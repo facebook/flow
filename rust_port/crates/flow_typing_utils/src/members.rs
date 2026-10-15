@@ -354,10 +354,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                                     None
                                 };
                                 let t = merge_type(cx, (e1.t.dupe(), e2.t.dupe()));
-                                let reason =
-                                    locationless_reason(VirtualReasonDesc::RTupleElement {
-                                        name: name.clone(),
-                                    });
+                                let reason = locationless_reason(None);
                                 TupleElement {
                                     name,
                                     t,
@@ -462,11 +459,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                                                 None
                                             };
                                             let t = merge_type(cx, (e1.t.dupe(), e2.t.dupe()));
-                                            let reason = locationless_reason(
-                                                VirtualReasonDesc::RTupleElement {
-                                                    name: name.clone(),
-                                                },
-                                            );
+                                            let reason = locationless_reason(None);
                                             TupleElement {
                                                 name,
                                                 t,

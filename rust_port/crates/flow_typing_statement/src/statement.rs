@@ -14872,7 +14872,7 @@ fn static_method_call_object<'a>(
             let o = e_ast.loc().1.dupe();
             let keys_t = get_keys(cx, arr_reason.dupe(), &o)?;
             let values_t = get_values(cx, arr_reason.dupe(), &o)?;
-            let elem_reason = mk_reason(RTupleElement { name: None }, loc.dupe());
+            let elem_reason = mk_reason(RTupleElement, loc.dupe());
             let elem_t = Type::new(TypeInner::UnionT(
                 elem_reason.dupe(),
                 union_rep::make(

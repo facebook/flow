@@ -5489,10 +5489,7 @@ fn convert_tuple_element<'a>(
                     &mut typed_ast_utils::ErrorMapper,
                     element,
                 );
-                let reason = reason::mk_reason(
-                    reason::VirtualReasonDesc::RTupleElement { name: None },
-                    loc.dupe(),
-                );
+                let reason = reason::mk_reason(None, loc.dupe());
                 let te = type_util::mk_tuple_element(
                     reason,
                     type_::any_t::at(type_::AnySource::AnyError(None), loc),
@@ -5520,8 +5517,7 @@ fn convert_tuple_element<'a>(
                     annot: annot_ast,
                     optional: *optional,
                 };
-                let reason =
-                    reason::mk_reason(reason::VirtualReasonDesc::RTupleElement { name: None }, loc);
+                let reason = reason::mk_reason(None, loc);
                 let te = type_util::mk_tuple_element(
                     reason,
                     t,
@@ -5571,15 +5567,9 @@ fn convert_tuple_element<'a>(
                     optional: *optional,
                 },
             };
-            let name_opt = Some(str_name.dupe());
-            let reason = reason::mk_reason(
-                reason::VirtualReasonDesc::RTupleElement {
-                    name: name_opt.dupe(),
-                },
-                loc,
-            );
+            let reason = reason::mk_reason(None, loc);
             let te = type_::TupleElement {
-                name: name_opt,
+                name: Some(str_name.dupe()),
                 t,
                 polarity: polarity(
                     cx,

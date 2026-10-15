@@ -9450,9 +9450,8 @@ where
                     mixed_t::make(reason_mixed)
                 } else {
                     let ts = tuple_ts_of_elements(&elements);
-                    let elem_t_reason = reason
-                        .dupe()
-                        .replace_desc(VirtualReasonDesc::RTupleElement { name: None });
+                    let elem_t_reason =
+                        reason.dupe().replace_desc(VirtualReasonDesc::RTupleElement);
                     union_of_ts(elem_t_reason, ts, None)
                 };
                 Ok(Type::new(TypeInner::DefT(
