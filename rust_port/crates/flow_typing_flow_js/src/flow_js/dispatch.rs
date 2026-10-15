@@ -390,6 +390,57 @@ fn flow_dict_key_to_keys<'cx>(
     )
 }
 
+/// Whether two evals are both `M[K]` for the same non-generic instance type `M` and the same
+/// generic `K`. Overriding generic methods restate the same indexed access at a new annotation
+/// site (e.g. `ev: HTMLElementEventMap[K]` in every `HTML*Element.addEventListener`), so their
+/// eval ids differ, and evaluating either one expands `K` to every key of its bound.
+fn same_generic_indexed_access<'cx>(
+    cx: &mut Context<'cx>,
+    (t1, d1): (&Type, &TypeDestructorT),
+    (t2, d2): (&Type, &TypeDestructorT),
+) -> bool {
+    let (Destructor::ElementType { index_type: i1 }, Destructor::ElementType { index_type: i2 }) =
+        (d1.2.as_ref(), d2.2.as_ref())
+    else {
+        return false;
+    };
+    let (TypeInner::GenericT(g1), TypeInner::GenericT(g2)) = (i1.deref(), i2.deref()) else {
+        return false;
+    };
+    g1.id == g2.id && flow_js_utils::is_same_non_generic_instance_annot(cx, t1, t2)
+}
+
+/// Substitutes `this` into the instance of a this-abstracted class or interface `c`.
+fn this_specialize_instance<'cx>(
+    cx: &mut Context<'cx>,
+    c: &Type,
+    inst_r: &Reason,
+    i: &InstanceT,
+    subst_name: &SubstName,
+    this: &Type,
+) -> Type {
+    if let Some(t) = flow_cache::this_specialize::find(cx, c, this) {
+        return t;
+    }
+    let mut map = FlowOrdMap::new();
+    map.insert(subst_name.dupe(), this.dupe());
+    let i = type_subst::subst_instance_type(
+        cx,
+        None,
+        true,
+        false,
+        type_subst::Purpose::Normal,
+        &map,
+        i,
+    );
+    let t = Type::new(TypeInner::DefT(
+        inst_r.dupe(),
+        DefT::new(DefTInner::InstanceT(Rc::new(i))),
+    ));
+    flow_cache::this_specialize::add(cx, c.dupe(), this.dupe(), t.dupe());
+    t
+}
+
 /// NOTE: Do not call this function directly. Instead, call the wrapper
 /// functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
 /// this module, and the function `flow` outside this module.
@@ -514,6 +565,24 @@ fn __flow_impl<'cx>(
         (TypeInner::EvalT { id: id1, .. }, UseTInner::UseT(_, t2)) if matches!(t2.deref(), TypeInner::EvalT { id: id2, .. } if id1 == id2) => {
             if cx.is_verbose() {
                 eprintln!("EvalT ~> EvalT fast path");
+            }
+        }
+        (
+            TypeInner::EvalT {
+                type_: t1,
+                defer_use_t: d1,
+                ..
+            },
+            UseTInner::UseT(_, t2),
+        ) if let TypeInner::EvalT {
+            type_: t2,
+            defer_use_t: d2,
+            ..
+        } = t2.deref()
+            && same_generic_indexed_access(cx, (t1, d1), (t2, d2)) =>
+        {
+            if cx.is_verbose() {
+                eprintln!("EvalT ~> EvalT same generic indexed access fast path");
             }
         }
         (
@@ -4539,21 +4608,7 @@ fn __flow_impl<'cx>(
                     ..
                 }) = inner.deref() =>
         {
-            let mut map = FlowOrdMap::new();
-            map.insert(subst_name.dupe(), this.dupe());
-            let i = type_subst::subst_instance_type(
-                cx,
-                None,
-                true,
-                false,
-                type_subst::Purpose::Normal,
-                &map,
-                i,
-            );
-            let def_t = Type::new(TypeInner::DefT(
-                inst_r.dupe(),
-                DefT::new(DefTInner::InstanceT(Rc::new(i))),
-            ));
+            let def_t = this_specialize_instance(cx, l, inst_r, i, subst_name, this);
             continue_repos(cx, env, trace, r, false, &def_t, k)?;
         }
         // this-specialize a this-abstracted interface
@@ -4566,21 +4621,7 @@ fn __flow_impl<'cx>(
             }),
             UseTInner::ThisSpecializeT(r, this, k),
         ) => {
-            let mut map = FlowOrdMap::new();
-            map.insert(subst_name.dupe(), this.dupe());
-            let i = type_subst::subst_instance_type(
-                cx,
-                None,
-                true,
-                false,
-                type_subst::Purpose::Normal,
-                &map,
-                i,
-            );
-            let def_t = Type::new(TypeInner::DefT(
-                inst_r.dupe(),
-                DefT::new(DefTInner::InstanceT(Rc::new(i))),
-            ));
+            let def_t = this_specialize_instance(cx, l, inst_r, i, subst_name, this);
             continue_repos(cx, env, trace, r, false, &def_t, k)?;
         }
         // this-specialization of non-this-abstracted classes is a no-op

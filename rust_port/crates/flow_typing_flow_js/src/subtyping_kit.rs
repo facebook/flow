@@ -4056,6 +4056,11 @@ pub fn rec_sub_t<'cx>(
                 }),
             )
         }
+        (TypeInner::KeysT(_, o1), TypeInner::KeysT(_, o2))
+            if flow_js_utils::is_same_non_generic_instance_annot(cx, o1, o2) =>
+        {
+            Ok(())
+        }
         (TypeInner::KeysT(reason1, o1), _) => {
             // flow all keys of o1 to u
             FlowJs::rec_flow_with_env(

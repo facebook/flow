@@ -10752,6 +10752,8 @@ pub type EvalReposCacheMap = MultiLevelMap<(Type, TypeDestructorT, eval::Id), Ty
 
 pub type FixCacheMap = MultiLevelMap<(bool, Type), Type>;
 
+pub type ThisSpecializeCacheMap = MultiLevelMap<(Type, Type), Type>;
+
 pub type ConstFoldMap = MultiLevelMap<(i32, Reason, i32), i32>;
 
 pub fn open_tvar(tvar: &Type) -> &Tvar {

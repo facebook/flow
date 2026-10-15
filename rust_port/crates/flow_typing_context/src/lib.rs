@@ -93,6 +93,7 @@ use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::RootUseOp;
+use flow_typing_type::type_::ThisSpecializeCacheMap;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeContext;
 use flow_typing_type::type_::TypeInner;
@@ -420,6 +421,7 @@ pub struct ComponentT {
     id_cache: IdCacheMap,
     eval_repos_cache: EvalReposCacheMap,
     fix_cache: FixCacheMap,
+    this_specialize_cache: ThisSpecializeCacheMap,
     spread_cache: SpreadCache,
     const_fold_cache: ConstFoldMap,
 
@@ -1080,6 +1082,7 @@ fn make_ccx() -> ComponentT {
         id_cache: Default::default(),
         eval_repos_cache: Default::default(),
         fix_cache: Default::default(),
+        this_specialize_cache: Default::default(),
         spread_cache: SpreadCache::new(),
         const_fold_cache: Default::default(),
         annot_graph: IntHashMap::default(),
@@ -2557,7 +2560,7 @@ impl<'a> Context<'a> {
 
 pub struct CacheSnapshot {
     constraint_cache_level_count: usize,
-    // eval_id_cache, id_cache, eval_repos_cache, fix_cache,
+    // eval_id_cache, id_cache, eval_repos_cache, fix_cache, this_specialize_cache,
     // const_fold_cache use MultiLevelMap — their state is tracked internally
     // via push_level/pop_level, not stored here.
     snapshot_subst_cache: type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>,
@@ -2742,6 +2745,7 @@ impl<'a> Context<'a> {
         ccx.id_cache.push_level();
         ccx.eval_repos_cache.push_level();
         ccx.fix_cache.push_level();
+        ccx.this_specialize_cache.push_level();
         ccx.const_fold_cache.push_level();
         ccx.elab_open_memo.push_level();
         let constraint_cache_level_count = ccx.constraint_cache.level_count();
@@ -2769,6 +2773,7 @@ impl<'a> Context<'a> {
         ccx.id_cache.pop_level();
         ccx.eval_repos_cache.pop_level();
         ccx.fix_cache.pop_level();
+        ccx.this_specialize_cache.pop_level();
         ccx.const_fold_cache.pop_level();
         ccx.elab_open_memo.pop_level();
         ccx.spread_cache = snapshot_spread_cache;
@@ -3360,6 +3365,14 @@ impl<'a> Context<'a> {
 
     pub fn fix_cache_mut(&mut self) -> &mut FixCacheMap {
         &mut self.ccx_mut().fix_cache
+    }
+
+    pub fn this_specialize_cache(&self) -> &ThisSpecializeCacheMap {
+        &self.ccx().this_specialize_cache
+    }
+
+    pub fn this_specialize_cache_mut(&mut self) -> &mut ThisSpecializeCacheMap {
+        &mut self.ccx_mut().this_specialize_cache
     }
 
     pub fn spread_cache(&self) -> &SpreadCache {

@@ -219,6 +219,24 @@ pub mod fix {
     }
 }
 
+// Keyed on the this-abstracted class or interface and the `this` it is specialized with. A
+// property lookup that walks up a `ThisTypeAppT` super specializes the same super once per
+// lookup, so without this every key of `keyof Map` re-substitutes the whole super interface.
+pub mod this_specialize {
+    use dupe::Dupe;
+
+    use super::*;
+
+    pub fn find(cx: &Context, c: &Type, this: &Type) -> Option<Type> {
+        let cache = cx.this_specialize_cache();
+        cache.get(&(c.dupe(), this.dupe())).map(|t| t.dupe())
+    }
+
+    pub fn add(cx: &mut Context, c: Type, this: Type, t: Type) {
+        cx.this_specialize_cache_mut().insert((c, this), t);
+    }
+}
+
 // debug util: please don't dead-code-eliminate
 // Summarize flow constraints in cache as ctor/reason pairs, and return counts
 //    for each group.

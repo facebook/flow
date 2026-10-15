@@ -9111,6 +9111,30 @@ pub fn is_same_instance_type(
     i1.inst.class_id == i2.inst.class_id && i1.inst.class_id != flow_aloc::ALocId::none()
 }
 
+/// Whether two annotations resolve to the same instance type without type arguments. Each
+/// annotation site of an interface gets its own `this`-specialized copy of the instance, so
+/// this compares nominally, as `InstanceT ~> InstanceT` does.
+pub fn is_same_non_generic_instance_annot(cx: &mut Context<'_>, t1: &Type, t2: &Type) -> bool {
+    let mut resolve = |t: &Type| match t.deref() {
+        TypeInner::AnnotT(_, t, _) => cx.find_resolved(t),
+        _ => cx.find_resolved(t),
+    };
+    let (Some(t1), Some(t2)) = (resolve(t1), resolve(t2)) else {
+        return false;
+    };
+    match (t1.deref(), t2.deref()) {
+        (TypeInner::DefT(_, d1), TypeInner::DefT(_, d2)) => match (d1.deref(), d2.deref()) {
+            (DefTInner::InstanceT(i1), DefTInner::InstanceT(i2)) => {
+                is_same_instance_type(i1, i2)
+                    && i1.inst.type_args.is_empty()
+                    && i2.inst.type_args.is_empty()
+            }
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
 // TypeAppT ~> TypeAppT has special behavior that flows the type arguments directly
 // instead of evaluating the types and then flowing the results to each other. This is
 // a bug that should be removed because it breaks transitivity, which can cause errors
