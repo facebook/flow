@@ -297,7 +297,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RArray,
     RArrayLit,
     RArrayLitUnsound,
-    RConstArrayLit,
     REmptyArrayLit,
     RArrayType,
     RArrayHole,
@@ -499,7 +498,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RArray => RArray,
             RArrayLit => RArrayLit,
             RArrayLitUnsound => RArrayLitUnsound,
-            RConstArrayLit => RConstArrayLit,
             REmptyArrayLit => REmptyArrayLit,
             RArrayType => RArrayType,
             RArrayNthElement(i) => RArrayNthElement(*i),
@@ -704,7 +702,6 @@ impl<L: Dupe> VirtualReasonDesc<L> {
                 RArray
                 | RArrayLit
                 | RArrayLitUnsound
-                | RConstArrayLit
                 | REmptyArrayLit
                 | RArrayType
                 | RROArrayType
@@ -1411,7 +1408,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Arrays
         RArray => "array".to_string(),
         RArrayLit | RArrayLitUnsound => "array literal".to_string(),
-        RConstArrayLit => "const array literal".to_string(),
         REmptyArrayLit => "empty array literal".to_string(),
         RArrayType => "array type".to_string(),
         RArrayNthElement(i) => format!("element {}", i),

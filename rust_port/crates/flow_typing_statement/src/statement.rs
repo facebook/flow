@@ -7136,7 +7136,7 @@ fn expression_<'a>(
             let as_const = *as_const;
             match inner.elements.as_ref() {
                 [] if as_const => {
-                    let reason = mk_reason(VirtualReasonDesc::RConstArrayLit, loc.dupe());
+                    let reason = mk_reason(VirtualReasonDesc::RArray, loc.dupe());
                     let elem_t = empty_t::make(mk_reason(None, loc.dupe()));
                     let arrtype = type_::ArrType::TupleAT(Box::new(TupleATData {
                         elem_t,
@@ -7221,7 +7221,7 @@ fn expression_<'a>(
                         }))
                     };
                     let reason = if as_const {
-                        mk_reason(VirtualReasonDesc::RConstArrayLit, loc.dupe())
+                        mk_reason(VirtualReasonDesc::RArray, loc.dupe())
                     } else if *has_hint.get_forced(cx) {
                         mk_reason(VirtualReasonDesc::RArrayLitUnsound, loc.dupe())
                     } else {
