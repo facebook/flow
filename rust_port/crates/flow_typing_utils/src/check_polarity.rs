@@ -185,7 +185,7 @@ fn check_polarity_impl<'cx>(
             // point. We need to know the polarity of the type parameters in order to
             // know the position of any found GenericTs. This call will continue
             // checking the type args once the root type is resolved.
-            type_operation_utils::distribute_union_intersection::distribute_with_env(
+            type_operation_utils::distribute_union_intersection::distribute(
                 cx,
                 env,
                 None,
