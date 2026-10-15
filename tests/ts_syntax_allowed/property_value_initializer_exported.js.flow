@@ -3,3 +3,5 @@ declare export class ExportedConstants {
   readonly code = "EXPORTED_VALUE";
   readonly neg = -1;
 }
+
+declare export const literal = "hello";

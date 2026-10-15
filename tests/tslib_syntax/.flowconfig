@@ -6,7 +6,6 @@ ts_interop_arrays.d.ts
 [options]
 all=true
 builtin_lib=core-only
-experimental.ts_syntax=true
 experimental.tslib_syntax=true
 module.file_ext=.js
 module.file_ext=.d.ts

@@ -2246,7 +2246,7 @@ fn statement_<'a>(
         let kind = decls.kind;
         let declarations: Vec<_> =
             try_map_vec(&decls.declarations, |decl| -> Result<_, CheckExprError> {
-                if kind == ast::VariableKind::Const && decl.init.is_none() && !cx.tslib_syntax() {
+                if kind == ast::VariableKind::Const && decl.init.is_none() && !cx.ts_syntax() {
                     flow_js::add_output_non_speculating(
                         cx,
                         ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -2503,7 +2503,7 @@ fn statement_<'a>(
             let Ok(v) = polymorphic_ast_mapper::predicate(&mut typed_ast_utils::ErrorMapper, p);
             v
         });
-        if *implicit_declare && !cx.tslib_syntax() {
+        if *implicit_declare && !cx.ts_syntax() {
             flow_js::add_output_non_speculating(
                 cx,
                 ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -3319,7 +3319,7 @@ fn statement_<'a>(
                         );
                     }
                     (None, true) => {
-                        if !cx.tslib_syntax() {
+                        if !cx.ts_syntax() {
                             flow_js::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -3618,7 +3618,7 @@ fn statement_<'a>(
                             loc: d_loc,
                             declaration: f,
                         } => {
-                            if f.id.is_none() && !cx.tslib_syntax() {
+                            if f.id.is_none() && !cx.ts_syntax() {
                                 flow_js::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -3840,7 +3840,7 @@ fn statement_<'a>(
             })
         }
         StatementInner::ExportAssignment { inner, .. } => {
-            if !cx.tslib_syntax() {
+            if !cx.ts_syntax() {
                 flow_js::add_output_non_speculating(
                     cx,
                     ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -3932,7 +3932,7 @@ fn statement_<'a>(
                     .any(|spec| spec.export_kind == statement::ExportKind::ExportType),
                 _ => false,
             };
-            if has_type_specifier && !cx.tslib_syntax() {
+            if has_type_specifier && !cx.ts_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -4340,7 +4340,7 @@ fn statement_<'a>(
             })
         }
         StatementInner::ImportEqualsDeclaration { inner, .. } => {
-            if !cx.tslib_syntax() {
+            if !cx.ts_syntax() {
                 flow_js::add_output_non_speculating(
                     cx,
                     ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -4708,19 +4708,16 @@ fn declare_variable<'a>(
         kind,
         comments,
     } = decl;
-    // TSLib gates
-    if !cx.tslib_syntax() {
-        if declarations.len() > 1 {
-            flow_js::add_output_non_speculating(
-                cx,
-                ErrorMessage::EUnsupportedSyntax(Box::new((
-                    loc.dupe(),
-                    UnsupportedSyntax::TSLibSyntax(
-                        TsLibSyntaxKind::DeclareVariableMultipleDeclarators,
-                    ),
-                ))),
-            );
-        }
+    if declarations.len() > 1 && !cx.tslib_syntax() {
+        flow_js::add_output_non_speculating(
+            cx,
+            ErrorMessage::EUnsupportedSyntax(Box::new((
+                loc.dupe(),
+                UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::DeclareVariableMultipleDeclarators),
+            ))),
+        );
+    }
+    if !cx.ts_syntax() {
         for d in declarations.iter() {
             match &d.init {
                 Some(init_expr) => {
@@ -5112,7 +5109,7 @@ pub fn declare_namespace<'a>(
         keyword,
     } = decl;
     let (body_loc, body_block) = body;
-    if *implicit_declare && !cx.tslib_syntax() {
+    if *implicit_declare && !cx.ts_syntax() {
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::EUnsupportedSyntax(Box::new((

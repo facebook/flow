@@ -3,4 +3,4 @@ lib
 
 [options]
 all=true
-experimental.tslib_syntax=true
+experimental.ts_syntax=true

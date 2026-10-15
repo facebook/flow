@@ -382,7 +382,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:51:3
 
-Flow does not support `abstract` methods. [unsupported-syntax]
+`abstract` member `n` can only appear within an `abstract` class. [invalid-abstract]
 
    51|   protected abstract n: number; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -399,7 +399,7 @@ modifier. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:52:3
 
-Flow does not support `abstract` methods. [unsupported-syntax]
+`abstract` member `o` can only appear within an `abstract` class. [invalid-abstract]
 
    52|   public abstract o: string; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -415,7 +415,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:53:3
 
-Flow does not support `abstract` methods. [unsupported-syntax]
+`abstract` member `p` can only appear within an `abstract` class. [invalid-abstract]
 
    53|   protected abstract p(): void; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -432,10 +432,153 @@ modifier. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:54:3
 
-Flow does not support `abstract` methods. [unsupported-syntax]
+`abstract` member `q` can only appear within an `abstract` class. [invalid-abstract]
 
    54|   public abstract q(): number; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- ambient_syntax.js.flow:1:7
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   1| const value: number; // ERROR
+            ^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- ambient_syntax.js.flow:2:1
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   2| function identity(x: number): number; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- ambient_syntax.js.flow:3:1
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   3| component Button(label: string); // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- ambient_syntax.js.flow:4:1
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+      v---------------------
+   4| namespace N { // ERROR
+   5|   const value: number; // ERROR
+   6|   function identity(x: number): number; // ERROR
+   7| }
+      ^
+
+
+Error --------------------------------------------------------------------------------------- ambient_syntax.js.flow:5:9
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   5|   const value: number; // ERROR
+              ^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- ambient_syntax.js.flow:6:3
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   6|   function identity(x: number): number; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- ambient_syntax.js.flow:9:31
+
+Optional unlabeled tuple element is not enabled. [unsupported-syntax]
+
+   9| type OptionalTuple = [string, number?]; // ERROR
+                                    ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- ambient_syntax.js.flow:10:23
+
+Optional indexer (`?:`) is not enabled. [unsupported-syntax]
+
+   10| type OptionalIndex = {[string]?: number}; // ERROR
+                             ^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- ambient_syntax.js.flow:12:3
+
+Optional indexer (`?:`) is not enabled. [unsupported-syntax]
+
+   12|   [string]?: number; // ERROR
+         ^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- ambient_syntax.js.flow:15:3
+
+Optional indexer (`?:`) is not enabled. [unsupported-syntax]
+
+   15|   [string]?: number; // ERROR
+         ^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- ambient_syntax.js.flow:17:26
+
+The equivalent of TypeScript's `readonly` type operator applied to an array type is `ReadonlyArray<T>`.
+[unsupported-syntax]
+
+   17| type ReadonlyArrayType = readonly string[]; // ERROR
+                                ^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- ambient_syntax.js.flow:18:22
+
+The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `Readonly<[T, S]>`.
+[unsupported-syntax]
+
+   18| type ReadonlyTuple = readonly [string, number]; // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- ambient_syntax.js.flow:19:18
+
+The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
+types. [unsupported-syntax]
+
+   19| type Undefined = undefined; // ERROR
+                        ^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- ambient_syntax.js.flow:22:3
+
+Private class field (`#private`) is not enabled. [unsupported-syntax]
+
+   22|   #private; // ERROR
+         ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- ambient_syntax.js.flow:25:3
+
+Property value initializer in declaration is not enabled. [unsupported-syntax]
+
+   25|   readonly value = 42; // ERROR
+         ^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- ambient_syntax.js.flow:27:25
+
+`declare` variable with literal initializer is not enabled. [unsupported-syntax]
+
+   27| declare const literal = "hello"; // ERROR
+                               ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------- anonymous_default.js.flow:1:16
+
+Anonymous default export function declaration is not enabled. [unsupported-syntax]
+
+   1| export default function (x: number): number; // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- deprecated/keyof.js:3:10
@@ -691,6 +834,14 @@ The utility type `$Values` is deprecated, use `Values` instead. [deprecated-util
                 ^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------- export_assignment.js:1:1
+
+`export =` syntax is not enabled. [unsupported-syntax]
+
+   1| export = {value: 42}; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
 
 Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
@@ -911,6 +1062,30 @@ Variance modifiers cannot appear on a type parameter of a method. [unsupported-v
 
    51|   coMethod<out T>(): T; // ERROR - variance modifiers not allowed on method type parameters
                   ^^^
+
+
+Error --------------------------------------------------------------------------------------------------- modules.js:1:1
+
+`import ... = ...` syntax is not enabled. [unsupported-syntax]
+
+   1| import Value = require("./export_assignment"); // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- modules.js:2:1
+
+`import ... = ...` syntax is not enabled. [unsupported-syntax]
+
+   2| import type ValueType = require("./export_assignment"); // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- modules.js:5:1
+
+Inline `type` modifier on export specifier is not enabled. [unsupported-syntax]
+
+   5| export {type T}; // ERROR
+      ^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- never.js:1:10
@@ -1369,14 +1544,6 @@ Cannot declare `Values` [1], because `Values` is a reserved type name. [reserved
                 ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- satisfies.js:3:1
-
-`satisfies` expression is not enabled. [unsupported-syntax]
-
-   3| 1 satisfies number; // ERROR: `satisfies` expression is not enabled
-      ^^^^^^^^^^^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------- type_param_extends.js:2:33
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -1434,4 +1601,4 @@ References:
 
 
 
-Found 158 errors
+Found 178 errors

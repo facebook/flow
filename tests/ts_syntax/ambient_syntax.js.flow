@@ -1,0 +1,31 @@
+const value: number; // ERROR
+function identity(x: number): number; // ERROR
+component Button(label: string); // ERROR
+namespace N { // ERROR
+  const value: number; // ERROR
+  function identity(x: number): number; // ERROR
+}
+
+type OptionalTuple = [string, number?]; // ERROR
+type OptionalIndex = {[string]?: number}; // ERROR
+interface OptionalInterfaceIndex {
+  [string]?: number; // ERROR
+}
+declare class OptionalClassIndex {
+  [string]?: number; // ERROR
+}
+type ReadonlyArrayType = readonly string[]; // ERROR
+type ReadonlyTuple = readonly [string, number]; // ERROR
+type Undefined = undefined; // ERROR
+
+declare class Private {
+  #private; // ERROR
+}
+declare class Constants {
+  readonly value = 42; // ERROR
+}
+declare const literal = "hello"; // ERROR
+
+declare const first: number, second: string; // OK
+type LabeledOptionalTuple = [value?: number]; // OK
+type OptionalProperty = {value?: number}; // OK

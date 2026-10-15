@@ -1,4 +1,3 @@
-// Property value initializers should infer literal types when tslib_syntax=true
 declare class Constants {
   static readonly BUFFER_SIZE = 256;
   readonly code = "NEXT_STATIC_GEN_BAILOUT";

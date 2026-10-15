@@ -1183,7 +1183,7 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::Undefined { loc, comments } => {
-            if !cx.ts_syntax() && !cx.tslib_syntax() {
+            if !cx.ts_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -1337,7 +1337,7 @@ fn convert_inner<'a>(
         }
         TypeInner::ReadOnly { loc, inner } => match inner.argument.deref() {
             TypeInner::Tuple { .. } => {
-                if !cx.ts_syntax() && !cx.tslib_syntax() {
+                if !cx.ts_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -1385,7 +1385,7 @@ fn convert_inner<'a>(
                 loc: arr_loc,
                 inner: arr_inner,
             } => {
-                if !cx.ts_syntax() && !cx.tslib_syntax() {
+                if !cx.ts_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -5147,7 +5147,7 @@ fn convert_object<'a>(
                         prop_asts.push(error_prop);
                         continue;
                     }
-                    KeyRead::IndexSignature if indexer.optional && !cx.tslib_syntax() => {
+                    KeyRead::IndexSignature if indexer.optional && !cx.ts_syntax() => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
                             ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -5475,7 +5475,7 @@ fn convert_tuple_element<'a>(
         Element::UnlabeledElement {
             annot, optional, ..
         } => {
-            if *optional && !cx.tslib_syntax() {
+            if *optional && !cx.ts_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -7246,7 +7246,7 @@ fn add_interface_properties<'a>(
                     prop_asts.push(error_prop);
                     continue;
                 }
-                if is_index_signature && idx.optional && !cx.tslib_syntax() {
+                if is_index_signature && idx.optional && !cx.ts_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -7446,7 +7446,7 @@ fn add_interface_properties<'a>(
                     }
                 };
                 match (init_, &np.value) {
-                    (Some(_), _) if !cx.tslib_syntax() => {
+                    (Some(_), _) if !cx.ts_syntax() => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
                             ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -7631,7 +7631,7 @@ fn add_interface_properties<'a>(
                          -> Option<ast::types::object::Property<ALoc, (ALoc, Type)>> {
                             match init_ {
                                 Some(init_expr)
-                                    if cx.tslib_syntax() && is_literal_init(init_expr) =>
+                                    if cx.ts_syntax() && is_literal_init(init_expr) =>
                                 {
                                     let init_ast = crate::statement::expression(
                                         None,
@@ -8499,7 +8499,7 @@ fn add_interface_properties<'a>(
                 prop_asts.push(error_prop);
             }
             Property::PrivateField(pf) => {
-                if !cx.tslib_syntax() {
+                if !cx.ts_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::EUnsupportedSyntax(Box::new((

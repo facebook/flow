@@ -1,4 +1,4 @@
-import {ExportedConstants} from "./property_value_initializer_exported";
+import {ExportedConstants, literal} from "./property_value_initializer_exported";
 
 declare const e: ExportedConstants;
 e.code as "EXPORTED_VALUE"; // OK
@@ -7,3 +7,5 @@ ExportedConstants.BUFFER_SIZE as 256; // OK
 ExportedConstants.BUFFER_SIZE as 0; // ERROR - incompatible literal types
 e.neg as -1; // OK
 e.neg as 1; // ERROR
+literal as "hello"; // OK
+literal as "goodbye"; // ERROR

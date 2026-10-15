@@ -1,3 +1,37 @@
+Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:6:1
+
+Cannot cast `f(...)` to number because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   anonymous_default_export_usage.js:6:1
+   6| f("hello") as number; // ERROR - string is not number
+      ^^^^^^^^^^
+
+References:
+   anonymous_default_export_usage.js:6:3
+   6| f("hello") as number; // ERROR - string is not number
+        ^^^^^^^ [1]
+   anonymous_default_export_usage.js:6:15
+   6| f("hello") as number; // ERROR - string is not number
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:7:1
+
+Cannot cast `f(...)` to string because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   anonymous_default_export_usage.js:7:1
+   7| f(42) as string; // ERROR - number is not string
+      ^^^^^
+
+References:
+   anonymous_default_export_usage.js:7:3
+   7| f(42) as string; // ERROR - number is not string
+        ^^ [1]
+   anonymous_default_export_usage.js:7:10
+   7| f(42) as string; // ERROR - number is not string
+               ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- basic_types.js:1:1
 
 Cannot cast `null` to undefined because `null` [1] is incompatible with `void` [2]. [incompatible-type]
@@ -24,6 +58,89 @@ References:
    basic_types.js:6:18
    6| '' as unknown as never; // error
                        ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- declare_var_extras.js:24:1
+
+Cannot cast `s` to string literal `bar` because `"foo"` [1] is incompatible with `"bar"` [2]. [incompatible-type]
+
+   declare_var_extras.js:24:1
+   24| s as 'bar'; // ERROR - 'foo' !== 'bar'
+       ^
+
+References:
+   declare_var_extras.js:2:19
+    2| declare const s = 'foo';
+                         ^^^^^ [1]
+   declare_var_extras.js:24:6
+   24| s as 'bar'; // ERROR - 'foo' !== 'bar'
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- declare_var_extras.js:25:1
+
+Cannot cast `n` to number literal `20` because `10` [1] is incompatible with `20` [2]. [incompatible-type]
+
+   declare_var_extras.js:25:1
+   25| n as 20; // ERROR - 10 !== 20
+       ^
+
+References:
+   declare_var_extras.js:3:19
+    3| declare const n = 10;
+                         ^^ [1]
+   declare_var_extras.js:25:6
+   25| n as 20; // ERROR - 10 !== 20
+            ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- declare_var_extras.js:26:1
+
+Cannot cast `bi` to bigint literal `200n` because `100n` [1] is incompatible with `200n` [2]. [incompatible-type]
+
+   declare_var_extras.js:26:1
+   26| bi as 200n; // ERROR - 100n !== 200n
+       ^^
+
+References:
+   declare_var_extras.js:5:20
+    5| declare const bi = 100n;
+                          ^^^^ [1]
+   declare_var_extras.js:26:7
+   26| bi as 200n; // ERROR - 100n !== 200n
+             ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- declare_var_extras.js:30:27
+
+`declare` variable declarations cannot have both a type annotation and an initializer. [unsupported-syntax]
+
+   30| declare const e: string = 'hello'; // ERROR
+                                 ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- declare_var_extras.js:33:19
+
+Initializer in a `declare` variable must be a literal (string, number, bigint, or boolean). [unsupported-syntax]
+
+   33| declare const f = 1 + 2; // ERROR
+                         ^^^^^
+
+
+Error -------------------------------------------------------------------------------------- declare_var_extras.js:36:15
+
+`declare` variable declarations require a type annotation or a literal initializer. [unsupported-syntax]
+
+   36| declare const h; // ERROR
+                     ^
+
+
+Error -------------------------------------------------------------------------------------- declare_var_extras.js:39:15
+
+Destructuring is not supported in `declare` variable declarations. [unsupported-syntax]
+
+   39| declare const [g] = 'foo'; // ERROR
+                     ^^^
 
 
 Error ------------------------------------------------------------------------------------------------ exported.js:10:20
@@ -98,6 +215,181 @@ References:
    keyof.js:14:10
    14| 'foo' as K2; // error: $Keys does not include props from super class, which is different from TS
                 ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ optional_indexer.js:3:1
+
+Cannot cast `t["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_indexer.js:3:1
+   3| t["foo"] as number; // ERROR - undefined is not number
+      ^^^^^^^^
+
+References:
+   optional_indexer.js:1:22
+   1| type T = {[string]?: number};
+                           ^^^^^^ [1]
+   optional_indexer.js:3:13
+   3| t["foo"] as number; // ERROR - undefined is not number
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_indexer.js:7:1
+
+Cannot cast `s["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_indexer.js:7:1
+   7| s["foo"] as number; // ERROR - undefined is not number
+      ^^^^^^^^
+
+References:
+   optional_indexer.js:5:31
+   5| type S = {readonly [string]?: number};
+                                    ^^^^^^ [1]
+   optional_indexer.js:7:13
+   7| s["foo"] as number; // ERROR - undefined is not number
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- optional_indexer.js:13:1
+
+Cannot cast `c["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_indexer.js:13:1
+   13| c["foo"] as number; // ERROR - undefined is not number
+       ^^^^^^^^
+
+References:
+   optional_indexer.js:10:14
+   10|   [string]?: number;
+                    ^^^^^^ [1]
+   optional_indexer.js:13:13
+   13| c["foo"] as number; // ERROR - undefined is not number
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- optional_indexer.js:19:1
+
+Cannot cast `i["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_indexer.js:19:1
+   19| i["foo"] as number; // ERROR - undefined is not number
+       ^^^^^^^^
+
+References:
+   optional_indexer.js:16:14
+   16|   [string]?: number;
+                    ^^^^^^ [1]
+   optional_indexer.js:19:13
+   19| i["foo"] as number; // ERROR - undefined is not number
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- optional_unlabeled_tuple.js:7:6
+
+Cannot cast array literal to `T` because in index `1`: `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_unlabeled_tuple.js:7:6
+   7| ['', 1] as T; // ERROR - number incompatible with string
+           ^ [1]
+
+References:
+   optional_unlabeled_tuple.js:2:19
+   2| type T = [string, string?];
+                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:15:5
+
+Cannot cast array literal to `S` because in index `1`: `""` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_unlabeled_tuple.js:15:5
+   15| [1, ''] as S; // ERROR
+           ^^ [1]
+
+References:
+   optional_unlabeled_tuple.js:10:20
+   10| type S = [number?, number?];
+                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:23:2
+
+Cannot cast array literal to `U` because in index `0`: [incompatible-type]
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
+
+   optional_unlabeled_tuple.js:23:2
+   23| [true] as U; // ERROR
+        ^^^^ [1]
+
+References:
+   optional_unlabeled_tuple.js:18:11
+   18| type U = [string | number?];
+                 ^^^^^^ [2]
+   optional_unlabeled_tuple.js:18:20
+   18| type U = [string | number?];
+                          ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:38:8
+
+Cannot cast array literal to `Sp` because in index `2`: `3` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_unlabeled_tuple.js:38:8
+   38| [1, 2, 3] as Sp; // ERROR
+              ^ [1]
+
+References:
+   optional_unlabeled_tuple.js:34:33
+   34| type Sp = [...[number, number], string?];
+                                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:45:2
+
+Cannot cast array literal to `C` because in index `0`: `""` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_unlabeled_tuple.js:45:2
+   45| [''] as C<string>; // ERROR
+        ^^ [1]
+
+References:
+   optional_unlabeled_tuple.js:41:33
+   41| type C<T> = [T extends string ? number : boolean?];
+                                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:52:2
+
+Cannot cast array literal to `W` because in index `0`: `1` [1] is incompatible with `Alias` [2]. [incompatible-type]
+
+   optional_unlabeled_tuple.js:52:2
+   52| [1] as W; // ERROR
+        ^ [1]
+
+References:
+   optional_unlabeled_tuple.js:49:11
+   49| type W = [Alias?];
+                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- optional_unlabeled_tuple.js:55:16
+
+Invalid tuple type [1], required tuple element [2] must be after optional tuple element [3].
+[tuple-required-after-optional]
+
+   optional_unlabeled_tuple.js:55:16
+   55| type Invalid = [string?, number]; // ERROR
+                      ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   optional_unlabeled_tuple.js:55:26
+   55| type Invalid = [string?, number]; // ERROR
+                                ^^^^^^ [2]
+   optional_unlabeled_tuple.js:55:17
+   55| type Invalid = [string?, number]; // ERROR
+                       ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:3:20
@@ -302,6 +594,238 @@ Cannot assign `'hello'` to `ro_obj2.b` because property `b` is not writable. [ca
 
    51| ro_obj2.b = 'hello'; // error
                ^
+
+
+Error --------------------------------------------------------------------------------------- private_class_field.js:8:3
+
+Cannot get `x.private` because property `private` is missing in `C` [1]. [prop-missing]
+
+   private_class_field.js:8:3
+   8| x.private; // ERROR
+        ^^^^^^^
+
+References:
+   private_class_field.js:6:18
+   6| declare const x: C;
+                       ^ [1]
+
+
+Error -------------------------------------------------------------------------------------- private_constructor.js:13:5
+
+Cannot call `Singleton` because function [1] requires another argument. [incompatible-type]
+
+   private_constructor.js:13:5
+   13| new Singleton(); // ERROR: requires `x` arg
+           ^^^^^^^^^
+
+References:
+   private_constructor.js:6:3
+    6|   private constructor(x: number) {}
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:15:1
+
+Cannot cast `c.code` to string literal `wrong` because `"NEXT_STATIC_GEN_BAILOUT"` [1] is incompatible with
+`"wrong"` [2]. [incompatible-type]
+
+   property_value_initializer.js:15:1
+   15| c.code as "wrong"; // ERROR - incompatible literal types
+       ^^^^^^
+
+References:
+   property_value_initializer.js:3:19
+    3|   readonly code = "NEXT_STATIC_GEN_BAILOUT";
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   property_value_initializer.js:15:11
+   15| c.code as "wrong"; // ERROR - incompatible literal types
+                 ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:17:1
+
+Cannot cast `c.neg` to number literal `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
+
+   property_value_initializer.js:17:1
+   17| c.neg as 1; // ERROR - -1 !== 1
+       ^^^^^
+
+References:
+   property_value_initializer.js:7:18
+    7|   readonly neg = -1;
+                        ^^ [1]
+   property_value_initializer.js:17:10
+   17| c.neg as 1; // ERROR - -1 !== 1
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:19:1
+
+Cannot cast `c.big` to bigint literal `0n` because `100n` [1] is incompatible with `0n` [2]. [incompatible-type]
+
+   property_value_initializer.js:19:1
+   19| c.big as 0n; // ERROR - incompatible literal types
+       ^^^^^
+
+References:
+   property_value_initializer.js:6:18
+    6|   readonly big = 100n;
+                        ^^^^ [1]
+   property_value_initializer.js:19:10
+   19| c.big as 0n; // ERROR - incompatible literal types
+                ^^ [2]
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:21:1
+
+Cannot cast `c.negBig` to bigint literal `100n` because `-100n` [1] is incompatible with `100n` [2]. [incompatible-type]
+
+   property_value_initializer.js:21:1
+   21| c.negBig as 100n; // ERROR - incompatible literal types
+       ^^^^^^^^
+
+References:
+   property_value_initializer.js:8:21
+    8|   readonly negBig = -100n;
+                           ^^^^^ [1]
+   property_value_initializer.js:21:13
+   21| c.negBig as 100n; // ERROR - incompatible literal types
+                   ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:30:24
+
+`declare` class properties cannot have both a type annotation and an initializer. [unsupported-syntax]
+
+   30|   readonly x: number = 42; // ERROR: DeclareClassPropertyAnnotationAndInit
+                              ^^
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:35:7
+
+Only `readonly` properties in `declare` class can have initializers. [unsupported-syntax]
+
+   35|   x = 42; // ERROR: DeclareClassPropertyInitWithoutReadonly
+             ^^
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:40:16
+
+Initializer in a `declare` class property must be a literal (string, number, bigint, or boolean). [unsupported-syntax]
+
+   40|   readonly x = someVariable; // ERROR: DeclareClassPropertyNonLiteralInit
+                      ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:45:3
+
+`declare` class properties require a type annotation or a literal initializer. [unsupported-syntax]
+
+   45|   x; // ERROR: DeclareClassPropertyMissingAnnotationOrInit
+         ^
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:46:3
+
+`declare` class properties require a type annotation or a literal initializer. [unsupported-syntax]
+
+   46|   readonly y; // ERROR: DeclareClassPropertyMissingAnnotationOrInit
+         ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:51:32
+
+`declare` class properties cannot have both a type annotation and an initializer. [unsupported-syntax]
+
+   51|   private readonly x: number = 42; // ERROR: DeclareClassPropertyAnnotationAndInit
+                                      ^^
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:52:15
+
+Only `readonly` properties in `declare` class can have initializers. [unsupported-syntax]
+
+   52|   private y = 42; // ERROR: DeclareClassPropertyInitWithoutReadonly
+                     ^^
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:53:24
+
+Initializer in a `declare` class property must be a literal (string, number, bigint, or boolean). [unsupported-syntax]
+
+   53|   private readonly z = someVariable; // ERROR: DeclareClassPropertyNonLiteralInit
+                              ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- property_value_initializer_import.js:5:1
+
+Cannot cast `e.code` to string literal `wrong` because `"EXPORTED_VALUE"` [1] is incompatible with `"wrong"` [2].
+[incompatible-type]
+
+   property_value_initializer_import.js:5:1
+   5| e.code as "wrong"; // ERROR - incompatible literal types
+      ^^^^^^
+
+References:
+   property_value_initializer_exported.js.flow:3:12
+   3|   readonly code = "EXPORTED_VALUE";
+                 ^^^^ [1]
+   property_value_initializer_import.js:5:11
+   5| e.code as "wrong"; // ERROR - incompatible literal types
+                ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------- property_value_initializer_import.js:7:1
+
+Cannot cast `ExportedConstants.BUFFER_SIZE` to number literal `0` because `256` [1] is incompatible with `0` [2].
+[incompatible-type]
+
+   property_value_initializer_import.js:7:1
+   7| ExportedConstants.BUFFER_SIZE as 0; // ERROR - incompatible literal types
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   property_value_initializer_exported.js.flow:2:19
+   2|   static readonly BUFFER_SIZE = 256;
+                        ^^^^^^^^^^^ [1]
+   property_value_initializer_import.js:7:34
+   7| ExportedConstants.BUFFER_SIZE as 0; // ERROR - incompatible literal types
+                                       ^ [2]
+
+
+Error ------------------------------------------------------------------------- property_value_initializer_import.js:9:1
+
+Cannot cast `e.neg` to number literal `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
+
+   property_value_initializer_import.js:9:1
+   9| e.neg as 1; // ERROR
+      ^^^^^
+
+References:
+   property_value_initializer_exported.js.flow:4:12
+   4|   readonly neg = -1;
+                 ^^^ [1]
+   property_value_initializer_import.js:9:10
+   9| e.neg as 1; // ERROR
+               ^ [2]
+
+
+Error ------------------------------------------------------------------------ property_value_initializer_import.js:11:1
+
+Cannot cast `literal` to string literal `goodbye` because `"hello"` [1] is incompatible with `"goodbye"` [2].
+[incompatible-type]
+
+   property_value_initializer_import.js:11:1
+   11| literal as "goodbye"; // ERROR
+       ^^^^^^^
+
+References:
+   property_value_initializer_exported.js.flow:7:22
+    7| declare export const literal = "hello";
+                            ^^^^^^^ [1]
+   property_value_initializer_import.js:11:12
+   11| literal as "goodbye"; // ERROR
+                  ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:3:20
@@ -614,4 +1138,4 @@ Cannot assign empty string to `exported_with_ts_typenames.e.foo` because propert
 
 
 
-Found 47 errors
+Found 85 errors

@@ -1640,7 +1640,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn ts_syntax(&self) -> bool {
-        self.inner().metadata.frozen.ts_syntax
+        self.inner().metadata.frozen.ts_syntax || self.is_global_lib_context()
     }
 
     pub fn ts_utility_syntax(&self) -> bool {

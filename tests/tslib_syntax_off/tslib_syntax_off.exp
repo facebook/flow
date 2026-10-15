@@ -311,6 +311,15 @@ Property value initializer in declaration is not enabled. [unsupported-syntax]
 
 Error ----------------------------------------------------------------------------------------------- test.js.flow:116:3
 
+Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
+to `#foo`. [unsupported-syntax]
+
+   116|   private readonly x = 42; // ERROR
+          ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:116:3
+
 Property value initializer in declaration is not enabled. [unsupported-syntax]
 
    116|   private readonly x = 42; // ERROR
@@ -424,4 +433,4 @@ Flow does not support `abstract` methods. [unsupported-syntax]
 
 
 
-Found 51 errors
+Found 52 errors

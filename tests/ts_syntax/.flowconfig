@@ -5,3 +5,5 @@ libs
 [options]
 all=true
 builtin_lib=core-only
+component_syntax=true
+experimental.tslib_syntax=true
