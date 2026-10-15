@@ -4410,8 +4410,6 @@ fn merge_class_extends<'cx>(
     extends: &ClassExtends<ALoc, Pack::Packed<ALoc>>,
     mixins: &[ClassMixins<ALoc, Pack::Packed<ALoc>>],
 ) -> (Type, Type) {
-    use flow_common::reason::VirtualReasonDesc::*;
-
     let super_reason = reason.dupe().replace_desc(None);
     let (super_, static_proto) = match extends {
         ClassExtends::ObjectPrototypeExtendsNull => (
@@ -4423,7 +4421,7 @@ fn merge_class_extends<'cx>(
             Type::new(type_::TypeInner::FunProtoT(super_reason.dupe())),
         ),
         ClassExtends::ClassExplicitExtends(box (loc, t)) => {
-            let reason_op = reason::mk_reason(RClassExtends, loc.dupe());
+            let reason_op = reason::mk_reason(None, loc.dupe());
             let t = merge_impl(env, cx, file, t, false, false);
             let t = specialize(cx, reason_op, t, AnnotationInferenceOperation::ClassExtends);
             let t = type_util::this_typeapp(t, this.dupe(), None, Some(loc.dupe()));
@@ -4510,7 +4508,7 @@ fn merge_class_mixin<'cx>(
 
     match mixin {
         ClassMixins::ClassMixin(box (loc, t)) => {
-            let reason_op = reason::mk_reason(RClassMixins, loc.dupe());
+            let reason_op = reason::mk_reason(None, loc.dupe());
             let t = merge_mixin_ref(cx, file, loc.dupe(), t);
             let t = specialize(cx, reason_op, t, AnnotationInferenceOperation::ClassMixins);
             type_util::this_typeapp(t, this, None, Some(loc.dupe()))

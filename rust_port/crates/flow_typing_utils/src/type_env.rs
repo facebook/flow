@@ -2002,7 +2002,7 @@ pub fn find_write<'cx>(cx: &mut Context<'cx>, kind: DefLocType, reason: Reason) 
 
 pub fn get_refinement<'cx>(
     cx: &mut Context<'cx>,
-    desc: ReasonDesc,
+    desc: impl Into<Option<ReasonDesc>>,
     loc: ALoc,
 ) -> Result<Option<Type>, JobError> {
     let reason = flow_common::reason::mk_reason(desc, loc.dupe());
@@ -2821,7 +2821,8 @@ pub fn discriminant_after_negated_cases<'cx>(
 ) -> Result<Option<Type>, JobError> {
     use flow_common::reason::mk_reason;
 
-    let reason_desc = refinement_key_opt.map(|refinement_key| refinement_key.reason_desc::<ALoc>());
+    let reason_desc =
+        refinement_key_opt.and_then(|refinement_key| refinement_key.reason_desc::<ALoc>());
     Ok(read_entry(
         LookupMode::ForValue,
         cx,

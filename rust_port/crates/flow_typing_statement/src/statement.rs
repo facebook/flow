@@ -1230,13 +1230,10 @@ fn method_call_opt_use<'a>(
             let (voided_out_collector, exp_reason) = if opt_state == OptState::NewChain {
                 (
                     Some(voided_out_collector),
-                    mk_reason(VirtualReasonDesc::ROptionalChain, chain_loc.dupe()),
+                    mk_reason(None, chain_loc.dupe()),
                 )
             } else {
-                (
-                    None,
-                    mk_reason(VirtualReasonDesc::RNonnullAssert, chain_loc.dupe()),
-                )
+                (None, mk_reason(None, chain_loc.dupe()))
             };
             type_::OptMethodAction::OptChainM(Box::new(type_::OptChainMData {
                 exp_reason,
@@ -6364,7 +6361,7 @@ fn array_elements<'a>(
                     )
                 }
                 ArrayElement::Hole(loc) => {
-                    let t = type_::void::make(mk_reason(VirtualReasonDesc::RArrayHole, loc.dupe()));
+                    let t = type_::void::make(mk_reason(VirtualReasonDesc::RVoid, loc.dupe()));
                     let reason = mk_reason(None, loc.dupe());
                     let elem = mk_tuple_element(reason, t, None, false, Polarity::Neutral);
                     (
@@ -7419,7 +7416,7 @@ fn expression_<'a>(
             };
             match result {
                 Ok((targ_t, arg_t)) => {
-                    let reason = mk_reason(VirtualReasonDesc::RNewArray, loc.dupe());
+                    let reason = mk_reason(None, loc.dupe());
                     let length_reason = reason.dupe().replace_desc(None);
                     flow_js::flow_t_non_speculating(
                         cx,
@@ -9121,7 +9118,9 @@ pub fn optional_chain<'a>(
             {
                 let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
                 let reason = mk_reason(
-                    VirtualReasonDesc::RFunctionCall(Some(VirtualReasonDesc::RSuper.into())),
+                    VirtualReasonDesc::RFunctionCall(Some(
+                        VirtualReasonDesc::RCode(FlowSmolStr::new_inline("super")).into(),
+                    )),
                     loc.dupe(),
                 );
                 let super_t = super_(cx, super_loc.dupe())?;
@@ -9455,7 +9454,7 @@ pub fn optional_chain<'a>(
         // calltype that the method call will flow into.
         let (subexpression_types, subexpression_asts) = subexpressions(cx)?;
         let reason = get_reason(&chain_t);
-        let chain_reason = mk_reason(ROptionalChain, loc.dupe());
+        let chain_reason = mk_reason(None, loc.dupe());
         let mem_tvar_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
         let mem_tvar = Tvar::new(reason.dupe(), mem_tvar_id as u32);
         let voided_out_collector = TypeCollector::create();
@@ -10229,11 +10228,11 @@ pub fn optional_chain<'a>(
                                             let (chain_reason, voided_out_collector_opt) =
                                                 if opt_state == OptState::NewChain {
                                                     (
-                                                        mk_reason(ROptionalChain, loc.dupe()),
+                                                        mk_reason(None, loc.dupe()),
                                                         Some(inner_voided_out_collector.dupe()),
                                                     )
                                                 } else {
-                                                    (mk_reason(RNonnullAssert, loc.dupe()), None)
+                                                    (mk_reason(None, loc.dupe()), None)
                                                 };
                                             let lhs_reason = mk_expression_reason(callee);
                                             flow_js_utils::flow_js_result_to_job_error(
@@ -10434,7 +10433,7 @@ pub fn optional_chain<'a>(
                                     reason_lookup.dupe(),
                                     expr_reason.dupe(),
                                     lhs_expression.dupe(),
-                                    mk_reason(ROptionalChain, loc.dupe()),
+                                    mk_reason(None, loc.dupe()),
                                     targts.clone(),
                                     argts.clone(),
                                     elem_t.dupe(),
@@ -11755,11 +11754,7 @@ fn assign_member<'a>(
      -> Result<(), JobError> {
         match (&optional, &mode) {
             (OptState::NewChain | OptState::AssertChain, SetMode::Delete) => {
-                let reason = if optional == OptState::NewChain {
-                    mk_reason(ROptionalChain, lhs_loc.dupe())
-                } else {
-                    mk_reason(RNonnullAssert, lhs_loc.dupe())
-                };
+                let reason = mk_reason(None, lhs_loc.dupe());
 
                 // When deleting an optional chain, we only really care about the case
                 // where the object type is non-nullable. The specification is:
@@ -11824,7 +11819,7 @@ fn assign_member<'a>(
             let prop_loc: &ALoc = &id.loc;
             let name: &FlowSmolStr = &id.name;
             let comments = &lhs.comments;
-            let reason = mk_reason(RPropertyAssignment(Some(name.dupe())), lhs_loc.dupe());
+            let reason = mk_reason(None, lhs_loc.dupe());
             let prop_name = Name::new(name.dupe());
             let prop_reason = mk_reason(RProperty(Some(prop_name.dupe())), prop_loc.dupe());
             let super_t = super_(cx, super_loc.dupe())?;
@@ -11897,7 +11892,7 @@ fn assign_member<'a>(
                 _ => WriteCtx::Normal,
             };
             let prop_t = {
-                let reason = mk_reason(RPropertyAssignment(Some(name.dupe())), lhs_loc.dupe());
+                let reason = mk_reason(None, lhs_loc.dupe());
                 // flow type to object property itself
                 let class_entries = type_env::get_class_entries(cx);
                 let prop_reason = mk_reason(RPrivateProperty(name.dupe()), prop_loc.dupe());
@@ -11964,7 +11959,7 @@ fn assign_member<'a>(
             let lhs_expression = flow_js_utils::expression_reference_for_error(&lhs.object);
             let (o, _object) = typecheck_object(cx, &lhs.object)?;
             let prop_t = {
-                let reason = mk_reason(RPropertyAssignment(Some(name.dupe())), lhs_loc.dupe());
+                let reason = mk_reason(None, lhs_loc.dupe());
                 let prop_name = Name::new(name.dupe());
                 let prop_reason = mk_reason(RProperty(Some(prop_name.dupe())), prop_loc.dupe());
                 // flow type to object property itself
@@ -12051,7 +12046,7 @@ fn assign_member<'a>(
         expression::member::Property::PropertyExpression(index) => {
             let iloc: &ALoc = index.loc();
             let comments = &lhs.comments;
-            let reason = mk_reason(RPropertyAssignment(None), lhs_loc.dupe());
+            let reason = mk_reason(None, lhs_loc.dupe());
             let lhs_reason = mk_expression_reason(&lhs.object);
             let lhs_expression = flow_js_utils::expression_reference_for_error(&lhs.object);
             let (o, _object) = typecheck_object(cx, &lhs.object)?;
@@ -12914,10 +12909,9 @@ fn jsx_title<'a>(
                         },
                         loc_element.dupe(),
                     ),
-                    flow_common::options::JsxMode::JsxPragma(_, _) => mk_reason(
-                        VirtualReasonDesc::RJSXElement(Some(id_name.dupe())),
-                        loc_element.dupe(),
-                    ),
+                    flow_common::options::JsxMode::JsxPragma(_, _) => {
+                        mk_reason(None, loc_element.dupe())
+                    }
                 };
                 let c = if id_name_str
                     .chars()
@@ -13077,10 +13071,7 @@ fn jsx_title<'a>(
             let Ok(typed_name) =
                 polymorphic_ast_mapper::jsx_element_name(&mut typed_ast_utils::ErrorMapper, name);
             let el_name = jsx_title_member_to_string(member);
-            let reason = mk_reason(
-                VirtualReasonDesc::RJSXElement(Some(FlowSmolStr::from(el_name.as_str()))),
-                loc_element.dupe(),
-            );
+            let reason = mk_reason(None, loc_element.dupe());
             let (_o, typed_attrs, _, typed_children) = jsx_mk_props(
                 cx,
                 reason,
@@ -13101,10 +13092,7 @@ fn jsx_title<'a>(
             let Ok(typed_name) =
                 polymorphic_ast_mapper::jsx_element_name(&mut typed_ast_utils::ErrorMapper, name);
             let el_name = jsx_title_namespaced_name_to_string(namespace);
-            let reason = mk_reason(
-                VirtualReasonDesc::RJSXElement(Some(FlowSmolStr::from(el_name.as_str()))),
-                loc_element.dupe(),
-            );
+            let reason = mk_reason(None, loc_element.dupe());
             let (_o, typed_attrs, _, typed_children) = jsx_mk_props(
                 cx,
                 reason,
@@ -14070,7 +14058,7 @@ fn jsx_trim_text(loc: ALoc, value: &str) -> Option<Type> {
     flow_common_utils::utils_jsx::trim_jsx_text(loc.to_loc_exn().dupe(), value).map(
         |(trimmed_loc, trimmed)| {
             Type::new(TypeInner::DefT(
-                mk_reason(VirtualReasonDesc::RJSXText, ALoc::of_loc(trimmed_loc)),
+                mk_reason(None, ALoc::of_loc(trimmed_loc)),
                 DefT::new(DefTInner::SingletonStrT {
                     from_annot: false,
                     value: FlowSmolStr::from(trimmed.as_str()),

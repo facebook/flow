@@ -9538,7 +9538,6 @@ fn __flow_impl<'cx>(
                 use_op: use_op.dupe(),
                 tout: Type::new(TypeInner::OpenT((**tout).dupe())),
             };
-            let name = name_of_propref(propref);
             let reason_prop = match &**propref {
                 PropRef::Named { reason, .. } => reason,
                 PropRef::Computed(_) => reason_op,
@@ -9547,9 +9546,7 @@ fn __flow_impl<'cx>(
             let lookup_default = match l.deref() {
                 TypeInner::DefT(_, obj_def) if matches!(obj_def.deref(), DefTInner::ObjT(obj) if obj_type::is_exact(&obj.flags.obj_kind)) =>
                 {
-                    let r = reason_op
-                        .dupe()
-                        .replace_desc(VirtualReasonDesc::RMissingProperty(name.dupe()));
+                    let r = reason_op.dupe().replace_desc(VirtualReasonDesc::RVoid);
                     Some((
                         Type::new(TypeInner::DefT(r, DefT::new(DefTInner::VoidT))),
                         lookup_default,

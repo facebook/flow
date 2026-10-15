@@ -7653,7 +7653,7 @@ pub mod get_prop_t_kit {
             None => match propref {
                 PropRef::Named {
                     reason: reason_prop,
-                    name,
+                    name: _,
                     from_indexed_access: _,
                 } => {
                     let lookup_kind = match &lookup_info {
@@ -7661,11 +7661,9 @@ pub mod get_prop_t_kit {
                             if obj_type::is_exact(&o.flags.obj_kind) =>
                         {
                             let lookup_default = {
-                                let r = reason_op.dupe().replace_desc(
-                                    flow_common::reason::VirtualReasonDesc::RMissingProperty(Some(
-                                        name.dupe(),
-                                    )),
-                                );
+                                let r = reason_op
+                                    .dupe()
+                                    .replace_desc(flow_common::reason::VirtualReasonDesc::RVoid);
                                 Some((
                                     Type::new(TypeInner::DefT(r, DefT::new(DefTInner::VoidT))),
                                     lookup_default_tout.clone(),

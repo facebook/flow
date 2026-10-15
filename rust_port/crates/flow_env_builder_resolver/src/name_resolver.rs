@@ -2802,8 +2802,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         };
                         (v.dupe(), v, None)
                     } else if name.as_str() == "super" {
-                        let desc = VirtualReasonDesc::RSuper;
-                        let reason = VirtualReason::new(desc, loc.dupe());
+                        let reason = VirtualReason::new(None, loc.dupe());
                         let v = match this_super_binding_env {
                             ThisSuperBindingEnv::FunctionEnv => {
                                 panic!(
@@ -4161,10 +4160,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
         {
             let root_loc = root_pattern.loc().dupe();
-            let reason = flow_common::reason::mk_reason(
-                flow_common::reason::VirtualReasonDesc::RMatchPattern,
-                root_loc.dupe(),
-            );
+            let reason = flow_common::reason::mk_reason(None, root_loc.dupe());
             let key = env_api::EnvKey::new(env_api::DefLocType::MatchCasePatternLoc, root_loc);
             self.env_state
                 .write_entries
@@ -4793,10 +4789,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         }
 
         for loc in non_binding_leaves.iter() {
-            let write_entry = env_api::EnvEntry::AssigningWrite(flow_common::reason::mk_reason(
-                flow_common::reason::VirtualReasonDesc::RMatchPattern,
-                loc.dupe(),
-            ));
+            let write_entry =
+                env_api::EnvEntry::AssigningWrite(flow_common::reason::mk_reason(None, loc.dupe()));
             let key = env_api::EnvKey::new(env_api::DefLocType::PatternLoc, loc.dupe());
             self.env_state.write_entries.insert(key, write_entry);
         }
@@ -6050,10 +6044,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 VirtualReasonDesc::RThis,
                 class_loc.dupe(),
             ));
-            let super_write = EnvEntry::AssigningWrite(VirtualReason::new(
-                VirtualReasonDesc::RSuper,
-                class_loc.dupe(),
-            ));
+            let super_write = EnvEntry::AssigningWrite(VirtualReason::new(None, class_loc.dupe()));
 
             self.env_state.write_entries.insert(
                 env_api::EnvKey::new(env_api::DefLocType::ClassSelfLoc, class_loc.dupe()),
@@ -10712,10 +10703,8 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 VirtualReasonDesc::RThis,
                 loc.dupe(),
             ));
-            let super_write = env_api::EnvEntry::AssigningWrite(VirtualReason::new(
-                VirtualReasonDesc::RSuper,
-                loc.dupe(),
-            ));
+            let super_write =
+                env_api::EnvEntry::AssigningWrite(VirtualReason::new(None, loc.dupe()));
 
             self.env_state.write_entries.insert(
                 env_api::EnvKey::new(env_api::DefLocType::ClassSelfLoc, loc.dupe()),

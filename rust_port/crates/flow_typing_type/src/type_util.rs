@@ -2349,7 +2349,7 @@ pub fn typeapp_annot(
 
 pub fn implicit_typeapp(t: Type, targs: Vec<Type>, annot_loc: Option<ALoc>) -> Type {
     let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
-        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RTypeAppImplicit(Arc::new(desc)))
+        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc)))
     });
     let reason = match annot_loc {
         Some(loc) => reason.reposition_and_annotate(loc),

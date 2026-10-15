@@ -181,10 +181,7 @@ pub fn config<'a, C: Config>(
     };
     if let Some((key_loc, ref_prop_t)) = &ref_prop {
         if !in_annotation {
-            let reason_op = flow_common::reason::mk_reason(
-                flow_common::reason::VirtualReasonDesc::RReactRef,
-                key_loc.dupe(),
-            );
+            let reason_op = flow_common::reason::mk_reason(None, key_loc.dupe());
             let u = match flow_typing_flow_js::flow_js::FlowJs::get_builtin_react_typeapp(
                 cx,
                 &reason_op,

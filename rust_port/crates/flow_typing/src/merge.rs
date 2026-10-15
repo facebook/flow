@@ -1403,10 +1403,7 @@ fn check_multiplatform_conformance<'cx>(
                         }
                     };
                     let interface_t = {
-                        let reason = flow_common::reason::mk_reason(
-                            VirtualReasonDesc::RCommonInterface,
-                            prog_aloc.dupe(),
-                        );
+                        let reason = flow_common::reason::mk_reason(None, prog_aloc.dupe());
                         let m_result = interface_module_f(cx);
                         get_exports_t(cx, true, reason, m_result.ok().as_ref())
                     };

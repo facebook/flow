@@ -287,7 +287,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RNullOrVoid,
     RConditionalType,
     RMatch,
-    RMatchPattern,
     RObject,
     RObjectLit,
     RObjectLitUnsound,
@@ -299,12 +298,10 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RArrayLitUnsound,
     REmptyArrayLit,
     RArrayType,
-    RArrayHole,
     RROArrayType,
     RTupleType,
     RTupleUnknownElementFromInexact,
     RFunctionType,
-    RJSXText,
     RFbt,
     RTemplateString,
     RThis,
@@ -322,7 +319,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RConstructor,
     RReturn,
     RRegExp,
-    RSuper,
     RDummyPrototype,
     RDummyThis,
     RObjectKeyMirror,
@@ -332,28 +328,21 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RGlobalObject,
     RProviders,
     RUpdate,
-    RCommonInterface,
     RContextualVariable,
     RNext,
     RModuleReference,
     RNewFunction,
-    RNewArray,
     RImportMeta,
     RAwait,
     RCallableObjectType,
-    RClassExtends,
-    RClassMixins,
     RNoProviders,
     RReadOnlyType,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
-    ROptionalChain,
     RReactProps,
     RReactChildren,
-    RReactRef,
     RUninitialized,
     RPossiblyUninitialized,
-    RUnannotatedNext,
     RComponentType,
     RRendersNothing,
     RStringLit(FlowSmolStr),
@@ -376,7 +365,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RJSXFunctionCall(FlowSmolStr),
     RJSXIdentifier(FlowSmolStr, FlowSmolStr),
     RJSXElementProps(FlowSmolStr),
-    RJSXElement(Option<FlowSmolStr>),
     RUnaryOperator(FlowSmolStr, Arc<VirtualReasonDesc<L>>),
     RBinaryOperator(
         Box<(
@@ -415,14 +403,12 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RParameter(Option<FlowSmolStr>),
     RRestParameter(Option<FlowSmolStr>),
     RIdentifier(FlowSmolStr),
-    RPropertyAssignment(Option<FlowSmolStr>),
     RProperty(Option<Name>),
     RPrivateProperty(FlowSmolStr),
     RMember {
         object_: FlowSmolStr,
         property: FlowSmolStr,
     },
-    RMissingProperty(Option<Name>),
     RUnknownUnspecifiedProperty(Arc<VirtualReasonDesc<L>>),
     RNamedImportedType(Userland, FlowSmolStr),
     RImportStarType(FlowSmolStr),
@@ -436,7 +422,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RMaybe(Arc<VirtualReasonDesc<L>>),
     RRestArrayLit(Option<Arc<VirtualReasonDesc<L>>>),
     RTypeApp(Arc<VirtualReasonDesc<L>>),
-    RTypeAppImplicit(Arc<VirtualReasonDesc<L>>),
     RExtends(Arc<VirtualReasonDesc<L>>),
     RClass(Arc<VirtualReasonDesc<L>>),
     RStatics(Arc<VirtualReasonDesc<L>>),
@@ -499,7 +484,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             REmptyArrayLit => REmptyArrayLit,
             RArrayType => RArrayType,
             RArrayNthElement(i) => RArrayNthElement(*i),
-            RArrayHole => RArrayHole,
             RROArrayType => RROArrayType,
             RTupleType => RTupleType,
             RTupleElement => RTupleElement,
@@ -510,12 +494,9 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RJSXFunctionCall(s) => RJSXFunctionCall(s.dupe()),
             RJSXIdentifier(s1, s2) => RJSXIdentifier(s1.dupe(), s2.dupe()),
             RJSXElementProps(s) => RJSXElementProps(s.dupe()),
-            RJSXElement(opt) => RJSXElement(opt.dupe()),
-            RJSXText => RJSXText,
             RFbt => RFbt,
             RUninitialized => RUninitialized,
             RPossiblyUninitialized => RPossiblyUninitialized,
-            RUnannotatedNext => RUnannotatedNext,
             RMappedType => RMappedType,
             RTypeGuardParam(s) => RTypeGuardParam(s.dupe()),
             RComponent(n) => RComponent(n.dupe()),
@@ -545,7 +526,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RRecordType(s) => RRecordType(s.dupe()),
             RReturn => RReturn,
             RRegExp => RRegExp,
-            RSuper => RSuper,
             RDummyPrototype => RDummyPrototype,
             RDummyThis => RDummyThis,
             RType(n) => RType(n.dupe()),
@@ -555,14 +535,12 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RParameter(opt) => RParameter(opt.dupe()),
             RRestParameter(opt) => RRestParameter(opt.dupe()),
             RIdentifier(n) => RIdentifier(n.dupe()),
-            RPropertyAssignment(opt) => RPropertyAssignment(opt.dupe()),
             RProperty(opt) => RProperty(opt.dupe()),
             RPrivateProperty(s) => RPrivateProperty(s.dupe()),
             RMember { object_, property } => RMember {
                 object_: object_.dupe(),
                 property: property.dupe(),
             },
-            RMissingProperty(opt) => RMissingProperty(opt.dupe()),
             RSomeProperty => RSomeProperty,
             RNamedImportedType(u, s) => RNamedImportedType(u.clone(), s.dupe()),
             RImportStarType(s) => RImportStarType(s.dupe()),
@@ -575,17 +553,13 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RGlobalObject => RGlobalObject,
             RProviders => RProviders,
             RUpdate => RUpdate,
-            RCommonInterface => RCommonInterface,
             RContextualVariable => RContextualVariable,
             RNext => RNext,
             RModuleReference => RModuleReference,
             RNewFunction => RNewFunction,
-            RNewArray => RNewArray,
             RImportMeta => RImportMeta,
             RAwait => RAwait,
             RCallableObjectType => RCallableObjectType,
-            RClassExtends => RClassExtends,
-            RClassMixins => RClassMixins,
             RNoProviders => RNoProviders,
             ROpaqueType(s) => ROpaqueType(s.dupe()),
             RObjectKeyMirror => RObjectKeyMirror,
@@ -595,12 +569,10 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RConditionalType => RConditionalType,
             RRendersNothing => RRendersNothing,
             RMatch => RMatch,
-            RMatchPattern => RMatchPattern,
             RObjectPatternRestProp => RObjectPatternRestProp,
             RArrayPatternRestProp => RArrayPatternRestProp,
             RModule(u) => RModule(u.clone()),
             RNamespace(s) => RNamespace(s.dupe()),
-            ROptionalChain => ROptionalChain,
             RReactProps => RReactProps,
             RReactElement {
                 name_opt,
@@ -610,7 +582,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 from_component_syntax: *from_component_syntax,
             },
             RReactChildren => RReactChildren,
-            RReactRef => RReactRef,
             RReadOnlyType => RReadOnlyType,
 
             // Recursive variants
@@ -642,7 +613,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RMaybe(d) => RMaybe(Arc::new(d.map_locs(f))),
             RRestArrayLit(d) => RRestArrayLit(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RTypeApp(d) => RTypeApp(Arc::new(d.map_locs(f))),
-            RTypeAppImplicit(d) => RTypeAppImplicit(Arc::new(d.map_locs(f))),
             RExtends(d) => RExtends(Arc::new(d.map_locs(f))),
             RClass(d) => RClass(Arc::new(d.map_locs(f))),
             RStatics(d) => RStatics(Arc::new(d.map_locs(f))),
@@ -688,8 +658,8 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         match self.unwrap() {
             Some(
                 RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
-                | RTemplateLiteralType | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RJSXText
-                | RFbt | RTemplateString | RKeySet | RRegExp,
+                | RTemplateLiteralType | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RFbt
+                | RTemplateString | RKeySet | RRegExp,
             ) => Scalar,
 
             Some(
@@ -736,7 +706,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
                 | RRenderMaybeType(_)
                 | RRenderStarType(_),
             ) => true,
-            Some(RTypeApp(inner) | RTypeAppImplicit(inner)) => inner.is_explanatory(),
+            Some(RTypeApp(inner)) => inner.is_explanatory(),
             _ => false,
         }
     }
@@ -1394,7 +1364,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         }
         RConditionalType => "conditional type".to_string(),
         RMatch => "match".to_string(),
-        RMatchPattern => "match pattern".to_string(),
 
         // Objects
         RObject => "object".to_string(),
@@ -1409,7 +1378,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         REmptyArrayLit => "empty array literal".to_string(),
         RArrayType => "array type".to_string(),
         RArrayNthElement(i) => format!("element {}", i),
-        RArrayHole => "undefined (due to array hole)".to_string(),
         RInferredUnionElemArray { .. } => "inferred union of array element types \
 (alternatively, provide an annotation to summarize the array element type)"
             .to_string(),
@@ -1436,12 +1404,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // JSX
         RJSXFunctionCall(raw_jsx) => format!("`{}(...)`", raw_jsx),
         RJSXIdentifier(_, name) => format!("`{}`", name),
-        RJSXElement(x) => match x {
-            Some(x) => format!("JSX element `{}`", x),
-            None => "JSX element".to_string(),
-        },
         RJSXElementProps(_) => "props".to_string(),
-        RJSXText => "JSX text".to_string(),
         RFbt => "`<fbt/>`".to_string(),
 
         // Operators
@@ -1526,7 +1489,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Misc
         RReturn => "return".to_string(),
         RRegExp => "regexp".to_string(),
-        RSuper => "super".to_string(),
         RDummyPrototype => "empty prototype object".to_string(),
         RDummyThis => "bound `this` in method".to_string(),
         RImplicitThis(desc) => format!("implicit `this` parameter of {}", string_of_desc(desc)),
@@ -1561,22 +1523,12 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RRestParameter(Some(x)) => format!("rest parameter `{}`", x),
         RRestParameter(None) => "rest parameter".to_string(),
         RIdentifier(x) => format!("`{}`", prettify_react_util(x.as_str())),
-        RPropertyAssignment(x) => match x {
-            Some(x) => format!("assignment of property `{}`", x),
-            None => "assignment of computed property/element".to_string(),
-        },
 
         // Properties
         RProperty(Some(x)) => format!("property `{}`", x),
         RProperty(None) => "computed property".to_string(),
         RPrivateProperty(x) => format!("property `#{}`", x),
         RMember { object_, property } => format!("`{}{}`", object_, property),
-        RMissingProperty(Some(x)) => {
-            format!("`void` (due to access of non-existent property `{}`)", x)
-        }
-        RMissingProperty(None) => {
-            "`void` (due to access of a computed property which does not exist)".to_string()
-        }
         RUnknownUnspecifiedProperty(d) => {
             format!(
                 "an unknown property that may exist on the inexact {}",
@@ -1603,17 +1555,13 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RGlobalObject => "global object".to_string(),
         RProviders => "providers".to_string(),
         RUpdate => "update".to_string(),
-        RCommonInterface => "common interface".to_string(),
         RContextualVariable => "contextual variable".to_string(),
         RNext => "next".to_string(),
         RModuleReference => "module reference".to_string(),
         RNewFunction => "new Function(..)".to_string(),
-        RNewArray => "new Array(..)".to_string(),
         RImportMeta => "import.meta".to_string(),
         RAwait => "await".to_string(),
         RCallableObjectType => "callable object type".to_string(),
-        RClassExtends => "class extends".to_string(),
-        RClassMixins => "class mixins".to_string(),
         RNoProviders => "no providers".to_string(),
 
         // Type wrappers
@@ -1636,7 +1584,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         }
         RRestArrayLit(_) => "rest array".to_string(),
         RTypeApp(d) => string_of_desc(d),
-        RTypeAppImplicit(d) => string_of_desc(d),
         RExtends(d) => format!("extends {}", string_of_desc(d)),
         RClass(d) => format!("class {}", string_of_desc(d)),
         RStatics(d) => format!("statics of {}", string_of_desc(d)),
@@ -1651,7 +1598,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Modules and namespaces
         RModule(module_name) => format!("module `{}`", module_name.display()),
         RNamespace(name) => format!("namespace {}", name),
-        ROptionalChain => "optional chain".to_string(),
 
         // React
         RReactProps => "props".to_string(),
@@ -1660,7 +1606,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
             None => "React element".to_string(),
         },
         RReactChildren => "children array".to_string(),
-        RReactRef => "React component ref".to_string(),
         RPossiblyMissingPropFromObj(propname, desc) => {
             format!(
                 "possibly missing property `{}` in {}",
@@ -1673,9 +1618,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Uninitialized
         RUninitialized => "uninitialized variable".to_string(),
         RPossiblyUninitialized => "possibly uninitialized variable".to_string(),
-        RUnannotatedNext => {
-            "undefined (default `next` of unannotated generator function)".to_string()
-        }
 
         // Type guards and components
         RTypeGuardParam(param) => format!("type guard parameter `{}`", param),

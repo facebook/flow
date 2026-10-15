@@ -4590,8 +4590,6 @@ impl<'a> DefFinder<'a> {
         root: Root,
         pattern: &ast::match_pattern::MatchPattern<ALoc, ALoc>,
     ) -> Result<(), EnvInvariant<ALoc>> {
-        use flow_common::reason::VirtualReasonDesc::RMatchPattern;
-
         use crate::env_api::DefLocType::MatchCasePatternLoc;
         use crate::env_api::EnvKey;
 
@@ -4599,7 +4597,7 @@ impl<'a> DefFinder<'a> {
 
         self.add_binding(
             EnvKey::new(MatchCasePatternLoc, pattern_loc.dupe()),
-            mk_reason(RMatchPattern, pattern_loc.dupe()),
+            mk_reason(None, pattern_loc.dupe()),
             Def::MatchCasePattern(Box::new(MatchCasePatternData {
                 case_match_root_loc,
                 has_guard,
@@ -6881,10 +6879,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
             ast::jsx::Name::NamespacedName(ns) => jsx_title_namespaced_name_to_string(ns).into(),
         };
 
-        let jsx_reason = mk_reason(
-            VirtualReasonDesc::RJSXElement(Some(jsx_name.dupe())),
-            loc_element.dupe(),
-        );
+        let jsx_reason = mk_reason(None, loc_element.dupe());
         let targs_for_hints = targs.clone();
         let jsx_props_and_children = (opening_attributes.clone(), children.clone());
         let instantiate_decomp = HintDecomposition::new(

@@ -383,10 +383,7 @@ pub mod pattern_union_builder {
         use flow_parser::ast::match_pattern::member_pattern::Property as MemberProperty;
 
         let loc = pattern_ast.loc();
-        let reason = flow_common::reason::mk_reason(
-            flow_common::reason::VirtualReasonDesc::RMatchPattern,
-            loc.dupe(),
-        );
+        let reason = flow_common::reason::mk_reason(None, loc.dupe());
         match t.deref() {
             TypeInner::DefT(_, d) => match d.deref() {
                 DefTInner::EnumValueT(enum_info_rc) => match &***enum_info_rc {
@@ -495,10 +492,7 @@ pub mod pattern_union_builder {
 
         let (mut pattern_union, i) = acc;
         let loc = pattern_ast.loc();
-        let reason = flow_common::reason::mk_reason(
-            flow_common::reason::VirtualReasonDesc::RMatchPattern,
-            loc.dupe(),
-        );
+        let reason = flow_common::reason::mk_reason(None, loc.dupe());
         let next_i = i + 1;
         match pattern_ast {
             MatchPattern::BindingPattern { .. } => {

@@ -78,19 +78,19 @@ impl Key {
         ps.is_empty()
     }
 
-    pub fn reason_desc<L: Dupe>(&self) -> VirtualReasonDesc<L> {
+    pub fn reason_desc<L: Dupe>(&self) -> Option<VirtualReasonDesc<L>> {
         use flow_common::reason::VirtualReasonDesc::*;
 
         let Key(base, projs) = self;
         match (base, projs.as_slice()) {
-            (Base::OrdinaryIdentifier(name), []) => RIdentifier(name.dupe()),
-            (Base::This, []) => RThis,
-            (Base::Super, []) => RSuper,
-            (_, projs) => match projs.last().unwrap() {
+            (Base::OrdinaryIdentifier(name), []) => Some(RIdentifier(name.dupe())),
+            (Base::This, []) => Some(RThis),
+            (Base::Super, []) => None,
+            (_, projs) => Some(match projs.last().unwrap() {
                 Proj::Prop(x) => RProperty(Some(Name::new(x.dupe()))),
                 Proj::PrivateField(x) => RPrivateProperty(x.dupe()),
                 Proj::Elem(_) => RProperty(None),
-            },
+            }),
         }
     }
 }

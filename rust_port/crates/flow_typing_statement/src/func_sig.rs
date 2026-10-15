@@ -524,11 +524,9 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     cx,
                     reason.dupe().replace_desc(reason::VirtualReasonDesc::RNext),
                 ),
-                AnnotatedOrInferred::Inferred(_) => type_::void::make(
-                    reason
-                        .dupe()
-                        .replace_desc(reason::VirtualReasonDesc::RUnannotatedNext),
-                ),
+                AnnotatedOrInferred::Inferred(_) => {
+                    type_::void::make(reason.dupe().replace_desc(reason::VirtualReasonDesc::RVoid))
+                }
             };
             let return_targ = flow_typing_tvar::mk(cx, reason.dupe());
             let (iterable, generator) = match kind {

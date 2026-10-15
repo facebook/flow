@@ -2741,9 +2741,7 @@ fn resolve_generator_next<'cx>(
 ) -> Result<Type, JobError> {
     match gen_info {
         None => {
-            let r = reason
-                .dupe()
-                .replace_desc(reason::VirtualReasonDesc::RUnannotatedNext);
+            let r = reason.dupe().replace_desc(reason::VirtualReasonDesc::RVoid);
             Ok(type_::void::make(r))
         }
         Some(gen_info) => {
