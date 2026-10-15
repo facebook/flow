@@ -47,6 +47,7 @@ pub(super) const LIB_ES2019_OBJECT_D_TS: &str = include_tslib!("lib.es2019.objec
 pub(super) const LIB_ES2019_SYMBOL_D_TS: &str = include_tslib!("lib.es2019.symbol.d.ts");
 pub(super) const LIB_ES2020_DATE_D_TS: &str = include_tslib!("lib.es2020.date.d.ts");
 pub(super) const LIB_ES2020_INTL_D_TS: &str = include_tslib!("lib.es2020.intl.d.ts");
+pub(super) const LIB_ES2020_NUMBER_D_TS: &str = include_tslib!("lib.es2020.number.d.ts");
 pub(super) const LIB_ES2020_SHAREDMEMORY_D_TS: &str =
     include_tslib!("lib.es2020.sharedmemory.d.ts");
 pub(super) const LIB_ES2020_SYMBOL_WELLKNOWN_D_TS: &str =
@@ -183,10 +184,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         include_tslib!("lib.es2020.full.d.ts"),
     ),
     ("lib.es2020.intl.d.ts", LIB_ES2020_INTL_D_TS),
-    (
-        "lib.es2020.number.d.ts",
-        include_tslib!("lib.es2020.number.d.ts"),
-    ),
+    ("lib.es2020.number.d.ts", LIB_ES2020_NUMBER_D_TS),
     (
         "lib.es2020.promise.d.ts",
         include_tslib!("lib.es2020.promise.d.ts"),
