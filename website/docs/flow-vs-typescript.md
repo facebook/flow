@@ -45,6 +45,7 @@ The features below are close enough in syntax and semantics that you can reuse y
 - [Conditional types](./types/conditional.md) with `infer`, including the `infer T extends Bound` constraint form.
 - [Mapped types](./types/mapped-types.md) including optionality removal `-?`.
 - [Type guards](./types/type-guards.md) of the form `param is T` (with additional validations), including inferred type predicates.
+- [Assertion functions](./types/assertion-functions.md) of the form `asserts param is T` or `asserts param` (with additional validations).
 - [`T[K]`](./types/indexed-access.md) indexed access types.
 - [`keyof T`](./types/utilities.md) operator.
 - [`as const`](./types/const-expression.md) assertions.
@@ -84,7 +85,7 @@ In most subsections the syntax is the same but the semantics differ: code that's
 - [Objects, classes, and interfaces](#toc-shape-rules) - exact objects, nominal classes, asymmetric class/object/interface subtyping
 - [Variance](#toc-variance) - `readonly`, `writeonly`, `in`, and `out`
 - [Type spellings](#toc-type-spellings) - `void` vs `undefined`, `?T`, `empty`, `unknown`
-- [Refinement and module-level validation](#toc-validation) - validated type-guard bodies, refinement invalidation, module-boundary annotations
+- [Refinement and module-level validation](#toc-validation) - validated type-guard and assertion-function bodies, refinement invalidation, module-boundary annotations
 - [Explicit type controls](#toc-explicit-controls) - `as` casts and error suppressions
 
 :::info Nominal vs. structural typing.
@@ -821,7 +822,7 @@ f();          // OK - `?T` includes `void`, which makes the arg optional
 
 ### Refinement and module-level validation {#toc-validation}
 
-How Flow validates the body of type guards, when refinements are invalidated by intervening code, and the validation Flow performs at module boundaries (annotation requirements and the value/type seam).
+How Flow validates the bodies of type guards and assertion functions, when refinements are invalidated by intervening code, and the validation Flow performs at module boundaries (annotation requirements and the value/type seam).
 
 #### User-defined type guard bodies are validated {#toc-type-guard-validation}
 
@@ -865,6 +866,12 @@ function isA(x: unknown): x is A {
 The diagnostic explicitly suggests the escape hatch: "Consider using a one-sided type-guard (`implies x is T`)." [One-sided guards](./types/type-guards.md) (`implies x is T`) skip exactly this negation check - they refine the parameter to `T` when the function returns `true` and leave it unchanged when it returns `false`, which is the right shape when only the positive direction holds.
 
 See the [type guards docs](./types/type-guards.md#toc-consistency-checks-of-type-guard-functions) for the full consistency rules, and the [one-sided type guard](#toc-one-sided-guards) section below for the `implies` form.
+
+#### Assertion functions {#toc-assertion-functions}
+
+Flow supports both `asserts x is T` and `asserts x`. An [assertion function](./types/assertion-functions.md) returns `void` and narrows a value after the call returns normally.
+
+Unlike TypeScript, Flow validates that paths where the asserted type or truthiness does not hold exit abnormally, for example by throwing an error. See [body validation](./types/assertion-functions.md#toc-validating-the-function-body) and [call restrictions](./types/assertion-functions.md#toc-call-restrictions).
 
 #### Refinement invalidation rules differ {#toc-refinement-invalidation}
 
@@ -1578,12 +1585,6 @@ No source-level `namespace { ... }` blocks. Flow has [`declare namespace`](./lib
 ### `const enum` {#toc-const-enum}
 
 No equivalent. Flow's transforms emit Flow Enums as a runtime object rather than inlining them at the use site like `tsc` does for `const enum`. Their restrictions (literal-only values, no redeclaration, no default number values) still make build-system inlining straightforward if you want it.
-
-### Assertion functions {#toc-assertion-functions}
-
-TypeScript's `asserts x is T` return type declares a function that throws when the assertion fails and refines the parameter to `T` unconditionally after the call returns: a different shape from a [type guard](./types/type-guards.md), which returns a boolean and refines only inside an `if`/`else`. Flow has type guards (`x is T`) but no `asserts x is T` form.
-
-The closest Flow equivalent is a type guard combined with an explicit `throw` at the call site: `function isStr(x: unknown): x is string { ... }` then `if (!isStr(x)) throw new Error();`.
 
 ### `ThisType<T>` utility {#toc-this-type-utility}
 

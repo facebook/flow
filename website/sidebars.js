@@ -56,6 +56,7 @@ module.exports = {
             'types/conditional',
             'types/mapped-types',
             'types/type-guards',
+            'types/assertion-functions',
             'types/typeof',
             'types/casting',
             'types/const-expression',

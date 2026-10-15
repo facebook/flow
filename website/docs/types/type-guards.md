@@ -428,5 +428,6 @@ To use type guards, you need to upgrade your infrastructure so that it supports 
 ## See Also {#toc-see-also}
 
 - [Refinements](../lang/refinements.md) — built-in type narrowing with `typeof`, `instanceof`, and equality checks
+- [Assertion Functions](./assertion-functions.md) — narrow values after a call returns normally
 - [Unions](./unions.md) — type guards are commonly used to narrow union types
 - [Functions](./functions.md) — type guard syntax builds on function return type annotations

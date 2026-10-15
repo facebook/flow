@@ -1,0 +1,166 @@
+=== block 1 ===
+Error ------------------------------------------------------------------ -:10:3
+
+Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   -:10:3
+   10|   value as number; // ERROR: value is now a string
+         ^^^^^
+
+References:
+   -:2:57
+    2| function assertString(value: unknown): asserts value is string {
+                                                               ^^^^^^ [1]
+   -:10:12
+   10|   value as number; // ERROR: value is now a string
+                  ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 2 ===
+Error ------------------------------------------------------------------ -:11:3
+
+Cannot cast `name` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   -:11:3
+   11|   name as null; // ERROR
+         ^^^^
+
+References:
+   -:8:23
+    8| function check(name: ?string, count: unknown) {
+                             ^^^^^^ [1]
+   -:11:11
+   11|   name as null; // ERROR
+                 ^^^^ [2]
+
+
+Found 1 error
+
+=== block 3 ===
+Error ------------------------------------------------------------------ -:2:40
+
+Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   -:2:40
+   2| function missingCheck(value: unknown): asserts value is string {} // ERROR
+                                             ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:2:30
+   2| function missingCheck(value: unknown): asserts value is string {} // ERROR
+                                   ^^^^^^^ [1]
+   -:2:57
+   2| function missingCheck(value: unknown): asserts value is string {} // ERROR
+                                                              ^^^^^^ [2]
+   -:2:23
+   2| function missingCheck(value: unknown): asserts value is string {} // ERROR
+                            ^^^^^ [3]
+
+Error ------------------------------------------------------------------- -:6:5
+
+Cannot return from assertion function because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   -:6:5
+   6|     return; // ERROR: value has not been narrowed
+          ^^^^^^^
+
+References:
+   -:4:33
+   4| function incompleteCheck(value: unknown, skip: boolean): asserts value is string {
+                                      ^^^^^^^ [1]
+   -:4:75
+   4| function incompleteCheck(value: unknown, skip: boolean): asserts value is string {
+                                                                                ^^^^^^ [2]
+   -:4:26
+   4| function incompleteCheck(value: unknown, skip: boolean): asserts value is string {
+                               ^^^^^ [3]
+
+Error ----------------------------------------------------------------- -:13:46
+
+Cannot return from assertion function at the end of its body because `value` [1] may still be falsy here: it may be
+`?""` [2]. Throw an error or call another assertion function on every path where it is falsy. [incompatible-type-guard]
+
+   -:13:46
+   13| function missingTruthyCheck(value: ?string): asserts value {} // ERROR
+                                                    ^^^^^^^^^^^^^
+
+References:
+   -:13:54
+   13| function missingTruthyCheck(value: ?string): asserts value {} // ERROR
+                                                            ^^^^^ [1]
+   -:13:29
+   13| function missingTruthyCheck(value: ?string): asserts value {} // ERROR
+                                   ^^^^^ [2]
+
+
+Found 3 errors
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+Error ------------------------------------------------------------------- -:7:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   -:7:3
+   7|   value as string; // ERROR: this call did not narrow value
+        ^^^^^
+
+References:
+   -:4:23
+   4| function check(value: unknown) {
+                            ^^^^^^^ [1]
+   -:7:12
+   7|   value as string; // ERROR: this call did not narrow value
+                 ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 6 ===
+Error ------------------------------------------------------------------- -:7:3
+
+Cannot narrow with this call to an assertion function because `inferred` [1] is not declared with an explicit type
+annotation. Annotate `inferred` or call the assertion function directly. [unrecognized-assertion-call]
+
+   -:7:3
+   7|   inferred(value); // ERROR: the local alias needs an annotation
+        ^^^^^^^^
+
+References:
+   -:6:9
+   6|   const inferred = assertString;
+              ^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 7 ===
+Error ------------------------------------------------------------------- -:8:3
+
+Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
+as `a.b.c`. [unrecognized-assertion-call]
+
+   8|   checks['assertString'](value); // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+Error ------------------------------------------------------------------- -:9:3
+
+Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
+as `a.b.c`. [unrecognized-assertion-call]
+
+   9|   getAssertion()(value); // ERROR
+        ^^^^^^^^^^^^^^
+
+
+Found 2 errors
