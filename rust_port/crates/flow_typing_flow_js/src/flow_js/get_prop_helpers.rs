@@ -577,7 +577,7 @@ pub(super) fn write_obj_prop<'cx>(
                     reason.loc().dupe(),
                     empty_t::make(reason.dupe().replace_desc_new(VirtualReasonDesc::REmpty)),
                 ));
-                let funtype = mk_boundfunctiontype(
+                let mut funtype = mk_boundfunctiontype(
                     global_this(reason.dupe()),
                     None,
                     vec![],
@@ -588,6 +588,7 @@ pub(super) fn write_obj_prop<'cx>(
                     None,
                     any_t::untyped(reason.dupe()),
                 );
+                funtype.literal = true;
                 let fn_t = Type::new(TypeInner::DefT(
                     reason.dupe(),
                     DefT::new(DefTInner::FunT(

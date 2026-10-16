@@ -158,6 +158,7 @@ pub mod func {
         pub effect_: ReactEffectType,
         pub ret_annot_loc: ALoc,
         pub statics: Option<Type>,
+        pub literal: bool,
     }
 
     impl<C: ConfigTypes> Clone for Func<C> {
@@ -173,6 +174,7 @@ pub mod func {
                 effect_: self.effect_.clone(),
                 ret_annot_loc: self.ret_annot_loc.clone(),
                 statics: self.statics.clone(),
+                literal: self.literal,
             }
         }
     }

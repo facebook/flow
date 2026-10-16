@@ -397,6 +397,7 @@ mod tests {
                         flow_common::error_ref::FunctionReferenceKind::FunctionType,
                     effect_: ReactEffectType::AnyEffect,
                     strictness_kind: flow_common::type_strictness::TypeStrictnessKind::Flow,
+                    literal: false,
                 }),
             )),
         ))

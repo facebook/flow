@@ -285,6 +285,7 @@ pub fn default_constructor<C: ConfigTypes>(reason: Reason) -> Func<C> {
         effect_: type_::ReactEffectType::ArbitraryEffect,
         ret_annot_loc: reason.loc().dupe(),
         statics: None,
+        literal: false,
     }
 }
 
@@ -309,6 +310,7 @@ pub fn field_initializer<C: ConfigTypes>(
         effect_: type_::ReactEffectType::ArbitraryEffect,
         ret_annot_loc: annot_loc,
         statics: None,
+        literal: false,
     }
 }
 
@@ -358,6 +360,7 @@ pub fn functiontype<'a, C: crate::func_params_intf::Config>(
         def_reason: reason.dupe(),
         function_reference_kind: x.function_reference_kind,
         strictness_kind: cx.type_strictness_kind(),
+        literal: x.literal,
     };
     let statics_t = match statics {
         Some(t) => t.dupe(),
@@ -434,6 +437,7 @@ pub fn methodtype<'a, C: crate::func_params_intf::Config>(
         type_util::type_t_of_annotated_or_inferred(return_t).dupe(),
     );
     funtype.strictness_kind = cx.type_strictness_kind();
+    funtype.literal = x.literal;
     let t = Type::new(type_::TypeInner::DefT(
         reason.dupe(),
         type_::DefT::new(type_::DefTInner::FunT(

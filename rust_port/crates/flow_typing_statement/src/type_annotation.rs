@@ -3139,6 +3139,7 @@ fn convert_inner<'a>(
                             flow_common::error_ref::FunctionReferenceKind::FunctionType,
                         effect_: effect_flag,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
                     }),
                 )),
             ));
@@ -6107,6 +6108,7 @@ fn mk_method_func_sig<'a>(
         ret_annot_loc,
         statics: None,
         effect_: effect_flag,
+        literal: false,
     };
     let func_ast = ast::types::Function {
         tparams: tparams_ast,

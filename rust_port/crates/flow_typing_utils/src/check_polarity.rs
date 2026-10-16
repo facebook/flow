@@ -447,6 +447,7 @@ fn check_polarity_impl<'cx>(
                     function_reference_kind: _,
                     effect_: _,
                     strictness_kind: _,
+                    literal: _,
                 } = f.deref();
                 let inv_polarity = Polarity::inv(polarity);
                 for param in params.iter() {

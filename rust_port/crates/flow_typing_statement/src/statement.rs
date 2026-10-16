@@ -15357,6 +15357,7 @@ pub fn mk_class_sig<'a>(
                             &BTreeMap::new(),
                             tparams_map,
                             reason.dupe(),
+                            false,
                             function_,
                         )?;
                         let func_sig = func_sig_data.clone();
@@ -15488,6 +15489,7 @@ pub fn mk_class_sig<'a>(
             &BTreeMap::new(),
             tparams_map,
             reason,
+            true,
             func,
         )
     }
@@ -16131,6 +16133,7 @@ pub fn mk_class_sig<'a>(
                             effect_: type_::ReactEffectType::ArbitraryEffect,
                             ret_annot_loc: name_loc,
                             statics: None,
+                            literal: false,
                         })
                     };
 
@@ -16769,6 +16772,7 @@ pub fn mk_class_sig<'a>(
                         ret_annot_loc,
                         statics: None,
                         effect_: type_::ReactEffectType::ArbitraryEffect,
+                        literal: false,
                     };
                     let typed_func = ast::types::Function {
                         tparams: tparams_ast,
@@ -18933,6 +18937,7 @@ pub fn mk_record_sig<'a>(
                             effect_: type_::ReactEffectType::ArbitraryEffect,
                             ret_annot_loc: name_loc,
                             statics: None,
+                            literal: false,
                         })
                     };
 
@@ -19022,6 +19027,7 @@ pub fn mk_record_sig<'a>(
                                         &BTreeMap::new(),
                                         &tparams_map_with_this,
                                         reason.dupe(),
+                                        true,
                                         func,
                                     )?;
                                 let params_ref: Rc<
@@ -19793,6 +19799,7 @@ pub fn mk_func_sig<'a>(
     statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
     tparams_map: &FlowOrdMap<SubstName, Type>,
     reason: Reason,
+    literal: bool,
     func: &ast::function::Function<ALoc, ALoc>,
 ) -> Result<
     (
@@ -20432,6 +20439,7 @@ pub fn mk_func_sig<'a>(
         ret_annot_loc: ret_loc.dupe(),
         statics: Some(statics_t),
         effect_: effect,
+        literal,
     };
     let id_clone = id.clone();
     let predicate_clone = predicate.clone();
@@ -20516,6 +20524,7 @@ fn function_decl<'a>(
         statics,
         &FlowOrdMap::new(),
         reason.dupe(),
+        true,
         func,
     )?;
     let default_this = match default_this {

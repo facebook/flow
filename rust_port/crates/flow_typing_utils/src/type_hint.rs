@@ -881,6 +881,7 @@ fn type_of_hint_decomposition<'cx>(
             function_reference_kind: flow_common::error_ref::FunctionReferenceKind::FunctionType,
             effect_: ReactEffectType::AnyEffect,
             strictness_kind: Default::default(),
+            literal: false,
         };
         Type::new(TypeInner::DefT(
             reason.dupe(),
@@ -930,6 +931,7 @@ fn type_of_hint_decomposition<'cx>(
                             function_reference_kind: func.function_reference_kind,
                             effect_: func.effect_.clone(),
                             strictness_kind: func.strictness_kind,
+                            literal: func.literal,
                         };
                         Type::new(TypeInner::DefT(
                             fun_reason.dupe(),

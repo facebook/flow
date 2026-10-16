@@ -1448,6 +1448,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             function_reference_kind,
             effect_,
             strictness_kind: _,
+            literal,
         } = ft;
         let (args, spread_arg) = flatten_call_arg(cx, env, use_op.dupe(), reason_op, resolved)?;
         let parlist: Vec<(Option<FlowSmolStr>, Type)> = params
@@ -1503,22 +1504,24 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         let params_tlist: Vec<Type> = remaining_params.iter().map(|(_, t)| t.dupe()).collect();
         let bound_reason = call_reason.dupe().replace_desc(None);
         let def_reason = reason_op.dupe();
+        let mut bound_ft = mk_methodtype(
+            dummy_this(reason_op.loc().dupe()),
+            None, // subtyping
+            Some(effect_.clone()),
+            params_tlist,
+            rest_param,
+            def_reason,
+            *function_reference_kind,
+            Some(params_names),
+            type_guard.clone(),
+            return_t.clone(),
+        );
+        bound_ft.literal = *literal;
         let funt = Type::new(TypeInner::DefT(
             reason_op.dupe(),
             DefT::new(DefTInner::FunT(
                 dummy_static(bound_reason),
-                Rc::new(mk_methodtype(
-                    dummy_this(reason_op.loc().dupe()),
-                    None, // subtyping
-                    Some(effect_.clone()),
-                    params_tlist,
-                    rest_param,
-                    def_reason,
-                    *function_reference_kind,
-                    Some(params_names),
-                    type_guard.clone(),
-                    return_t.clone(),
-                )),
+                Rc::new(bound_ft),
             )),
         ));
         rec_flow_t(cx, env, trace, unknown_use(), (&funt, tout))

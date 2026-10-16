@@ -19,7 +19,6 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::is_literal_array_reason;
-use flow_common::reason::is_literal_function_reason;
 use flow_common::reason::is_literal_object_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::VariableKind;
@@ -35,6 +34,7 @@ use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::FrozenKind;
+use flow_typing_type::type_::FunType;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::PolyTData;
@@ -367,9 +367,19 @@ fn literal_type_mapper_type_dispatch<'cx>(
             LiteralMapAction::TypeDefault(t)
         }
         TypeInner::DefT(r, def_t)
-            if matches!(def_t.deref(), DefTInner::FunT(..)) && is_literal_function_reason(r) =>
+            if let DefTInner::FunT(statics, ft) = def_t.deref()
+                && ft.literal =>
         {
-            LiteralMapAction::TypeDefault(t.dupe())
+            LiteralMapAction::TypeDefault(Type::new(TypeInner::DefT(
+                r.dupe(),
+                DefT::new(DefTInner::FunT(
+                    statics.dupe(),
+                    Rc::new(FunType {
+                        literal: false,
+                        ..ft.as_ref().clone()
+                    }),
+                )),
+            )))
         }
         TypeInner::TypeAppT(box TypeAppTData { type_, .. }) if is_builtin_promise(cx, type_) => {
             // async expressions will wrap result in Promise<>, so we need to descend here
@@ -524,7 +534,7 @@ fn is_literal_type<'cx>(cx: &mut Context<'cx>, seen: &mut BTreeSet<i32>, t: &Typ
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::ArrT(_) => is_literal_array_reason(r),
             DefTInner::ObjT(_) => is_literal_object_reason(r),
-            DefTInner::FunT(..) => is_literal_function_reason(r),
+            DefTInner::FunT(_, ft) => ft.literal,
             DefTInner::SingletonStrT {
                 from_annot: false, ..
             }

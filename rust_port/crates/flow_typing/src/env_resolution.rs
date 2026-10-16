@@ -954,6 +954,7 @@ fn resolve_annotated_function<'cx>(
         statics,
         &tparams_map,
         reason.dupe(),
+        true,
         function_,
     )?;
     let (ref func_sig, ref reconstruct, ref deferred_tg_check) = sig_data;
@@ -1709,6 +1710,7 @@ fn resolve_binding<'cx>(
                 statics,
                 &tparams_map,
                 reason_fun,
+                true,
                 function_,
             )?;
             let (ref func_sig, ref reconstruct, ref deferred_tg_check) = sig_data;

@@ -4808,6 +4808,7 @@ pub struct FunType {
     pub function_reference_kind: FunctionReferenceKind,
     pub effect_: ReactEffectType,
     pub strictness_kind: TypeStrictnessKind,
+    pub literal: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -12048,6 +12049,7 @@ pub fn mk_methodtype(
         function_reference_kind,
         effect_,
         strictness_kind: TypeStrictnessKind::Flow,
+        literal: false,
     }
 }
 

@@ -1173,6 +1173,7 @@ pub fn fun_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             function_reference_kind: t.function_reference_kind,
             effect_: t.effect_.clone(),
             strictness_kind: t.strictness_kind,
+            literal: t.literal,
         })
     }
 }

@@ -1696,10 +1696,6 @@ pub fn is_literal_array_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     }
 }
 
-pub fn is_literal_function_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
-    matches!(r.desc(true), Some(VirtualReasonDesc::RFunction(_)))
-}
-
 pub fn is_record_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     matches!(r.desc(true), Some(VirtualReasonDesc::RRecordType(_)))
 }

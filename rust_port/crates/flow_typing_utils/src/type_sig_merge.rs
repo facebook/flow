@@ -2676,6 +2676,7 @@ fn merge_annot<'cx>(
                 matches!(annot, Annot::MethodAnnot(box (_, true, _))),
                 false,
                 matches!(annot, Annot::MethodAnnot(_)),
+                false,
             )
         }
         Annot::ComponentAnnot(box (loc, def)) => {
@@ -3118,6 +3119,7 @@ fn merge_value<'cx>(
                 false,
                 false,
                 false,
+                true,
             )
         }
         Value::StringVal(box loc) => {
@@ -3668,6 +3670,7 @@ fn merge_obj_value_prop<'cx>(
                         false,
                         false,
                         false,
+                        true,
                     )
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
@@ -3718,6 +3721,7 @@ fn merge_class_prop<'cx>(
                         is_static,
                         uses_this,
                         false,
+                        true,
                     )
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
@@ -3758,6 +3762,7 @@ fn merge_obj_annot_prop<'cx>(
                 FunctionReferenceKind::FunctionType,
                 def,
                 statics,
+                false,
                 false,
                 false,
                 false,
@@ -3804,6 +3809,7 @@ fn merge_interface_prop<'cx>(
                     statics,
                     true,
                     is_static,
+                    false,
                     false,
                     false,
                 )
@@ -4894,6 +4900,7 @@ fn merge_fun<'cx>(
     is_static: bool,
     uses_this: bool,
     is_optional_method: bool,
+    literal: bool,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     use flow_type_sig::type_sig;
@@ -4999,6 +5006,7 @@ fn merge_fun<'cx>(
             function_reference_kind,
             effect_,
             strictness_kind: def_ref.strictness_kind,
+            literal,
         };
         Type::new(type_::TypeInner::DefT(
             reason2.dupe(),
@@ -5563,6 +5571,7 @@ fn merge_declare_fun<'cx>(
                 false,
                 false,
                 false,
+                false,
             )
         })
         .collect();
@@ -5720,6 +5729,7 @@ pub fn merge_def<'cx>(
                 false,
                 false,
                 false,
+                true,
             );
             wrap_with_namespace_types(
                 cx,
