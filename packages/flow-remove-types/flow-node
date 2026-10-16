@@ -13,7 +13,7 @@ var repl = require('repl');
 var util = require('util');
 var vm = require('vm');
 
-var flowRemoveTypes = require('./index');
+var runnable = require('./runnable');
 
 var usage = 'Usage: flow-node [options] [ script.js ] [arguments] \n' +
 
@@ -67,6 +67,10 @@ while (i < process.argv.length) {
 
 // If node options were provided, forward to another process with the options
 // applied before other arguments.
+var needsLoader = !Module.register && !process.env.FLOW_NODE_LOADER;
+if (needsLoader) {
+  options.unshift('--experimental-loader', require('url').pathToFileURL(require.resolve('./loader.mjs')).href);
+}
 if (options.length > 0) {
   var nodePath = process.argv.shift();
   var nodeArgs = options.concat(process.argv.filter(function (arg) {
@@ -74,7 +78,12 @@ if (options.length > 0) {
   }));
 
   const child_process = require('child_process');
-  const proc = child_process.spawn(nodePath, nodeArgs, { stdio: 'inherit' });
+  const proc = child_process.spawn(nodePath, nodeArgs, {
+    stdio: 'inherit',
+    env: Object.assign({}, process.env, needsLoader ? {
+      FLOW_NODE_LOADER: '1', FLOW_NODE_OPTIONS: JSON.stringify({all: all})
+    } : {})
+  });
   proc.on('exit', function (code, signal) {
     process.on('exit', function () {
       if (signal) {
@@ -101,7 +110,7 @@ if (evalScript || printScript) {
   global.module = evalModule;
   global.require = evalModule.require.bind(evalModule);
   var result = vm.runInThisContext(
-    flowRemoveTypes(evalScript || printScript, { all: true }).toString(),
+    runnable.transform(evalScript || printScript, global.__filename, { all: true, allowReturnOutsideFunction: false }),
     { filename: global.__filename }
   );
 
@@ -113,7 +122,7 @@ if (evalScript || printScript) {
 } else if (source && checkSource) {
   var code = fs.readFileSync(source, 'utf8');
   try {
-    flowRemoveTypes(code, { all: all });
+    runnable.compile(code, path.resolve(source), {all: all}, runnable.sourceType(path.resolve(source)));
   } catch (error) {
     var lines = code.split(/\r\n?|\n|\u2028|\u2029/);
     process.stdout.write(source + ':' + error.loc.line + '\n');
@@ -144,7 +153,7 @@ if (evalScript || printScript) {
       var error;
       var result;
       try {
-        var runCode = flowRemoveTypes(code, { all: true }).toString();
+        var runCode = runnable.transform(code, filename, { all: true, allowReturnOutsideFunction: false });
         try {
           result = vm.runInThisContext(runCode, { filename: filename });
         } catch (runError) {

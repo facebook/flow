@@ -7,7 +7,8 @@
  * @format
  */
 
-var flowRemoveTypes = require('./index');
+var Module = require('module');
+var runnable = require('./runnable');
 var pirates = require('pirates');
 
 // Supported options:
@@ -19,60 +20,31 @@ var pirates = require('pirates');
 //               transformed, defaults to ignoring /node_modules/, provide null
 //               to exclude nothing. (alias: exclude)
 var options;
+// ES modules, including entry points that Node reloads after detecting module syntax, are
+// loaded by the ESM loader rather than through the require hook below.
+var esmOptions = Module.register ? runnable.registerESM(options) : null;
 module.exports = function setOptions(newOptions) {
   options = newOptions;
+  if (esmOptions) {
+    runnable.writeOptions(esmOptions, newOptions);
+  }
 };
 
-var jsLoader = require.extensions['.js'];
 var exts = ['.js', '.mjs', '.cjs', '.jsx', '.flow', '.es6'];
 
 var revert = pirates.addHook(
   function hook(code, filename) {
     try {
-      return flowRemoveTypes(code, options).toString();
+      return runnable.transform(code, filename, options);
     } catch (e) {
       e.message = filename + ': ' + e.message;
       throw e;
     }
   },
-  {exts: exts, matcher: shouldTransform},
+  {
+    exts: exts,
+    matcher: function (filename) {
+      return runnable.shouldTransform(filename, options);
+    },
+  },
 );
-
-function shouldTransform(filename) {
-  var includes = options && regexpPattern(options.includes || options.include);
-  var excludes =
-    options && 'excludes' in options
-      ? regexpPattern(options.excludes)
-      : options && 'exclude' in options
-        ? regexpPattern(options.exclude)
-        : /\/node_modules\//;
-  return (
-    (!includes || includes.test(filename)) &&
-    !(excludes && excludes.test(filename))
-  );
-}
-
-// Given a null | string | RegExp | any, returns null | Regexp or throws a
-// more helpful error.
-function regexpPattern(pattern) {
-  if (!pattern) {
-    return pattern;
-  }
-  // A very simplified glob transform which allows passing legible strings like
-  // "myPath/*.js" instead of a harder to read RegExp like /\/myPath\/.*\.js/.
-  if (typeof pattern === 'string') {
-    pattern = pattern.replace(/\./g, '\\.').replace(/\*/g, '.*');
-    if (pattern[0] !== '/') {
-      pattern = '/' + pattern;
-    }
-    return new RegExp(pattern);
-  }
-  if (typeof pattern.test === 'function') {
-    return pattern;
-  }
-  throw new Error(
-    'flow-remove-types: ' +
-      'includes and excludes must be RegExp or path strings. Got: ' +
-      pattern,
-  );
-}

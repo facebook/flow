@@ -122,6 +122,27 @@ test('Wasm emitter preserves shebangs', () => {
   expect(emitted.map.sourcesContent).toEqual([source]);
 });
 
+test('Wasm emission supports module await and dependency runtime specifiers', () => {
+  const emitted = flowToRunnableJSWithSourceMap(
+    'enum E {A}\nconst value: string = await Promise.resolve(E.A);\nconsole.log(value);',
+    {
+      sourceFilename: 'await.mjs',
+      sourceType: 'module',
+      enumRuntimeModule: require('url').pathToFileURL(
+        require.resolve('flow-enums-runtime'),
+      ).href,
+    },
+  );
+  const result = spawnSync(
+    process.execPath,
+    ['--input-type=module', '-e', emitted.code],
+    {encoding: 'utf8'},
+  );
+  expect(result.status).toBe(0);
+  expect(result.stderr).toBe('');
+  expect(result.stdout).toBe('A\n');
+});
+
 function executeScript(source: string): mixed {
   const module = {exports: null};
   vm.runInNewContext(source, {module});

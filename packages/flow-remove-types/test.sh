@@ -75,3 +75,6 @@ if [ "$FLOW_NODE_OPTS" != 4 ]; then echo 'flow-node with options failed'; exit 1
 # --bogus-flag isn't a node flag, so node will error. this test ensures we're not just dropping flags
 FLOW_NODE_OPTS=$(./flow-node --bogus-flag 2>&1);
 if [[ "$FLOW_NODE_OPTS" != *"bad option: --bogus-flag"* ]]; then echo 'flow-node with options failed'; exit 1; fi;
+
+# Exercise the actual Wasm compiler through Node module loading and stack traces.
+node test/test-flow-node.cjs || exit 1

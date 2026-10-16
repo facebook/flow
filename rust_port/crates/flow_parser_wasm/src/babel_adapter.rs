@@ -17,6 +17,7 @@ mod strip_flow;
 #[cfg(test)]
 mod tests;
 
+use dupe::Dupe;
 pub use enum_lowering::EnumRuntime;
 pub use error::BabelLoweringError;
 use flow_parser::ast;
@@ -82,7 +83,7 @@ pub fn lower_program(
     options: &BabelLoweringOptions,
 ) -> Result<BabelProgram, BabelLoweringError> {
     let program = if options.lower_enums {
-        enum_lowering::lower_program(program, options.enum_runtime)
+        enum_lowering::lower_program(program, options.enum_runtime.dupe())
     } else {
         program.clone()
     };

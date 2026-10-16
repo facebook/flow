@@ -2,11 +2,12 @@
 
 'use strict';
 
+var FlowParserWASMModule = require('flow-parser/dist/FlowParserWASM');
 var bindings;
 
 function init() {
   if (bindings) return bindings;
-  var wasm = require('flow-parser/dist/FlowParserWASM')({
+  var wasm = FlowParserWASMModule({
     quit: function (_status, error) {
       throw error;
     }
@@ -39,7 +40,10 @@ exports.flowToRunnableJSWithSourceMap = function (source, options) {
   var api = init();
   var wasm = api.wasm;
   var sourceBuffer = Buffer.from(source, 'utf8');
-  var filenameBuffer = options.sourceFilename.length > 0 ? Buffer.from(options.sourceFilename, 'utf8') : null;
+  var filenameBuffer = Buffer.from(JSON.stringify({
+    sourceFilename: options.sourceFilename,
+    enumRuntimeModule: options.enumRuntimeModule
+  }), 'utf8');
   var sourceAddr = 0;
   var filenameAddr = 0;
   var filenameLength = 0;

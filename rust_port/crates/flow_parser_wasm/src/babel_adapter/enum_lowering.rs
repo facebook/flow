@@ -23,11 +23,12 @@ use flow_parser_utils::ast_builder;
 use super::builders;
 use super::gen_id::GenId;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Dupe)]
 pub enum EnumRuntime {
     Default,
     CustomPlaceholder,
-    Import,
+    Require(FlowSmolStr),
+    Import(FlowSmolStr),
 }
 
 struct EnumLowerer {
@@ -39,18 +40,23 @@ struct EnumLowerer {
 
 impl EnumLowerer {
     fn runtime_expression(&mut self, loc: &Loc) -> expression::Expression<Loc, Loc> {
-        match self.runtime {
+        match &self.runtime {
             EnumRuntime::Default => builders::call(
                 loc,
                 builders::identifier(loc, "require"),
                 vec![builders::string_literal(loc, "flow-enums-runtime")],
+            ),
+            EnumRuntime::Require(module) => builders::call(
+                loc,
+                builders::identifier(loc, "require"),
+                vec![builders::string_literal(loc, module.as_str())],
             ),
             EnumRuntime::CustomPlaceholder => {
                 let index = self.next_placeholder;
                 self.next_placeholder += 1;
                 builders::identifier(loc, &format!("\0flow_enum_runtime_{index}"))
             }
-            EnumRuntime::Import => {
+            EnumRuntime::Import(_) => {
                 let name = self
                     .imported_runtime
                     .get_or_insert_with(|| self.gen_id.id());
@@ -276,12 +282,12 @@ pub fn lower_program(
     runtime: EnumRuntime,
 ) -> ast::Program<Loc, Loc> {
     let mut lowerer = EnumLowerer {
-        runtime,
+        runtime: runtime.dupe(),
         next_placeholder: 0,
         gen_id: GenId::new("enum_runtime"),
         imported_runtime: None,
     };
-    if matches!(runtime, EnumRuntime::Import) {
+    if matches!(runtime, EnumRuntime::Import(_)) {
         struct Usages<'a>(&'a mut GenId);
         impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, Infallible> for Usages<'_> {
             fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
@@ -303,7 +309,9 @@ pub fn lower_program(
         let Ok(()) = Usages(&mut lowerer.gen_id).program(program);
     }
     let mut program = lowerer.map_program(program);
-    if let Some(name) = lowerer.imported_runtime {
+    if let Some(name) = lowerer.imported_runtime
+        && let EnumRuntime::Import(module) = runtime
+    {
         let import = ast_builder::statements::import_declaration(
             None,
             None,
@@ -312,8 +320,8 @@ pub fn lower_program(
             (
                 Loc::default(),
                 ast::StringLiteral {
-                    value: "flow-enums-runtime".into(),
-                    raw: "'flow-enums-runtime'".into(),
+                    raw: format!("{module:?}").into(),
+                    value: module,
                     comments: None,
                 },
             ),

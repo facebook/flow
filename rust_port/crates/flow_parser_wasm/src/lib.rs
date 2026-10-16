@@ -190,23 +190,28 @@ pub extern "C" fn hermesParse(
     };
 
     if babel == 2 {
-        let emitted = runnable_js::flow_to_runnable_js_with_source_map(
-            source_str,
-            &filename_str,
-            &runnable_js::RunnableOptions {
-                source_type: if source_type == 2 {
-                    runnable_js::SourceType::Module
-                } else {
-                    runnable_js::SourceType::CommonJs
-                },
-                react_runtime_target: if react_runtime_target == 19 {
-                    runnable_js::ReactRuntimeTarget::React19
-                } else {
-                    runnable_js::ReactRuntimeTarget::React18
-                },
-                allow_return_outside_function: allow_return_outside != 0,
-            },
-        );
+        let emitted = serde_json::from_str::<runnable_js::SourceMetadata>(&filename_str)
+            .map_err(runnable_js::RunnableError::Options)
+            .and_then(|metadata| {
+                runnable_js::flow_to_runnable_js_with_source_map(
+                    source_str,
+                    &metadata.source_filename,
+                    &runnable_js::RunnableOptions {
+                        enum_runtime_module: metadata.enum_runtime_module,
+                        source_type: if source_type == 2 {
+                            runnable_js::SourceType::Module
+                        } else {
+                            runnable_js::SourceType::CommonJs
+                        },
+                        react_runtime_target: if react_runtime_target == 19 {
+                            runnable_js::ReactRuntimeTarget::React19
+                        } else {
+                            runnable_js::ReactRuntimeTarget::React18
+                        },
+                        allow_return_outside_function: allow_return_outside != 0,
+                    },
+                )
+            });
         let mut result = Box::new(ParseResult {
             error: None,
             error_line: 0,
@@ -505,6 +510,8 @@ pub extern "C" fn hermesParseResult_getStringBuffer(result: *const ParseResult) 
 
 /// Wasm entry point for runnable emission. Source buffers follow the same
 /// contract as `hermesParse`; the result uses its existing ownership/getters.
+/// Source metadata is UTF-8 JSON with `sourceFilename` and optional
+/// `enumRuntimeModule`, in the existing filename buffer slot.
 /// The program buffer contains the JSON byte length; the string buffer holds
 /// the serialized `RunnableJs`. Source type is 1 for CommonJS or 2 for ESM.
 #[cfg(target_arch = "wasm32")]
@@ -512,8 +519,8 @@ pub extern "C" fn hermesParseResult_getStringBuffer(result: *const ParseResult) 
 pub extern "C" fn flow_to_runnable_js_with_source_map(
     source: *const u8,
     source_size: usize,
-    source_filename: *const u8,
-    source_filename_size: usize,
+    source_metadata: *const u8,
+    source_metadata_size: usize,
     source_type: i32,
     react_runtime_target: i32,
     allow_return_outside: i32,
@@ -521,8 +528,8 @@ pub extern "C" fn flow_to_runnable_js_with_source_map(
     hermesParse(
         source,
         source_size,
-        source_filename,
-        source_filename_size,
+        source_metadata,
+        source_metadata_size,
         1,
         1,
         0,

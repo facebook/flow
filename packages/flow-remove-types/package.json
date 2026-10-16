@@ -20,6 +20,9 @@
     "jest.js",
     "register.js",
     "runnable-wasm.js",
+    "runnable.js",
+    "loader.mjs",
+    "register-esm.mjs",
     "flow-remove-types",
     "flow-node",
     "LICENSE"
@@ -48,9 +51,21 @@
   "dependencies": {
     "flow-parser": "^0.336.0",
     "pirates": "^3.0.2",
-    "vlq": "^0.2.1"
+    "vlq": "^0.2.1",
+    "flow-enums-runtime": "^0.0.6",
+    "source-map-support": "^0.5.21"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=16.20"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./register": "./register.js",
+    "./register.js": "./register.js",
+    "./register/esm": "./register-esm.mjs",
+    "./loader": "./loader.mjs",
+    "./jest": "./jest.js",
+    "./jest.js": "./jest.js",
+    "./package.json": "./package.json"
   }
 }

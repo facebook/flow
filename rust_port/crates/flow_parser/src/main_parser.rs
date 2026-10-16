@@ -555,6 +555,19 @@ pub fn parse_program_file<'a, E>(
     )
 }
 
+/// Parse an ES module in strict mode with top-level await enabled.
+pub fn parse_module_file(
+    parse_options: ParseOptions,
+    file_name: FileKey,
+    content: &str,
+) -> Result<ast::Program<Loc, Loc>, Vec<(Loc, ParseError)>> {
+    let env = init_env::<()>(None, Some(parse_options), Some(file_name), Ok(content));
+    do_parse(env, true, |env| {
+        env.with_strict(true, |env| env.with_allow_await(true, parse_program_inner))
+    })
+    .and_then(|(program, errors)| program.map_err(|_| errors))
+}
+
 pub fn parse_annotation<E>(
     parse_options: Option<ParseOptions>,
     file_name: Option<FileKey>,

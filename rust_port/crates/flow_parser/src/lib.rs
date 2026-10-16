@@ -54,6 +54,7 @@ pub use main_parser::parse_annotation;
 pub use main_parser::parse_expression;
 pub use main_parser::parse_json_file;
 pub use main_parser::parse_jsx_pragma_expression;
+pub use main_parser::parse_module_file;
 pub use main_parser::parse_package_json_file;
 pub use main_parser::parse_program_file;
 pub use main_parser::parse_program_without_file;
