@@ -112,7 +112,6 @@ use flow_typing_flow_js::type_inference_hooks_js;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_loc_env::func_class_sig_types;
 use flow_typing_type::type_;
-use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::type_collector::TypeCollector;
@@ -7989,24 +7988,11 @@ fn expression_<'a>(
                             let t = e.loc().1.dupe();
                             let reason = reason_of_t(&t).dupe();
                             let concrete_types = flow_js_utils::flow_js_result_to_job_error(
-                                FlowJs::possible_concrete_types_for_inspection(cx, &reason, &t),
+                                FlowJs::possible_concrete_types_for_operators_checking(
+                                    cx, &reason, &t,
+                                ),
                             )?;
-                            let expanded: Vec<_> = concrete_types
-                                .iter()
-                                .flat_map(|ct| {
-                                    if let TypeInner::GenericT(box GenericTData { bound, .. }) =
-                                        ct.deref()
-                                    {
-                                        FlowJs::possible_concrete_types_for_inspection(
-                                            cx, &reason, bound,
-                                        )
-                                        .unwrap_or_else(|_| vec![ct.dupe()])
-                                    } else {
-                                        vec![ct.dupe()]
-                                    }
-                                })
-                                .collect();
-                            for ct in &expanded {
+                            for ct in &concrete_types {
                                 let is_numeric = matches!(
                                     ct.deref(),
                                     TypeInner::DefT(_, def)

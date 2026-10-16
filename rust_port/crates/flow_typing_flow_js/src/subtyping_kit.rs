@@ -151,6 +151,17 @@ use crate::speculation_kit;
 use crate::template_literal_type;
 use crate::type_inference_hooks_js;
 
+fn has_syntactic_nullish_member(t: &Type) -> bool {
+    match t.deref() {
+        TypeInner::MaybeT(_, _) | TypeInner::OptionalT { .. } => true,
+        TypeInner::UnionT(_, rep) => rep.members_iter().any(has_syntactic_nullish_member),
+        TypeInner::DefT(_, def_t) => {
+            matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT)
+        }
+        _ => false,
+    }
+}
+
 fn flow_all_in_union<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
@@ -4512,7 +4523,62 @@ pub fn rec_sub_t<'cx>(
                 });
             speculation_kit::try_union(cx, env, Some(on_success), trace, use_op, l.dupe(), r.dupe(), rep)
         }
-        // maybe and optional types are just special union types
+        // maybe types are special union types
+        // This target arm otherwise strips nullishness before opaque upper-bound
+        // handling runs. Preserve explicit nullish upper bounds against the original
+        // nullable target while retaining the stripped-target path as a fallback.
+        (
+            TypeInner::NominalT {
+                reason: opaque_t_reason,
+                nominal_type: lnom,
+            },
+            TypeInner::MaybeT(r2, t2),
+        ) if let Some(upper_t) = &lnom.upper_t
+            && has_syntactic_nullish_member(upper_t) =>
+        {
+            let upper_t = upper_t.dupe();
+            let upper_u = u.dupe();
+            let fallback_l = l.dupe();
+            let fallback_t = type_util::push_type_alias_reason(r2, t2.dupe());
+            let opaque_t_reason_c = opaque_t_reason.dupe();
+            let upper_use_op = use_op.dupe();
+            let fallback_use_op = use_op.dupe();
+            speculation_kit::try_custom(
+                cx, env,
+                Some(use_op),
+                None,
+                None,
+                opaque_t_reason.loc().clone(),
+                vec![
+                    Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
+                        let use_op = VirtualUseOp::Frame(
+                            Arc::new(VirtualFrameUseOp::OpaqueTypeUpperBound {
+                                opaque_t_reason: opaque_t_reason_c,
+                            }),
+                            Arc::new(upper_use_op),
+                        );
+                        FlowJs::rec_flow_t_with_env(
+                            cx,
+                            env,
+                            trace,
+                            use_op,
+                            &upper_t,
+                            &upper_u,
+                        )
+                    }),
+                    Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
+                        FlowJs::rec_flow_t_with_env(
+                            cx,
+                            env,
+                            trace,
+                            fallback_use_op,
+                            &fallback_l,
+                            &fallback_t,
+                        )
+                    }),
+                ],
+            )
+        }
         (_, TypeInner::MaybeT(r2, t2)) => {
             let t2 = type_util::push_type_alias_reason(r2, t2.dupe());
             FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t2)))
