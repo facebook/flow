@@ -2215,9 +2215,7 @@ pub fn class_type(t: Type, structural: bool, annot_loc: Option<ALoc>) -> Type {
 }
 
 pub fn extends_use_type<CX: ContextFamily>(use_op: UseOp, l: Type, u: Type) -> UseT<CX> {
-    let reason = reason_of_t(&u).dupe().update_desc_new(|desc| {
-        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RExtends(Arc::new(desc)))
-    });
+    let reason = reason_of_t(&u).dupe().update_desc_new(|desc| desc);
     UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
         use_op,
         reason,

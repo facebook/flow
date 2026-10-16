@@ -392,7 +392,7 @@ pub fn check_type_guard<'cx>(
         let tg_reason = if is_this_guard {
             mk_reason(RThis, name_loc.dupe())
         } else {
-            mk_reason(RTypeGuardParam(name.dupe()), name_loc.dupe())
+            mk_reason(None, name_loc.dupe())
         };
         let check_consistency = |cx: &mut Context<'cx>, binding_loc: &ALoc| match (kind, type_guard)
         {

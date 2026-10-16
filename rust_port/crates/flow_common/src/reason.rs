@@ -422,7 +422,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RMaybe(Arc<VirtualReasonDesc<L>>),
     RRestArrayLit(Option<Arc<VirtualReasonDesc<L>>>),
     RTypeApp(Arc<VirtualReasonDesc<L>>),
-    RExtends(Arc<VirtualReasonDesc<L>>),
     RClass(Arc<VirtualReasonDesc<L>>),
     RStatics(Arc<VirtualReasonDesc<L>>),
     RRefined(Arc<VirtualReasonDesc<L>>),
@@ -437,7 +436,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     },
     RPossiblyMissingPropFromObj(Name, Arc<VirtualReasonDesc<L>>),
     RUnionBranching(Arc<VirtualReasonDesc<L>>, i32),
-    RTypeGuardParam(FlowSmolStr),
     RComponent(FlowSmolStr),
     RPropsOfComponent(Arc<VirtualReasonDesc<L>>),
     RRenderType(Arc<VirtualReasonDesc<L>>),
@@ -498,7 +496,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RUninitialized => RUninitialized,
             RPossiblyUninitialized => RPossiblyUninitialized,
             RMappedType => RMappedType,
-            RTypeGuardParam(s) => RTypeGuardParam(s.dupe()),
             RComponent(n) => RComponent(n.dupe()),
             RComponentType => RComponentType,
             RInferredUnionElemArray {
@@ -613,7 +610,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RMaybe(d) => RMaybe(Arc::new(d.map_locs(f))),
             RRestArrayLit(d) => RRestArrayLit(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RTypeApp(d) => RTypeApp(Arc::new(d.map_locs(f))),
-            RExtends(d) => RExtends(Arc::new(d.map_locs(f))),
             RClass(d) => RClass(Arc::new(d.map_locs(f))),
             RStatics(d) => RStatics(Arc::new(d.map_locs(f))),
             RRefined(d) => RRefined(Arc::new(d.map_locs(f))),
@@ -1584,7 +1580,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         }
         RRestArrayLit(_) => "rest array".to_string(),
         RTypeApp(d) => string_of_desc(d),
-        RExtends(d) => format!("extends {}", string_of_desc(d)),
         RClass(d) => format!("class {}", string_of_desc(d)),
         RStatics(d) => format!("statics of {}", string_of_desc(d)),
         RRefined(d) => format!("refined {}", string_of_desc(d)),
@@ -1620,7 +1615,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RPossiblyUninitialized => "possibly uninitialized variable".to_string(),
 
         // Type guards and components
-        RTypeGuardParam(param) => format!("type guard parameter `{}`", param),
         RComponent(name) => format!("component {}", name.as_str()),
         RComponentType => "component".to_string(),
         RPropsOfComponent(d) => format!("props of {}", string_of_desc(d)),

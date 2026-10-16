@@ -2148,9 +2148,7 @@ fn instanceof_test<'cx>(
             let arr = left.dupe();
             let elemt = elemt_of_arrtype(arrtype);
             let right = InstanceofRhs::InternalExtendsOperand {
-                reason: r
-                    .dupe()
-                    .update_desc(|d| d.map(|d| VirtualReasonDesc::RExtends(Arc::new(d)))),
+                reason: r.dupe(),
                 c: arr.dupe(),
                 a: a.dupe(),
                 seen: SeenClasses::new(),
@@ -2175,9 +2173,7 @@ fn instanceof_test<'cx>(
             let arr = left.dupe();
             let elemt = elemt_of_arrtype(arrtype);
             let right = InstanceofRhs::InternalExtendsOperand {
-                reason: r
-                    .dupe()
-                    .update_desc(|d| d.map(|d| VirtualReasonDesc::RExtends(Arc::new(d)))),
+                reason: r.dupe(),
                 c: arr.dupe(),
                 a: a.dupe(),
                 seen: SeenClasses::new(),
@@ -2210,9 +2206,7 @@ fn instanceof_test<'cx>(
         {
             let c = left;
             let right = InstanceofRhs::InternalExtendsOperand {
-                reason: r
-                    .dupe()
-                    .update_desc(|d| d.map(|d| VirtualReasonDesc::RExtends(Arc::new(d)))),
+                reason: r.dupe(),
                 c: c.dupe(),
                 a: a.dupe(),
                 seen: SeenClasses::new(),
@@ -2420,9 +2414,7 @@ fn instanceof_test<'cx>(
         {
             let c = left;
             let right = InstanceofRhs::InternalExtendsOperand {
-                reason: r
-                    .dupe()
-                    .update_desc(|d| d.map(|d| VirtualReasonDesc::RExtends(Arc::new(d)))),
+                reason: r.dupe(),
                 c: c.dupe(),
                 a: a.dupe(),
                 seen: SeenClasses::new(),

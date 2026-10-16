@@ -5642,12 +5642,7 @@ fn __flow_impl<'cx>(
             if flow_js_utils::is_same_instance_type(inst_t, inst_super_t) {
                 let tmap1 = inst.type_args.dupe();
                 let tmap2 = inst_super.type_args.dupe();
-                let ureason = reason_op.dupe().update_desc_new(|desc| match desc {
-                    Some(VirtualReasonDesc::RExtends(inner_desc)) => {
-                        Some(inner_desc.as_ref().clone())
-                    }
-                    other => other,
-                });
+                let ureason = reason_op.dupe().update_desc_new(|desc| desc);
                 flow_type_args(
                     cx,
                     env,
