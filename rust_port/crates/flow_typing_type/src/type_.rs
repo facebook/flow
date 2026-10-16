@@ -9341,9 +9341,12 @@ pub mod concretize_seen {
     use std::cell::RefCell;
     use std::collections::BTreeSet;
 
+    use super::Type;
+
     #[derive(Debug, Clone)]
     pub struct ConcretizeSeen {
         seen: RefCell<BTreeSet<i32>>,
+        expanding_type_apps: RefCell<Vec<Type>>,
     }
 
     impl PartialEq for ConcretizeSeen {
@@ -9376,6 +9379,7 @@ pub mod concretize_seen {
         pub fn new() -> Self {
             ConcretizeSeen {
                 seen: RefCell::new(BTreeSet::new()),
+                expanding_type_apps: RefCell::new(Vec::new()),
             }
         }
 
@@ -9385,6 +9389,18 @@ pub mod concretize_seen {
 
         pub fn insert(&self, tvar: i32) {
             self.seen.borrow_mut().insert(tvar);
+        }
+
+        pub fn is_expanding_type_app(&self, t: &Type) -> bool {
+            self.expanding_type_apps.borrow().contains(t)
+        }
+
+        pub fn push_expanding_type_app(&self, t: Type) {
+            self.expanding_type_apps.borrow_mut().push(t);
+        }
+
+        pub fn pop_expanding_type_app(&self) {
+            self.expanding_type_apps.borrow_mut().pop();
         }
     }
 }

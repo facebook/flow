@@ -430,6 +430,41 @@ Invalid trivially recursive definition of conditional type.  [recursive-definiti
                 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------- trivially_recursive_with_typeapps_concretization.js:9:9
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   9|     if (t2) {} // only the null and void members are concretized
+              ^^
+
+
+Error -------------------------------------------------------- trivially_recursive_with_typeapps_concretization.js:19:11
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `null` to match
+`null` [1]. [match-not-exhaustive]
+
+   trivially_recursive_with_typeapps_concretization.js:19:11
+   19| const r = match (m) { 1 => 1 }; // error: `null` is not checked
+                 ^^^^^
+
+References:
+   trivially_recursive_with_typeapps_concretization.js:18:18
+   18| declare var m: W<Bad<{}>>;
+                        ^^^^^^^ [1]
+
+
+Error -------------------------------------------------------- trivially_recursive_with_typeapps_concretization.js:19:23
+
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   19| const r = match (m) { 1 => 1 }; // error: `null` is not checked
+                             ^ [1]
+
+
 Error ------------------------------------------------------------- trivially_recursive_with_union_intersections.js:1:12
 
 Invalid trivially recursive definition of `T1`.  [recursive-definition]
@@ -455,4 +490,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 31 errors
+Found 34 errors

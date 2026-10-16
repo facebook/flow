@@ -2028,17 +2028,30 @@ fn __flow_impl<'cx>(
             _,
         ) => {
             let reason_op = upper_operation_reason_or(u, reason_tapp);
-            FlowJs::instantiate_this_class_with_env(
-                cx,
-                env,
-                trace,
-                &reason_op,
-                reason_tapp,
-                c,
-                ts.dupe(),
-                this,
-                &Cont::Upper(Box::new(u.dupe())),
-            )?;
+            let seen = match u.deref() {
+                UseTInner::ConcretizeT(box ConcretizeTData { seen, .. }) => Some(seen),
+                _ => None,
+            };
+            if !seen.is_some_and(|seen| seen.is_expanding_type_app(l)) {
+                if let Some(seen) = seen {
+                    seen.push_expanding_type_app(l.dupe());
+                }
+                let result = FlowJs::instantiate_this_class_with_env(
+                    cx,
+                    env,
+                    trace,
+                    &reason_op,
+                    reason_tapp,
+                    c,
+                    ts.dupe(),
+                    this,
+                    &Cont::Upper(Box::new(u.dupe())),
+                );
+                if let Some(seen) = seen {
+                    seen.pop_expanding_type_app();
+                }
+                result?;
+            }
         }
         (
             TypeInner::TypeAppT(..),
@@ -2268,15 +2281,28 @@ fn __flow_impl<'cx>(
             _,
         ) => {
             let reason_op = upper_operation_reason_or(u, reason_tapp);
-            if let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
-                cx,
-                env,
-                type_app_expansion::Bound::Lower,
-                type_,
-                targs,
-            ) {
+            // Concretization bypasses the constraint cache, each expansion is wrapped in a
+            // fresh tvar, and the expansion stack only counts growing targs, so an
+            // application reappearing within its own expansion (e.g. `type T<X> = T<X>`)
+            // would otherwise be expanded until the recursion limit.
+            let seen = match u.deref() {
+                UseTInner::ConcretizeT(box ConcretizeTData { seen, .. }) => Some(seen),
+                _ => None,
+            };
+            if !seen.is_some_and(|seen| seen.is_expanding_type_app(l))
+                && let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
+                    cx,
+                    env,
+                    type_app_expansion::Bound::Lower,
+                    type_,
+                    targs,
+                )
+            {
                 let env = &env;
-                let t = mk_typeapp_instance_annot(
+                if let Some(seen) = seen {
+                    seen.push_expanding_type_app(l.dupe());
+                }
+                let result = mk_typeapp_instance_annot(
                     cx,
                     env,
                     Some(trace),
@@ -2287,8 +2313,12 @@ fn __flow_impl<'cx>(
                     None,
                     type_,
                     targs.dupe(),
-                )?;
-                rec_flow(cx, env, trace, (&t, u))?;
+                )
+                .and_then(|t| rec_flow(cx, env, trace, (&t, u)));
+                if let Some(seen) = seen {
+                    seen.pop_expanding_type_app();
+                }
+                result?;
             }
         }
         // Concretize types for type inspection purpose up to this point. The rest are

@@ -8,7 +8,9 @@
 use std::rc::Rc;
 
 use flow_typing_flow_common::instantiation_utils::implicit_type_argument;
+use flow_typing_flow_common::instantiation_utils::type_app_expansion;
 use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_flow_js_env::type_app_expansion::Bound;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_type::type_::SpecializeTData;
 
@@ -251,6 +253,15 @@ pub(super) fn instantiate_this_class<'cx>(
     this: &Type,
     k: &Cont<Cx>,
 ) -> Result<(), FlowJsException> {
+    let side = match k {
+        Cont::Upper(_) | Cont::Collect(_) => Bound::Lower,
+        Cont::Lower(..) => Bound::Upper,
+    };
+    let Some(env) =
+        type_app_expansion::push_unless_loop(cx, env, side, c, ts.as_deref().unwrap_or_default())
+    else {
+        return Ok(());
+    };
     let this_use = UseT::new(UseTInner::ThisSpecializeT(
         reason_tapp.dupe(),
         this.dupe(),
@@ -266,5 +277,5 @@ pub(super) fn instantiate_this_class<'cx>(
             upper: Some(Box::new(Cont::Upper(Box::new(this_use)))),
         }))),
     };
-    rec_flow(cx, env, trace, (c, &use_t))
+    rec_flow(cx, &env, trace, (c, &use_t))
 }
