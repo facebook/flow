@@ -19,6 +19,7 @@
     "index.js",
     "jest.js",
     "register.js",
+    "runnable-wasm.js",
     "flow-remove-types",
     "flow-node",
     "LICENSE"

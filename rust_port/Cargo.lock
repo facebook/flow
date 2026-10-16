@@ -1244,6 +1244,8 @@ dependencies = [
  "prettyplease 0.3.0",
  "proc-macro2",
  "quote",
+ "serde",
+ "serde_json",
  "syn 3.0.6",
  "thiserror 2.0.21",
 ]

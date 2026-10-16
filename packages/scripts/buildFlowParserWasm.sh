@@ -84,13 +84,14 @@ mkdir -p "$(dirname "$OUTPUT")"
 rm -f "$OUTPUT"
 
 "$EMCC_BIN" \
+  --no-entry \
   "$RUST_STATICLIB" \
   -o "$OUTPUT" \
   -sALLOW_MEMORY_GROWTH=1 \
   -sWASM=1 \
   -sBINARYEN_ASYNC_COMPILATION=0 \
   -sENVIRONMENT=node \
-  "-sEXPORTED_FUNCTIONS=['_malloc','_free','_main','_hermesParse','_hermesParseResult_free','_hermesParseResult_getError','_hermesParseResult_getErrorLine','_hermesParseResult_getErrorColumn','_hermesParseResult_getProgramBuffer','_hermesParseResult_getPositionBuffer','_hermesParseResult_getPositionBufferSize','_hermesParseResult_getStringBuffer']" \
+  "-sEXPORTED_FUNCTIONS=['_malloc','_free','_flow_to_runnable_js_with_source_map','_hermesParse','_hermesParseResult_free','_hermesParseResult_getError','_hermesParseResult_getErrorLine','_hermesParseResult_getErrorColumn','_hermesParseResult_getProgramBuffer','_hermesParseResult_getPositionBuffer','_hermesParseResult_getPositionBufferSize','_hermesParseResult_getStringBuffer']" \
   "-sEXPORTED_RUNTIME_METHODS=['cwrap','ccall']" \
   -sEXPORT_NAME=hermes_parser_wasm \
   -sINITIAL_MEMORY=128MB \

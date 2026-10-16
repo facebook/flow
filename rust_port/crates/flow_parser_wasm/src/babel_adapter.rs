@@ -69,8 +69,9 @@ pub struct BabelProgram {
     pub metadata: BabelMetadata,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum ReactRuntimeTarget {
+    #[default]
     React18,
     React19,
 }

@@ -10,12 +10,14 @@ dupe = "0.9.1"
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_parser = { path = "../flow_parser" }
 flow_parser_utils = { path = "../flow_parser_utils" }
+flow_parser_utils_output = { path = "../flow_parser_utils_output" }
 prettyplease = { version = "0.3.0", features = ["verbatim"] }
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 quote = "1.0.47"
+serde = { version = "1.0.229", features = ["derive", "rc"] }
+serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 syn = { version = "3.0.6", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
 thiserror = "2.0.21"
 
 [dev-dependencies]
 buck-resources = "1"
-flow_parser_utils_output = { path = "../flow_parser_utils_output" }

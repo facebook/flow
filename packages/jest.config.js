@@ -36,6 +36,7 @@ module.exports = {
     '<rootDir>/flow-eslint',
     '<rootDir>/flow-estree',
     '<rootDir>/flow-parser',
+    '<rootDir>/flow-remove-types',
     '<rootDir>/flow-transform',
   ],
   // The glob patterns Jest uses to detect test files
@@ -82,19 +83,19 @@ module.exports = {
       'babel-plugin.js',
     ),
 
-    '^flow-parser/(.*)$': path.resolve(
-      __dirname,
-      'flow-parser',
-      'oxidized-src',
-      '$1',
-    ),
-
     // flow-parser
     '.*/FlowParserWASM$': path.resolve(
       __dirname,
       'flow-parser',
       'dist',
       'FlowParserWASM.js',
+    ),
+
+    '^flow-parser/(.*)$': path.resolve(
+      __dirname,
+      'flow-parser',
+      'oxidized-src',
+      '$1',
     ),
   },
 };

@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::convert::Infallible;
 use std::sync::Arc;
 
 use dupe::Dupe;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::expression;
 use flow_parser::ast::expression::ExpressionInner;
@@ -19,16 +21,20 @@ use flow_parser::loc::Loc;
 use flow_parser_utils::ast_builder;
 
 use super::builders;
+use super::gen_id::GenId;
 
 #[derive(Clone, Copy)]
 pub enum EnumRuntime {
     Default,
     CustomPlaceholder,
+    Import,
 }
 
 struct EnumLowerer {
     runtime: EnumRuntime,
     next_placeholder: usize,
+    gen_id: GenId,
+    imported_runtime: Option<FlowSmolStr>,
 }
 
 impl EnumLowerer {
@@ -43,6 +49,19 @@ impl EnumLowerer {
                 let index = self.next_placeholder;
                 self.next_placeholder += 1;
                 builders::identifier(loc, &format!("\0flow_enum_runtime_{index}"))
+            }
+            EnumRuntime::Import => {
+                let name = self
+                    .imported_runtime
+                    .get_or_insert_with(|| self.gen_id.id());
+                expression::Expression::new(ExpressionInner::Identifier {
+                    loc: loc.dupe(),
+                    inner: ast::Identifier::new(ast::IdentifierInner {
+                        loc: loc.dupe(),
+                        name: name.dupe(),
+                        comments: None,
+                    }),
+                })
             }
         }
     }
@@ -256,9 +275,61 @@ pub fn lower_program(
     program: &ast::Program<Loc, Loc>,
     runtime: EnumRuntime,
 ) -> ast::Program<Loc, Loc> {
-    EnumLowerer {
+    let mut lowerer = EnumLowerer {
         runtime,
         next_placeholder: 0,
+        gen_id: GenId::new("enum_runtime"),
+        imported_runtime: None,
+    };
+    if matches!(runtime, EnumRuntime::Import) {
+        struct Usages<'a>(&'a mut GenId);
+        impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, Infallible> for Usages<'_> {
+            fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
+                loc
+            }
+
+            fn normalize_type(loc: &'ast Loc) -> &'ast Loc {
+                loc
+            }
+
+            fn identifier(
+                &mut self,
+                identifier: &'ast ast::Identifier<Loc, Loc>,
+            ) -> Result<(), Infallible> {
+                self.0.add_usage(&identifier.name);
+                Ok(())
+            }
+        }
+        let Ok(()) = Usages(&mut lowerer.gen_id).program(program);
     }
-    .map_program(program)
+    let mut program = lowerer.map_program(program);
+    if let Some(name) = lowerer.imported_runtime {
+        let import = ast_builder::statements::import_declaration(
+            None,
+            None,
+            None,
+            statement::ImportKind::ImportValue,
+            (
+                Loc::default(),
+                ast::StringLiteral {
+                    value: "flow-enums-runtime".into(),
+                    raw: "'flow-enums-runtime'".into(),
+                    comments: None,
+                },
+            ),
+            Some(statement::import_declaration::DefaultIdentifier {
+                identifier: ast::Identifier::new(ast::IdentifierInner {
+                    loc: Loc::default(),
+                    name,
+                    comments: None,
+                }),
+                remote_default_name_def_loc: None,
+            }),
+            None,
+        );
+        let mut statements = vec![import];
+        statements.extend(program.statements.iter().map(Dupe::dupe));
+        program.statements = statements.into();
+    }
+    program
 }

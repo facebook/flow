@@ -23,12 +23,15 @@
 mod babel_adapter;
 pub mod node_kinds;
 pub mod position;
+pub mod runnable_js;
 pub mod serializer;
 pub mod strip_flow;
 
 use std::ffi::CString;
 
 use position::PositionResult;
+#[cfg(not(target_arch = "wasm32"))]
+pub use runnable_js::flow_to_runnable_js_with_source_map;
 
 /// Opaque parse result stored in WASM memory.
 pub struct ParseResult {
@@ -185,6 +188,67 @@ pub extern "C" fn hermesParse(
             Err(_) => String::new(),
         }
     };
+
+    if babel == 2 {
+        let emitted = runnable_js::flow_to_runnable_js_with_source_map(
+            source_str,
+            &filename_str,
+            &runnable_js::RunnableOptions {
+                source_type: if source_type == 2 {
+                    runnable_js::SourceType::Module
+                } else {
+                    runnable_js::SourceType::CommonJs
+                },
+                react_runtime_target: if react_runtime_target == 19 {
+                    runnable_js::ReactRuntimeTarget::React19
+                } else {
+                    runnable_js::ReactRuntimeTarget::React18
+                },
+                allow_return_outside_function: allow_return_outside != 0,
+            },
+        );
+        let mut result = Box::new(ParseResult {
+            error: None,
+            error_line: 0,
+            error_column: 0,
+            program_buffer: Vec::new(),
+            position_buffer: Vec::new(),
+            string_buffer: Vec::new(),
+        });
+        match emitted {
+            Ok(emitted) => match serde_json::to_vec(&emitted) {
+                Ok(bytes) => match u32::try_from(bytes.len()) {
+                    Ok(length) => {
+                        result.program_buffer.push(length);
+                        result.string_buffer = bytes;
+                    }
+                    Err(error) => {
+                        result.error = Some(
+                            CString::new(error.to_string())
+                                .expect("integer conversion error contains no NUL"),
+                        );
+                    }
+                },
+                Err(error) => {
+                    result.error = Some(
+                        CString::new(error.to_string().replace('\0', "\\0"))
+                            .expect("NUL bytes were escaped"),
+                    );
+                }
+            },
+            Err(error) => {
+                if let runnable_js::RunnableError::Syntax { loc, .. } = &error {
+                    result.error_line = nonneg_u32(loc.line);
+                    result.error_column = nonneg_u32(loc.column);
+                }
+                result.error = Some(
+                    CString::new(error.to_string().replace('\0', "\\0"))
+                        .expect("NUL bytes were escaped"),
+                );
+            }
+        }
+        return Box::into_raw(result);
+    }
 
     // When pragma detection is requested, mirror upstream Hermes'
     // ParseFlowSetting::ALL vs ParseFlowSetting::UNAMBIGUOUS split:
@@ -439,13 +503,44 @@ pub extern "C" fn hermesParseResult_getStringBuffer(result: *const ParseResult) 
     result.string_buffer.as_ptr()
 }
 
-/// Emscripten entry point. Only compiled for wasm32 targets to avoid
-/// conflicting with binary crates (e.g. codegen) that link this library
-/// and define their own `main`.
+/// Wasm entry point for runnable emission. Source buffers follow the same
+/// contract as `hermesParse`; the result uses its existing ownership/getters.
+/// The program buffer contains the JSON byte length; the string buffer holds
+/// the serialized `RunnableJs`. Source type is 1 for CommonJS or 2 for ESM.
 #[cfg(target_arch = "wasm32")]
 #[unsafe(no_mangle)]
-pub extern "C" fn main() -> i32 {
-    0
+pub extern "C" fn flow_to_runnable_js_with_source_map(
+    source: *const u8,
+    source_size: usize,
+    source_filename: *const u8,
+    source_filename_size: usize,
+    source_type: i32,
+    react_runtime_target: i32,
+    allow_return_outside: i32,
+) -> *mut ParseResult {
+    hermesParse(
+        source,
+        source_size,
+        source_filename,
+        source_filename_size,
+        1,
+        1,
+        0,
+        0,
+        allow_return_outside,
+        1,
+        1,
+        1,
+        1,
+        source_type,
+        0,
+        0,
+        2,
+        1,
+        0,
+        react_runtime_target,
+        1,
+    )
 }
 
 /// Scan `code`'s docblock for an `@flow` pragma. Mirrors C++ hermes-parser
