@@ -238,5 +238,141 @@ References:
          ^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ template.js:49:10
 
-Found 15 errors
+Cannot coerce `b` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   template.js:49:10
+   49|   `foo ${b}`; // ERROR - opaque boolean still rejected
+                ^
+
+References:
+   template.js:48:20
+   48|   declare const b: ClientBool<boolean>;
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+   template.js:49:3
+   49|   `foo ${b}`; // ERROR - opaque boolean still rejected
+         ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- template.js:50:6
+
+Cannot coerce `b` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   template.js:50:6
+   50|   `${b} bar`; // ERROR
+            ^
+
+References:
+   template.js:48:20
+   48|   declare const b: ClientBool<boolean>;
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+   template.js:50:3
+   50|   `${b} bar`; // ERROR
+         ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:51:19
+
+Cannot coerce `b` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   template.js:51:19
+   51|   `foo ${'bar'} ${b}`; // ERROR
+                         ^
+
+References:
+   template.js:48:20
+   48|   declare const b: ClientBool<boolean>;
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+   template.js:51:3
+   51|   `foo ${'bar'} ${b}`; // ERROR
+         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:56:10
+
+Cannot coerce `o` to string because `{}` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   template.js:56:10
+   56|   `foo ${o}`; // ERROR - opaque object still rejected
+                ^
+
+References:
+   template.js:55:20
+   55|   declare const o: ClientObj<{}>;
+                          ^^^^^^^^^^^^^ [1]
+   template.js:56:3
+   56|   `foo ${o}`; // ERROR - opaque object still rejected
+         ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- template.js:57:6
+
+Cannot coerce `o` to string because `{}` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   template.js:57:6
+   57|   `${o} bar`; // ERROR
+            ^
+
+References:
+   template.js:55:20
+   55|   declare const o: ClientObj<{}>;
+                          ^^^^^^^^^^^^^ [1]
+   template.js:57:3
+   57|   `${o} bar`; // ERROR
+         ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:58:19
+
+Cannot coerce `o` to string because `{}` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   template.js:58:19
+   58|   `foo ${'bar'} ${o}`; // ERROR
+                         ^
+
+References:
+   template.js:55:20
+   55|   declare const o: ClientObj<{}>;
+                          ^^^^^^^^^^^^^ [1]
+   template.js:58:3
+   58|   `foo ${'bar'} ${o}`; // ERROR
+         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:71:10
+
+Cannot coerce `obool` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   template.js:71:10
+   71|   `foo ${obool}`; // ERROR - plain opaque boolean still rejected
+                ^^^^^
+
+References:
+   template.js:67:24
+   67|   declare const obool: OBool;
+                              ^^^^^ [1]
+   template.js:71:3
+   71|   `foo ${obool}`; // ERROR - plain opaque boolean still rejected
+         ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:72:10
+
+Cannot coerce `oobj` to string because `{}` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   template.js:72:10
+   72|   `foo ${oobj}`; // ERROR - plain opaque object still rejected
+                ^^^^
+
+References:
+   template.js:68:23
+   68|   declare const oobj: OObj;
+                             ^^^^ [1]
+   template.js:72:3
+   72|   `foo ${oobj}`; // ERROR - plain opaque object still rejected
+         ^^^^^^^^^^^^^ [2]
+
+
+
+Found 23 errors

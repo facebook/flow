@@ -162,6 +162,65 @@ fn has_syntactic_nullish_member(t: &Type) -> bool {
     }
 }
 
+struct OpaqueUpperBoundSpeculation<'a> {
+    trace: DepthTrace,
+    use_op: UseOp,
+    opaque_t_reason: &'a Reason,
+    upper_t: &'a Type,
+    upper_u: &'a Type,
+    fallback_l: &'a Type,
+    fallback_t: Type,
+}
+
+impl OpaqueUpperBoundSpeculation<'_> {
+    fn flow<'cx>(self, cx: &mut Context<'cx>, env: &FlowJsEnv) -> Result<(), FlowJsException> {
+        let Self {
+            trace,
+            use_op,
+            opaque_t_reason,
+            upper_t,
+            upper_u,
+            fallback_l,
+            fallback_t,
+        } = self;
+        let upper_t = upper_t.dupe();
+        let upper_u = upper_u.dupe();
+        let fallback_l = fallback_l.dupe();
+        let opaque_t_reason_c = opaque_t_reason.dupe();
+        let upper_use_op = use_op.dupe();
+        let fallback_use_op = use_op.dupe();
+        speculation_kit::try_custom(
+            cx,
+            env,
+            Some(use_op),
+            None,
+            None,
+            opaque_t_reason.loc().clone(),
+            vec![
+                Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
+                    let use_op = VirtualUseOp::Frame(
+                        Arc::new(VirtualFrameUseOp::OpaqueTypeUpperBound {
+                            opaque_t_reason: opaque_t_reason_c,
+                        }),
+                        Arc::new(upper_use_op),
+                    );
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &upper_t, &upper_u)
+                }),
+                Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
+                    FlowJs::rec_flow_t_with_env(
+                        cx,
+                        env,
+                        trace,
+                        fallback_use_op,
+                        &fallback_l,
+                        &fallback_t,
+                    )
+                }),
+            ],
+        )
+    }
+}
+
 fn flow_all_in_union<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
@@ -4536,52 +4595,41 @@ pub fn rec_sub_t<'cx>(
         ) if let Some(upper_t) = &lnom.upper_t
             && has_syntactic_nullish_member(upper_t) =>
         {
-            let upper_t = upper_t.dupe();
-            let upper_u = u.dupe();
-            let fallback_l = l.dupe();
-            let fallback_t = type_util::push_type_alias_reason(r2, t2.dupe());
-            let opaque_t_reason_c = opaque_t_reason.dupe();
-            let upper_use_op = use_op.dupe();
-            let fallback_use_op = use_op.dupe();
-            speculation_kit::try_custom(
-                cx, env,
-                Some(use_op),
-                None,
-                None,
-                opaque_t_reason.loc().clone(),
-                vec![
-                    Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
-                        let use_op = VirtualUseOp::Frame(
-                            Arc::new(VirtualFrameUseOp::OpaqueTypeUpperBound {
-                                opaque_t_reason: opaque_t_reason_c,
-                            }),
-                            Arc::new(upper_use_op),
-                        );
-                        FlowJs::rec_flow_t_with_env(
-                            cx,
-                            env,
-                            trace,
-                            use_op,
-                            &upper_t,
-                            &upper_u,
-                        )
-                    }),
-                    Box::new(move |cx: &mut Context, env: &FlowJsEnv| {
-                        FlowJs::rec_flow_t_with_env(
-                            cx,
-                            env,
-                            trace,
-                            fallback_use_op,
-                            &fallback_l,
-                            &fallback_t,
-                        )
-                    }),
-                ],
-            )
+            OpaqueUpperBoundSpeculation {
+                trace,
+                use_op,
+                opaque_t_reason,
+                upper_t,
+                upper_u: u,
+                fallback_l: l,
+                fallback_t: type_util::push_type_alias_reason(r2, t2.dupe()),
+            }
+            .flow(cx, env)
         }
         (_, TypeInner::MaybeT(r2, t2)) => {
             let t2 = type_util::push_type_alias_reason(r2, t2.dupe());
             FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t2)))
+        }
+        (
+            TypeInner::NominalT {
+                reason: opaque_t_reason,
+                nominal_type: lnom,
+            },
+            TypeInner::OptionalT { type_: t2, .. },
+        ) if let Some(upper_t) = &lnom.upper_t
+            && has_syntactic_nullish_member(upper_t) =>
+        {
+            OpaqueUpperBoundSpeculation {
+                trace,
+                use_op,
+                opaque_t_reason,
+                upper_t,
+                upper_u: u,
+                fallback_l: l,
+                // Match the existing OptionalT target path, which forwards its inner type directly.
+                fallback_t: t2.dupe(),
+            }
+            .flow(cx, env)
         }
         (_, TypeInner::OptionalT { type_: t2, .. }) => {
             FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t2.dupe())))

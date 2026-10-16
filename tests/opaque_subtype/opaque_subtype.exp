@@ -193,6 +193,74 @@ References:
              ^^^^^^ [4]
 
 
+Error ----------------------------------------------------------------------------------------------- distribute.js:15:1
+
+Cannot cast `maybeStr` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   distribute.js:15:1
+   15| maybeStr as string; // error - ?string not <: string
+       ^^^^^^^^
+
+References:
+   distribute.js:13:25
+   13| declare const maybeStr: Client<?string>;
+                               ^^^^^^^^^^^^^^^ [1]
+   distribute.js:15:13
+   15| maybeStr as string; // error - ?string not <: string
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- distribute.js:15:1
+
+Cannot cast `maybeStr` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   distribute.js:15:1
+   15| maybeStr as string; // error - ?string not <: string
+       ^^^^^^^^
+
+References:
+   distribute.js:13:25
+   13| declare const maybeStr: Client<?string>;
+                               ^^^^^^^^^^^^^^^ [1]
+   distribute.js:15:13
+   15| maybeStr as string; // error - ?string not <: string
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- distribute.js:26:1
+
+Cannot cast `plainMaybe` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   distribute.js:26:1
+   26| plainMaybe as string; // error - ?string not <: string
+       ^^^^^^^^^^
+
+References:
+   distribute.js:24:27
+   24| declare const plainMaybe: OMaybe;
+                                 ^^^^^^ [1]
+   distribute.js:26:15
+   26| plainMaybe as string; // error - ?string not <: string
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- distribute.js:26:1
+
+Cannot cast `plainMaybe` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   distribute.js:26:1
+   26| plainMaybe as string; // error - ?string not <: string
+       ^^^^^^^^^^
+
+References:
+   distribute.js:24:27
+   24| declare const plainMaybe: OMaybe;
+                                 ^^^^^^ [1]
+   distribute.js:26:15
+   26| plainMaybe as string; // error - ?string not <: string
+                     ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- importtest.js:5:12
 
 Cannot return `y` because `number` [1] is incompatible with `SuperOpaque` [2]. [incompatible-type]
@@ -405,4 +473,4 @@ Cannot assign `null` to `foo2.p` because property `p` is not writable. [cannot-w
 
 
 
-Found 26 errors
+Found 30 errors

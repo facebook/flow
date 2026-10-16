@@ -29,3 +29,45 @@
   `${x} bar`; // ERROR
   `foo ${'bar'} ${x}`; // ERROR
 }
+{
+  declare opaque type ClientNum<T> super T extends T;
+  declare const n: ClientNum<number>;
+  `foo ${n}`; // OK - opaque number unwrapped via operator concretization
+  `${n} bar`; // OK
+  `foo ${'bar'} ${n}`; // OK
+}
+{
+  declare opaque type ClientStr<T> super T extends T;
+  declare const s: ClientStr<string>;
+  `foo ${s}`; // OK - opaque string
+  `${s} bar`; // OK
+  `foo ${'bar'} ${s}`; // OK
+}
+{
+  declare opaque type ClientBool<T> super T extends T;
+  declare const b: ClientBool<boolean>;
+  `foo ${b}`; // ERROR - opaque boolean still rejected
+  `${b} bar`; // ERROR
+  `foo ${'bar'} ${b}`; // ERROR
+}
+{
+  declare opaque type ClientObj<T> super T extends T;
+  declare const o: ClientObj<{}>;
+  `foo ${o}`; // ERROR - opaque object still rejected
+  `${o} bar`; // ERROR
+  `foo ${'bar'} ${o}`; // ERROR
+}
+{
+  declare opaque type OStr: string;
+  declare opaque type ONum: number;
+  declare opaque type OBool: boolean;
+  declare opaque type OObj: {};
+  declare const ostr: OStr;
+  declare const onum: ONum;
+  declare const obool: OBool;
+  declare const oobj: OObj;
+  `foo ${ostr}`; // OK - plain opaque string/number also unwrapped
+  `${onum} bar`; // OK
+  `foo ${obool}`; // ERROR - plain opaque boolean still rejected
+  `foo ${oobj}`; // ERROR - plain opaque object still rejected
+}
