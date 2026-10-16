@@ -1861,6 +1861,90 @@ References:
                   ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- scoping.js:9:14
+
+Cannot get `x.length` because property `length` is missing in `null` [1]. [incompatible-use]
+
+   scoping.js:9:14
+   9|     return x.length; // ERROR
+                   ^^^^^^
+
+References:
+   scoping.js:7:37
+   7|   function check(checks: Checks, x: ?string): number {
+                                          ^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- scoping.js:9:14
+
+Cannot get `x.length` because property `length` is missing in `void` [1]. [incompatible-use]
+
+   scoping.js:9:14
+   9|     return x.length; // ERROR
+                   ^^^^^^
+
+References:
+   scoping.js:7:37
+   7|   function check(checks: Checks, x: ?string): number {
+                                          ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- scoping.js:20:14
+
+Cannot get `x.length` because property `length` is missing in `null` [1]. [incompatible-use]
+
+   scoping.js:20:14
+   20|     return x.length; // ERROR
+                    ^^^^^^
+
+References:
+   scoping.js:18:37
+   18|   function check(checks: Checks, x: ?string): number {
+                                           ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- scoping.js:20:14
+
+Cannot get `x.length` because property `length` is missing in `void` [1]. [incompatible-use]
+
+   scoping.js:20:14
+   20|     return x.length; // ERROR
+                    ^^^^^^
+
+References:
+   scoping.js:18:37
+   18|   function check(checks: Checks, x: ?string): number {
+                                           ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- scoping.js:29:12
+
+Cannot get `x.length` because property `length` is missing in `null` [1]. [incompatible-use]
+
+   scoping.js:29:12
+   29|   return x.length; // ERROR
+                  ^^^^^^
+
+References:
+   scoping.js:26:6
+   26|   x: ?string,
+            ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- scoping.js:29:12
+
+Cannot get `x.length` because property `length` is missing in `void` [1]. [incompatible-use]
+
+   scoping.js:29:12
+   29|   return x.length; // ERROR
+                  ^^^^^^
+
+References:
+   scoping.js:26:6
+   26|   x: ?string,
+            ^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- spreads.js:15:3
 
 Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -2556,4 +2640,4 @@ as `a.b.c`. [unrecognized-assertion-call]
 
 
 
-Found 159 errors
+Found 165 errors

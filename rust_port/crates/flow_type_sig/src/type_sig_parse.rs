@@ -1031,11 +1031,63 @@ pub(crate) mod scope {
 
     pub(crate) struct Scopes<'arena, 'ast> {
         scopes: Vec<Scope<'arena, 'ast>>,
+        use_defs: Option<BTreeMap<Loc, Vec<Loc>>>,
     }
 
     impl<'arena, 'ast> Scopes<'arena, 'ast> {
         pub(crate) fn new() -> Self {
-            Scopes { scopes: Vec::new() }
+            Scopes {
+                scopes: Vec::new(),
+                use_defs: None,
+            }
+        }
+
+        pub(crate) fn set_use_defs(&mut self, use_defs: BTreeMap<Loc, Vec<Loc>>) {
+            self.use_defs = Some(use_defs);
+        }
+
+        pub(crate) fn lookup_ref(
+            &mut self,
+            tbls: &mut Tables<'arena, 'ast>,
+            ref_: &Ref<'arena, 'ast>,
+            type_only: bool,
+        ) -> Option<BindingNode<'arena, 'ast>> {
+            let native = if type_only {
+                lookup_type(self, ref_.scope, &ref_.name)
+            } else {
+                lookup_value(self, ref_.scope, &ref_.name)
+            }
+            .map(|(binding, _)| binding);
+            let Some(def_locs) = self
+                .use_defs
+                .as_ref()
+                .and_then(|use_defs| use_defs.get(&ref_.ref_loc.0.data()))
+            else {
+                return native;
+            };
+            if let Some(binding) = &native
+                && super::binding_locs(binding)
+                    .iter()
+                    .any(|loc| def_locs.contains(&loc.0.data()))
+            {
+                return native;
+            }
+            // The source declaration has no binding here (e.g. it is local to a
+            // function body), but it must still shadow outer names.
+            let def_loc = def_locs.first()?.dupe();
+            let id_loc = tbls.push_loc(def_loc.dupe());
+            let def = Lazy::new(Box::new(move |_, _, tbls| {
+                Parsed::Annot(Box::new(Annot::Mixed(Box::new(tbls.push_loc(def_loc)))))
+            }));
+            Some(BindingNode::LocalBinding(tbls.push_local_def(
+                LocalBinding::ParamBinding {
+                    id_loc,
+                    name: ref_.name.dupe(),
+                    def,
+                    tparams: TParams::Mono,
+                    strictness_kind: tbls.strictness_kind,
+                },
+            )))
         }
 
         pub(super) fn push(&mut self, scope: Scope<'arena, 'ast>) -> ScopeId {

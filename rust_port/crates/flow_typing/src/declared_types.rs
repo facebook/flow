@@ -150,6 +150,16 @@ pub(crate) fn pack(
         None
     } else {
         let arena = bumpalo::Bump::new();
+        let use_defs = scope_info
+            .defs_of_all_uses()
+            .iter()
+            .map(|(use_loc, def)| {
+                (
+                    use_loc.to_loc_exn().dupe(),
+                    def.locs.iter().map(|loc| loc.to_loc_exn().dupe()).collect(),
+                )
+            })
+            .collect();
         let (_, locs, targeted) = type_sig_utils::parse_and_pack_targets(
             opts,
             &arena,
@@ -158,6 +168,7 @@ pub(crate) fn pack(
             Some(cx.file().dupe()),
             ast,
             &fallback_roots,
+            use_defs,
         );
         Some(ParsedLocalAnalysis { locs, targeted })
     };

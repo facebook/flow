@@ -425,6 +425,7 @@ pub fn parse_and_pack_targets<'arena: 'ast, 'ast>(
     source: Option<FileKey>,
     ast: &'ast Program<Loc, Loc>,
     target_locs: &BTreeSet<Loc>,
+    use_defs: BTreeMap<Loc, Vec<Loc>>,
 ) -> (Vec<Errno<Index<Loc>>>, Table<Loc>, TargetedModule<Loc>) {
     if target_locs.is_empty() {
         return (
@@ -477,6 +478,7 @@ pub fn parse_and_pack_targets<'arena: 'ast, 'ast>(
         ));
     }
 
+    scopes.set_use_defs(use_defs);
     let mut marker = mark::Marker::new(&opts.locs_to_dirtify);
     for binding in roots.values() {
         mark::mark_binding(opts, &mut scopes, &mut tbls, &mut marker, binding);

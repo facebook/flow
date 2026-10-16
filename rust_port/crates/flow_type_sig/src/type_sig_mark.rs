@@ -615,8 +615,8 @@ fn resolve_value_ref<'arena, 'ast>(
     ref_: &parse::Ref<'arena, 'ast>,
 ) {
     mark_loc(marker, &ref_.ref_loc);
-    match parse::scope::lookup_value(scopes, ref_.scope, &ref_.name) {
-        Some((binding, _)) => {
+    match scopes.lookup_ref(tbls, ref_, false) {
+        Some(binding) => {
             mark_binding(opts, scopes, tbls, marker, &binding);
             let _ = ref_.resolved.set(Some(binding));
         }
@@ -634,8 +634,8 @@ fn resolve_type_ref<'arena, 'ast>(
     ref_: &parse::Ref<'arena, 'ast>,
 ) {
     mark_loc(marker, &ref_.ref_loc);
-    match parse::scope::lookup_type(scopes, ref_.scope, &ref_.name) {
-        Some((binding, _)) => {
+    match scopes.lookup_ref(tbls, ref_, true) {
+        Some(binding) => {
             mark_binding(opts, scopes, tbls, marker, &binding);
             let _ = ref_.resolved.set(Some(binding));
             // Keep alive a co-existing value-side binding for the same name (e.g. an
@@ -681,13 +681,13 @@ fn resolve_typeof_ref<'arena, 'ast>(
     ref_: &parse::Ref<'arena, 'ast>,
 ) {
     mark_loc(marker, &ref_.ref_loc);
-    match parse::scope::lookup_value(scopes, ref_.scope, &ref_.name) {
-        Some((binding, _)) => {
+    match scopes.lookup_ref(tbls, ref_, false) {
+        Some(binding) => {
             mark_binding(opts, scopes, tbls, marker, &binding);
             let _ = ref_.resolved.set(Some(binding));
         }
-        None => match parse::scope::lookup_type(scopes, ref_.scope, &ref_.name) {
-            Some((binding, _)) if binding_allowed_in_typeof(&binding) => {
+        None => match scopes.lookup_ref(tbls, ref_, true) {
+            Some(binding) if binding_allowed_in_typeof(&binding) => {
                 mark_binding(opts, scopes, tbls, marker, &binding);
                 let _ = ref_.resolved.set(Some(binding));
             }
