@@ -1882,9 +1882,6 @@ pub fn type_guard_reference_for_error(reason: &Reason) -> TypeGuardReferenceData
         Some(VirtualReasonDesc::RIdentifier(name)) => {
             TypeGuardReferenceKind::Parameter(Some(name.dupe()))
         }
-        Some(VirtualReasonDesc::RTypeGuardParam(name)) => {
-            TypeGuardReferenceKind::TypeGuardParameter(name.dupe())
-        }
         Some(VirtualReasonDesc::RThis) => TypeGuardReferenceKind::This,
         _ => TypeGuardReferenceKind::TypeGuard,
     };
