@@ -2786,19 +2786,6 @@ fn convert_inner<'a>(
                             Ok(reconstruct_ast(result_t, None, targs_ast))
                         })?
                     }
-                    "Function$Prototype$Bind" => {
-                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |_| {
-                            let reason = reason::mk_annot_reason(
-                                reason::VirtualReasonDesc::RFunctionPrototype,
-                                loc.dupe(),
-                            );
-                            Ok(reconstruct_ast(
-                                Type::new(type_::TypeInner::FunProtoBindT(reason)),
-                                None,
-                                None,
-                            ))
-                        })?
-                    }
                     "$Flow$EnforceOptimized" => {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, |cx| {
                             let (ts, targs_ast) =

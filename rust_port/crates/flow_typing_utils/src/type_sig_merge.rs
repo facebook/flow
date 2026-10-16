@@ -2615,10 +2615,6 @@ fn merge_annot<'cx>(
                 type_::DefT::new(type_::DefTInner::ClassT(t)),
             ))
         }
-        Annot::FunctionBind(box loc) => {
-            let reason = reason::mk_annot_reason(RFunctionPrototype, loc.dupe());
-            Type::new(type_::TypeInner::FunProtoBindT(reason))
-        }
         Annot::Renders(inner) => {
             let AnnotRenders { loc, arg, variant } = inner.as_ref();
             let mut renders_env = env.dupe();

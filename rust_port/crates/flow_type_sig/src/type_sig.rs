@@ -2307,7 +2307,6 @@ pub enum Annot<Loc, T> {
     Conditional(Box<AnnotConditional<Loc, T>>),
     ObjKeyMirror(Box<AnnotObjKeyMirror<Loc, T>>),
     ClassT(Box<(Loc, T)>),
-    FunctionBind(Box<Loc>),
     FunAnnot(Box<(Loc, FunSig<Loc, T>)>),
     MethodAnnot(Box<(Loc, bool, FunSig<Loc, T>)>),
     ComponentAnnot(Box<(Loc, ComponentSig<Loc, T>)>),
@@ -2458,7 +2457,7 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
                 inner.arg.hash(state);
                 inner.variant.hash(state);
             }
-            Annot::ComponentMissingRenders(l) | Annot::FunctionBind(l) => l.hash(state),
+            Annot::ComponentMissingRenders(l) => l.hash(state),
             Annot::ExportsT(inner) => {
                 inner.0.hash(state);
                 inner.1.hash(state);
@@ -2671,9 +2670,7 @@ impl<Loc, T> Annot<Loc, T> {
                 f_loc(cx, &inner.loc);
                 f_t(cx, &inner.arg);
             }
-            Annot::ComponentMissingRenders(box loc) | Annot::FunctionBind(box loc) => {
-                f_loc(cx, loc)
-            }
+            Annot::ComponentMissingRenders(box loc) => f_loc(cx, loc),
             Annot::ExportsT(inner) => f_loc(cx, &inner.0),
             Annot::Conditional(inner) => {
                 f_loc(cx, &inner.loc);
@@ -3027,7 +3024,6 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::ClassT(inner) => {
                 Annot::ClassT(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
-            Annot::FunctionBind(box loc) => Annot::FunctionBind(Box::new(f_loc(cx, loc))),
             Annot::FunAnnot(inner) => Annot::FunAnnot(Box::new((
                 f_loc(cx, &inner.0),
                 inner.1.map(cx, &f_loc, &f_t),

@@ -9076,10 +9076,6 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             None => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
             Some(_) => Parsed::Err(loc, Errno::CheckError),
         },
-        "Function$Prototype$Bind" => match targs {
-            None => Parsed::Annot(Box::new(ParsedAnnot::FunctionBind(Box::new(loc)))),
-            Some(_) => Parsed::Err(loc, Errno::CheckError),
-        },
         "NoInfer" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);

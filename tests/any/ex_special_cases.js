@@ -3,15 +3,12 @@
 // any ~> functionlike
 class C { }
 var C_any: any = C;
-declare const proto_bind: Function$Prototype$Bind;
-var proto_bind_any: any = proto_bind;
 function f() { }
 var f_any: any = f;
 
 // functionlike ~> any
 declare const a: any;
 var C_from_any: Class<C> = a;
-var proto_bind_from_any: Function$Prototype$Bind = a;
 var f_from_any: () => void = a;
 
 // any ~> objectlike
