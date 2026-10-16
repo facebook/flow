@@ -180,11 +180,11 @@ impl ErrorSet {
     }
 
     pub fn union(&self, other: &Self) -> Self {
-        if self.0.is_empty() {
-            return other.dupe();
-        }
         if other.0.is_empty() {
             return self.dupe();
+        }
+        if self.0.is_empty() {
+            return other.dupe();
         }
         if self.0.ptr_eq(&other.0) {
             return self.dupe();
