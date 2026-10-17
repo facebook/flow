@@ -114,6 +114,30 @@ function check(value: unknown) {
 }
 ```
 
+### Asserting the Receiver <SinceVersion version="0.337" /> {#toc-asserting-the-receiver}
+
+Use `asserts this is Type` in a method to narrow the object on which it is called:
+
+```js flow-check
+class Message {
+  assertText(): asserts this is TextMessage {
+    if (!(this instanceof TextMessage)) throw new Error('Expected a text message');
+  }
+}
+
+class TextMessage extends Message {
+  text: string = 'Hello';
+}
+
+function read(message: Message): string {
+  message.assertText();
+  message.text as number; // ERROR: text is a string
+  return message.text;
+}
+```
+
+After `message.assertText()` returns, Flow narrows `message` to `TextMessage`. Calls through `this` or `super` narrow the current `this` value. The same [call restrictions](#toc-call-restrictions) and [annotation requirements](#toc-current-call-limitations) apply.
+
 ## Current Limitations {#toc-current-call-limitations}
 
 Flow recognizes function declarations, imported assertion functions, and aliases defined at module scope. Aliases inside a function body need an explicit type annotation for assertion narrowing. The same requirement applies to local objects holding assertion methods:
@@ -132,7 +156,7 @@ function check(value: unknown) {
 }
 ```
 
-Flow currently requires the callee to be an identifier or a chain of named properties, such as `assertString(value)` or `checks.assertString(value)`. Computed property access and calling a function returned by another call are not supported for assertion narrowing:
+Flow currently requires the callee to be an identifier or a chain of named properties rooted in an identifier, `this`, or `super`, such as `assertString(value)` or `this.checks.assertString(value)`. Computed property access and calling a function returned by another call are not supported for assertion narrowing:
 
 ```js flow-check
 declare const checks: {
@@ -149,7 +173,7 @@ function check(value: unknown) {
 }
 ```
 
-Flow currently does not narrow values for optional calls or calls rooted in `this` or `super`.
+Flow currently does not narrow values for optional calls.
 
 ## Adoption {#toc-adoption}
 

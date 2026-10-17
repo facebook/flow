@@ -128,6 +128,26 @@ References:
 Found 1 error
 
 === block 6 ===
+Error ------------------------------------------------------------------ -:14:3
+
+Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   -:14:3
+   14|   message.text as number; // ERROR: text is a string
+         ^^^^^^^^^^^^
+
+References:
+   -:9:9
+    9|   text: string = 'Hello';
+               ^^^^^^ [1]
+   -:14:19
+   14|   message.text as number; // ERROR: text is a string
+                         ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 7 ===
 Error ------------------------------------------------------------------- -:7:3
 
 Cannot narrow with this call to an assertion function because `inferred` [1] is not declared with an explicit type
@@ -145,7 +165,7 @@ References:
 
 Found 1 error
 
-=== block 7 ===
+=== block 8 ===
 Error ------------------------------------------------------------------- -:8:3
 
 Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
@@ -165,5 +185,5 @@ as `a.b.c`. [unrecognized-assertion-call]
 
 Found 2 errors
 
-=== block 8 ===
+=== block 9 ===
 No errors!

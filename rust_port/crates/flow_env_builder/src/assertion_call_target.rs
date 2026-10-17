@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::mem;
 use std::ops::Deref;
 
 use dupe::Dupe;
@@ -16,6 +17,7 @@ use flow_analysis::scope_api::Def;
 use flow_analysis::scope_api::ScopeInfo;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
+use flow_parser::ast::class::BodyElement;
 use flow_parser::ast::expression::Expression;
 use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::expression::ExpressionOrSpread;
@@ -40,12 +42,17 @@ pub enum AssertionKind {
     TypeGuard,
 }
 
-/// The assertion behavior of a proven assertion callee: which parameter is
-/// asserted and whether it carries a type guard (`asserts x is T`) or is bare
-/// (`asserts x`).
+/// The value asserted by an assertion function.
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq)]
+pub enum AssertionTarget {
+    Parameter(usize),
+    Receiver,
+}
+
+/// The asserted value and whether the assertion carries a type guard.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AssertionInfo {
-    pub parameter_index: usize,
+    pub target: AssertionTarget,
     pub kind: AssertionKind,
 }
 
@@ -69,12 +76,13 @@ pub fn bare_asserted_argument<M: Dupe, T: Dupe>(
     assertion: AssertionInfo,
     arguments: &[ExpressionOrSpread<M, T>],
 ) -> Option<&Expression<M, T>> {
-    if assertion.kind != AssertionKind::Bare
-        || spread_before_index(arguments, assertion.parameter_index)
-    {
+    let AssertionTarget::Parameter(parameter_index) = assertion.target else {
+        return None;
+    };
+    if assertion.kind != AssertionKind::Bare || spread_before_index(arguments, parameter_index) {
         return None;
     }
-    match arguments.get(assertion.parameter_index)? {
+    match arguments.get(parameter_index)? {
         ExpressionOrSpread::Expression(argument) => Some(argument),
         ExpressionOrSpread::Spread(_) => None,
     }
@@ -131,6 +139,18 @@ pub struct CalleeTarget<L> {
     pub provider_locs: Vec<L>,
     pub property_path: Vec<FlowSmolStr>,
     pub import: Option<ImportedCallee>,
+    /// How to obtain the receiver from the root signature type.
+    pub root_kind: CalleeRootKind,
+}
+
+/// Receiver selected from a binding or an enclosing class signature.
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord)]
+pub enum CalleeRootKind {
+    Binding,
+    InstanceThis,
+    StaticThis,
+    InstanceSuper,
+    StaticSuper,
 }
 
 struct Collector<'a, L: LocSig> {
@@ -140,6 +160,8 @@ struct Collector<'a, L: LocSig> {
     /// local identifier location.
     imports: BTreeMap<L, ImportedCallee>,
     targets: Vec<CalleeTarget<L>>,
+    class_binding: Option<(L, FlowSmolStr)>,
+    receiver: Option<(L, FlowSmolStr, CalleeRootKind)>,
 }
 
 impl<'a, L: LocSig> Collector<'a, L> {
@@ -159,9 +181,11 @@ impl<'a, L: LocSig> Collector<'a, L> {
         }
     }
 
-    fn callee_path(callee: &Expression<L, L>) -> Option<(&L, Vec<FlowSmolStr>)> {
+    fn callee_path(callee: &Expression<L, L>) -> Option<(&Expression<L, L>, Vec<FlowSmolStr>)> {
         match &**callee {
-            ExpressionInner::Identifier { loc, .. } => Some((loc, vec![])),
+            ExpressionInner::Identifier { .. }
+            | ExpressionInner::This { .. }
+            | ExpressionInner::Super { .. } => Some((callee, vec![])),
             ExpressionInner::Member { inner, .. } => {
                 let member::Property::PropertyIdentifier(property) = &inner.property else {
                     return None;
@@ -175,7 +199,33 @@ impl<'a, L: LocSig> Collector<'a, L> {
     }
 
     fn target_for_call(&self, call_loc: &L, callee: &Expression<L, L>) -> Option<CalleeTarget<L>> {
-        let (root_use_loc, property_path) = Self::callee_path(callee)?;
+        let (root, property_path) = Self::callee_path(callee)?;
+        let root_use_loc = root.loc();
+        if matches!(
+            &**root,
+            ExpressionInner::This { .. } | ExpressionInner::Super { .. }
+        ) {
+            let (binding_loc, name, mut root_kind) = self.receiver.dupe()?;
+            if matches!(&**root, ExpressionInner::Super { .. }) {
+                root_kind = match root_kind {
+                    CalleeRootKind::InstanceThis => CalleeRootKind::InstanceSuper,
+                    CalleeRootKind::StaticThis => CalleeRootKind::StaticSuper,
+                    _ => return None,
+                };
+            }
+            return Some(CalleeTarget {
+                call_loc: call_loc.dupe(),
+                callee_loc: callee.loc().dupe(),
+                root_use_loc: root_use_loc.dupe(),
+                root_binding_loc: binding_loc,
+                root_name: name,
+                is_global: false,
+                provider_locs: Vec::new(),
+                property_path,
+                import: None,
+                root_kind,
+            });
+        }
         let Some(def) = self.scope_info.def_of_use_opt(root_use_loc) else {
             // No scope definition: a global reference (e.g. a lib
             // declaration), classified by name through builtins. Only plain
@@ -193,6 +243,7 @@ impl<'a, L: LocSig> Collector<'a, L> {
                 provider_locs: Vec::new(),
                 property_path,
                 import: None,
+                root_kind: CalleeRootKind::Binding,
             });
         };
         let is_import = matches!(def.kind, Kind::Import { .. } | Kind::TsImport);
@@ -238,7 +289,26 @@ impl<'a, L: LocSig> Collector<'a, L> {
             provider_locs,
             property_path,
             import,
+            root_kind: CalleeRootKind::Binding,
         })
+    }
+
+    fn with_function_receiver<'ast>(
+        &mut self,
+        loc: &'ast L,
+        func: &'ast ast::function::Function<L, L>,
+    ) -> Result<(), !> {
+        let receiver = func.params.this_.as_ref().map(|param| {
+            (
+                param.loc.dupe(),
+                FlowSmolStr::new_inline("this"),
+                CalleeRootKind::Binding,
+            )
+        });
+        let previous = mem::replace(&mut self.receiver, receiver);
+        let result = ast_visitor::function_default(self, loc, func);
+        self.receiver = previous;
+        result
     }
 }
 
@@ -377,6 +447,82 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for Collector<'_, L> {
         type_
     }
 
+    fn class_(&mut self, loc: &'ast L, class: &'ast ast::class::Class<L, L>) -> Result<(), !> {
+        let binding = class.id.as_ref().map_or_else(
+            || (loc.dupe(), FlowSmolStr::new_inline("<anonymous class>")),
+            |id| (id.loc.dupe(), id.name.dupe()),
+        );
+        let previous = self.class_binding.replace(binding);
+        let result = ast_visitor::class_default(self, loc, class);
+        self.class_binding = previous;
+        result
+    }
+
+    fn class_element(&mut self, element: &'ast BodyElement<L, L>) -> Result<(), !> {
+        let static_ = match element {
+            BodyElement::Method(method) => {
+                self.object_key(&method.key)?;
+                method.static_
+            }
+            BodyElement::Property(property) => {
+                self.object_key(&property.key)?;
+                property.static_
+            }
+            BodyElement::PrivateField(property) => property.static_,
+            BodyElement::StaticBlock(_) => true,
+            _ => return ast_visitor::class_element_default(self, element),
+        };
+        let receiver = self.class_binding.as_ref().map(|(loc, name)| {
+            (
+                loc.dupe(),
+                name.dupe(),
+                if static_ {
+                    CalleeRootKind::StaticThis
+                } else {
+                    CalleeRootKind::InstanceThis
+                },
+            )
+        });
+        let previous_receiver = mem::replace(&mut self.receiver, receiver);
+        let result = match element {
+            BodyElement::Method(method) => {
+                ast_visitor::function_default(self, &method.value.0, &method.value.1)
+            }
+            BodyElement::Property(property) => self.class_property_value(&property.value),
+            BodyElement::PrivateField(property) => self.class_property_value(&property.value),
+            BodyElement::StaticBlock(block) => ast_visitor::class_static_block_default(self, block),
+            _ => Ok(()),
+        };
+        self.receiver = previous_receiver;
+        result?;
+        let decorators = match element {
+            BodyElement::Method(method) => &method.decorators,
+            BodyElement::Property(property) => &property.decorators,
+            BodyElement::PrivateField(property) => &property.decorators,
+            _ => return Ok(()),
+        };
+        for decorator in decorators.iter() {
+            self.class_decorator(decorator)?;
+        }
+        Ok(())
+    }
+
+    fn function_declaration(
+        &mut self,
+        loc: &'ast L,
+        func: &'ast ast::function::Function<L, L>,
+    ) -> Result<(), !> {
+        self.with_function_receiver(loc, func)
+    }
+
+    fn function_expression_or_method(
+        &mut self,
+        loc: &'ast L,
+        func: &'ast ast::function::Function<L, L>,
+    ) -> Result<(), !> {
+        self.with_function_receiver(loc, func)
+    }
+
     fn expression_statement(
         &mut self,
         loc: &'ast L,
@@ -437,6 +583,8 @@ pub fn collect<L: LocSig>(
         provider_info,
         imports,
         targets: vec![],
+        class_binding: None,
+        receiver: None,
     };
     let Ok(()) = collector.program(program);
     collector.targets

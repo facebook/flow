@@ -42,6 +42,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
 use flow_env_builder::assertion_call_target::AssertionInfo;
 use flow_env_builder::assertion_call_target::AssertionKind;
+use flow_env_builder::assertion_call_target::AssertionTarget;
 use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
 use flow_env_builder::assertion_call_target::spread_before_index;
 use flow_env_builder::env_api;
@@ -6564,39 +6565,48 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     ) -> Result<(), AbruptCompletion> {
         use flow_parser::ast::expression::ExpressionOrSpread;
 
-        if spread_before_index(&call.arguments.arguments, assertion.parameter_index) {
-            return Ok(());
-        }
+        let (asserted, replay_from) = match assertion.target {
+            AssertionTarget::Parameter(index) => {
+                if spread_before_index(&call.arguments.arguments, index) {
+                    return Ok(());
+                }
+                let Some(ExpressionOrSpread::Expression(argument)) =
+                    call.arguments.arguments.get(index)
+                else {
+                    return Ok(());
+                };
+                (argument, index + 1)
+            }
+            AssertionTarget::Receiver => {
+                let receiver = match call.callee.deref() {
+                    ExpressionInner::Member { inner, .. } => &inner.object,
+                    _ => return Ok(()),
+                };
+                (receiver, 0)
+            }
+        };
         match assertion.kind {
             AssertionKind::Bare => {
                 if bare_assertion_call_always_throws(assertion, &call.arguments.arguments) {
                     return self.raise_abrupt_completion(AbruptCompletion::Throw);
                 }
-                match call.arguments.arguments.get(assertion.parameter_index) {
-                    Some(ExpressionOrSpread::Expression(argument)) => {
-                        // Refine the asserted argument in an isolated scope.
-                        // Negated tests (e.g. `!==`) negate the whole current
-                        // scope, which would clobber enclosing branch
-                        // refinements when the call is nested; an isolated
-                        // scope popped without unrefining keeps the
-                        // refinement while leaving the enclosing scope
-                        // untouched, matching the old builtin `invariant`
-                        // handling.
-                        self.push_refinement_scope(empty_refinements());
-                        let result = self.expression_refinement(argument);
-                        self.pop_refinement_scope_without_unrefining();
-                        result
-                    }
-                    None | Some(ExpressionOrSpread::Spread(_)) => Ok(()),
-                }
+                self.push_refinement_scope(empty_refinements());
+                let result = self.expression_refinement(asserted);
+                self.pop_refinement_scope_without_unrefining();
+                result
             }
             AssertionKind::TypeGuard => self.with_persistent_refinement_scope(|this| {
-                let Some(ExpressionOrSpread::Expression(argument)) =
-                    call.arguments.arguments.get(assertion.parameter_index)
-                else {
-                    return Ok(());
+                let key = if assertion.target == AssertionTarget::Receiver
+                    && matches!(asserted.deref(), ExpressionInner::Super { .. })
+                {
+                    Some(refinement_key::RefinementKey::of_name(
+                        FlowSmolStr::new_inline("this"),
+                        asserted.loc().dupe(),
+                    ))
+                } else {
+                    refinement_key::RefinementKey::of_expression(asserted)
                 };
-                let Some(key) = refinement_key::RefinementKey::of_expression(argument) else {
+                let Some(key) = key else {
                     return Ok(());
                 };
                 let call_expr = Expression::new(ExpressionInner::Call {
@@ -6606,7 +6616,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 this.add_pred_func_info(
                     call.callee.loc().dupe(),
                     call_expr,
-                    call.callee.clone(),
+                    call.callee.dupe(),
                     call.targs.clone(),
                     call.arguments.clone(),
                 );
@@ -6616,37 +6626,23 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     &key,
                     refining_locs,
                     env_api::RefinementKind::AssertionR {
-                        func: Rc::new(call.callee.clone()),
+                        func: Rc::new(call.callee.dupe()),
                         targs: call.targs.clone().map(Rc::new),
                         arguments: Rc::new(call.arguments.clone()),
-                        index: Rc::from([assertion.parameter_index as i32].as_slice()),
+                        target: assertion.target,
                     },
                 );
                 Ok(())
             }),
         }?;
-        // Arguments after the asserted one are evaluated after the asserted
-        // value is observed, so replay them to let their writes and havoc
-        // invalidate the refinement when they touch the asserted binding.
-        // This mirrors the handling of `invariant` conditions in `call`,
-        // except reads are not re-recorded: they keep the entries from
-        // the first traversal (pre-refinement), so a later-arg read of
-        // the asserted binding neither resolves to the lazy `AssertionR`
-        // (whose forcing would re-enter the same pred-func lazy while
-        // the call's arguments are being typed and panic) nor has real
-        // errors suppressed.
+        // Arguments evaluated after the asserted value can invalidate its refinement.
+        // Keep their original reads to avoid recursively forcing the call's predicate.
         self.with_skip_read_recording(|this| {
-            for arg in call
-                .arguments
-                .arguments
-                .iter()
-                .skip(assertion.parameter_index + 1)
-            {
+            for arg in call.arguments.arguments.iter().skip(replay_from) {
                 this.expression_or_spread(arg)?;
             }
             Ok(())
-        })?;
-        Ok(())
+        })
     }
 
     fn add_pred_func_info(

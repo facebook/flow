@@ -32,3 +32,71 @@ second as AssertsFirst; // error: asserted parameter positions differ
 // Only the second member matches; the first member's mismatch is speculative.
 assertion as ((x: string) => x is string) | ((x: string) => asserts x is string);
 bare as ((x: string) => asserts x is string) | ((x: string) => asserts x);
+
+declare class AssertedValue {
+  readonly value: string | number;
+}
+
+declare class AssertedString extends AssertedValue {
+  readonly value: string;
+}
+
+declare class TypedReceiverAssertion {
+  check(x: unknown): asserts this is AssertedValue;
+}
+
+declare class StrongerReceiverAssertion extends TypedReceiverAssertion {
+  check(x: unknown): asserts this is AssertedString;
+}
+
+declare class SameReceiverAssertion extends StrongerReceiverAssertion {
+  check(renamed: unknown): asserts this is AssertedString;
+}
+
+declare class WeakerReceiverAssertion extends StrongerReceiverAssertion {
+  check(x: unknown): asserts this is AssertedValue; // ERROR
+}
+
+declare class BareReceiverAssertion {
+  check(x: unknown): asserts this;
+}
+
+declare class BareParameterAssertion {
+  check(x: unknown): asserts x;
+}
+
+declare class TypedParameterAssertion {
+  check(x: unknown): asserts x is AssertedString;
+}
+
+declare class ParameterInsteadOfReceiver extends BareReceiverAssertion {
+  check(x: unknown): asserts x; // ERROR
+}
+
+declare class ReceiverInsteadOfParameter extends BareParameterAssertion {
+  check(x: unknown): asserts this; // ERROR
+}
+
+declare class TypedParameterInsteadOfReceiver extends StrongerReceiverAssertion {
+  check(x: unknown): asserts x is AssertedString; // ERROR
+}
+
+declare class TypedReceiverInsteadOfParameter extends TypedParameterAssertion {
+  check(x: unknown): asserts this is AssertedString; // ERROR
+}
+
+declare class TypedInsteadOfBareReceiver extends BareReceiverAssertion {
+  check(x: unknown): asserts this is AssertedString; // ERROR
+}
+
+declare class BareInsteadOfTypedReceiver extends StrongerReceiverAssertion {
+  check(x: unknown): asserts this; // ERROR
+}
+
+declare class TypedReceiverInsteadOfBareParameter extends BareParameterAssertion {
+  check(x: unknown): asserts this is AssertedString; // ERROR
+}
+
+declare class BareParameterInsteadOfTypedReceiver extends StrongerReceiverAssertion {
+  check(x: unknown): asserts x; // ERROR
+}

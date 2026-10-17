@@ -22,6 +22,8 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::assertion_call_target;
 use flow_env_builder::assertion_call_target::AssertionInfo;
 use flow_env_builder::assertion_call_target::AssertionKind;
+use flow_env_builder::assertion_call_target::AssertionTarget;
+use flow_env_builder::assertion_call_target::CalleeRootKind;
 use flow_env_builder::assertion_call_target::CalleeTarget;
 use flow_env_builder::assertion_call_target::ImportedName;
 use flow_parser::ast;
@@ -66,7 +68,8 @@ struct ParsedLocalAnalysis {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct CanonicalCallee {
     root_binding_loc: ALoc,
-    property_path: Vec<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
+    property_path: Vec<FlowSmolStr>,
+    root_kind: CalleeRootKind,
 }
 
 impl CanonicalCallee {
@@ -74,6 +77,7 @@ impl CanonicalCallee {
         Self {
             root_binding_loc: target.root_binding_loc.dupe(),
             property_path: target.property_path.clone(),
+            root_kind: target.root_kind,
         }
     }
 }
@@ -213,12 +217,13 @@ pub(crate) fn resolve<'cx>(cx: &mut Context<'cx>, analysis: PackedAnalysis) -> R
                 .as_ref()
                 .and_then(|merged| merged.root(&candidate.root_binding_loc));
             let assertion = root_type
+                .and_then(|root_type| receiver_type(cx, &reason, candidate.root_kind, root_type))
                 .and_then(|root_type| {
                     callee_type_for_classification(
                         cx,
                         &candidate.callee_loc,
                         &candidate.property_path,
-                        root_type,
+                        &root_type,
                     )
                 })
                 .as_ref()
@@ -266,12 +271,18 @@ fn assertion_of_function(function: &flow_typing_type::type_::FunType) -> Option<
     if !guard.is_asserts() {
         return None;
     }
-    let parameter_index = function
-        .params
-        .iter()
-        .position(|param| param.0.as_ref() == Some(&guard.param_name.1))?;
+    let target = if guard.param_name.1 == "this" {
+        AssertionTarget::Receiver
+    } else {
+        AssertionTarget::Parameter(
+            function
+                .params
+                .iter()
+                .position(|param| param.0.as_ref() == Some(&guard.param_name.1))?,
+        )
+    };
     Some(AssertionInfo {
-        parameter_index,
+        target,
         kind: if guard.type_guard.is_some() {
             AssertionKind::TypeGuard
         } else {
@@ -403,14 +414,55 @@ fn callee_type_for_classification(
         }
         break;
     }
-    // Deferred heads evaluate in the classifier.
     Some(property_type(cx, callee_loc, path, current))
+}
+
+fn receiver_type(
+    cx: &mut Context<'_>,
+    reason: &Reason,
+    kind: CalleeRootKind,
+    type_: &Type,
+) -> Option<Type> {
+    if matches!(kind, CalleeRootKind::Binding | CalleeRootKind::StaticThis) {
+        return Some(type_.dupe());
+    }
+    let type_ = normalized_assertion_head(cx, reason, type_)?;
+    if let TypeInner::DefT(_, def_t) = type_.deref()
+        && let DefTInner::PolyT(poly) = def_t.deref()
+    {
+        return receiver_type(cx, reason, kind, &poly.t_out);
+    }
+    let instance = annotation_inference::mk_instance(cx, None, reason.dupe(), None, type_);
+    let instance = normalized_assertion_head(cx, reason, &instance)?;
+    match kind {
+        CalleeRootKind::InstanceThis => Some(instance),
+        CalleeRootKind::InstanceSuper | CalleeRootKind::StaticSuper => {
+            let TypeInner::DefT(_, def_t) = instance.deref() else {
+                return None;
+            };
+            let DefTInner::InstanceT(inner) = def_t.deref() else {
+                return None;
+            };
+            let parent = normalized_assertion_head(cx, reason, &inner.super_)?;
+            if kind == CalleeRootKind::InstanceSuper {
+                return Some(parent);
+            }
+            let TypeInner::DefT(_, def_t) = parent.deref() else {
+                return None;
+            };
+            let DefTInner::InstanceT(inner) = def_t.deref() else {
+                return None;
+            };
+            Some(inner.static_.dupe())
+        }
+        _ => None,
+    }
 }
 
 fn property_type<'cx>(
     cx: &mut Context<'cx>,
     callee_loc: &ALoc,
-    property_path: &[flow_data_structure_wrapper::smol_str::FlowSmolStr],
+    property_path: &[FlowSmolStr],
     root_type: Type,
 ) -> Type {
     property_path.iter().fold(root_type, |type_, property| {

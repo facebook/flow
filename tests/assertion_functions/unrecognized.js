@@ -13,7 +13,8 @@ class C {
   }
 
   viaThis(x: unknown) {
-    this.assertString(x); // TODO: TS narrows `this` calls
+    this.assertString(x);
+    x as string; // OK
   }
 }
 

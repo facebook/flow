@@ -14827,12 +14827,13 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
 // nothing. When the binding carries its own annotation, bind it here from
 // the annotation alone, so scope+provider-targeted analyses can address
 // parameters and function-local definitions. Function-local declarations
-// (`declare function`, `declare const`, `function`) bind through the same
+// (`declare function`, `declare const`, `function`) and classes outside
+// module scope (class expressions, local classes) bind through the same
 // handlers module-level ones use.
 struct LexicalAnnotRoot<'ast> {
     loc: Loc,
     name: FlowSmolStr,
-    annot: &'ast ast::types::AnnotationOrHint<Loc, Loc>,
+    annotation: &'ast ast::types::Annotation<Loc, Loc>,
     kind: LexicalAnnotKind,
 }
 
@@ -14853,6 +14854,7 @@ enum LexicalDecl<'ast> {
     DeclareFunctions(Vec<&'ast ast::statement::DeclareFunction<Loc, Loc>>),
     DeclareVariable(&'ast ast::statement::DeclareVariable<Loc, Loc>),
     Function(&'ast ast::function::Function<Loc, Loc>),
+    Class(&'ast ast::class::Class<Loc, Loc>),
 }
 
 struct LexicalAnnotCollector<'a, 'ast> {
@@ -14867,9 +14869,9 @@ impl<'a, 'ast> LexicalAnnotCollector<'a, 'ast> {
         kind: LexicalAnnotKind,
         id: &'ast ast::pattern::Identifier<Loc, Loc>,
     ) {
-        if !matches!(id.annot, ast::types::AnnotationOrHint::Available(_)) {
+        let ast::types::AnnotationOrHint::Available(annotation) = &id.annot else {
             return;
-        }
+        };
         let loc = id.name.loc.dupe();
         if !self.targets.contains(&loc) {
             return;
@@ -14877,7 +14879,7 @@ impl<'a, 'ast> LexicalAnnotCollector<'a, 'ast> {
         self.roots.push(LexicalAnnotRoot {
             loc,
             name: id.name.name.dupe(),
-            annot: &id.annot,
+            annotation,
             kind,
         });
     }
@@ -14956,6 +14958,40 @@ impl<'a, 'ast> AstVisitor<'ast, Loc> for LexicalAnnotCollector<'a, 'ast> {
         type_
     }
 
+    fn class_(
+        &mut self,
+        loc: &'ast Loc,
+        class: &'ast ast::class::Class<Loc, Loc>,
+    ) -> Result<(), !> {
+        let (binding_loc, name) = class.id.as_ref().map_or_else(
+            || (loc.dupe(), FlowSmolStr::new_inline("<anonymous class>")),
+            |id| (id.loc.dupe(), id.name.dupe()),
+        );
+        if self.targets.contains(&binding_loc) {
+            self.decls.push(LexicalDeclRoot {
+                loc: binding_loc,
+                name,
+                decl: LexicalDecl::Class(class),
+            });
+        }
+        ast_visitor::class_default(self, loc, class)
+    }
+
+    fn function_this_param(
+        &mut self,
+        param: &'ast ast::function::ThisParam<Loc, Loc>,
+    ) -> Result<(), !> {
+        if self.targets.contains(&param.loc) {
+            self.roots.push(LexicalAnnotRoot {
+                loc: param.loc.dupe(),
+                name: FlowSmolStr::new_inline("this"),
+                annotation: &param.annot,
+                kind: LexicalAnnotKind::Param,
+            });
+        }
+        ast_visitor::function_this_param_default(self, param)
+    }
+
     fn function_param(&mut self, param: &'ast ast::function::Param<Loc, Loc>) -> Result<(), !> {
         if let ast::function::Param::RegularParam { argument, .. } = param {
             self.record_pattern(LexicalAnnotKind::Param, argument);
@@ -15014,25 +15050,20 @@ pub(crate) fn bind_lexical_annotation_roots<'arena: 'ast, 'ast>(
         let LexicalAnnotRoot {
             loc,
             name,
-            annot,
+            annotation,
             kind,
         } = root;
         let id_loc_node = tbls.push_loc(loc.dupe());
         let id_loc_node_for_def = id_loc_node.dupe();
-        let name_for_def = name.dupe();
         let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
             tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
-                annot_or_hint(
-                    ExpectedAnnotationSort::VariableDefinition {
-                        name: name_for_def.clone(),
-                    },
-                    Some(&id_loc_node_for_def),
+                annot(
                     opts,
                     module_scope,
                     scopes,
                     tbls,
                     &mut tparam_stack::TParamStack::new(),
-                    annot,
+                    &annotation.annotation,
                 )
             })
         }));
@@ -15097,6 +15128,28 @@ pub(crate) fn bind_lexical_annotation_roots<'arena: 'ast, 'ast>(
             }
             LexicalDecl::Function(decl) => {
                 function_decl(lex, scopes, tbls, decl, &record);
+            }
+            LexicalDecl::Class(decl) if decl.id.is_some() => {
+                class_decl(opts, lex, scopes, tbls, decl, &record);
+            }
+            LexicalDecl::Class(decl) => {
+                let id_loc_node = tbls.push_loc(loc.dupe());
+                let id_loc_node_for_def = id_loc_node.dupe();
+                let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
+                    tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
+                        class_def(opts, lex, scopes, tbls, decl)
+                    })
+                }));
+                scope::bind_class(
+                    opts,
+                    lex,
+                    scopes,
+                    tbls,
+                    id_loc_node,
+                    name.dupe(),
+                    def,
+                    record,
+                );
             }
         }
         if let Some(node) = slot.into_inner() {

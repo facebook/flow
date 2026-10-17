@@ -27,6 +27,7 @@ use flow_parser::ast::expression::Expression;
 use flow_parser::loc_sig::LocSig;
 
 use crate::assertion_call_target::AssertionInfo;
+use crate::assertion_call_target::AssertionTarget;
 use crate::provider_api;
 
 #[derive(
@@ -320,6 +321,8 @@ pub mod refi {
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_parser::ast::expression;
 
+    use crate::assertion_call_target::AssertionTarget;
+
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Dupe)]
     pub enum ArrayLengthOp {
         ArrLenEqual,
@@ -407,7 +410,7 @@ pub mod refi {
             func: Rc<expression::Expression<L, L>>,
             targs: Option<Rc<expression::CallTypeArgs<L, L>>>,
             arguments: Rc<expression::ArgList<L, L>>,
-            index: Rc<[i32]>,
+            target: AssertionTarget,
         },
         LatentThisR {
             func: Rc<expression::Expression<L, L>>,
@@ -953,10 +956,10 @@ pub fn show_refinement_kind_without_locs<L: Dupe>(kind: &RefinementKind<L>) -> S
             let indices: Vec<String> = index.iter().map(|i| i.to_string()).collect();
             format!("LatentR (index = {})", indices.join(", "))
         }
-        RefinementKind::AssertionR { index, .. } => {
-            let indices: Vec<String> = index.iter().map(|i| i.to_string()).collect();
-            format!("AssertionR (index = {})", indices.join(", "))
-        }
+        RefinementKind::AssertionR { target, .. } => match target {
+            AssertionTarget::Parameter(index) => format!("AssertionR (index = {index})"),
+            AssertionTarget::Receiver => "AssertionR (this)".to_string(),
+        },
         RefinementKind::LatentThisR { .. } => "LatentThisR".to_string(),
         RefinementKind::PropTruthyR { propname, .. } => format!("PropTruthyR ({})", propname),
         RefinementKind::EqR(_) => "EqR".to_string(),

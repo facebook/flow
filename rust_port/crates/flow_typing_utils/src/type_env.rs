@@ -18,6 +18,7 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
+use flow_env_builder::assertion_call_target::AssertionTarget;
 use flow_env_builder::env_api::CacheableEnvError;
 use flow_env_builder::env_api::DeclareNamespaceReadPathElement;
 use flow_env_builder::env_api::DefLocType;
@@ -1148,7 +1149,7 @@ fn predicate_of_refinement<'cx>(
             }
             RefinementKind::AssertionR {
                 func,
-                index,
+                target,
                 targs: _,
                 arguments: _,
             } => {
@@ -1160,10 +1161,15 @@ fn predicate_of_refinement<'cx>(
                     env.pred_func_map.get(&func_loc).duped()
                 };
                 match lazy_info {
-                    Some(_) => Some(Predicate::new(PredicateInner::LatentP(
-                        read_pred_func_info_exn(cx, func_loc)?,
-                        index.dupe(),
-                    ))),
+                    Some(_) => {
+                        let info = read_pred_func_info_exn(cx, func_loc)?;
+                        Some(Predicate::new(match target {
+                            AssertionTarget::Parameter(index) => {
+                                PredicateInner::LatentP(info, Rc::from([*index as i32].as_slice()))
+                            }
+                            AssertionTarget::Receiver => PredicateInner::LatentThisP(info),
+                        }))
+                    }
                     None => None,
                 }
             }

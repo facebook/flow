@@ -360,7 +360,7 @@ where
                     func,
                     targs,
                     arguments,
-                    index: _,
+                    target: _,
                 } => {
                     let Ok(()) = this.expression(func.as_ref());
                     if let Some(targs) = targs {

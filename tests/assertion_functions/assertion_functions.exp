@@ -1616,6 +1616,850 @@ References:
                    ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:16:5
+
+Cannot cast `this.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:16:5
+   16|     this.text as number; // ERROR
+           ^^^^^^^^^
+
+References:
+   receiver_assertions.js:38:9
+   38|   text: string = 'hello';
+               ^^^^^^ [1]
+   receiver_assertions.js:16:18
+   16|     this.text as number; // ERROR
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:23:7
+
+Cannot cast `this.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:23:7
+   23|       this.text as number; // ERROR
+             ^^^^^^^^^
+
+References:
+   receiver_assertions.js:38:9
+   38|   text: string = 'hello';
+               ^^^^^^ [1]
+   receiver_assertions.js:23:20
+   23|       this.text as number; // ERROR
+                          ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:33:5
+
+Cannot cast `this.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:33:5
+   33|     this.text as number; // ERROR
+           ^^^^^^^^^
+
+References:
+   receiver_assertions.js:38:9
+   38|   text: string = 'hello';
+               ^^^^^^ [1]
+   receiver_assertions.js:33:18
+   33|     this.text as number; // ERROR
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:45:3
+
+Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:45:3
+   45|   message.text as number; // ERROR
+         ^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:38:9
+   38|   text: string = 'hello';
+               ^^^^^^ [1]
+   receiver_assertions.js:45:19
+   45|   message.text as number; // ERROR
+                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:52:3
+
+Cannot cast `holder.message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:52:3
+   52|   holder.message.text as number; // ERROR
+         ^^^^^^^^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:38:9
+   38|   text: string = 'hello';
+               ^^^^^^ [1]
+   receiver_assertions.js:52:26
+   52|   holder.message.text as number; // ERROR
+                                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:58:3
+
+Cannot cast `message` to `TextMessage` because `Message` [1] is incompatible with `TextMessage` [2]. [incompatible-type]
+
+   receiver_assertions.js:58:3
+   58|   message as TextMessage; // ERROR
+         ^^^^^^^
+
+References:
+   receiver_assertions.js:55:46
+   55| function receiverExpressionPosition(message: Message) {
+                                                    ^^^^^^^ [1]
+   receiver_assertions.js:58:14
+   58|   message as TextMessage; // ERROR
+                    ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:64:3
+
+Cannot cast `message` to `TextMessage` because `Message` [1] is incompatible with `TextMessage` [2]. [incompatible-type]
+
+   receiver_assertions.js:64:3
+   64|   message as TextMessage; // ERROR
+         ^^^^^^^
+
+References:
+   receiver_assertions.js:63:13
+   63|   message = new Message();
+                   ^^^^^^^^^^^^^ [1]
+   receiver_assertions.js:64:14
+   64|   message as TextMessage; // ERROR
+                    ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:80:3
+
+Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:80:3
+   80|   message.text as number; // ERROR
+         ^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:74:9
+   74|   text: string = 'hello';
+               ^^^^^^ [1]
+   receiver_assertions.js:80:19
+   80|   message.text as number; // ERROR
+                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:85:3
+
+Cannot cast `message` to `ReceiverWithText` because `ReceiverWithArguments` [1] is incompatible with
+`ReceiverWithText` [2]. [incompatible-type]
+
+   receiver_assertions.js:85:3
+   85|   message as ReceiverWithText; // ERROR: argument replaced the receiver binding
+         ^^^^^^^
+
+References:
+   receiver_assertions.js:84:32
+   84|   message.assertText(message = new ReceiverWithArguments());
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   receiver_assertions.js:85:14
+   85|   message as ReceiverWithText; // ERROR: argument replaced the receiver binding
+                    ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:90:3
+
+Cannot cast `holder.message` to `ReceiverWithText` because `ReceiverWithArguments` [1] is incompatible with
+`ReceiverWithText` [2]. [incompatible-type]
+
+   receiver_assertions.js:90:3
+   90|   holder.message as ReceiverWithText; // ERROR
+         ^^^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:89:46
+   89|   holder.message.assertText(holder.message = new ReceiverWithArguments());
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   receiver_assertions.js:90:21
+   90|   holder.message as ReceiverWithText; // ERROR
+                           ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- receiver_assertions.js:96:3
+
+Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:96:3
+   96|   message.text as number; // ERROR
+         ^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:74:9
+   74|   text: string = 'hello';
+               ^^^^^^ [1]
+   receiver_assertions.js:96:19
+   96|   message.text as number; // ERROR
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:101:3
+
+Cannot cast `holder.message` to `ReceiverWithText` because `ReceiverWithArguments` [1] is incompatible with
+`ReceiverWithText` [2]. [incompatible-type]
+
+   receiver_assertions.js:101:3
+   101|   holder.message as ReceiverWithText; // ERROR: call can replace the property
+          ^^^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:99:57
+    99| function receiverPropertyArgumentCall(holder: {message: ReceiverWithArguments}, effect: () => void) {
+                                                                ^^^^^^^^^^^^^^^^^^^^^ [1]
+   receiver_assertions.js:101:21
+   101|   holder.message as ReceiverWithText; // ERROR: call can replace the property
+                            ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:107:3
+
+Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:107:3
+   107|   message.text as number; // ERROR
+          ^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:74:9
+    74|   text: string = 'hello';
+                ^^^^^^ [1]
+   receiver_assertions.js:107:19
+   107|   message.text as number; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:122:3
+
+Cannot cast `box.value` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   receiver_assertions.js:122:3
+   122|   box.value as null; // ERROR
+          ^^^^^^^^^
+
+References:
+   receiver_assertions.js:111:19
+   111|   readonly value: string;
+                          ^^^^^^ [1]
+   receiver_assertions.js:122:16
+   122|   box.value as null; // ERROR
+                       ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:129:3
+
+Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:129:3
+   129|   message.text as number; // ERROR
+          ^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:38:9
+    38|   text: string = 'hello';
+                ^^^^^^ [1]
+   receiver_assertions.js:129:19
+   129|   message.text as number; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:136:3
+
+Cannot cast `box.value` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   receiver_assertions.js:136:3
+   136|   box.value as string; // ERROR
+          ^^^^^^^^^
+
+References:
+   receiver_assertions.js:135:15
+   135|   box.value = null;
+                      ^^^^ [1]
+   receiver_assertions.js:136:16
+   136|   box.value as string; // ERROR
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:151:3
+
+Cannot cast `message.value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   receiver_assertions.js:151:3
+   151|   message.value as string; // ERROR
+          ^^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:148:50
+   148| function genericReceiver(message: GenericMessage<number>) {
+                                                         ^^^^^^ [1]
+   receiver_assertions.js:151:20
+   151|   message.value as string; // ERROR
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:157:3
+
+Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:157:3
+   157|   message.text as number; // ERROR
+          ^^^^^^^^^^^^
+
+References:
+   receiver_exports.js:8:9
+     8|   text: string = 'hello';
+                ^^^^^^ [1]
+   receiver_assertions.js:157:19
+   157|   message.text as number; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:164:5
+
+Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:164:5
+   164|     message.text as number; // ERROR
+            ^^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:38:9
+    38|   text: string = 'hello';
+                ^^^^^^ [1]
+   receiver_assertions.js:164:21
+   164|     message.text as number; // ERROR
+                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- receiver_assertions.js:172:3
+
+Cannot cast `second.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_assertions.js:172:3
+   172|   second.text as number; // ERROR
+          ^^^^^^^^^^^
+
+References:
+   receiver_assertions.js:38:9
+    38|   text: string = 'hello';
+                ^^^^^^ [1]
+   receiver_assertions.js:172:18
+   172|   second.text as number; // ERROR
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- receiver_scoping.js:16:16
+
+Cannot get `x.length` because property `length` is missing in `null` [1]. [incompatible-use]
+
+   receiver_scoping.js:16:16
+   16|       return x.length; // ERROR
+                      ^^^^^^
+
+References:
+   receiver_scoping.js:14:14
+   14|     check(x: ?string): number {
+                    ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- receiver_scoping.js:16:16
+
+Cannot get `x.length` because property `length` is missing in `void` [1]. [incompatible-use]
+
+   receiver_scoping.js:16:16
+   16|       return x.length; // ERROR
+                      ^^^^^^
+
+References:
+   receiver_scoping.js:14:14
+   14|     check(x: ?string): number {
+                    ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- receiver_scoping.js:21:16
+
+Cannot get `x.length` because property `length` is missing in `null` [1]. [incompatible-use]
+
+   receiver_scoping.js:21:16
+   21|       return x.length; // ERROR
+                      ^^^^^^
+
+References:
+   receiver_scoping.js:19:18
+   19|     checkThis(x: ?string): number {
+                        ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- receiver_scoping.js:21:16
+
+Cannot get `x.length` because property `length` is missing in `void` [1]. [incompatible-use]
+
+   receiver_scoping.js:21:16
+   21|       return x.length; // ERROR
+                      ^^^^^^
+
+References:
+   receiver_scoping.js:19:18
+   19|     checkThis(x: ?string): number {
+                        ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- receiver_scoping.js:40:7
+
+Cannot cast `x` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   receiver_scoping.js:40:7
+   40|       x as string;
+             ^
+
+References:
+   receiver_scoping.js:38:14
+   38|     check(x: ?string): void {
+                    ^^^^^^^ [1]
+   receiver_scoping.js:40:12
+   40|       x as string;
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- receiver_scoping.js:40:7
+
+Cannot cast `x` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   receiver_scoping.js:40:7
+   40|       x as string;
+             ^
+
+References:
+   receiver_scoping.js:38:14
+   38|     check(x: ?string): void {
+                    ^^^^^^^ [1]
+   receiver_scoping.js:40:12
+   40|       x as string;
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- receiver_scoping.js:41:7
+
+Cannot cast `x` to null because `void` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   receiver_scoping.js:41:7
+   41|       x as null; // ERROR
+             ^
+
+References:
+   receiver_scoping.js:38:14
+   38|     check(x: ?string): void {
+                    ^^^^^^^ [1]
+   receiver_scoping.js:41:12
+   41|       x as null; // ERROR
+                  ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- receiver_scoping.js:41:7
+
+Cannot cast `x` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   receiver_scoping.js:41:7
+   41|       x as null; // ERROR
+             ^
+
+References:
+   receiver_scoping.js:38:15
+   38|     check(x: ?string): void {
+                     ^^^^^^ [1]
+   receiver_scoping.js:41:12
+   41|       x as null; // ERROR
+                  ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- receiver_scoping.js:52:14
+
+Cannot get `x.length` because property `length` is missing in `null` [1]. [incompatible-use]
+
+   receiver_scoping.js:52:14
+   52|     return x.length; // ERROR
+                    ^^^^^^
+
+References:
+   receiver_scoping.js:50:35
+   50|   function check(this: Checks, x: ?string): number {
+                                         ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- receiver_scoping.js:52:14
+
+Cannot get `x.length` because property `length` is missing in `void` [1]. [incompatible-use]
+
+   receiver_scoping.js:52:14
+   52|     return x.length; // ERROR
+                    ^^^^^^
+
+References:
+   receiver_scoping.js:50:35
+   50|   function check(this: Checks, x: ?string): number {
+                                         ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- receiver_scoping.js:61:5
+
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   61|     this.assertString(x);
+           ^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- receiver_scoping.js:62:5
+
+Cannot cast `x` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   receiver_scoping.js:62:5
+   62|     x as string;
+           ^
+
+References:
+   receiver_scoping.js:60:40
+   60|   function check(this: LocalChecks, x: unknown): void {
+                                              ^^^^^^^ [1]
+   receiver_scoping.js:62:10
+   62|     x as string;
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- receiver_scoping.js:63:5
+
+Cannot cast `x` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receiver_scoping.js:63:5
+   63|     x as number; // ERROR
+           ^
+
+References:
+   receiver_scoping.js:60:40
+   60|   function check(this: LocalChecks, x: unknown): void {
+                                              ^^^^^^^ [1]
+   receiver_scoping.js:63:10
+   63|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:28:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:28:5
+   28|     x as number; // ERROR
+           ^
+
+References:
+   receivers.js:9:42
+    9|   assertString(x: unknown): asserts x is string {
+                                                ^^^^^^ [1]
+   receivers.js:28:10
+   28|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:34:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:34:5
+   34|     x as number; // ERROR
+           ^
+
+References:
+   receivers.js:9:42
+    9|   assertString(x: unknown): asserts x is string {
+                                                ^^^^^^ [1]
+   receivers.js:34:10
+   34|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:40:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:40:5
+   40|     x as number; // ERROR
+           ^
+
+References:
+   receivers.js:4:46
+    4|   assertString: (x: unknown) => asserts x is string,
+                                                    ^^^^^^ [1]
+   receivers.js:40:10
+   40|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:47:7
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:47:7
+   47|       x as number; // ERROR
+             ^
+
+References:
+   receivers.js:9:42
+    9|   assertString(x: unknown): asserts x is string {
+                                                ^^^^^^ [1]
+   receivers.js:47:12
+   47|       x as number; // ERROR
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:54:5
+
+Cannot cast `x` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   receivers.js:54:5
+   54|     x as null; // ERROR
+           ^
+
+References:
+   receivers.js:51:11
+   51|   bare(x: string | null) {
+                 ^^^^^^ [1]
+   receivers.js:54:10
+   54|     x as null; // ERROR
+                ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:60:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:60:5
+   60|     x as number; // ERROR
+           ^
+
+References:
+   receivers.js:58:24
+   58|     super.assertTruthy(typeof x === 'string');
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   receivers.js:60:10
+   60|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:70:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:70:5
+   70|     x as number; // ERROR
+           ^
+
+References:
+   receivers.js:17:49
+   17|   static assertString(x: unknown): asserts x is string {
+                                                       ^^^^^^ [1]
+   receivers.js:70:10
+   70|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:76:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:76:5
+   76|     x as number; // ERROR
+           ^
+
+References:
+   receivers.js:17:49
+   17|   static assertString(x: unknown): asserts x is string {
+                                                       ^^^^^^ [1]
+   receivers.js:76:10
+   76|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:82:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:82:5
+   82|     x as number; // ERROR
+           ^
+
+References:
+   receivers.js:9:42
+    9|   assertString(x: unknown): asserts x is string {
+                                                ^^^^^^ [1]
+   receivers.js:82:10
+   82|     x as number; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:88:7
+
+Cannot cast `x` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   receivers.js:88:7
+   88|       x as string; // ERROR
+             ^
+
+References:
+   receivers.js:86:75
+   86|     function differentThis(this: {assertString: (x: unknown) => void}, x: unknown) {
+                                                                                 ^^^^^^^ [1]
+   receivers.js:88:12
+   88|       x as string; // ERROR
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ receivers.js:93:7
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:93:7
+   93|       x as number; // ERROR
+             ^
+
+References:
+   receivers.js:4:46
+    4|   assertString: (x: unknown) => asserts x is string,
+                                                    ^^^^^^ [1]
+   receivers.js:93:12
+   93|       x as number; // ERROR
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- receivers.js:101:3
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:101:3
+   101|   x as number; // ERROR
+          ^
+
+References:
+   receivers.js:4:46
+     4|   assertString: (x: unknown) => asserts x is string,
+                                                     ^^^^^^ [1]
+   receivers.js:101:8
+   101|   x as number; // ERROR
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- receivers.js:107:3
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:107:3
+   107|   x as number; // ERROR
+          ^
+
+References:
+   receivers.js:105:21
+   105|   this.assertTruthy(typeof x === 'string');
+                            ^^^^^^^^^^^^^^^^^^^^^ [1]
+   receivers.js:107:8
+   107|   x as number; // ERROR
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- receivers.js:125:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:125:5
+   125|     x as number; // ERROR
+            ^
+
+References:
+   receivers.js:118:49
+   118|   static assertString(x: unknown): asserts x is string {
+                                                        ^^^^^^ [1]
+   receivers.js:125:10
+   125|     x as number; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- receivers.js:134:7
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:134:7
+   134|       x as number; // ERROR
+              ^
+
+References:
+   receivers.js:9:42
+     9|   assertString(x: unknown): asserts x is string {
+                                                 ^^^^^^ [1]
+   receivers.js:134:12
+   134|       x as number; // ERROR
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- receivers.js:144:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:144:5
+   144|     x as number; // ERROR
+            ^
+
+References:
+   receivers.js:9:42
+     9|   assertString(x: unknown): asserts x is string {
+                                                 ^^^^^^ [1]
+   receivers.js:144:10
+   144|     x as number; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- receivers.js:152:5
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   receivers.js:152:5
+   152|     x as number; // ERROR
+            ^
+
+References:
+   receivers.js:9:42
+     9|   assertString(x: unknown): asserts x is string {
+                                                 ^^^^^^ [1]
+   receivers.js:152:10
+   152|     x as number; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- receivers.js:160:5
+
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   receivers.js:160:5
+   160|     x as string; // ERROR
+            ^
+
+References:
+   exports.js:21:57
+    21|   static assertNumber(value: unknown): asserts value is number {
+                                                                ^^^^^^ [1]
+   receivers.js:160:10
+   160|     x as string; // ERROR
+                 ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- requires.js:10:3
 
 Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
@@ -2190,6 +3034,220 @@ References:
                                                                ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- subtyping.js:57:38
+
+Cannot extend `StrongerReceiverAssertion` [1] with `WeakerReceiverAssertion` because in property `check` > the type
+predicate: `AssertedValue` [2] is incompatible with `AssertedString` [3]. [incompatible-type]
+
+   subtyping.js:57:38
+   57|   check(x: unknown): asserts this is AssertedValue; // ERROR
+                                            ^^^^^^^^^^^^^ [2]
+
+References:
+   subtyping.js:56:47
+   56| declare class WeakerReceiverAssertion extends StrongerReceiverAssertion {
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:49:38
+   49|   check(x: unknown): asserts this is AssertedString;
+                                            ^^^^^^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:73:30
+
+Cannot extend `BareReceiverAssertion` [1] with `ParameterInsteadOfReceiver` because in property `check` > the type
+predicate: type guard parameter `x` [2] does not appear in the same position as type guard parameter `this` [3].
+[function-predicate]
+
+   subtyping.js:73:30
+   73|   check(x: unknown): asserts x; // ERROR
+                                    ^ [2]
+
+References:
+   subtyping.js:72:50
+   72| declare class ParameterInsteadOfReceiver extends BareReceiverAssertion {
+                                                        ^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:61:30
+   61|   check(x: unknown): asserts this;
+                                    ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:77:30
+
+Cannot extend `BareParameterAssertion` [1] with `ReceiverInsteadOfParameter` because in property `check` > the type
+predicate: type guard parameter `this` [2] does not appear in the same position as type guard parameter `x` [3].
+[function-predicate]
+
+   subtyping.js:77:30
+   77|   check(x: unknown): asserts this; // ERROR
+                                    ^^^^ [2]
+
+References:
+   subtyping.js:76:50
+   76| declare class ReceiverInsteadOfParameter extends BareParameterAssertion {
+                                                        ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:65:30
+   65|   check(x: unknown): asserts x;
+                                    ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:81:30
+
+Cannot extend `StrongerReceiverAssertion` [1] with `TypedParameterInsteadOfReceiver` because in property `check` > the
+type predicate: type guard parameter `x` [2] does not appear in the same position as type guard parameter `this` [3].
+[function-predicate]
+
+   subtyping.js:81:30
+   81|   check(x: unknown): asserts x is AssertedString; // ERROR
+                                    ^ [2]
+
+References:
+   subtyping.js:80:55
+   80| declare class TypedParameterInsteadOfReceiver extends StrongerReceiverAssertion {
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:49:30
+   49|   check(x: unknown): asserts this is AssertedString;
+                                    ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:85:30
+
+Cannot extend `TypedParameterAssertion` [1] with `TypedReceiverInsteadOfParameter` because in property `check` > the
+type predicate: type guard parameter `this` [2] does not appear in the same position as type guard parameter `x` [3].
+[function-predicate]
+
+   subtyping.js:85:30
+   85|   check(x: unknown): asserts this is AssertedString; // ERROR
+                                    ^^^^ [2]
+
+References:
+   subtyping.js:84:55
+   84| declare class TypedReceiverInsteadOfParameter extends TypedParameterAssertion {
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:69:30
+   69|   check(x: unknown): asserts x is AssertedString;
+                                    ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:89:22
+
+Cannot extend `BareReceiverAssertion` [1] with `TypedInsteadOfBareReceiver` because in property `check` > the type
+predicate: `AssertedString` [2], a non-type-guard function, is incompatible with type guard [3], which is a type-guard
+function. [function-predicate]
+
+   subtyping.js:89:22
+   89|   check(x: unknown): asserts this is AssertedString; // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   subtyping.js:88:50
+   88| declare class TypedInsteadOfBareReceiver extends BareReceiverAssertion {
+                                                        ^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:89:38
+   89|   check(x: unknown): asserts this is AssertedString; // ERROR
+                                            ^^^^^^^^^^^^^^ [2]
+   subtyping.js:61:22
+   61|   check(x: unknown): asserts this;
+                            ^^^^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:93:22
+
+Cannot extend `StrongerReceiverAssertion` [1] with `BareInsteadOfTypedReceiver` because in property `check` > the type
+predicate: type guard [2], a non-type-guard function, is incompatible with `AssertedString` [3], which is a type-guard
+function. [function-predicate]
+
+   subtyping.js:93:22
+   93|   check(x: unknown): asserts this; // ERROR
+                            ^^^^^^^^^^^^ [2]
+
+References:
+   subtyping.js:92:50
+   92| declare class BareInsteadOfTypedReceiver extends StrongerReceiverAssertion {
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:49:38
+   49|   check(x: unknown): asserts this is AssertedString;
+                                            ^^^^^^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:97:22
+
+Cannot extend `BareParameterAssertion` [1] with `TypedReceiverInsteadOfBareParameter` because in property `check` > the
+type predicate: `AssertedString` [2], a non-type-guard function, is incompatible with type guard [3], which is a
+type-guard function. [function-predicate]
+
+   subtyping.js:97:22
+   97|   check(x: unknown): asserts this is AssertedString; // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   subtyping.js:96:59
+   96| declare class TypedReceiverInsteadOfBareParameter extends BareParameterAssertion {
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:97:38
+   97|   check(x: unknown): asserts this is AssertedString; // ERROR
+                                            ^^^^^^^^^^^^^^ [2]
+   subtyping.js:65:22
+   65|   check(x: unknown): asserts x;
+                            ^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:97:30
+
+Cannot extend `BareParameterAssertion` [1] with `TypedReceiverInsteadOfBareParameter` because in property `check` > the
+type predicate: type guard parameter `this` [2] does not appear in the same position as type guard parameter `x` [3].
+[function-predicate]
+
+   subtyping.js:97:30
+   97|   check(x: unknown): asserts this is AssertedString; // ERROR
+                                    ^^^^ [2]
+
+References:
+   subtyping.js:96:59
+   96| declare class TypedReceiverInsteadOfBareParameter extends BareParameterAssertion {
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:65:30
+   65|   check(x: unknown): asserts x;
+                                    ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- subtyping.js:101:22
+
+Cannot extend `StrongerReceiverAssertion` [1] with `BareParameterInsteadOfTypedReceiver` because in property `check` >
+the type predicate: type guard [2], a non-type-guard function, is incompatible with `AssertedString` [3], which is a
+type-guard function. [function-predicate]
+
+   subtyping.js:101:22
+   101|   check(x: unknown): asserts x; // ERROR
+                             ^^^^^^^^^ [2]
+
+References:
+   subtyping.js:100:59
+   100| declare class BareParameterInsteadOfTypedReceiver extends StrongerReceiverAssertion {
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:49:38
+    49|   check(x: unknown): asserts this is AssertedString;
+                                             ^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- subtyping.js:101:30
+
+Cannot extend `StrongerReceiverAssertion` [1] with `BareParameterInsteadOfTypedReceiver` because in property `check` >
+the type predicate: type guard parameter `x` [2] does not appear in the same position as type guard parameter
+`this` [3]. [function-predicate]
+
+   subtyping.js:101:30
+   101|   check(x: unknown): asserts x; // ERROR
+                                     ^ [2]
+
+References:
+   subtyping.js:100:59
+   100| declare class BareParameterInsteadOfTypedReceiver extends StrongerReceiverAssertion {
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:49:30
+    49|   check(x: unknown): asserts this is AssertedString;
+                                     ^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------------- test_context.js:9:14
 
 This condition is likely truthy.
@@ -2447,145 +3505,136 @@ References:
                           ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:44:3
+Error --------------------------------------------------------------------------------------------- unrecognized.js:45:3
 
 Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
 Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
 
-   unrecognized.js:44:3
-   44|   g(x); // error: `g` needs an annotation
+   unrecognized.js:45:3
+   45|   g(x); // error: `g` needs an annotation
          ^
 
 References:
-   unrecognized.js:43:9
-   43|   const g = assertString;
+   unrecognized.js:44:9
+   44|   const g = assertString;
                ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:49:3
+Error --------------------------------------------------------------------------------------------- unrecognized.js:50:3
 
 Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
 Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
 
-   unrecognized.js:49:3
-   49|   g(x); // error: `g` needs an annotation
+   unrecognized.js:50:3
+   50|   g(x); // error: `g` needs an annotation
          ^
 
 References:
-   unrecognized.js:48:7
-   48|   let g = assertString;
+   unrecognized.js:49:7
+   49|   let g = assertString;
              ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:54:3
+Error --------------------------------------------------------------------------------------------- unrecognized.js:55:3
 
 Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
 Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
 
-   unrecognized.js:54:3
-   54|   g(x); // error: `g` needs an annotation
+   unrecognized.js:55:3
+   55|   g(x); // error: `g` needs an annotation
          ^
 
 References:
-   unrecognized.js:53:24
-   53|   const {assertString: g} = utils;
+   unrecognized.js:54:24
+   54|   const {assertString: g} = utils;
                               ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:59:3
+Error --------------------------------------------------------------------------------------------- unrecognized.js:60:3
 
 Cannot narrow with this call to an assertion function because `o` [1] is not declared with an explicit type annotation.
 Annotate `o` or call the assertion function directly. [unrecognized-assertion-call]
 
-   unrecognized.js:59:3
-   59|   o.assertString(x); // error: `o` needs an annotation
+   unrecognized.js:60:3
+   60|   o.assertString(x); // error: `o` needs an annotation
          ^^^^^^^^^^^^^^
 
 References:
-   unrecognized.js:58:9
-   58|   const o = {assertString};
+   unrecognized.js:59:9
+   59|   const o = {assertString};
                ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:66:3
+Error --------------------------------------------------------------------------------------------- unrecognized.js:67:3
 
 Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
 Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
 
-   unrecognized.js:66:3
-   66|   g(x); // error: `g` needs an annotation
+   unrecognized.js:67:3
+   67|   g(x); // error: `g` needs an annotation
          ^
 
 References:
-   unrecognized.js:63:9
-   63|   const g = <T>(value: T): asserts value is T & string => {
+   unrecognized.js:64:9
+   64|   const g = <T>(value: T): asserts value is T & string => {
                ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:71:4
+Error --------------------------------------------------------------------------------------------- unrecognized.js:72:4
 
 Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
 Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
 
-   unrecognized.js:71:4
-   71|   (g(x), g(x)); // error twice: `g` needs an annotation
+   unrecognized.js:72:4
+   72|   (g(x), g(x)); // error twice: `g` needs an annotation
           ^
 
 References:
-   unrecognized.js:70:9
-   70|   const g = assertString;
+   unrecognized.js:71:9
+   71|   const g = assertString;
                ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- unrecognized.js:71:10
+Error -------------------------------------------------------------------------------------------- unrecognized.js:72:10
 
 Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
 Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
 
-   unrecognized.js:71:10
-   71|   (g(x), g(x)); // error twice: `g` needs an annotation
+   unrecognized.js:72:10
+   72|   (g(x), g(x)); // error twice: `g` needs an annotation
                 ^
 
 References:
-   unrecognized.js:70:9
-   70|   const g = assertString;
+   unrecognized.js:71:9
+   71|   const g = assertString;
                ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:75:3
+Error --------------------------------------------------------------------------------------------- unrecognized.js:76:3
 
 Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
 as `a.b.c`. [unrecognized-assertion-call]
 
-   75|   getAssert()(x); // error: not a dotted name
+   76|   getAssert()(x); // error: not a dotted name
          ^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:79:3
+Error --------------------------------------------------------------------------------------------- unrecognized.js:80:3
 
 Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
 as `a.b.c`. [unrecognized-assertion-call]
 
-   79|   utils['assertString'](x); // error: not a dotted name
+   80|   utils['assertString'](x); // error: not a dotted name
          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------- unrecognized.js:83:3
+Error --------------------------------------------------------------------------------------------- unrecognized.js:84:3
 
 Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
 as `a.b.c`. [unrecognized-assertion-call]
 
-   83|   new C().assertString(x); // error: not a dotted name
+   84|   new C().assertString(x); // error: not a dotted name
          ^^^^^^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------- unrecognized.js:117:3
-
-Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
-Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
-
-   117|   intersected(x); // error: intersection
-          ^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- unrecognized.js:118:3
@@ -2593,8 +3642,8 @@ Error --------------------------------------------------------------------------
 Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
 Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
 
-   118|   overloaded(x); // error: overloaded
-          ^^^^^^^^^^
+   118|   intersected(x); // error: intersection
+          ^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- unrecognized.js:119:3
@@ -2602,42 +3651,51 @@ Error --------------------------------------------------------------------------
 Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
 Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
 
-   119|   g(x); // error: type parameter (TODO: TS narrows through the bound)
-          ^
+   119|   overloaded(x); // error: overloaded
+          ^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- unrecognized.js:124:5
-
-Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
-Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
-
-   unrecognized.js:124:5
-   124|     g(x); // error: `g` needs an annotation
-            ^
-
-References:
-   unrecognized.js:123:56
-   123|   const h: (g: StringAssertion, x: unknown) => void = (g, x) => {
-                                                               ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- unrecognized.js:135:3
+Error -------------------------------------------------------------------------------------------- unrecognized.js:120:3
 
 Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
 Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
 
-   135|   assertionLast(x); // error: the assertion overload wins
-          ^^^^^^^^^^^^^
+   120|   g(x); // error: type parameter (TODO: TS narrows through the bound)
+          ^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:125:5
+
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:125:5
+   125|     g(x); // error: `g` needs an annotation
+            ^
+
+References:
+   unrecognized.js:124:56
+   124|   const h: (g: StringAssertion, x: unknown) => void = (g, x) => {
+                                                               ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- unrecognized.js:136:3
 
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   136|   assertionLast(x); // error: the assertion overload wins
+          ^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:137:3
+
 Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
 as `a.b.c`. [unrecognized-assertion-call]
 
-   136|   utils['assertString'](x); // error: previous speculation does not suppress this call
+   137|   utils['assertString'](x); // error: previous speculation does not suppress this call
           ^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 165 errors
+Found 227 errors

@@ -42,6 +42,7 @@ use flow_common::reason::mk_reason;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_env_builder::assertion_call_target::AssertionTarget;
 use flow_env_builder::assertion_call_target::bare_asserted_argument;
 use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
 use flow_env_builder::assertion_call_target::callee_root_has_declared_type;
@@ -8504,10 +8505,10 @@ fn check_unrecognized_assertion_call(
         root = &inner.object;
     }
     let callee_kind = match root.deref() {
-        // TODO: TS narrows `this.assert(x)` and `super.assert(x)`, so these
-        // should be recognized rather than reported.
-        expression::ExpressionInner::This { .. } | expression::ExpressionInner::Super { .. } => {
-            return;
+        expression::ExpressionInner::This { .. } | expression::ExpressionInner::Super { .. }
+            if dotted =>
+        {
+            UnrecognizedAssertionCallee::UnsupportedType
         }
         expression::ExpressionInner::Identifier {
             loc: (use_loc, _),
@@ -10733,7 +10734,10 @@ fn call_arg_list<'a>(
         .copied();
     let Some(asserted) = assertion.and_then(|assertion| {
         bare_asserted_argument(assertion, &args.arguments)?;
-        Some(assertion.parameter_index)
+        match assertion.target {
+            AssertionTarget::Parameter(index) => Some(index),
+            AssertionTarget::Receiver => None,
+        }
     }) else {
         return arg_list(cx, args);
     };

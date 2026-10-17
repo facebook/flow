@@ -21,6 +21,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::assertion_call_target;
 use flow_env_builder::assertion_call_target::AssertionInfo;
 use flow_env_builder::assertion_call_target::AssertionKind;
+use flow_env_builder::assertion_call_target::AssertionTarget;
 use flow_env_builder::env_api::Refinement;
 use flow_env_builder::env_api::Values;
 use flow_env_builder::env_api::WriteLoc;
@@ -241,7 +242,7 @@ fn print_ssa_assertion_test(contents: &str) -> String {
                 (
                     target.callee_loc,
                     AssertionInfo {
-                        parameter_index: 0,
+                        target: AssertionTarget::Parameter(0),
                         kind: AssertionKind::Bare,
                     },
                 )

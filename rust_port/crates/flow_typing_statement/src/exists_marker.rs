@@ -9,6 +9,7 @@ use std::ops::Deref;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_env_builder::assertion_call_target::AssertionTarget;
 use flow_env_builder::assertion_call_target::bare_asserted_argument;
 use flow_parser::ast;
 use flow_parser::ast::expression;
@@ -108,7 +109,10 @@ impl<'a, 'cx> Marker<'a, 'cx> {
             .get(&call.callee.loc().0)
             .copied()?;
         let asserted = bare_asserted_argument(assertion, &call.arguments.arguments)?;
-        Some((assertion.parameter_index, asserted))
+        match assertion.target {
+            AssertionTarget::Parameter(index) => Some((index, asserted)),
+            AssertionTarget::Receiver => None,
+        }
     }
 }
 

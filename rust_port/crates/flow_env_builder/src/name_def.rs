@@ -39,6 +39,7 @@ use flow_parser::loc_sig::LocSig;
 use flow_parser_utils::type_param_analysis::analyze_type_params;
 
 use crate::assertion_call_target::AssertionInfo;
+use crate::assertion_call_target::AssertionTarget;
 use crate::assertion_call_target::bare_asserted_argument;
 use crate::env_api::AutocompleteHooks;
 use crate::env_api::DefLocType;
@@ -3396,7 +3397,10 @@ impl<'a> DefFinder<'a> {
             .get(callee.loc())
             .copied()
             .filter(|assertion| bare_asserted_argument(*assertion, arguments).is_some())
-            .map(|assertion| assertion.parameter_index);
+            .and_then(|assertion| match assertion.target {
+                AssertionTarget::Parameter(index) => Some(index),
+                AssertionTarget::Receiver => None,
+            });
 
         match &**arguments {
             [ast::expression::ExpressionOrSpread::Expression(expr)]
