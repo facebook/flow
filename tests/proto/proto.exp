@@ -496,5 +496,52 @@ References:
                           ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- setter.js:2:3
 
-Found 35 errors
+Cannot assign object literal to `o.__proto__` because property `__proto__` is missing in object literal [1].
+[prop-missing]
+
+   setter.js:2:3
+   2| o.__proto__ = {}; // error: `__proto__` is missing in the object literal
+        ^^^^^^^^^
+
+References:
+   setter.js:1:11
+   1| const o = {x: 1};
+                ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- setter.js:7:1
+
+Mutating this prototype is unsupported. [cannot-write]
+
+   7| new C().__proto__ = null; // error: unsupported
+      ^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- setter.js:8:1
+
+Mutating this prototype is unsupported. [cannot-write]
+
+   8| C.__proto__ = {}; // error: unsupported
+      ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- setter.js:17:1
+
+Mutating this prototype is unsupported. [cannot-write]
+
+   17| u.__proto__ = {}; // error: unsupported
+       ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- setter.js:20:1
+
+Mutating this prototype is unsupported. [incompatible-use]
+
+   20| i.__proto__ = {}; // error
+       ^^^^^^^^^^^
+
+
+
+Found 40 errors

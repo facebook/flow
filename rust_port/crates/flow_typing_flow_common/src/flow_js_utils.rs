@@ -1207,7 +1207,6 @@ pub fn object_like_op<CX: ContextFamily>(u: &UseT<CX>) -> bool {
         | UseTInner::MethodT(..)
         | UseTInner::LookupT(..)
         | UseTInner::GetProtoT(_, _)
-        | UseTInner::SetProtoT(_, _)
         | UseTInner::SuperT(..)
         | UseTInner::GetKeysT { .. }
         | UseTInner::HasOwnPropT(..)
@@ -1605,7 +1604,6 @@ pub fn error_message_loc_of_upper<CX: ContextFamily>(u: &UseT<CX>) -> ALoc {
         UseTInner::CallElemT(data) => data.reason.loc().dupe(),
         UseTInner::GetStaticsT(reason, _) => reason.loc().dupe(),
         UseTInner::GetProtoT(reason, _) => reason.loc().dupe(),
-        UseTInner::SetProtoT(reason, _) => reason.loc().dupe(),
         UseTInner::ReposLowerT { reason, .. } => reason.loc().dupe(),
         UseTInner::ReposUseT(data) => data.reason.loc().dupe(),
         UseTInner::ConstructorT(data) => data.reason.loc().dupe(),

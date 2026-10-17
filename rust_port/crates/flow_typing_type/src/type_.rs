@@ -2634,7 +2634,6 @@ pub enum UseTInner<CX: ContextFamily = ()> {
     CallElemT(Box<CallElemTData<CX>>),
     GetStaticsT(Reason, type_collector::TypeCollector),
     GetProtoT(Reason, type_collector::TypeCollector),
-    SetProtoT(Reason, Type),
 
     // Repositioning
     ReposLowerT {
@@ -2752,7 +2751,6 @@ impl<CX: ContextFamily> Clone for UseTInner<CX> {
             UseTInner::CallElemT(a) => UseTInner::CallElemT(a.clone()),
             UseTInner::GetStaticsT(a, b) => UseTInner::GetStaticsT(a.dupe(), b.dupe()),
             UseTInner::GetProtoT(a, b) => UseTInner::GetProtoT(a.clone(), b.clone()),
-            UseTInner::SetProtoT(a, b) => UseTInner::SetProtoT(a.clone(), b.clone()),
             UseTInner::ReposLowerT {
                 reason,
                 use_desc,
@@ -2866,7 +2864,6 @@ impl<CX: ContextFamily> PartialEq for UseTInner<CX> {
                 a1 == a2 && b1 == b2
             }
             (UseTInner::GetProtoT(a1, b1), UseTInner::GetProtoT(a2, b2)) => a1 == a2 && b1 == b2,
-            (UseTInner::SetProtoT(a1, b1), UseTInner::SetProtoT(a2, b2)) => a1 == a2 && b1 == b2,
             (
                 UseTInner::ReposLowerT {
                     reason: a1,
@@ -3034,10 +3031,6 @@ impl<CX: ContextFamily> std::hash::Hash for UseTInner<CX> {
                 a.hash(state);
                 b.hash(state);
             }
-            UseTInner::SetProtoT(a, b) => {
-                a.hash(state);
-                b.hash(state);
-            }
             UseTInner::ReposLowerT {
                 reason,
                 use_desc,
@@ -3195,7 +3188,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
                 UseTInner::CallElemT(..) => 14,
                 UseTInner::GetStaticsT(..) => 15,
                 UseTInner::GetProtoT(..) => 16,
-                UseTInner::SetProtoT(..) => 17,
                 UseTInner::ReposLowerT { .. } => 18,
                 UseTInner::ReposUseT(..) => 19,
                 UseTInner::ConstructorT(..) => 20,
@@ -3273,9 +3265,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
             (UseTInner::GetProtoT(a1, b1), UseTInner::GetProtoT(a2, b2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2))
-            }
-            (UseTInner::SetProtoT(a1, b1), UseTInner::SetProtoT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
             (
@@ -3449,7 +3438,6 @@ impl<CX: ContextFamily> std::fmt::Debug for UseTInner<CX> {
             UseTInner::CallElemT(a) => f.debug_tuple("CallElemT").field(a).finish(),
             UseTInner::GetStaticsT(a, b) => f.debug_tuple("GetStaticsT").field(a).field(b).finish(),
             UseTInner::GetProtoT(a, b) => f.debug_tuple("GetProtoT").field(a).field(b).finish(),
-            UseTInner::SetProtoT(a, b) => f.debug_tuple("SetProtoT").field(a).field(b).finish(),
             UseTInner::ReposLowerT {
                 reason,
                 use_desc,
@@ -11800,7 +11788,6 @@ pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
         UseTInner::SetElemT(..) => "SetElemT".to_string(),
         UseTInner::SetPropT(..) => "SetPropT".to_string(),
         UseTInner::SetPrivatePropT(..) => "SetPrivatePropT".to_string(),
-        UseTInner::SetProtoT(..) => "SetProtoT".to_string(),
         UseTInner::SpecializeT(..) => "SpecializeT".to_string(),
         UseTInner::ObjKitT(..) => "ObjKitT".to_string(),
         UseTInner::SuperT(..) => "SuperT".to_string(),

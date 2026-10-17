@@ -545,7 +545,6 @@ pub(super) fn any_propagated<'cx>(
         UseTInner::HasOwnPropT(..)
         | UseTInner::ImplementsT(..)
         | UseTInner::SetPrivatePropT(..)
-        | UseTInner::SetProtoT(..)
         | UseTInner::SuperT(..)
         | UseTInner::ConcretizeTypeAppsT(..) => Ok(true),
     }

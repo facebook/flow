@@ -688,7 +688,6 @@ fn t_of_use_t<'cx>(
         | UseTInner::TestPropT { .. }
         | UseTInner::GetStaticsT(..)
         | UseTInner::GetProtoT(..)
-        | UseTInner::SetProtoT(..)
         | UseTInner::ObjTestProtoT(..)
         | UseTInner::HasOwnPropT(..)
         | UseTInner::LookupT { .. }

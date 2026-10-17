@@ -1554,10 +1554,6 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
             let extra = format!("({}), {}", data.name, kid(tvars, &data.tin));
             p(cx, use_t, true, &extra)
         }
-        UseTInner::SetProtoT(_, arg) => {
-            let extra = kid(tvars, arg);
-            p(cx, use_t, true, &extra)
-        }
         UseTInner::SpecializeT(box SpecializeTData {
             targs: args_opt,
             upper,

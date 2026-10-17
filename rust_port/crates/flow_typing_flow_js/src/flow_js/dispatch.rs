@@ -6207,18 +6207,6 @@ fn __flow_impl<'cx>(
             t.add(proto);
         }
 
-        // ********************
-        // * __proto__ setter *
-        // ********************
-        (TypeInner::AnyT(_, _), UseTInner::SetProtoT(_, _)) => {}
-        (_, UseTInner::SetProtoT(reason_op, _)) => {
-            flow_js_utils::add_output_with_env(
-                cx,
-                env,
-                ErrorMessage::EUnsupportedSetProto(reason_op.loc().dupe()),
-            )?;
-        }
-
         // ********************************************************
         // * instances of classes may have their fields looked up *
         // ********************************************************
@@ -9912,29 +9900,17 @@ fn __flow_impl<'cx>(
                 indexer_fallback: _,
                 try_ts_on_failure,
                 propref: box PropRef::Named { name, .. },
-                lookup_action:
-                    box LookupAction::WriteProp(box WritePropData {
-                        use_op: _,
-                        obj_t: lookup_l,
-                        prop_tout: _,
-                        tin,
-                        write_ctx: _,
-                        mode: _,
-                    }),
+                lookup_action: box LookupAction::WriteProp(_),
                 method_accessible: _,
                 ids: _,
                 ignore_dicts: _,
             }),
         ) if try_ts_on_failure.is_empty() && name == &Name::new("__proto__") => {
             // __proto__ is a getter/setter on Object.prototype
-            rec_flow(
+            flow_js_utils::add_output_with_env(
                 cx,
                 env,
-                trace,
-                (
-                    lookup_l,
-                    &UseT::new(UseTInner::SetProtoT(reason_op.dupe(), tin.dupe())),
-                ),
+                ErrorMessage::EUnsupportedSetProto(reason_op.loc().dupe()),
             )?;
         }
         (

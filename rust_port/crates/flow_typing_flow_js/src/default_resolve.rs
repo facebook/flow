@@ -243,7 +243,6 @@ pub fn default_resolve_touts<C>(
             collector.add(any.dupe());
             Ok(())
         }
-        UseTInner::SetProtoT(..) => Ok(()),
         UseTInner::ReposLowerT { .. } | UseTInner::ReposUseT(..) => Ok(()),
         UseTInner::ConstructorT(data) => resolve(cx, data.tout.dupe()),
         UseTInner::SuperT(..) => Ok(()),

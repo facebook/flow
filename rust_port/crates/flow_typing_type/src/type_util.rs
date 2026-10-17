@@ -973,7 +973,6 @@ pub fn util_use_op_of_use_t<T, CX: ContextFamily>(
         UseTInner::CallElemT(..)
         | UseTInner::GetStaticsT(..)
         | UseTInner::GetProtoT(_, _)
-        | UseTInner::SetProtoT(_, _)
         | UseTInner::MixinT(_, _)
         | UseTInner::ConvertEmptyPropsToMixedT(_, _)
         | UseTInner::DeepReadOnlyT(_, _)
