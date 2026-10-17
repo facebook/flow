@@ -20,17 +20,19 @@ pub async fn exec(
     _cwd: Option<&str>,
     _cmd: &str,
     _args: &[&str],
-) -> CommandResult {
+) -> std::io::Result<CommandResult> {
     panic!("LwtSysUtils.exec is not supported on wasm targets");
 }
 
+/// Fails only if `cmd` could not be spawned (e.g. it is not on `PATH`). A command that runs and
+/// exits nonzero is still `Ok`, with the exit code in `status`.
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn exec(
     env: Option<&[(String, String)]>,
     cwd: Option<&str>,
     cmd: &str,
     args: &[&str],
-) -> CommandResult {
+) -> std::io::Result<CommandResult> {
     let mut command = tokio::process::Command::new(cmd);
     command.args(args);
     if let Some(envs) = env {
@@ -41,13 +43,10 @@ pub async fn exec(
     if let Some(cwd) = cwd {
         command.current_dir(cwd);
     }
-    let output = command
-        .output()
-        .await
-        .expect("LwtSysUtils.exec spawn failed; OCaml propagates as rejected Lwt promise");
-    CommandResult {
+    let output = command.output().await?;
+    Ok(CommandResult {
         stdout: String::from_utf8_lossy(&output.stdout).to_string(),
         stderr: String::from_utf8_lossy(&output.stderr).to_string(),
         status: output.status,
-    }
+    })
 }
