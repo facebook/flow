@@ -349,7 +349,7 @@ fn literal_type_mapper_type_dispatch<'cx>(
             if let DefTInner::ArrT(arr) = def_t.deref()
                 && arr.literal() =>
         {
-            let t = if matches!(r.desc(true), Some(VirtualReasonDesc::RArrayLitUnsound)) {
+            let t = if matches!(r.desc(true), Some(VirtualReasonDesc::RArrayLit)) {
                 non_literal_of_t(&mod_reason_of_t(
                     &|r| r.replace_desc_new(VirtualReasonDesc::RArrayLit),
                     t,
@@ -363,7 +363,7 @@ fn literal_type_mapper_type_dispatch<'cx>(
             if let DefTInner::ObjT(o) = def_t.deref()
                 && o.literal =>
         {
-            let t = if matches!(r.desc(true), Some(VirtualReasonDesc::RObjectLitUnsound)) {
+            let t = if matches!(r.desc(true), Some(VirtualReasonDesc::RObjectLit)) {
                 non_literal_of_t(&mod_reason_of_t(
                     &|r| r.replace_desc_new(VirtualReasonDesc::RObjectLit),
                     t,

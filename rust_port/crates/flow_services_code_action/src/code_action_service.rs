@@ -2231,9 +2231,7 @@ pub fn ast_transforms_of_error(
                     ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
                         lower_array_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
                             VirtualReasonDesc::RObjectLit
-                            | VirtualReasonDesc::RObjectLitUnsound
-                            | VirtualReasonDesc::RArrayLit
-                            | VirtualReasonDesc::RArrayLitUnsound,
+                            | VirtualReasonDesc::RArrayLit,
                         )),
                         upper_array_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(_))),
                         ..
@@ -2241,9 +2239,7 @@ pub fn ast_transforms_of_error(
                     | ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
                         lower_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
                             VirtualReasonDesc::RObjectLit
-                            | VirtualReasonDesc::RObjectLitUnsound
-                            | VirtualReasonDesc::RArrayLit
-                            | VirtualReasonDesc::RArrayLitUnsound,
+                            | VirtualReasonDesc::RArrayLit,
                         )),
                         upper_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(_))),
                         ..
@@ -2251,9 +2247,7 @@ pub fn ast_transforms_of_error(
                     | ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperties {
                         lower_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
                             VirtualReasonDesc::RObjectLit
-                            | VirtualReasonDesc::RObjectLitUnsound
-                            | VirtualReasonDesc::RArrayLit
-                            | VirtualReasonDesc::RArrayLitUnsound,
+                            | VirtualReasonDesc::RArrayLit,
                         )),
                         upper_obj_desc: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Normalized(Elt::Type(_))),
                         ..
@@ -2311,10 +2305,7 @@ pub fn ast_transforms_of_error(
                         definition_loc: lower_obj_loc,
                         type_desc:
                             TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::ReasonDesc(
-                                VirtualReasonDesc::RObjectLit
-                                | VirtualReasonDesc::RObjectLitUnsound
-                                | VirtualReasonDesc::RArrayLit
-                                | VirtualReasonDesc::RArrayLitUnsound,
+                                VirtualReasonDesc::RObjectLit | VirtualReasonDesc::RArrayLit,
                             )),
                         ..
                     },

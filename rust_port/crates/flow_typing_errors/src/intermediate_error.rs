@@ -4393,11 +4393,7 @@ where
                         (
                             ErrorTypeDesc::ReasonDesc(lower_desc),
                             ErrorTypeDesc::Normalized(Elt::Type(_)),
-                        ) if matches!(
-                            lower_desc,
-                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                        ) =>
-                        {
+                        ) if matches!(lower_desc, RObjectLit | RArrayLit) => {
                             vec![
                                 text("annotate "),
                                 friendly::ref_map(
@@ -4412,11 +4408,7 @@ where
                         (
                             ErrorTypeDesc::Normalized(Elt::Type(_)),
                             ErrorTypeDesc::ReasonDesc(upper_desc),
-                        ) if matches!(
-                            upper_desc,
-                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                        ) =>
-                        {
+                        ) if matches!(upper_desc, RObjectLit | RArrayLit) => {
                             vec![
                                 text("annotate "),
                                 friendly::ref_map(
@@ -4462,11 +4454,7 @@ where
                         (
                             ErrorTypeDesc::ReasonDesc(lower_desc),
                             ErrorTypeDesc::Normalized(Elt::Type(_)),
-                        ) if matches!(
-                            lower_desc,
-                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                        ) =>
-                        {
+                        ) if matches!(lower_desc, RObjectLit | RArrayLit) => {
                             vec![
                                 text("annotate "),
                                 friendly::ref_map(
@@ -4480,11 +4468,7 @@ where
                         (
                             ErrorTypeDesc::Normalized(Elt::Type(_)),
                             ErrorTypeDesc::ReasonDesc(upper_desc),
-                        ) if matches!(
-                            upper_desc,
-                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                        ) =>
-                        {
+                        ) if matches!(upper_desc, RObjectLit | RArrayLit) => {
                             vec![
                                 text("annotate "),
                                 friendly::ref_map(
@@ -4545,11 +4529,7 @@ where
                         (
                             ErrorTypeDesc::ReasonDesc(lower_desc),
                             ErrorTypeDesc::Normalized(Elt::Type(_)),
-                        ) if matches!(
-                            lower_desc,
-                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                        ) =>
-                        {
+                        ) if matches!(lower_desc, RObjectLit | RArrayLit) => {
                             vec![
                                 text("annotate "),
                                 friendly::ref_map(
@@ -4563,11 +4543,7 @@ where
                         (
                             ErrorTypeDesc::Normalized(Elt::Type(_)),
                             ErrorTypeDesc::ReasonDesc(upper_desc),
-                        ) if matches!(
-                            upper_desc,
-                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                        ) =>
-                        {
+                        ) if matches!(upper_desc, RObjectLit | RArrayLit) => {
                             vec![
                                 text("annotate "),
                                 friendly::ref_map(
@@ -4626,11 +4602,7 @@ where
                         (
                             ErrorTypeDesc::ReasonDesc(lower_desc),
                             ErrorTypeDesc::Normalized(Elt::Type(_)),
-                        ) if matches!(
-                            lower_desc,
-                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                        ) =>
-                        {
+                        ) if matches!(lower_desc, RObjectLit | RArrayLit) => {
                             vec![
                                 text("annotate "),
                                 friendly::ref_map(
@@ -4644,11 +4616,7 @@ where
                         (
                             ErrorTypeDesc::Normalized(Elt::Type(_)),
                             ErrorTypeDesc::ReasonDesc(upper_desc),
-                        ) if matches!(
-                            upper_desc,
-                            RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
-                        ) =>
-                        {
+                        ) if matches!(upper_desc, RObjectLit | RArrayLit) => {
                             vec![
                                 text("annotate "),
                                 friendly::ref_map(

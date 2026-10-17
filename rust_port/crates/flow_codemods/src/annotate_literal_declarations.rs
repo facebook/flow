@@ -199,9 +199,7 @@ impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
                     if let Some((
                         lower_loc,
                         VirtualReasonDesc::RObjectLit
-                        | VirtualReasonDesc::RObjectLitUnsound
-                        | VirtualReasonDesc::RArrayLit
-                        | VirtualReasonDesc::RArrayLitUnsound,
+                        | VirtualReasonDesc::RArrayLit,
                         upper_ty,
                     )) = extracted
                     {

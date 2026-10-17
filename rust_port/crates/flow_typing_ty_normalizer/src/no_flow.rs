@@ -202,12 +202,9 @@ pub fn type_to_desc_for_errors<'cx>(
     use flow_common::reason::VirtualReasonDesc;
     let desc = flow_typing_type::type_util::desc_of_t(t);
     match desc {
-        Some(
-            desc @ (VirtualReasonDesc::RArrayLit
-            | VirtualReasonDesc::RArrayLitUnsound
-            | VirtualReasonDesc::RObjectLit
-            | VirtualReasonDesc::RObjectLitUnsound),
-        ) => ErrorTypeDesc::ReasonDesc(desc.clone()),
+        Some(desc @ (VirtualReasonDesc::RArrayLit | VirtualReasonDesc::RObjectLit)) => {
+            ErrorTypeDesc::ReasonDesc(desc.clone())
+        }
         // Why do we try to use the printed types? For these non-leaf-node types, it's
         // reference locations can be spread across multiple locations, but the reason infra
         // can only point code reference to one place, instead of multiple places that

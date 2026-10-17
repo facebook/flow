@@ -3442,7 +3442,7 @@ fn merge_object_lit<'cx>(
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
 
-    let reason = reason::mk_obj_lit_reason(as_const, frozen, || false, loc.dupe());
+    let reason = reason::mk_obj_lit_reason(as_const, frozen, loc.dupe());
     let proto_t = match proto {
         None => Type::new(type_::TypeInner::ObjProtoT(reason.dupe())),
         Some((proto_loc, t)) => {
@@ -3485,7 +3485,7 @@ fn merge_obj_spread_lit<'cx>(
     as_const: bool,
     strictness_kind: TypeStrictnessKind,
 ) -> Type {
-    let reason = reason::mk_obj_lit_reason(as_const, frozen, || false, loc.dupe());
+    let reason = reason::mk_obj_lit_reason(as_const, frozen, loc.dupe());
     // TODO: fix spread to use provided __proto__ prop
     let merge_slice =
         |cx: &mut Context<'cx>,

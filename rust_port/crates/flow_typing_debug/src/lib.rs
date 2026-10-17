@@ -392,7 +392,7 @@ fn dump_value_as_type_reference(
 fn dump_expression_reference(reference: &ExpressionReferenceData<ALoc>) -> String {
     let description = match &reference.kind {
         ExpressionReferenceKind::Code(code) => format!("RCode({code:?})"),
-        ExpressionReferenceKind::ObjectLiteral => "RObjectLitUnsound".to_string(),
+        ExpressionReferenceKind::ObjectLiteral => "RObjectLit".to_string(),
         ExpressionReferenceKind::ArrayLiteral => "RArrayLit".to_string(),
         ExpressionReferenceKind::Function(kind) => match kind {
             ExpressionFunctionKind::Normal => "RFunction(RNormal)".to_string(),

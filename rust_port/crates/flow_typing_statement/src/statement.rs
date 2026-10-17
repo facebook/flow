@@ -5881,7 +5881,7 @@ fn object_<'a>(
         }))
     };
     let literal = !frozen && !as_const && *has_hint.get_forced(cx);
-    let reason = mk_obj_lit_reason(as_const, frozen, || literal, loc.dupe());
+    let reason = mk_obj_lit_reason(as_const, frozen, loc.dupe());
     // Use the same reason for proto and the ObjT so we can walk the proto chain
     // and use the root proto reason to build an error.
     let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
@@ -7229,8 +7229,6 @@ fn expression_<'a>(
                     let literal = !as_const && *has_hint.get_forced(cx);
                     let reason = if as_const {
                         mk_reason(VirtualReasonDesc::RArray, loc.dupe())
-                    } else if literal {
-                        mk_reason(VirtualReasonDesc::RArrayLitUnsound, loc.dupe())
                     } else {
                         mk_reason(VirtualReasonDesc::RArrayLit, loc.dupe())
                     };

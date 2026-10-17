@@ -38,9 +38,7 @@ use crate::get_def_types::SinglePropertyDefInfo;
 pub fn get_object_literal_loc(ty: &Type) -> Option<ALoc> {
     let reason_desc = type_util::reason_of_t(ty).desc(false);
     match reason_desc {
-        Some(VirtualReasonDesc::RObjectLit | VirtualReasonDesc::RObjectLitUnsound) => {
-            Some(type_util::def_loc_of_t(ty).dupe())
-        }
+        Some(VirtualReasonDesc::RObjectLit) => Some(type_util::def_loc_of_t(ty).dupe()),
         _ => None,
     }
 }

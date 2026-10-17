@@ -5800,7 +5800,7 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::ObjT(_))
                 && matches!(
                     lreason.desc(true),
-                    Some(VirtualReasonDesc::RObjectLit | VirtualReasonDesc::RObjectLitUnsound)
+                    Some(VirtualReasonDesc::RObjectLit)
                 )
                 && let DefTInner::InstanceT(inst) = ud.deref()
                 && matches!(inst.inst.inst_kind, InstanceKind::RecordKind { .. })
