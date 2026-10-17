@@ -29,7 +29,6 @@ use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::ReasonDesc;
 use flow_common::reason::VirtualReasonDesc;
-use flow_common::reason::is_literal_object_reason;
 use flow_common::subst_name;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;

@@ -858,6 +858,7 @@ fn type_of_hint_decomposition<'cx>(
             None,
             None,
             Type::new(TypeInner::FunProtoT(reason.dupe())),
+            true,
         );
         let type_guard = type_guard.as_ref().map(|tg| match tg {
             PredicateKind::TypeGuardKind(param_loc, param_name) => TypeGuard::new(TypeGuardInner {
@@ -1516,6 +1517,7 @@ fn type_of_hint_decomposition<'cx>(
                             Rc::from([]),
                             Type::new(TypeInner::OpenT(tout)),
                             flow_common::reason::mk_id() as i32,
+                            false,
                         ));
                         speculation_flow::resolved_lower_flow_unsafe(
                             cx,

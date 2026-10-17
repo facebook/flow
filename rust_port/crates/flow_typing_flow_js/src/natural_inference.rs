@@ -19,7 +19,6 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::is_literal_array_reason;
-use flow_common::reason::is_literal_object_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::VariableKind;
 use flow_typing_context::Context;
@@ -57,6 +56,7 @@ use flow_typing_type::type_::property;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_util::mod_reason_of_t;
+use flow_typing_type::type_util::non_literal_of_t;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_visitors::type_mapper;
 use flow_typing_visitors::type_mapper::TypeMapper;
@@ -357,10 +357,14 @@ fn literal_type_mapper_type_dispatch<'cx>(
             LiteralMapAction::TypeDefault(t)
         }
         TypeInner::DefT(r, def_t)
-            if matches!(def_t.deref(), DefTInner::ObjT(_)) && is_literal_object_reason(r) =>
+            if let DefTInner::ObjT(o) = def_t.deref()
+                && o.literal =>
         {
             let t = if matches!(r.desc(true), Some(VirtualReasonDesc::RObjectLitUnsound)) {
-                mod_reason_of_t(&|r| r.replace_desc_new(VirtualReasonDesc::RObjectLit), t)
+                non_literal_of_t(&mod_reason_of_t(
+                    &|r| r.replace_desc_new(VirtualReasonDesc::RObjectLit),
+                    t,
+                ))
             } else {
                 t.dupe()
             };
@@ -533,7 +537,7 @@ fn is_literal_type<'cx>(cx: &mut Context<'cx>, seen: &mut BTreeSet<i32>, t: &Typ
         },
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::ArrT(_) => is_literal_array_reason(r),
-            DefTInner::ObjT(_) => is_literal_object_reason(r),
+            DefTInner::ObjT(o) => o.literal,
             DefTInner::FunT(_, ft) => ft.literal,
             DefTInner::SingletonStrT {
                 from_annot: false, ..
@@ -751,10 +755,13 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
                     _ => self.type_as_literal_type_mapper(cx, map_cx, t),
                 }
             }
-            TypeInner::DefT(r, def_t) if let DefTInner::ObjT(_) = def_t.deref() => {
-                if is_literal_object_reason(r) && self.reason_def_loc_within_call(r) {
+            TypeInner::DefT(r, def_t) if let DefTInner::ObjT(o) = def_t.deref() => {
+                if o.literal && self.reason_def_loc_within_call(r) {
                     let t = self.type_as_literal_type_mapper(cx, map_cx, t);
-                    mod_reason_of_t(&|r| r.replace_desc(VirtualReasonDesc::RObject), &t)
+                    non_literal_of_t(&mod_reason_of_t(
+                        &|r| r.replace_desc(VirtualReasonDesc::RObject),
+                        &t,
+                    ))
                 } else {
                     t
                 }

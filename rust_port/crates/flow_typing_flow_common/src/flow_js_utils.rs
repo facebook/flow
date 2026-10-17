@@ -3321,6 +3321,7 @@ pub fn obj_key_mirror<'cx>(
                 call_t: o.call_t,
                 reachable_targs: o.reachable_targs.dupe(),
                 strictness_kind: o.strictness_kind,
+                literal: false,
             }
             .into(),
         )),
@@ -3399,6 +3400,7 @@ pub fn namespace_type<'cx>(
         Some(props),
         None,
         proto,
+        false,
     );
     namespace_type_with_values_type(cx, namespace_symbol, values_type, types)
 }
@@ -4801,6 +4803,7 @@ pub mod cjs_require_t_kit {
                         Some(value_props),
                         None,
                         proto,
+                        false,
                     );
                     let types_tmap = cx.generate_property_map(type_props);
                     Type::new(TypeInner::NamespaceT(Rc::new(NamespaceType {
@@ -4993,6 +4996,7 @@ pub mod import_module_ns_t_kit {
             Some(value_props),
             None,
             proto,
+            false,
         );
         let types_tmap = cx.generate_property_map(type_props);
         Ok((values_type, types_tmap))
@@ -8378,6 +8382,7 @@ pub fn objt_to_obj_rest<'cx>(
     reason_op: &Reason,
     reason_obj: &Reason,
     xs: &[flow_data_structure_wrapper::smol_str::FlowSmolStr],
+    literal: bool,
 ) -> Result<Type, FlowJsException> {
     use flow_common::polarity::Polarity;
     use flow_common::reason::Name;
@@ -8451,6 +8456,7 @@ pub fn objt_to_obj_rest<'cx>(
         Some(props),
         None,
         proto,
+        literal,
     ))
 }
 

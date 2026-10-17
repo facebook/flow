@@ -1648,7 +1648,7 @@ fn __flow_impl<'cx>(
                 propref: _,
                 method_action: _,
             })
-            | UseTInner::ObjRestT(_, _, _, _)
+            | UseTInner::ObjRestT(_, _, _, _, _)
             | UseTInner::SetElemT(..)
             | UseTInner::GetElemT(..)
             | UseTInner::CallElemT(..)
@@ -1761,7 +1761,7 @@ fn __flow_impl<'cx>(
                 propref: _,
                 method_action: _,
             })
-            | UseTInner::ObjRestT(_, _, _, _)
+            | UseTInner::ObjRestT(_, _, _, _, _)
             | UseTInner::SetElemT(..)
             | UseTInner::GetElemT(..)
             | UseTInner::CallElemT(..)
@@ -6669,9 +6669,10 @@ fn __flow_impl<'cx>(
         // *************************
         // * objects can be copied *
         // *************************
-        (TypeInner::DefT(reason_obj, def_t), UseTInner::ObjRestT(reason_op, xs, t, id))
-            if let DefTInner::ObjT(o) = def_t.deref() =>
-        {
+        (
+            TypeInner::DefT(reason_obj, def_t),
+            UseTInner::ObjRestT(reason_op, xs, t, id, literal),
+        ) if let DefTInner::ObjT(o) = def_t.deref() => {
             let props_tmap = o.props_tmap.dupe();
             let obj_kind = &o.flags.obj_kind;
             let reachable_targs = &o.reachable_targs;
@@ -6689,6 +6690,7 @@ fn __flow_impl<'cx>(
                             reason_op,
                             reason_obj,
                             &xs_smol,
+                            *literal,
                         )?;
                         rec_flow_t(cx, env, trace, unknown_use(), (&rest_obj, t))?;
                     }
@@ -6697,7 +6699,7 @@ fn __flow_impl<'cx>(
                 Ok::<(), FlowJsException>(())
             })?;
         }
-        (TypeInner::DefT(reason, def_t), UseTInner::ObjRestT(reason_op, xs, t, _))
+        (TypeInner::DefT(reason, def_t), UseTInner::ObjRestT(reason_op, xs, t, _, literal))
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
         {
             let super_ = &inst_t.super_;
@@ -6709,6 +6711,7 @@ fn __flow_impl<'cx>(
                     xs.clone(),
                     tvar.dupe(),
                     flow_common::reason::mk_id() as i32,
+                    *literal,
                 ));
                 rec_flow(
                     cx,
@@ -6736,6 +6739,7 @@ fn __flow_impl<'cx>(
                 reason_op,
                 reason,
                 &xs_smol,
+                *literal,
             );
             // Combine super and own props.
             let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::ObjectSpread {
@@ -6745,6 +6749,7 @@ fn __flow_impl<'cx>(
             let spread_target = object::spread::Target::Value {
                 make_seal: obj_type::mk_seal(false, false),
                 strictness_kind: cx.type_strictness_kind(),
+                literal: *literal,
             };
             let spread_state = object::spread::State {
                 todo_rev: flow_data_structure_wrapper::list::FlowOcamlList::unit(
@@ -6777,7 +6782,7 @@ fn __flow_impl<'cx>(
             })?;
             rec_flow_t(cx, env, trace, use_op, (&o2, t))?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::ObjRestT(reason, _, t, _)) => {
+        (TypeInner::AnyT(_, src), UseTInner::ObjRestT(reason, _, t, _, _)) => {
             rec_flow_t(
                 cx,
                 env,
@@ -6786,7 +6791,7 @@ fn __flow_impl<'cx>(
                 (&any_t::why(*src, reason.dupe()), t),
             )?;
         }
-        (TypeInner::ObjProtoT(_), UseTInner::ObjRestT(reason, _, t, _)) => {
+        (TypeInner::ObjProtoT(_), UseTInner::ObjRestT(reason, _, t, _, literal)) => {
             let obj = obj_type::mk_with_proto(
                 cx,
                 reason.dupe(),
@@ -6796,13 +6801,14 @@ fn __flow_impl<'cx>(
                 None,
                 None,
                 l.dupe(),
+                *literal,
             );
             rec_flow_t(cx, env, trace, unknown_use(), (&obj, t))?;
         }
-        (TypeInner::DefT(_, def_t), UseTInner::ObjRestT(reason, _, t, _))
+        (TypeInner::DefT(_, def_t), UseTInner::ObjRestT(reason, _, t, _, literal))
             if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
         {
-            let o = obj_type::mk(ObjKind::Exact, cx, reason.dupe());
+            let o = obj_type::mk(ObjKind::Exact, cx, reason.dupe(), *literal);
             rec_flow_t(cx, env, trace, unknown_use(), (&o, t))?;
         }
         // *******************************************
@@ -8522,6 +8528,7 @@ fn __flow_impl<'cx>(
                 proto_t: _,
                 reachable_targs: _,
                 strictness_kind: _,
+                literal: _,
             } = obj.as_ref();
             let proto_props = cx.generate_property_map(properties::PropertiesMap::new());
             structural_subtype(

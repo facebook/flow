@@ -43,6 +43,7 @@ pub fn mk_with_proto(
     props: Option<properties::PropertiesMap>,
     id: Option<properties::Id>,
     proto: Type,
+    literal: bool,
 ) -> Type {
     mk_with_proto_and_strictness(
         cx,
@@ -54,6 +55,7 @@ pub fn mk_with_proto(
         id,
         proto,
         cx.type_strictness_kind(),
+        literal,
     )
 }
 
@@ -67,6 +69,7 @@ pub fn mk_with_proto_and_strictness(
     id: Option<properties::Id>,
     proto: Type,
     strictness_kind: TypeStrictnessKind,
+    literal: bool,
 ) -> Type {
     let flags = Flags {
         obj_kind,
@@ -93,11 +96,12 @@ pub fn mk_with_proto_and_strictness(
             pmap,
             proto,
             strictness_kind,
+            literal,
         )))),
     ))
 }
 
-pub fn mk(obj_kind: ObjKind, cx: &mut Context, reason: Reason) -> Type {
+pub fn mk(obj_kind: ObjKind, cx: &mut Context, reason: Reason, literal: bool) -> Type {
     mk_with_proto(
         cx,
         reason.dupe(),
@@ -107,6 +111,7 @@ pub fn mk(obj_kind: ObjKind, cx: &mut Context, reason: Reason) -> Type {
         None,
         None,
         obj_proto::make(reason),
+        literal,
     )
 }
 

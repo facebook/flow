@@ -578,6 +578,7 @@ pub mod object_expression_acc {
             as_const: bool,
             frozen: bool,
             default_proto: Type,
+            literal: bool,
         ) -> Result<Type, JobError> {
             use object::spread;
 
@@ -606,6 +607,7 @@ pub mod object_expression_acc {
                         Some(slice_pmap),
                         None,
                         proto,
+                        literal,
                     );
                     if obj_key_autocomplete_flag {
                         let LazyHintT(_has_hint, lazy_hint) =
@@ -698,6 +700,7 @@ pub mod object_expression_acc {
                     let target = spread::Target::Value {
                         make_seal: flow_typing_flow_common::obj_type::mk_seal(frozen, as_const),
                         strictness_kind: cx.type_strictness_kind(),
+                        literal,
                     };
                     let tool = object::ResolveTool::Resolve(object::Resolve::Next);
                     let state = spread::State {
@@ -5876,7 +5879,8 @@ fn object_<'a>(
             *has_hint.get_forced(cx) || natural_inference::loc_has_hint(cx, &loc)
         }))
     };
-    let reason = mk_obj_lit_reason(as_const, frozen, || *has_hint.get_forced(cx), loc.dupe());
+    let literal = !frozen && !as_const && *has_hint.get_forced(cx);
+    let reason = mk_obj_lit_reason(as_const, frozen, || literal, loc.dupe());
     // Use the same reason for proto and the ObjT so we can walk the proto chain
     // and use the root proto reason to build an error.
     let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
@@ -6067,7 +6071,7 @@ fn object_<'a>(
             }
         },
     )?;
-    let t = acc.mk_object_from_spread_acc(cx, reason, as_const, frozen, obj_proto)?;
+    let t = acc.mk_object_from_spread_acc(cx, reason, as_const, frozen, obj_proto, literal)?;
     Ok((t, prop_asts))
 }
 
@@ -7087,7 +7091,10 @@ fn expression_<'a>(
                     props_loc.dupe(),
                     &props_obj.properties,
                 )?;
-                let props_t = mod_reason_of_t(&|r: Reason| r.replace_desc(None), &props_t);
+                let props_t = non_literal_of_t(&mod_reason_of_t(
+                    &|r: Reason| r.replace_desc(None),
+                    &props_t,
+                ));
                 let use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::RecordCreate(Box::new(
                     RecordCreateData {
                         op: mk_expression_reason(e),
@@ -12755,6 +12762,7 @@ fn jsx_fragment<'a>(
                     Some(props_map),
                     None,
                     proto,
+                    true,
                 )
             }
         }
@@ -13576,7 +13584,7 @@ pub fn jsx_mk_props<'a>(
         }
         _ => acc,
     };
-    let t = acc.mk_object_from_spread_acc(cx, reason_props, false, false, proto)?;
+    let t = acc.mk_object_from_spread_acc(cx, reason_props, false, false, proto, true)?;
     Ok((t, attributes, unresolved_params, children))
 }
 
@@ -14494,6 +14502,7 @@ fn static_method_call_object<'a>(
                 None,
                 None,
                 proto,
+                false,
             );
             (
                 t,
@@ -14597,6 +14606,7 @@ fn static_method_call_object<'a>(
                 Some(props),
                 None,
                 proto,
+                false,
             );
             (
                 t,
@@ -16101,6 +16111,7 @@ pub fn mk_class_sig<'a>(
                             Some(props),
                             None,
                             null_proto,
+                            false,
                         );
                         let param = flow_typing_loc_env::func_stmt_config_types::Param {
                             t: obj_t.dupe(),
@@ -18905,6 +18916,7 @@ pub fn mk_record_sig<'a>(
                             Some(props),
                             None,
                             null_proto,
+                            false,
                         );
                         let param = flow_typing_loc_env::func_stmt_config_types::Param {
                             t: obj_t.dupe(),
@@ -20422,6 +20434,7 @@ pub fn mk_func_sig<'a>(
             Some(props),
             None,
             Type::new(TypeInner::FunProtoT(reason.dupe())),
+            literal,
         )
     };
     let effect = match effect_ {

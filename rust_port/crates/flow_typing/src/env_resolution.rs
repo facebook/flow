@@ -719,7 +719,14 @@ fn resolve_hint<'cx>(
                     obj_reason.dupe(),
                     false,
                     move |cx: &mut Context<'_>| {
-                        acc.mk_object_from_spread_acc(cx, obj_reason, false, false, default_proto)
+                        acc.mk_object_from_spread_acc(
+                            cx,
+                            obj_reason,
+                            false,
+                            false,
+                            default_proto,
+                            false,
+                        )
                     },
                 )
             }
@@ -1015,6 +1022,7 @@ fn resolve_function_statics<'cx>(
         Some(props),
         None,
         Type::new(TypeInner::FunProtoT(reason)),
+        false,
     )
 }
 
@@ -1656,7 +1664,7 @@ fn resolve_binding<'cx>(
                         })
                     },
                 )?;
-                Ok(acc.mk_object_from_spread_acc(cx, obj_reason, false, false, obj_proto)?)
+                Ok(acc.mk_object_from_spread_acc(cx, obj_reason, false, false, obj_proto, false)?)
             }
 
             mk_obj(

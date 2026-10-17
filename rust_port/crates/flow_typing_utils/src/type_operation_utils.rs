@@ -1762,6 +1762,7 @@ pub mod special_cased_functions {
                         None,
                         None,
                         proto,
+                        false,
                     );
                     assign_from_after_concretization(
                         cx, env, reason, fix_cache, &o, use_op, reason_op, to_obj, t, kind,

@@ -1666,23 +1666,6 @@ pub fn is_instantiable_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     }
 }
 
-pub fn is_literal_object_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
-    match r.desc(true) {
-        Some(
-            VirtualReasonDesc::RObjectLitUnsound
-            | VirtualReasonDesc::RObjectPatternRestProp
-            | VirtualReasonDesc::RFunction(_)
-            | VirtualReasonDesc::RReactProps
-            | VirtualReasonDesc::RReactElement { .. }
-            | VirtualReasonDesc::RJSXElementProps(_),
-        ) => true,
-        Some(VirtualReasonDesc::RStatics(inner)) => {
-            matches!(&**inner, VirtualReasonDesc::RFunction(_))
-        }
-        _ => false,
-    }
-}
-
 pub fn is_literal_array_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     match r.desc(true) {
         Some(

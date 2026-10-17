@@ -108,6 +108,7 @@ pub fn mk_object_type<'cx>(
     proto: Type,
     generics: object::GenericSpreadId,
     strictness_kind: TypeStrictnessKind,
+    literal: bool,
 ) -> Type {
     let reason = if invalidate_aliases {
         reason
@@ -157,6 +158,7 @@ pub fn mk_object_type<'cx>(
                     id,
                     proto,
                     strictness_kind,
+                    literal,
                 )))),
             ));
             if wrap_on_exact_obj && obj_type::is_exact(&flags.obj_kind) {
@@ -221,6 +223,7 @@ fn object_type_of_slice<'cx>(cx: &mut Context<'cx>, slice: &object::Slice) -> Ty
         generics,
         interface,
         reachable_targs,
+        literal,
     } = slice;
     let id = cx.generate_property_map(props.clone());
     mk_object_type(
@@ -237,6 +240,7 @@ fn object_type_of_slice<'cx>(cx: &mut Context<'cx>, slice: &object::Slice) -> Ty
         Type::new(TypeInner::ObjProtoT(reason.dupe())),
         generics.clone(),
         *strictness_kind,
+        *literal,
     )
 }
 
@@ -417,6 +421,7 @@ pub fn object_slice<'cx>(
     reachable_targs: Rc<[(Type, Polarity)]>,
     generics: object::GenericSpreadId,
     strictness_kind: TypeStrictnessKind,
+    literal: bool,
 ) -> object::Slice {
     let props_map = cx.find_props(id);
     let props: properties::PropertiesMap = props_map
@@ -445,6 +450,7 @@ pub fn object_slice<'cx>(
         generics,
         interface,
         reachable_targs,
+        literal,
     }
 }
 
@@ -539,6 +545,7 @@ fn spread2<'cx>(
     use_op: &UseOp,
     reason: &Reason,
     allow_inexact: bool,
+    literal: bool,
     (
         _inline1,
         inexact_slice1,
@@ -551,6 +558,7 @@ fn spread2<'cx>(
             generics: generics1,
             interface: _,
             reachable_targs: targs1,
+            literal: _,
         },
     ): &(bool, Option<object::Slice>, object::Slice),
     (
@@ -565,6 +573,7 @@ fn spread2<'cx>(
             generics: generics2,
             interface: _,
             reachable_targs: targs2,
+            literal: _,
         },
     ): &(bool, Option<object::Slice>, object::Slice),
 ) -> Result<(bool, Option<object::Slice>, object::Slice), FlowJsException> {
@@ -779,6 +788,7 @@ fn spread2<'cx>(
                 generics,
                 interface: None,
                 reachable_targs: reachable_targs.into(),
+                literal,
             },
         )),
         Err(e) => Err(FlowJsException::Speculative(SpeculativeError(e))),
@@ -797,6 +807,7 @@ pub fn spread<'cx>(
     reason: &Reason,
     allow_inexact: bool,
     strictness_kind: TypeStrictnessKind,
+    literal: bool,
     nel: (
         object::spread::AccElement,
         flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement>,
@@ -837,6 +848,7 @@ pub fn spread<'cx>(
                             generics: inline.generics.clone(),
                             interface: None,
                             reachable_targs: inline.reachable_targs.dupe(),
+                            literal,
                         },
                     ))
                 }
@@ -850,7 +862,7 @@ pub fn spread<'cx>(
         let mut rest = xs.dupe();
         rest.drop_first();
         merge_result(
-            |a, b| spread2(dict_check, cx, use_op, reason, allow_inexact, a, b),
+            |a, b| spread2(dict_check, cx, use_op, reason, allow_inexact, literal, a, b),
             resolved_of_acc_element,
             x,
             (x1, rest),
@@ -873,6 +885,7 @@ pub fn spread_mk_object<'cx>(
         generics,
         interface: _,
         reachable_targs,
+        literal: _,
     } = slice;
     let mk_dro = |t: Type| -> Type {
         match &flags.react_dro {
@@ -942,6 +955,7 @@ pub fn spread_mk_object<'cx>(
         proto,
         generics,
         target.strictness_kind().join(strictness_kind),
+        target.literal(),
     )
 }
 
@@ -1138,6 +1152,7 @@ pub fn object_spread_with_env<'cx, A>(
         &reason,
         matches!(options, object::spread::Target::Annot { .. }),
         options.strictness_kind(),
+        options.literal(),
         (resolved, acc),
     ) {
         Ok(result) => {
@@ -1233,6 +1248,7 @@ fn check_config2<'cx>(
         proto,
         generics,
         slice.strictness_kind,
+        slice.literal,
     );
     (t, duplicate_props_in_spread)
 }
@@ -1397,6 +1413,7 @@ pub fn object_rest_with_env<'cx, A>(
                     generics: generics1,
                     interface,
                     reachable_targs,
+                    literal: literal1,
                 }: &object::Slice,
                 slice2 @ object::Slice {
                     reason: r2,
@@ -1407,6 +1424,7 @@ pub fn object_rest_with_env<'cx, A>(
                     generics: generics2,
                     interface: _,
                     reachable_targs: _,
+                    literal: _,
                 }: &object::Slice|
      -> Result<Type, FlowJsException> {
         let dict1 = obj_type::get_dict_opt(&flags1.obj_kind);
@@ -1557,9 +1575,9 @@ pub fn object_rest_with_env<'cx, A>(
         let id = cx.generate_property_map(props);
         let proto = Type::new(TypeInner::ObjProtoT(r1.dupe()));
         let call = None;
-        let (rest_reason, rest_interface) = match merge_mode {
-            object::rest::MergeMode::Omit => (reason.dupe(), interface.clone()),
-            _ => (r1.dupe(), None),
+        let (rest_reason, rest_interface, rest_literal) = match merge_mode {
+            object::rest::MergeMode::Omit => (reason.dupe(), interface.clone(), false),
+            _ => (r1.dupe(), None, *literal1),
         };
         Ok(mk_object_type(
             cx,
@@ -1577,6 +1595,7 @@ pub fn object_rest_with_env<'cx, A>(
             proto,
             generics.clone(),
             *strictness_kind,
+            rest_literal,
         ))
     };
     match state {
@@ -1635,6 +1654,7 @@ pub fn object_make_exact<'cx>(
                                generics,
                                interface,
                                reachable_targs,
+                               literal,
                            }: &object::Slice|
      -> Result<Type, FlowJsException> {
         match interface {
@@ -1702,6 +1722,7 @@ pub fn object_make_exact<'cx>(
                     proto,
                     generics.clone(),
                     *strictness_kind,
+                    *literal,
                 ))
             }
         }
@@ -1739,6 +1760,7 @@ pub fn object_read_only<'cx>(
                                    generics,
                                    interface,
                                    reachable_targs,
+                                   literal,
                                }: &object::Slice|
      -> Type {
         let props_map = props.ident_map(|p| property::with_polarity(p, polarity));
@@ -1756,9 +1778,9 @@ pub fn object_read_only<'cx>(
         let id = cx.generate_property_map(props_map);
         let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
         // Avoid referring directly to the $ReadOnly keyword
-        let reason = match reason.desc(false) {
-            Some(VirtualReasonDesc::RReadOnlyType) => r.dupe(),
-            _ => reason.dupe(),
+        let (reason, literal) = match reason.desc(false) {
+            Some(VirtualReasonDesc::RReadOnlyType) => (r.dupe(), *literal),
+            _ => (reason.dupe(), false),
         };
         mk_object_type(
             cx,
@@ -1774,6 +1796,7 @@ pub fn object_read_only<'cx>(
             proto,
             generics.clone(),
             *strictness_kind,
+            literal,
         )
     };
     let mapped: Vec<Type> = x.iter().map(mk_read_only_object).collect();
@@ -1814,6 +1837,7 @@ pub fn object_update_optionality<'cx>(
                          generics,
                          interface,
                          reachable_targs,
+                         literal,
                      }: &object::Slice|
      -> Type {
         let polarity_for = |orig: Polarity| {
@@ -1851,14 +1875,14 @@ pub fn object_update_optionality<'cx>(
         let call = None;
         let id = cx.generate_property_map(props_map);
         let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
-        let reason = match (reason.desc(false), kind) {
+        let (reason, literal) = match (reason.desc(false), kind) {
             (Some(VirtualReasonDesc::RPartialOf(_)), ObjectUpdateOptionalityKind::Partial) => {
-                r.dupe()
+                (r.dupe(), *literal)
             }
             (Some(VirtualReasonDesc::RRequiredOf(_)), ObjectUpdateOptionalityKind::Required) => {
-                r.dupe()
+                (r.dupe(), *literal)
             }
-            _ => reason.dupe(),
+            _ => (reason.dupe(), false),
         };
         let op_kind = match kind {
             ObjectUpdateOptionalityKind::Partial => flow_common::subst_name::OpKind::Partial,
@@ -1878,6 +1902,7 @@ pub fn object_update_optionality<'cx>(
             proto,
             generics.clone(),
             *strictness_kind,
+            literal,
         )
     };
     let mapped: Vec<Type> = x.iter().map(mk_object).collect();
@@ -1920,6 +1945,7 @@ pub fn intersect2<'cx>(
         generics: generics1,
         interface: _,
         reachable_targs: targs1,
+        literal: _,
     }: &object::Slice,
     object::Slice {
         reason: r2,
@@ -1930,6 +1956,7 @@ pub fn intersect2<'cx>(
         generics: generics2,
         interface: _,
         reachable_targs: targs2,
+        literal: _,
     }: &object::Slice,
 ) -> (
     properties::PropertiesMap,
@@ -2050,6 +2077,7 @@ pub fn intersect2_with_reason<'cx>(
         generics,
         interface: None,
         reachable_targs,
+        literal: false,
     }
 }
 
@@ -2172,6 +2200,7 @@ pub fn interface_slice<'cx>(
         Rc::from([]),
         generics,
         strictness_kind,
+        false,
     )
 }
 
@@ -2265,6 +2294,11 @@ fn resolve_with_env<'cx, A>(
     t: &Type,
 ) -> Result<A, FlowJsException> {
     let dict_polarity_override = object_tool_dict_polarity_override(tool);
+    let literal = match tool {
+        object::Tool::Spread(box (target, _)) => target.literal(),
+        object::Tool::ReactConfig(box ObjectToolReactConfigData { literal, .. }) => *literal,
+        _ => false,
+    };
     let (t_generic_id, t) = {
         fn loop_generic<'cx>(
             cx: &mut Context<'cx>,
@@ -2315,6 +2349,7 @@ fn resolve_with_env<'cx, A>(
                     obj.reachable_targs.dupe(),
                     t_generic_id,
                     obj.strictness_kind,
+                    obj.literal,
                 ));
                 return resolved(
                     next,
@@ -2464,6 +2499,7 @@ fn resolve_with_env<'cx, A>(
                     generics: t_generic_id,
                     interface: None,
                     reachable_targs: Rc::from([]),
+                    literal,
                 });
                 return resolved(
                     next,
@@ -2498,6 +2534,7 @@ fn resolve_with_env<'cx, A>(
                     generics: t_generic_id,
                     interface: None,
                     reachable_targs: Rc::from([]),
+                    literal,
                 });
                 return resolved(
                     next,
@@ -2536,6 +2573,7 @@ fn resolve_with_env<'cx, A>(
                             generics: t_generic_id.clone(),
                             interface: None,
                             reachable_targs: Rc::from([]),
+                            literal,
                         })
                     }
                     _ => {
@@ -2557,6 +2595,7 @@ fn resolve_with_env<'cx, A>(
                             generics: t_generic_id.clone(),
                             interface: None,
                             reachable_targs: Rc::from([]),
+                            literal,
                         })
                     }
                 };
@@ -2907,6 +2946,7 @@ pub fn super_<'cx, A>(
                 generics,
                 interface: Some((static_.dupe(), inst.clone())),
                 reachable_targs,
+                literal: acc.literal,
             };
             let resolve_tool = object::ResolveTool::Super(acc, Rc::new(resolve_tool));
             recurse(cx, env, use_op, reason, resolve_tool, tool, super_t.dupe())
@@ -3105,6 +3145,7 @@ pub fn map_object<'cx>(
         generics,
         interface,
         reachable_targs,
+        literal: _,
     } = slice;
     let mk_prop_type = |cx: &mut Context<'cx>,
                         key_t: Type,
@@ -3459,6 +3500,7 @@ pub fn map_object<'cx>(
         proto,
         generics.clone(),
         *strictness_kind,
+        false,
     ))
 }
 

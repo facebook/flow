@@ -423,6 +423,7 @@ pub fn mapped_type_of_keys<'cx>(
         generics,
         interface,
         reachable_targs: Rc::from([]),
+        literal: false,
     };
     let filter_optional = |cx: &mut Context<'cx>, t: Type| -> Result<Type, FlowJsException> {
         let filter_id = crate::flow_js::filter_optional_with_env(cx, env, reason, &t)?;
@@ -749,6 +750,7 @@ pub(super) fn run_with_env<'cx>(
                 generics,
                 interface: _,
                 reachable_targs,
+                literal,
             } = slice;
             // TODO(jmbrown): Add polarity information to props
             let polarity = Polarity::Neutral;
@@ -780,6 +782,7 @@ pub(super) fn run_with_env<'cx>(
                 proto,
                 generics.clone(),
                 *strictness_kind,
+                *literal,
             )
         };
         let ts = x.mapped_ref(mk_object);
@@ -801,6 +804,7 @@ pub(super) fn run_with_env<'cx>(
 
     let react_config = |ref_manipulation: &object::react_config::RefManipulation,
                         state: &object::react_config::State,
+                        literal: bool,
                         cx: &mut Context<'cx>,
                         use_op: UseOp,
                         reason: &Reason,
@@ -828,6 +832,7 @@ pub(super) fn run_with_env<'cx>(
                 generics: config_generics,
                 interface: _,
                 reachable_targs: config_targs,
+                literal: _,
             } = config;
             let config_dict = obj_type::get_dict_opt(&config_flags.obj_kind);
             let key_name = Name::new("key");
@@ -875,6 +880,7 @@ pub(super) fn run_with_env<'cx>(
                         generics: defaults_generics,
                         interface: _,
                         reachable_targs: defaults_targs,
+                        literal: _,
                     } = defaults_slice;
                     let defaults_dict = obj_type::get_dict_opt(&defaults_flags.obj_kind);
                     //  Merge our props and default props.
@@ -1080,6 +1086,7 @@ pub(super) fn run_with_env<'cx>(
                 proto,
                 generics,
                 strictness_kind,
+                literal,
             ))
         };
 
@@ -1106,6 +1113,7 @@ pub(super) fn run_with_env<'cx>(
                             ObjectToolReactConfigData {
                                 state: new_state,
                                 ref_manipulation: ref_manipulation.clone(),
+                                literal,
                             },
                         ))),
                         tout.dupe(),
@@ -1265,7 +1273,17 @@ pub(super) fn run_with_env<'cx>(
             object::Tool::ReactConfig(box ObjectToolReactConfigData {
                 state,
                 ref_manipulation,
-            }) => react_config(ref_manipulation, state, cx, use_op, reason, x, tout),
+                literal,
+            }) => react_config(
+                ref_manipulation,
+                state,
+                *literal,
+                cx,
+                use_op,
+                reason,
+                x,
+                tout,
+            ),
             object::Tool::ReadOnly => object_read_only(cx, use_op, reason, x, tout),
             object::Tool::Partial => object_partial(cx, use_op, reason, x, tout),
             object::Tool::Required => object_required(cx, use_op, reason, x, tout),

@@ -921,6 +921,7 @@ pub fn obj_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         // other fields will be more accurate
         reachable_targs: _,
         strictness_kind: _,
+        literal: _,
     } = obj;
     let acc = visitor.obj_flags(cx, pole, acc, flags);
     let acc = visitor.props(cx, pole, acc, props_tmap.dupe());

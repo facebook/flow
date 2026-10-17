@@ -2197,6 +2197,7 @@ fn visit_mixed<'cx>(
             None,
             id,
             flow_typing_type::type_::dummy_prototype(),
+            false,
         );
         let obj_t = Type::new(TypeInner::DefT(
             reason.dupe(),

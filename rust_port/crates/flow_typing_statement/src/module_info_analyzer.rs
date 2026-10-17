@@ -1077,6 +1077,7 @@ fn mk_module_type<'a>(
                         Some(props),
                         None,
                         proto,
+                        false,
                     ),
                 )
             }

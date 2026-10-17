@@ -533,7 +533,7 @@ fn t_of_use_t<'cx>(
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
                     let t_rest = t_rest.dupe();
                     bind_use_t_result(cx, result, |cx, tout_val: Type| {
-                        let reversed = reverse_obj_kit_rest(cx, env, r, &t_rest, &tout_val)?;
+                        let reversed = reverse_obj_kit_rest(cx, env, r, &t_rest, &tout_val, false)?;
                         use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
                     })
                 }
@@ -557,7 +557,8 @@ fn t_of_use_t<'cx>(
                     let result = merge_lower_or_upper_bounds(cx, env, seen, &tout_t)?;
                     let pmap = pmap.clone();
                     bind_use_t_result(cx, result, |cx, t: Type| {
-                        let reversed = reverse_component_check_config(cx, env, r, &pmap, &t)?;
+                        let reversed =
+                            reverse_component_check_config(cx, env, r, &pmap, &t, false)?;
                         use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
                     })
                 }
@@ -578,7 +579,7 @@ fn t_of_use_t<'cx>(
                     let todo_rev = todo_rev.dupe();
                     bind_use_t_result(cx, result, |cx, t: Type| {
                         let reversed =
-                            reverse_obj_spread(cx, env, r, &todo_rev, &acc_elements, &t)?;
+                            reverse_obj_spread(cx, env, r, &todo_rev, &acc_elements, &t, false)?;
                         use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
                     })
                 }
@@ -797,6 +798,7 @@ fn t_of_use_t<'cx>(
             }) => identity_reverse_upper_bound(cx, env, seen, tvar, tout),
             object::Tool::ReactConfig(box ObjectToolReactConfigData {
                 ref_manipulation: object::react_config::RefManipulation::AddRef(ref_t),
+                literal,
                 ..
             }) => {
                 let solution = merge_upper_bounds(cx, env, seen, tout)?;
@@ -814,7 +816,8 @@ fn t_of_use_t<'cx>(
                                 polarity: Polarity::Neutral,
                             }))),
                         )]));
-                        let reversed = reverse_component_check_config(cx, env, r, &pmap, &t)?;
+                        let reversed =
+                            reverse_component_check_config(cx, env, r, &pmap, &t, *literal)?;
                         match merge_lower_bounds(cx, env, &reversed)? {
                             None => Ok(UseTResult::UpperEmpty),
                             Some(reversed) => {
@@ -832,7 +835,7 @@ fn t_of_use_t<'cx>(
                     UseTResult::UpperPlaceholder(t) => Ok(UseTResult::UpperPlaceholder(t)),
                     UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
                     UseTResult::UpperT(t) => {
-                        let reversed = reverse_component_check_config(cx, env, r, pmap, &t)?;
+                        let reversed = reverse_component_check_config(cx, env, r, pmap, &t, false)?;
                         match merge_lower_bounds(cx, env, &reversed)? {
                             None => Ok(UseTResult::UpperEmpty),
                             Some(reversed) => {
@@ -846,15 +849,23 @@ fn t_of_use_t<'cx>(
             object::Tool::ObjectMap(box ObjectToolObjectMapData { .. }) => {
                 Ok(UseTResult::UpperEmpty)
             }
-            object::Tool::Spread(box (_, state)) => {
+            object::Tool::Spread(box (target, state)) => {
+                let literal = target.literal();
                 let solution = merge_upper_bounds(cx, env, seen, tout)?;
                 match solution {
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
                     UseTResult::UpperPlaceholder(t) => Ok(UseTResult::UpperPlaceholder(t)),
                     UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
                     UseTResult::UpperT(t) => {
-                        let reversed =
-                            reverse_obj_spread(cx, env, r, &state.todo_rev, &state.acc, &t)?;
+                        let reversed = reverse_obj_spread(
+                            cx,
+                            env,
+                            r,
+                            &state.todo_rev,
+                            &state.acc,
+                            &t,
+                            literal,
+                        )?;
                         match merge_lower_bounds(cx, env, &reversed)? {
                             None => Ok(UseTResult::UpperEmpty),
                             Some(reversed) => {
@@ -869,7 +880,7 @@ fn t_of_use_t<'cx>(
                 let result = merge_upper_bounds(cx, env, seen, tout)?;
                 let t_rest = t_rest.dupe();
                 bind_use_t_result(cx, result, |cx, t: Type| {
-                    let reversed = reverse_obj_kit_rest(cx, env, r, &t_rest, &t)?;
+                    let reversed = reverse_obj_kit_rest(cx, env, r, &t_rest, &t, false)?;
                     match merge_lower_bounds(cx, env, &reversed)? {
                         None => Ok(UseTResult::UpperEmpty),
                         Some(reversed) => {
@@ -937,6 +948,7 @@ fn reverse_obj_spread<'cx>(
     todo_rev: &flow_data_structure_wrapper::list::FlowOcamlList<object::spread::Operand>,
     acc_elements: &flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement>,
     tout: &Type,
+    literal: bool,
 ) -> Result<Type, FlowJsException> {
     let inline_slice_to_t = |cx: &mut Context<'cx>, s: &object::spread::OperandSlice| -> Type {
         let obj_kind = obj_type::obj_kind_from_optional_dict(s.dict.clone(), ObjKind::Exact);
@@ -949,6 +961,7 @@ fn reverse_obj_spread<'cx>(
             Some(s.prop_map.dupe()),
             None,
             Type::new(TypeInner::ObjProtoT(r.dupe())),
+            literal,
         )
     };
 
@@ -963,6 +976,7 @@ fn reverse_obj_spread<'cx>(
             Some(props),
             None,
             Type::new(TypeInner::ObjProtoT(r.dupe())),
+            literal,
         )
     };
 
@@ -1021,6 +1035,7 @@ fn reverse_component_check_config<'cx>(
     reason: &Reason,
     pmap: &properties::PropertiesMap,
     tout: &Type,
+    literal: bool,
 ) -> Result<Type, FlowJsException> {
     if pmap.is_empty() {
         return Ok(tout.dupe());
@@ -1035,6 +1050,7 @@ fn reverse_component_check_config<'cx>(
             Some(pmap.dupe()),
             None,
             Type::new(TypeInner::ObjProtoT(reason.dupe())),
+            literal,
         );
         let u_inner = UseTInner::ObjKitT(
             unknown_use(),
@@ -1057,12 +1073,14 @@ fn reverse_obj_kit_rest<'cx>(
     reason: &Reason,
     t_rest: &Type,
     tout: &Type,
+    literal: bool,
 ) -> Result<Type, FlowJsException> {
     flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |cx, _r, t_prime_id| {
         let tool = object::ResolveTool::Resolve(object::Resolve::Next);
         let options = object::spread::Target::Value {
             make_seal: obj_type::mk_seal(false, false),
             strictness_kind: cx.type_strictness_kind(),
+            literal,
         };
         let state = object::spread::State {
             todo_rev: flow_data_structure_wrapper::list::FlowOcamlList::unit(

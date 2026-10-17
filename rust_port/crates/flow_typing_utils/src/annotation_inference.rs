@@ -2298,6 +2298,7 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
                         reason_op,
                         reason_obj,
                         xs,
+                        true,
                     )
                     // Annotation inference is never speculative
                     .unwrap()
@@ -2316,6 +2317,7 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
                     None,
                     None,
                     t,
+                    true,
                 ),
                 TypeInner::DefT(_, def_t)
                     if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
@@ -2324,6 +2326,7 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
                         type_::ObjKind::Exact,
                         cx,
                         reason_op.dupe(),
+                        true,
                     )
                 }
                 TypeInner::NamespaceT(ns) => elab_t(cx, Some(seen), ns.values_type.dupe(), op),

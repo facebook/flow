@@ -432,6 +432,7 @@ fn add_optional_ref_prop_to_props<'cx>(
                             type_: ref_setter_type,
                         },
                     )),
+                    literal: false,
                 },
             ))),
             tout,
@@ -503,11 +504,9 @@ fn props_to_tout<'cx>(
                         ) =>
                     {
                         // Contravariance
-                        let t = ft
-                            .params
-                            .first()
-                            .map(|p| p.1.dupe())
-                            .unwrap_or_else(|| obj_type::mk(ObjKind::Exact, cx, r.dupe()));
+                        let t = ft.params.first().map(|p| p.1.dupe()).unwrap_or_else(|| {
+                            obj_type::mk(ObjKind::Exact, cx, r.dupe(), ft.literal)
+                        });
                         FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &t, &tout)?;
                     }
                     _ => {
@@ -951,6 +950,7 @@ pub(super) fn run_with_env<'cx>(
                         object::spread::Target::Value {
                             make_seal: object::spread::SealType::Sealed,
                             strictness_kind,
+                            literal: false,
                         },
                         Default::default(),
                         Some(ref_slice),
@@ -989,11 +989,9 @@ pub(super) fn run_with_env<'cx>(
                             ) =>
                         {
                             // Contravariance
-                            let t = ft
-                                .params
-                                .first()
-                                .map(|p| p.1.dupe())
-                                .unwrap_or_else(|| obj_type::mk(ObjKind::Exact, cx, r.dupe()));
+                            let t = ft.params.first().map(|p| p.1.dupe()).unwrap_or_else(|| {
+                                obj_type::mk(ObjKind::Exact, cx, r.dupe(), ft.literal)
+                            });
                             FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &t)?;
                             if !env.in_implicit_instantiation() {
                                 let react_node = FlowJs::get_builtin_react_type_with_env(
@@ -1145,6 +1143,7 @@ pub(super) fn run_with_env<'cx>(
                             component_default_props,
                         },
                         ref_manipulation,
+                        literal: true,
                     },
                 ))),
                 component_props,

@@ -524,6 +524,7 @@ fn check_polarity_impl<'cx>(
                     call_t,
                     reachable_targs: _,
                     strictness_kind: _,
+                    literal: _,
                 } = obj.deref();
                 check_polarity_propmap(
                     cx,

@@ -353,6 +353,29 @@ pub fn mod_reason_of_t(f: &dyn Fn(Reason) -> Reason, t: &Type) -> Type {
     }
 }
 
+/// Clears `literal` on a top-level object type.
+pub fn non_literal_of_t(t: &Type) -> Type {
+    use crate::type_::DefT;
+    use crate::type_::DefTInner;
+    use crate::type_::ObjType;
+
+    match t.deref() {
+        TypeInner::DefT(reason, def)
+            if let DefTInner::ObjT(o) = def.deref()
+                && o.literal =>
+        {
+            Type::new(TypeInner::DefT(
+                reason.dupe(),
+                DefT::new(DefTInner::ObjT(Rc::new(ObjType {
+                    literal: false,
+                    ..o.as_ref().clone()
+                }))),
+            ))
+        }
+        _ => t.dupe(),
+    }
+}
+
 pub fn mod_reason_of_defer_use_t(
     f: &dyn Fn(Reason) -> Reason,
     defer_use_t: &TypeDestructorT,
@@ -943,7 +966,7 @@ pub fn util_use_op_of_use_t<T, CX: ContextFamily>(
         | UseTInner::HooklikeT(_)
         | UseTInner::ThisSpecializeT(_, _, _)
         | UseTInner::LookupT(..)
-        | UseTInner::ObjRestT(_, _, _, _)
+        | UseTInner::ObjRestT(_, _, _, _, _)
         | UseTInner::ObjTestProtoT(_, _)
         | UseTInner::ObjTestT(_, _, _)
         | UseTInner::GetValuesT(_, _)
@@ -2175,6 +2198,7 @@ pub fn make_exact_object(
             call_t: obj.call_t,
             reachable_targs: obj.reachable_targs.dupe(),
             strictness_kind: obj.strictness_kind,
+            literal: obj.literal,
         }))),
     ))
 }

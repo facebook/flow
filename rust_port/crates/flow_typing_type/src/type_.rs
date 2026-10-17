@@ -2669,7 +2669,8 @@ pub enum UseTInner<CX: ContextFamily = ()> {
     LookupT(Box<LookupTData>),
 
     // Operations on objects
-    ObjRestT(Reason, Rc<[String]>, Type, i32),
+    // The bool is whether the rest object is a literal.
+    ObjRestT(Reason, Rc<[String]>, Type, i32, bool),
     ObjTestProtoT(Reason, type_collector::TypeCollector),
     ObjTestT(Reason, Type, Type),
     ArrRestT(Box<ArrRestTData>),
@@ -2783,8 +2784,8 @@ impl<CX: ContextFamily> Clone for UseTInner<CX> {
                 UseTInner::ConcretizeTypeAppsT(a.clone(), b.clone(), c.clone(), *d)
             }
             UseTInner::LookupT(a) => UseTInner::LookupT(a.clone()),
-            UseTInner::ObjRestT(a, b, c, d) => {
-                UseTInner::ObjRestT(a.clone(), b.clone(), c.clone(), *d)
+            UseTInner::ObjRestT(a, b, c, d, e) => {
+                UseTInner::ObjRestT(a.clone(), b.clone(), c.clone(), *d, *e)
             }
             UseTInner::ObjTestProtoT(a, b) => UseTInner::ObjTestProtoT(a.clone(), b.clone()),
             UseTInner::ObjTestT(a, b, c) => UseTInner::ObjTestT(a.clone(), b.clone(), c.clone()),
@@ -2908,8 +2909,8 @@ impl<CX: ContextFamily> PartialEq for UseTInner<CX> {
                 UseTInner::ConcretizeTypeAppsT(a2, b2, c2, d2),
             ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
             (UseTInner::LookupT(a1), UseTInner::LookupT(a2)) => a1 == a2,
-            (UseTInner::ObjRestT(a1, b1, c1, d1), UseTInner::ObjRestT(a2, b2, c2, d2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
+            (UseTInner::ObjRestT(a1, b1, c1, d1, e1), UseTInner::ObjRestT(a2, b2, c2, d2, e2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2
             }
             (UseTInner::ObjTestProtoT(a1, b1), UseTInner::ObjTestProtoT(a2, b2)) => {
                 a1 == a2 && b1 == b2
@@ -3079,11 +3080,12 @@ impl<CX: ContextFamily> std::hash::Hash for UseTInner<CX> {
                 d.hash(state);
             }
             UseTInner::LookupT(a) => a.hash(state),
-            UseTInner::ObjRestT(a, b, c, d) => {
+            UseTInner::ObjRestT(a, b, c, d, e) => {
                 a.hash(state);
                 b.hash(state);
                 c.hash(state);
                 d.hash(state);
+                e.hash(state);
             }
             UseTInner::ObjTestProtoT(a, b) => {
                 a.hash(state);
@@ -3324,11 +3326,13 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
                 .then_with(|| c1.cmp(c2))
                 .then_with(|| d1.cmp(d2)),
             (UseTInner::LookupT(a1), UseTInner::LookupT(a2)) => a1.cmp(a2),
-            (UseTInner::ObjRestT(a1, b1, c1, d1), UseTInner::ObjRestT(a2, b2, c2, d2)) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ObjRestT(a1, b1, c1, d1, e1), UseTInner::ObjRestT(a2, b2, c2, d2, e2)) => {
+                a1.cmp(a2)
+                    .then_with(|| b1.cmp(b2))
+                    .then_with(|| c1.cmp(c2))
+                    .then_with(|| d1.cmp(d2))
+                    .then_with(|| e1.cmp(e2))
+            }
             (UseTInner::ObjTestProtoT(a1, b1), UseTInner::ObjTestProtoT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
@@ -3488,12 +3492,13 @@ impl<CX: ContextFamily> std::fmt::Debug for UseTInner<CX> {
                 .field(d)
                 .finish(),
             UseTInner::LookupT(a) => f.debug_tuple("LookupT").field(a).finish(),
-            UseTInner::ObjRestT(a, b, c, d) => f
+            UseTInner::ObjRestT(a, b, c, d, e) => f
                 .debug_tuple("ObjRestT")
                 .field(a)
                 .field(b)
                 .field(c)
                 .field(d)
+                .field(e)
                 .finish(),
             UseTInner::ObjTestProtoT(a, b) => {
                 f.debug_tuple("ObjTestProtoT").field(a).field(b).finish()
@@ -5129,6 +5134,7 @@ pub struct ObjType {
     /// and instead pollute the reachable_targs directly.
     pub reachable_targs: Rc<[(Type, Polarity)]>,
     pub strictness_kind: TypeStrictnessKind,
+    pub literal: bool,
 }
 
 /// Object.assign(target, source1, ...source2) first resolves target then the sources.
@@ -8740,6 +8746,7 @@ pub mod object {
         pub generics: GenericSpreadId,
         pub interface: Option<(Type, InstType)>,
         pub reachable_targs: Rc<[(Type, Polarity)]>,
+        pub literal: bool,
     }
 
     pub type Dict = Option<DictType>;
@@ -8815,6 +8822,7 @@ pub mod object {
             Value {
                 make_seal: SealType,
                 strictness_kind: TypeStrictnessKind,
+                literal: bool,
             },
             // Type spreads use the declared shape of inexact inputs. The annotation
             // determines whether the resulting object is exact.
@@ -8833,6 +8841,13 @@ pub mod object {
                     | Target::Annot {
                         strictness_kind, ..
                     } => *strictness_kind,
+                }
+            }
+
+            pub fn literal(&self) -> bool {
+                match self {
+                    Target::Value { literal, .. } => *literal,
+                    Target::Annot { .. } => false,
                 }
             }
         }
@@ -8879,6 +8894,7 @@ pub mod object {
     pub struct ObjectToolReactConfigData {
         pub state: react_config::State,
         pub ref_manipulation: react_config::RefManipulation,
+        pub literal: bool,
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -12168,6 +12184,7 @@ pub fn mk_objecttype(
     call: Option<i32>,
     pmap: properties::Id,
     proto: Type,
+    literal: bool,
 ) -> ObjType {
     mk_objecttype_with_strictness(
         flags,
@@ -12176,6 +12193,7 @@ pub fn mk_objecttype(
         pmap,
         proto,
         TypeStrictnessKind::Flow,
+        literal,
     )
 }
 
@@ -12186,6 +12204,7 @@ pub fn mk_objecttype_with_strictness(
     pmap: properties::Id,
     proto: Type,
     strictness_kind: TypeStrictnessKind,
+    literal: bool,
 ) -> ObjType {
     ObjType {
         flags: flags.unwrap_or_else(default_flags),
@@ -12194,6 +12213,7 @@ pub fn mk_objecttype_with_strictness(
         call_t: call,
         reachable_targs: reachable_targs.unwrap_or_else(|| Rc::from([])),
         strictness_kind,
+        literal,
     }
 }
 
@@ -12208,7 +12228,7 @@ pub fn mk_object_def_type(
     TypeInner::DefT(
         reason,
         DefT::new(DefTInner::ObjT(Rc::new(mk_objecttype(
-            flags, None, call, pmap, proto,
+            flags, None, call, pmap, proto, false,
         )))),
     )
 }

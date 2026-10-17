@@ -833,10 +833,11 @@ pub(super) fn handle_generic<'cx>(
             )?;
             Ok(true)
         }
-        UseTInner::ObjRestT(r, xs, t_out, obj_rest_id) => {
+        UseTInner::ObjRestT(r, xs, t_out, obj_rest_id, literal) => {
             let r = r.dupe();
             let xs = xs.clone();
             let obj_rest_id = *obj_rest_id;
+            let literal = *literal;
             narrow_generic(
                 cx,
                 None,
@@ -846,6 +847,7 @@ pub(super) fn handle_generic<'cx>(
                         xs.clone(),
                         t_out_prime,
                         obj_rest_id,
+                        literal,
                     ))
                 },
                 t_out,

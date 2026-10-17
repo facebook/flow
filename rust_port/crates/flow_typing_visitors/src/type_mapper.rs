@@ -1766,6 +1766,7 @@ pub fn obj_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             call_t: call_t_prime,
             reachable_targs: reachable_targs_prime,
             strictness_kind: t.strictness_kind,
+            literal: t.literal,
         })
     }
 }

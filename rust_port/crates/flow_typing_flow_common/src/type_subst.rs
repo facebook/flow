@@ -919,6 +919,7 @@ impl<'cx> TypeMapper<'cx, MapCx> for Substituter {
                 call_t: t_prime.call_t,
                 reachable_targs: reachable_targs.into(),
                 strictness_kind: t_prime.strictness_kind,
+                literal: t_prime.literal,
             })
         }
     }

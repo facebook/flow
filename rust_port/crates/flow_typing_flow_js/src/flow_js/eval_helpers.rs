@@ -144,6 +144,7 @@ pub(super) fn eval_selector<'cx>(
             xs.iter().map(|x| x.to_string()).collect(),
             Type::new(TypeInner::OpenT(tvar.dupe())),
             id,
+            true,
         )),
         Selector::ArrRest(i) => UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
             use_op: unknown_use(),

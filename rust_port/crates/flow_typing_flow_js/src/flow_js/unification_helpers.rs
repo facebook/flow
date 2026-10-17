@@ -352,7 +352,7 @@ fn __unify_inner<'cx>(
                     let uflags = &u_obj.flags;
 
                     if !obj_type::is_exact(&lflags.obj_kind)
-                        && !is_literal_object_reason(ureason)
+                        && !u_obj.literal
                         && obj_type::is_exact(&uflags.obj_kind)
                     {
                         flow_js_utils::exact_obj_error(
@@ -365,7 +365,7 @@ fn __unify_inner<'cx>(
                         )?;
                     }
                     if !obj_type::is_exact(&uflags.obj_kind)
-                        && !is_literal_object_reason(lreason)
+                        && !l_obj.literal
                         && obj_type::is_exact(&lflags.obj_kind)
                     {
                         flow_js_utils::exact_obj_error(

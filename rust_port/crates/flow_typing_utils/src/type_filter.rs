@@ -1449,6 +1449,7 @@ pub fn object_<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
                     None,
                     None,
                     proto,
+                    false,
                 );
                 match flavor {
                     MixedFlavor::MixedTruthy

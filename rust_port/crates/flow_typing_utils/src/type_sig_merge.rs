@@ -610,6 +610,7 @@ fn add_record_constructor<'cx>(
         Some(props),
         None,
         Type::new(type_::TypeInner::NullProtoT(record_reason)),
+        false,
     );
     let funtype = type_::mk_boundfunctiontype(
         type_::implicit_mixed_this(reason.dupe()),
@@ -1437,6 +1438,7 @@ pub fn merge_exports<'cx>(
                         None,
                         None,
                         Type::new(type_::TypeInner::ObjProtoT(reason.dupe())),
+                        false,
                     ),
                 ),
             };
@@ -2659,7 +2661,7 @@ fn merge_annot<'cx>(
         }
         Annot::FunAnnot(box (loc, def)) | Annot::MethodAnnot(box (loc, _, def)) => {
             let reason = reason::mk_annot_reason(RFunctionType, loc.dupe());
-            let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
+            let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new(), false);
             merge_fun(
                 env,
                 cx,
@@ -2728,6 +2730,7 @@ fn merge_annot<'cx>(
                     id,
                     proto,
                     *strictness_kind,
+                    false,
                 );
                 if obj_kind == type_::ObjKind::Exact {
                     let reason_op =
@@ -3102,7 +3105,7 @@ fn merge_value<'cx>(
                 statics,
             } = inner.as_ref();
             let reason = reason::func_reason(*async_, *generator, loc.dupe());
-            let statics_t = merge_fun_statics(env, cx, file, reason.dupe(), statics);
+            let statics_t = merge_fun_statics(env, cx, file, reason.dupe(), statics, true);
             merge_fun(
                 env,
                 cx,
@@ -3408,6 +3411,7 @@ fn merge_declare_module_implicitly_exported_object<'cx>(
         None,
         proto,
         strictness_kind,
+        false,
     )
 }
 
@@ -3452,6 +3456,7 @@ fn merge_object_lit<'cx>(
         None,
         proto_t,
         strictness_kind,
+        false,
     )
 }
 
@@ -3520,6 +3525,7 @@ fn merge_obj_spread_lit<'cx>(
     let target = type_::object::spread::Target::Value {
         make_seal,
         strictness_kind,
+        literal: false,
     };
     let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::ObjectSpread {
         op: reason.dupe(),
@@ -3653,7 +3659,8 @@ fn merge_obj_value_prop<'cx>(
                      def,
                  }: &ObjValueMethodData<ALoc, Pack::Packed<ALoc>>| {
                     let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
-                    let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
+                    let statics =
+                        merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new(), true);
                     merge_fun(
                         env,
                         cx,
@@ -3749,7 +3756,7 @@ fn merge_obj_annot_prop<'cx>(
             def,
         }) => {
             let reason = reason::mk_annot_reason(RFunctionType, fn_loc.dupe());
-            let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
+            let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new(), false);
             let type_ = merge_fun(
                 env,
                 cx,
@@ -4179,6 +4186,7 @@ fn merge_interface<'cx>(
             Some(props),
             None,
             proto,
+            false,
         )
     };
     // Inline interfaces use the same polymorphic receiver as named interfaces.
@@ -4615,6 +4623,7 @@ fn merge_this_class_t<'cx>(
                 Some(props),
                 None,
                 static_proto,
+                false,
             )
         };
         let mut own_props_map: BTreeMap<Name, type_::Property> = BTreeMap::new();
@@ -4814,6 +4823,7 @@ fn merge_fun_statics<'cx>(
     file: &SigFile,
     reason: Reason,
     statics: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
+    literal: bool,
 ) -> Type {
     let props: type_::properties::PropertiesMap = statics
         .iter()
@@ -4840,6 +4850,7 @@ fn merge_fun_statics<'cx>(
         Some(props),
         None,
         Type::new(type_::TypeInner::FunProtoT(reason)),
+        literal,
     )
 }
 
@@ -5060,6 +5071,7 @@ fn merge_component<'cx>(
                 None,
                 None,
                 Type::new(type_::TypeInner::ObjProtoT(config_reason.dupe())),
+                false,
             ),
             Some(ComponentRestParam { t }) => merge_impl(env, cx, file, t, false, false),
         };
@@ -5365,6 +5377,7 @@ fn merge_declare_class<'cx>(
                 Some(props),
                 None,
                 static_proto,
+                false,
             )
         };
         // The two sides are folded apart, since a `declare class` is not
@@ -5550,7 +5563,7 @@ fn merge_declare_fun<'cx>(
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     let env = mk_merge_env(FlowOrdMap::new());
-    let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), statics);
+    let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), statics, false);
     let ts: Vec<Type> = defs
         .iter()
         .map(|(_, fn_loc, def)| {
@@ -5712,7 +5725,7 @@ pub fn merge_def<'cx>(
         }
         Def::FunBinding(inner) => {
             let env = mk_merge_env(FlowOrdMap::new());
-            let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), &inner.statics);
+            let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), &inner.statics, true);
             let function_t = merge_fun(
                 &env,
                 cx,

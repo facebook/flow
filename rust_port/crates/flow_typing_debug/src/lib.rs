@@ -1104,6 +1104,7 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
             generics: flow_typing_generics::spread_empty(),
             interface: None,
             reachable_targs: Rc::from([]),
+            literal: false,
         };
         slice(&s)
     };
@@ -1243,6 +1244,7 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
             type_::object::Tool::ReactConfig(box type_::object::ObjectToolReactConfigData {
                 state,
                 ref_manipulation,
+                literal: _,
             }) => react_props_fn(state, ref_manipulation),
             type_::object::Tool::ObjectMap(box type_::object::ObjectToolObjectMapData {
                 prop_type,
@@ -1451,7 +1453,7 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
             p(cx, use_t, true, &extra)
         }
         UseTInner::MixinT(..) => p(cx, use_t, true, ""),
-        UseTInner::ObjRestT(_, xs, arg, _) => {
+        UseTInner::ObjRestT(_, xs, arg, _, _) => {
             let extra = format!("[{}], {}", xs.join("; "), kid(tvars, arg));
             p(cx, use_t, true, &extra)
         }

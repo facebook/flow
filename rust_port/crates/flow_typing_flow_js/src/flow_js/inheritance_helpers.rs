@@ -128,6 +128,7 @@ pub(super) fn inst_type_to_obj_type<'cx>(
         call_t: call_id,
         reachable_targs: Rc::from([]),
         strictness_kind,
+        literal: false,
     };
     Type::new(TypeInner::DefT(
         reason_struct,
@@ -189,6 +190,7 @@ pub(super) fn structural_subtype<'cx>(
                     call_t: lcall,
                     reachable_targs: lreachable_targs.dupe(),
                     strictness_kind: l_obj.strictness_kind,
+                    literal: l_obj.literal,
                 }))),
             ));
             rec_flow_t(cx, env, trace, use_op, (&lower, &o))?;
@@ -235,7 +237,14 @@ pub(super) fn inst_structural_subtype<'cx>(
 ) -> Result<(), FlowJsException> {
     let lreason = reason_of_t(lower);
     let reason_struct = reason_of_t(upper);
-    let lit = is_literal_object_reason(lreason);
+    let lit = match lower.deref() {
+        TypeInner::DefT(_, def_t) => match def_t.deref() {
+            DefTInner::ObjT(o) => o.literal,
+            DefTInner::FunT(_, ft) => ft.literal,
+            _ => false,
+        },
+        _ => false,
+    };
     let own_props = cx.find_props(own_props_id);
     let proto_props = cx.find_props(proto_props_id);
     let call_t = call_id.map(|id| cx.find_call(id));

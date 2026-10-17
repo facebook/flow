@@ -1744,6 +1744,7 @@ fn flow_obj_to_obj<'cx>(
         proto_t: lproto,
         reachable_targs: _,
         strictness_kind: lstrictness_kind,
+        literal: _,
     } = &**l_obj;
     let ObjType {
         flags: rflags,
@@ -1752,12 +1753,13 @@ fn flow_obj_to_obj<'cx>(
         proto_t: uproto,
         reachable_targs: _,
         strictness_kind: ustrictness_kind,
+        literal: _,
     } = &**u_obj;
     let strictness_kind = lstrictness_kind.join(*ustrictness_kind);
 
     // if inflowing type is literal (thus guaranteed to be
     // unaliased), propertywise subtyping is sound
-    let lit = flow_common::reason::is_literal_object_reason(lreason);
+    let lit = l_obj.literal;
     // If both are dictionaries, ensure the keys and values are compatible
     // with each other.
     let ldict = obj_type::get_dict_opt(&lflags.obj_kind);
@@ -1884,9 +1886,7 @@ fn flow_obj_to_obj<'cx>(
     // values, but this also suppresses Flow's usual excess-property check for
     // object literals like `{a: 1, b: 2} as {a: number}`. TypeScript still
     // reports those as excess properties, so this is a known compatibility gap.
-    if rflags.obj_kind == ObjKind::Exact
-        && !flow_common::reason::is_literal_object_reason(ureason)
-        && !strictness_kind.is_typescript_loose()
+    if rflags.obj_kind == ObjKind::Exact && !u_obj.literal && !strictness_kind.is_typescript_loose()
     {
         if !obj_type::is_exact(&lflags.obj_kind) {
             let l_t = Type::new(TypeInner::DefT(
@@ -4665,6 +4665,7 @@ pub fn rec_sub_t<'cx>(
                     call_t: obj.call_t,
                     reachable_targs: Rc::from([]),
                     strictness_kind: obj.strictness_kind,
+                    literal: obj.literal,
                 };
                 FlowJs::rec_flow_with_env(
                     cx, env,
@@ -6404,6 +6405,7 @@ pub fn rec_sub_t<'cx>(
                 call_t: None,
                 reachable_targs: o.reachable_targs.dupe(),
                 strictness_kind: o.strictness_kind,
+                literal: o.literal,
             };
             let obj_t = Type::new(TypeInner::DefT(
                 reason.dupe(),

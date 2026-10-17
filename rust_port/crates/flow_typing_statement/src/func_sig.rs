@@ -373,6 +373,7 @@ pub fn functiontype<'a, C: crate::func_params_intf::Config>(
             None,
             None,
             Type::new(type_::TypeInner::FunProtoT(reason.dupe())),
+            x.literal,
         ),
     };
     let t = Type::new(type_::TypeInner::DefT(
