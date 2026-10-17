@@ -680,7 +680,6 @@ fn t_of_use_t<'cx>(
         | UseTInner::GetElemT { .. }
         | UseTInner::SetElemT(..)
         | UseTInner::CallElemT(..)
-        | UseTInner::GetTypeFromNamespaceT { .. }
         | UseTInner::GetPropT(..)
         | UseTInner::GetPrivatePropT(..)
         | UseTInner::TestPropT { .. }

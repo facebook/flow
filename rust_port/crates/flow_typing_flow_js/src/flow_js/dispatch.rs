@@ -47,7 +47,6 @@ use flow_typing_type::type_::ExtendsUseTData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumTData;
-use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::IndexerFallbackData;
 use flow_typing_type::type_::LookupDefaultResult;
@@ -2334,89 +2333,6 @@ fn __flow_impl<'cx>(
             collector.add(l.dupe());
         }
 
-        // Namespace and type qualification
-        (
-            TypeInner::NamespaceT(ns),
-            UseTInner::GetTypeFromNamespaceT(box GetTypeFromNamespaceTData {
-                reason: reason_op,
-                use_op,
-                prop_ref: (prop_ref_reason, prop_name),
-                tout,
-            }),
-        ) => {
-            let props = cx.find_props(ns.types_tmap.dupe());
-            match props.get(prop_name).and_then(property::read_t) {
-                Some(prop) => {
-                    let t = helpers::reposition(
-                        cx,
-                        env,
-                        Some(trace),
-                        reason_op.loc().dupe(),
-                        None,
-                        None,
-                        prop,
-                    )?;
-                    let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-                    rec_flow_t(cx, env, trace, use_op.dupe(), (&t, &tout_t))?;
-                }
-                None => {
-                    rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (
-                            &ns.values_type,
-                            &UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
-                                use_op: use_op.dupe(),
-                                reason: reason_op.dupe(),
-                                id: None,
-                                from_annot: false,
-                                skip_optional: false,
-                                propref: Box::new(PropRef::Named {
-                                    reason: prop_ref_reason.dupe(),
-                                    name: prop_name.dupe(),
-                                    from_indexed_access: false,
-                                }),
-                                tout: tout.clone(),
-                                hint: hint_unavailable(),
-                            }))),
-                        ),
-                    )?;
-                }
-            }
-        }
-        (
-            _,
-            UseTInner::GetTypeFromNamespaceT(box GetTypeFromNamespaceTData {
-                reason: reason_op,
-                use_op,
-                prop_ref: (prop_ref_reason, prop_name),
-                tout,
-            }),
-        ) => {
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    l,
-                    &UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
-                        use_op: use_op.dupe(),
-                        reason: reason_op.dupe(),
-                        id: None,
-                        from_annot: false,
-                        skip_optional: false,
-                        propref: Box::new(PropRef::Named {
-                            reason: prop_ref_reason.dupe(),
-                            name: prop_name.dupe(),
-                            from_indexed_access: false,
-                        }),
-                        tout: tout.clone(),
-                        hint: hint_unavailable(),
-                    }))),
-                ),
-            )?;
-        }
         // unwrap namespace type into object type, drop all information about types in the namespace
         (TypeInner::NamespaceT(ns), UseTInner::GetPropT(box data))
             if let UseOp::Op(root_op) = &data.use_op

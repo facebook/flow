@@ -47,7 +47,6 @@ use crate::type_::GetElemTData;
 use crate::type_::GetEnumTData;
 use crate::type_::GetPrivatePropTData;
 use crate::type_::GetPropTData;
-use crate::type_::GetTypeFromNamespaceTData;
 use crate::type_::HasOwnPropTData;
 use crate::type_::ImplicitInstantiationTvarData;
 use crate::type_::JSXCreateElementData;
@@ -496,21 +495,6 @@ pub fn util_use_op_of_use_t<T, CX: ContextFamily>(
                     tin: t.clone(),
                     tout: tp.clone(),
                 })))
-            })
-        }
-        UseTInner::GetTypeFromNamespaceT(data) => {
-            let reason = data.reason.dupe();
-            let prop_ref = data.prop_ref.clone();
-            let tout = data.tout.clone();
-            call_util(&data.use_op, &move |use_op| {
-                UseT::new(UseTInner::GetTypeFromNamespaceT(Box::new(
-                    GetTypeFromNamespaceTData {
-                        use_op,
-                        reason: reason.dupe(),
-                        prop_ref: prop_ref.clone(),
-                        tout: tout.clone(),
-                    },
-                )))
             })
         }
         UseTInner::GetPropT(data) => {

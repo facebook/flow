@@ -1596,7 +1596,6 @@ pub fn error_message_loc_of_upper<CX: ContextFamily>(u: &UseT<CX>) -> ALoc {
         UseTInner::PrivateMethodT(data) => data.reason.loc().dupe(),
         UseTInner::SetPropT(_, reason, ..) => reason.loc().dupe(),
         UseTInner::SetPrivatePropT(data) => data.reason.loc().dupe(),
-        UseTInner::GetTypeFromNamespaceT(data) => data.reason.loc().dupe(),
         UseTInner::GetPropT(data) => data.reason.loc().dupe(),
         UseTInner::GetPrivatePropT(data) => data.reason.loc().dupe(),
         UseTInner::TestPropT(data) => data.reason.loc().dupe(),

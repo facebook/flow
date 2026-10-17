@@ -1864,14 +1864,6 @@ pub struct GetElemTData {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct GetTypeFromNamespaceTData {
-    pub use_op: UseOp,
-    pub reason: Reason,
-    pub prop_ref: (Reason, Name),
-    pub tout: Box<Tvar>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ReposUseTData {
     pub reason: Reason,
     pub use_desc: bool,
@@ -2633,7 +2625,6 @@ pub enum UseTInner<CX: ContextFamily = ()> {
         Option<Type>,
     ),
     SetPrivatePropT(Box<SetPrivatePropTData>),
-    GetTypeFromNamespaceT(Box<GetTypeFromNamespaceTData>),
     GetPropT(Box<GetPropTData<CX>>),
     GetPrivatePropT(Box<GetPrivatePropTData>),
     TestPropT(Box<TestPropTData<CX>>),
@@ -2751,7 +2742,6 @@ impl<CX: ContextFamily> Clone for UseTInner<CX> {
                 g.clone(),
             ),
             UseTInner::SetPrivatePropT(a) => UseTInner::SetPrivatePropT(a.clone()),
-            UseTInner::GetTypeFromNamespaceT(a) => UseTInner::GetTypeFromNamespaceT(a.clone()),
             UseTInner::GetPropT(a) => UseTInner::GetPropT(a.clone()),
             UseTInner::GetPrivatePropT(a) => UseTInner::GetPrivatePropT(a.clone()),
             UseTInner::TestPropT(a) => UseTInner::TestPropT(a.clone()),
@@ -2864,9 +2854,6 @@ impl<CX: ContextFamily> PartialEq for UseTInner<CX> {
                 UseTInner::SetPropT(a2, b2, c2, d2, e2, f2, g2),
             ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2 && g1 == g2,
             (UseTInner::SetPrivatePropT(a1), UseTInner::SetPrivatePropT(a2)) => a1 == a2,
-            (UseTInner::GetTypeFromNamespaceT(a1), UseTInner::GetTypeFromNamespaceT(a2)) => {
-                a1 == a2
-            }
             (UseTInner::GetPropT(a1), UseTInner::GetPropT(a2)) => a1 == a2,
             (UseTInner::GetPrivatePropT(a1), UseTInner::GetPrivatePropT(a2)) => a1 == a2,
             (UseTInner::TestPropT(a1), UseTInner::TestPropT(a2)) => a1 == a2,
@@ -3031,7 +3018,6 @@ impl<CX: ContextFamily> std::hash::Hash for UseTInner<CX> {
                 g.hash(state);
             }
             UseTInner::SetPrivatePropT(a) => a.hash(state),
-            UseTInner::GetTypeFromNamespaceT(a) => a.hash(state),
             UseTInner::GetPropT(a) => a.hash(state),
             UseTInner::GetPrivatePropT(a) => a.hash(state),
             UseTInner::TestPropT(a) => a.hash(state),
@@ -3198,7 +3184,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
                 UseTInner::PrivateMethodT(..) => 5,
                 UseTInner::SetPropT(..) => 6,
                 UseTInner::SetPrivatePropT(..) => 7,
-                UseTInner::GetTypeFromNamespaceT(..) => 8,
                 UseTInner::GetPropT(..) => 9,
                 UseTInner::GetPrivatePropT(..) => 10,
                 UseTInner::TestPropT(..) => 11,
@@ -3275,9 +3260,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
                 .then_with(|| f1.cmp(f2))
                 .then_with(|| g1.cmp(g2)),
             (UseTInner::SetPrivatePropT(a1), UseTInner::SetPrivatePropT(a2)) => a1.cmp(a2),
-            (UseTInner::GetTypeFromNamespaceT(a1), UseTInner::GetTypeFromNamespaceT(a2)) => {
-                a1.cmp(a2)
-            }
             (UseTInner::GetPropT(a1), UseTInner::GetPropT(a2)) => a1.cmp(a2),
             (UseTInner::GetPrivatePropT(a1), UseTInner::GetPrivatePropT(a2)) => a1.cmp(a2),
             (UseTInner::TestPropT(a1), UseTInner::TestPropT(a2)) => a1.cmp(a2),
@@ -3454,9 +3436,6 @@ impl<CX: ContextFamily> std::fmt::Debug for UseTInner<CX> {
                 .field(g)
                 .finish(),
             UseTInner::SetPrivatePropT(a) => f.debug_tuple("SetPrivatePropT").field(a).finish(),
-            UseTInner::GetTypeFromNamespaceT(a) => {
-                f.debug_tuple("GetTypeFromNamespaceT").field(a).finish()
-            }
             UseTInner::GetPropT(a) => f.debug_tuple("GetPropT").field(a).finish(),
             UseTInner::GetPrivatePropT(a) => f.debug_tuple("GetPrivatePropT").field(a).finish(),
             UseTInner::TestPropT(a) => f.debug_tuple("TestPropT").field(a).finish(),
@@ -11647,7 +11626,6 @@ pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
         UseTInner::GetKeysDictKeyT { .. } => "GetKeysDictKeyT".to_string(),
         UseTInner::GetValuesT(..) => "GetValuesT".to_string(),
         UseTInner::GetDictValuesT(..) => "GetDictValuesT".to_string(),
-        UseTInner::GetTypeFromNamespaceT(..) => "GetTypeFromNamespaceT".to_string(),
         UseTInner::GetPropT(..) => "GetPropT".to_string(),
         UseTInner::GetPrivatePropT(..) => "GetPrivatePropT".to_string(),
         UseTInner::GetProtoT(..) => "GetProtoT".to_string(),

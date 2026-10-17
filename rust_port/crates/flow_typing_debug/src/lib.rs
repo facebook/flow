@@ -213,7 +213,6 @@ use flow_typing_type::type_::ExtendsUseTData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumTData;
-use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::Literal;
@@ -1407,21 +1406,6 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
         }
         UseTInner::GetProtoT(..) => p(cx, use_t, true, ""),
         UseTInner::GetStaticsT(..) => p(cx, use_t, true, ""),
-        UseTInner::GetTypeFromNamespaceT(box GetTypeFromNamespaceTData {
-            use_op,
-            prop_ref,
-            tout,
-            ..
-        }) => {
-            let extra = format!(
-                "{}, ({}), ({}, {})",
-                string_of_use_op(use_op),
-                prop_ref.1,
-                string_of_reason(cx, tout.reason()),
-                tvar(tvars, tout.id() as i32)
-            );
-            p(cx, use_t, true, &extra)
-        }
         UseTInner::HasOwnPropT(box HasOwnPropTData { .. }) | UseTInner::ConcretizeT { .. } => {
             p(cx, use_t, true, "")
         }

@@ -1,0 +1,217 @@
+Error ---------------------------------------------------------------------------------------------------- nested.js:8:1
+
+Cannot cast `true` to `N` because `true` [1] is incompatible with `T` [2]. [incompatible-type]
+
+   nested.js:8:1
+   8| true as N; // error
+      ^^^^ [1]
+
+References:
+   nested.js:8:9
+   8| true as N; // error
+              ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:3:26
+
+Cannot resolve module `./does-not-exist`. [cannot-resolve-module]
+
+   3| import * as Missing from './does-not-exist'; // error
+                               ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
+
+Cannot cast `'s'` to `A1` because `"s"` [1] is incompatible with `T` [2]. [incompatible-type]
+
+   test.js:8:1
+   8| 's' as A1; // error
+      ^^^ [1]
+
+References:
+   test.js:8:8
+   8| 's' as A1; // error
+             ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:13:11
+
+Cannot use `v` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   13| type A5 = NS.v; // error: value used as a type
+                 ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:14
+
+Cannot get `NS.nope` because property `nope` is missing in `{readonly C: typeof C, readonly v: number}` [1].
+[prop-missing]
+
+   test.js:14:14
+   14| type A6 = NS.nope; // error
+                    ^^^^
+
+References:
+   m.js
+   ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:11
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   15| type A7 = Missing.T; // error: any-typed value used as a type
+                 ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:11
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   16| type A8 = Untyped.T; // error: any-typed value used as a type
+                 ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:20
+
+Cannot get `NSTypeof.v` because property `v` is missing in `NSTypeof` [1]. [incompatible-use]
+
+   test.js:17:20
+   17| type A9 = NSTypeof.v; // error
+                          ^
+
+References:
+   test.js:2:20
+    2| import typeof * as NSTypeof from './m';
+                          ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:25:1
+
+Cannot cast `1` to `B1` because `1` [1] is incompatible with `T` [2]. [incompatible-type]
+
+   test.js:25:1
+   25| 1 as B1; // error
+       ^ [1]
+
+References:
+   test.js:25:6
+   25| 1 as B1; // error
+            ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:11
+
+Cannot use `c` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   26| type B2 = DNS.c; // error: value used as a type
+                 ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:15
+
+Cannot get `DNS.nope` because property `nope` is missing in `{readonly c: number}` [1]. [prop-missing]
+
+   test.js:27:15
+   27| type B3 = DNS.nope; // error
+                     ^^^^
+
+References:
+   test.js:19:19
+   19| declare namespace DNS {
+                         ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:32:11
+
+Cannot use `S` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   32| type C1 = K.S; // error: value used as a type
+                 ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:34:11
+
+Cannot use `P` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   34| type C2 = obj.P; // error: value used as a type
+                 ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:36:11
+
+Cannot use `Q` as a type because it is an `any`-typed value. Type `Q` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   36| type C3 = anyV.Q; // error: any-typed value used as a type
+                 ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- union.js:9:1
+
+Cannot cast `true` to `S` because `true` [1] is incompatible with `T` [2]. [incompatible-type]
+
+   union.js:9:1
+   9| true as S; // error
+      ^^^^ [1]
+
+References:
+   union.js:9:9
+   9| true as S; // error
+              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- union.js:12:10
+
+Cannot use `T` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   12| type D = Different.T; // error: a union of type definitions is not a type
+                ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- union.js:15:19
+
+Cannot get `nullable.T` because property `T` is missing in `null` [1]. [incompatible-use]
+
+   union.js:15:19
+   15| type N = nullable.T; // error: `T` is missing in `null`, so `N` is not a type
+                         ^
+
+References:
+   union.js:14:37
+   14| declare const nullable: typeof NS | null;
+                                           ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- union.js:15:10
+
+Cannot use `T` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   15| type N = nullable.T; // error: `T` is missing in `null`, so `N` is not a type
+                ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- union.js:22:1
+
+Cannot cast `1` to `K` because `1` [1] is incompatible with `<<anonymous class>>` [2]. [incompatible-type]
+
+   union.js:22:1
+   22| 1 as K; // error
+       ^ [1]
+
+References:
+   union.js:22:6
+   22| 1 as K; // error
+            ^ [2]
+
+
+
+Found 19 errors

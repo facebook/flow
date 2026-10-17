@@ -33,7 +33,6 @@ use flow_typing_type::type_::ElemAction;
 use flow_typing_type::type_::ElemTData;
 use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumTData;
-use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupActionMatchPropData;
 use flow_typing_type::type_::LookupTData;
@@ -227,8 +226,7 @@ pub fn default_resolve_touts<C>(
         UseTInner::PrivateMethodT(data) => resolve_method_action(cx, &data.method_action),
         UseTInner::SetPropT(_, _, _, _, _, _, topt) => map_opt(cx, topt),
         UseTInner::SetPrivatePropT(data) => map_opt(cx, &data.tout),
-        UseTInner::GetTypeFromNamespaceT(box GetTypeFromNamespaceTData { tout: tvar, .. })
-        | UseTInner::TestPropT(box TestPropTData { tout: tvar, .. }) => resolve_tvar(cx, tvar),
+        UseTInner::TestPropT(box TestPropTData { tout: tvar, .. }) => resolve_tvar(cx, tvar),
         UseTInner::GetPrivatePropT(data) => resolve_tvar(cx, &data.tout),
         UseTInner::GetPropT(data) => resolve_tvar(cx, &data.tout),
         UseTInner::SetElemT(box SetElemTData { tout: topt, .. }) => map_opt(cx, topt),

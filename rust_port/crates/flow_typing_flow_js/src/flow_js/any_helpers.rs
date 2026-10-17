@@ -499,7 +499,6 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::GetKeysT { .. }
         | UseTInner::GetPrivatePropT(..)
         | UseTInner::GetPropT(..)
-        | UseTInner::GetTypeFromNamespaceT(..)
         | UseTInner::GetProtoT(..)
         | UseTInner::GetStaticsT(..)
         | UseTInner::GetValuesT(..)

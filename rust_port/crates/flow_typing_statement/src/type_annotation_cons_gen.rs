@@ -21,7 +21,6 @@ use flow_typing_flow_js::tvar_resolver;
 use flow_typing_type::type_::Cont;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::GetPropTData;
-use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::SpecializeTData;
@@ -34,6 +33,7 @@ use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::hint_unavailable;
+use flow_typing_type::type_::property;
 use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
@@ -159,15 +159,49 @@ pub fn qualify_type<'a>(
             op_reason_inner,
             move |cx, tout_reason, tout_id| {
                 let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
-                let use_t = UseT::new(UseTInner::GetTypeFromNamespaceT(Box::new(
-                    GetTypeFromNamespaceTData {
-                        use_op,
-                        reason: op_reason_for_flow,
-                        prop_ref: (reason, prop_name),
-                        tout: Box::new(tout),
-                    },
-                )));
-                flow_js::flow_non_speculating(cx, (&l, &use_t))
+                for t in flow_js_utils::flow_js_result_to_job_error(
+                    FlowJs::possible_concrete_types_for_imports_exports(
+                        cx,
+                        &op_reason_for_flow,
+                        &l,
+                    ),
+                )? {
+                    let obj_t = if let TypeInner::NamespaceT(ns) = t.deref() {
+                        let props = cx.find_props(ns.types_tmap.dupe());
+                        if let Some(prop) = props.get(&prop_name).and_then(property::read_t) {
+                            let prop_t = flow_js::reposition_non_speculating(
+                                cx,
+                                op_reason_for_flow.loc().dupe(),
+                                prop,
+                            )?;
+                            let tout_t = Type::new(TypeInner::OpenT(tout.dupe()));
+                            flow_js::flow_non_speculating(
+                                cx,
+                                (&prop_t, &UseT::new(UseTInner::UseT(use_op.dupe(), tout_t))),
+                            )?;
+                            continue;
+                        }
+                        ns.values_type.dupe()
+                    } else {
+                        t
+                    };
+                    let use_t = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                        use_op: use_op.dupe(),
+                        reason: op_reason_for_flow.dupe(),
+                        id: None,
+                        from_annot: false,
+                        skip_optional: false,
+                        propref: Box::new(PropRef::Named {
+                            reason: reason.dupe(),
+                            name: prop_name.dupe(),
+                            from_indexed_access: false,
+                        }),
+                        tout: Box::new(tout.dupe()),
+                        hint: hint_unavailable(),
+                    })));
+                    flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                }
+                Ok(())
             },
         )
     };

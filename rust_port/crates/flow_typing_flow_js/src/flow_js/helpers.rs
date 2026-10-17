@@ -2897,6 +2897,21 @@ pub(super) fn singleton_concretize_type_for_imports_exports<'cx>(
     )
 }
 
+pub(super) fn possible_concrete_types_for_imports_exports<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    reason: &Reason,
+    t: &Type,
+) -> Result<Vec<Type>, FlowJsException> {
+    possible_concrete_types(
+        ConcretizationKind::ConcretizeForImportsExports,
+        cx,
+        env,
+        reason,
+        t,
+    )
+}
+
 pub(super) fn singleton_concrete_type_for_inspection<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,

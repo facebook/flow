@@ -870,6 +870,15 @@ impl FlowJs {
         helpers::singleton_concretize_type_for_imports_exports(cx, env, reason, t)
     }
 
+    fn possible_concrete_types_for_imports_exports_with_env<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_imports_exports(cx, env, reason, t)
+    }
+
     pub fn singleton_concrete_type_for_inspection_with_env<'cx>(
         cx: &mut Context<'cx>,
         env: &FlowJsEnv,
@@ -1098,6 +1107,19 @@ impl FlowJs {
         t: &Type,
     ) -> Result<Type, FlowJsException> {
         Self::singleton_concretize_type_for_imports_exports_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
+        )
+    }
+
+    pub fn possible_concrete_types_for_imports_exports<'cx>(
+        cx: &mut Context<'cx>,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        Self::possible_concrete_types_for_imports_exports_with_env(
             cx,
             &FlowJsEnv::entry(),
             reason,
