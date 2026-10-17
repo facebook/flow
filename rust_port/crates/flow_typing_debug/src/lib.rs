@@ -226,6 +226,7 @@ use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::PropertyType;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::RendersVariant;
 use flow_typing_type::type_::ReposUseTData;
@@ -652,7 +653,7 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
                         let extra = format!("Tuple [{}]", elems_str);
                         p(cx, t, true, &extra)
                     }
-                    ArrType::ROArrayAT(box (elem_t, _)) => {
+                    ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) => {
                         let extra = format!("ReadOnlyArray {}", kid(tvars, elem_t));
                         p(cx, t, true, &extra)
                     }
@@ -1507,7 +1508,7 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
                         kid(tvars, tout)
                     )
                 }
-                type_::SpreadResolve::ResolveSpreadsToArray(elem_t, tout) => {
+                type_::SpreadResolve::ResolveSpreadsToArray { elem_t, tout, .. } => {
                     format!(
                         "{}, {}, {}",
                         string_of_use_op(use_op),

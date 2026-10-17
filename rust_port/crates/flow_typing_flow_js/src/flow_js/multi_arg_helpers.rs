@@ -16,6 +16,7 @@ use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ResolveSpreadTData;
 use flow_typing_type::type_::ResolveSpreadsToMultiflowPartialData;
 use flow_typing_type::type_::ResolvedArgData;
@@ -296,6 +297,7 @@ pub(super) fn multiflow_partial<'cx>(
                             (
                                 &rest_param_t,
                                 &UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+                                    literal: false,
                                     use_op: use_op.dupe(),
                                     reason: orig_rest_reason.dupe(),
                                     index: i,
@@ -352,6 +354,17 @@ pub(super) fn multiflow_partial<'cx>(
                         result
                     }
                 };
+            let fresh = matches!(
+                reason_op.desc(true),
+                Some(
+                    VirtualReasonDesc::RCode(_)
+                        | VirtualReasonDesc::RFunctionCall(_)
+                        | VirtualReasonDesc::RConstructorCall(_)
+                        | VirtualReasonDesc::RMethodCall(_)
+                        | VirtualReasonDesc::RJSXFunctionCall(_)
+                        | VirtualReasonDesc::RFunctionType
+                )
+            );
             let arg_array_reason = reason_op
                 .dupe()
                 .replace_desc(VirtualReasonDesc::RRestArrayLit(
@@ -372,6 +385,8 @@ pub(super) fn multiflow_partial<'cx>(
                             });
                     let elem_t = flow_typing_tvar::mk(cx, element_reason);
                     let resolve_to = SpreadResolve::ResolveSpreadsToArrayLiteral {
+                        literal: true,
+                        fresh,
                         id: flow_common::reason::mk_id() as i32,
                         as_const: false,
                         elem_t,
@@ -572,7 +587,9 @@ pub(super) fn finish_resolve_spread_list<'cx>(
 
     fn propagate_dro<'cx>(cx: &mut Context<'cx>, elem: Type, arrtype: &ArrType) -> Type {
         match arrtype {
-            ArrType::ROArrayAT(box (_, Some(l)))
+            ArrType::ROArrayAT(box ROArrayATData {
+                react_dro: Some(l), ..
+            })
             | ArrType::ArrayAT(box ArrayATData {
                 react_dro: Some(l), ..
             })
@@ -664,6 +681,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                                 tuple_view: None,
                                                 react_dro: None,
                                                 strictness_kind: *strictness_kind,
+                                                literal: false,
+                                                fresh: false,
                                             })),
                                             generic.clone(),
                                         ),
@@ -695,13 +714,19 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 if let Some(rest) = rest {
                                     let elem_t = propagate_dro(cx, rest.t.dupe(), arrtype);
                                     let rest_arrtype = if rest.polarity == Polarity::Positive {
-                                        ArrType::ROArrayAT(Box::new((elem_t, None)))
+                                        ArrType::ROArrayAT(Box::new(ROArrayATData {
+                                            elem_t,
+                                            react_dro: None,
+                                            literal: false,
+                                        }))
                                     } else {
                                         ArrType::ArrayAT(Box::new(ArrayATData {
                                             elem_t,
                                             tuple_view: None,
                                             react_dro: None,
                                             strictness_kind: *strictness_kind,
+                                            literal: false,
+                                            fresh: false,
                                         }))
                                     };
                                     args.push(ResolvedParam::ResolvedSpreadArg(Box::new(
@@ -714,7 +739,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 }
                                 (args, seen_opt, inexact_spread || *inexact)
                             }
-                            ArrType::ROArrayAT(box (_, _)) => {
+                            ArrType::ROArrayAT(box ROArrayATData { .. }) => {
                                 args.push(arg.clone());
                                 (args, seen_opt, inexact_spread)
                             }
@@ -760,10 +785,15 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         elem_t: &Type,
         tout: &Type,
     ) -> Result<(), FlowJsException> {
+        let (literal, fresh) = match resolve_to {
+            SpreadArrayResolveTo::ResolveToArrayLiteral { literal, fresh, .. }
+            | SpreadArrayResolveTo::ResolveToArray { literal, fresh } => (literal, fresh),
+            SpreadArrayResolveTo::ResolveToTupleType { .. } => (false, false),
+        };
         let result = match spread_resolved_to_any_src(resolved) {
             Some(any_src) => match resolve_to {
                 // Array<any> is a good enough any type for arrays
-                SpreadArrayResolveTo::ResolveToArray => Type::new(TypeInner::DefT(
+                SpreadArrayResolveTo::ResolveToArray { .. } => Type::new(TypeInner::DefT(
                     reason_op.dupe(),
                     DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
                         ArrayATData {
@@ -771,6 +801,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                             tuple_view: None,
                             react_dro: None,
                             strictness_kind: cx.type_strictness_kind(),
+                            literal,
+                            fresh,
                         },
                     ))))),
                 )),
@@ -790,9 +822,9 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                 let (elems, spread_after_opt, inexact_spread) =
                     flatten_spread_args(cx, env, resolved)?;
                 let as_const = match resolve_to {
-                    SpreadArrayResolveTo::ResolveToArrayLiteral { as_const } => as_const,
+                    SpreadArrayResolveTo::ResolveToArrayLiteral { as_const, .. } => as_const,
                     SpreadArrayResolveTo::ResolveToTupleType { .. }
-                    | SpreadArrayResolveTo::ResolveToArray => false,
+                    | SpreadArrayResolveTo::ResolveToArray { .. } => false,
                 };
                 let mut rest = None;
                 let tuple_elements: Option<Vec<TupleElement>> = match resolve_to {
@@ -842,7 +874,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         resolve_to,
                                         SpreadArrayResolveTo::ResolveToTupleType { .. }
                                             | SpreadArrayResolveTo::ResolveToArrayLiteral {
-                                                as_const: false
+                                                as_const: false,
+                                                ..
                                             }
                                     ) =>
                                 {
@@ -908,7 +941,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                             Some(tuple_elements)
                         }
                     }
-                    SpreadArrayResolveTo::ResolveToArray => None,
+                    SpreadArrayResolveTo::ResolveToArray { .. } => None,
                 };
 
                 // We infer the array's general element type by looking at the type of
@@ -1028,7 +1061,11 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 polarity: Polarity::Positive,
                                 ..
                             }) if elements.is_empty() => {
-                                ArrType::ROArrayAT(Box::new((elem_t.dupe(), None)))
+                                ArrType::ROArrayAT(Box::new(ROArrayATData {
+                                    elem_t: elem_t.dupe(),
+                                    react_dro: None,
+                                    literal,
+                                }))
                             }
                             Some(_) if elements.is_empty() => {
                                 ArrType::ArrayAT(Box::new(ArrayATData {
@@ -1036,6 +1073,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                     tuple_view: None,
                                     react_dro: None,
                                     strictness_kind: cx.type_strictness_kind(),
+                                    literal,
+                                    fresh,
                                 }))
                             }
                             _ => ArrType::TupleAT(Box::new(TupleATData {
@@ -1046,6 +1085,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 rest: rest.dupe(),
                                 react_dro: None,
                                 strictness_kind: Default::default(),
+                                literal,
+                                fresh,
                             })),
                         };
                         Type::new(TypeInner::DefT(
@@ -1057,17 +1098,23 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     })
                 };
                 let t = match (resolve_to, &tuple_elements, spread_after_opt) {
-                    (SpreadArrayResolveTo::ResolveToArray, _, _)
+                    (SpreadArrayResolveTo::ResolveToArray { .. }, _, _)
                     | (SpreadArrayResolveTo::ResolveToArrayLiteral { .. }, None, _)
                     | (SpreadArrayResolveTo::ResolveToArrayLiteral { .. }, _, true) => {
                         let arrtype = if as_const {
-                            ArrType::ROArrayAT(Box::new((elem_t.dupe(), None)))
+                            ArrType::ROArrayAT(Box::new(ROArrayATData {
+                                elem_t: elem_t.dupe(),
+                                react_dro: None,
+                                literal,
+                            }))
                         } else {
                             ArrType::ArrayAT(Box::new(ArrayATData {
                                 elem_t: elem_t.dupe(),
                                 tuple_view: None,
                                 react_dro: None,
                                 strictness_kind: cx.type_strictness_kind(),
+                                literal,
+                                fresh,
                             }))
                         };
                         Type::new(TypeInner::DefT(
@@ -1076,7 +1123,9 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         ))
                     }
                     (
-                        SpreadArrayResolveTo::ResolveToArrayLiteral { as_const: false },
+                        SpreadArrayResolveTo::ResolveToArrayLiteral {
+                            as_const: false, ..
+                        },
                         Some(elements),
                         _,
                     ) => {
@@ -1104,6 +1153,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         tuple_view,
                                         react_dro: None,
                                         strictness_kind: cx.type_strictness_kind(),
+                                        literal,
+                                        fresh,
                                     },
                                 ))))),
                             ))
@@ -1116,6 +1167,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         tuple_view: None,
                                         react_dro: None,
                                         strictness_kind: cx.type_strictness_kind(),
+                                        literal,
+                                        fresh,
                                     },
                                 ))))),
                             ))
@@ -1125,7 +1178,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         create_tuple_type(cx, inexact, elements.clone())?
                     }
                     (
-                        SpreadArrayResolveTo::ResolveToArrayLiteral { as_const: true },
+                        SpreadArrayResolveTo::ResolveToArrayLiteral { as_const: true, .. },
                         Some(elements),
                         _,
                     ) => create_tuple_type(cx, false, elements.clone())?,
@@ -1413,6 +1466,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         tuple_view: None,
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
+                        fresh: false,
                     }))
                 }
             };
@@ -1484,6 +1539,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         (
                             &rest_t,
                             &UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+                                literal: false,
                                 use_op: use_op.dupe(),
                                 reason: rest_reason.dupe(),
                                 index: rest_args_count,
@@ -1585,6 +1641,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         SpreadResolve::ResolveSpreadsToArrayLiteral {
             id: _,
             as_const,
+            literal,
+            fresh,
             elem_t,
             tout,
         } => finish_array(
@@ -1593,18 +1651,27 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             use_op,
             trace,
             reason_op,
-            SpreadArrayResolveTo::ResolveToArrayLiteral { as_const },
+            SpreadArrayResolveTo::ResolveToArrayLiteral {
+                as_const,
+                literal,
+                fresh,
+            },
             &resolved,
             &elem_t,
             &tout,
         ),
-        SpreadResolve::ResolveSpreadsToArray(elem_t, tout) => finish_array(
+        SpreadResolve::ResolveSpreadsToArray {
+            elem_t,
+            tout,
+            literal,
+            fresh,
+        } => finish_array(
             cx,
             env,
             use_op,
             trace,
             reason_op,
-            SpreadArrayResolveTo::ResolveToArray,
+            SpreadArrayResolveTo::ResolveToArray { literal, fresh },
             &resolved,
             &elem_t,
             &tout,

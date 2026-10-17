@@ -64,6 +64,7 @@ use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::ModuleTypeInner;
 use flow_typing_type::type_::NamedSymbol;
 use flow_typing_type::type_::PolyTKind;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
@@ -2032,6 +2033,8 @@ fn merge_annot<'cx>(
                         strictness_kind: TypeStrictnessKind::from_is_typescript(
                             loc.source().is_some_and(flow_common::files::has_ts_ext),
                         ),
+                        literal: false,
+                        fresh: false,
                     }),
                 )))),
             ))
@@ -2042,7 +2045,11 @@ fn merge_annot<'cx>(
             Type::new(type_::TypeInner::DefT(
                 reason,
                 type_::DefT::new(type_::DefTInner::ArrT(Rc::new(type_::ArrType::ROArrayAT(
-                    Box::new((t, None)),
+                    Box::new(ROArrayATData {
+                        elem_t: t,
+                        react_dro: None,
+                        literal: false,
+                    }),
                 )))),
             ))
         }
@@ -3301,6 +3308,8 @@ fn merge_value<'cx>(
                 inexact: false,
                 rest: None,
                 strictness_kind: inner.strictness_kind,
+                literal: false,
+                fresh: false,
             }));
             Type::new(type_::TypeInner::DefT(
                 reason,
@@ -3363,6 +3372,8 @@ fn merge_value<'cx>(
                     inexact: false,
                     rest: None,
                     strictness_kind: inner.strictness_kind,
+                    literal: false,
+                    fresh: false,
                 }))
             } else {
                 type_::ArrType::ArrayAT(Box::new(ArrayATData {
@@ -3370,6 +3381,8 @@ fn merge_value<'cx>(
                     tuple_view: None,
                     react_dro: None,
                     strictness_kind: inner.strictness_kind,
+                    literal: false,
+                    fresh: false,
                 }))
             };
             Type::new(type_::TypeInner::DefT(

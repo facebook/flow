@@ -1976,6 +1976,7 @@ pub struct LookupTData {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ArrRestTData {
+    pub literal: bool,
     pub use_op: UseOp,
     pub reason: Reason,
     pub index: i32,
@@ -5084,6 +5085,10 @@ pub struct ArrayATData {
     pub elem_t: Type,
     pub tuple_view: Option<TupleView>,
     pub strictness_kind: TypeStrictnessKind,
+    /// Literal elements can be generalized by natural inference.
+    pub literal: bool,
+    /// Fresh mutable arrays can be checked covariantly.
+    pub fresh: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -5100,6 +5105,8 @@ pub struct TupleATData {
     /// element type `T`, and it is never `optional`. A tuple with a rest element is not `inexact`.
     pub rest: Option<TupleElement>,
     pub strictness_kind: TypeStrictnessKind,
+    pub literal: bool,
+    pub fresh: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -5111,7 +5118,45 @@ pub enum ArrType {
     TupleAT(Box<TupleATData>),
     /// ROArrayAT(elemt) is the super type for all tuples and arrays for which
     /// elemt is a supertype of every element type
-    ROArrayAT(Box<(Type, Option<ReactDro>)>),
+    ROArrayAT(Box<ROArrayATData>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ROArrayATData {
+    pub elem_t: Type,
+    pub react_dro: Option<ReactDro>,
+    pub literal: bool,
+}
+
+impl ArrType {
+    pub fn literal(&self) -> bool {
+        match self {
+            Self::ArrayAT(a) => a.literal,
+            Self::TupleAT(a) => a.literal,
+            Self::ROArrayAT(a) => a.literal,
+        }
+    }
+    pub fn fresh(&self) -> bool {
+        match self {
+            Self::ArrayAT(a) => a.fresh,
+            Self::TupleAT(a) => a.fresh,
+            Self::ROArrayAT(_) => false,
+        }
+    }
+    pub fn with_literal(mut self, literal: bool, fresh: bool) -> Self {
+        match &mut self {
+            Self::ArrayAT(a) => {
+                a.literal = literal;
+                a.fresh = fresh;
+            }
+            Self::TupleAT(a) => {
+                a.literal = literal;
+                a.fresh = fresh;
+            }
+            Self::ROArrayAT(a) => a.literal = literal,
+        }
+        self
+    }
 }
 
 #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -6214,11 +6259,18 @@ pub enum SpreadResolve {
     ResolveSpreadsToArrayLiteral {
         id: i32,
         as_const: bool,
+        literal: bool,
+        fresh: bool,
         elem_t: Type,
         tout: Type,
     },
     /// Once we've finished resolving spreads, try to construct a non-tuple array
-    ResolveSpreadsToArray(Type, Type), // elem type, array type
+    ResolveSpreadsToArray {
+        elem_t: Type,
+        tout: Type,
+        literal: bool,
+        fresh: bool,
+    },
     /// Once we've finished resolving spreads for a function's arguments, call the
     /// function with those arguments
     ResolveSpreadsToMultiflowCallFull(i32, Box<FunType>),
@@ -6231,9 +6283,18 @@ pub enum SpreadResolve {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SpreadArrayResolveTo {
-    ResolveToArrayLiteral { as_const: bool },
-    ResolveToArray,
-    ResolveToTupleType { inexact: bool },
+    ResolveToArrayLiteral {
+        as_const: bool,
+        literal: bool,
+        fresh: bool,
+    },
+    ResolveToArray {
+        literal: bool,
+        fresh: bool,
+    },
+    ResolveToTupleType {
+        inexact: bool,
+    },
 }
 
 /// Add some flavor to the TypeT constructor. For now this information is only
@@ -11900,7 +11961,7 @@ pub fn elemt_of_arrtype(arrtype: &ArrType) -> Type {
     match arrtype {
         ArrType::ArrayAT(box ArrayATData { elem_t, .. })
         | ArrType::TupleAT(box TupleATData { elem_t, .. }) => elem_t.dupe(),
-        ArrType::ROArrayAT(box (elem_t, _)) => elem_t.dupe(),
+        ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) => elem_t.dupe(),
     }
 }
 

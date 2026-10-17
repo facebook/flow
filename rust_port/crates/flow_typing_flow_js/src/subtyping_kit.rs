@@ -100,6 +100,7 @@ use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::PropertyType;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::ReactKitTData;
@@ -5906,24 +5907,7 @@ pub fn rec_sub_t<'cx>(
                 }),
                 Arc::new(use_op),
             );
-            // These cases correspond to calls so the rest array can be considered "literal".
-            let lit1 = match r1.desc(true) {
-                Some(VirtualReasonDesc::RArrayLitUnsound | VirtualReasonDesc::RReactChildren) => {
-                    true
-                }
-                Some(VirtualReasonDesc::RRestArrayLit(desc)) => matches!(
-                    desc.as_deref(),
-                    Some(
-                        VirtualReasonDesc::RCode(_)
-                            | VirtualReasonDesc::RFunctionCall(_)
-                            | VirtualReasonDesc::RConstructorCall(_)
-                            | VirtualReasonDesc::RMethodCall(_)
-                            | VirtualReasonDesc::RJSXFunctionCall(_)
-                            | VirtualReasonDesc::RFunctionType
-                    )
-                ),
-                _ => false,
-            };
+            let lit1 = arr1.fresh();
             let ts1 = tv1
                 .as_ref()
                 .map(|tv| type_util::tuple_ts_of_elements(&tv.elements))
@@ -5972,7 +5956,7 @@ pub fn rec_sub_t<'cx>(
                     }),
                 ) = (arr1.as_ref(), arr2.as_ref()) =>
         {
-            let fresh = flow_common::reason::is_literal_array_reason(r1);
+            let fresh = arr1.literal();
             let (num_req1, num_total1) = *lower_arity;
             let (num_req2, num_total2) = *upper_arity;
             // A tuple with a rest element has no maximum length, like an inexact tuple.
@@ -6234,6 +6218,8 @@ pub fn rec_sub_t<'cx>(
                                 rest: tv.rest.dupe(),
                                 react_dro: react_dro.clone(),
                                 strictness_kind: *strictness_kind,
+                                literal: arr1.literal(),
+                                fresh: arr1.fresh(),
                             },
                         ))))),
                     ));
@@ -6247,12 +6233,12 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
             if let DefTInner::ArrT(arr1) = ld.deref()
                 && let DefTInner::ArrT(arr2) = ud.deref()
-                && let ArrType::ROArrayAT(box (t2, _)) = arr2.as_ref() =>
+                && let ArrType::ROArrayAT(box ROArrayATData { elem_t: t2, .. }) = arr2.as_ref() =>
         {
             let t1 = match arr1.as_ref() {
                 ArrType::ArrayAT(box ArrayATData { elem_t, .. })
                 | ArrType::TupleAT(box TupleATData { elem_t, .. }) => elem_t,
-                ArrType::ROArrayAT(box (t, _)) => t,
+                ArrType::ROArrayAT(box ROArrayATData { elem_t: t, .. }) => t,
             };
             let use_op = VirtualUseOp::Frame(
                 Arc::new(VirtualFrameUseOp::ArrayElementCompatibility {
@@ -6279,7 +6265,7 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(_, ld), TypeInner::DefT(r2, ud))
             if matches!(ld.deref(), DefTInner::InstanceT(_))
                 && let DefTInner::ArrT(arr2) = ud.deref()
-                && let ArrType::ROArrayAT(box (elemt, _)) = arr2.as_ref() =>
+                && let ArrType::ROArrayAT(box ROArrayATData { elem_t: elemt, .. }) = arr2.as_ref() =>
         {
             let arrt = FlowJs::get_builtin_typeapp_with_env(
                 cx,

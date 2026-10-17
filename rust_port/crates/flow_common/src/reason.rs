@@ -1666,19 +1666,6 @@ pub fn is_instantiable_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     }
 }
 
-pub fn is_literal_array_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
-    match r.desc(true) {
-        Some(
-            VirtualReasonDesc::RArrayLitUnsound
-            | VirtualReasonDesc::REmptyArrayLit
-            | VirtualReasonDesc::RRestArrayLit(_)
-            | VirtualReasonDesc::RReactChildren
-            | VirtualReasonDesc::RArrayPatternRestProp,
-        ) => true,
-        _ => false,
-    }
-}
-
 pub fn is_record_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
     matches!(r.desc(true), Some(VirtualReasonDesc::RRecordType(_)))
 }

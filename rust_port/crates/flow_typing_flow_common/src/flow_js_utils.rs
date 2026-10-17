@@ -74,6 +74,7 @@ use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::NamedSymbol;
 use flow_typing_type::type_::PolyTData;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::SetElemTData;
 use flow_typing_type::type_::SpecializeTData;
@@ -7885,7 +7886,7 @@ pub fn array_elem_check<'cx>(
             inexact,
             rest,
             react_dro,
-            strictness_kind: _,
+            ..
         }) => {
             let elem_t = union_void_if_instructed(elem_t.dupe());
             // An index past the fixed elements accesses the rest element, which may not exist.
@@ -7907,7 +7908,9 @@ pub fn array_elem_check<'cx>(
                 react_dro.clone(),
             )
         }
-        ArrType::ROArrayAT(box (elem_t, react_dro)) => {
+        ArrType::ROArrayAT(box ROArrayATData {
+            elem_t, react_dro, ..
+        }) => {
             let elem_t = union_void_if_instructed(elem_t.dupe());
             (elem_t, None, None, true, false, false, react_dro.clone())
         }
@@ -9186,6 +9189,8 @@ where
                             rest: None,
                             react_dro: None,
                             strictness_kind,
+                            literal: false,
+                            fresh: false,
                         }),
                     )))),
                 )))

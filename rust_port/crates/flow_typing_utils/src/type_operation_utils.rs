@@ -61,6 +61,7 @@ use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::Predicate;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::RootUseOp;
 use flow_typing_type::type_::SwitchRefinementCheckData;
 use flow_typing_type::type_::TupleATData;
@@ -1782,7 +1783,7 @@ pub mod special_cased_functions {
                             tuple_view: Some(type_::TupleView { inexact: true, .. }),
                             ..
                         })
-                        | ArrType::ROArrayAT(box (elem_t, _)) => {
+                        | ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) => {
                             // Object.assign(o, ...Array<x>) -> Object.assign(o, x)
                             let default_kind = type_::default_obj_assign_kind();
                             assign_from(
@@ -2744,7 +2745,7 @@ pub mod type_assertions {
             {
                 Ok(())
             }
-            (TypeInner::DefT(_, def_t), _) if matches!(def_t.deref(), DefTInner::ArrT(arr) if matches!(arr.deref(), ArrType::ROArrayAT(box (_, _)) | ArrType::ArrayAT(box ArrayATData { .. }))) => {
+            (TypeInner::DefT(_, def_t), _) if matches!(def_t.deref(), DefTInner::ArrT(arr) if matches!(arr.deref(), ArrType::ROArrayAT(box ROArrayATData { .. }) | ArrType::ArrayAT(box ArrayATData { .. }))) => {
                 Ok(())
             }
             (TypeInner::DefT(_, def_t), Some(prop_name))
@@ -2891,7 +2892,7 @@ pub mod type_assertions {
                     DefTInner::ArrT(arr) => {
                         matches!(
                             arr.deref(),
-                            ArrType::ArrayAT(box ArrayATData { .. }) | ArrType::ROArrayAT(box (_, _))
+                            ArrType::ArrayAT(box ArrayATData { .. }) | ArrType::ROArrayAT(box ROArrayATData { .. })
                         )
                     }
                     _ => false,

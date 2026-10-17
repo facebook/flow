@@ -29,6 +29,7 @@ use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::NominalType;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::RendersVariant;
 use flow_typing_type::type_::TupleATData;
@@ -571,14 +572,14 @@ pub fn non_renders_to_renders<'cx>(
             DefTInner::ArrT(arr) if matches!(arr.deref(),
                 ArrType::ArrayAT(box ArrayATData { .. })
                 | ArrType::TupleAT(box TupleATData { .. })
-                | ArrType::ROArrayAT(box (..)))
+                | ArrType::ROArrayAT(box ROArrayATData { .. }))
         ) =>
         {
             if let DefTInner::ArrT(arr) = def_t.deref() {
                 let t = match arr.deref() {
                     ArrType::ArrayAT(box ArrayATData { elem_t: t, .. })
                     | ArrType::TupleAT(box TupleATData { elem_t: t, .. })
-                    | ArrType::ROArrayAT(box (t, _)) => t,
+                    | ArrType::ROArrayAT(box ROArrayATData { elem_t: t, .. }) => t,
                 };
                 FlowJs::rec_flow_t_with_env(
                     cx,
@@ -861,7 +862,7 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
                         let arr_elem_t = match arr.deref() {
                             ArrType::ArrayAT(box ArrayATData { elem_t, .. }) => elem_t,
                             ArrType::TupleAT(box TupleATData { elem_t, .. }) => elem_t,
-                            ArrType::ROArrayAT(box (t, _)) => t,
+                            ArrType::ROArrayAT(box ROArrayATData { elem_t: t, .. }) => t,
                         };
                         let concrete = FlowJs::possible_concrete_types_for_inspection_with_env(
                             cx,

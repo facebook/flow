@@ -66,6 +66,7 @@ use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::OptionalIndexedAccessIndex;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PolyTKind;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ResolvedArgData;
 use flow_typing_type::type_::ResolvedSpreadArgData;
@@ -2243,7 +2244,7 @@ mod type_converter {
                     arr_elt_t,
                 })))
             }
-            (ArrType::ROArrayAT(box (elem_t, _)), _) => {
+            (ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }), _) => {
                 let arr_elt_t = type__::<I>(env, state, None, elem_t)?;
                 Ok(Arc::new(ty::Ty::Arr(ty::ArrT {
                     arr_readonly: true,
@@ -4864,7 +4865,7 @@ mod expand_members {
     ) -> Result<ALocTy, Error> {
         let builtin = match a {
             flow_typing_type::type_::ArrType::ArrayAT(box ArrayATData { .. }) => "Array",
-            flow_typing_type::type_::ArrType::ROArrayAT(box (..))
+            flow_typing_type::type_::ArrType::ROArrayAT(box ROArrayATData { .. })
             | flow_typing_type::type_::ArrType::TupleAT(box TupleATData { .. }) => "ReadonlyArray",
         };
         let t = match a {
@@ -4875,7 +4876,7 @@ mod expand_members {
                     r.dupe(),
                 )
             }
-            flow_typing_type::type_::ArrType::ROArrayAT(box (..))
+            flow_typing_type::type_::ArrType::ROArrayAT(box ROArrayATData { .. })
             | flow_typing_type::type_::ArrType::TupleAT(box TupleATData { .. }) => {
                 flow_typing_flow_common::flow_js_utils::lookup_builtin_type(
                     env.cx,

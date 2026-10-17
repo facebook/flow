@@ -17,6 +17,7 @@ use flow_typing_context::Context;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
@@ -107,7 +108,7 @@ pub mod type_app_expansion {
         fn arrtype(&self, r: &Reason, arr: &ArrType) -> Root {
             match arr {
                 ArrType::ArrayAT(box ArrayATData { .. }) => Root::Array(r.dupe()),
-                ArrType::ROArrayAT(box (..)) => Root::ROArray(r.dupe()),
+                ArrType::ROArrayAT(box ROArrayATData { .. }) => Root::ROArray(r.dupe()),
                 ArrType::TupleAT(box TupleATData { elements, .. }) => {
                     Root::Tuple(r.dupe(), elements.len())
                 }

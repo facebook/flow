@@ -18,7 +18,6 @@ use flow_common::hint::HintKind;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
-use flow_common::reason::is_literal_array_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::VariableKind;
 use flow_typing_context::Context;
@@ -347,10 +346,14 @@ fn literal_type_mapper_type_dispatch<'cx>(
     match t.deref() {
         TypeInner::OpenT(_) => LiteralMapAction::TypeDefault(t.dupe()),
         TypeInner::DefT(r, def_t)
-            if matches!(def_t.deref(), DefTInner::ArrT(_)) && is_literal_array_reason(r) =>
+            if let DefTInner::ArrT(arr) = def_t.deref()
+                && arr.literal() =>
         {
             let t = if matches!(r.desc(true), Some(VirtualReasonDesc::RArrayLitUnsound)) {
-                mod_reason_of_t(&|r| r.replace_desc_new(VirtualReasonDesc::RArrayLit), t)
+                non_literal_of_t(&mod_reason_of_t(
+                    &|r| r.replace_desc_new(VirtualReasonDesc::RArrayLit),
+                    t,
+                ))
             } else {
                 t.dupe()
             };
@@ -535,8 +538,8 @@ fn is_literal_type<'cx>(cx: &mut Context<'cx>, seen: &mut BTreeSet<i32>, t: &Typ
             }
             _ => false,
         },
-        TypeInner::DefT(r, def_t) => match def_t.deref() {
-            DefTInner::ArrT(_) => is_literal_array_reason(r),
+        TypeInner::DefT(_, def_t) => match def_t.deref() {
+            DefTInner::ArrT(arr) => arr.literal(),
             DefTInner::ObjT(o) => o.literal,
             DefTInner::FunT(_, ft) => ft.literal,
             DefTInner::SingletonStrT {
@@ -712,7 +715,7 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
                         tuple_view: Some(tv),
                         ..
                     }) => {
-                        if is_literal_array_reason(r) && self.reason_def_loc_within_call(r) {
+                        if arr.literal() && self.reason_def_loc_within_call(r) {
                             let elem_t_prime = self.type_(cx, map_cx, elem_t.dupe());
                             let elements: Vec<TupleElement> = tv
                                 .elements
@@ -745,6 +748,8 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
                                         inexact: false,
                                         rest,
                                         strictness_kind: cx.type_strictness_kind(),
+                                        literal: false,
+                                        fresh: false,
                                     },
                                 ))))),
                             ))

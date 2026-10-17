@@ -85,6 +85,7 @@ use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::ReposUseTData;
@@ -610,6 +611,7 @@ fn t_of_use_t<'cx>(
                                     reason_spread.dupe(),
                                     |cx, t_prime| {
                                         let u_inner = UseTInner::ArrRestT(Box::new(ArrRestTData {
+                                            literal: false,
                                             use_op: unknown_use(),
                                             reason: reason_spread.dupe(),
                                             index: n,
@@ -647,7 +649,7 @@ fn t_of_use_t<'cx>(
                     ArrType::ArrayAT(box ArrayATData {
                         tuple_view: None, ..
                     })
-                    | ArrType::ROArrayAT(box (..)) => {
+                    | ArrType::ROArrayAT(box ROArrayATData { .. }) => {
                         identity_reverse_upper_bound(cx, env, seen, tvar, tout)
                     }
                     ArrType::ArrayAT(box ArrayATData {
@@ -762,6 +764,7 @@ fn t_of_use_t<'cx>(
                         let arr_rest_result =
                             flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, t_prime| {
                                 let u_inner = UseTInner::ArrRestT(Box::new(ArrRestTData {
+                                    literal: false,
                                     use_op: unknown_use(),
                                     reason: reason.dupe(),
                                     index: n as i32,
@@ -775,7 +778,7 @@ fn t_of_use_t<'cx>(
                 }
                 SpreadResolve::ResolveSpreadsToTupleType { .. }
                 | SpreadResolve::ResolveSpreadsToArrayLiteral { .. }
-                | SpreadResolve::ResolveSpreadsToArray(..)
+                | SpreadResolve::ResolveSpreadsToArray { .. }
                 | SpreadResolve::ResolveSpreadsToMultiflowCallFull(..)
                 | SpreadResolve::ResolveSpreadsToMultiflowPartial(..) => {
                     Ok(UseTResult::UpperNonT(u.dupe()))
@@ -1170,6 +1173,8 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                 rest: None,
                 react_dro: None,
                 strictness_kind: Default::default(),
+                literal: false,
+                fresh: false,
             }));
             let reason_out = reason
                 .dupe()
@@ -1241,6 +1246,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
         index => {
             let arr_rest_result = flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tout| {
                 let u_inner = UseTInner::ArrRestT(Box::new(ArrRestTData {
+                    literal: false,
                     use_op: unknown_use(),
                     reason: reason.dupe(),
                     index: index as i32,

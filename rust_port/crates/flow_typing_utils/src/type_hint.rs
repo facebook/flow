@@ -1067,6 +1067,7 @@ fn type_of_hint_decomposition<'cx>(
                     move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
                         let use_t = UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+                            literal: false,
                             use_op: unknown_use(),
                             reason: reason2.dupe(),
                             index: i,
@@ -1101,6 +1102,8 @@ fn type_of_hint_decomposition<'cx>(
                                 tuple_view: Some(empty_tuple_view()),
                                 react_dro: None,
                                 strictness_kind: cx.type_strictness_kind(),
+                                literal: false,
+                                fresh: false,
                             },
                         ))))),
                     ));

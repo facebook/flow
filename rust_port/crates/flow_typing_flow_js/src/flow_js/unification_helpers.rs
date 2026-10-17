@@ -230,6 +230,7 @@ fn __unify_inner<'cx>(
                                 rest: rest1,
                                 react_dro: _,
                                 strictness_kind: lower_strictness_kind,
+                                ..
                             }),
                             ArrType::TupleAT(box TupleATData {
                                 elem_t: _,
@@ -239,6 +240,7 @@ fn __unify_inner<'cx>(
                                 rest: rest2,
                                 react_dro: _,
                                 strictness_kind: upper_strictness_kind,
+                                ..
                             }),
                         ) => {
                             let (num_req1, num_total1) = lower_arity;

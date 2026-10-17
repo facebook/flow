@@ -1406,13 +1406,19 @@ fn convert_inner<'a>(
                             elem_t: elem_t.dupe(),
                             tuple_view: None,
                             strictness_kind: cx.type_strictness_kind(),
+                            literal: false,
+                            fresh: false,
                         }),
                     )))),
                 ));
                 let ro_t = Type::new(type_::TypeInner::DefT(
                     reason::mk_annot_reason(reason::VirtualReasonDesc::RROArrayType, loc.dupe()),
                     type_::DefT::new(type_::DefTInner::ArrT(Rc::new(type_::ArrType::ROArrayAT(
-                        Box::new((elem_t.dupe(), None)),
+                        Box::new(ROArrayATData {
+                            elem_t: elem_t.dupe(),
+                            react_dro: None,
+                            literal: false,
+                        }),
                     )))),
                 ));
                 ast::types::Type::new(TypeInner::ReadOnly {
@@ -1512,6 +1518,8 @@ fn convert_inner<'a>(
                         tuple_view: None,
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
+                        fresh: false,
                     }),
                 )))),
             ));
@@ -2184,6 +2192,8 @@ fn convert_inner<'a>(
                                             elem_t,
                                             tuple_view: None,
                                             strictness_kind: cx.type_strictness_kind(),
+                                            literal: false,
+                                            fresh: false,
                                         })),
                                     ))),
                                 )),
@@ -2215,7 +2225,11 @@ fn convert_inner<'a>(
                                         loc.dupe(),
                                     ),
                                     type_::DefT::new(type_::DefTInner::ArrT(Rc::new(
-                                        type_::ArrType::ROArrayAT(Box::new((elemt, None))),
+                                        type_::ArrType::ROArrayAT(Box::new(ROArrayATData {
+                                            elem_t: elemt,
+                                            react_dro: None,
+                                            literal: false,
+                                        })),
                                     ))),
                                 )),
                                 None,
@@ -2832,7 +2846,11 @@ fn convert_inner<'a>(
                                         loc.dupe(),
                                     ),
                                     type_::DefT::new(type_::DefTInner::ArrT(Rc::new(
-                                        type_::ArrType::ROArrayAT(Box::new((elemt, None))),
+                                        type_::ArrType::ROArrayAT(Box::new(ROArrayATData {
+                                            elem_t: elemt,
+                                            react_dro: None,
+                                            literal: false,
+                                        })),
                                     ))),
                                 )),
                                 id_t,

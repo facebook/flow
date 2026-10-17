@@ -177,7 +177,7 @@ pub fn default_resolve_touts<C>(
         match resolve_tool {
             SpreadResolve::ResolveSpreadsToTupleType { tout, .. } => resolve(cx, tout.dupe()),
             SpreadResolve::ResolveSpreadsToArrayLiteral { tout, .. } => resolve(cx, tout.dupe()),
-            SpreadResolve::ResolveSpreadsToArray(_, t) => resolve(cx, t.dupe()),
+            SpreadResolve::ResolveSpreadsToArray { tout: t, .. } => resolve(cx, t.dupe()),
             SpreadResolve::ResolveSpreadsToMultiflowCallFull(..) => Ok(()),
             SpreadResolve::ResolveSpreadsToMultiflowPartial(
                 box ResolveSpreadsToMultiflowPartialData(_, _, _, t),

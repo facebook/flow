@@ -41,6 +41,7 @@ use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::DestructorSpreadTypeData;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TupleATData;
@@ -2231,6 +2232,7 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
                             rest,
                             react_dro: _,
                             strictness_kind,
+                            ..
                         }) => Type::new(TypeInner::DefT(
                             r.dupe(),
                             type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
@@ -2242,6 +2244,8 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
                                     inexact: *inexact,
                                     rest: rest.dupe(),
                                     strictness_kind: *strictness_kind,
+                                    literal: arr.literal(),
+                                    fresh: arr.fresh(),
                                 },
                             ))))),
                         )),
@@ -2250,6 +2254,7 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
                             tuple_view,
                             react_dro: _,
                             strictness_kind,
+                            ..
                         }) => Type::new(TypeInner::DefT(
                             r.dupe(),
                             type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
@@ -2258,13 +2263,21 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
                                     elem_t: elem_t.dupe(),
                                     tuple_view: tuple_view.clone(),
                                     strictness_kind: *strictness_kind,
+                                    literal: arr.literal(),
+                                    fresh: arr.fresh(),
                                 },
                             ))))),
                         )),
-                        ArrType::ROArrayAT(box (inner_t, _)) => Type::new(TypeInner::DefT(
+                        ArrType::ROArrayAT(box ROArrayATData {
+                            elem_t: inner_t, ..
+                        }) => Type::new(TypeInner::DefT(
                             r.dupe(),
                             type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(
-                                Box::new((inner_t.dupe(), dro)),
+                                Box::new(ROArrayATData {
+                                    elem_t: inner_t.dupe(),
+                                    react_dro: dro,
+                                    literal: arr.literal(),
+                                }),
                             )))),
                         )),
                     },
@@ -2558,7 +2571,7 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
                             elab_t(cx, Some(seen), arr_t, op)
                         }
                         ArrType::TupleAT(box TupleATData { .. })
-                        | ArrType::ROArrayAT(box (_, _)) => {
+                        | ArrType::ROArrayAT(box ROArrayATData { .. }) => {
                             let elem_t = type_::elemt_of_arrtype(arr.as_ref());
                             let arr_t = get_builtin_typeapp(
                                 cx,

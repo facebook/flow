@@ -39,6 +39,7 @@ use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TupleATData;
@@ -324,6 +325,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                                 }),
                             react_dro: dro1,
                             strictness_kind: strictness_kind1,
+                            ..
                         }),
                         ArrType::ArrayAT(box ArrayATData {
                             elem_t: et2,
@@ -336,6 +338,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                                 }),
                             react_dro: dro2,
                             strictness_kind: strictness_kind2,
+                            ..
                         }),
                     ) if arity1 == arity2
                         && inexact1 == inexact2
@@ -381,6 +384,8 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                                         None
                                     },
                                     strictness_kind: strictness_kind1.join(*strictness_kind2),
+                                    literal: false,
+                                    fresh: false,
                                 },
                             ))))),
                         ))
@@ -410,6 +415,8 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                                     None
                                 },
                                 strictness_kind: strictness_kind1.join(*strictness_kind2),
+                                literal: false,
+                                fresh: false,
                             },
                         ))))),
                     )),
@@ -422,6 +429,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                             rest: None,
                             react_dro: dro1,
                             strictness_kind: strictness_kind1,
+                            ..
                         }),
                         ArrType::TupleAT(box TupleATData {
                             elem_t: et2,
@@ -431,6 +439,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                             rest: None,
                             react_dro: dro2,
                             strictness_kind: strictness_kind2,
+                            ..
                         }),
                     ) if arity1 == arity2
                         && inexact1 == inexact2
@@ -473,23 +482,36 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                                     inexact: *inexact1,
                                     rest: None,
                                     strictness_kind: strictness_kind1.join(*strictness_kind2),
+                                    literal: false,
+                                    fresh: false,
                                 },
                             ))))),
                         ))
                     }
                     (
-                        ArrType::ROArrayAT(box (elemt1, dro1)),
-                        ArrType::ROArrayAT(box (elemt2, dro2)),
+                        ArrType::ROArrayAT(box ROArrayATData {
+                            elem_t: elemt1,
+                            react_dro: dro1,
+                            ..
+                        }),
+                        ArrType::ROArrayAT(box ROArrayATData {
+                            elem_t: elemt2,
+                            react_dro: dro2,
+                            ..
+                        }),
                     ) => Type::new(TypeInner::DefT(
                         locationless_reason(VirtualReasonDesc::RArrayType),
-                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((
-                            merge_type(cx, (elemt1.dupe(), elemt2.dupe())),
-                            if dro1.is_some() && dro2.is_some() {
-                                dro1.clone()
-                            } else {
-                                None
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
+                            ROArrayATData {
+                                elem_t: merge_type(cx, (elemt1.dupe(), elemt2.dupe())),
+                                react_dro: if dro1.is_some() && dro2.is_some() {
+                                    dro1.clone()
+                                } else {
+                                    None
+                                },
+                                literal: false,
                             },
-                        )))))),
+                        ))))),
                     )),
                     // Non-matching ArrT pairs
                     _ => create_union(union_rep::make(
@@ -955,7 +977,7 @@ pub fn extract_type<'cx>(cx: &mut Context<'cx>, this_t: Type) -> GenericT<Type, 
                         flow_js_utils::lookup_builtin_type(cx, "ReadonlyArray", reason.dupe()),
                         elem_t.dupe(),
                     ),
-                    ArrType::ROArrayAT(box (elem_t, _)) => (
+                    ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) => (
                         flow_js_utils::lookup_builtin_type(cx, "ReadonlyArray", reason.dupe()),
                         elem_t.dupe(),
                     ),

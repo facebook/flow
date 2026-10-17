@@ -40,6 +40,7 @@ use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
@@ -1556,13 +1557,16 @@ pub fn array(t: Type) -> FilterResult {
                 let r = r.dupe().replace_desc_new(None);
                 changed_result(Type::new(TypeInner::DefT(
                     r.dupe().replace_desc_new(VirtualReasonDesc::RROArrayType),
-                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((
-                        Type::new(TypeInner::DefT(
-                            r,
-                            DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
-                        )),
-                        None,
-                    )))))),
+                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
+                        ROArrayATData {
+                            elem_t: Type::new(TypeInner::DefT(
+                                r,
+                                DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
+                            )),
+                            react_dro: None,
+                            literal: false,
+                        },
+                    ))))),
                 )))
             }
             DefTInner::ArrT(_) => unchanged_result(t),
@@ -1639,7 +1643,8 @@ pub fn array_length(sense: bool, op: &ArrayLengthOp, n: i32, t: Type) -> FilterR
                     }
                 }
             }
-            ArrType::ArrayAT(box ArrayATData { .. }) | ArrType::ROArrayAT(box (_, _)) => {
+            ArrType::ArrayAT(box ArrayATData { .. })
+            | ArrType::ROArrayAT(box ROArrayATData { .. }) => {
                 // [...]` matches every length, so arrays are matched.
                 let matches = n == 0 && *op == ArrayLengthOp::ArrLenGreaterThanEqual;
                 if matches == sense {
@@ -2023,7 +2028,8 @@ fn tag_of_def_t<'cx>(cx: &mut Context<'cx>, d: &DefTInner) -> Option<TypeTagSet>
                     sentinel: sentinel_of_tuple(cx, elements),
                 })]))
             }
-            ArrType::ArrayAT(box ArrayATData { .. }) | ArrType::ROArrayAT(box (..)) => {
+            ArrType::ArrayAT(box ArrayATData { .. })
+            | ArrType::ROArrayAT(box ROArrayATData { .. }) => {
                 Some(BTreeSet::from([TypeTag(TypeTagInner::ArrTag {
                     sentinel: BTreeMap::new(),
                 })]))

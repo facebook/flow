@@ -674,6 +674,8 @@ fn resolve_hint<'cx>(
                         &reason_op,
                         elem_spread_list,
                         type_::SpreadResolve::ResolveSpreadsToArrayLiteral {
+                            literal: false,
+                            fresh: false,
                             id: reason::mk_id() as i32,
                             as_const: false,
                             elem_t,
@@ -1427,6 +1429,8 @@ fn resolve_binding<'cx>(
                                     tuple_view: Some(type_::empty_tuple_view()),
                                     react_dro: None,
                                     strictness_kind: cx.type_strictness_kind(),
+                                    literal: false,
+                                    fresh: false,
                                 },
                             ))))),
                         ))
@@ -1510,6 +1514,8 @@ fn resolve_binding<'cx>(
                                 &reason_op,
                                 elem_spread_list,
                                 type_::SpreadResolve::ResolveSpreadsToArrayLiteral {
+                                    literal: false,
+                                    fresh: false,
                                     id: reason::mk_id() as i32,
                                     as_const: false,
                                     elem_t,
@@ -1852,6 +1858,8 @@ fn resolve_binding<'cx>(
                         tuple_view,
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: array_providers.is_empty(),
+                        fresh: false,
                     },
                 ))))),
             ));

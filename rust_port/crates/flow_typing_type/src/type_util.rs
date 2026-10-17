@@ -60,6 +60,7 @@ use crate::type_::PolyTKind;
 use crate::type_::PositiveTypeGuardConsistencyData;
 use crate::type_::PrivateMethodTData;
 use crate::type_::PropertyCompatibilityData;
+use crate::type_::ROArrayATData;
 use crate::type_::ReactCreateElementCallData;
 use crate::type_::ReactKitTData;
 use crate::type_::RecordCreateData;
@@ -353,13 +354,24 @@ pub fn mod_reason_of_t(f: &dyn Fn(Reason) -> Reason, t: &Type) -> Type {
     }
 }
 
-/// Clears `literal` on a top-level object type.
+/// Clears literal status on a top-level object or array type.
 pub fn non_literal_of_t(t: &Type) -> Type {
     use crate::type_::DefT;
     use crate::type_::DefTInner;
     use crate::type_::ObjType;
 
     match t.deref() {
+        TypeInner::DefT(reason, def)
+            if let DefTInner::ArrT(arr) = def.deref()
+                && (arr.literal() || arr.fresh()) =>
+        {
+            Type::new(TypeInner::DefT(
+                reason.dupe(),
+                DefT::new(DefTInner::ArrT(Rc::new(
+                    arr.as_ref().clone().with_literal(false, false),
+                ))),
+            ))
+        }
         TypeInner::DefT(reason, def)
             if let DefTInner::ObjT(o) = def.deref()
                 && o.literal =>
@@ -765,11 +777,13 @@ pub fn util_use_op_of_use_t<T, CX: ContextFamily>(
             })
         }
         UseTInner::ArrRestT(data) => {
+            let literal = data.literal;
             let r = data.reason.dupe();
             let i = data.index;
             let t = data.tout.clone();
             call_util(&data.use_op, &move |op| {
                 UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+                    literal,
                     use_op: op,
                     reason: r.dupe(),
                     index: i,
@@ -2651,7 +2665,7 @@ pub fn dro_of_type(t: &Type) -> Option<&crate::type_::ReactDro> {
             DefTInner::ArrT(arr) => match arr.as_ref() {
                 ArrType::ArrayAT(box ArrayATData { react_dro, .. }) => react_dro.as_ref(),
                 ArrType::TupleAT(box TupleATData { react_dro, .. }) => react_dro.as_ref(),
-                ArrType::ROArrayAT(box (_, react_dro)) => react_dro.as_ref(),
+                ArrType::ROArrayAT(box ROArrayATData { react_dro, .. }) => react_dro.as_ref(),
             },
             _ => None,
         },
@@ -2709,6 +2723,8 @@ pub fn normalize_jsx_children_prop(
                         }),
                         react_dro: None,
                         strictness_kind: TypeStrictnessKind::Flow,
+                        literal: true,
+                        fresh: true,
                     },
                 ))))),
             )))

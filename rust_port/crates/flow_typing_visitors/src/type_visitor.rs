@@ -27,6 +27,7 @@ use flow_typing_type::type_::NamespaceType;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::Property;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::Selector;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::ThisInstanceTData;
@@ -981,7 +982,7 @@ pub fn arr_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
                 .chain(rest)
                 .fold(acc, |acc, el| visitor.tuple_element(cx, pole, acc, el))
         }
-        ArrType::ROArrayAT(box (t, _)) => visitor.type_(cx, pole, acc, t),
+        ArrType::ROArrayAT(box ROArrayATData { elem_t: t, .. }) => visitor.type_(cx, pole, acc, t),
     }
 }
 

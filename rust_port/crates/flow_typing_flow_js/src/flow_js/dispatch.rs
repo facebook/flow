@@ -57,6 +57,7 @@ use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::OptionalIndexedAccessTData;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PrivateMethodTData;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::ReadElemData;
 use flow_typing_type::type_::ReposUseTData;
@@ -1416,6 +1417,7 @@ fn __flow_impl<'cx>(
                     rest,
                     react_dro: _,
                     strictness_kind,
+                    ..
                 }) = arr.as_ref() =>
         {
             let ReactDro(dro_loc, dro_type) = dro;
@@ -1430,6 +1432,8 @@ fn __flow_impl<'cx>(
                         inexact: *inexact,
                         rest: rest.dupe(),
                         strictness_kind: *strictness_kind,
+                        literal: arr.literal(),
+                        fresh: arr.fresh(),
                     },
                 ))))),
             ));
@@ -1443,6 +1447,7 @@ fn __flow_impl<'cx>(
                     tuple_view,
                     react_dro: _,
                     strictness_kind,
+                    ..
                 }) = arr.as_ref() =>
         {
             let ReactDro(dro_loc, dro_type) = dro;
@@ -1454,6 +1459,8 @@ fn __flow_impl<'cx>(
                         elem_t: elem_t.dupe(),
                         tuple_view: tuple_view.clone(),
                         strictness_kind: *strictness_kind,
+                        literal: arr.literal(),
+                        fresh: arr.fresh(),
                     },
                 ))))),
             ));
@@ -1462,15 +1469,18 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, dro))
             if let DefTInner::ArrT(arr) = def_t.deref()
-                && let ArrType::ROArrayAT(box (t, _)) = arr.as_ref() =>
+                && let ArrType::ROArrayAT(box ROArrayATData { elem_t: t, .. }) = arr.as_ref() =>
         {
             let ReactDro(dro_loc, dro_type) = dro;
             let new_l = Type::new(TypeInner::DefT(
                 r.dupe(),
-                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((
-                    t.dupe(),
-                    Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
-                )))))),
+                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
+                    ROArrayATData {
+                        elem_t: t.dupe(),
+                        react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
+                        literal: arr.literal(),
+                    },
+                ))))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
@@ -3737,7 +3747,7 @@ fn __flow_impl<'cx>(
                             ArrType::ArrayAT(box ArrayATData {
                                 tuple_view: None, ..
                             })
-                            | ArrType::ROArrayAT(box (_, _))
+                            | ArrType::ROArrayAT(box ROArrayATData { .. })
                             | ArrType::TupleAT(box TupleATData { rest: Some(_), .. }),
                         ) if *inexact || !resolve_spread.rrt_unresolved.is_empty() => {
                             // Only the last spread of a tuple type can have an unknown number of
@@ -3790,7 +3800,7 @@ fn __flow_impl<'cx>(
                             ResolveTo::Iterable
                         }
                         // Otherwise we're spreading values
-                        SpreadResolve::ResolveSpreadsToArray(_, _)
+                        SpreadResolve::ResolveSpreadsToArray { .. }
                         | SpreadResolve::ResolveSpreadsToArrayLiteral { .. }
                         | SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, _)
                         | SpreadResolve::ResolveSpreadsToMultiflowPartial(..) => {
@@ -3822,7 +3832,11 @@ fn __flow_impl<'cx>(
                             Type::new(TypeInner::DefT(
                                 arr_reason,
                                 DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
-                                    (elem_t.dupe(), None),
+                                    ROArrayATData {
+                                        elem_t: elem_t.dupe(),
+                                        react_dro: None,
+                                        literal: false,
+                                    },
                                 ))))),
                             ))
                         }
@@ -3858,6 +3872,8 @@ fn __flow_impl<'cx>(
                         tuple_view: None,
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
+                        fresh: false,
                     }))
                 }
             };
@@ -3924,6 +3940,14 @@ fn __flow_impl<'cx>(
                                     )?;
                                 }
                                 1 => {
+                                    let (literal, fresh) = match &resolve_spread.rrt_resolve_to {
+                                        SpreadResolve::ResolveSpreadsToArrayLiteral {
+                                            literal,
+                                            fresh,
+                                            ..
+                                        } => (*literal, *fresh),
+                                        _ => (false, false),
+                                    };
                                     // To avoid infinite recursion, let's deconstruct to a simpler case
                                     // where we no longer resolve to a tuple but instead just resolve to
                                     // an array.
@@ -3946,10 +3970,12 @@ fn __flow_impl<'cx>(
                                                                 .rrt_unresolved
                                                                 .dupe(),
                                                             rrt_resolve_to:
-                                                                SpreadResolve::ResolveSpreadsToArray(
-                                                                    cfe_elem_t.dupe(),
-                                                                    tout.dupe(),
-                                                                ),
+                                                                SpreadResolve::ResolveSpreadsToArray {
+                                                                    elem_t: cfe_elem_t.dupe(),
+                                                                    tout: tout.dupe(),
+                                                                    literal,
+                                                                    fresh,
+                                                                },
                                                         },
                                                     ),
                                                 },
@@ -4021,11 +4047,14 @@ fn __flow_impl<'cx>(
                                             tuple_view: Some(_),
                                             react_dro,
                                             strictness_kind,
+                                            ..
                                         }) => ArrType::ArrayAT(Box::new(ArrayATData {
                                             elem_t: elem_t.dupe(),
                                             tuple_view: None,
                                             react_dro: react_dro.clone(),
                                             strictness_kind: *strictness_kind,
+                                            literal: arrtype.literal(),
+                                            fresh: arrtype.fresh(),
                                         })),
                                         ArrType::TupleAT(box TupleATData {
                                             elem_t,
@@ -4037,13 +4066,17 @@ fn __flow_impl<'cx>(
                                             tuple_view: None,
                                             react_dro: react_dro.clone(),
                                             strictness_kind: *strictness_kind,
+                                            literal: arrtype.literal(),
+                                            fresh: arrtype.fresh(),
                                         })),
                                         // These cannot
                                         ArrType::ArrayAT(box ArrayATData {
                                             tuple_view: None,
                                             ..
                                         })
-                                        | ArrType::ROArrayAT(box (_, _)) => arrtype.clone(),
+                                        | ArrType::ROArrayAT(box ROArrayATData { .. }) => {
+                                            arrtype.clone()
+                                        }
                                     };
                                     let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
                                     rrt_resolved.push_front(ResolvedParam::ResolvedSpreadArg(
@@ -4071,7 +4104,7 @@ fn __flow_impl<'cx>(
                     )?;
                 }
                 // no caching
-                SpreadResolve::ResolveSpreadsToArray(_, _) => {
+                SpreadResolve::ResolveSpreadsToArray { .. } => {
                     let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
                     rrt_resolved.push_front(ResolvedParam::ResolvedSpreadArg(Box::new(
                         ResolvedSpreadArgData(reason.dupe(), arrtype.clone(), generic.clone()),
@@ -7471,7 +7504,7 @@ fn __flow_impl<'cx>(
             let react_dro = match (action, arrtype.as_ref()) {
                 (
                     box ElemAction::WriteElem(..),
-                    ArrType::ROArrayAT(box (_, _))
+                    ArrType::ROArrayAT(box ROArrayATData { .. })
                     | ArrType::TupleAT(box TupleATData {
                         react_dro: Some(_), ..
                     })
@@ -7505,7 +7538,7 @@ fn __flow_impl<'cx>(
                 }
                 (
                     box ElemAction::ReadElem(..),
-                    ArrType::ROArrayAT(box (_, react_dro))
+                    ArrType::ROArrayAT(box ROArrayATData { react_dro, .. })
                     | ArrType::TupleAT(box TupleATData { react_dro, .. })
                     | ArrType::ArrayAT(box ArrayATData { react_dro, .. }),
                 ) => react_dro.clone(),
@@ -7635,10 +7668,12 @@ fn __flow_impl<'cx>(
         (
             TypeInner::DefT(_, def_t),
             UseTInner::ArrRestT(box ArrRestTData {
+                literal,
                 use_op: _,
                 reason,
                 index: i,
                 tout,
+                ..
             }),
         ) if let DefTInner::ArrT(arrtype) = def_t.deref() => {
             let i = *i as usize;
@@ -7646,12 +7681,13 @@ fn __flow_impl<'cx>(
                 ArrType::ArrayAT(box ArrayATData {
                     tuple_view: None, ..
                 })
-                | ArrType::ROArrayAT(box (_, _)) => arrtype.deref().clone(),
+                | ArrType::ROArrayAT(box ROArrayATData { .. }) => arrtype.deref().clone(),
                 ArrType::ArrayAT(box ArrayATData {
                     elem_t,
                     tuple_view: Some(tuple_view),
                     react_dro,
                     strictness_kind,
+                    ..
                 }) => {
                     let elements = tuple_view.elements[i.min(tuple_view.elements.len())..].to_vec();
                     let (num_req, num_total) = tuple_view.arity;
@@ -7674,6 +7710,8 @@ fn __flow_impl<'cx>(
                         tuple_view,
                         react_dro: react_dro.clone(),
                         strictness_kind: *strictness_kind,
+                        literal: *literal,
+                        fresh: false,
                     }))
                 }
                 ArrType::TupleAT(box TupleATData {
@@ -7684,6 +7722,7 @@ fn __flow_impl<'cx>(
                     rest,
                     react_dro,
                     strictness_kind,
+                    ..
                 }) => {
                     let elements = &elements[i.min(elements.len())..];
                     // The element type of an exact tuple is the union of its elements.
@@ -7707,6 +7746,8 @@ fn __flow_impl<'cx>(
                             tuple_view: None,
                             react_dro: react_dro.clone(),
                             strictness_kind: *strictness_kind,
+                            literal: *literal,
+                            fresh: false,
                         })),
                         _ => ArrType::TupleAT(Box::new(TupleATData {
                             elem_t,
@@ -7719,13 +7760,17 @@ fn __flow_impl<'cx>(
                             rest: rest.dupe(),
                             react_dro: react_dro.clone(),
                             strictness_kind: *strictness_kind,
+                            literal: *literal,
+                            fresh: false,
                         })),
                     }
                 }
             };
             let a = Type::new(TypeInner::DefT(
                 reason.dupe(),
-                DefT::new(DefTInner::ArrT(Rc::new(arrtype))),
+                DefT::new(DefTInner::ArrT(Rc::new(
+                    arrtype.with_literal(*literal, false),
+                ))),
             ));
             rec_flow_t(cx, env, trace, unknown_use(), (&a, tout))?;
         }
@@ -7736,6 +7781,7 @@ fn __flow_impl<'cx>(
                 reason,
                 index: _,
                 tout,
+                ..
             }),
         ) => {
             rec_flow_t(
@@ -7798,15 +7844,16 @@ fn __flow_impl<'cx>(
                             let roarray_bound = Type::new(TypeInner::DefT(
                                 reason.dupe(),
                                 DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
-                                    (
-                                        Type::new(TypeInner::DefT(
+                                    ROArrayATData {
+                                        elem_t: Type::new(TypeInner::DefT(
                                             reason.dupe(),
                                             DefT::new(DefTInner::MixedT(
                                                 MixedFlavor::MixedEverything,
                                             )),
                                         )),
-                                        None,
-                                    ),
+                                        react_dro: None,
+                                        literal: false,
+                                    },
                                 ))))),
                             ));
                             speculative_subtyping_succeeds(cx, env, bound, &roarray_bound)?
@@ -7854,13 +7901,16 @@ fn __flow_impl<'cx>(
             && {
                 let roarray_bound = Type::new(TypeInner::DefT(
                     reason.dupe(),
-                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((
-                        Type::new(TypeInner::DefT(
-                            reason.dupe(),
-                            DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
-                        )),
-                        None,
-                    )))))),
+                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
+                        ROArrayATData {
+                            elem_t: Type::new(TypeInner::DefT(
+                                reason.dupe(),
+                                DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
+                            )),
+                            react_dro: None,
+                            literal: false,
+                        },
+                    ))))),
                 ));
                 speculative_subtyping_succeeds(cx, env, bound, &roarray_bound)?
             } =>
@@ -8033,6 +8083,7 @@ fn __flow_impl<'cx>(
                     tuple_view,
                     react_dro,
                     strictness_kind,
+                    ..
                 }) => {
                     let mapped_elem_t = f(cx, elem_t, None, false)?;
                     let mapped_tuple_view = match tuple_view.as_ref() {
@@ -8079,6 +8130,8 @@ fn __flow_impl<'cx>(
                         react_dro: react_dro.clone(),
                         tuple_view: mapped_tuple_view,
                         strictness_kind: *strictness_kind,
+                        literal: false,
+                        fresh: false,
                     }))
                 }
                 ArrType::TupleAT(box TupleATData {
@@ -8089,6 +8142,7 @@ fn __flow_impl<'cx>(
                     rest,
                     react_dro,
                     strictness_kind,
+                    ..
                 }) => {
                     let mapped_elem_t = f(cx, elem_t, None, false)?;
                     ArrType::TupleAT(Box::new(TupleATData {
@@ -8121,11 +8175,21 @@ fn __flow_impl<'cx>(
                             })
                             .transpose()?,
                         strictness_kind: *strictness_kind,
+                        literal: false,
+                        fresh: false,
                     }))
                 }
-                ArrType::ROArrayAT(box (elemt, dro)) => {
+                ArrType::ROArrayAT(box ROArrayATData {
+                    elem_t: elemt,
+                    react_dro: dro,
+                    ..
+                }) => {
                     let mapped_elem_t = f(cx, elemt, None, false)?;
-                    ArrType::ROArrayAT(Box::new((array_elem(cx, mapped_elem_t)?, dro.clone())))
+                    ArrType::ROArrayAT(Box::new(ROArrayATData {
+                        elem_t: array_elem(cx, mapped_elem_t)?,
+                        react_dro: dro.clone(),
+                        literal: false,
+                    }))
                 }
             };
             let t = {
@@ -8466,9 +8530,9 @@ fn __flow_impl<'cx>(
                                             ("Array", elem_t)
                                         }
                                         ArrType::TupleAT(box TupleATData { elem_t, .. })
-                                        | ArrType::ROArrayAT(box (elem_t, _)) => {
-                                            ("ReadonlyArray", elem_t)
-                                        }
+                                        | ArrType::ROArrayAT(box ROArrayATData {
+                                            elem_t, ..
+                                        }) => ("ReadonlyArray", elem_t),
                                     };
                                     let instance = get_builtin_typeapp(
                                         cx,
@@ -10587,6 +10651,7 @@ fn __flow_impl<'cx>(
                     react_dro: Some(ReactDro(dro_loc, dro_type)),
                     tuple_view,
                     strictness_kind,
+                    ..
                 }) = arr.deref()
                 && matches!(
                     u.deref(),
@@ -10640,6 +10705,8 @@ fn __flow_impl<'cx>(
                                 react_dro: None,
                                 tuple_view: tuple_view.clone(),
                                 strictness_kind: *strictness_kind,
+                                literal: arr.literal(),
+                                fresh: arr.fresh(),
                             },
                         ))))),
                     ));
@@ -10684,6 +10751,8 @@ fn __flow_impl<'cx>(
                                 react_dro: None,
                                 tuple_view: tuple_view.clone(),
                                 strictness_kind: *strictness_kind,
+                                literal: arr.literal(),
+                                fresh: arr.fresh(),
                             },
                         ))))),
                     ));
@@ -10764,7 +10833,7 @@ fn __flow_impl<'cx>(
                     ArrType::TupleAT(box TupleATData {
                         react_dro: Some(_),
                         ..
-                    }) | ArrType::ROArrayAT(box (_, Some(_)))
+                    }) | ArrType::ROArrayAT(box ROArrayATData { react_dro: Some(_), .. })
                 )
                 && matches!(
                     u.deref(),
@@ -10780,7 +10849,11 @@ fn __flow_impl<'cx>(
                     react_dro: Some(dro),
                     ..
                 }) => (elem_t, dro),
-                ArrType::ROArrayAT(box (elem_t, Some(dro))) => (elem_t, dro),
+                ArrType::ROArrayAT(box ROArrayATData {
+                    elem_t,
+                    react_dro: Some(dro),
+                    ..
+                }) => (elem_t, dro),
                 _ => unreachable!(),
             };
             let ReactDro(dro_loc, dro_type) = dro;
@@ -10810,7 +10883,7 @@ fn __flow_impl<'cx>(
             if let DefTInner::ArrT(arr) = def_t.deref()
                 && matches!(
                     arr.deref(),
-                    ArrType::TupleAT(box TupleATData { .. }) | ArrType::ROArrayAT(box (_, _))
+                    ArrType::TupleAT(box TupleATData { .. }) | ArrType::ROArrayAT(box ROArrayATData { .. })
                 )
                 && matches!(
                     u.deref(),

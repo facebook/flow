@@ -147,6 +147,7 @@ pub(super) fn eval_selector<'cx>(
             true,
         )),
         Selector::ArrRest(i) => UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+            literal: true,
             use_op: unknown_use(),
             reason: reason.dupe(),
             index: *i,

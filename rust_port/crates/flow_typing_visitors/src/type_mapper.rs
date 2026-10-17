@@ -52,6 +52,7 @@ use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::Property;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ResolvedArgData;
 use flow_typing_type::type_::ResolvedParam;
@@ -1822,6 +1823,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             elem_t,
             tuple_view,
             strictness_kind,
+            ..
         }) => {
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
             let same_tuple_view = |a: &TupleView, b: &TupleView| {
@@ -1873,6 +1875,8 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                     elem_t: elem_t_prime,
                     tuple_view: tuple_view_prime,
                     strictness_kind: *strictness_kind,
+                    literal: t.literal(),
+                    fresh: t.fresh(),
                 })))
             }
         }
@@ -1884,6 +1888,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             inexact,
             rest,
             strictness_kind,
+            ..
         }) => {
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
             let elements_prime = list_utils::ident_map(
@@ -1915,15 +1920,25 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                     inexact: *inexact,
                     rest: rest_prime,
                     strictness_kind: *strictness_kind,
+                    literal: t.literal(),
+                    fresh: t.fresh(),
                 })))
             }
         }
-        ArrType::ROArrayAT(box (inner_t, dro)) => {
+        ArrType::ROArrayAT(box ROArrayATData {
+            elem_t: inner_t,
+            react_dro: dro,
+            ..
+        }) => {
             let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
             if inner_t.ptr_eq(&inner_t_prime) {
                 t
             } else {
-                Rc::new(ArrType::ROArrayAT(Box::new((inner_t_prime, dro.clone()))))
+                Rc::new(ArrType::ROArrayAT(Box::new(ROArrayATData {
+                    elem_t: inner_t_prime,
+                    react_dro: dro.clone(),
+                    literal: t.literal(),
+                })))
             }
         }
     }

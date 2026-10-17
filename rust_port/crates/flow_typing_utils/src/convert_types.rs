@@ -46,6 +46,7 @@ use flow_typing_type::type_::OptionalIndexedAccessIndex;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::RendersVariant;
@@ -952,8 +953,7 @@ fn arrtype_to_json<'cx>(cx: &mut TypeJsonCx<'_, 'cx>, depth: i32, arrtype: &ArrT
         ArrType::ArrayAT(box ArrayATData {
             react_dro: _,
             elem_t,
-            tuple_view: _,
-            strictness_kind: _,
+            ..
         }) => {
             json!({"kind": "ArrayAT", "elem_t": type_to_json(cx, depth - 1, elem_t)})
         }
@@ -964,7 +964,7 @@ fn arrtype_to_json<'cx>(cx: &mut TypeJsonCx<'_, 'cx>, depth: i32, arrtype: &ArrT
             arity: (min_arity, max_arity),
             inexact,
             rest,
-            strictness_kind: _,
+            ..
         }) => {
             let mut json = json!({
                 "kind": "TupleAT",
@@ -979,7 +979,7 @@ fn arrtype_to_json<'cx>(cx: &mut TypeJsonCx<'_, 'cx>, depth: i32, arrtype: &ArrT
             }
             json
         }
-        ArrType::ROArrayAT(box (elem_t, _)) => {
+        ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) => {
             json!({"kind": "ROArrayAT", "elem_t": type_to_json(cx, depth - 1, elem_t)})
         }
     }

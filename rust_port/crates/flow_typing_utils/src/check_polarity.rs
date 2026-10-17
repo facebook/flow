@@ -37,6 +37,7 @@ use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ResolvedArgData;
 use flow_typing_type::type_::ResolvedParam;
@@ -511,7 +512,9 @@ fn check_polarity_impl<'cx>(
                             )?;
                         }
                     }
-                    ArrType::ROArrayAT(box (inner_t, _)) => {
+                    ArrType::ROArrayAT(box ROArrayATData {
+                        elem_t: inner_t, ..
+                    }) => {
                         check_polarity_impl(cx, env, trace, seen, tparams, polarity, inner_t)?;
                     }
                 }
@@ -823,7 +826,7 @@ fn check_spread_argument_polarity<'cx>(
                     }
                 }
                 ArrType::ArrayAT(box ArrayATData { elem_t, .. })
-                | ArrType::ROArrayAT(box (elem_t, _)) => {
+                | ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) => {
                     check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, elem_t)?;
                 }
             },

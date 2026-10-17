@@ -114,6 +114,7 @@ use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_loc_env::func_class_sig_types;
 use flow_typing_type::type_;
 use flow_typing_type::type_::LazyHintT;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
@@ -7145,6 +7146,8 @@ fn expression_<'a>(
                         inexact: false,
                         rest: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
+                        fresh: false,
                     }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
@@ -7173,6 +7176,8 @@ fn expression_<'a>(
                         tuple_view: Some(type_::empty_tuple_view()),
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: true,
+                        fresh: false,
                     }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
@@ -7195,6 +7200,8 @@ fn expression_<'a>(
                         tuple_view: Some(type_::empty_tuple_view()),
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: true,
+                        fresh: false,
                     }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
@@ -7219,9 +7226,10 @@ fn expression_<'a>(
                                 || natural_inference::loc_has_hint(cx, &loc)
                         }))
                     };
+                    let literal = !as_const && *has_hint.get_forced(cx);
                     let reason = if as_const {
                         mk_reason(VirtualReasonDesc::RArray, loc.dupe())
-                    } else if *has_hint.get_forced(cx) {
+                    } else if literal {
                         mk_reason(VirtualReasonDesc::RArrayLitUnsound, loc.dupe())
                     } else {
                         mk_reason(VirtualReasonDesc::RArrayLit, loc.dupe())
@@ -7243,6 +7251,8 @@ fn expression_<'a>(
                             );
                             let elem_t = flow_typing_tvar::mk(cx, element_reason);
                             let resolve_to = type_::SpreadResolve::ResolveSpreadsToArrayLiteral {
+                                literal,
+                                fresh: literal,
                                 id: mk_id() as i32,
                                 as_const,
                                 elem_t,
@@ -13413,7 +13423,11 @@ pub fn jsx_mk_props<'a>(
                 let arr_t = Type::new(TypeInner::DefT(
                     shorthand_arr_reason_clone,
                     DefT::new(DefTInner::ArrT(Rc::new(type_::ArrType::ROArrayAT(
-                        Box::new((elem_t.dupe(), None)),
+                        Box::new(ROArrayATData {
+                            elem_t: elem_t.dupe(),
+                            react_dro: None,
+                            literal: false,
+                        }),
                     )))),
                 ));
                 flow_js::flow_non_speculating(
@@ -14645,6 +14659,8 @@ fn static_method_call_object<'a>(
                         tuple_view: None,
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
+                        fresh: false,
                     },
                 ))))),
             ));
@@ -14671,6 +14687,8 @@ fn static_method_call_object<'a>(
                         tuple_view: None,
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
+                        fresh: false,
                     },
                 ))))),
             ));
@@ -14728,6 +14746,8 @@ fn static_method_call_object<'a>(
                         inexact: false,
                         rest: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
+                        fresh: false,
                     },
                 ))))),
             ));
@@ -14739,6 +14759,8 @@ fn static_method_call_object<'a>(
                         tuple_view: None,
                         react_dro: None,
                         strictness_kind: cx.type_strictness_kind(),
+                        literal: false,
+                        fresh: false,
                     },
                 ))))),
             ));

@@ -7,6 +7,7 @@
 
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::ROArrayATData;
 
 use super::helpers::*;
 use super::*;
@@ -33,6 +34,8 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                                 tuple_view: None,
                                 react_dro: None,
                                 strictness_kind: *strictness_kind,
+                                literal: arr.literal(),
+                                fresh: arr.fresh(),
                             },
                         ))))),
                     ));
@@ -44,7 +47,7 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                     rest,
                     react_dro,
                     strictness_kind,
-                    elem_t: _,
+                    ..
                 }) => {
                     let only_any_element = |te: &TupleElement| TupleElement {
                         name: te.name.dupe(),
@@ -65,6 +68,8 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                                 inexact: *inexact,
                                 rest: rest.as_ref().map(only_any_element),
                                 strictness_kind: *strictness_kind,
+                                literal: arr.literal(),
+                                fresh: arr.fresh(),
                             },
                         ))))),
                     ));
@@ -384,7 +389,7 @@ pub(super) fn any_propagated<'cx>(
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::ArrT(arr_t) => {
                     // read-only arrays are covariant
-                    if let ArrType::ROArrayAT(box (elem_t, _)) = arr_t.deref() {
+                    if let ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) = arr_t.deref() {
                         covariant_flow(cx, use_op, elem_t)?;
                         Ok(true)
                     } else {
@@ -575,7 +580,9 @@ pub(super) fn any_propagated_use<'cx>(
                 Ok(true)
             }
 
-            DefTInner::ArrT(arr_t) if let ArrType::ROArrayAT(box (elem_t, _)) = arr_t.deref() => {
+            DefTInner::ArrT(arr_t)
+                if let ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) = arr_t.deref() =>
+            {
                 covariant_flow(cx, use_op, elem_t)?;
                 Ok(true)
             }

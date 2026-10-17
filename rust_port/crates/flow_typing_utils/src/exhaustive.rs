@@ -53,6 +53,7 @@ use flow_typing_loc_env::match_pattern_ir::pattern_union;
 use flow_typing_loc_env::match_pattern_ir::value_object;
 use flow_typing_loc_env::match_pattern_ir::value_union;
 use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_util;
@@ -1160,7 +1161,7 @@ mod value_union_builder {
                             }
                         }
                         ArrType::ArrayAT(box ArrayATData { .. })
-                        | ArrType::ROArrayAT(box (_, _)) => {
+                        | ArrType::ROArrayAT(box ROArrayATData { .. }) => {
                             let reason = enum_reason;
                             let arr = value_object::ValueObject(
                                 reason.dupe(),
@@ -2153,7 +2154,11 @@ fn visit_mixed<'cx>(
         let arr_t = Type::new(TypeInner::DefT(
             reason.dupe(),
             flow_typing_type::type_::DefT::new(DefTInner::ArrT(std::rc::Rc::new(
-                flow_typing_type::type_::ArrType::ROArrayAT(Box::new((mixed_t, None))),
+                flow_typing_type::type_::ArrType::ROArrayAT(Box::new(ROArrayATData {
+                    elem_t: mixed_t,
+                    react_dro: None,
+                    literal: false,
+                })),
             ))),
         ));
         let mixed_array = value_object::ValueObject(

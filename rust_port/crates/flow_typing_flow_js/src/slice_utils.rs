@@ -2620,6 +2620,7 @@ fn resolve_with_env<'cx, A>(
                     rest,
                     react_dro,
                     strictness_kind,
+                    ..
                 }) if matches!(tool, object::Tool::ReadOnly) => {
                     let read_only = |elem: &TupleElement| TupleElement {
                         t: elem.t.dupe(),
@@ -2647,6 +2648,8 @@ fn resolve_with_env<'cx, A>(
                                     rest: rest.as_ref().map(read_only),
                                     react_dro: react_dro.clone(),
                                     strictness_kind: *strictness_kind,
+                                    literal: arr.literal(),
+                                    fresh: arr.fresh(),
                                 },
                             ))))),
                         )),
@@ -2660,6 +2663,7 @@ fn resolve_with_env<'cx, A>(
                     rest,
                     react_dro,
                     strictness_kind,
+                    ..
                 }) if matches!(tool, object::Tool::Partial) => {
                     let elements: Vec<TupleElement> = elements
                         .iter()
@@ -2712,6 +2716,8 @@ fn resolve_with_env<'cx, A>(
                                     rest,
                                     react_dro: react_dro.clone(),
                                     strictness_kind: *strictness_kind,
+                                    literal: arr.literal(),
+                                    fresh: arr.fresh(),
                                 },
                             ))))),
                         )),
@@ -2725,6 +2731,7 @@ fn resolve_with_env<'cx, A>(
                     rest,
                     react_dro,
                     strictness_kind,
+                    ..
                 }) if matches!(tool, object::Tool::Required) => {
                     let elements: Vec<TupleElement> = elements
                         .iter()
@@ -2771,6 +2778,8 @@ fn resolve_with_env<'cx, A>(
                                     rest: rest.dupe(),
                                     react_dro: react_dro.clone(),
                                     strictness_kind: *strictness_kind,
+                                    literal: arr.literal(),
+                                    fresh: arr.fresh(),
                                 },
                             ))))),
                         )),
