@@ -3046,14 +3046,14 @@ pub fn handle_updates_since_saved_state(
     libs_ok: bool,
     updates: &CheckedSet,
     env: Env,
-) -> (Env, ActiveTransaction) {
+) -> Result<(Env, ActiveTransaction), RecheckError> {
     let should_force_recheck = options.saved_state_force_recheck;
     // We know that all the files in updates have changed since the saved state was generated. We
     // have two ways to deal with them:
     if !options.lazy_mode || should_force_recheck {
         if updates.is_empty() || !libs_ok {
             // Don't recheck if the libs are not ok
-            return (env, transaction);
+            return Ok((env, transaction));
         }
         // In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
         // fanout, this can be a huge recheck, but it's sound.
@@ -3061,26 +3061,37 @@ pub fn handle_updates_since_saved_state(
         // We'll also hit this code path in lazy modes if the user has passed
         // --saved-state-force-recheck. These users want to force Flow to recheck all the files that
         // have changed since the saved state was generated
-        let mut will_be_checked_files = CheckedSet::empty();
-        let files_to_force = CheckedSet::empty();
         let find_ref_request = flow_services_references::find_refs_types::empty_request();
-        let mut env_transaction = EnvTransaction::new(Arc::new(env));
-        let (_log_recheck_event, _summary_info, _find_ref_results) = recheck_impl(
-            orchestrator,
-            pool,
-            &transaction.handle(),
-            options,
-            updates,
-            &find_ref_request,
-            files_to_force,
-            None,
-            &mut will_be_checked_files,
-            &mut env_transaction,
-        )
-        .unwrap_or_else(|_| {
-            panic!("saved-state recheck during init failed");
-        });
-        (env_transaction.into_env(), transaction)
+        let mut updated_files = updates.dupe();
+        let env = Arc::new(env);
+        loop {
+            let mut env_transaction = EnvTransaction::new(env.dupe());
+            let mut will_be_checked_files = CheckedSet::empty();
+            match recheck_impl(
+                orchestrator,
+                pool,
+                &transaction.handle(),
+                options,
+                &updated_files,
+                &find_ref_request,
+                CheckedSet::empty(),
+                None,
+                &mut will_be_checked_files,
+                &mut env_transaction,
+            ) {
+                Ok((_log_recheck_event, _summary_info, _find_ref_results)) => {
+                    return Ok((env_transaction.into_env(), transaction));
+                }
+                Err(RecheckError::Canceled(changed_files)) if !changed_files.is_empty() => {
+                    let heap = transaction.committed_heap();
+                    heap.clear_reader_cache();
+                    transaction = ActiveTransaction::new(heap);
+                    let dependencies = changed_files.into_iter().collect();
+                    updated_files.add(None, None, Some(dependencies));
+                }
+                Err(err) => return Err(err),
+            }
+        }
     } else {
         // In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
         // is to update the dependency graph and stuff like that. We don't actually want to merge
@@ -3103,7 +3114,7 @@ pub fn handle_updates_since_saved_state(
                 )
             }) {
                 Ok(()) => {
-                    return (env_transaction.into_env(), transaction);
+                    return Ok((env_transaction.into_env(), transaction));
                 }
                 Err(RecheckError::Canceled(changed_files)) if !changed_files.is_empty() => {
                     let heap = transaction.committed_heap();
@@ -3114,7 +3125,7 @@ pub fn handle_updates_since_saved_state(
                 }
                 Err(err) => {
                     transaction.committed_heap().clear_reader_cache();
-                    panic!("lazy init update deps failed: {:?}", err);
+                    return Err(err);
                 }
             }
         }
@@ -3486,7 +3497,7 @@ pub fn init(
                     libs_ok,
                     &updates,
                     env,
-                );
+                )?;
                 (transaction, env, libs_ok)
             }
             Err(msg) => {

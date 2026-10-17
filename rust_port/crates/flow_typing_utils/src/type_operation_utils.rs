@@ -2590,7 +2590,7 @@ pub mod type_assertions {
         t: &Type,
     ) -> Result<(), JobError> {
         let env = &FlowJsEnv::entry();
-        match crate::exhaustive::get_class_info(cx, t) {
+        match crate::exhaustive::get_class_info(cx, t)? {
             Some(_) => Ok(()),
             None => flow_js_utils::flow_js_result_to_job_error(flow_js_utils::add_output_with_env(
                 cx,

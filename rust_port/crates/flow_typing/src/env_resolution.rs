@@ -136,10 +136,10 @@ fn try_cache_result<'cx, T>(
 fn get_pattern_union_state_from_prev<'cx>(
     cx: &mut Context<'cx>,
     prev_pattern_loc: Option<ALoc>,
-) -> (match_pattern_ir::pattern_union::PatternUnion, usize) {
+) -> Result<(match_pattern_ir::pattern_union::PatternUnion, usize), JobError> {
     match prev_pattern_loc {
         // First pattern: start with empty PatternUnion
-        None => (match_pattern_ir::pattern_union::empty(), 0),
+        None => Ok((match_pattern_ir::pattern_union::empty(), 0)),
         Some(prev_loc) => {
             let node_cache = cx.node_cache();
             match node_cache.get_match_pattern_union(&prev_loc) {
@@ -1328,7 +1328,7 @@ fn resolve_binding<'cx>(
                 case_match_root_loc.dupe(),
             )?;
             let pattern_union_state =
-                get_pattern_union_state_from_prev(cx, prev_pattern_loc.dupe());
+                get_pattern_union_state_from_prev(cx, prev_pattern_loc.dupe())?;
             // Optimization: if the previous value_left was only inexhaustible (e.g., just `string`),
             // filtering won't change it, so we can reuse it directly.
             let value_left = prev_pattern_loc.as_ref().and_then(|prev_loc| {
@@ -2005,7 +2005,9 @@ fn resolve_binding<'cx>(
             let filtered_pattern_type = cx
                 .node_cache()
                 .get_match_pattern_value_union(parent_loc)
-                .and_then(|vu| vu.select(cx, selector))
+                .map(|vu| vu.select(cx, selector))
+                .transpose()?
+                .flatten()
                 .map(|value_left| {
                     cx.node_cache_mut()
                         .set_match_pattern_value_union(loc.dupe(), value_left.clone());
@@ -2744,7 +2746,7 @@ fn resolve_match_pattern<'cx>(
     let pattern_loc = typed_pattern.loc().dupe();
     // Set the match pattern union cache for incremental PatternUnion building.
     // This allows subsequent patterns to depend on this one and build incrementally.
-    let pattern_union_state = get_pattern_union_state_from_prev(cx, prev_pattern_loc);
+    let pattern_union_state = get_pattern_union_state_from_prev(cx, prev_pattern_loc)?;
     cx.node_cache_mut().set_match_pattern_union(
         pattern_loc,
         (pattern_union_state.0, pattern_union_state.1 as i32),

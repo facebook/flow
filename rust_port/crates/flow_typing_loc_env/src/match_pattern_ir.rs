@@ -26,6 +26,7 @@ use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::EnumConcreteInfo;
 use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::Type;
+use flow_utils_concurrency::job_error::JobError;
 
 pub type PatternAstList = Vec<(MatchPattern<ALoc, (ALoc, Type)>, /* guarded */ bool)>;
 
@@ -855,7 +856,8 @@ pub mod value_object {
 
     use super::*;
 
-    pub type LazyValueUnion<CX> = Rc<flow_lazy::Lazy<CX, value_union::ValueUnion<CX>>>;
+    pub type LazyValueUnion<CX> =
+        Rc<flow_lazy::Lazy<CX, Result<value_union::ValueUnion<CX>, JobError>>>;
 
     #[derive(Debug, Clone, Dupe)]
     pub struct Property<CX: ContextFamily + Clone> {
@@ -894,7 +896,10 @@ pub mod value_object {
             inner.t.dupe()
         }
 
-        pub fn to_pattern(&self, cx: &mut CX::Context<'_>) -> pattern_object::PatternObject {
+        pub fn to_pattern(
+            &self,
+            cx: &mut CX::Context<'_>,
+        ) -> Result<pattern_object::PatternObject, JobError> {
             let ValueObject(reason, inner) = self;
             let ValueObjectInner {
                 props,
@@ -934,7 +939,11 @@ pub mod value_object {
                                     result_rest = Some(reason.dupe());
                                 }
                             } else if value.is_forced() || is_sentinel_prop {
-                                let pattern_value = value.get_forced(cx).to_pattern(cx);
+                                let pattern_value = value
+                                    .get_forced(cx)
+                                    .as_ref()
+                                    .map_err(Dupe::dupe)?
+                                    .to_pattern(cx)?;
                                 let pattern_prop = pattern_object::Property {
                                     loc: loc.dupe(),
                                     value: pattern_value,
@@ -989,20 +998,25 @@ pub mod value_object {
                                     value: prop_value,
                                     loc: prop_loc,
                                     ..
-                                }) if prop_value.is_forced() => {
-                                    (prop_loc.dupe(), prop_value.get_forced(cx).to_pattern(cx))
-                                }
+                                }) if prop_value.is_forced() => (
+                                    prop_loc.dupe(),
+                                    prop_value
+                                        .get_forced(cx)
+                                        .as_ref()
+                                        .map_err(Dupe::dupe)?
+                                        .to_pattern(cx)?,
+                                ),
                                 _ => (loc.dupe(), wildcard_pattern(reason.dupe())),
                             };
-                            (
+                            Ok((
                                 key.dupe(),
                                 pattern_object::Property {
                                     loc: prop_loc,
                                     value,
                                 },
-                            )
+                            ))
                         })
-                        .collect();
+                        .collect::<Result<_, JobError>>()?;
 
                     let keys_order: Vec<FlowSmolStr> =
                         (0..*length).map(|i| i.to_string().into()).collect();
@@ -1019,7 +1033,7 @@ pub mod value_object {
                 (class_id.dupe(), name.dupe(), super_ids.dupe(), t.dupe())
             });
 
-            pattern_object::PatternObject(
+            Ok(pattern_object::PatternObject(
                 reason.dupe(),
                 Rc::new(pattern_object::PatternObjectInner {
                     kind: *kind,
@@ -1030,7 +1044,7 @@ pub mod value_object {
                     contains_invalid_pattern: false,
                     guarded: false,
                 }),
-            )
+            ))
         }
     }
 }
@@ -1135,7 +1149,10 @@ pub mod value_union {
             }
         }
 
-        pub fn to_pattern(&self, cx: &mut CX::Context<'_>) -> pattern_union::PatternUnion {
+        pub fn to_pattern(
+            &self,
+            cx: &mut CX::Context<'_>,
+        ) -> Result<pattern_union::PatternUnion, JobError> {
             let ValueUnion {
                 leafs,
                 tuples,
@@ -1145,8 +1162,10 @@ pub mod value_union {
                 inexhaustible,
             } = self;
 
-            let mut tuple_patterns: Vec<pattern_object::PatternObject> =
-                tuples.iter().map(|vo| vo.to_pattern(cx)).collect();
+            let mut tuple_patterns: Vec<pattern_object::PatternObject> = tuples
+                .iter()
+                .map(|vo| vo.to_pattern(cx))
+                .collect::<Result<_, _>>()?;
             tuple_patterns.sort();
 
             let mut tuples_exact: FlowOrdMap<usize, FlowVector<pattern_object::WithIndex>> =
@@ -1187,8 +1206,10 @@ pub mod value_union {
                     .push((i, empty_inexact_tuple_pattern(reason.dupe())));
             }
 
-            let mut object_patterns: Vec<pattern_object::PatternObject> =
-                objects.iter().map(|vo| vo.to_pattern(cx)).collect();
+            let mut object_patterns: Vec<pattern_object::PatternObject> = objects
+                .iter()
+                .map(|vo| vo.to_pattern(cx))
+                .collect::<Result<_, _>>()?;
             object_patterns.sort();
             let objects_result: Vec<pattern_object::WithIndex> =
                 object_patterns.into_iter().enumerate().collect();
@@ -1199,14 +1220,14 @@ pub mod value_union {
                 (None, Some((reason, _, _))) => Some(reason.dupe()),
             };
 
-            pattern_union::PatternUnion {
+            Ok(pattern_union::PatternUnion {
                 leafs: leafs.dupe(),
                 tuples_exact,
                 tuples_inexact,
                 objects: objects_result,
                 wildcard,
                 ..pattern_union::empty()
-            }
+            })
         }
 
         pub fn to_type(&self, r: Reason) -> Type {
@@ -1248,7 +1269,7 @@ pub mod value_union {
             &self,
             cx: &mut CX::Context<'_>,
             selector: &Selector<ALoc, ALoc>,
-        ) -> Option<Self> {
+        ) -> Result<Option<Self>, JobError> {
             let Self {
                 tuples,
                 arrays,
@@ -1291,29 +1312,33 @@ pub mod value_union {
             let vus_opt: Option<Vec<ValueUnion<CX>>> = match selector {
                 Selector::Elem { index, .. } => {
                     let key: FlowSmolStr = index.to_string().into();
-                    conservative_find_all(&key).map(|lazy_cells| {
+                    conservative_find_all(&key)
+                        .map(|lazy_cells| {
+                            lazy_cells
+                                .into_iter()
+                                .map(|cell| cell.get_forced(cx).clone())
+                                .collect::<Result<_, _>>()
+                        })
+                        .transpose()?
+                }
+                Selector::Prop { prop, .. } => conservative_find_all(prop)
+                    .map(|lazy_cells| {
                         lazy_cells
                             .into_iter()
                             .map(|cell| cell.get_forced(cx).clone())
-                            .collect()
+                            .collect::<Result<_, _>>()
                     })
-                }
-                Selector::Prop { prop, .. } => conservative_find_all(prop).map(|lazy_cells| {
-                    lazy_cells
-                        .into_iter()
-                        .map(|cell| cell.get_forced(cx).clone())
-                        .collect()
-                }),
+                    .transpose()?,
                 Selector::Computed { .. } => None,
                 Selector::ObjRest { .. } => None,
                 Selector::ArrRest(_) => None,
                 Selector::Default => Some(vec![self.clone()]),
             };
 
-            vus_opt.map(|vus| {
+            Ok(vus_opt.map(|vus| {
                 vus.into_iter()
                     .rfold(Self::empty(), |acc, vu| Self::union(vu, acc))
-            })
+            }))
         }
     }
 }

@@ -68,13 +68,26 @@ type IMap<V> = FlowOrdMap<usize, V>;
 // * Helper functions for analyzing types *
 // ****************************************
 
-fn singleton_concrete_type<'cx>(cx: &mut Context<'cx>, t: &Type) -> Type {
-    FlowJs::singleton_concrete_type_for_match_arg(cx, false, reason_of_t(t), t).unwrap()
+fn singleton_concrete_type<'cx>(cx: &mut Context<'cx>, t: &Type) -> Result<Type, JobError> {
+    flow_js_utils::flow_js_result_to_job_error(FlowJs::singleton_concrete_type_for_match_arg(
+        cx,
+        false,
+        reason_of_t(t),
+        t,
+    ))
 }
 
-fn possible_concrete_types<'cx>(cx: &mut Context<'cx>, keep_unions: bool, t: &Type) -> Vec<Type> {
-    FlowJs::possible_concrete_types_for_match_arg(cx, keep_unions, reason_of_t(t), t)
-        .unwrap_or_default()
+fn possible_concrete_types<'cx>(
+    cx: &mut Context<'cx>,
+    keep_unions: bool,
+    t: &Type,
+) -> Result<Vec<Type>, JobError> {
+    flow_js_utils::flow_js_result_to_job_error(FlowJs::possible_concrete_types_for_match_arg(
+        cx,
+        keep_unions,
+        reason_of_t(t),
+        t,
+    ))
 }
 
 fn attempt_union_rep_optimization<'cx>(
@@ -98,14 +111,14 @@ fn get_super_class_ids<'cx>(
     cx: &mut Context<'cx>,
     class_id: &ALocId,
     super_: &Type,
-) -> FlowOrdSet<ALocId> {
+) -> Result<FlowOrdSet<ALocId>, JobError> {
     fn loop_<'cx>(
         cx: &mut Context<'cx>,
         class_id: &ALocId,
         mut acc: FlowOrdSet<ALocId>,
         t: &Type,
-    ) -> FlowOrdSet<ALocId> {
-        match singleton_concrete_type(cx, t).deref() {
+    ) -> Result<FlowOrdSet<ALocId>, JobError> {
+        Ok(match singleton_concrete_type(cx, t)?.deref() {
             TypeInner::DefT(_, d) => match d.deref() {
                 DefTInner::InstanceT(inst_rc) => {
                     let inst = inst_rc.deref();
@@ -120,7 +133,7 @@ fn get_super_class_ids<'cx>(
                                 acc
                             } else {
                                 acc.insert(super_class_id.dupe());
-                                loop_(cx, class_id, acc, super_)
+                                loop_(cx, class_id, acc, super_)?
                             }
                         }
                         _ => acc,
@@ -129,7 +142,7 @@ fn get_super_class_ids<'cx>(
                 _ => acc,
             },
             _ => acc,
-        }
+        })
     }
     loop_(cx, class_id, FlowOrdSet::default(), super_)
 }
@@ -141,15 +154,15 @@ fn get_super_class_ids<'cx>(
 fn get_class_info_with_supers<'cx>(
     cx: &mut Context<'cx>,
     t: &Type,
-) -> Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>, Type)> {
-    let instance_t = match singleton_concrete_type(cx, t).deref() {
+) -> Result<Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>, Type)>, JobError> {
+    let instance_t = match singleton_concrete_type(cx, t)?.deref() {
         TypeInner::DefT(_, d) => match d.deref() {
-            DefTInner::ClassT(class_t) => singleton_concrete_type(cx, class_t),
+            DefTInner::ClassT(class_t) => singleton_concrete_type(cx, class_t)?,
             _ => flow_typing_type::type_::empty_t::why(reason_of_t(t).dupe()),
         },
         _ => flow_typing_type::type_::empty_t::why(reason_of_t(t).dupe()),
     };
-    match instance_t.deref() {
+    Ok(match instance_t.deref() {
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::InstanceT(inst_rc) => {
                 let inst = inst_rc.deref();
@@ -160,7 +173,7 @@ fn get_class_info_with_supers<'cx>(
                     | flow_typing_type::type_::InstanceKind::RecordKind { .. } => Some((
                         inst_data.class_id.dupe(),
                         inst_data.class_name.dupe(),
-                        get_super_class_ids(cx, &inst_data.class_id, super_),
+                        get_super_class_ids(cx, &inst_data.class_id, super_)?,
                         instance_t.dupe(),
                     )),
                     _ => None,
@@ -169,14 +182,15 @@ fn get_class_info_with_supers<'cx>(
             _ => None,
         },
         _ => None,
-    }
+    })
 }
 
 pub fn get_class_info<'cx>(
     cx: &mut Context<'cx>,
     t: &Type,
-) -> Option<(ALocId, Option<FlowSmolStr>)> {
-    get_class_info_with_supers(cx, t).map(|(class_id, class_name, _, _)| (class_id, class_name))
+) -> Result<Option<(ALocId, Option<FlowSmolStr>)>, JobError> {
+    Ok(get_class_info_with_supers(cx, t)?
+        .map(|(class_id, class_name, _, _)| (class_id, class_name)))
 }
 
 // Datatype builders
@@ -466,7 +480,7 @@ pub mod pattern_union_builder {
         is_global_var: &dyn Fn(&Context<'cx>, ALoc) -> bool,
         raise_errors: bool,
         pattern_ast: &ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>,
-    ) -> pattern_union::PatternUnion {
+    ) -> Result<pattern_union::PatternUnion, JobError> {
         let (pattern_union, _) = of_pattern_ast_inner(
             cx,
             is_global_var,
@@ -475,8 +489,8 @@ pub mod pattern_union_builder {
             false,
             false,
             pattern_ast,
-        );
-        pattern_union
+        )?;
+        Ok(pattern_union)
     }
 
     fn of_pattern_ast_inner<'cx>(
@@ -487,7 +501,7 @@ pub mod pattern_union_builder {
         guarded: bool,
         last: bool,
         pattern_ast: &ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>,
-    ) -> (pattern_union::PatternUnion, usize) {
+    ) -> Result<(pattern_union::PatternUnion, usize), JobError> {
         use flow_parser::ast::match_pattern::MatchPattern;
         use flow_parser::ast::match_pattern::unary_pattern;
 
@@ -495,7 +509,7 @@ pub mod pattern_union_builder {
         let loc = pattern_ast.loc();
         let reason = flow_common::reason::mk_reason(None, loc.dupe());
         let next_i = i + 1;
-        match pattern_ast {
+        Ok(match pattern_ast {
             MatchPattern::BindingPattern { .. } => {
                 let reason = flow_common::reason::mk_reason(None, loc.dupe());
                 pattern_union =
@@ -605,7 +619,7 @@ pub mod pattern_union_builder {
             }
             MatchPattern::IdentifierPattern { inner, .. } => {
                 let (_, ref id_t) = inner.loc;
-                let concrete_t = singleton_concrete_type(cx, id_t);
+                let concrete_t = singleton_concrete_type(cx, id_t)?;
                 match leaf_of_type(cx, raise_errors, &concrete_t, pattern_ast) {
                     Some(leaf_val) => {
                         pattern_union =
@@ -620,7 +634,7 @@ pub mod pattern_union_builder {
             }
             MatchPattern::MemberPattern { inner, .. } => {
                 let (_, ref member_t) = inner.loc;
-                let concrete_t = singleton_concrete_type(cx, member_t);
+                let concrete_t = singleton_concrete_type(cx, member_t)?;
                 match leaf_of_type(cx, raise_errors, &concrete_t, pattern_ast) {
                     Some(leaf_val) => {
                         pattern_union =
@@ -641,7 +655,7 @@ pub mod pattern_union_builder {
                 guarded,
                 last,
                 &inner.pattern,
-            ),
+            )?,
             MatchPattern::OrPattern { inner, .. } => {
                 let mut acc = (pattern_union, i);
                 for pat in inner.patterns.iter() {
@@ -653,7 +667,7 @@ pub mod pattern_union_builder {
                         guarded,
                         last,
                         pat,
-                    );
+                    )?;
                 }
                 acc
             }
@@ -666,7 +680,7 @@ pub mod pattern_union_builder {
                 let mut contains_invalid_pattern_arr = false;
                 for (idx, elem) in elements.iter().enumerate() {
                     let key: FlowSmolStr = idx.to_string().into();
-                    let value = of_pattern_ast(cx, is_global_var, raise_errors, &elem.pattern);
+                    let value = of_pattern_ast(cx, is_global_var, raise_errors, &elem.pattern)?;
                     contains_invalid_pattern_arr =
                         contains_invalid_pattern_arr || value.contains_invalid_pattern;
                     props.insert(
@@ -717,7 +731,7 @@ pub mod pattern_union_builder {
                 guarded,
                 None,
                 inner,
-            ),
+            )?,
             MatchPattern::InstancePattern { inner, .. } => {
                 use flow_parser::ast::match_pattern::InstancePatternConstructor;
                 use flow_parser::ast::match_pattern::member_pattern::Property as MemberProperty;
@@ -735,7 +749,7 @@ pub mod pattern_union_builder {
                             }
                         }
                     };
-                match get_class_info_with_supers(cx, constructor_t) {
+                match get_class_info_with_supers(cx, constructor_t)? {
                     Some((class_id, class_name, super_ids, instance_t)) => {
                         let class_name = constructor_name.or(class_name);
                         let class_info = Some((class_id, class_name, super_ids, instance_t));
@@ -750,12 +764,12 @@ pub mod pattern_union_builder {
                             guarded,
                             class_info,
                             properties,
-                        )
+                        )?
                     }
                     None => (pattern_union, next_i),
                 }
             }
-        }
+        })
     }
 
     fn object_pattern<'cx>(
@@ -768,7 +782,7 @@ pub mod pattern_union_builder {
         guarded: bool,
         class_info: Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>, Type)>,
         pattern: &ast::match_pattern::ObjectPattern<ALoc, (ALoc, Type)>,
-    ) -> (pattern_union::PatternUnion, usize) {
+    ) -> Result<(pattern_union::PatternUnion, usize), JobError> {
         use flow_parser::ast::match_pattern::object_pattern as ast_obj_pattern;
         use flow_parser::ast::match_pattern::object_pattern::Key;
 
@@ -797,7 +811,7 @@ pub mod pattern_union_builder {
                             (key_loc.dupe(), bigint_lit.raw.dupe())
                         }
                     };
-                    let value = of_pattern_ast(cx, is_global_var, raise_errors, &property.pattern);
+                    let value = of_pattern_ast(cx, is_global_var, raise_errors, &property.pattern)?;
                     // If the object patterns seems like it could also match tuples, record that.
                     tuple_like = match tuple_like {
                         None => None,
@@ -862,7 +876,7 @@ pub mod pattern_union_builder {
             }
             _ => pattern_union,
         };
-        (pattern_union, next_i)
+        Ok((pattern_union, next_i))
     }
 
     pub fn finalize(pattern_union: pattern_union::PatternUnion) -> pattern_union::PatternUnion {
@@ -876,7 +890,7 @@ pub mod pattern_union_builder {
         acc: (pattern_union::PatternUnion, usize),
         (pattern_ast, guarded): (&ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>, bool),
         last: bool,
-    ) -> (pattern_union::PatternUnion, usize) {
+    ) -> Result<(pattern_union::PatternUnion, usize), JobError> {
         of_pattern_ast_inner(
             cx,
             is_global_var,
@@ -893,7 +907,7 @@ pub mod pattern_union_builder {
         is_global_var: &dyn Fn(&Context<'cx>, ALoc) -> bool,
         raise_errors: bool,
         patterns_ast: &match_pattern_ir::PatternAstList,
-    ) -> pattern_union::PatternUnion {
+    ) -> Result<pattern_union::PatternUnion, JobError> {
         let last_i = if patterns_ast.is_empty() {
             0
         } else {
@@ -908,10 +922,10 @@ pub mod pattern_union_builder {
                 acc,
                 (pat, *guarded),
                 i == last_i,
-            );
+            )?;
         }
         let (pattern_union, _) = acc;
-        finalize(pattern_union)
+        Ok(finalize(pattern_union))
     }
 }
 
@@ -970,7 +984,7 @@ mod value_union_builder {
         cx: &mut Context<'cx>,
         value_union: value_union::ValueUnion<Cx>,
         t: &Type,
-    ) -> value_union::ValueUnion<Cx> {
+    ) -> Result<value_union::ValueUnion<Cx>, JobError> {
         use flow_typing_type::type_::ArrType;
         use flow_typing_type::type_::ArrayATData;
         use flow_typing_type::type_::EnumInfoInner;
@@ -978,7 +992,7 @@ mod value_union_builder {
         use flow_typing_type::type_::ObjKind as TypeObjKind;
         use flow_typing_type::type_::TupleATData;
 
-        let possible = possible_concrete_types(cx, true, t);
+        let possible = possible_concrete_types(cx, true, t)?;
         let mut ts: Vec<Type> = Vec::new();
         let mut all_sentinel_props: BTreeSet<flow_common::reason::Name> = BTreeSet::new();
         for pt in possible {
@@ -988,7 +1002,7 @@ mod value_union_builder {
                     if let Some(props) = rep.disjoint_object_union_props() {
                         all_sentinel_props.extend(props);
                     }
-                    let union_ts = possible_concrete_types(cx, false, &pt);
+                    let union_ts = possible_concrete_types(cx, false, &pt)?;
                     ts.extend(union_ts);
                 }
                 _ => {
@@ -1242,7 +1256,7 @@ mod value_union_builder {
                         let class_info = Some((
                             class_id.dupe(),
                             class_name.as_ref().map(|n| n.dupe()),
-                            get_super_class_ids(cx, class_id, super_),
+                            get_super_class_ids(cx, class_id, super_)?,
                         ));
                         let obj_value = value_object::ValueObject(
                             reason.dupe(),
@@ -1267,7 +1281,7 @@ mod value_union_builder {
                 }
             }
         }
-        value_union
+        Ok(value_union)
     }
 
     // We implement this ourselves for now because we want to know if we are getting a
@@ -1345,7 +1359,7 @@ mod value_union_builder {
         }
 
         let (_, key_name) = key;
-        let concrete = singleton_concrete_type(cx, obj);
+        let concrete = singleton_concrete_type(cx, obj)?;
         match concrete.deref() {
             TypeInner::DefT(reason, d) => match d.deref() {
                 DefTInner::ObjT(obj_rc) => {
@@ -1410,16 +1424,19 @@ mod value_union_builder {
         }
     }
 
-    pub(super) fn of_type<'cx>(cx: &mut Context<'cx>, t: &Type) -> value_union::ValueUnion<Cx> {
+    pub(super) fn of_type<'cx>(
+        cx: &mut Context<'cx>,
+        t: &Type,
+    ) -> Result<value_union::ValueUnion<Cx>, JobError> {
         // The list members of the `ValueUnion` are accumulated in reverse order,
         // put them back in their original order.
-        let mut vu = of_type_inner(cx, value_union::ValueUnion::empty(), t);
+        let mut vu = of_type_inner(cx, value_union::ValueUnion::empty(), t)?;
         vu.tuples = vu.tuples.into_iter().rev().collect();
         vu.arrays = vu.arrays.into_iter().rev().collect();
         vu.objects = vu.objects.into_iter().rev().collect();
         vu.enum_unknown_members = vu.enum_unknown_members.into_iter().rev().collect();
         vu.inexhaustible = vu.inexhaustible.into_iter().rev().collect();
-        vu
+        Ok(vu)
     }
 }
 
@@ -1854,7 +1871,7 @@ fn filter_object_by_pattern<'cx>(
                     } else {
                         // Validate the object part of the pattern by matching it against a value
                         // of the pattern's own class, reusing the normal filtering path.
-                        let value_union = value_union_builder::of_type(cx, pattern_instance_t);
+                        let value_union = value_union_builder::of_type(cx, pattern_instance_t)?;
                         let pattern_union = pattern_union::PatternUnion {
                             objects: vec![(0, pattern_object.dupe())],
                             ..pattern_union::empty()
@@ -1974,7 +1991,7 @@ fn filter_object_by_pattern<'cx>(
                     (value_union::ValueUnion::empty(), value.dupe(), false, locs)
                 }
                 None => {
-                    let forced_value = value.get_forced(cx);
+                    let forced_value = value.get_forced(cx).as_ref().map_err(Dupe::dupe)?;
                     let FilterUnionResult {
                         value_left,
                         value_matched,
@@ -1985,7 +2002,7 @@ fn filter_object_by_pattern<'cx>(
                         // We need to create an already forced value to match ocaml behavior
                         // of creating already forced value for `lazy expr`, where expr is
                         // an already computed expression.
-                        std::rc::Rc::new(flow_lazy::Lazy::new_forced(value_matched));
+                        std::rc::Rc::new(flow_lazy::Lazy::new_forced(Ok(value_matched)));
                     (value_left, matched_lazy, is_empty, new_used_pattern_locs)
                 }
             };
@@ -2026,7 +2043,7 @@ fn filter_object_by_pattern<'cx>(
                     // We need to create an already forced value to match ocaml behavior
                     // of creating already forced value for `lazy expr`, where expr is
                     // an already computed expression.
-                    std::rc::Rc::new(flow_lazy::Lazy::new_forced(value_left));
+                    std::rc::Rc::new(flow_lazy::Lazy::new_forced(Ok(value_left)));
                 let property_left = value_object::Property {
                     loc: loc_value.dupe(),
                     value: left_lazy,
@@ -2336,8 +2353,8 @@ pub fn analyze<'cx>(
     patterns: &match_pattern_ir::PatternAstList,
     arg_t: &Type,
 ) -> Result<(), JobError> {
-    let pattern_union = pattern_union_builder::of_patterns_ast(cx, is_global_var, true, patterns);
-    let value_union = value_union_builder::of_type(cx, arg_t);
+    let pattern_union = pattern_union_builder::of_patterns_ast(cx, is_global_var, true, patterns)?;
+    let value_union = value_union_builder::of_type(cx, arg_t)?;
     let FilterUnionResult {
         value_left,
         value_matched,
@@ -2411,8 +2428,8 @@ pub fn analyze<'cx>(
         // Sort examples based on their original order
         let mut tuple_patterns: Vec<(pattern_object::PatternObject, Type)> = tuples
             .iter()
-            .map(|vo| (vo.to_pattern(cx), vo.to_original_type()))
-            .collect();
+            .map(|vo| Ok((vo.to_pattern(cx)?, vo.to_original_type())))
+            .collect::<Result<_, JobError>>()?;
         tuple_patterns.sort_by(|(p1, _), (p2, _)| p1.cmp(p2));
         let mut tuple_examples_map: BTreeMap<
             FlowSmolStr,
@@ -2470,8 +2487,8 @@ pub fn analyze<'cx>(
         // Compute the list of object examples
         let mut object_patterns: Vec<(pattern_object::PatternObject, Type)> = objects
             .iter()
-            .map(|vo| (vo.to_pattern(cx), vo.to_original_type()))
-            .collect();
+            .map(|vo| Ok((vo.to_pattern(cx)?, vo.to_original_type())))
+            .collect::<Result<_, JobError>>()?;
         object_patterns.sort_by(|(p1, _), (p2, _)| p1.cmp(p2));
         let mut object_examples_map: BTreeMap<
             FlowSmolStr,
@@ -2580,7 +2597,7 @@ pub fn filter_by_pattern_union<'cx>(
     root_t: &Type,
     pattern_union: &pattern_union::PatternUnion,
 ) -> Result<value_union::ValueUnion<Cx>, JobError> {
-    let value_union = value_union_builder::of_type(cx, root_t);
+    let value_union = value_union_builder::of_type(cx, root_t)?;
     let FilterUnionResult {
         value_left,
         value_matched: _,
