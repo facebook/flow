@@ -1643,7 +1643,6 @@ pub fn error_message_loc_of_upper<CX: ContextFamily>(u: &UseT<CX>) -> ALoc {
         }
         UseTInner::SealGenericT(data) => data.loc.dupe(),
         UseTInner::OptionalIndexedAccessT(data) => data.reason.loc().dupe(),
-        UseTInner::CheckUnusedPromiseT { reason, .. } => reason.loc().dupe(),
         UseTInner::ConvertEmptyPropsToMixedT(loc, _) => loc.dupe(),
         UseTInner::ExitRendersT { renders_reason, .. } => renders_reason.loc().dupe(),
         UseTInner::EvalTypeDestructorT(data) => data.reason.loc().dupe(),

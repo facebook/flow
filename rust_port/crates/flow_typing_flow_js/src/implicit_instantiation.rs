@@ -702,7 +702,6 @@ fn t_of_use_t<'cx>(
         | UseTInner::ObjTestT(..)
         | UseTInner::GetEnumT { .. }
         | UseTInner::CondT(..)
-        | UseTInner::CheckUnusedPromiseT { .. }
         | UseTInner::ConvertEmptyPropsToMixedT(..)
         | UseTInner::ValueToTypeReferenceT(..)
         | UseTInner::ExitRendersT { .. } => Ok(UseTResult::UpperEmpty),

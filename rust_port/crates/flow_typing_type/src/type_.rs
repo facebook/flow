@@ -2724,10 +2724,6 @@ pub enum UseTInner<CX: ContextFamily = ()> {
     HooklikeT(Box<Tvar>),
     SealGenericT(Box<SealGenericTData<CX>>),
     OptionalIndexedAccessT(Box<OptionalIndexedAccessTData>),
-    CheckUnusedPromiseT {
-        reason: Reason,
-        async_: bool,
-    },
     ConvertEmptyPropsToMixedT(ALoc, type_collector::TypeCollector),
     ExitRendersT {
         renders_reason: Reason,
@@ -2842,10 +2838,6 @@ impl<CX: ContextFamily> Clone for UseTInner<CX> {
             UseTInner::HooklikeT(a) => UseTInner::HooklikeT(a.clone()),
             UseTInner::SealGenericT(a) => UseTInner::SealGenericT(a.clone()),
             UseTInner::OptionalIndexedAccessT(a) => UseTInner::OptionalIndexedAccessT(a.clone()),
-            UseTInner::CheckUnusedPromiseT { reason, async_ } => UseTInner::CheckUnusedPromiseT {
-                reason: reason.clone(),
-                async_: *async_,
-            },
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => {
                 UseTInner::ConvertEmptyPropsToMixedT(a.clone(), b.clone())
             }
@@ -2994,16 +2986,6 @@ impl<CX: ContextFamily> PartialEq for UseTInner<CX> {
             (UseTInner::OptionalIndexedAccessT(a1), UseTInner::OptionalIndexedAccessT(a2)) => {
                 a1 == a2
             }
-            (
-                UseTInner::CheckUnusedPromiseT {
-                    reason: a1,
-                    async_: b1,
-                },
-                UseTInner::CheckUnusedPromiseT {
-                    reason: a2,
-                    async_: b2,
-                },
-            ) => a1 == a2 && b1 == b2,
             (
                 UseTInner::ConvertEmptyPropsToMixedT(a1, b1),
                 UseTInner::ConvertEmptyPropsToMixedT(a2, b2),
@@ -3185,10 +3167,6 @@ impl<CX: ContextFamily> std::hash::Hash for UseTInner<CX> {
             UseTInner::HooklikeT(a) => a.hash(state),
             UseTInner::SealGenericT(a) => a.hash(state),
             UseTInner::OptionalIndexedAccessT(a) => a.hash(state),
-            UseTInner::CheckUnusedPromiseT { reason, async_ } => {
-                reason.hash(state);
-                async_.hash(state);
-            }
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => {
                 a.hash(state);
                 b.hash(state);
@@ -3266,7 +3244,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
                 UseTInner::HooklikeT(..) => 55,
                 UseTInner::SealGenericT(..) => 56,
                 UseTInner::OptionalIndexedAccessT(..) => 57,
-                UseTInner::CheckUnusedPromiseT { .. } => 58,
                 UseTInner::ConvertEmptyPropsToMixedT(..) => 59,
                 UseTInner::ExitRendersT { .. } => 60,
                 UseTInner::EvalTypeDestructorT(..) => 61,
@@ -3438,16 +3415,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
                 a1.cmp(a2)
             }
             (
-                UseTInner::CheckUnusedPromiseT {
-                    reason: a1,
-                    async_: b1,
-                },
-                UseTInner::CheckUnusedPromiseT {
-                    reason: a2,
-                    async_: b2,
-                },
-            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
-            (
                 UseTInner::ConvertEmptyPropsToMixedT(a1, b1),
                 UseTInner::ConvertEmptyPropsToMixedT(a2, b2),
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
@@ -3615,11 +3582,6 @@ impl<CX: ContextFamily> std::fmt::Debug for UseTInner<CX> {
             UseTInner::OptionalIndexedAccessT(a) => {
                 f.debug_tuple("OptionalIndexedAccessT").field(a).finish()
             }
-            UseTInner::CheckUnusedPromiseT { reason, async_ } => f
-                .debug_struct("CheckUnusedPromiseT")
-                .field("reason", reason)
-                .field("async_", async_)
-                .finish(),
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => f
                 .debug_tuple("ConvertEmptyPropsToMixedT")
                 .field(a)
@@ -6208,6 +6170,7 @@ pub enum ConcretizationKind {
     ConcretizeForMatchArg {
         keep_unions: bool,
     },
+    ConcretizeForUnusedPromiseCheck,
     ConcretizeAll,
 }
 
@@ -11722,6 +11685,9 @@ pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
             ConcretizationKind::ConcretizeForSentinelPropTest => {
                 "ConcretizeT ConcretizeForPredicate".to_string()
             }
+            ConcretizationKind::ConcretizeForUnusedPromiseCheck => {
+                "ConcretizeT ConcretizeForUnusedPromiseCheck".to_string()
+            }
             ConcretizationKind::ConcretizeAll => "ConcretizeT ConcretizeAll".to_string(),
             ConcretizationKind::ConcretizeForOperatorsChecking => {
                 "ConcretizeT ConcretizeForOperatorsChecking".to_string()
@@ -11796,7 +11762,6 @@ pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
         UseTInner::HooklikeT(..) => "HooklikeT".to_string(),
         UseTInner::SealGenericT(..) => "SealGenericT".to_string(),
         UseTInner::OptionalIndexedAccessT(..) => "OptionalIndexedAccessT".to_string(),
-        UseTInner::CheckUnusedPromiseT { .. } => "CheckUnusedPromiseT".to_string(),
         UseTInner::ConvertEmptyPropsToMixedT(..) => "ConvertEmptyPropsToMixedT".to_string(),
         UseTInner::ExitRendersT { .. } => "ExitRendersT".to_string(),
         UseTInner::EvalTypeDestructorT(..) => "EvalTypeDestructorT".to_string(),

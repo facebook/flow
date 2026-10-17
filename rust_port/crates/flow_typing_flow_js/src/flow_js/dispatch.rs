@@ -11088,41 +11088,27 @@ fn __flow_impl<'cx>(
                 })),
             )?;
         }
-        (TypeInner::DefT(_, def_t), UseTInner::CheckUnusedPromiseT { reason, async_ })
-            if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
-        {
-            let class_id = &inst_t.inst.class_id;
-            let super_ = &inst_t.super_;
-            if flow_js_utils::is_builtin_class_id("Promise", class_id.dupe(), cx) {
-                flow_js_utils::add_output_with_env(
-                    cx,
-                    env,
-                    ErrorMessage::EUnusedPromise {
-                        loc: reason.loc().dupe(),
-                        async_: *async_,
-                    },
-                )?;
-            } else {
-                rec_flow(
-                    cx,
-                    env,
-                    trace,
-                    (
-                        super_,
-                        &UseT::new(UseTInner::CheckUnusedPromiseT {
-                            reason: reason.dupe(),
-                            async_: *async_,
-                        }),
-                    ),
-                )?;
+        // Super classes are collected too, so that subclasses of `Promise` are found
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::ConcretizeT(box ConcretizeTData {
+                kind: ConcretizationKind::ConcretizeForUnusedPromiseCheck,
+                collector,
+                ..
+            }),
+        ) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
+            collector.add(l.dupe());
+            if !flow_js_utils::is_builtin_class_id("Promise", inst_t.inst.class_id.dupe(), cx) {
+                rec_flow(cx, env, trace, (&inst_t.super_, u))?;
             }
         }
-        (_, UseTInner::CheckUnusedPromiseT { .. }) => {}
         (
             _,
             UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
-                kind: ConcretizationKind::ConcretizeAll,
+                kind:
+                    ConcretizationKind::ConcretizeForUnusedPromiseCheck
+                    | ConcretizationKind::ConcretizeAll,
                 seen: _,
                 collector,
             }),

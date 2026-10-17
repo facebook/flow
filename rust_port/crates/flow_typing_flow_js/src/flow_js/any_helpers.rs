@@ -534,8 +534,7 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::GetKeysDictKeyT { .. }
         | UseTInner::ValueToTypeReferenceT(..)
         | UseTInner::EvalTypeDestructorT(..)
-        | UseTInner::ConvertEmptyPropsToMixedT(..)
-        | UseTInner::CheckUnusedPromiseT { .. } => Ok(false),
+        | UseTInner::ConvertEmptyPropsToMixedT(..) => Ok(false),
 
         // These types have no t_out, so can't propagate anything.
         // Thus we short-circuit by returning true

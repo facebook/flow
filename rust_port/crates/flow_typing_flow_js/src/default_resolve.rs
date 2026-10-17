@@ -314,7 +314,6 @@ pub fn default_resolve_touts<C>(
         UseTInner::OptionalIndexedAccessT(box OptionalIndexedAccessTData { tout_tvar, .. }) => {
             resolve_tvar(cx, tout_tvar)
         }
-        UseTInner::CheckUnusedPromiseT { .. } => Ok(()),
         UseTInner::ConvertEmptyPropsToMixedT(_, collector) => {
             collector.add(any.dupe());
             Ok(())

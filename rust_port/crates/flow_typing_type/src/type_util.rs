@@ -968,7 +968,6 @@ pub fn util_use_op_of_use_t<T, CX: ContextFamily>(
         | UseTInner::ResolveUnionT(..)
         | UseTInner::ExitRendersT { .. }
         | UseTInner::SealGenericT(..)
-        | UseTInner::CheckUnusedPromiseT { .. }
         | UseTInner::EvalTypeDestructorT(..) => nope(u),
     }
 }

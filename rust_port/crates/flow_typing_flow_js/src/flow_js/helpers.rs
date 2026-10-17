@@ -3009,6 +3009,21 @@ pub(super) fn all_possible_concrete_types<'cx>(
     possible_concrete_types(ConcretizationKind::ConcretizeAll, cx, env, reason, t)
 }
 
+pub(super) fn possible_concrete_types_for_unused_promise_check<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    reason: &Reason,
+    t: &Type,
+) -> Result<Vec<Type>, FlowJsException> {
+    possible_concrete_types(
+        ConcretizationKind::ConcretizeForUnusedPromiseCheck,
+        cx,
+        env,
+        reason,
+        t,
+    )
+}
+
 pub(super) fn possible_concrete_types_for_operators_checking<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,

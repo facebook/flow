@@ -1,3 +1,61 @@
+Error ----------------------------------------------------------------------------------------------------- edge.js:12:3
+
+`Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
+
+   12|   promiseFirst(); // error
+         ^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- edge.js:14:3
+
+`Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
+
+   14|   promises(); // error
+         ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- edge.js:15:3
+
+`Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
+
+   15|   union(); // error
+         ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- edge.js:17:3
+
+`Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
+
+   17|   sub(); // error
+         ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- edge.js:21:3
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   21|   x(); // error
+         ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- edge.js:27:3
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   27|   op(); // error
+         ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- edge.js:35:3
+
+`Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
+
+   35|   both(); // error
+         ^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:9:5
 
 `Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
@@ -201,4 +259,4 @@ Error --------------------------------------------------------------------------
 
 
 
-Found 20 errors
+Found 27 errors

@@ -1155,16 +1155,26 @@ fn detect_unused_promises<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
             t.dupe(),
         );
         let reason = flow_common::reason::mk_reason(None, loc.dupe());
-        flow_js::flow_non_speculating(
-            cx,
-            (
-                &t,
-                &UseT::new(UseTInner::CheckUnusedPromiseT {
-                    reason,
+        let concrete_types = flow_js_utils::flow_js_result_to_job_error(
+            FlowJs::possible_concrete_types_for_unused_promise_check(cx, &reason, &t),
+        )?;
+        if concrete_types.iter().any(|t| {
+            if let TypeInner::DefT(_, def_t) = t.deref()
+                && let DefTInner::InstanceT(inst_t) = def_t.deref()
+            {
+                flow_js_utils::is_builtin_class_id("Promise", inst_t.inst.class_id.dupe(), cx)
+            } else {
+                false
+            }
+        }) {
+            flow_js::add_output_non_speculating(
+                cx,
+                ErrorMessage::EUnusedPromise {
+                    loc: loc.dupe(),
                     async_: *async_,
-                }),
-            ),
-        )?
+                },
+            );
+        }
     }
     Ok(())
 }

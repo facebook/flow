@@ -897,6 +897,15 @@ impl FlowJs {
         helpers::all_possible_concrete_types(cx, env, reason, t)
     }
 
+    fn possible_concrete_types_for_unused_promise_check_with_env<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_unused_promise_check(cx, env, reason, t)
+    }
+
     fn singleton_concrete_type_for_match_arg_with_env<'cx>(
         cx: &mut Context<'cx>,
         env: &FlowJsEnv,
@@ -1110,6 +1119,19 @@ impl FlowJs {
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
         Self::all_possible_concrete_types_with_env(cx, &FlowJsEnv::entry(), reason, t)
+    }
+
+    pub fn possible_concrete_types_for_unused_promise_check<'cx>(
+        cx: &mut Context<'cx>,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        Self::possible_concrete_types_for_unused_promise_check_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
+        )
     }
 
     pub fn singleton_concrete_type_for_match_arg<'cx>(

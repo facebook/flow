@@ -1718,9 +1718,6 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
             );
             p(cx, use_t, true, &extra)
         }
-        UseTInner::CheckUnusedPromiseT { reason, .. } => {
-            format!("CheckUnusedPromiseT ({})", string_of_reason(cx, reason))
-        }
         UseTInner::ConvertEmptyPropsToMixedT(_, _) => "ConvertEmptyPropsToMixedT".to_string(),
         UseTInner::ExitRendersT { .. } => "ExitRendersT".to_string(),
         UseTInner::EvalTypeDestructorT(box EvalTypeDestructorTData {
