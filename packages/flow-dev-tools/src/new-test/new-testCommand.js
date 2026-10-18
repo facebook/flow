@@ -21,8 +21,14 @@ export type Args = {
   ...
 };
 
-class NewTestCommand extends Base<Args> {
-  static processArgv(argv: Object): Args {
+type Input = {
+  _: Array<string>,
+  bin?: string,
+  ...
+};
+
+class NewTestCommand extends Base<Args, Input> {
+  static processArgv(argv: Input): Args {
     return {
       names: new Set(argv._),
       bin: findFlowBin(argv.bin),

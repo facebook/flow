@@ -3,22 +3,22 @@
 
 declare module 'minimist' {
   declare type minimistOptions = {
-    string?: string | Array<string>,
-    boolean?: boolean | string | Array<string>,
-    alias?: { [arg: string]: string | Array<string>, ... },
-    default?: { [arg: string]: any, ... },
+    string?: string | ReadonlyArray<string>,
+    boolean?: boolean | string | ReadonlyArray<string>,
+    alias?: { readonly [arg: string]: string | ReadonlyArray<string>, ... },
+    default?: { [arg: string]: unknown, ... },
     stopEarly?: boolean,
-    // TODO: Strings as keys don't work...
-    // '--'? boolean,
+    '--'?: boolean,
     unknown?: (param: string) => boolean,
     ...
   };
 
   declare type minimistOutput = {
-    [flag: string]: string | boolean,
-    _: Array<string>,
+    [flag: string]: unknown,
+    _: Array<string | number>,
+    '--'?: Array<string>,
     ...
   };
 
-  declare module.exports: (argv: Array<string>, opts?: minimistOptions) => minimistOutput;
+  declare module.exports: (argv: ReadonlyArray<string>, opts?: minimistOptions) => minimistOutput;
 }

@@ -25,21 +25,21 @@ import type {Builder, TestBuilder} from './builder';
 import type {Suite} from './Suite';
 import type {StepResult} from './TestStep';
 
-type TestResult = $ReadOnly<{
+type TestResult = Readonly<{
   name: ?string,
-  stepResults: $ReadOnlyArray<StepResult>,
+  stepResults: ReadonlyArray<StepResult>,
   ...
 }>;
 
 export type SuiteResult =
-  | $ReadOnly<{
+  | Readonly<{
       type: 'exceptional',
       message: string,
       ...
     }>
-  | $ReadOnly<{
+  | Readonly<{
       type: 'normal',
-      testResults: $ReadOnlyArray<TestResult>,
+      testResults: ReadonlyArray<TestResult>,
       ...
     }>;
 

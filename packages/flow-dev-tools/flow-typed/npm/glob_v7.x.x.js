@@ -2,7 +2,7 @@
 // flow-typed version: f243e51ed7/glob_v7.x.x/flow_>=v0.104.x
 
 declare module "glob" {
-  declare type MinimatchOptions = {|
+  declare type MinimatchOptions = {
     debug?: boolean,
     nobrace?: boolean,
     noglobstar?: boolean,
@@ -14,9 +14,9 @@ declare module "glob" {
     nocomment?: boolean,
     nonegate?: boolean,
     flipNegate?: boolean
-  |};
+  };
 
-  declare type Options = {|
+  declare type Options = {
     ...MinimatchOptions,
     cwd?: string,
     root?: string,
@@ -26,18 +26,18 @@ declare module "glob" {
     stat?: boolean,
     silent?: boolean,
     strict?: boolean,
-    cache?: { [path: string]: boolean | "DIR" | "FILE" | $ReadOnlyArray<string>, ... },
+    cache?: { [path: string]: boolean | "DIR" | "FILE" | ReadonlyArray<string>, ... },
     statCache?: { [path: string]: boolean | { isDirectory(): boolean, ... } | void, ... },
     symlinks?: { [path: string]: boolean | void, ... },
     realpathCache?: { [path: string]: string, ... },
     sync?: boolean,
     nounique?: boolean,
     nodir?: boolean,
-    ignore?: string | $ReadOnlyArray<string>,
+    ignore?: string | ReadonlyArray<string>,
     follow?: boolean,
     realpath?: boolean,
     absolute?: boolean
-  |};
+  };
 
   /**
    * Called when an error occurs, or matches are found
@@ -54,7 +54,7 @@ declare module "glob" {
     minimatch: {...};
     options: Options;
     aborted: boolean;
-    cache: { [path: string]: boolean | "DIR" | "FILE" | $ReadOnlyArray<string>, ... };
+    cache: { [path: string]: boolean | "DIR" | "FILE" | ReadonlyArray<string>, ... };
     statCache: { [path: string]: boolean | { isDirectory(): boolean, ... } | void, ... };
     symlinks: { [path: string]: boolean | void, ... };
     realpathCache: { [path: string]: string, ... };
@@ -65,12 +65,17 @@ declare module "glob" {
     abort(): void;
   }
 
-  declare class GlobModule {
-    Glob: Class<Glob>;
+  declare interface GlobModule {
+    Glob: typeof Glob;
 
-    (pattern: string, callback: CallBack): void;
-    (pattern: string, options: Options, callback: CallBack): void;
+    (pattern: string): Glob;
+    (pattern: string, callback: CallBack): Glob;
+    (pattern: string, options: Options, callback: CallBack): Glob;
+    (pattern: string, options: {...Options, sync: true}): Array<string>;
+    (pattern: string, options: {...Options, sync?: false}): Glob;
+    (pattern: string, options: Options): Glob | Array<string>;
 
+    glob: GlobModule;
     hasMagic(pattern: string, options?: Options): boolean;
     sync(pattern: string, options?: Options): Array<string>;
   }

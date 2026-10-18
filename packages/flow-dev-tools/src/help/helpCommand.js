@@ -18,8 +18,13 @@ type Args = {
   ...
 };
 
-class HelpCommand extends Base<Args> {
-  static processArgv(argv: Object): Args {
+type Input = {
+  _: Array<string>,
+  ...
+};
+
+class HelpCommand extends Base<Args, Input> {
+  static processArgv(argv: Input): Args {
     const command = argv._.length > 0 ? argv._[0] : null;
     return {command};
   }

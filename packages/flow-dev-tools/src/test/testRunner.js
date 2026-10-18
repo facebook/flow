@@ -28,7 +28,7 @@ import type {Args} from './testCommand';
 async function write(
   writer: stream$Writable | tty$WriteStream,
   fmt: string,
-  ...args: Array<mixed>
+  ...args: Array<unknown>
 ): Promise<void> {
   if (false == writer.write(format(fmt, ...args))) {
     await drain(writer);
@@ -36,16 +36,16 @@ async function write(
 }
 
 async function runOnce(suites: {[suiteName: string]: Suite}, args: Args) {
-  let maxErroredTests = 0;
+  let maxErroredTests: string | number = 0;
   if (args.maxErroredTests != null) {
     maxErroredTests = args.maxErroredTests;
   }
   if (args.maxErroredTestsPct != null) {
     const maxErroredTestsPct = args.maxErroredTestsPct;
     const numTests = Object.keys(suites).length;
-    maxErroredTests = Math.floor((numTests * maxErroredTestsPct) / 100);
+    maxErroredTests = Math.floor((numTests * Number(maxErroredTestsPct)) / 100);
   }
-  if (maxErroredTests > 0) {
+  if (Number(maxErroredTests) > 0) {
     process.stderr.write(
       format(
         'A maximum of %d suite%s allowed to error\n',
@@ -75,7 +75,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args: Args) {
   for (const suiteName of Object.keys(results).sort()) {
     const suiteResult = results[suiteName];
     if (suiteResult.type === 'exceptional') {
-      maxErroredTests--;
+      maxErroredTests = Number(maxErroredTests) - 1;
       if (maxErroredTests < 0 && exitCode === 0) {
         exitCode = 2;
       }

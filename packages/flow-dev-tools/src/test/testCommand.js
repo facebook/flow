@@ -23,18 +23,33 @@ export type Args = {
   testsDir?: string,
   bin: string,
   fbmakeJson: boolean,
-  parallelism: number,
+  parallelism: string | number,
   errorCheckCommand: ErrorCheckCommand,
   rerun: ?string,
   failedOnly: boolean,
   watch: boolean,
-  maxErroredTests: ?number,
-  maxErroredTestsPct: ?number,
+  maxErroredTests: ?(string | number),
+  maxErroredTestsPct: ?(string | number),
   ...
 };
 
-class TestCommand extends Base<Args> {
-  static processArgv(argv: Object): Args {
+type Input = {
+  _: Array<string>,
+  bin?: string,
+  fbmakeJson: boolean,
+  parallelism: string | number,
+  check: ErrorCheckCommand,
+  rerun?: string,
+  'rerun-failed'?: string,
+  watch: boolean,
+  'tests-dir'?: string,
+  'max-errored-tests'?: string | number,
+  'max-errored-tests-pct'?: string | number,
+  ...
+};
+
+class TestCommand extends Base<Args, Input> {
+  static processArgv(argv: Input): Args {
     const suites = argv._.length > 0 ? new Set(argv._) : null;
     if (argv.rerun != null && argv['rerun-failed'] != null) {
       process.stderr.write('You cannot set both --rerun and --rerun-failed\n');

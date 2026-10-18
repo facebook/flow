@@ -8,8 +8,6 @@
  * @format
  */
 
-import typeof Base from './Base';
-
 module.exports = {
   'add-comments': () => require('../comment/add-commentsCommand'),
   help: () => require('../help/helpCommand'),
@@ -31,7 +29,7 @@ module.exports = {
   // @fb-only: 'windtunnel-recheck-prof': () => require('../facebook/windtunnel-recheck-prof/windtunnel-recheck-profCommand'),
 } as {
   [string]: () => {
-    +default: interface {
+    readonly default: interface {
       description(): string,
       go(): Promise<void>,
       showUsage(number): void,

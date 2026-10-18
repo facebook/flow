@@ -20,14 +20,24 @@ export type Args = {
   suites: ?Set<string>,
   testsDir?: string,
   bin: string,
-  parallelism: number,
+  parallelism: string | number,
   errorCheckCommand: ErrorCheckCommand,
   rerun: ?string,
   ...
 };
 
-class RecordCommand extends Base<Args> {
-  static processArgv(argv: Object): Args {
+type Input = {
+  _: Array<string>,
+  bin?: string,
+  parallelism: string | number,
+  check: ErrorCheckCommand,
+  'tests-dir'?: string,
+  'rerun-failed'?: string,
+  ...
+};
+
+class RecordCommand extends Base<Args, Input> {
+  static processArgv(argv: Input): Args {
     const suites = argv._.length > 0 ? new Set(argv._) : null;
     return {
       suites,

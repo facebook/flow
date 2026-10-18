@@ -44,7 +44,7 @@ class ShellMocker {
     await mkdirp(this.outDir);
   }
 
-  prepareProcessEnv(env: $ReadOnly<ProcessEnv>): ProcessEnv {
+  prepareProcessEnv(env: Readonly<ProcessEnv>): ProcessEnv {
     // on Windows we'd need to use ; instead of :
     const PATH = `${this.binDir}:${env.PATH || ''}`;
     return {...env, PATH};

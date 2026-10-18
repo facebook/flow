@@ -38,7 +38,7 @@ class RunQueue {
   isTTY: boolean;
   maxLength: number;
   onDone: () => void;
-  parallelism: number;
+  parallelism: string | number;
   results: {[key: string]: SuiteResult};
   writeResults: Array<Promise<void>> = [];
   running: Array<string>;
@@ -48,7 +48,7 @@ class RunQueue {
 
   constructor(
     bin: string,
-    parallelism: number,
+    parallelism: string | number,
     isFbmakeJson: boolean,
     suites: {[key: string]: Suite},
     builder: Builder,
@@ -86,12 +86,12 @@ class RunQueue {
       this.onDone = resolve;
     });
     if (this.todo.length > 0) {
-      if (this.parallelism < 1) {
+      if (Number(this.parallelism) < 1) {
         throw new Error(
           'Parallelism must be >=1, given ' + String(this.parallelism),
         );
       }
-      (this.todo.slice(0, this.parallelism).forEach(() => this.start()),
+      (this.todo.slice(0, Number(this.parallelism)).forEach(() => this.start()),
         await donePromise);
     } else {
       this.checkDone();

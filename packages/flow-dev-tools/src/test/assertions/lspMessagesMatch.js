@@ -17,8 +17,8 @@ const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
 function lspMessagesMatch(
   actualMessages: Array<LSPMessage>,
-  expects: $ReadOnlyArray<string | [string, string] | LSPMessage>,
-  ignores: $ReadOnlyArray<string | [string, string] | LSPMessage>,
+  expects: ReadonlyArray<string | [string, string] | LSPMessage>,
+  ignores: ReadonlyArray<string | [string, string] | LSPMessage>,
   reason: ?string,
   assertionMethod: AssertionMethod,
   assertLoc: ?AssertionLocation,

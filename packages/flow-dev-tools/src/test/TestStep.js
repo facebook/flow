@@ -55,9 +55,9 @@ type Action = (
   envWrite: StepEnvWriteable,
 ) => Promise<void>;
 
-export type StepResult = $ReadOnly<{
+export type StepResult = Readonly<{
   passed: boolean,
-  assertionResults: $ReadOnlyArray<ErrorAssertionResult>,
+  assertionResults: ReadonlyArray<ErrorAssertionResult>,
   exception?: Error,
   ...
 }>;
@@ -534,7 +534,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  lspNotification: (string, ...params: Array<mixed>) => TestStepFirstStage = (
+  lspNotification: (string, ...params: Array<unknown>) => TestStepFirstStage = (
     method,
     ...params
   ) => {
@@ -546,7 +546,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
 
   lspResponse: (
     number | 'mostRecent',
-    ...params: Array<mixed>
+    ...params: Array<unknown>
   ) => TestStepFirstStage = (id, ...params) => {
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.sendLSPResponse(id, params);
@@ -554,7 +554,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  lspRequest: (string, ...params: Array<mixed>) => TestStepFirstStage = (
+  lspRequest: (string, ...params: Array<unknown>) => TestStepFirstStage = (
     method,
     ...params
   ) => {
@@ -568,7 +568,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
 
   lspRequestAndWaitUntilResponse: (
     string,
-    ...params: Array<mixed>
+    ...params: Array<unknown>
   ) => TestStepFirstStage = (method, ...params) => {
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.sendLSPRequestAndWaitForResponse(method, params);
@@ -609,8 +609,8 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
   // ignore any "E". But if there are unexpected messages not in the ignore
   // list, then we fail.
   verifyAllLSPMessagesInStep: (
-    $ReadOnlyArray<string | [string, string] | LSPMessage>,
-    $ReadOnlyArray<string | [string, string] | LSPMessage>,
+    ReadonlyArray<string | [string, string] | LSPMessage>,
+    ReadonlyArray<string | [string, string] | LSPMessage>,
   ) => TestStepSecondStage = (expects, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
@@ -629,7 +629,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
 
   verifyLSPMessageSnapshot: (
     string,
-    $ReadOnlyArray<string | [string, string] | LSPMessage>,
+    ReadonlyArray<string | [string, string] | LSPMessage>,
   ) => TestStepSecondStage = (snapshot, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
@@ -718,7 +718,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
   // are identical to the expected messages, then it succeeds.
   waitAndVerifyAllLSPMessagesContentSinceStartOfStep: (
     number,
-    $ReadOnlyArray<LSPMessage>,
+    ReadonlyArray<LSPMessage>,
   ) => TestStepSecondStage = (timeoutMs, expected) => {
     const assertLoc = searchStackForTestAssertion();
 

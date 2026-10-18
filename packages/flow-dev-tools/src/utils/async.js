@@ -62,7 +62,7 @@ function exec(cmd: string, options?: ExecOpts): Promise<string> {
 function execManual(
   cmd: string,
   options?: child_process$execOpts,
-): Promise<[?Object, string | Buffer, string | Buffer]> {
+): Promise<[?child_process$Error, string | Buffer, string | Buffer]> {
   return new Promise((resolve, reject) =>
     cp_exec(cmd, options, (err, stdout, stderr) =>
       resolve([err, stdout, stderr]),

@@ -13,29 +13,29 @@ const {format} = require('util');
 const parseArgs = require('minimist');
 
 export type Flag =
-  | $ReadOnly<{
+  | Readonly<{
       type: 'string',
       name: string,
       description: string,
       argName: string,
-      aliases?: $ReadOnlyArray<string>,
+      aliases?: ReadonlyArray<string>,
       default?: string,
       ...
     }>
-  | $ReadOnly<{
+  | Readonly<{
       type: 'boolean',
       name: string,
       description: string,
-      aliases?: $ReadOnlyArray<string>,
+      aliases?: ReadonlyArray<string>,
       ...
     }>
-  | $ReadOnly<{
+  | Readonly<{
       type: 'enum',
       name: string,
       description: string,
       argName: string,
-      validValues: $ReadOnlyArray<string>,
-      aliases?: $ReadOnlyArray<string>,
+      validValues: ReadonlyArray<string>,
+      aliases?: ReadonlyArray<string>,
       default?: string,
       ...
     }>;
@@ -81,12 +81,12 @@ class ShowUsageException {
   }
 }
 
-class Base<T: Object> {
+class Base<T extends interface {}, Input extends interface {} = interface {}> {
   static BAD_ARGS: number = 64;
   static OK: number = 0;
 
   // abstract
-  static processArgv(argv: Object): T {
+  static processArgv(argv: Input): T {
     throw new Error('Unimplemented abstract method: parse');
   }
 
@@ -122,7 +122,7 @@ class Base<T: Object> {
   static parse(): any {
     const boolean = [];
     const string = [];
-    const defaults: {[string]: mixed} = {};
+    const defaults: {[string]: unknown} = {};
     const alias: {[string]: string | Array<string>} = {};
 
     const flags = this.getAllFlags();
@@ -179,7 +179,7 @@ class Base<T: Object> {
   }
 
   // final
-  static showUsage(exitCode: number): void {
+  static showUsage(exitCode: number): empty {
     throw new ShowUsageException(exitCode);
   }
 

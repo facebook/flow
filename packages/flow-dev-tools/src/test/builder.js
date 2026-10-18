@@ -48,9 +48,13 @@ const {
 import type {SuiteResult} from './runTestSuite';
 import type {AllInvocations} from './ShellMocker';
 import type {ServerExit, ServerLog} from './serverCrash';
+import type {FlowResult} from '../flowResult';
+
+type JsonValue = null | boolean | number | string | JsonObject;
+type JsonObject = {[string]: JsonValue};
 
 type CancellationToken = {
-  +isCancellationRequested: boolean,
+  readonly isCancellationRequested: boolean,
   onCancellationRequested(callback: () => any): void,
   ...
 };
@@ -122,7 +126,7 @@ class TestBuilder {
     return join(this.dir, 'test.js');
   }
 
-  async log(fmt: string, ...args: Array<mixed>): Promise<void> {
+  async log(fmt: string, ...args: Array<unknown>): Promise<void> {
     const {logStream} = this;
     if (logStream != null) {
       const now = new Date();
@@ -288,14 +292,14 @@ class TestBuilder {
   async execManualAndLog(
     cmd: string,
     options?: child_process$execOpts,
-  ): Promise<[?Object, string, string]> {
+  ): Promise<[?child_process$Error, string, string]> {
     await this.log(`# ${cmd}...`);
     const [err, stdout_, stderr_] = await execManual(cmd, options);
     await this.log(`# Finished ${cmd}.`);
     const stderr = typeof stderr_ === 'string' ? stderr_ : stderr_.toString();
     const stdout = typeof stdout_ === 'string' ? stdout_ : stdout_.toString();
     if (err != null) {
-      await this.log(`# err.code=${err.code} err=${String(err)}`);
+      await this.log(`# err.code=${String(err.code)} err=${String(err)}`);
     }
     if (stderr !== '') {
       await this.log(`# stderr=BEGIN`);
@@ -308,7 +312,7 @@ class TestBuilder {
   async flowCmd(
     args: Array<string>,
     stdinFile?: string,
-  ): Promise<[number, string, string]> {
+  ): Promise<[number | string | null, string, string]> {
     let cmd = format(
       '%s %s %s',
       this.bin,
@@ -327,7 +331,7 @@ class TestBuilder {
     return [code, stdout, stderr];
   }
 
-  async getFlowErrors(retry?: boolean = true): Promise<Object> {
+  async getFlowErrors(retry?: boolean = true): Promise<FlowResult> {
     let cmd;
     match (this.errorCheckCommand) {
       'full-check' | 'check' => {
@@ -400,11 +404,11 @@ class TestBuilder {
     this.serverEmitter.emit('server');
 
     const stderr = [];
-    serverProcess.stderr.on('data', data => {
+    serverProcess.stderr.on('data', (data: string | Buffer) => {
       stderr.push(data.toString());
     });
 
-    serverProcess.on('exit', (code, signal) => {
+    serverProcess.on('exit', (code: number | null, signal: string | null) => {
       // `stopFlowServer` clears `this.server` before it kills, so a null one here means the
       // harness is the one that asked.
       const context = {
@@ -474,7 +478,7 @@ class TestBuilder {
     // the 'close' event is fired when its stdio streams have been closed.
     // The streams might be closed before exit if the process manually
     // closes them, or after if it leaves that to the system.
-    lspProcess.on('exit', (code, signal) => {
+    lspProcess.on('exit', (code: number | null, signal: string | null) => {
       this.cleanupLSPConnection();
     });
 
@@ -494,7 +498,7 @@ class TestBuilder {
     connection.onRequest(
       (
         method: string,
-        rawParams: Array<mixed> | {...} | void,
+        rawParams: Array<unknown> | {...} | void,
         cancellationToken: CancellationToken,
       ) => {
         const id = outstandingRequestsInfo.nextId;
@@ -523,7 +527,7 @@ class TestBuilder {
     );
 
     connection.onNotification(
-      (method: string, rawParams: Array<mixed> | {...} | void) => {
+      (method: string, rawParams: Array<unknown> | {...} | void) => {
         const params = this.sanitizeIncomingLSPMessage(rawParams);
         messages.push({method, params});
         messageEmitter.emit('message');
@@ -531,7 +535,7 @@ class TestBuilder {
     );
 
     const stderr = [];
-    lspProcess.stderr.on('data', data => {
+    lspProcess.stderr.on('data', (data: string | Buffer) => {
       stderr.push(data.toString());
     });
 
@@ -587,7 +591,7 @@ class TestBuilder {
 
     // Legacy IDE sends back an array of objects where those objects have
     // a '.flowVersion' field
-    function replace(obj: Object) {
+    function replace(obj: JsonObject) {
       for (var k in obj) {
         if (!obj.hasOwnProperty(k)) {
           continue;
@@ -614,12 +618,12 @@ class TestBuilder {
 
   // sanitizeOutgoingLSPMessage: replaces some placeholders with values
   // that can only be computed by the builder instance
-  sanitizeOutgoingLSPMessage(params: Array<mixed>): Array<mixed> {
+  sanitizeOutgoingLSPMessage(params: Array<unknown>): Array<unknown> {
     const params2: any = JSON.parse(JSON.stringify(params));
 
     const dir = this.dir;
     const dirUrl = this.getDirUrl();
-    function replace(obj: Object) {
+    function replace(obj: JsonObject) {
       for (const k in obj) {
         if (!obj.hasOwnProperty(k)) {
           continue;
@@ -645,7 +649,7 @@ class TestBuilder {
 
   async sendLSPNotification(
     method: string,
-    argsRaw: Array<mixed>,
+    argsRaw: Array<unknown>,
   ): Promise<void> {
     const lsp = this.lsp;
     if (lsp == null) {
@@ -657,7 +661,7 @@ class TestBuilder {
 
   async sendLSPResponse(
     id: number | 'mostRecent',
-    argsRaw: Array<mixed>,
+    argsRaw: Array<unknown>,
   ): Promise<void> {
     const lsp = this.lsp;
     if (lsp == null) {
@@ -685,7 +689,7 @@ class TestBuilder {
   // until that time.
   async sendLSPRequestAndWaitForResponse(
     method: string,
-    argsRaw: Array<mixed>,
+    argsRaw: Array<unknown>,
   ): Promise<void> {
     const lsp = this.lsp;
     const lspMessages = this.lspMessages;
@@ -1078,7 +1082,7 @@ class Builder {
   static doesMessageMatch(actual: LSPMessage, expected: LSPMessage): boolean {
     const replacer =
       typeof expected.id == 'undefined' && typeof actual.id !== 'undefined'
-        ? (key: string, value: mixed) => (key == 'id' ? undefined : value)
+        ? (key: string, value: unknown) => (key == 'id' ? undefined : value)
         : null;
     return JSON.stringify(actual, replacer) === JSON.stringify(expected);
   }

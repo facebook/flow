@@ -20,12 +20,17 @@ function cleanUp() {
   process.exit(1);
 }
 
-process.on('unhandledRejection', function (err, p) {
-  process.stderr.write(format('uncaught rejection\n%s\n%s\n', err, err.stack));
-  cleanUp();
-});
+process.on(
+  'unhandledRejection',
+  function (err: interface {stack?: unknown}, p: Promise<unknown>) {
+    process.stderr.write(
+      format('uncaught rejection\n%s\n%s\n', err, err.stack),
+    );
+    cleanUp();
+  },
+);
 
-process.on('uncaughtException', function (err) {
+process.on('uncaughtException', function (err: Error) {
   process.stderr.write(format('uncaught exception', err, err.stack, '\n'));
   cleanUp();
 });

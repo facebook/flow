@@ -15,7 +15,7 @@ import type {LSPMessage} from './lsp';
 export interface StepEnvWriteable {
   reportStdout(output: string): void;
   reportStderr(output: string): void;
-  reportExitCode(code: number): void;
+  reportExitCode(code: number | string | null): void;
   setLSPMessagesSinceStartOfStep(messages: Array<LSPMessage>): void;
   setLSPStderrSinceStartOfStep(stderr: string): void;
   setMockInvocationsSinceStartOfStep(invocations: AllInvocations): void;
@@ -29,7 +29,7 @@ export interface StepEnvWriteable {
 export interface StepEnvReadable {
   getStdout(): string;
   getStderr(): string;
-  getExitCodes(): Array<number>;
+  getExitCodes(): Array<number | string | null>;
   getLSPMessagesSinceStartOfStep(): Array<LSPMessage>;
   getLSPStderrSinceStartOfStep(): string;
   getMockInvocationsSinceStartOfStep(): AllInvocations;
@@ -48,7 +48,7 @@ function newEnv(oldErrors: FlowResult): {
 } {
   let stdout: Array<string> = [];
   let stderr: Array<string> = [];
-  let exitCodes: Array<number> = [];
+  let exitCodes: Array<number | string | null> = [];
   let newErrors = oldErrors;
   let serverRunning: 'running' | 'stopped' = 'stopped';
   let lspRunning: 'running' | 'stopped' = 'stopped';
@@ -67,7 +67,7 @@ function newEnv(oldErrors: FlowResult): {
       stderr.push(output);
     },
 
-    reportExitCode(code: number) {
+    reportExitCode(code: number | string | null) {
       exitCodes.push(code);
     },
 

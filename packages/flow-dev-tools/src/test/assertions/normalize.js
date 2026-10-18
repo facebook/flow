@@ -27,7 +27,7 @@ function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function expandTags(tags: $ReadOnlyArray<NormalizeTag>): Array<Step> {
+function expandTags(tags: ReadonlyArray<NormalizeTag>): Array<Step> {
   const steps: Array<Step> = [];
   let parses = false;
   for (const tag of tags) {
@@ -58,15 +58,15 @@ function normalizePathsInString(value: string, projectDir: string): string {
   );
 }
 
-function normalizePaths(value: mixed, projectDir: string): mixed {
+function normalizePaths(value: unknown, projectDir: string): unknown {
   if (typeof value === 'string') {
     return normalizePathsInString(value, projectDir);
   }
   if (Array.isArray(value)) {
-    return value.map(item => normalizePaths(item, projectDir));
+    return value.map((item: unknown) => normalizePaths(item, projectDir));
   }
   if (typeof value === 'object' && value != null) {
-    const out: {[string]: mixed} = {};
+    const out: {[string]: unknown} = {};
     for (const key of Object.keys(value)) {
       // Keys too: a manifest keyed by absolute path is otherwise unsnapshottable.
       out[normalizePathsInString(key, projectDir)] = normalizePaths(
@@ -143,7 +143,7 @@ function describeJsonParseFailure(error: JsonParseError): string {
   return `${subject}, failing at position ${position}:\n${snippetAt(value, position)}`;
 }
 
-function parseJson(value: mixed): mixed {
+function parseJson(value: unknown): unknown {
   if (typeof value !== 'string') {
     throw new Error("normalize: 'json' can only parse a string");
   }
@@ -157,7 +157,7 @@ function parseJson(value: mixed): mixed {
   }
 }
 
-function rootedPaths(value: mixed, projectDir: string): mixed {
+function rootedPaths(value: unknown, projectDir: string): unknown {
   if (projectDir === '') {
     // A silent no-op here would let a golden be recorded still containing absolute sandbox paths —
     // the exact thing `paths` normalization exists to prevent. Fail loudly instead.
@@ -166,7 +166,7 @@ function rootedPaths(value: mixed, projectDir: string): mixed {
   return normalizePaths(value, projectDir);
 }
 
-function applyStep(step: Step, value: mixed, projectDir: string): mixed {
+function applyStep(step: Step, value: unknown, projectDir: string): unknown {
   return match (step) {
     'paths' => rootedPaths(value, projectDir),
     'json_parse' => parseJson(value),
@@ -176,11 +176,11 @@ function applyStep(step: Step, value: mixed, projectDir: string): mixed {
 
 // Apply the requested normalization as an ordered pipeline, and hand back text to snapshot against.
 function normalizeOutput(
-  tags: $ReadOnlyArray<NormalizeTag>,
+  tags: ReadonlyArray<NormalizeTag>,
   value: string,
   projectDir: string,
 ): string {
-  let out: mixed = value;
+  let out: unknown = value;
   for (const step of expandTags(tags)) {
     out = applyStep(step, out, projectDir);
   }

@@ -39,17 +39,17 @@ export type AssertionMethod =
 // Closed set of output-normalization tags an assertion may request via `{normalize: [...]}`.
 export type NormalizeTag = 'paths' | 'json';
 
-export type NormalizeOptions = $ReadOnly<{
-  normalize?: $ReadOnlyArray<NormalizeTag>,
+export type NormalizeOptions = Readonly<{
+  normalize?: ReadonlyArray<NormalizeTag>,
 }>;
 
-export type CallSuggestion = $ReadOnly<{
+export type CallSuggestion = Readonly<{
   method: AssertionMethod,
-  args: $ReadOnlyArray<mixed>,
+  args: ReadonlyArray<unknown>,
   ...
 }>;
 
-export type SnapshotSuggestion = $ReadOnly<{
+export type SnapshotSuggestion = Readonly<{
   file: string,
   contents: string,
   ...
@@ -58,13 +58,13 @@ export type SnapshotSuggestion = $ReadOnly<{
 export type Suggestion = CallSuggestion | SnapshotSuggestion;
 
 export type ErrorAssertionResult =
-  | $ReadOnly<{
+  | Readonly<{
       type: 'pass',
       ...
     }>
-  | $ReadOnly<{
+  | Readonly<{
       type: 'fail',
-      messages: $ReadOnlyArray<string>,
+      messages: ReadonlyArray<string>,
       assertLoc: ?AssertionLocation,
       suggestion: Suggestion,
       ...

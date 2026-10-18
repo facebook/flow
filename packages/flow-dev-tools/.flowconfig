@@ -2,10 +2,11 @@
 ../../node_modules/**
 
 [ignore]
-**/json5/test/parse-cases/**
-**/packages/flow-remove-types/**
-**/newtests/**
+../../node_modules/json5/test/parse-cases/**
+../../node_modules/newtests/**
+../../node_modules/flow-remove-types/**
+../../newtests/**
+../flow-remove-types/**
 
 [options]
 emoji=true
-experimental.pattern_matching=true

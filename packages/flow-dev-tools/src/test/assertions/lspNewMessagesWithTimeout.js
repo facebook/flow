@@ -19,7 +19,7 @@ import type {LSPMessage} from '../lsp';
 
 function lspNewMessagesWithTimeout(
   timeoutMs: number,
-  expected: $ReadOnlyArray<LSPMessage>,
+  expected: ReadonlyArray<LSPMessage>,
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
   return (reason: ?string, env) => {

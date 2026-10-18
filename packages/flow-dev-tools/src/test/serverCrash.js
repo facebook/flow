@@ -19,7 +19,7 @@ const PART_CHARS = 4000;
 // What the harness saw when the process it spawned went away. `stderr` is everything that process
 // wrote; note that `flow server` is the monitor, so a panic inside the server it supervises lands
 // in a log file rather than here.
-export type ServerExit = $ReadOnly<{
+export type ServerExit = Readonly<{
   code: number | null,
   signal: string | null,
   stderr: string,
@@ -28,7 +28,7 @@ export type ServerExit = $ReadOnly<{
 // What Flow appended to one of its logs during the step that killed it. The harness marks the
 // logs' lengths as each step begins, so this window is bounded by the test's own timeline rather
 // than by guessing which part of the file is interesting.
-export type ServerLog = $ReadOnly<{
+export type ServerLog = Readonly<{
   name: string,
   contents: string,
 }>;
@@ -36,7 +36,7 @@ export type ServerLog = $ReadOnly<{
 // The declarations that make a server exit legitimate. Both are made before the fact: the harness
 // knows when it stopped the server itself, and a step says `dontMindServerDeath()` (or asks to
 // `waitUntilServerStatus(_, 'stopped')`) when the death is the thing under test.
-export type ExitContext = $ReadOnly<{
+export type ExitContext = Readonly<{
   harnessStoppedIt: boolean,
   stepAllowsDeath: boolean,
 }>;
@@ -119,7 +119,7 @@ function excerpt(text: string): string {
  */
 function describeServerCrash(
   exit: ServerExit,
-  logs: $ReadOnlyArray<ServerLog>,
+  logs: ReadonlyArray<ServerLog>,
   tmpDir: string,
 ): string {
   const sources =

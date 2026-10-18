@@ -8,7 +8,7 @@
  * @format
  */
 
-export type MessageHandler = (...args: any) => mixed;
+export type MessageHandler = (...args: any) => unknown;
 export type RpcConnection = {
   onNotification(methodName: string, handler: MessageHandler): void,
   sendNotification(methodName: string, ...args: any): void,
@@ -22,13 +22,13 @@ export type RpcConnection = {
 export type LSPMessage =
   | {
       method: string,
-      params: $ReadOnlyArray<mixed> | {...} | void,
-      id?: mixed,
+      params: ReadonlyArray<unknown> | {...} | void,
+      id?: unknown,
       ...
     } // Notification/request
   | {
       method: string,
-      result: $ReadOnlyArray<mixed> | {...} | string | number | boolean | null,
+      result: ReadonlyArray<unknown> | {...} | string | number | boolean | null,
       ...
     } // Response
-  | {method: string, error: mixed, ...}; // Response-error
+  | {method: string, error: unknown, ...}; // Response-error

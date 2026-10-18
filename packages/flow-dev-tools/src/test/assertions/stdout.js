@@ -29,7 +29,7 @@ function formatIfJSON(actual: string) {
 function stdout(
   expected: string,
   assertLoc: ?AssertionLocation,
-  normalize?: $ReadOnlyArray<NormalizeTag>,
+  normalize?: ReadonlyArray<NormalizeTag>,
 ): ErrorAssertion {
   return (reason: ?string, env) => {
     let actual = formatIfJSON(env.getStdout());
