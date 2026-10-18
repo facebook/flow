@@ -2,6 +2,12 @@ declare const sharedArrayBuffer: SharedArrayBuffer;
 
 const structuralArrayBuffer: ArrayBuffer = {
   byteLength: 0,
+  maxByteLength: 0,
+  resizable: false,
+  detached: false,
+  resize: () => {},
+  transfer: () => new ArrayBuffer(0),
+  transferToFixedLength: () => new ArrayBuffer(0),
   slice: () => new ArrayBuffer(0),
 };
 structuralArrayBuffer.slice() as ArrayBuffer;
@@ -90,7 +96,7 @@ arrayBacked.buffer as SharedArrayBuffer; // ERROR
 
 declare const sharedBacked: Uint8Array<SharedArrayBuffer>;
 sharedBacked.buffer as SharedArrayBuffer;
-sharedBacked.buffer as ArrayBuffer;
+sharedBacked.buffer as ArrayBuffer; // ERROR
 
 sharedBacked as ArrayBufferView<SharedArrayBuffer>;
 sharedBacked as ArrayBufferView<ArrayBufferLike>;
