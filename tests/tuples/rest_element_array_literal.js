@@ -43,7 +43,7 @@ type T = [string, ...Array<number>];
   }
   declare const c: C;
   declare const arr: Array<number>;
-  const g = c.m.bind(c, 'a', ...arr); // OK
+  const g = c.m.bind(c, 'a', ...arr); // ERROR
   g(1); // OK
   g('x'); // ERROR: string ~> number
 }

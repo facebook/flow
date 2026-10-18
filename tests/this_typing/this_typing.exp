@@ -444,14 +444,14 @@ References:
                      ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- class_poly_method.js:23:15
+Error --------------------------------------------------------------------------------------- class_poly_method.js:23:10
 
 Cannot call `n.method.bind` because in type argument `N` [1]: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
-   class_poly_method.js:23:15
+   class_poly_method.js:23:10
    23| n.method.bind(s); // errors: type argument and receiver mismatch
-                     ^
+                ^^^^
 
 References:
    class_poly_method.js:1:9
@@ -481,14 +481,14 @@ References:
        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------- class_poly_method.js:24:15
+Error --------------------------------------------------------------------------------------- class_poly_method.js:24:10
 
 Cannot call `s.method.bind` because in type argument `N` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
-   class_poly_method.js:24:15
+   class_poly_method.js:24:10
    24| s.method.bind(n); // errors: type argument and receiver mismatch
-                     ^
+                ^^^^
 
 References:
    class_poly_method.js:1:9

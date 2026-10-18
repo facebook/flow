@@ -64,6 +64,6 @@ import {Emitter} from './rest_args_emitter';
 
 class Controller extends Emitter<{[string]: Array<unknown>}> {
   setup(): void {
-    const proxy = (event: string) => this.emit.bind(this, event);
+    const proxy = (event: string) => this.emit.bind(this, event); // ERROR
   }
 }

@@ -5084,7 +5084,7 @@ fn __flow_impl<'cx>(
             // records `Function.prototype` accesses. Record it here instead --
             // the receiver is a function, so `.call`/`.apply`/`.bind` can only
             // be the `Function.prototype` ones.
-            let use_typed_bind = if let PropRef::Named {
+            let method_static = if let PropRef::Named {
                 reason: reason_prop,
                 name,
                 ..
@@ -5095,44 +5095,44 @@ fn __flow_impl<'cx>(
                     TypeInner::AnyT(_, AnySource::Unsound(UnsoundnessKind::DummyStatic))
                 ) {
                 cx.record_fun_proto_method_lookup(reason_prop.loc().dupe());
-                name.as_str_opt() == Some("bind")
+                if name.as_str_opt() == Some("bind") {
+                    Type::new(TypeInner::FunProtoT(reason_lookup.dupe()))
+                } else {
+                    static_.dupe()
+                }
             } else {
-                false
+                static_.dupe()
             };
-            let method_type = if use_typed_bind {
-                Type::new(TypeInner::FunProtoBindT(reason_lookup.dupe()))
-            } else {
-                flow_typing_tvar::mk_no_wrap_where(
-                    cx,
-                    reason_lookup.dupe(),
-                    |cx, tvar_reason, tvar_id| {
-                        let tout = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                        let use_t = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
-                            use_op: use_op.dupe(),
-                            reason: reason_lookup.dupe(),
-                            id: None,
-                            from_annot: false,
-                            skip_optional: false,
-                            propref: propref.clone(),
-                            tout: Box::new(tout),
-                            hint: hint_unavailable(),
-                        })));
-                        rec_flow(
-                            cx,
-                            env,
-                            trace,
-                            (
-                                &static_,
-                                &UseT::new(UseTInner::ReposLowerT {
-                                    reason: reason.dupe(),
-                                    use_desc: false,
-                                    use_t: Box::new(use_t),
-                                }),
-                            ),
-                        )
-                    },
-                )?
-            };
+            let method_type = flow_typing_tvar::mk_no_wrap_where(
+                cx,
+                reason_lookup.dupe(),
+                |cx, tvar_reason, tvar_id| {
+                    let tout = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                    let use_t = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                        use_op: use_op.dupe(),
+                        reason: reason_lookup.dupe(),
+                        id: None,
+                        from_annot: false,
+                        skip_optional: false,
+                        propref: propref.clone(),
+                        tout: Box::new(tout),
+                        hint: hint_unavailable(),
+                    })));
+                    rec_flow(
+                        cx,
+                        env,
+                        trace,
+                        (
+                            &method_static,
+                            &UseT::new(UseTInner::ReposLowerT {
+                                reason: reason.dupe(),
+                                use_desc: false,
+                                use_t: Box::new(use_t),
+                            }),
+                        ),
+                    )
+                },
+            )?;
             apply_method_action(
                 cx,
                 env,
