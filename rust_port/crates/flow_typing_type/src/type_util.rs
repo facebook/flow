@@ -981,7 +981,6 @@ pub fn util_use_op_of_use_t<T, CX: ContextFamily>(
         | UseTInner::LookupT(..)
         | UseTInner::ObjRestT(_, _, _, _, _)
         | UseTInner::ObjTestProtoT(_, _)
-        | UseTInner::ObjTestT(_, _, _)
         | UseTInner::GetValuesT(_, _)
         | UseTInner::ConcretizeT(..)
         | UseTInner::CondT(..)

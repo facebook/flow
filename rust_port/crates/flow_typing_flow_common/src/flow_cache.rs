@@ -81,7 +81,6 @@ pub mod flow_constraint {
                 | UseTInner::LookupT(..)
                 | UseTInner::GetPropT(..)
                 | UseTInner::ObjRestT { .. }
-                | UseTInner::ObjTestT { .. }
                 | UseTInner::ArrRestT(..)
                 | UseTInner::ValueToTypeReferenceT(..)
                 | UseTInner::SpecializeT(..)

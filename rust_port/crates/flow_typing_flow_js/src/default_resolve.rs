@@ -270,7 +270,7 @@ pub fn default_resolve_touts<C>(
         UseTInner::LookupT(box LookupTData { lookup_action, .. }) => {
             resolve_lookup_action(cx, lookup_action)
         }
-        UseTInner::ObjRestT(_, _, t, _, _) | UseTInner::ObjTestT(_, _, t) => resolve(cx, t.dupe()),
+        UseTInner::ObjRestT(_, _, t, _, _) => resolve(cx, t.dupe()),
         UseTInner::ArrRestT(box ArrRestTData { tout: t, .. }) => resolve(cx, t.dupe()),
         UseTInner::ObjTestProtoT(_, collector) => {
             collector.add(any.dupe());

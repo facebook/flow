@@ -54,6 +54,8 @@ use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::ChainMData;
 use flow_typing_type::type_::ComponentKind;
+use flow_typing_type::type_::ConcretizationKind;
+use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::ConstructorTData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
@@ -700,12 +702,15 @@ fn t_of_use_t<'cx>(
         | UseTInner::ImplementsT(..)
         | UseTInner::MixinT(..)
         | UseTInner::ExtendsUseT(..)
-        | UseTInner::ObjTestT(..)
         | UseTInner::GetEnumT { .. }
         | UseTInner::CondT(..)
         | UseTInner::ConvertEmptyPropsToMixedT(..)
         | UseTInner::ValueToTypeReferenceT(..)
-        | UseTInner::ExitRendersT { .. } => Ok(UseTResult::UpperEmpty),
+        | UseTInner::ExitRendersT { .. }
+        | UseTInner::ConcretizeT(box ConcretizeTData {
+            kind: ConcretizationKind::ConcretizeForConstructorReturn,
+            ..
+        }) => Ok(UseTResult::UpperEmpty),
         // Remaining unhandled upper bounds
         UseTInner::SpecializeT(..)
         | UseTInner::ThisSpecializeT(..)

@@ -2672,7 +2672,6 @@ pub enum UseTInner<CX: ContextFamily = ()> {
     // The bool is whether the rest object is a literal.
     ObjRestT(Reason, Rc<[String]>, Type, i32, bool),
     ObjTestProtoT(Reason, type_collector::TypeCollector),
-    ObjTestT(Reason, Type, Type),
     ArrRestT(Box<ArrRestTData>),
     GetKeysT {
         reason: Reason,
@@ -2787,7 +2786,6 @@ impl<CX: ContextFamily> Clone for UseTInner<CX> {
                 UseTInner::ObjRestT(a.clone(), b.clone(), c.clone(), *d, *e)
             }
             UseTInner::ObjTestProtoT(a, b) => UseTInner::ObjTestProtoT(a.clone(), b.clone()),
-            UseTInner::ObjTestT(a, b, c) => UseTInner::ObjTestT(a.clone(), b.clone(), c.clone()),
             UseTInner::ArrRestT(a) => UseTInner::ArrRestT(a.clone()),
             UseTInner::GetKeysT {
                 reason,
@@ -2912,9 +2910,6 @@ impl<CX: ContextFamily> PartialEq for UseTInner<CX> {
             }
             (UseTInner::ObjTestProtoT(a1, b1), UseTInner::ObjTestProtoT(a2, b2)) => {
                 a1 == a2 && b1 == b2
-            }
-            (UseTInner::ObjTestT(a1, b1, c1), UseTInner::ObjTestT(a2, b2, c2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2
             }
             (UseTInner::ArrRestT(a1), UseTInner::ArrRestT(a2)) => a1 == a2,
             (
@@ -3085,11 +3080,6 @@ impl<CX: ContextFamily> std::hash::Hash for UseTInner<CX> {
                 a.hash(state);
                 b.hash(state);
             }
-            UseTInner::ObjTestT(a, b, c) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-            }
             UseTInner::ArrRestT(a) => a.hash(state),
             UseTInner::GetKeysT {
                 reason,
@@ -3202,7 +3192,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
                 UseTInner::LookupT(..) => 29,
                 UseTInner::ObjRestT(..) => 30,
                 UseTInner::ObjTestProtoT(..) => 31,
-                UseTInner::ObjTestT(..) => 32,
                 UseTInner::ArrRestT(..) => 33,
                 UseTInner::GetKeysT { .. } => 34,
                 UseTInner::HasOwnPropT(..) => 35,
@@ -3325,9 +3314,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
             }
             (UseTInner::ObjTestProtoT(a1, b1), UseTInner::ObjTestProtoT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
-            }
-            (UseTInner::ObjTestT(a1, b1, c1), UseTInner::ObjTestT(a2, b2, c2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
             }
             (UseTInner::ArrRestT(a1), UseTInner::ArrRestT(a2)) => a1.cmp(a2),
             (
@@ -3492,12 +3478,6 @@ impl<CX: ContextFamily> std::fmt::Debug for UseTInner<CX> {
             UseTInner::ObjTestProtoT(a, b) => {
                 f.debug_tuple("ObjTestProtoT").field(a).field(b).finish()
             }
-            UseTInner::ObjTestT(a, b, c) => f
-                .debug_tuple("ObjTestT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .finish(),
             UseTInner::ArrRestT(a) => f.debug_tuple("ArrRestT").field(a).finish(),
             UseTInner::GetKeysT {
                 reason,
@@ -6189,6 +6169,7 @@ pub enum ConcretizationKind {
         keep_unions: bool,
     },
     ConcretizeForUnusedPromiseCheck,
+    ConcretizeForConstructorReturn,
     ConcretizeAll,
 }
 
@@ -11731,6 +11712,9 @@ pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
             ConcretizationKind::ConcretizeForUnusedPromiseCheck => {
                 "ConcretizeT ConcretizeForUnusedPromiseCheck".to_string()
             }
+            ConcretizationKind::ConcretizeForConstructorReturn => {
+                "ConcretizeT ConcretizeForConstructorReturn".to_string()
+            }
             ConcretizationKind::ConcretizeAll => "ConcretizeT ConcretizeAll".to_string(),
             ConcretizationKind::ConcretizeForOperatorsChecking => {
                 "ConcretizeT ConcretizeForOperatorsChecking".to_string()
@@ -11758,7 +11742,6 @@ pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
         UseTInner::MixinT(..) => "MixinT".to_string(),
         UseTInner::ObjRestT(..) => "ObjRestT".to_string(),
         UseTInner::ObjTestProtoT(..) => "ObjTestProtoT".to_string(),
-        UseTInner::ObjTestT(..) => "ObjTestT".to_string(),
         UseTInner::ReactKitT(..) => "ReactKitT".to_string(),
         UseTInner::ReposLowerT { .. } => "ReposLowerT".to_string(),
         UseTInner::ReposUseT(..) => "ReposUseT".to_string(),

@@ -466,9 +466,9 @@ pub fn collect_construct_return_ts<'cx>(
 }
 
 // A construct signature as a `constructor` method: same parameters, returning
-// void. The instance `new` produces comes from the [ObjTestT] the constructor
-// call is wrapped in, which hands back the class being constructed only when
-// the constructor itself returns a non-object — exactly how a class's own
+// void. The instance `new` produces comes from the `ClassT ~> ConstructorT`
+// rule, which hands back the class being constructed only when the constructor
+// itself returns a non-object — exactly how a class's own
 // `constructor(): void` behaves. Leaving the signature's return in place would
 // make `new Derived()` the base's instance instead of the derived one.
 fn void_returning(construct: &Type) -> Type {
@@ -1618,7 +1618,6 @@ pub fn error_message_loc_of_upper<CX: ContextFamily>(u: &UseT<CX>) -> ALoc {
         UseTInner::LookupT(data) => data.reason.loc().dupe(),
         UseTInner::ObjRestT(reason, ..) => reason.loc().dupe(),
         UseTInner::ObjTestProtoT(reason, _) => reason.loc().dupe(),
-        UseTInner::ObjTestT(reason, _, _) => reason.loc().dupe(),
         UseTInner::ArrRestT(data) => data.reason.loc().dupe(),
         UseTInner::GetKeysT { reason, .. } => reason.loc().dupe(),
         UseTInner::GetKeysDictKeyT { reason, .. } => reason.loc().dupe(),

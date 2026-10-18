@@ -521,7 +521,6 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::ObjKitT(..)
         | UseTInner::ObjRestT(..)
         | UseTInner::ObjTestProtoT(..)
-        | UseTInner::ObjTestT(..)
         | UseTInner::OptionalIndexedAccessT(..)
         | UseTInner::PrivateMethodT(..)
         | UseTInner::ReactKitT(..)

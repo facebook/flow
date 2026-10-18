@@ -5541,21 +5541,15 @@ fn __flow_impl<'cx>(
                 helpers::reposition(cx, env, Some(trace), reason.loc().dupe(), None, None, fun_t)?;
             rec_flow(cx, env, trace, (&repos_fun_t, u))?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::ObjTestT(reason_op, _, u_inner)) => {
-            let any = any_t::why(*src, reason_op.dupe());
-            rec_flow_t(cx, env, trace, unknown_use(), (&any, u_inner))?;
-        }
-        (_, UseTInner::ObjTestT(reason_op, default, u_inner)) => {
-            let repos_use = UseT::new(UseTInner::ReposLowerT {
-                reason: reason_op.dupe(),
-                use_desc: false,
-                use_t: Box::new(UseT::new(UseTInner::UseT(unknown_use(), u_inner.dupe()))),
-            });
-            if flow_js_utils::object_like(l) {
-                rec_flow(cx, env, trace, (l, &repos_use))?;
-            } else {
-                rec_flow(cx, env, trace, (default, &repos_use))?;
-            }
+        (
+            _,
+            UseTInner::ConcretizeT(box ConcretizeTData {
+                kind: ConcretizationKind::ConcretizeForConstructorReturn,
+                collector,
+                ..
+            }),
+        ) => {
+            collector.add(l.dupe());
         }
         (TypeInner::AnyT(_, src), UseTInner::ObjTestProtoT(reason_op, u_inner)) => {
             let any = any_t::why(*src, reason_op.dupe());
@@ -5843,15 +5837,26 @@ fn __flow_impl<'cx>(
             )?;
             let annot_r = reason_op.dupe().reposition_and_annotate(annot_loc);
             // return this
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    &ret,
-                    &UseT::new(UseTInner::ObjTestT(annot_r, this.dupe(), t.dupe())),
-                ),
-            )?;
+            for ret_t in
+                helpers::possible_concrete_types_for_constructor_return(cx, env, reason_op, &ret)?
+            {
+                if let TypeInner::AnyT(_, src) = ret_t.deref() {
+                    let any = any_t::why(*src, annot_r.dupe());
+                    rec_flow_t(cx, env, trace, unknown_use(), (&any, t))?;
+                } else {
+                    let repos_use = UseT::new(UseTInner::ReposLowerT {
+                        reason: annot_r.dupe(),
+                        use_desc: false,
+                        use_t: Box::new(UseT::new(UseTInner::UseT(unknown_use(), t.dupe()))),
+                    });
+                    let ret_or_this = if flow_js_utils::object_like(&ret_t) {
+                        &ret_t
+                    } else {
+                        this
+                    };
+                    rec_flow(cx, env, trace, (ret_or_this, &repos_use))?;
+                }
+            }
         }
         (TypeInner::AnyT(_, src), UseTInner::ConstructorT(box ctor_data)) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);

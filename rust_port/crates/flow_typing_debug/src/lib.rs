@@ -1459,7 +1459,6 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
             p(cx, use_t, true, &extra)
         }
         UseTInner::ObjTestProtoT(_, _) => p(cx, use_t, true, ""),
-        UseTInner::ObjTestT(_, _, _) => p(cx, use_t, true, ""),
         UseTInner::OptionalIndexedAccessT(box OptionalIndexedAccessTData { index, .. }) => {
             let extra = match index {
                 type_::OptionalIndexedAccessIndex::OptionalIndexedAccessTypeIndex(t) => {
