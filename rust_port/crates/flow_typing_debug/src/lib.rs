@@ -3104,16 +3104,22 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EUnreachable(loc) => {
             format!("EUnreachable ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
+        ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData {
+            loc,
+            value,
+            use_op,
+            requirement,
+        }) => {
             let value = match &value.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
             format!(
-                "EInvalidObjectKit(Box::new(EInvalidObjectKitData {{ loc = {}; value = {}; use_op = {} }}))",
+                "EInvalidObjectKit(Box::new(EInvalidObjectKitData {{ loc = {}; value = {}; use_op = {}; requirement = {:?} }}))",
                 string_of_aloc(None, loc),
                 value,
-                string_of_use_op(use_op)
+                string_of_use_op(use_op),
+                requirement
             )
         }
         ErrorMessage::EInvalidTypeof(box (loc, name)) => {

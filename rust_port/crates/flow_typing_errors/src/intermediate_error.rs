@@ -8185,6 +8185,7 @@ where
                     LowerRequirement::Inheritable => " is not inheritable",
                     LowerRequirement::InstanceType => " is not an instance type",
                     LowerRequirement::Object => " is not an object",
+                    LowerRequirement::ObjectOrArrayOrTuple => " is not an object, array, or tuple",
                     LowerRequirement::PolymorphicType => " is not a polymorphic type",
                 };
                 friendly::Message(vec![

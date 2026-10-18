@@ -1766,7 +1766,18 @@ pub struct TupleElementReferenceData<L: Dupe> {
     pub name: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum LowerRequirement {
     Array,
     ArrayIndex,
@@ -1777,6 +1788,7 @@ pub enum LowerRequirement {
     Inheritable,
     InstanceType,
     Object,
+    ObjectOrArrayOrTuple,
     PolymorphicType,
 }
 

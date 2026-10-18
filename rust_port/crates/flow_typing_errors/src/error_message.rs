@@ -2139,6 +2139,7 @@ pub struct EInvalidObjectKitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub value: ErrorTypeReferenceData<L>,
     pub use_op: VirtualUseOp<L>,
+    pub requirement: LowerRequirement,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2224,7 +2225,10 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ECannotDeleteData<L> {
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EInvalidObjectKitData<L> {
     fn eq(&self, other: &Self) -> bool {
-        self.loc == other.loc && self.value == other.value && self.use_op == other.use_op
+        self.loc == other.loc
+            && self.value == other.value
+            && self.use_op == other.use_op
+            && self.requirement == other.requirement
     }
 }
 
@@ -2235,6 +2239,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for EInvalidObject
         self.loc.hash(state);
         self.value.hash(state);
         self.use_op.hash(state);
+        self.requirement.hash(state);
     }
 }
 
@@ -2250,6 +2255,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EInvalidObjectKitData<
             .cmp(&other.loc)
             .then_with(|| self.value.cmp(&other.value))
             .then_with(|| self.use_op.cmp(&other.use_op))
+            .then_with(|| self.requirement.cmp(&other.requirement))
     }
 }
 
@@ -5058,13 +5064,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 value_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), value_desc),
             })),
 
-            EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
-                EInvalidObjectKit(Box::new(EInvalidObjectKitData {
-                    loc: f(loc),
-                    value: map_error_type_ref(value),
-                    use_op: map_use_op(use_op),
-                }))
-            }
+            EInvalidObjectKit(box EInvalidObjectKitData {
+                loc,
+                value,
+                use_op,
+                requirement,
+            }) => EInvalidObjectKit(Box::new(EInvalidObjectKitData {
+                loc: f(loc),
+                value: map_error_type_ref(value),
+                use_op: map_use_op(use_op),
+                requirement,
+            })),
 
             EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 use_op,
@@ -7756,13 +7766,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             })),
 
-            EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
-                EInvalidObjectKit(Box::new(EInvalidObjectKitData {
-                    loc,
-                    value: map_error_type_ref(f, value),
-                    use_op,
-                }))
-            }
+            EInvalidObjectKit(box EInvalidObjectKitData {
+                loc,
+                value,
+                use_op,
+                requirement,
+            }) => EInvalidObjectKit(Box::new(EInvalidObjectKitData {
+                loc,
+                value: map_error_type_ref(f, value),
+                use_op,
+                requirement,
+            })),
 
             EUnsupportedExact(box EUnsupportedExactData {
                 value_loc,
@@ -11471,17 +11485,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotBuildTypedInterface(sve))
             }
 
-            ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessageLowerIsNotWithPrintedType {
-                        lower: Box::new(expect_error_type_reference(value)),
-                        requirement: LowerRequirement::Object,
-                    },
-                    explanation: None,
-                    use_op,
-                }))
-            }
+            ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData {
+                loc,
+                value,
+                use_op,
+                requirement,
+            }) => UseOp(Box::new(UseOpData {
+                loc,
+                message: Message::MessageLowerIsNotWithPrintedType {
+                    lower: Box::new(expect_error_type_reference(value)),
+                    requirement,
+                },
+                explanation: None,
+                use_op,
+            })),
 
             ErrorMessage::EInvalidTypeof(box (_, typename)) => {
                 Normal(Message::MessageInvalidGenericRef(typename))

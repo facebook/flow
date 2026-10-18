@@ -1,3 +1,242 @@
+Error ----------------------------------------------------------------------------------------------------- array.js:7:1
+
+Cannot cast `x[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   array.js:7:1
+   7| x[0] as number; // ERROR
+      ^^^^
+
+References:
+   array.js:1:32
+   1| export type T = Readonly<Array<string>>;
+                                     ^^^^^^ [1]
+   array.js:7:9
+   7| x[0] as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- array.js:8:3
+
+Cannot call `x.push` because property `push` is missing in `ReadonlyArray<string>` [1]. [prop-missing]
+
+   array.js:8:3
+   8| x.push("a"); // ERROR
+        ^^^^
+
+References:
+   array.js:4:18
+   4| declare const x: T;
+                       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- array.js:9:1
+
+Cannot assign `"b"` to `x[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   9| x[0] = "b"; // ERROR
+      ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:10:1
+
+Cannot cast `x` to array type because `ReadonlyArray<string>` [1] is incompatible with `Array<string>` [2].
+[incompatible-type]
+
+   array.js:10:1
+   10| x as Array<string>; // ERROR
+       ^
+
+References:
+   array.js:4:18
+    4| declare const x: T;
+                        ^ [1]
+   array.js:10:6
+   10| x as Array<string>; // ERROR
+            ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:28:5
+
+Cannot call `x.push` because property `push` is missing in `ReadonlyArray<string>` [1]. [prop-missing]
+
+   array.js:28:5
+   28|   x.push("a"); // ERROR
+           ^^^^
+
+References:
+   array.js:25:29
+   25|   declare const x: Readonly<ReadonlyArray<string>>;
+                                   ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:29:3
+
+Cannot assign `"b"` to `x[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   29|   x[0] = "b"; // ERROR
+         ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:42:3
+
+Cannot cast `x` to array type because `ReadonlyArray<U>` [1] is incompatible with `Array<U>` [2]. [incompatible-type]
+
+   array.js:42:3
+   42|   x as Array<U>; // ERROR
+         ^
+
+References:
+   array.js:39:24
+   39| function generic<U>(x: ReadonlyValues<U>, y: ReadonlyArray<U>): void {
+                              ^^^^^^^^^^^^^^^^^ [1]
+   array.js:42:8
+   42|   x as Array<U>; // ERROR
+              ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:49:3
+
+Cannot cast `x` to `ReadonlyValues` because in type argument `U` [1]: `string` [2] is incompatible with `number` [3].
+[incompatible-type]
+
+   array.js:49:3
+   49|   x as ReadonlyValues<number>; // ERROR
+         ^
+
+References:
+   array.js:38:28
+   38| export type ReadonlyValues<U> = Readonly<Array<U>>;
+                                  ^ [1]
+   array.js:47:35
+   47|   declare const x: ReadonlyValues<string>;
+                                         ^^^^^^ [2]
+   array.js:49:23
+   49|   x as ReadonlyValues<number>; // ERROR
+                             ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:56:3
+
+Cannot assign `"a"` to `x[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   56|   x[0] = "a"; // ERROR
+         ^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- array.js:56:10
+
+Cannot assign `"a"` to `x[0]` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   array.js:56:10
+   56|   x[0] = "a"; // ERROR
+                ^^^ [1]
+
+References:
+   array.js:53:51
+   53|   declare const x: Readonly<Array<string> | Array<number>>;
+                                                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:65:3
+
+Cannot assign object literal to `x[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   65|   x[0] = {value: "b"}; // ERROR
+         ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- array.js:72:5
+
+Cannot call `x.push` because property `push` is missing in `ReadonlyArray<Array<string>>` [1]. [prop-missing]
+
+   array.js:72:5
+   72|   x.push([]); // ERROR
+           ^^^^
+
+References:
+   array.js:69:29
+   69|   declare const x: Readonly<Array<Array<string>>>;
+                                   ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- array_import.js:5:3
+
+Cannot call `x.push` because property `push` is missing in `ReadonlyArray<string>` [1]. [prop-missing]
+
+   array_import.js:5:3
+   5| x.push("a"); // ERROR
+        ^^^^
+
+References:
+   array_import.js:3:18
+   3| declare const x: T;
+                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- array_import.js:6:1
+
+Cannot assign `"b"` to `x[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   6| x[0] = "b"; // ERROR
+      ^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:2:29
+
+Cannot instantiate `Readonly` because `string` [1] is not an object, array, or tuple. [not-an-object]
+
+   2|   declare const x: Readonly<string>; // ERROR
+                                  ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:5:29
+
+Cannot instantiate `Readonly` because `boolean` [1] is not an object, array, or tuple. [not-an-object]
+
+   5|   declare const x: Readonly<boolean>; // ERROR
+                                  ^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:8:29
+
+Cannot instantiate `Readonly` because `() => void` [1] is not an object, array, or tuple. [not-an-object]
+
+   8|   declare const x: Readonly<() => void>; // ERROR
+                                  ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:12:29
+
+Cannot instantiate `Readonly` because `number` [1] is not an object, array, or tuple. [not-an-object]
+
+   12|   declare const x: Readonly<Primitive>; // ERROR
+                                   ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:12:29
+
+Cannot instantiate `Readonly` because `string` [1] is not an object, array, or tuple. [not-an-object]
+
+   12|   declare const x: Readonly<Primitive>; // ERROR
+                                   ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:15:28
+
+Cannot instantiate partial number because `number` [1] is not an object. [not-an-object]
+
+   15|   declare const x: Partial<number>; // ERROR: still requires an object
+                                  ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:16:29
+
+Cannot instantiate required of number because `number` [1] is not an object. [not-an-object]
+
+   16|   declare const y: Required<number>; // ERROR: still requires an object
+                                   ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:4:5
 
 Cannot assign `42` to `obj.p` because property `p` is not writable. [cannot-write]
@@ -206,11 +445,11 @@ Cannot assign `42` to `writeOnlyObj.p` because property `p` is not writable. [ca
 
 Error ---------------------------------------------------------------------------------------------------- test.js:97:29
 
-Cannot instantiate `Readonly` because `number` [1] is not an object. [not-an-object]
+Cannot instantiate `Readonly` because `number` [1] is not an object, array, or tuple. [not-an-object]
 
    97| type readOnlyNum = Readonly<number>;
                                    ^^^^^^ [1]
 
 
 
-Found 25 errors
+Found 46 errors

@@ -33,6 +33,7 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::ExponentialSpreadOperandGroup;
+use flow_typing_errors::intermediate_error_types::LowerRequirement;
 use flow_typing_errors::intermediate_error_types::RecordBannedTypeUtilOp;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -43,6 +44,7 @@ use flow_typing_spread_cache::LowerBound;
 use flow_typing_spread_cache::LowerBoundGroup;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
@@ -64,6 +66,7 @@ use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ReactDro;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::TupleATData;
@@ -2612,6 +2615,31 @@ fn resolve_with_env<'cx, A>(
                 );
             }
             DefTInner::ArrT(arr) => match arr.deref() {
+                ArrType::ArrayAT(box ArrayATData {
+                    elem_t, react_dro, ..
+                })
+                | ArrType::ROArrayAT(box ROArrayATData {
+                    elem_t, react_dro, ..
+                }) if matches!(tool, object::Tool::ReadOnly) => {
+                    let def_reason = match reason.desc(false) {
+                        Some(VirtualReasonDesc::RReadOnlyType) => r.dupe(),
+                        _ => reason.dupe(),
+                    };
+                    return return_(
+                        cx,
+                        use_op,
+                        Type::new(TypeInner::DefT(
+                            def_reason,
+                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
+                                ROArrayATData {
+                                    elem_t: elem_t.dupe(),
+                                    react_dro: react_dro.clone(),
+                                    literal: arr.literal(),
+                                },
+                            ))))),
+                        )),
+                    );
+                }
                 ArrType::TupleAT(box TupleATData {
                     elem_t,
                     elements,
@@ -2875,6 +2903,11 @@ fn resolve_with_env<'cx, A>(
                     loc: type_util::reason_of_t(&t).loc().dupe(),
                     value: flow_js_utils::type_reference_for_error(&t),
                     use_op: use_op.clone(),
+                    requirement: if matches!(tool, object::Tool::ReadOnly) {
+                        LowerRequirement::ObjectOrArrayOrTuple
+                    } else {
+                        LowerRequirement::Object
+                    },
                 })),
             )?;
         }

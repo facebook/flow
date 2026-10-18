@@ -5012,7 +5012,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:16:21
 
-Cannot instantiate `Readonly` because enum `E` [1] is not an object. [not-an-object]
+Cannot instantiate `Readonly` because enum `E` [1] is not an object, array, or tuple. [not-an-object]
 
    16| trigger as Readonly<typeof E>; // Error: enum `E` is not an object
                            ^^^^^^^^ [1]
