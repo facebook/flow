@@ -97,7 +97,7 @@ def _test_setup(self):
         self.fail(f"Eval compile/setup failed:\n{_setup_error}")
 
 
-EvalDryRunTests.test_setup = _test_setup  # pyre-ignore[16]
+EvalDryRunTests.test_setup = _test_setup
 
 
 def _make_test(eval_name):
