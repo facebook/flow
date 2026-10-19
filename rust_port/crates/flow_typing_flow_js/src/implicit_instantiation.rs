@@ -672,8 +672,7 @@ fn t_of_use_t<'cx>(
         // Call related upper bounds are ignored because there is not enough info to reverse.
         // Get/set-prop related upper bounds are ignored
         // because there is not enough info to reverse.
-        UseTInner::BindT(..)
-        | UseTInner::CallT(..)
+        UseTInner::CallT(..)
         | UseTInner::ConditionalT(..)
         | UseTInner::MethodT(..)
         | UseTInner::PrivateMethodT(..)

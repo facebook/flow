@@ -73,8 +73,7 @@ pub mod flow_constraint {
             (_, UseTInner::ConcretizeT(..)) => false,
             (
                 _,
-                UseTInner::BindT(..)
-                | UseTInner::CallT(..)
+                UseTInner::CallT(..)
                 | UseTInner::MethodT(..)
                 | UseTInner::PrivateMethodT(..)
                 | UseTInner::ConstructorT(..)

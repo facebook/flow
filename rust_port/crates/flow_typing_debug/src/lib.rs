@@ -193,7 +193,6 @@ use flow_typing_errors::intermediate_error_types::ValueAsTypeReference;
 use flow_typing_type::type_;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
-use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallArgInner;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::CallTData;
@@ -1298,9 +1297,6 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
         UseTInner::ArrRestT(box ArrRestTData { use_op, .. }) => {
             p(cx, use_t, true, &string_of_use_op(use_op))
         }
-        UseTInner::BindT(box BindTData { use_op, .. }) => {
-            p(cx, use_t, true, &string_of_use_op(use_op))
-        }
         UseTInner::CallElemT(box CallElemTData { .. }) => p(cx, use_t, true, ""),
         UseTInner::CallT(box CallTData {
             use_op,
@@ -2005,7 +2001,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             UpperKind::IncompatibleGetValuesT => "IncompatibleGetValuesT".to_string(),
             UpperKind::IncompatibleMapTypeTObject => "IncompatibleMapTypeTObject".to_string(),
             UpperKind::IncompatibleGetStaticsT => "IncompatibleGetStaticsT".to_string(),
-            UpperKind::IncompatibleBindT => "IncompatibleBindT".to_string(),
             UpperKind::IncompatibleUnclassified(ctor) => {
                 format!("IncompatibleUnclassified {:?}", ctor)
             }

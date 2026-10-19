@@ -3540,13 +3540,6 @@ where
                 lower_is_not(LowerRequirement::InstanceType),
             ),
 
-            UpperKind::IncompatibleBindT => mk_use_op_error(
-                use_loc,
-                use_op,
-                None,
-                lower_is_not(LowerRequirement::FunctionType),
-            ),
-
             UpperKind::IncompatibleUnclassified(ctor) => mk_use_op_error(
                 use_loc,
                 use_op,

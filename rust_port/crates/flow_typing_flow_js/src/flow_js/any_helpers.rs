@@ -491,7 +491,6 @@ pub(super) fn any_propagated<'cx>(
             _ => Ok(true),
         },
         UseTInner::ArrRestT(..)
-        | UseTInner::BindT(..)
         | UseTInner::CallT(..)
         | UseTInner::CallElemT(..)
         | UseTInner::CondT(..)

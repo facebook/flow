@@ -32,7 +32,6 @@ use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_implicit_instantiation_check::MethodOptionalChain;
 use flow_typing_implicit_instantiation_check::Operation;
 use flow_typing_type::type_::ArrRestTData;
-use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
@@ -1661,8 +1660,7 @@ fn __flow_impl<'cx>(
             | UseTInner::ObjRestT(_, _, _, _, _)
             | UseTInner::SetElemT(..)
             | UseTInner::GetElemT(..)
-            | UseTInner::CallElemT(..)
-            | UseTInner::BindT(..),
+            | UseTInner::CallElemT(..),
         ) if let DefTInner::InstanceT(instance) = def_t.deref()
             && let inst = &instance.inst
             && let Some(ReactDro(dro_loc, dro_type)) = inst.inst_react_dro.as_ref()
@@ -1774,8 +1772,7 @@ fn __flow_impl<'cx>(
             | UseTInner::ObjRestT(_, _, _, _, _)
             | UseTInner::SetElemT(..)
             | UseTInner::GetElemT(..)
-            | UseTInner::CallElemT(..)
-            | UseTInner::BindT(..),
+            | UseTInner::CallElemT(..),
         ) if let DefTInner::InstanceT(instance) = def_t.deref()
             && let inst = &instance.inst
             && let Some(ReactDro(dro_loc, dro_type)) = inst.inst_react_dro.as_ref()
@@ -8215,118 +8212,6 @@ fn __flow_impl<'cx>(
                 tout,
             )?;
         }
-        // ************************************************************************
-        // * functions may be bound by passing a receiver and (partial) arguments *
-        // ************************************************************************
-        (
-            TypeInner::DefT(reason, def_t),
-            UseTInner::BindT(box BindTData {
-                use_op,
-                reason: reason_op,
-                funcall_type: calltype,
-            }),
-        ) if let DefTInner::FunT(_, ft_rc) = def_t.deref() => {
-            let ft = ft_rc.deref();
-            let (o1, _) = &ft.this_t;
-            let o2 = &calltype.call_this_t;
-            let tins2 = calltype.call_args_tlist.dupe();
-            let call_tout = &calltype.call_tout;
-            let call_specialized_callee = &calltype.call_specialized_callee;
-            callee_recorder::add_callee(
-                env,
-                callee_recorder::Kind::All,
-                l.dupe(),
-                call_specialized_callee.as_ref(),
-            );
-            // TODO: closure
-            rec_flow_t(cx, env, trace, use_op.dupe(), (o2, o1))?;
-            let resolve_to = SpreadResolve::ResolveSpreadsToMultiflowPartial(Box::new(
-                ResolveSpreadsToMultiflowPartialData(
-                    flow_common::reason::mk_id() as i32,
-                    ft.clone(),
-                    reason_op.dupe(),
-                    Type::new(TypeInner::OpenT(call_tout.dupe())),
-                ),
-            ));
-            resolve_call_list(
-                cx,
-                env,
-                Some(trace),
-                use_op.dupe(),
-                reason,
-                tins2.to_vec(),
-                resolve_to,
-            )?;
-        }
-        (
-            TypeInner::DefT(_, def_t),
-            UseTInner::BindT(box BindTData {
-                use_op: _,
-                reason: _,
-                funcall_type: _,
-            }),
-        ) if let DefTInner::ObjT(obj) = def_t.deref()
-            && obj.call_t.is_some() =>
-        {
-            let id = obj.call_t.as_ref().unwrap();
-            let call_t = cx.find_call(*id);
-            rec_flow(cx, env, trace, (&call_t, u))?;
-        }
-        (
-            TypeInner::DefT(_, def_t),
-            UseTInner::BindT(box BindTData {
-                use_op: _,
-                reason: _,
-                funcall_type: _,
-            }),
-        ) if let DefTInner::InstanceT(inst_t) = def_t.deref()
-            && inst_t.inst.inst_call_t.is_some() =>
-        {
-            let id = inst_t.inst.inst_call_t.as_ref().unwrap();
-            let call_t = cx.find_call(*id);
-            rec_flow(cx, env, trace, (&call_t, u))?;
-        }
-        (
-            TypeInner::AnyT(_, src),
-            UseTInner::BindT(box BindTData {
-                use_op,
-                reason,
-                funcall_type: calltype,
-            }),
-        ) => {
-            let call_this_t = &calltype.call_this_t;
-            let call_args_tlist = &calltype.call_args_tlist;
-            let call_tout = &calltype.call_tout;
-            let call_specialized_callee = &calltype.call_specialized_callee;
-            callee_recorder::add_callee(
-                env,
-                callee_recorder::Kind::All,
-                l.dupe(),
-                call_specialized_callee.as_ref(),
-            );
-            let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
-            let any = any_t::why(src, reason.dupe());
-            rec_flow_t(cx, env, trace, unknown_use(), (&any, call_this_t))?;
-            call_args_iter(
-                |param_t| {
-                    let any = any_t::why(src, reason.dupe());
-                    rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (
-                            &any,
-                            &UseT::new(UseTInner::UseT(use_op.dupe(), param_t.dupe())),
-                        ),
-                    )?;
-                    Ok::<(), FlowJsException>(())
-                },
-                call_args_tlist,
-            )?;
-            let open_tout = Type::new(TypeInner::OpenT(call_tout.dupe()));
-            rec_flow_t(cx, env, trace, unknown_use(), (l, &open_tout))?;
-        }
-
         // ***************************************************************
         // * Enable structural subtyping for upperbounds like interfaces *
         // ***************************************************************

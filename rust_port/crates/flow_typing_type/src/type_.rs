@@ -1822,13 +1822,6 @@ impl<CX: ContextFamily> std::fmt::Debug for ConstructorTData<CX> {
 
 // Data structs for boxed UseTInner variants
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct BindTData {
-    pub use_op: UseOp,
-    pub reason: Reason,
-    pub funcall_type: Box<FuncallType>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ConditionalTData {
     pub use_op: UseOp,
     pub reason: Reason,
@@ -2610,7 +2603,6 @@ pub enum UseTInner<CX: ContextFamily = ()> {
     UseT(UseOp, Type),
 
     // Operations on runtime values
-    BindT(Box<BindTData>),
     CallT(Box<CallTData<CX>>),
     ConditionalT(Box<ConditionalTData>),
     MethodT(Box<MethodTData<CX>>),
@@ -2726,7 +2718,6 @@ impl<CX: ContextFamily> Clone for UseTInner<CX> {
     fn clone(&self) -> Self {
         match self {
             UseTInner::UseT(a, b) => UseTInner::UseT(a.clone(), b.clone()),
-            UseTInner::BindT(a) => UseTInner::BindT(a.clone()),
             UseTInner::CallT(a) => UseTInner::CallT(a.clone()),
             UseTInner::ConditionalT(a) => UseTInner::ConditionalT(a.clone()),
             UseTInner::MethodT(a) => UseTInner::MethodT(a.clone()),
@@ -2841,7 +2832,6 @@ impl<CX: ContextFamily> PartialEq for UseTInner<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (UseTInner::UseT(a1, b1), UseTInner::UseT(a2, b2)) => a1 == a2 && b1 == b2,
-            (UseTInner::BindT(a1), UseTInner::BindT(a2)) => a1 == a2,
             (UseTInner::CallT(a1), UseTInner::CallT(a2)) => a1 == a2,
             (UseTInner::ConditionalT(a1), UseTInner::ConditionalT(a2)) => a1 == a2,
             (UseTInner::MethodT(a1), UseTInner::MethodT(a2)) => a1 == a2,
@@ -2996,7 +2986,6 @@ impl<CX: ContextFamily> std::hash::Hash for UseTInner<CX> {
                 a.hash(state);
                 b.hash(state);
             }
-            UseTInner::BindT(a) => a.hash(state),
             UseTInner::CallT(a) => a.hash(state),
             UseTInner::ConditionalT(a) => a.hash(state),
             UseTInner::MethodT(a) => a.hash(state),
@@ -3162,7 +3151,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
         fn variant_index<CX: ContextFamily>(v: &UseTInner<CX>) -> u32 {
             match v {
                 UseTInner::UseT(..) => 0,
-                UseTInner::BindT(..) => 1,
                 UseTInner::CallT(..) => 2,
                 UseTInner::ConditionalT(..) => 3,
                 UseTInner::MethodT(..) => 4,
@@ -3226,7 +3214,6 @@ impl<CX: ContextFamily> Ord for UseTInner<CX> {
             (UseTInner::UseT(a1, b1), UseTInner::UseT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
-            (UseTInner::BindT(a1), UseTInner::BindT(a2)) => a1.cmp(a2),
             (UseTInner::CallT(a1), UseTInner::CallT(a2)) => a1.cmp(a2),
             (UseTInner::ConditionalT(a1), UseTInner::ConditionalT(a2)) => a1.cmp(a2),
             (UseTInner::MethodT(a1), UseTInner::MethodT(a2)) => a1.cmp(a2),
@@ -3399,7 +3386,6 @@ impl<CX: ContextFamily> std::fmt::Debug for UseTInner<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             UseTInner::UseT(a, b) => f.debug_tuple("UseT").field(a).field(b).finish(),
-            UseTInner::BindT(a) => f.debug_tuple("BindT").field(a).finish(),
             UseTInner::CallT(a) => f.debug_tuple("CallT").field(a).finish(),
             UseTInner::ConditionalT(a) => f.debug_tuple("ConditionalT").field(a).finish(),
             UseTInner::MethodT(a) => f.debug_tuple("MethodT").field(a).finish(),
@@ -11657,7 +11643,6 @@ pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
     match use_t.deref() {
         UseTInner::UseT(op, t) => format!("UseT({}, {})", string_of_use_op(op), string_of_ctor(t)),
         UseTInner::ArrRestT(..) => "ArrRestT".to_string(),
-        UseTInner::BindT(..) => "BindT".to_string(),
         UseTInner::CallElemT(..) => "CallElemT".to_string(),
         UseTInner::CallT(..) => "CallT".to_string(),
         UseTInner::ConstructorT(..) => "ConstructorT".to_string(),

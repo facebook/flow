@@ -18,7 +18,6 @@ use flow_typing_flow_common::flow_js_utils::callee_recorder;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
-use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallAction;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::CallMData;
@@ -199,10 +198,6 @@ pub fn default_resolve_touts<C>(
     };
     match u.deref() {
         UseTInner::UseT(..) => Ok(()),
-        UseTInner::BindT(box BindTData {
-            funcall_type: funcalltype,
-            ..
-        }) => resolve_tvar(cx, &funcalltype.call_tout),
         UseTInner::CallT(box CallTData {
             call_action: box CallAction::Funcalltype(box funcalltype),
             ..

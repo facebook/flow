@@ -1577,7 +1577,6 @@ pub fn error_message_kind_of_upper<CX: ContextFamily>(
             }
         }
         UseTInner::GetStaticsT(..) => UpperKind::IncompatibleGetStaticsT,
-        UseTInner::BindT(..) => UpperKind::IncompatibleBindT,
         _ => UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
     }
 }
@@ -1587,7 +1586,6 @@ pub fn error_message_loc_of_upper<CX: ContextFamily>(u: &UseT<CX>) -> ALoc {
 
     match u.deref() {
         UseTInner::UseT(_, t) => loc_of_t(t).dupe(),
-        UseTInner::BindT(data) => data.reason.loc().dupe(),
         UseTInner::CallT(data) => data.reason.loc().dupe(),
         UseTInner::ConditionalT(data) => data.reason.loc().dupe(),
         UseTInner::MethodT(data) => data.reason.loc().dupe(),

@@ -4092,7 +4092,6 @@ pub enum UpperKind<L: Dupe> {
     IncompatibleGetValuesT,
     IncompatibleMapTypeTObject,
     IncompatibleGetStaticsT,
-    IncompatibleBindT,
     IncompatibleUnclassified(FlowSmolStr),
 }
 
@@ -4600,7 +4599,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 UpperKind::IncompatibleGetValuesT => UpperKind::IncompatibleGetValuesT,
                 UpperKind::IncompatibleMapTypeTObject => UpperKind::IncompatibleMapTypeTObject,
                 UpperKind::IncompatibleGetStaticsT => UpperKind::IncompatibleGetStaticsT,
-                UpperKind::IncompatibleBindT => UpperKind::IncompatibleBindT,
                 UpperKind::IncompatibleUnclassified(s) => UpperKind::IncompatibleUnclassified(s),
             }
         };

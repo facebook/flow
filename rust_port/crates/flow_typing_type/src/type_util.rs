@@ -27,7 +27,6 @@ use flow_lazy::ContextFamily;
 
 use crate::type_::ArrRestTData;
 use crate::type_::AssertionFunctionConsistencyData;
-use crate::type_::BindTData;
 use crate::type_::CallTData;
 use crate::type_::ClassImplementsCheckData;
 use crate::type_::ClassOwnProtoCheckData;
@@ -408,17 +407,6 @@ pub fn util_use_op_of_use_t<T, CX: ContextFamily>(
         UseTInner::UseT(op, t) => {
             let t = t.dupe();
             call_util(op, &move |op| UseT::new(UseTInner::UseT(op, t.dupe())))
-        }
-        UseTInner::BindT(data) => {
-            let r = data.reason.dupe();
-            let f = data.funcall_type.clone();
-            call_util(&data.use_op, &move |op| {
-                UseT::new(UseTInner::BindT(Box::new(BindTData {
-                    use_op: op,
-                    reason: r.dupe(),
-                    funcall_type: f.clone(),
-                })))
-            })
         }
         UseTInner::ConditionalT(data) => {
             let reason = data.reason.dupe();
