@@ -933,7 +933,6 @@ pub mod invalid_cyclic_type_validation {
                 | TypeInner::FunProtoT(_)
                 | TypeInner::ObjProtoT(_)
                 | TypeInner::NullProtoT(_)
-                | TypeInner::FunProtoBindT(_)
                 | TypeInner::TemplateLiteralT { .. }
                 | TypeInner::StringMappingT { .. }
                 | TypeInner::OpenT(_)
@@ -1180,7 +1179,6 @@ pub fn function_like(t: &Type) -> bool {
         TypeInner::DefT(_, def_t) => {
             matches!(def_t.deref(), DefTInner::ClassT(_) | DefTInner::FunT(_, _))
         }
-        TypeInner::FunProtoBindT(_) => true,
         _ => false,
     }
 }

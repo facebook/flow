@@ -156,28 +156,6 @@ fn qualified2(x1: &str, x2: &str) -> ast::types::Type<Loc, Loc> {
     })
 }
 
-fn qualified3(x1: &str, x2: &str, x3: &str) -> ast::types::Type<Loc, Loc> {
-    let q = ast::types::typeof_::Target::Unqualified(id_from_string(x1));
-    let q = ast::types::typeof_::Target::Qualified(Arc::new(ast::types::typeof_::Qualified {
-        loc: LOC_NONE,
-        qualification: q,
-        id: id_from_string(x2),
-    }));
-    let q = ast::types::typeof_::Target::Qualified(Arc::new(ast::types::typeof_::Qualified {
-        loc: LOC_NONE,
-        qualification: q,
-        id: id_from_string(x3),
-    }));
-    ast::types::Type::new(TypeInner::Typeof {
-        loc: LOC_NONE,
-        inner: Arc::new(ast::types::Typeof {
-            argument: q,
-            targs: None,
-            comments: None,
-        }),
-    })
-}
-
 pub struct Serializer;
 
 impl Serializer {
@@ -385,7 +363,6 @@ impl Serializer {
                     }
                     BuiltinOrSymbol::FunProto => qualified2("Object", "prototype"),
                     BuiltinOrSymbol::ObjProto => qualified2("Function", "prototype"),
-                    BuiltinOrSymbol::FunProtoBind => qualified3("Function", "prototype", "bind"),
                 }
             }
             Ty::Component {

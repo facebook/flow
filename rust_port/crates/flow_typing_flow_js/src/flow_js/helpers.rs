@@ -2300,32 +2300,6 @@ pub(super) fn call_args_iter<E, F: FnMut(&Type) -> Result<(), E>>(
     Ok(())
 }
 
-// There's a lot of code that looks at a call argument list and tries to do
-// something with one or two arguments. Usually this code assumes that the
-// argument is not a spread argument. This utility function helps with that
-pub(super) fn extract_non_spread<'cx>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    arg: &CallArg,
-) -> Result<Type, FlowJsException> {
-    match arg.deref() {
-        CallArgInner::Arg(t) => Ok(t.dupe()),
-        CallArgInner::SpreadArg(arr) => {
-            let reason = reason_of_t(arr);
-            let loc = loc_of_t(arr).dupe();
-            flow_js_utils::add_output_with_env(
-                cx,
-                env,
-                ErrorMessage::EUnsupportedSyntax(Box::new((
-                    loc,
-                    flow_typing_errors::intermediate_error_types::UnsupportedSyntax::SpreadArgument,
-                ))),
-            )?;
-            Ok(any_t::error(reason.dupe()))
-        }
-    }
-}
-
 // Wrapper functions around __flow that manage traces. Use these functions for
 // all recursive calls in the implementation of __flow.
 

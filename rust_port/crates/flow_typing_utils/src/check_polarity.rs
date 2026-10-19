@@ -126,10 +126,7 @@ fn check_polarity_impl<'cx>(
         // type will certainly not contain a GenericT.
         TypeInner::AnnotT(..) => {}
         TypeInner::AnyT(..) => {}
-        TypeInner::FunProtoBindT(_)
-        | TypeInner::FunProtoT(_)
-        | TypeInner::NullProtoT(_)
-        | TypeInner::ObjProtoT(_) => {}
+        TypeInner::FunProtoT(_) | TypeInner::NullProtoT(_) | TypeInner::ObjProtoT(_) => {}
         TypeInner::OptionalT { type_, .. } | TypeInner::MaybeT(_, type_) => {
             check_polarity_impl(cx, env, trace, seen, tparams, polarity, type_)?;
         }

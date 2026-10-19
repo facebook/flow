@@ -652,10 +652,7 @@ pub(super) fn any_propagated_use<'cx>(
             Ok(true)
         }
         // These types have no negative positions in their lower bounds
-        TypeInner::FunProtoBindT(_)
-        | TypeInner::FunProtoT(_)
-        | TypeInner::ObjProtoT(_)
-        | TypeInner::NullProtoT(_) => Ok(true),
+        TypeInner::FunProtoT(_) | TypeInner::ObjProtoT(_) | TypeInner::NullProtoT(_) => Ok(true),
         // AnnotTs are 0->1, so there's no need to propagate any inside them
         TypeInner::AnnotT(..) => Ok(true),
         // Handled already in __flow

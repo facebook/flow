@@ -103,7 +103,6 @@ pub fn reason_of_t(t: &Type) -> &Reason {
         TypeInner::GenericT(box GenericTData { reason, .. }) => reason,
         TypeInner::ImplicitInstantiationTvar(data) => &data.reason,
         TypeInner::FunProtoT(reason) => reason,
-        TypeInner::FunProtoBindT(reason) => reason,
         TypeInner::KeysT(reason, _) => reason,
         TypeInner::TemplateLiteralT { reason, .. } => reason,
         TypeInner::StringMappingT { reason, .. } => reason,
@@ -280,7 +279,6 @@ pub fn mod_reason_of_t(f: &dyn Fn(Reason) -> Reason, t: &Type) -> Type {
             },
         ))),
         TypeInner::FunProtoT(reason) => Type::new(TypeInner::FunProtoT(f(reason.dupe()))),
-        TypeInner::FunProtoBindT(reason) => Type::new(TypeInner::FunProtoBindT(f(reason.dupe()))),
         TypeInner::KeysT(reason, inner_t) => {
             Type::new(TypeInner::KeysT(f(reason.dupe()), inner_t.dupe()))
         }
@@ -1495,7 +1493,6 @@ pub fn reasonless_cmp_inner_fast(
     use crate::type_::TypeInner::AnnotT;
     use crate::type_::TypeInner::AnyT;
     use crate::type_::TypeInner::DefT;
-    use crate::type_::TypeInner::FunProtoBindT;
     use crate::type_::TypeInner::FunProtoT;
     use crate::type_::TypeInner::IntersectionT;
     use crate::type_::TypeInner::KeysT;
@@ -1525,7 +1522,6 @@ pub fn reasonless_cmp_inner_fast(
             },
         ) => Some(q1.cmp(q2).then_with(|| t1.cmp(t2))),
         (FunProtoT(_), FunProtoT(_))
-        | (FunProtoBindT(_), FunProtoBindT(_))
         | (NullProtoT(_), NullProtoT(_))
         | (ObjProtoT(_), ObjProtoT(_)) => Some(std::cmp::Ordering::Equal),
         _ => None,

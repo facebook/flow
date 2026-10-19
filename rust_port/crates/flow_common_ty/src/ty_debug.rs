@@ -217,7 +217,6 @@ fn builtin_value<L: Debug>(v: &BuiltinOrSymbol<L>) -> String {
     match v {
         BuiltinOrSymbol::FunProto => "Function.prototype".to_string(),
         BuiltinOrSymbol::ObjProto => "Object.prototype".to_string(),
-        BuiltinOrSymbol::FunProtoBind => "Function.prototype.bind".to_string(),
         BuiltinOrSymbol::TSymbol(s) => dump_symbol(s),
     }
 }
@@ -936,7 +935,6 @@ fn json_of_builtin_value<L>(
     match v {
         BuiltinOrSymbol::FunProto => Json::String("Function.prototype".to_string()),
         BuiltinOrSymbol::ObjProto => Json::String("Object.prototype".to_string()),
-        BuiltinOrSymbol::FunProtoBind => Json::String("Function.prototype.bind".to_string()),
         BuiltinOrSymbol::TSymbol(s) => json_of_symbol(converter, s, strip_root),
     }
 }

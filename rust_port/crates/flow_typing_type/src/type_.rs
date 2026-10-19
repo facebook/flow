@@ -268,7 +268,6 @@ pub enum TypeInner {
     /// Signifies the end of the prototype chain. Distinct from NullT when it
     /// appears as an upper bound of an object type, otherwise the same.
     NullProtoT(Reason),
-    FunProtoBindT(Reason), //  Function.prototype.bind
     /// & types
     IntersectionT(Reason, inter_rep::InterRep),
     /// | types
@@ -11503,7 +11502,6 @@ pub fn string_of_ctor(t: &Type) -> &'static str {
         TypeInner::DefT(_, def) => string_of_def_ctor(def),
         TypeInner::EvalT { .. } => "EvalT",
         TypeInner::FunProtoT(_) => "FunProtoT",
-        TypeInner::FunProtoBindT(_) => "FunProtoBindT",
         TypeInner::GenericT(..) => "GenericT",
         TypeInner::ImplicitInstantiationTvar(..) => "ImplicitInstantiationTvar",
         TypeInner::KeysT(_, _) => "KeysT",

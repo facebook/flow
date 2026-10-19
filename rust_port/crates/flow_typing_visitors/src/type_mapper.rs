@@ -482,10 +482,7 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 })))
             }
         }
-        TypeInner::FunProtoT(_)
-        | TypeInner::ObjProtoT(_)
-        | TypeInner::NullProtoT(_)
-        | TypeInner::FunProtoBindT(_) => t,
+        TypeInner::FunProtoT(_) | TypeInner::ObjProtoT(_) | TypeInner::NullProtoT(_) => t,
         TypeInner::GenericT(box GenericTData {
             reason,
             name,

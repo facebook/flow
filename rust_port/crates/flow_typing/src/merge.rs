@@ -605,7 +605,6 @@ fn try_eval_concrete_type_truthyness<'cx>(cx: &mut Context<'cx>, t: &Type) -> Tr
         TypeInner::ObjProtoT(_) => TruthynessResult::ConstCondUnknown,
         TypeInner::FunProtoT(_) => TruthynessResult::ConstCondUnknown,
         TypeInner::NullProtoT(_) => TruthynessResult::ConstCondUnknown,
-        TypeInner::FunProtoBindT(_) => TruthynessResult::ConstCondUnknown,
         TypeInner::IntersectionT(_, _) => TruthynessResult::ConstCondUnknown,
         TypeInner::KeysT(_, _) => TruthynessResult::ConstCondUnknown,
         TypeInner::TemplateLiteralT { .. } => TruthynessResult::ConstCondUnknown,

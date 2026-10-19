@@ -684,7 +684,6 @@ pub enum Polarity {
 pub enum BuiltinOrSymbol<L> {
     FunProto,
     ObjProto,
-    FunProtoBind,
     TSymbol(Symbol<L>),
 }
 
@@ -1607,9 +1606,7 @@ where
 
     fn on_builtin_or_symbol(&mut self, env: &Env, bos: &BuiltinOrSymbol<L>) {
         match bos {
-            BuiltinOrSymbol::FunProto
-            | BuiltinOrSymbol::ObjProto
-            | BuiltinOrSymbol::FunProtoBind => {}
+            BuiltinOrSymbol::FunProto | BuiltinOrSymbol::ObjProto => {}
             BuiltinOrSymbol::TSymbol(sym) => {
                 self.on_symbol(env, sym);
             }
@@ -2381,8 +2378,7 @@ where
     ) -> Result<(), StructuralMismatch> {
         match (bos1, bos2) {
             (BuiltinOrSymbol::FunProto, BuiltinOrSymbol::FunProto)
-            | (BuiltinOrSymbol::ObjProto, BuiltinOrSymbol::ObjProto)
-            | (BuiltinOrSymbol::FunProtoBind, BuiltinOrSymbol::FunProtoBind) => Ok(()),
+            | (BuiltinOrSymbol::ObjProto, BuiltinOrSymbol::ObjProto) => Ok(()),
             (BuiltinOrSymbol::TSymbol(s1), BuiltinOrSymbol::TSymbol(s2)) => {
                 self.on_symbol(env, s1, s2)
             }
@@ -3169,9 +3165,7 @@ where
 
     fn on_builtin_or_symbol(&mut self, env: &Env, bos: &BuiltinOrSymbol<L>) -> Self::Acc {
         match bos {
-            BuiltinOrSymbol::FunProto
-            | BuiltinOrSymbol::ObjProto
-            | BuiltinOrSymbol::FunProtoBind => Self::Acc::zero(),
+            BuiltinOrSymbol::FunProto | BuiltinOrSymbol::ObjProto => Self::Acc::zero(),
             BuiltinOrSymbol::TSymbol(sym) => self.on_symbol(env, sym),
         }
     }
@@ -3913,7 +3907,6 @@ where
         match bos {
             BuiltinOrSymbol::FunProto => BuiltinOrSymbol::FunProto,
             BuiltinOrSymbol::ObjProto => BuiltinOrSymbol::ObjProto,
-            BuiltinOrSymbol::FunProtoBind => BuiltinOrSymbol::FunProtoBind,
             BuiltinOrSymbol::TSymbol(sym) => {
                 let sym_new = self.on_symbol(env, sym);
                 BuiltinOrSymbol::TSymbol(sym_new)
@@ -4347,7 +4340,6 @@ pub fn tag_of_builtin_or_symbol<L>(_bos: &BuiltinOrSymbol<L>) -> i32 {
     match _bos {
         BuiltinOrSymbol::FunProto => 0,
         BuiltinOrSymbol::ObjProto => 1,
-        BuiltinOrSymbol::FunProtoBind => 2,
         BuiltinOrSymbol::TSymbol(_) => 3,
     }
 }
@@ -4503,7 +4495,6 @@ impl<L: Dupe> BuiltinOrSymbol<L> {
         match self {
             BuiltinOrSymbol::FunProto => BuiltinOrSymbol::FunProto,
             BuiltinOrSymbol::ObjProto => BuiltinOrSymbol::ObjProto,
-            BuiltinOrSymbol::FunProtoBind => BuiltinOrSymbol::FunProtoBind,
             BuiltinOrSymbol::TSymbol(sym) => BuiltinOrSymbol::TSymbol(sym.map_locs(f)),
         }
     }

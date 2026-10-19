@@ -783,10 +783,9 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
             let extra = string_of_any_source(src);
             p(cx, t, true, extra)
         }
-        TypeInner::NullProtoT(_)
-        | TypeInner::ObjProtoT(_)
-        | TypeInner::FunProtoT(_)
-        | TypeInner::FunProtoBindT(_) => p(cx, t, true, ""),
+        TypeInner::NullProtoT(_) | TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) => {
+            p(cx, t, true, "")
+        }
         TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
             let extra = instance_t(tvars, instance);
             p(cx, t, true, &extra)

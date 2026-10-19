@@ -905,8 +905,7 @@ pub fn extract_type<'cx>(cx: &mut Context<'cx>, this_t: Type) -> GenericT<Type, 
                 }
             }
         }
-        TypeInner::FunProtoBindT(_)
-        | TypeInner::FunProtoT(_)
+        TypeInner::FunProtoT(_)
         | TypeInner::KeysT(_, _)
         | TypeInner::NullProtoT(_)
         | TypeInner::ObjProtoT(_) => GenericT::FailureUnhandledType(this_t),

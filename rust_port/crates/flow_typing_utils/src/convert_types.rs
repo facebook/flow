@@ -459,7 +459,6 @@ fn type_to_json_uncached<'cx>(cx: &mut TypeJsonCx<'_, 'cx>, depth: i32, t: &Type
         TypeInner::FunProtoT(_) => json_with_type("FunProto", vec![]),
         TypeInner::ObjProtoT(_) => json_with_type("ObjProto", vec![]),
         TypeInner::NullProtoT(_) => json_with_type("NullProto", vec![]),
-        TypeInner::FunProtoBindT(_) => json_with_type("FunProtoBind", vec![]),
         TypeInner::IntersectionT(_, inter_rep) => {
             let members: Vec<Json> = inter_rep
                 .members_iter()

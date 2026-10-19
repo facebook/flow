@@ -520,49 +520,6 @@ fn app_on_generic(
     })
 }
 
-// =============================================================================
-// Construct built-ins
-// =============================================================================
-
-fn non_opt_param() -> ty::FunParam {
-    ty::FunParam {
-        prm_optional: false,
-    }
-}
-
-fn mk_fun(
-    params: Option<
-        Vec<(
-            Option<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-            ALocTy,
-            ty::FunParam,
-        )>,
-    >,
-    effect_: Option<ty::FunEffect>,
-    fun_rest_param: Option<(
-        Option<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-        ALocTy,
-    )>,
-    fun_type_params: Option<Vec<ty::TypeParam<ALoc>>>,
-    static_: Option<ALocTy>,
-    fun_return: ty::ReturnT<ALoc>,
-) -> ty::FunT<ALoc> {
-    ty::FunT {
-        fun_this_param: None,
-        fun_params: params.unwrap_or_default().into(),
-        fun_rest_param,
-        fun_return,
-        fun_type_params: fun_type_params.map(Into::into),
-        fun_static: static_.unwrap_or_else(|| {
-            Arc::new(ty::Ty::TypeOf(Box::new((
-                ty::BuiltinOrSymbol::FunProto,
-                None,
-            ))))
-        }),
-        fun_effect: effect_.unwrap_or(ty::FunEffect::Arbitrary),
-    }
-}
-
 fn symbol_from_loc<'cx>(
     env: &mut Env<'_, 'cx>,
     sym_def_loc: ALoc,
@@ -1797,39 +1754,6 @@ mod type_converter {
                 ty::BuiltinOrSymbol::FunProto,
                 None,
             ))))),
-            TypeInner::FunProtoBindT(_) => {
-                if env.expand_internal_types() {
-                    // Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any
-                    let explicit_any = Arc::new(ty::Ty::Any(ty::AnyKind::Annotated(
-                        flow_aloc::ALoc::default(),
-                    )));
-                    Ok(Arc::new(ty::Ty::Fun(Box::new(mk_fun(
-                        Some(vec![(
-                            Some(flow_data_structure_wrapper::smol_str::FlowSmolStr::from(
-                                "thisArg",
-                            )),
-                            explicit_any.clone(),
-                            non_opt_param(),
-                        )]),
-                        None,
-                        Some((
-                            Some(FlowSmolStr::from("argArray")),
-                            Arc::new(ty::Ty::Arr(ty::ArrT {
-                                arr_readonly: false,
-                                arr_elt_t: explicit_any.clone(),
-                            })),
-                        )),
-                        None,
-                        None,
-                        ty::ReturnT::ReturnType(explicit_any),
-                    )))))
-                } else {
-                    Ok(Arc::new(ty::Ty::TypeOf(Box::new((
-                        ty::BuiltinOrSymbol::FunProtoBind,
-                        None,
-                    )))))
-                }
-            }
             TypeInner::NullProtoT(_) => Ok(Arc::new(ty::Ty::Null)),
         }
     }

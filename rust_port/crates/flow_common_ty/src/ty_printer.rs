@@ -213,7 +213,6 @@ fn builtin_value<L: Dupe>(pv: &BuiltinOrSymbol<L>, state: &mut PrintState<L>) ->
     match pv {
         BuiltinOrSymbol::FunProto => LayoutNode::atom("Function.prototype".to_string()),
         BuiltinOrSymbol::ObjProto => LayoutNode::atom("Object.prototype".to_string()),
-        BuiltinOrSymbol::FunProtoBind => LayoutNode::atom("Function.prototype.bind".to_string()),
         BuiltinOrSymbol::TSymbol(symbol) => {
             record_symbol(state, symbol);
             LayoutNode::atom(local_name_of_symbol(symbol).to_string())

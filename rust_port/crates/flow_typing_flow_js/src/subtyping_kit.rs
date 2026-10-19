@@ -7231,10 +7231,6 @@ pub fn rec_sub_t<'cx>(
             let any = any_t::make(AnySource::AnyError(None), lreason.dupe());
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &any, u)
         }
-        (TypeInner::FunProtoBindT(reason), _) => {
-            let fun_proto_t = Type::new(TypeInner::FunProtoT(reason.dupe()));
-            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &fun_proto_t, u)
-        }
         (
             TypeInner::NominalT {
                 reason,

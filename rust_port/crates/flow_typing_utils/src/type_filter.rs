@@ -2122,7 +2122,6 @@ pub fn tag_of_t<'cx>(cx: &mut Context<'cx>, t: &Type) -> Option<TypeTagSet> {
         | TypeInner::FunProtoT(_)
         | TypeInner::ObjProtoT(_)
         | TypeInner::NullProtoT(_)
-        | TypeInner::FunProtoBindT(_)
         | TypeInner::IntersectionT(_, _)
         | TypeInner::UnionT(_, _)
         | TypeInner::MaybeT(_, _)

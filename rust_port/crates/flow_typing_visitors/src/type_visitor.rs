@@ -310,10 +310,7 @@ pub fn type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         TypeInner::OpenT(tvar) => visitor.tvar(cx, pole, acc, tvar.reason(), tvar.id()),
         TypeInner::ImplicitInstantiationTvar(_) => acc,
         TypeInner::DefT(_, def_t) => visitor.def_type(cx, pole, acc, def_t),
-        TypeInner::FunProtoT(_)
-        | TypeInner::FunProtoBindT(_)
-        | TypeInner::ObjProtoT(_)
-        | TypeInner::NullProtoT(_) => acc,
+        TypeInner::FunProtoT(_) | TypeInner::ObjProtoT(_) | TypeInner::NullProtoT(_) => acc,
         TypeInner::EvalT {
             type_,
             defer_use_t,

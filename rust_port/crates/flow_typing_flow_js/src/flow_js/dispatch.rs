@@ -8219,66 +8219,6 @@ fn __flow_impl<'cx>(
         // * functions may be bound by passing a receiver and (partial) arguments *
         // ************************************************************************
         (
-            TypeInner::FunProtoBindT(_),
-            UseTInner::CallT(box CallTData {
-                call_action: box CallAction::ConcretizeCallee(tout),
-                ..
-            }),
-        ) => {
-            tout.add(l.dupe());
-        }
-        (
-            TypeInner::FunProtoBindT(_),
-            UseTInner::CallT(box CallTData {
-                use_op,
-                reason: reason_op,
-                call_action: box CallAction::Funcalltype(box funtype),
-                return_hint: _,
-            }),
-        ) if !funtype.call_args_tlist.is_empty() => {
-            let func = &funtype.call_this_t;
-            let call_targs = &funtype.call_targs;
-            let first_arg = &funtype.call_args_tlist[0];
-            let call_args_tlist = funtype.call_args_tlist[1..].to_vec();
-            if call_targs.is_some() {
-                flow_js_utils::add_output_with_env(
-                    cx,
-                    env,
-                    ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
-                        call_loc: reason_op.loc().dupe(),
-                        is_new: false,
-                        callee: CallTypeArityCallee::Type(flow_js_utils::type_reference_for_error(
-                            l,
-                        )),
-                        expected_arity: 0,
-                    })),
-                )?;
-            }
-            let call_this_t = extract_non_spread(cx, env, first_arg)?;
-            let new_funtype = FuncallType {
-                call_this_t,
-                call_targs: None,
-                call_args_tlist: call_args_tlist.into(),
-                call_tout: funtype.call_tout.dupe(),
-                call_strict_arity: funtype.call_strict_arity,
-                call_speculation_hint_state: funtype.call_speculation_hint_state.dupe(),
-                call_specialized_callee: funtype.call_specialized_callee.clone(),
-            };
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    func,
-                    &UseT::new(UseTInner::BindT(Box::new(BindTData {
-                        use_op: use_op.dupe(),
-                        reason: reason_op.dupe(),
-                        funcall_type: Box::new(new_funtype),
-                    }))),
-                ),
-            )?;
-        }
-        (
             TypeInner::DefT(reason, def_t),
             UseTInner::BindT(box BindTData {
                 use_op,
@@ -10985,51 +10925,6 @@ fn __flow_impl<'cx>(
             )?;
             let any = any_t::make(AnySource::AnyError(None), lreason.dupe());
             rec_flow(cx, env, trace, (&any, u))?;
-        }
-        // Special cases of FunT
-        (
-            TypeInner::FunProtoBindT(reason),
-            UseTInner::MethodT(box MethodTData {
-                use_op,
-                reason: call_r,
-                prop_reason: lookup_r,
-                propref,
-                method_action: action,
-            }),
-        ) => {
-            let method_type = flow_typing_tvar::mk_no_wrap_where(
-                cx,
-                lookup_r.dupe(),
-                |cx, tout_reason, tout_id| {
-                    let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
-                    let get_prop_u = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
-                        use_op: use_op.dupe(),
-                        reason: lookup_r.dupe(),
-                        id: None,
-                        from_annot: false,
-                        skip_optional: false,
-                        propref: propref.clone(),
-                        tout: Box::new(tout),
-                        hint: hint_unavailable(),
-                    })));
-                    let fun_proto = Type::new(TypeInner::FunProtoT(reason.dupe()));
-                    rec_flow(cx, env, trace, (&fun_proto, &get_prop_u))
-                },
-            )?;
-            apply_method_action(
-                cx,
-                env,
-                trace,
-                &method_type,
-                use_op.dupe(),
-                call_r.dupe(),
-                l.dupe(),
-                action,
-            )?;
-        }
-        (TypeInner::FunProtoBindT(reason), _) => {
-            let fun_proto = Type::new(TypeInner::FunProtoT(reason.dupe()));
-            rec_flow(cx, env, trace, (&fun_proto, u))?;
         }
         (
             _,

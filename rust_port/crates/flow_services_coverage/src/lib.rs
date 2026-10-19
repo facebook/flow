@@ -247,7 +247,6 @@ impl CoverageVisitor {
             }
             // Concrete covered constructors
             TypeInner::FunProtoT(_)
-            | TypeInner::FunProtoBindT(_)
             | TypeInner::ThisInstanceT(..)
             | TypeInner::KeysT(..)
             | TypeInner::TemplateLiteralT { .. }
