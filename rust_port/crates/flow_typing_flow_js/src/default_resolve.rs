@@ -44,7 +44,6 @@ use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::ReadElemData;
 use flow_typing_type::type_::ReadPropData;
 use flow_typing_type::type_::ResolveSpreadTData;
-use flow_typing_type::type_::ResolveSpreadsToMultiflowPartialData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::SealGenericTData;
 use flow_typing_type::type_::SetElemTData;
@@ -178,9 +177,6 @@ pub fn default_resolve_touts<C>(
             SpreadResolve::ResolveSpreadsToArrayLiteral { tout, .. } => resolve(cx, tout.dupe()),
             SpreadResolve::ResolveSpreadsToArray { tout: t, .. } => resolve(cx, t.dupe()),
             SpreadResolve::ResolveSpreadsToMultiflowCallFull(..) => Ok(()),
-            SpreadResolve::ResolveSpreadsToMultiflowPartial(
-                box ResolveSpreadsToMultiflowPartialData(_, _, _, t),
-            ) => resolve(cx, t.dupe()),
             SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(..) => Ok(()),
         }
     };

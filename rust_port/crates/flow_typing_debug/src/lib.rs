@@ -1510,11 +1510,6 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
                         kid(tvars, tout)
                     )
                 }
-                type_::SpreadResolve::ResolveSpreadsToMultiflowPartial(
-                    box type_::ResolveSpreadsToMultiflowPartialData(_, _, _, tout),
-                ) => {
-                    format!("{}, {}", string_of_use_op(use_op), kid(tvars, tout))
-                }
                 type_::SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, _)
                 | type_::SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(_, _) => {
                     string_of_use_op(use_op)

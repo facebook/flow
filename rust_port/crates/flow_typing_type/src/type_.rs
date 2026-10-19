@@ -6199,9 +6199,6 @@ pub enum ResolvedParam {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ResolveSpreadsToMultiflowPartialData(pub i32, pub FunType, pub Reason, pub Type);
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SpreadResolve {
     ResolveSpreadsToTupleType {
         id: i32,
@@ -6229,10 +6226,6 @@ pub enum SpreadResolve {
     /// function with those arguments
     ResolveSpreadsToMultiflowCallFull(i32, Box<FunType>),
     ResolveSpreadsToMultiflowSubtypeFull(i32, Box<FunType>),
-    /// Once we've finished resolving spreads for a function's arguments,
-    /// partially apply the arguments to the function and return the resulting
-    /// function (basically what func.bind(that, ...args) does)
-    ResolveSpreadsToMultiflowPartial(Box<ResolveSpreadsToMultiflowPartialData>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -11746,9 +11739,6 @@ pub fn string_of_use_ctor<CX: ContextFamily>(use_t: &UseT<CX>) -> String {
             }
             SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(..) => {
                 "ResolveSpreadT(ResolveSpreadsToMultiflowSubtypeFull)".to_string()
-            }
-            SpreadResolve::ResolveSpreadsToMultiflowPartial(..) => {
-                "ResolveSpreadT(ResolveSpreadsToMultiflowPartial)".to_string()
             }
         },
         UseTInner::SetElemT(..) => "SetElemT".to_string(),

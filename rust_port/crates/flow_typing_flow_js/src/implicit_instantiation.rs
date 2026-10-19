@@ -782,8 +782,7 @@ fn t_of_use_t<'cx>(
                 SpreadResolve::ResolveSpreadsToTupleType { .. }
                 | SpreadResolve::ResolveSpreadsToArrayLiteral { .. }
                 | SpreadResolve::ResolveSpreadsToArray { .. }
-                | SpreadResolve::ResolveSpreadsToMultiflowCallFull(..)
-                | SpreadResolve::ResolveSpreadsToMultiflowPartial(..) => {
+                | SpreadResolve::ResolveSpreadsToMultiflowCallFull(..) => {
                     Ok(UseTResult::UpperNonT(u.dupe()))
                 }
             }

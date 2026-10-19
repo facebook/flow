@@ -18,12 +18,9 @@ use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ResolveSpreadTData;
-use flow_typing_type::type_::ResolveSpreadsToMultiflowPartialData;
 use flow_typing_type::type_::ResolvedArgData;
 use flow_typing_type::type_::ResolvedSpreadArgData;
 use flow_typing_type::type_::UnresolvedArgData;
-use flow_typing_type::type_::dummy_this;
-use flow_typing_type::type_::mk_methodtype;
 
 use super::helpers::*;
 use super::*;
@@ -78,8 +75,6 @@ pub(super) fn multiflow_subtype<'cx>(
     )
 }
 
-// Like multiflow_partial, but if there is no spread argument, it flows VoidT to
-// all unused parameters
 pub(super) fn multiflow_full<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
@@ -95,7 +90,7 @@ pub(super) fn multiflow_full<'cx>(
     parlist: Vec<(Option<FlowSmolStr>, Type)>,
 ) -> Result<(), FlowJsException> {
     let parlist_len = parlist.len();
-    let (unused_parameters, _) = multiflow_partial(
+    let unused_parameters = multiflow_args(
         cx,
         env,
         trace,
@@ -135,14 +130,7 @@ pub(super) fn multiflow_full<'cx>(
     Ok(())
 }
 
-/// This is a tricky function. The simple description is that it flows all the
-/// arguments to all the parameters. This function is used by
-/// Function.prototype.apply, so after the arguments are applied, it returns the
-/// unused parameters.
-///  
-/// It is a little trickier in that there may be a single spread argument after
-/// all the regular arguments. There may also be a rest parameter.
-pub(super) fn multiflow_partial<'cx>(
+fn multiflow_args<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
@@ -155,7 +143,7 @@ pub(super) fn multiflow_partial<'cx>(
     rest_param: &Option<FunRestParam>,
     arglist: Vec<(Type, Option<GenericId>)>,
     parlist: Vec<(Option<FlowSmolStr>, Type)>,
-) -> Result<(Vec<(Option<FlowSmolStr>, Type)>, Option<FunRestParam>), FlowJsException> {
+) -> Result<Vec<(Option<FlowSmolStr>, Type)>, FlowJsException> {
     use flow_typing_type::type_::elemt_of_arrtype;
 
     fn multiflow_non_spreads<'cx>(
@@ -257,9 +245,9 @@ pub(super) fn multiflow_partial<'cx>(
                 rec_flow(cx, env, trace, (tin, tout))?;
             }
 
-            Ok((Vec::from(unused_parlist), rest_param.clone()))
+            Ok(Vec::from(unused_parlist))
         }
-        Some(FunRestParam(name, loc, rest_param_t)) => {
+        Some(FunRestParam(_, loc, rest_param_t)) => {
             for (tin, tout) in &used_pairs {
                 rec_flow(cx, env, trace, (tin, tout))?;
             }
@@ -282,48 +270,35 @@ pub(super) fn multiflow_partial<'cx>(
                 ))));
             }
 
-            let unused_rest_param = match spread_arg {
-                None => {
-                    // If the rest parameter is consuming N elements, then drop N elements
-                    // from the rest parameter
-                    let i = rev_elems.len() as i32;
-                    let rest_param_t = rest_param_t.dupe();
-                    let use_op = use_op.dupe();
-                    flow_typing_tvar::mk_where(cx, rest_reason.dupe(), |cx, tout| {
-                        rec_flow(
-                            cx,
-                            env,
-                            trace,
-                            (
-                                &rest_param_t,
-                                &UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
-                                    literal: false,
-                                    use_op: use_op.dupe(),
-                                    reason: orig_rest_reason.dupe(),
-                                    index: i,
-                                    tout: tout.dupe(),
-                                }))),
-                            ),
-                        )?;
-                        if !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(
-                            cx,
+            if spread_arg.is_none() {
+                let i = rev_elems.len() as i32;
+                let rest_param_t = rest_param_t.dupe();
+                let use_op = use_op.dupe();
+                flow_typing_tvar::mk_where(cx, rest_reason.dupe(), |cx, tout| {
+                    rec_flow(
+                        cx,
+                        env,
+                        trace,
+                        (
                             &rest_param_t,
-                        ) {
-                            tvar_resolver::resolve(
-                                cx,
-                                tvar_resolver::default_no_lowers,
-                                true,
-                                tout,
-                            );
-                        }
-                        Ok::<(), FlowJsException>(())
-                    })?
-                }
-                // If there is a spread argument, the number of elements it consumes from
-                // the rest param is unknown, so we don't drop any. Partial application
-                // drops the elements before the spread itself.
-                Some(_) => rest_param_t.dupe(),
-            };
+                            &UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+                                literal: false,
+                                use_op: use_op.dupe(),
+                                reason: orig_rest_reason.dupe(),
+                                index: i,
+                                tout: tout.dupe(),
+                            }))),
+                        ),
+                    )?;
+                    if !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(
+                        cx,
+                        &rest_param_t,
+                    ) {
+                        tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, tout);
+                    }
+                    Ok::<(), FlowJsException>(())
+                })?;
+            }
             let elems: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam> =
                 match spread_arg {
                     None => {
@@ -435,10 +410,7 @@ pub(super) fn multiflow_partial<'cx>(
                     Ok::<(), FlowJsException>(())
                 })?;
             }
-            Ok((
-                Vec::from(unused_parlist),
-                Some(FunRestParam(name.dupe(), loc.dupe(), unused_rest_param)),
-            ))
+            Ok(Vec::from(unused_parlist))
         }
     }
 }
@@ -1478,111 +1450,6 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         Ok((args, spread))
     }
 
-    // This is used for things like Function.prototype.bind, which partially
-    // apply arguments and then return the new function.
-    fn finish_multiflow_partial<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        trace: Option<DepthTrace>,
-        use_op: UseOp,
-        reason_op: &Reason,
-        ft: &FunType,
-        call_reason: &Reason,
-        resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
-        tout: &Type,
-    ) -> Result<(), FlowJsException> {
-        // Multiflows always come out of a flow
-        let trace = trace.expect("All multiflows show have a trace");
-        let FunType {
-            this_t: _,
-            params,
-            rest_param,
-            return_t,
-            type_guard,
-            def_reason,
-            function_reference_kind,
-            effect_,
-            strictness_kind: _,
-            literal,
-        } = ft;
-        let (args, spread_arg) = flatten_call_arg(cx, env, use_op.dupe(), reason_op, resolved)?;
-        let parlist: Vec<(Option<FlowSmolStr>, Type)> = params
-            .iter()
-            .map(|FunParam(name, t)| (name.dupe(), t.dupe()))
-            .collect();
-        let rest_args_count = args.len().saturating_sub(parlist.len()) as i32;
-        let has_spread_arg = spread_arg.is_some();
-        let (remaining_params, rest_param) = multiflow_partial(
-            cx,
-            env,
-            trace,
-            use_op.dupe(),
-            reason_op,
-            true,
-            def_reason,
-            ft,
-            &spread_arg,
-            rest_param,
-            args,
-            parlist,
-        )?;
-        // The bound function's arguments come after the ones that went to the rest param before
-        // a spread argument. The spread argument can be empty, so it drops none.
-        let rest_param = match rest_param {
-            Some(FunRestParam(name, loc, rest_t)) if has_spread_arg && rest_args_count > 0 => {
-                let rest_reason = reason_of_t(&rest_t).dupe();
-                let rest_t = flow_typing_tvar::mk_where(cx, rest_reason.dupe(), |cx, tout| {
-                    rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (
-                            &rest_t,
-                            &UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
-                                literal: false,
-                                use_op: use_op.dupe(),
-                                reason: rest_reason.dupe(),
-                                index: rest_args_count,
-                                tout: tout.dupe(),
-                            }))),
-                        ),
-                    )?;
-                    Ok::<(), FlowJsException>(())
-                })?;
-                Some(FunRestParam(name, loc, rest_t))
-            }
-            rest_param => rest_param,
-        };
-        let params_names: Vec<Option<Name>> = remaining_params
-            .iter()
-            .map(|(name, _)| name.as_ref().map(|n| Name::new(n.dupe())))
-            .collect();
-        let params_tlist: Vec<Type> = remaining_params.iter().map(|(_, t)| t.dupe()).collect();
-        let bound_reason = call_reason.dupe().replace_desc(None);
-        let def_reason = reason_op.dupe();
-        let mut bound_ft = mk_methodtype(
-            dummy_this(reason_op.loc().dupe()),
-            None, // subtyping
-            Some(effect_.clone()),
-            params_tlist,
-            rest_param,
-            def_reason,
-            *function_reference_kind,
-            Some(params_names),
-            type_guard.clone(),
-            return_t.clone(),
-        );
-        bound_ft.literal = *literal;
-        let funt = Type::new(TypeInner::DefT(
-            reason_op.dupe(),
-            DefT::new(DefTInner::FunT(
-                dummy_static(bound_reason),
-                Rc::new(bound_ft),
-            )),
-        ));
-        rec_flow_t(cx, env, trace, unknown_use(), (&funt, tout))
-    }
-
     // This is used for things like function application, where all the arguments
     // are applied to a function
     fn finish_multiflow_full<'cx>(
@@ -1674,19 +1541,6 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             SpreadArrayResolveTo::ResolveToArray { literal, fresh },
             &resolved,
             &elem_t,
-            &tout,
-        ),
-        SpreadResolve::ResolveSpreadsToMultiflowPartial(
-            box ResolveSpreadsToMultiflowPartialData(_, ft, call_reason, tout),
-        ) => finish_multiflow_partial(
-            cx,
-            env,
-            trace,
-            use_op,
-            reason_op,
-            &ft,
-            &call_reason,
-            resolved,
             &tout,
         ),
         SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, ft) => {

@@ -61,7 +61,6 @@ use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::ReadElemData;
 use flow_typing_type::type_::ReposUseTData;
 use flow_typing_type::type_::ResolveSpreadTData;
-use flow_typing_type::type_::ResolveSpreadsToMultiflowPartialData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::ResolvedSpreadArgData;
 use flow_typing_type::type_::SealGenericTData;
@@ -3799,8 +3798,7 @@ fn __flow_impl<'cx>(
                         // Otherwise we're spreading values
                         SpreadResolve::ResolveSpreadsToArray { .. }
                         | SpreadResolve::ResolveSpreadsToArrayLiteral { .. }
-                        | SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, _)
-                        | SpreadResolve::ResolveSpreadsToMultiflowPartial(..) => {
+                        | SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, _) => {
                             // Babel's "loose mode" array spread transform deviates from
                             // the spec by assuming the spread argument is always an
                             // array. If the babel_loose_array_spread option is set, model
@@ -3988,10 +3986,7 @@ fn __flow_impl<'cx>(
                     )?;
                 }
                 SpreadResolve::ResolveSpreadsToMultiflowCallFull(cfe_id, _)
-                | SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(cfe_id, _)
-                | SpreadResolve::ResolveSpreadsToMultiflowPartial(
-                    box ResolveSpreadsToMultiflowPartialData(cfe_id, _, _, _),
-                ) => {
+                | SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(cfe_id, _) => {
                     let reason_elemt = reason_of_t(&elemt);
                     let pos = resolve_spread.rrt_resolved.len() as i32;
                     const_fold_expansion::guard(
