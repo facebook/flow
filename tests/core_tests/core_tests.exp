@@ -310,6 +310,173 @@ References:
                                             ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- reflect.js:5:1
+
+Cannot cast `Reflect.get(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   reflect.js:5:1
+   5| Reflect.get(target, 'value') as string; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   reflect.js:3:24
+   3| const target = {value: 1};
+                             ^ [1]
+   reflect.js:5:33
+   5| Reflect.get(target, 'value') as string; // ERROR
+                                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- reflect.js:8:12
+
+Cannot get `descriptor.value` because property `value` is missing in `void` [1]. [incompatible-use]
+
+   reflect.js:8:12
+    8| descriptor.value; // ERROR: a descriptor can be absent
+                  ^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.reflect.js:88:66
+   88|     ): TypedPropertyDescriptor<P extends keyof T ? T[P] : any> | undefined;
+                                                                        ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- reflect.js:12:5
+
+Cannot cast `descriptor.value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   reflect.js:12:5
+   12|     descriptor.value as string; // ERROR
+           ^^^^^^^^^^^^^^^^
+
+References:
+   reflect.js:3:24
+    3| const target = {value: 1};
+                              ^ [1]
+   reflect.js:12:25
+   12|     descriptor.value as string; // ERROR
+                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- reflect.js:17:1
+
+Cannot cast `Reflect.ownKeys(...)` to array type because in array element: `string | symbol` [1] is not exactly the same
+as `string` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<string | symbol>` [3] and `Array<string>` [4] exactly the same
+- Or make `Array<string>` [4] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   reflect.js:17:1
+    17| Reflect.ownKeys(target) as Array<string>; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.reflect.js:114:40
+   114|     function ownKeys(target: object): (string | symbol)[];
+                                               ^^^^^^^^^^^^^^^ [1]
+   reflect.js:17:34
+    17| Reflect.ownKeys(target) as Array<string>; // ERROR
+                                         ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.reflect.js:114:39
+   114|     function ownKeys(target: object): (string | symbol)[];
+                                              ^^^^^^^^^^^^^^^^^^^ [3]
+   reflect.js:17:28
+    17| Reflect.ownKeys(target) as Array<string>; // ERROR
+                                   ^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- reflect.js:20:1
+
+Cannot cast `Reflect.getPrototypeOf(...)` to interface type because `null` [1] is incompatible with `interface {}` [2].
+[incompatible-type]
+
+   reflect.js:20:1
+   20| Reflect.getPrototypeOf(target) as interface {}; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.reflect.js:94:55
+   94|     function getPrototypeOf(target: object): object | null;
+                                                             ^^^^ [1]
+   reflect.js:20:35
+   20| Reflect.getPrototypeOf(target) as interface {}; // ERROR
+                                         ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- reflect.js:22:13
+
+Cannot call `Reflect.has` with `1` bound to `target` because `1` [1], a primitive, cannot be used as a subtype of
+`interface {}` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype
+of an interface. [incompatible-type]
+
+   reflect.js:22:13
+    22| Reflect.has(1, 'value'); // ERROR: targets must be objects
+                    ^ [1]
+
+References:
+   <BUILTINS>/lib.es2015.reflect.js:101:26
+   101|     function has(target: object, propertyKey: PropertyKey): boolean;
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- reflect.js:23:32
+
+Cannot call `Reflect.deleteProperty` with `true` bound to `propertyKey` because: [incompatible-type]
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
+ - Or `true` [1] is incompatible with `symbol` [4].
+
+   reflect.js:23:32
+     23| Reflect.deleteProperty(target, true); // ERROR: keys must be strings, numbers, or symbols
+                                        ^^^^ [1]
+
+References:
+   <BUILTINS>/lib.es5.js:3657:20
+   3657| type PropertyKey = string | number | symbol;
+                            ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:3657:29
+   3657| type PropertyKey = string | number | symbol;
+                                     ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:3657:38
+   3657| type PropertyKey = string | number | symbol;
+                                              ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- reflect.js:25:52
+
+Cannot call `Reflect.defineProperty` with object literal bound to `attributes` because in property `writable`:
+`"yes"` [1] is incompatible with `boolean` [2]. [incompatible-type]
+
+   reflect.js:25:52
+   25| Reflect.defineProperty(target, 'value', {writable: 'yes'}); // ERROR
+                                                          ^^^^^ [1]
+
+References:
+   <BUILTINS>/lib.es5.js:74:25
+   74|     readonly writable?: boolean,
+                               ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- reflect.js:34:1
+
+Cannot cast `Reflect.construct<...>(...)` to string because `Constructed` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   reflect.js:34:1
+   34| Reflect.construct<[number], Constructed>(Constructed, [1]) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   reflect.js:34:29
+   34| Reflect.construct<[number], Constructed>(Constructed, [1]) as string; // ERROR
+                                   ^^^^^^^^^^^ [1]
+   reflect.js:34:63
+   34| Reflect.construct<[number], Constructed>(Constructed, [1]) as string; // ERROR
+                                                                     ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- weakref.js:17:23
 
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
@@ -475,4 +642,4 @@ References:
 
 
 
-Found 25 errors
+Found 34 errors

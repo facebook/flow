@@ -9084,21 +9084,21 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }));
             nominal_type(opts, scope, scopes, tbls, xs, loc, name, targs)
         }
-        // TS-only: lowercase `object` is the builtin that rejects primitives.
-        "object" if opts.is_ts_file => match targs {
+        // Lowercase `object` is the builtin that rejects primitives.
+        "object" if opts.is_ts_file || opts.for_builtins => match targs {
             None => Parsed::Annot(Box::new(ParsedAnnot::ObjectBuiltin(Box::new((
                 loc,
                 tbls.strictness_kind,
             ))))),
             Some(_) => Parsed::Err(loc, Errno::CheckError),
         },
-        // TS-only: `ThisType<T>` is a marker that Flow reduces to a
+        // `ThisType<T>` is a marker that Flow reduces to a
         // structurally-empty interface; the type argument is irrelevant (see
         // type_annotation.rs). We parse the argument so any types it references
         // still resolve, then discard it. This mirrors the checking path so
         // cross-file consumers of a `.d.ts` see `M & ThisType<T>` as `M` rather
         // than degrading to `any`.
-        "ThisType" if opts.is_ts_file => match targs {
+        "ThisType" if opts.is_ts_file || opts.for_builtins => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
                 let def = interface_acc::InterfaceAcc::empty().interface_def(

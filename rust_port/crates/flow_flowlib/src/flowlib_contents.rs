@@ -27,7 +27,6 @@ flowlib_file!(LIB_ES2015_GENERATOR_JS, "lib.es2015.generator.js");
 flowlib_file!(LIB_ES2015_ITERABLE_JS, "lib.es2015.iterable.js");
 flowlib_file!(LIB_ES2015_PROMISE_JS, "lib.es2015.promise.js");
 flowlib_file!(LIB_ES2015_PROXY_JS, "lib.es2015.proxy.js");
-flowlib_file!(LIB_ES2015_REFLECT_JS, "lib.es2015.reflect.js");
 flowlib_file!(
     LIB_ES2015_SYMBOL_WELLKNOWN_JS,
     "lib.es2015.symbol.wellknown.js"
@@ -61,7 +60,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ("lib.es2015.iterable.js", LIB_ES2015_ITERABLE_JS),
     ("lib.es2015.promise.js", LIB_ES2015_PROMISE_JS),
     ("lib.es2015.proxy.js", LIB_ES2015_PROXY_JS),
-    ("lib.es2015.reflect.js", LIB_ES2015_REFLECT_JS),
+    (
+        "lib.es2015.reflect.js",
+        tslib_contents::LIB_ES2015_REFLECT_D_TS,
+    ),
     (
         "lib.es2015.symbol.js",
         tslib_contents::LIB_ES2015_SYMBOL_D_TS,

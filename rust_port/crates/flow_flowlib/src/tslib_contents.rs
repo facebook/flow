@@ -28,6 +28,7 @@ pub(super) const LIB_DECORATORS_LEGACY_D_TS: &str = include_tslib!("lib.decorato
 pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asynciterable.d.ts");
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
 pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
+pub(super) const LIB_ES2015_REFLECT_D_TS: &str = include_tslib!("lib.es2015.reflect.d.ts");
 pub(super) const LIB_ES2015_SYMBOL_D_TS: &str = include_tslib!("lib.es2015.symbol.d.ts");
 pub(super) const LIB_ES2016_INTL_D_TS: &str = include_tslib!("lib.es2016.intl.d.ts");
 pub(super) const LIB_ES2017_ARRAYBUFFER_D_TS: &str = include_tslib!("lib.es2017.arraybuffer.d.ts");
@@ -123,10 +124,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2015.proxy.d.ts",
         include_tslib!("lib.es2015.proxy.d.ts"),
     ),
-    (
-        "lib.es2015.reflect.d.ts",
-        include_tslib!("lib.es2015.reflect.d.ts"),
-    ),
+    ("lib.es2015.reflect.d.ts", LIB_ES2015_REFLECT_D_TS),
     ("lib.es2015.symbol.d.ts", LIB_ES2015_SYMBOL_D_TS),
     (
         "lib.es2015.symbol.wellknown.d.ts",
