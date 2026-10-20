@@ -1,3 +1,35 @@
+Error -------------------------------------------------------------------------- class_optional_method_signatures.js:2:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   2|   m?(x: number): string; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- class_optional_method_signatures.js:3:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   3|   static s?(): number; // ERROR
+        ^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- class_optional_method_signatures.js:4:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   4|   generic?<T>(x: T): T; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- class_optional_method_signatures.js:5:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   5|   ["computed"]?(x: number): number; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------- test.js.flow:2:7
 
 Declaration without `declare` is not enabled. [unsupported-syntax]
@@ -433,4 +465,4 @@ Flow does not support `abstract` methods. [unsupported-syntax]
 
 
 
-Found 52 errors
+Found 56 errors

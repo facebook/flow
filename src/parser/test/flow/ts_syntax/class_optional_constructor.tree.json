@@ -1,0 +1,201 @@
+{
+  "body": [
+    {
+      "body": {
+        "body": [
+          {
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 21,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 10,
+                  "line": 1
+                }
+              },
+              "name": "constructor",
+              "optional": false,
+              "range": [
+                10,
+                21
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 30,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 10,
+                "line": 1
+              }
+            },
+            "optional": true,
+            "range": [
+              10,
+              30
+            ],
+            "static": false,
+            "type": "DeclareMethodDefinition",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 24,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 22,
+                  "line": 1
+                }
+              },
+              "range": [
+                22,
+                24
+              ],
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "loc": {
+                  "end": {
+                    "column": 24,
+                    "line": 1
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 22,
+                    "line": 1
+                  }
+                },
+                "params": [],
+                "range": [
+                  22,
+                  24
+                ],
+                "rest": null,
+                "returnType": {
+                  "loc": {
+                    "end": {
+                      "column": 30,
+                      "line": 1
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 26,
+                      "line": 1
+                    }
+                  },
+                  "range": [
+                    26,
+                    30
+                  ],
+                  "type": "VoidTypeAnnotation"
+                },
+                "this": null,
+                "type": "FunctionTypeAnnotation",
+                "typeParameters": null
+              }
+            }
+          }
+        ],
+        "loc": {
+          "end": {
+            "column": 33,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 8,
+            "line": 1
+          }
+        },
+        "range": [
+          8,
+          33
+        ],
+        "type": "ClassBody"
+      },
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 7,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 6,
+            "line": 1
+          }
+        },
+        "name": "C",
+        "optional": false,
+        "range": [
+          6,
+          7
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 33,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        33
+      ],
+      "superClass": null,
+      "superTypeArguments": null,
+      "type": "ClassDeclaration",
+      "typeParameters": null
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 23,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 22,
+          "line": 1
+        }
+      },
+      "message": "Constructor can't be optional."
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 33,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    33
+  ],
+  "type": "Program"
+}

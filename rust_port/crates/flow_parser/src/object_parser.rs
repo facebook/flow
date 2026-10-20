@@ -1610,11 +1610,6 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         }
     }
 
-    fn is_optional_method_in_ambient(env: &mut ParserEnv) -> bool {
-        env.in_ambient_context()
-            && peek::class_optional_method_continuation_is_call_or_type_args(env)
-    }
-
     #[allow(clippy::too_many_arguments)]
     fn init(
         env: &mut ParserEnv,
@@ -1659,7 +1654,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         if !async_
             && !generator
             && peek::token(env) == &TokenKind::TPling
-            && is_optional_method_in_ambient(env)
+            && peek::class_optional_method_continuation_is_call_or_type_args(env)
         {
             eat::token(env)?;
             error_unsupported_declare(env, &declare)?;
