@@ -1283,7 +1283,7 @@ mod hardcoded_tests {
     use std::collections::BTreeMap;
     use std::fs;
 
-    use crate::file_key::has_dts_ext;
+    use crate::file_key::has_ts_ext;
     use crate::main_parser;
     use crate::parser_env::ParseOptions;
     use crate::parser_integration_tests::common::TestOptions;
@@ -1362,9 +1362,11 @@ mod hardcoded_tests {
                             case.options.1.ambient = true;
                             test.cases.insert(case_name, case);
                         }
-                        // Handle .d.ts / .d.mts / .d.cts files (e.g., foo.d.ts -> foo)
-                        "ts" | "mts" | "cts" if case_name.ends_with(".d") => {
-                            let case_name = case_name.strip_suffix(".d").unwrap().to_owned();
+                        "ts" | "tsx" | "mts" | "cts" => {
+                            let case_name = case_name
+                                .strip_suffix(".d")
+                                .unwrap_or(&case_name)
+                                .to_owned();
                             let mut case = test.cases.remove(&case_name).unwrap_or_default();
                             let content = fs::read_to_string(&file).unwrap();
                             case.content = Some(content);
@@ -1412,12 +1414,7 @@ mod hardcoded_tests {
         content: &str,
         filename: Option<&str>,
     ) -> serde_json::Value {
-        // For .d.ts files, pass the filename to the parser so it can detect
-        // the file type and enable d.ts-specific parsing (e.g., destructuring
-        // in function type parameters). For other files, use the simpler path
-        // that doesn't set a file key.
-        let is_d_ts = filename.is_some_and(has_dts_ext);
-        if is_d_ts {
+        if filename.is_some_and(has_ts_ext) {
             use crate::comment_utils;
             use crate::estree_translator;
             use crate::file_key::FileKey;

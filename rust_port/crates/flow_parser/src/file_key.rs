@@ -41,6 +41,12 @@ pub fn has_dts_ext(filename: &str) -> bool {
     DTS_EXTENSIONS.iter().any(|ext| filename.ends_with(ext))
 }
 
+pub fn has_ts_ext(filename: &str) -> bool {
+    [".ts", ".tsx", ".mts", ".cts"]
+        .iter()
+        .any(|ext| filename.ends_with(ext))
+}
+
 // Marker for flowlib LibFile paths. This is the single source of truth —
 // saved_state.ml uses File_key.flowlib_marker, not a separate constant.
 pub const FLOWLIB_MARKER: &str = "<BUILTIN_FLOW_LIB>///";

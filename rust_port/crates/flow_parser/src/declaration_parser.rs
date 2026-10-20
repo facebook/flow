@@ -862,24 +862,24 @@ pub(super) fn parse_function(
                 ))
             })?;
 
-        // Check for implicit declare function: in ambient context with semicolon instead of body.
         // We check all conversion conditions BEFORE consuming the semicolon. If conversion
         // would fail, we fall through to normal body parsing which will emit appropriate errors.
         // We also accept implicit semicolons (ASI).
-        let implicit_declare_conversion = if env.in_ambient_context()
+        let implicit_declare_conversion = if (env.in_ambient_context() || env.is_ts())
+            && peek::token(env) != &TokenKind::TLcurly
             && (peek::token(env) == &TokenKind::TSemicolon || peek::is_implicit_semicolon(env))
             && !async_
             && !generator
             && effect_ != function::Effect::Hook
             && !matches!(return_, function::ReturnAnnot::Missing(_))
         {
-            convert_function_params_to_type_params(&params).ok()
+            convert_function_params_to_type_params(&params)
         } else {
-            None
+            Err(())
         };
 
         match implicit_declare_conversion {
-            Some(type_params) => {
+            Ok(type_params) => {
                 // Consume the semicolon if explicit, or handle ASI trailing comments
                 let trailing = if peek::token(env) == &TokenKind::TSemicolon {
                     eat::token(env)?;
@@ -946,7 +946,7 @@ pub(super) fn parse_function(
                     },
                 ))
             }
-            None => {
+            Err(()) => {
                 // Normal function: parse body
                 let simple_params = is_simple_parameter_list(&params);
                 let (body, contains_use_strict) =

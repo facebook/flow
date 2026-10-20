@@ -15,6 +15,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use crate::ast::*;
 use crate::file_key::FileKey;
 use crate::file_key::has_dts_ext;
+use crate::file_key::has_ts_ext;
 use crate::flow_lexer::LexResult;
 use crate::loc::LOC_NONE;
 use crate::loc::Loc;
@@ -586,6 +587,11 @@ impl<'a> ParserEnv<'a> {
     pub fn is_d_ts(&self) -> bool {
         self.source()
             .is_some_and(|file_key| has_dts_ext(file_key.as_str()))
+    }
+
+    pub(crate) fn is_ts(&self) -> bool {
+        self.source()
+            .is_some_and(|file_key| has_ts_ext(file_key.as_str()))
     }
 
     pub(crate) fn source(&self) -> Option<FileKey> {

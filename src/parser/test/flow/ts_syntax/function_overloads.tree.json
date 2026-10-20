@@ -1,0 +1,2387 @@
+{
+  "body": [
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 21,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 1
+          }
+        },
+        "name": "f",
+        "optional": false,
+        "range": [
+          9,
+          21
+        ],
+        "type": "Identifier",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 21,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 10,
+              "line": 1
+            }
+          },
+          "range": [
+            10,
+            21
+          ],
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 21,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 10,
+                "line": 1
+              }
+            },
+            "params": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 20,
+                    "line": 1
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 11,
+                    "line": 1
+                  }
+                },
+                "name": {
+                  "loc": {
+                    "end": {
+                      "column": 12,
+                      "line": 1
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 11,
+                      "line": 1
+                    }
+                  },
+                  "name": "a",
+                  "optional": false,
+                  "range": [
+                    11,
+                    12
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "optional": false,
+                "range": [
+                  11,
+                  20
+                ],
+                "type": "FunctionTypeParam",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 20,
+                      "line": 1
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 14,
+                      "line": 1
+                    }
+                  },
+                  "range": [
+                    14,
+                    20
+                  ],
+                  "type": "StringTypeAnnotation"
+                }
+              }
+            ],
+            "range": [
+              10,
+              21
+            ],
+            "rest": null,
+            "returnType": {
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 1
+                }
+              },
+              "range": [
+                23,
+                27
+              ],
+              "type": "VoidTypeAnnotation"
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null
+          }
+        }
+      },
+      "implicitDeclare": true,
+      "loc": {
+        "end": {
+          "column": 28,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "predicate": null,
+      "range": [
+        0,
+        28
+      ],
+      "type": "DeclareFunction"
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 21,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 2
+          }
+        },
+        "name": "f",
+        "optional": false,
+        "range": [
+          38,
+          50
+        ],
+        "type": "Identifier",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 21,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 10,
+              "line": 2
+            }
+          },
+          "range": [
+            39,
+            50
+          ],
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 21,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 10,
+                "line": 2
+              }
+            },
+            "params": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 20,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 11,
+                    "line": 2
+                  }
+                },
+                "name": {
+                  "loc": {
+                    "end": {
+                      "column": 12,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 11,
+                      "line": 2
+                    }
+                  },
+                  "name": "a",
+                  "optional": false,
+                  "range": [
+                    40,
+                    41
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "optional": false,
+                "range": [
+                  40,
+                  49
+                ],
+                "type": "FunctionTypeParam",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 20,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 14,
+                      "line": 2
+                    }
+                  },
+                  "range": [
+                    43,
+                    49
+                  ],
+                  "type": "NumberTypeAnnotation"
+                }
+              }
+            ],
+            "range": [
+              39,
+              50
+            ],
+            "rest": null,
+            "returnType": {
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 2
+                }
+              },
+              "range": [
+                52,
+                56
+              ],
+              "type": "VoidTypeAnnotation"
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null
+          }
+        }
+      },
+      "implicitDeclare": true,
+      "loc": {
+        "end": {
+          "column": 28,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "predicate": null,
+      "range": [
+        29,
+        57
+      ],
+      "type": "DeclareFunction"
+    },
+    {
+      "async": false,
+      "body": {
+        "body": [],
+        "loc": {
+          "end": {
+            "column": 39,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 37,
+            "line": 3
+          }
+        },
+        "range": [
+          95,
+          97
+        ],
+        "type": "BlockStatement"
+      },
+      "expression": false,
+      "generator": false,
+      "id": {
+        "loc": {
+          "end": {
+            "column": 10,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 3
+          }
+        },
+        "name": "f",
+        "optional": false,
+        "range": [
+          67,
+          68
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 39,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "params": [
+        {
+          "loc": {
+            "end": {
+              "column": 29,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 11,
+              "line": 3
+            }
+          },
+          "name": "a",
+          "optional": false,
+          "range": [
+            69,
+            87
+          ],
+          "type": "Identifier",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 29,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 12,
+                "line": 3
+              }
+            },
+            "range": [
+              70,
+              87
+            ],
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 29,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 14,
+                  "line": 3
+                }
+              },
+              "range": [
+                72,
+                87
+              ],
+              "type": "UnionTypeAnnotation",
+              "types": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 20,
+                      "line": 3
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 14,
+                      "line": 3
+                    }
+                  },
+                  "range": [
+                    72,
+                    78
+                  ],
+                  "type": "StringTypeAnnotation"
+                },
+                {
+                  "loc": {
+                    "end": {
+                      "column": 29,
+                      "line": 3
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 23,
+                      "line": 3
+                    }
+                  },
+                  "range": [
+                    81,
+                    87
+                  ],
+                  "type": "NumberTypeAnnotation"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "predicate": null,
+      "range": [
+        58,
+        97
+      ],
+      "returnType": {
+        "loc": {
+          "end": {
+            "column": 36,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 30,
+            "line": 3
+          }
+        },
+        "range": [
+          88,
+          94
+        ],
+        "type": "TypeAnnotation",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 36,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 32,
+              "line": 3
+            }
+          },
+          "range": [
+            90,
+            94
+          ],
+          "type": "VoidTypeAnnotation"
+        }
+      },
+      "type": "FunctionDeclaration",
+      "typeParameters": null
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 20,
+              "line": 5
+            },
+            "source": null,
+            "start": {
+              "column": 16,
+              "line": 5
+            }
+          },
+          "name": "g",
+          "optional": false,
+          "range": [
+            115,
+            119
+          ],
+          "type": "Identifier",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 20,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 17,
+                "line": 5
+              }
+            },
+            "range": [
+              116,
+              119
+            ],
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 20,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 17,
+                  "line": 5
+                }
+              },
+              "params": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 25,
+                      "line": 5
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 21,
+                      "line": 5
+                    }
+                  },
+                  "name": {
+                    "loc": {
+                      "end": {
+                        "column": 22,
+                        "line": 5
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 21,
+                        "line": 5
+                      }
+                    },
+                    "name": "a",
+                    "optional": false,
+                    "range": [
+                      120,
+                      121
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "optional": false,
+                  "range": [
+                    120,
+                    124
+                  ],
+                  "type": "FunctionTypeParam",
+                  "typeAnnotation": {
+                    "id": {
+                      "loc": {
+                        "end": {
+                          "column": 25,
+                          "line": 5
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 24,
+                          "line": 5
+                        }
+                      },
+                      "name": "T",
+                      "optional": false,
+                      "range": [
+                        123,
+                        124
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 25,
+                        "line": 5
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 24,
+                        "line": 5
+                      }
+                    },
+                    "range": [
+                      123,
+                      124
+                    ],
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null
+                  }
+                }
+              ],
+              "range": [
+                116,
+                119
+              ],
+              "rest": null,
+              "returnType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 29,
+                      "line": 5
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 28,
+                      "line": 5
+                    }
+                  },
+                  "name": "T",
+                  "optional": false,
+                  "range": [
+                    127,
+                    128
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 29,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 28,
+                    "line": 5
+                  }
+                },
+                "range": [
+                  127,
+                  128
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": {
+                "loc": {
+                  "end": {
+                    "column": 20,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 17,
+                    "line": 5
+                  }
+                },
+                "params": [
+                  {
+                    "bound": null,
+                    "const": false,
+                    "default": null,
+                    "loc": {
+                      "end": {
+                        "column": 19,
+                        "line": 5
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 18,
+                        "line": 5
+                      }
+                    },
+                    "name": "T",
+                    "range": [
+                      117,
+                      118
+                    ],
+                    "type": "TypeParameter",
+                    "variance": null
+                  }
+                ],
+                "range": [
+                  116,
+                  119
+                ],
+                "type": "TypeParameterDeclaration"
+              }
+            }
+          }
+        },
+        "implicitDeclare": true,
+        "loc": {
+          "end": {
+            "column": 30,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 5
+          }
+        },
+        "predicate": null,
+        "range": [
+          106,
+          129
+        ],
+        "type": "DeclareFunction"
+      },
+      "default": false,
+      "loc": {
+        "end": {
+          "column": 30,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 5
+        }
+      },
+      "range": [
+        99,
+        129
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 28,
+              "line": 6
+            },
+            "source": null,
+            "start": {
+              "column": 16,
+              "line": 6
+            }
+          },
+          "name": "g",
+          "optional": false,
+          "range": [
+            146,
+            158
+          ],
+          "type": "Identifier",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 28,
+                "line": 6
+              },
+              "source": null,
+              "start": {
+                "column": 17,
+                "line": 6
+              }
+            },
+            "range": [
+              147,
+              158
+            ],
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 28,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 17,
+                  "line": 6
+                }
+              },
+              "params": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 27,
+                      "line": 6
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 18,
+                      "line": 6
+                    }
+                  },
+                  "name": {
+                    "loc": {
+                      "end": {
+                        "column": 19,
+                        "line": 6
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 18,
+                        "line": 6
+                      }
+                    },
+                    "name": "a",
+                    "optional": false,
+                    "range": [
+                      148,
+                      149
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "optional": false,
+                  "range": [
+                    148,
+                    157
+                  ],
+                  "type": "FunctionTypeParam",
+                  "typeAnnotation": {
+                    "loc": {
+                      "end": {
+                        "column": 27,
+                        "line": 6
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 21,
+                        "line": 6
+                      }
+                    },
+                    "range": [
+                      151,
+                      157
+                    ],
+                    "type": "StringTypeAnnotation"
+                  }
+                }
+              ],
+              "range": [
+                147,
+                158
+              ],
+              "rest": null,
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 36,
+                    "line": 6
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 30,
+                    "line": 6
+                  }
+                },
+                "range": [
+                  160,
+                  166
+                ],
+                "type": "StringTypeAnnotation"
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            }
+          }
+        },
+        "implicitDeclare": true,
+        "loc": {
+          "end": {
+            "column": 37,
+            "line": 6
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 6
+          }
+        },
+        "predicate": null,
+        "range": [
+          137,
+          167
+        ],
+        "type": "DeclareFunction"
+      },
+      "default": false,
+      "loc": {
+        "end": {
+          "column": 37,
+          "line": 6
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 6
+        }
+      },
+      "range": [
+        130,
+        167
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "async": false,
+        "body": {
+          "body": [
+            {
+              "argument": {
+                "loc": {
+                  "end": {
+                    "column": 47,
+                    "line": 7
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 46,
+                    "line": 7
+                  }
+                },
+                "name": "a",
+                "optional": false,
+                "range": [
+                  214,
+                  215
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 48,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 39,
+                  "line": 7
+                }
+              },
+              "range": [
+                207,
+                216
+              ],
+              "type": "ReturnStatement"
+            }
+          ],
+          "loc": {
+            "end": {
+              "column": 50,
+              "line": 7
+            },
+            "source": null,
+            "start": {
+              "column": 37,
+              "line": 7
+            }
+          },
+          "range": [
+            205,
+            218
+          ],
+          "type": "BlockStatement"
+        },
+        "expression": false,
+        "generator": false,
+        "id": {
+          "loc": {
+            "end": {
+              "column": 17,
+              "line": 7
+            },
+            "source": null,
+            "start": {
+              "column": 16,
+              "line": 7
+            }
+          },
+          "name": "g",
+          "optional": false,
+          "range": [
+            184,
+            185
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 50,
+            "line": 7
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 7
+          }
+        },
+        "params": [
+          {
+            "loc": {
+              "end": {
+                "column": 27,
+                "line": 7
+              },
+              "source": null,
+              "start": {
+                "column": 18,
+                "line": 7
+              }
+            },
+            "name": "a",
+            "optional": false,
+            "range": [
+              186,
+              195
+            ],
+            "type": "Identifier",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 19,
+                  "line": 7
+                }
+              },
+              "range": [
+                187,
+                195
+              ],
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "loc": {
+                  "end": {
+                    "column": 27,
+                    "line": 7
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 21,
+                    "line": 7
+                  }
+                },
+                "range": [
+                  189,
+                  195
+                ],
+                "type": "StringTypeAnnotation"
+              }
+            }
+          }
+        ],
+        "predicate": null,
+        "range": [
+          175,
+          218
+        ],
+        "returnType": {
+          "loc": {
+            "end": {
+              "column": 36,
+              "line": 7
+            },
+            "source": null,
+            "start": {
+              "column": 28,
+              "line": 7
+            }
+          },
+          "range": [
+            196,
+            204
+          ],
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 36,
+                "line": 7
+              },
+              "source": null,
+              "start": {
+                "column": 30,
+                "line": 7
+              }
+            },
+            "range": [
+              198,
+              204
+            ],
+            "type": "StringTypeAnnotation"
+          }
+        },
+        "type": "FunctionDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "value",
+      "loc": {
+        "end": {
+          "column": 50,
+          "line": 7
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 7
+        }
+      },
+      "range": [
+        168,
+        218
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 36,
+              "line": 9
+            },
+            "source": null,
+            "start": {
+              "column": 24,
+              "line": 9
+            }
+          },
+          "name": "h",
+          "optional": false,
+          "range": [
+            244,
+            256
+          ],
+          "type": "Identifier",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 36,
+                "line": 9
+              },
+              "source": null,
+              "start": {
+                "column": 25,
+                "line": 9
+              }
+            },
+            "range": [
+              245,
+              256
+            ],
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 36,
+                  "line": 9
+                },
+                "source": null,
+                "start": {
+                  "column": 25,
+                  "line": 9
+                }
+              },
+              "params": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 35,
+                      "line": 9
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 26,
+                      "line": 9
+                    }
+                  },
+                  "name": {
+                    "loc": {
+                      "end": {
+                        "column": 27,
+                        "line": 9
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 26,
+                        "line": 9
+                      }
+                    },
+                    "name": "a",
+                    "optional": false,
+                    "range": [
+                      246,
+                      247
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "optional": false,
+                  "range": [
+                    246,
+                    255
+                  ],
+                  "type": "FunctionTypeParam",
+                  "typeAnnotation": {
+                    "loc": {
+                      "end": {
+                        "column": 35,
+                        "line": 9
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 29,
+                        "line": 9
+                      }
+                    },
+                    "range": [
+                      249,
+                      255
+                    ],
+                    "type": "StringTypeAnnotation"
+                  }
+                }
+              ],
+              "range": [
+                245,
+                256
+              ],
+              "rest": null,
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 44,
+                    "line": 9
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 38,
+                    "line": 9
+                  }
+                },
+                "range": [
+                  258,
+                  264
+                ],
+                "type": "StringTypeAnnotation"
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            }
+          }
+        },
+        "implicitDeclare": true,
+        "loc": {
+          "end": {
+            "column": 45,
+            "line": 9
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 9
+          }
+        },
+        "predicate": null,
+        "range": [
+          235,
+          265
+        ],
+        "type": "DeclareFunction"
+      },
+      "default": true,
+      "loc": {
+        "end": {
+          "column": 45,
+          "line": 9
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 9
+        }
+      },
+      "range": [
+        220,
+        265
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "async": false,
+        "body": {
+          "body": [
+            {
+              "argument": {
+                "loc": {
+                  "end": {
+                    "column": 55,
+                    "line": 10
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 54,
+                    "line": 10
+                  }
+                },
+                "name": "a",
+                "optional": false,
+                "range": [
+                  320,
+                  321
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 56,
+                  "line": 10
+                },
+                "source": null,
+                "start": {
+                  "column": 47,
+                  "line": 10
+                }
+              },
+              "range": [
+                313,
+                322
+              ],
+              "type": "ReturnStatement"
+            }
+          ],
+          "loc": {
+            "end": {
+              "column": 58,
+              "line": 10
+            },
+            "source": null,
+            "start": {
+              "column": 45,
+              "line": 10
+            }
+          },
+          "range": [
+            311,
+            324
+          ],
+          "type": "BlockStatement"
+        },
+        "expression": false,
+        "generator": false,
+        "id": {
+          "loc": {
+            "end": {
+              "column": 25,
+              "line": 10
+            },
+            "source": null,
+            "start": {
+              "column": 24,
+              "line": 10
+            }
+          },
+          "name": "h",
+          "optional": false,
+          "range": [
+            290,
+            291
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 58,
+            "line": 10
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 10
+          }
+        },
+        "params": [
+          {
+            "loc": {
+              "end": {
+                "column": 35,
+                "line": 10
+              },
+              "source": null,
+              "start": {
+                "column": 26,
+                "line": 10
+              }
+            },
+            "name": "a",
+            "optional": false,
+            "range": [
+              292,
+              301
+            ],
+            "type": "Identifier",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 35,
+                  "line": 10
+                },
+                "source": null,
+                "start": {
+                  "column": 27,
+                  "line": 10
+                }
+              },
+              "range": [
+                293,
+                301
+              ],
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "loc": {
+                  "end": {
+                    "column": 35,
+                    "line": 10
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 29,
+                    "line": 10
+                  }
+                },
+                "range": [
+                  295,
+                  301
+                ],
+                "type": "StringTypeAnnotation"
+              }
+            }
+          }
+        ],
+        "predicate": null,
+        "range": [
+          281,
+          324
+        ],
+        "returnType": {
+          "loc": {
+            "end": {
+              "column": 44,
+              "line": 10
+            },
+            "source": null,
+            "start": {
+              "column": 36,
+              "line": 10
+            }
+          },
+          "range": [
+            302,
+            310
+          ],
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 44,
+                "line": 10
+              },
+              "source": null,
+              "start": {
+                "column": 38,
+                "line": 10
+              }
+            },
+            "range": [
+              304,
+              310
+            ],
+            "type": "StringTypeAnnotation"
+          }
+        },
+        "type": "FunctionDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "value",
+      "loc": {
+        "end": {
+          "column": 58,
+          "line": 10
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 10
+        }
+      },
+      "range": [
+        266,
+        324
+      ],
+      "type": "ExportDefaultDeclaration"
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 39,
+            "line": 12
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 12
+          }
+        },
+        "name": "destructured",
+        "optional": false,
+        "range": [
+          335,
+          365
+        ],
+        "type": "Identifier",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 39,
+              "line": 12
+            },
+            "source": null,
+            "start": {
+              "column": 21,
+              "line": 12
+            }
+          },
+          "range": [
+            347,
+            365
+          ],
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 39,
+                "line": 12
+              },
+              "source": null,
+              "start": {
+                "column": 21,
+                "line": 12
+              }
+            },
+            "params": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 38,
+                    "line": 12
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 22,
+                    "line": 12
+                  }
+                },
+                "optional": false,
+                "properties": [
+                  {
+                    "computed": false,
+                    "key": {
+                      "loc": {
+                        "end": {
+                          "column": 24,
+                          "line": 12
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 23,
+                          "line": 12
+                        }
+                      },
+                      "name": "a",
+                      "optional": false,
+                      "range": [
+                        349,
+                        350
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "kind": "init",
+                    "loc": {
+                      "end": {
+                        "column": 24,
+                        "line": 12
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 23,
+                        "line": 12
+                      }
+                    },
+                    "method": false,
+                    "range": [
+                      349,
+                      350
+                    ],
+                    "shorthand": true,
+                    "type": "Property",
+                    "value": {
+                      "loc": {
+                        "end": {
+                          "column": 24,
+                          "line": 12
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 23,
+                          "line": 12
+                        }
+                      },
+                      "name": "a",
+                      "optional": false,
+                      "range": [
+                        349,
+                        350
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    }
+                  }
+                ],
+                "range": [
+                  348,
+                  364
+                ],
+                "type": "ObjectPattern",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 38,
+                      "line": 12
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 25,
+                      "line": 12
+                    }
+                  },
+                  "range": [
+                    351,
+                    364
+                  ],
+                  "type": "TypeAnnotation",
+                  "typeAnnotation": {
+                    "callProperties": [],
+                    "exact": false,
+                    "indexers": [],
+                    "inexact": false,
+                    "internalSlots": [],
+                    "loc": {
+                      "end": {
+                        "column": 38,
+                        "line": 12
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 27,
+                        "line": 12
+                      }
+                    },
+                    "properties": [
+                      {
+                        "abstract": false,
+                        "init": null,
+                        "key": {
+                          "loc": {
+                            "end": {
+                              "column": 29,
+                              "line": 12
+                            },
+                            "source": null,
+                            "start": {
+                              "column": 28,
+                              "line": 12
+                            }
+                          },
+                          "name": "a",
+                          "optional": false,
+                          "range": [
+                            354,
+                            355
+                          ],
+                          "type": "Identifier",
+                          "typeAnnotation": null
+                        },
+                        "kind": "init",
+                        "loc": {
+                          "end": {
+                            "column": 37,
+                            "line": 12
+                          },
+                          "source": null,
+                          "start": {
+                            "column": 28,
+                            "line": 12
+                          }
+                        },
+                        "method": false,
+                        "optional": false,
+                        "proto": false,
+                        "range": [
+                          354,
+                          363
+                        ],
+                        "static": false,
+                        "type": "ObjectTypeProperty",
+                        "value": {
+                          "loc": {
+                            "end": {
+                              "column": 37,
+                              "line": 12
+                            },
+                            "source": null,
+                            "start": {
+                              "column": 31,
+                              "line": 12
+                            }
+                          },
+                          "range": [
+                            357,
+                            363
+                          ],
+                          "type": "StringTypeAnnotation"
+                        },
+                        "variance": null
+                      }
+                    ],
+                    "range": [
+                      353,
+                      364
+                    ],
+                    "type": "ObjectTypeAnnotation"
+                  }
+                }
+              }
+            ],
+            "range": [
+              347,
+              365
+            ],
+            "rest": null,
+            "returnType": {
+              "loc": {
+                "end": {
+                  "column": 45,
+                  "line": 12
+                },
+                "source": null,
+                "start": {
+                  "column": 41,
+                  "line": 12
+                }
+              },
+              "range": [
+                367,
+                371
+              ],
+              "type": "VoidTypeAnnotation"
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null
+          }
+        }
+      },
+      "implicitDeclare": true,
+      "loc": {
+        "end": {
+          "column": 46,
+          "line": 12
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 12
+        }
+      },
+      "predicate": null,
+      "range": [
+        326,
+        372
+      ],
+      "type": "DeclareFunction"
+    },
+    {
+      "async": false,
+      "body": {
+        "body": [
+          {
+            "argument": {
+              "loc": {
+                "end": {
+                  "column": 10,
+                  "line": 14
+                },
+                "source": null,
+                "start": {
+                  "column": 9,
+                  "line": 14
+                }
+              },
+              "name": "a",
+              "optional": false,
+              "range": [
+                422,
+                423
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 11,
+                "line": 14
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 14
+              }
+            },
+            "range": [
+              415,
+              424
+            ],
+            "type": "ReturnStatement"
+          }
+        ],
+        "loc": {
+          "end": {
+            "column": 13,
+            "line": 14
+          },
+          "source": null,
+          "start": {
+            "column": 0,
+            "line": 14
+          }
+        },
+        "range": [
+          413,
+          426
+        ],
+        "type": "BlockStatement"
+      },
+      "expression": false,
+      "generator": false,
+      "id": {
+        "loc": {
+          "end": {
+            "column": 20,
+            "line": 13
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 13
+          }
+        },
+        "name": "newlineBody",
+        "optional": false,
+        "range": [
+          382,
+          393
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 13,
+          "line": 14
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 13
+        }
+      },
+      "params": [
+        {
+          "loc": {
+            "end": {
+              "column": 30,
+              "line": 13
+            },
+            "source": null,
+            "start": {
+              "column": 21,
+              "line": 13
+            }
+          },
+          "name": "a",
+          "optional": false,
+          "range": [
+            394,
+            403
+          ],
+          "type": "Identifier",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 30,
+                "line": 13
+              },
+              "source": null,
+              "start": {
+                "column": 22,
+                "line": 13
+              }
+            },
+            "range": [
+              395,
+              403
+            ],
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 30,
+                  "line": 13
+                },
+                "source": null,
+                "start": {
+                  "column": 24,
+                  "line": 13
+                }
+              },
+              "range": [
+                397,
+                403
+              ],
+              "type": "StringTypeAnnotation"
+            }
+          }
+        }
+      ],
+      "predicate": null,
+      "range": [
+        373,
+        426
+      ],
+      "returnType": {
+        "loc": {
+          "end": {
+            "column": 39,
+            "line": 13
+          },
+          "source": null,
+          "start": {
+            "column": 31,
+            "line": 13
+          }
+        },
+        "range": [
+          404,
+          412
+        ],
+        "type": "TypeAnnotation",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 39,
+              "line": 13
+            },
+            "source": null,
+            "start": {
+              "column": 33,
+              "line": 13
+            }
+          },
+          "range": [
+            406,
+            412
+          ],
+          "type": "StringTypeAnnotation"
+        }
+      },
+      "type": "FunctionDeclaration",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 23,
+            "line": 15
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 15
+          }
+        },
+        "name": "asi",
+        "optional": false,
+        "range": [
+          436,
+          450
+        ],
+        "type": "Identifier",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 23,
+              "line": 15
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 15
+            }
+          },
+          "range": [
+            439,
+            450
+          ],
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 23,
+                "line": 15
+              },
+              "source": null,
+              "start": {
+                "column": 12,
+                "line": 15
+              }
+            },
+            "params": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 22,
+                    "line": 15
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 13,
+                    "line": 15
+                  }
+                },
+                "name": {
+                  "loc": {
+                    "end": {
+                      "column": 14,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 13,
+                      "line": 15
+                    }
+                  },
+                  "name": "a",
+                  "optional": false,
+                  "range": [
+                    440,
+                    441
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "optional": false,
+                "range": [
+                  440,
+                  449
+                ],
+                "type": "FunctionTypeParam",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 22,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 16,
+                      "line": 15
+                    }
+                  },
+                  "range": [
+                    443,
+                    449
+                  ],
+                  "type": "StringTypeAnnotation"
+                }
+              }
+            ],
+            "range": [
+              439,
+              450
+            ],
+            "rest": null,
+            "returnType": {
+              "loc": {
+                "end": {
+                  "column": 29,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 25,
+                  "line": 15
+                }
+              },
+              "range": [
+                452,
+                456
+              ],
+              "type": "VoidTypeAnnotation"
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null
+          }
+        }
+      },
+      "implicitDeclare": true,
+      "loc": {
+        "end": {
+          "column": 29,
+          "line": 15
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 15
+        }
+      },
+      "predicate": null,
+      "range": [
+        427,
+        456
+      ],
+      "type": "DeclareFunction"
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 23,
+            "line": 16
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 16
+          }
+        },
+        "name": "eof",
+        "optional": false,
+        "range": [
+          466,
+          480
+        ],
+        "type": "Identifier",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 23,
+              "line": 16
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 16
+            }
+          },
+          "range": [
+            469,
+            480
+          ],
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 23,
+                "line": 16
+              },
+              "source": null,
+              "start": {
+                "column": 12,
+                "line": 16
+              }
+            },
+            "params": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 22,
+                    "line": 16
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 13,
+                    "line": 16
+                  }
+                },
+                "name": {
+                  "loc": {
+                    "end": {
+                      "column": 14,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 13,
+                      "line": 16
+                    }
+                  },
+                  "name": "a",
+                  "optional": false,
+                  "range": [
+                    470,
+                    471
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "optional": false,
+                "range": [
+                  470,
+                  479
+                ],
+                "type": "FunctionTypeParam",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 22,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 16,
+                      "line": 16
+                    }
+                  },
+                  "range": [
+                    473,
+                    479
+                  ],
+                  "type": "NumberTypeAnnotation"
+                }
+              }
+            ],
+            "range": [
+              469,
+              480
+            ],
+            "rest": null,
+            "returnType": {
+              "loc": {
+                "end": {
+                  "column": 31,
+                  "line": 16
+                },
+                "source": null,
+                "start": {
+                  "column": 25,
+                  "line": 16
+                }
+              },
+              "range": [
+                482,
+                488
+              ],
+              "type": "NumberTypeAnnotation"
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null
+          }
+        }
+      },
+      "implicitDeclare": true,
+      "loc": {
+        "end": {
+          "column": 31,
+          "line": 16
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 16
+        }
+      },
+      "predicate": null,
+      "range": [
+        457,
+        488
+      ],
+      "type": "DeclareFunction"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 31,
+      "line": 16
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    488
+  ],
+  "type": "Program"
+}

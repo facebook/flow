@@ -1,0 +1,208 @@
+{
+  "body": [
+    {
+      "async": false,
+      "body": {
+        "body": [],
+        "loc": {
+          "end": {
+            "column": 0,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 27,
+            "line": 1
+          }
+        },
+        "range": [
+          27,
+          29
+        ],
+        "type": "BlockStatement"
+      },
+      "expression": false,
+      "generator": false,
+      "id": {
+        "loc": {
+          "end": {
+            "column": 10,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 1
+          }
+        },
+        "name": "f",
+        "optional": false,
+        "range": [
+          9,
+          10
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 0,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "params": [
+        {
+          "loc": {
+            "end": {
+              "column": 20,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 11,
+              "line": 1
+            }
+          },
+          "name": "a",
+          "optional": false,
+          "range": [
+            11,
+            20
+          ],
+          "type": "Identifier",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 20,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 12,
+                "line": 1
+              }
+            },
+            "range": [
+              12,
+              20
+            ],
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 20,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 14,
+                  "line": 1
+                }
+              },
+              "range": [
+                14,
+                20
+              ],
+              "type": "StringTypeAnnotation"
+            }
+          }
+        }
+      ],
+      "predicate": null,
+      "range": [
+        0,
+        29
+      ],
+      "returnType": {
+        "loc": {
+          "end": {
+            "column": 27,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 21,
+            "line": 1
+          }
+        },
+        "range": [
+          21,
+          27
+        ],
+        "type": "TypeAnnotation",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 27,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 23,
+              "line": 1
+            }
+          },
+          "range": [
+            23,
+            27
+          ],
+          "type": "VoidTypeAnnotation"
+        }
+      },
+      "type": "FunctionDeclaration",
+      "typeParameters": null
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 28,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 27,
+          "line": 1
+        }
+      },
+      "message": "Unexpected token `;`, expected the token `{`"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 0,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "message": "Unexpected end of input, expected the token `}`"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 0,
+      "line": 2
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    29
+  ],
+  "type": "Program"
+}
