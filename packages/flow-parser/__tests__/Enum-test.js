@@ -15,6 +15,83 @@ import {parseForSnapshot, printForSnapshotBabel} from '../__test_utils__/parse';
 import {ident} from '../oxidized-src/utils/Builders';
 
 describe('Enum', () => {
+  test.each([
+    ['enum E { A }', null, 'EnumDefaultedMember'],
+    ['enum E { A = true }', null, 'EnumBooleanMember'],
+    ['enum E { A = 1 }', null, 'EnumNumberMember'],
+    ['enum E { A = 1n }', null, 'EnumBigIntMember'],
+    ['enum E { A = "a" }', null, 'EnumStringMember'],
+    ['enum E of boolean { A = true }', 'boolean', 'EnumBooleanMember'],
+    ['enum E of number { A = 1 }', 'number', 'EnumNumberMember'],
+    ['enum E of bigint { A = 1n }', 'bigint', 'EnumBigIntMember'],
+    ['enum E of string { A = "a" }', 'string', 'EnumStringMember'],
+    ['enum E of symbol { A }', 'symbol', 'EnumDefaultedMember'],
+  ])('unified ESTree body: %s', (code, explicitType, memberType) => {
+    for (const prefix of ['', 'declare ']) {
+      expect(parseForSnapshot(prefix + code)).toMatchObject({
+        body: [
+          {
+            body: {
+              type: 'EnumBody',
+              explicitType,
+              hasUnknownMembers: false,
+              members: [{type: memberType}],
+            },
+          },
+        ],
+      });
+    }
+  });
+
+  test.each([
+    ['enum E { A }', 'EnumStringBody', false],
+    ['enum E { A = true }', 'EnumBooleanBody', false],
+    ['enum E { A = 1 }', 'EnumNumberBody', false],
+    ['enum E { A = 1n }', 'EnumBigIntBody', false],
+    ['enum E of string { A = "a" }', 'EnumStringBody', true],
+    ['enum E of boolean { A = true }', 'EnumBooleanBody', true],
+    ['enum E of number { A = 1 }', 'EnumNumberBody', true],
+    ['enum E of bigint { A = 1n }', 'EnumBigIntBody', true],
+    ['enum E of symbol { A }', 'EnumSymbolBody', undefined],
+  ])('preserves Babel body: %s', (code, type, explicitType) => {
+    expect(parseForSnapshot(code, {babel: true})).toMatchObject({
+      body: [{body: {type, ...(explicitType == null ? {} : {explicitType})}}],
+    });
+  });
+
+  test('Babel symbol bodies omit explicitType', () => {
+    expect(
+      parseForSnapshot('enum E of symbol { A }', {babel: true}),
+    ).not.toHaveProperty('body.0.body.explicitType');
+  });
+
+  test('empty ESTree bodies retain their explicit representation', () => {
+    expect(parseForSnapshot('enum E of number {}')).toMatchObject({
+      body: [{body: {type: 'EnumBody', explicitType: 'number', members: []}}],
+    });
+  });
+
+  test('preserves unknown members and heterogeneous member nodes', () => {
+    expect(parseForSnapshot('enum E { A = 1, B = "b", C, ... }')).toMatchObject(
+      {
+        body: [
+          {
+            body: {
+              type: 'EnumBody',
+              explicitType: null,
+              hasUnknownMembers: true,
+              members: [
+                {type: 'EnumNumberMember'},
+                {type: 'EnumStringMember'},
+                {type: 'EnumDefaultedMember'},
+              ],
+            },
+          },
+        ],
+      },
+    );
+  });
+
   const testCase: AlignmentCase = {
     code: `
       enum T1 { A = 1n, B = 2n}
@@ -35,7 +112,7 @@ describe('Enum', () => {
        "body": [
          {
            "body": {
-             "explicitType": false,
+             "explicitType": null,
              "hasUnknownMembers": false,
              "members": [
                {
@@ -71,7 +148,7 @@ describe('Enum', () => {
                  "type": "EnumBigIntMember",
                },
              ],
-             "type": "EnumBigIntBody",
+             "type": "EnumBody",
            },
            "id": {
              "name": "T1",

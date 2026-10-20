@@ -201,16 +201,12 @@ export type ESNode =
   | ComponentParameter
   | HookDeclaration
   | EnumDeclaration
-  | EnumNumberBody
-  | EnumBigIntBody
-  | EnumStringBody
+  | EnumBody
   | EnumStringMember
   | EnumDefaultedMember
   | EnumNumberMember
   | EnumBigIntMember
-  | EnumBooleanBody
   | EnumBooleanMember
-  | EnumSymbolBody
   | DeclaredNode
   | ObjectTypeInternalSlot
   // Match
@@ -1855,13 +1851,6 @@ export interface TypeParameterInstantiation extends BaseNode {
     | TaggedTemplateExpression;
 }
 
-type EnumBody =
-  | EnumNumberBody
-  | EnumBigIntBody
-  | EnumStringBody
-  | EnumBooleanBody
-  | EnumSymbolBody;
-// Error recovery can preserve heterogeneous member variants in any body kind.
 type EnumMember =
   | EnumNumberMember
   | EnumBigIntMember
@@ -1877,17 +1866,12 @@ export interface EnumDeclaration extends BaseNode {
   readonly body: EnumBody;
 }
 
-interface BaseEnumBody extends BaseNode {
-  readonly hasUnknownMembers: boolean;
-}
-interface BaseInferrableEnumBody extends BaseEnumBody {
-  readonly explicitType: boolean;
-}
-
-export interface EnumNumberBody extends BaseInferrableEnumBody {
-  readonly type: 'EnumNumberBody';
+export interface EnumBody extends BaseNode {
+  readonly type: 'EnumBody';
   readonly members: ReadonlyArray<EnumMember>;
-  readonly explicitType: boolean;
+  readonly explicitType:
+    null | 'boolean' | 'number' | 'string' | 'symbol' | 'bigint';
+  readonly hasUnknownMembers: boolean;
 
   readonly parent: EnumDeclaration | DeclareEnum;
 }
@@ -1900,27 +1884,12 @@ export interface EnumNumberMember extends BaseNode {
   readonly parent: EnumBody;
 }
 
-export interface EnumBigIntBody extends BaseInferrableEnumBody {
-  readonly type: 'EnumBigIntBody';
-  readonly members: ReadonlyArray<EnumMember>;
-  readonly explicitType: boolean;
-
-  readonly parent: EnumDeclaration | DeclareEnum;
-}
-
 export interface EnumBigIntMember extends BaseNode {
   readonly type: 'EnumBigIntMember';
   readonly id: EnumMemberName;
   readonly init: BigIntLiteral;
 
   readonly parent: EnumBody;
-}
-
-export interface EnumStringBody extends BaseInferrableEnumBody {
-  readonly type: 'EnumStringBody';
-  readonly members: ReadonlyArray<EnumMember>;
-
-  readonly parent: EnumDeclaration | DeclareEnum;
 }
 
 export interface EnumStringMember extends BaseNode {
@@ -1931,26 +1900,12 @@ export interface EnumStringMember extends BaseNode {
   readonly parent: EnumBody;
 }
 
-export interface EnumBooleanBody extends BaseInferrableEnumBody {
-  readonly type: 'EnumBooleanBody';
-  readonly members: ReadonlyArray<EnumMember>;
-
-  readonly parent: EnumDeclaration | DeclareEnum;
-}
-
 export interface EnumBooleanMember extends BaseNode {
   readonly type: 'EnumBooleanMember';
   readonly id: EnumMemberName;
   readonly init: BooleanLiteral;
 
   readonly parent: EnumBody;
-}
-
-export interface EnumSymbolBody extends BaseEnumBody {
-  readonly type: 'EnumSymbolBody';
-  readonly members: ReadonlyArray<EnumMember>;
-
-  readonly parent: EnumDeclaration | DeclareEnum;
 }
 
 export interface EnumDefaultedMember extends BaseNode {

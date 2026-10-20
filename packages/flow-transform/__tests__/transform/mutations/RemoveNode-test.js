@@ -64,7 +64,7 @@ describe('RemoveNode', () => {
         {
           type: 'EnumDeclaration',
           body: {
-            type: 'EnumStringBody',
+            type: 'EnumBody',
             members: [
               {
                 type: 'EnumDefaultedMember',

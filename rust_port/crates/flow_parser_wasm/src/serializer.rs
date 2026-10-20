@@ -3770,20 +3770,24 @@ impl<'a> Serializer<'a> {
     fn serialize_enum_body(&mut self, body: &ast::statement::enum_declaration::Body<Loc>) {
         use ast::statement::enum_declaration::Member;
         let explicit_type = body.explicit_type.as_ref().map(|(_, t)| t.as_str());
-        let body_kind = match explicit_type {
-            Some("boolean") => NodeKind::EnumBooleanBody,
-            Some("number") => NodeKind::EnumNumberBody,
-            Some("bigint") => NodeKind::EnumBigIntBody,
-            Some("symbol") => NodeKind::EnumSymbolBody,
-            Some("string") | None => match body.members.first() {
-                Some(Member::BooleanMember(_)) => NodeKind::EnumBooleanBody,
-                Some(Member::NumberMember(_)) => NodeKind::EnumNumberBody,
-                Some(Member::BigIntMember(_)) => NodeKind::EnumBigIntBody,
-                Some(Member::StringMember(_)) | Some(Member::DefaultedMember(_)) | None => {
-                    NodeKind::EnumStringBody
-                }
-            },
-            Some(_) => NodeKind::EnumStringBody,
+        let body_kind = if self.is_babel() {
+            match explicit_type {
+                Some("boolean") => NodeKind::BabelEnumBooleanBody,
+                Some("number") => NodeKind::BabelEnumNumberBody,
+                Some("bigint") => NodeKind::BabelEnumBigIntBody,
+                Some("symbol") => NodeKind::BabelEnumSymbolBody,
+                Some("string") | None => match body.members.first() {
+                    Some(Member::BooleanMember(_)) => NodeKind::BabelEnumBooleanBody,
+                    Some(Member::NumberMember(_)) => NodeKind::BabelEnumNumberBody,
+                    Some(Member::BigIntMember(_)) => NodeKind::BabelEnumBigIntBody,
+                    Some(Member::StringMember(_)) | Some(Member::DefaultedMember(_)) | None => {
+                        NodeKind::BabelEnumStringBody
+                    }
+                },
+                Some(_) => NodeKind::BabelEnumStringBody,
+            }
+        } else {
+            NodeKind::ESTreeEnumBody
         };
         self.write_node_header(body_kind, &body.loc);
         self.buf.push(body.members.len() as u32);
@@ -3824,7 +3828,9 @@ impl<'a> Serializer<'a> {
                 }
             }
         }
-        if body_kind != NodeKind::EnumSymbolBody {
+        if !self.is_babel() {
+            self.write_str_opt(explicit_type);
+        } else if body_kind != NodeKind::BabelEnumSymbolBody {
             self.write_bool(explicit_type.is_some());
         }
         self.write_bool(body.has_unknown_members.is_some());

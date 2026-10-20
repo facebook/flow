@@ -90,17 +90,13 @@ import type {
   DoWhileStatement,
   EmptyStatement,
   EmptyTypeAnnotation,
-  EnumBigIntBody,
   EnumBigIntMember,
-  EnumBooleanBody,
+  EnumBody,
   EnumBooleanMember,
   EnumDeclaration,
   EnumDefaultedMember,
-  EnumNumberBody,
   EnumNumberMember,
-  EnumStringBody,
   EnumStringMember,
-  EnumSymbolBody,
   ExistsTypeAnnotation,
   ExportAllDeclaration,
   ExportAssignment,
@@ -551,18 +547,13 @@ export function isEmptyTypeAnnotation(node /*: ESNode | Token */) /*: implies no
 }
     
 
-export function isEnumBigIntBody(node /*: ESNode | Token */) /*: implies node is EnumBigIntBody */ {
-  return node.type === 'EnumBigIntBody';
-}
-    
-
 export function isEnumBigIntMember(node /*: ESNode | Token */) /*: implies node is EnumBigIntMember */ {
   return node.type === 'EnumBigIntMember';
 }
     
 
-export function isEnumBooleanBody(node /*: ESNode | Token */) /*: implies node is EnumBooleanBody */ {
-  return node.type === 'EnumBooleanBody';
+export function isEnumBody(node /*: ESNode | Token */) /*: implies node is EnumBody */ {
+  return node.type === 'EnumBody';
 }
     
 
@@ -581,28 +572,13 @@ export function isEnumDefaultedMember(node /*: ESNode | Token */) /*: implies no
 }
     
 
-export function isEnumNumberBody(node /*: ESNode | Token */) /*: implies node is EnumNumberBody */ {
-  return node.type === 'EnumNumberBody';
-}
-    
-
 export function isEnumNumberMember(node /*: ESNode | Token */) /*: implies node is EnumNumberMember */ {
   return node.type === 'EnumNumberMember';
 }
     
 
-export function isEnumStringBody(node /*: ESNode | Token */) /*: implies node is EnumStringBody */ {
-  return node.type === 'EnumStringBody';
-}
-    
-
 export function isEnumStringMember(node /*: ESNode | Token */) /*: implies node is EnumStringMember */ {
   return node.type === 'EnumStringMember';
-}
-    
-
-export function isEnumSymbolBody(node /*: ESNode | Token */) /*: implies node is EnumSymbolBody */ {
-  return node.type === 'EnumSymbolBody';
 }
     
 

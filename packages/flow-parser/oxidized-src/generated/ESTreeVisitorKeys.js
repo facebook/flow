@@ -249,14 +249,11 @@ module.exports = {
   ],
   EmptyStatement: [],
   EmptyTypeAnnotation: [],
-  EnumBigIntBody: [
-    'members',
-  ],
   EnumBigIntMember: [
     'id',
     'init',
   ],
-  EnumBooleanBody: [
+  EnumBody: [
     'members',
   ],
   EnumBooleanMember: [
@@ -270,22 +267,13 @@ module.exports = {
   EnumDefaultedMember: [
     'id',
   ],
-  EnumNumberBody: [
-    'members',
-  ],
   EnumNumberMember: [
     'id',
     'init',
   ],
-  EnumStringBody: [
-    'members',
-  ],
   EnumStringMember: [
     'id',
     'init',
-  ],
-  EnumSymbolBody: [
-    'members',
   ],
   ExistsTypeAnnotation: [],
   ExportAllDeclaration: [

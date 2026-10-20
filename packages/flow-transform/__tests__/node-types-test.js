@@ -162,9 +162,9 @@ describe('generated node builders', () => {
     ).toMatchObject({optional: true});
 
     const enumBody = () =>
-      t.EnumNumberBody({
+      t.EnumBody({
         members: [],
-        explicitType: true,
+        explicitType: 'number',
         hasUnknownMembers: false,
       });
     expect(

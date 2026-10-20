@@ -1086,27 +1086,6 @@
     "arguments": []
   },
   {
-    "name": "EnumBigIntBody",
-    "base": "Flow",
-    "arguments": [
-      {
-        "type": "NodeList",
-        "name": "members",
-        "optional": false
-      },
-      {
-        "type": "NodeBoolean",
-        "name": "explicitType",
-        "optional": false
-      },
-      {
-        "type": "NodeBoolean",
-        "name": "hasUnknownMembers",
-        "optional": false
-      }
-    ]
-  },
-  {
     "name": "EnumBigIntMember",
     "base": "Flow",
     "arguments": [
@@ -1123,7 +1102,7 @@
     ]
   },
   {
-    "name": "EnumBooleanBody",
+    "name": "EnumBody",
     "base": "Flow",
     "arguments": [
       {
@@ -1132,7 +1111,7 @@
         "optional": false
       },
       {
-        "type": "NodeBoolean",
+        "type": "NodeString",
         "name": "explicitType",
         "optional": false
       },
@@ -1192,27 +1171,6 @@
     ]
   },
   {
-    "name": "EnumNumberBody",
-    "base": "Flow",
-    "arguments": [
-      {
-        "type": "NodeList",
-        "name": "members",
-        "optional": false
-      },
-      {
-        "type": "NodeBoolean",
-        "name": "explicitType",
-        "optional": false
-      },
-      {
-        "type": "NodeBoolean",
-        "name": "hasUnknownMembers",
-        "optional": false
-      }
-    ]
-  },
-  {
     "name": "EnumNumberMember",
     "base": "Flow",
     "arguments": [
@@ -1229,27 +1187,6 @@
     ]
   },
   {
-    "name": "EnumStringBody",
-    "base": "Flow",
-    "arguments": [
-      {
-        "type": "NodeList",
-        "name": "members",
-        "optional": false
-      },
-      {
-        "type": "NodeBoolean",
-        "name": "explicitType",
-        "optional": false
-      },
-      {
-        "type": "NodeBoolean",
-        "name": "hasUnknownMembers",
-        "optional": false
-      }
-    ]
-  },
-  {
     "name": "EnumStringMember",
     "base": "Flow",
     "arguments": [
@@ -1261,22 +1198,6 @@
       {
         "type": "NodePtr",
         "name": "init",
-        "optional": false
-      }
-    ]
-  },
-  {
-    "name": "EnumSymbolBody",
-    "base": "Flow",
-    "arguments": [
-      {
-        "type": "NodeList",
-        "name": "members",
-        "optional": false
-      },
-      {
-        "type": "NodeBoolean",
-        "name": "hasUnknownMembers",
         "optional": false
       }
     ]

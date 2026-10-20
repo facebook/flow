@@ -43,7 +43,7 @@ function mapEnumDeclaration(node: EnumDeclaration, options: ParserOptions) {
       ? getRuntime()
       : callExpression(ident('require'), [stringLiteral('flow-enums-runtime')]);
   const mirrored =
-    body.type === 'EnumStringBody' &&
+    (body.explicitType == null || body.explicitType === 'string') &&
     members.every(member => member.type === 'EnumDefaultedMember');
   const enumExpression = mirrored
     ? callExpression(

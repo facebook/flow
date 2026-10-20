@@ -372,7 +372,17 @@ const getTransforms = (
     [TSESTree.TSEnumDeclaration, TSESTree.TSModuleDeclaration],
   > {
     const body = node.body;
-    if (body.type === 'EnumSymbolBody') {
+    const firstMember = body.members[0];
+    const enumType =
+      body.explicitType ??
+      (firstMember?.type === 'EnumBooleanMember'
+        ? 'boolean'
+        : firstMember?.type === 'EnumNumberMember'
+          ? 'number'
+          : firstMember?.type === 'EnumBigIntMember'
+            ? 'bigint'
+            : 'string');
+    if (enumType === 'symbol') {
       /*
       There's unfortunately no way for us to support this in a clean way.
       We can get really close using this code:
@@ -406,7 +416,7 @@ const getTransforms = (
         FlowESTree.isDeclareEnum(node),
       );
     }
-    if (body.type === 'EnumBooleanBody') {
+    if (enumType === 'boolean') {
       /*
       TODO - TS enums only allow strings or numbers as their values - not booleans.
       This means we need a non-ts-enum representation of the enum.
@@ -432,7 +442,7 @@ const getTransforms = (
         FlowESTree.isDeclareEnum(node),
       );
     }
-    if (body.type === 'EnumBigIntBody') {
+    if (enumType === 'bigint') {
       return unsupportedDeclaration(
         node,
         'bigint enums',
@@ -449,7 +459,7 @@ const getTransforms = (
           : transform.StringLiteral(member.id);
       switch (member.type) {
         case 'EnumDefaultedMember': {
-          if (body.type === 'EnumNumberBody') {
+          if (enumType === 'number') {
             // this should be impossible!
             throw unexpectedTranslationError(
               member,
@@ -491,13 +501,13 @@ const getTransforms = (
         case 'EnumBooleanMember':
           throw unexpectedTranslationError(
             member,
-            `Unexpected ${member.type} in ${body.type}`,
+            `Unexpected ${member.type} in ${enumType} enum`,
           );
       }
     }
 
     const bodyRepresentationType: TSESTree.TypeNode =
-      body.type === 'EnumNumberBody'
+      enumType === 'number'
         ? {type: 'TSNumberKeyword', loc: DUMMY_LOC}
         : {type: 'TSStringKeyword', loc: DUMMY_LOC};
 

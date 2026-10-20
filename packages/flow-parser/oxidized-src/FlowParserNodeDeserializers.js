@@ -2037,7 +2037,7 @@ module.exports = [
     };
   },
 
-  // 182: EnumBooleanBody
+  // 182: BabelEnumBooleanBody
   function () {
     return {
       type: 'EnumBooleanBody',
@@ -2058,7 +2058,7 @@ module.exports = [
     };
   },
 
-  // 184: EnumNumberBody
+  // 184: BabelEnumNumberBody
   function () {
     return {
       type: 'EnumNumberBody',
@@ -2079,7 +2079,7 @@ module.exports = [
     };
   },
 
-  // 186: EnumStringBody
+  // 186: BabelEnumStringBody
   function () {
     return {
       type: 'EnumStringBody',
@@ -2100,7 +2100,7 @@ module.exports = [
     };
   },
 
-  // 188: EnumSymbolBody
+  // 188: BabelEnumSymbolBody
   function () {
     return {
       type: 'EnumSymbolBody',
@@ -2119,7 +2119,7 @@ module.exports = [
     };
   },
 
-  // 190: EnumBigIntBody
+  // 190: BabelEnumBigIntBody
   function () {
     return {
       type: 'EnumBigIntBody',
@@ -2455,7 +2455,7 @@ module.exports = [
     return node;
   },
 
-  // 223: EnumBody
+  // 223: ESTreeEnumBody
   function () {
     return {
       type: 'EnumBody',

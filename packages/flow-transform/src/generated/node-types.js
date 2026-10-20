@@ -72,17 +72,13 @@ import type {
   DoWhileStatement as DoWhileStatementType,
   EmptyStatement as EmptyStatementType,
   EmptyTypeAnnotation as EmptyTypeAnnotationType,
-  EnumBigIntBody as EnumBigIntBodyType,
   EnumBigIntMember as EnumBigIntMemberType,
-  EnumBooleanBody as EnumBooleanBodyType,
+  EnumBody as EnumBodyType,
   EnumBooleanMember as EnumBooleanMemberType,
   EnumDeclaration as EnumDeclarationType,
   EnumDefaultedMember as EnumDefaultedMemberType,
-  EnumNumberBody as EnumNumberBodyType,
   EnumNumberMember as EnumNumberMemberType,
-  EnumStringBody as EnumStringBodyType,
   EnumStringMember as EnumStringMemberType,
-  EnumSymbolBody as EnumSymbolBodyType,
   ExistsTypeAnnotation as ExistsTypeAnnotationType,
   ExportAssignment as ExportAssignmentType,
   ExportAllDeclaration as ExportAllDeclarationType,
@@ -588,25 +584,17 @@ export type EmptyStatementProps = {};
 
 export type EmptyTypeAnnotationProps = {};
 
-export type EnumBigIntBodyProps = {
-  readonly members: ReadonlyArray<
-    MaybeDetachedNode<EnumBigIntBodyType['members'][number]>,
-  >,
-  readonly explicitType: EnumBigIntBodyType['explicitType'],
-  readonly hasUnknownMembers: EnumBigIntBodyType['hasUnknownMembers'],
-};
-
 export type EnumBigIntMemberProps = {
   readonly id: MaybeDetachedNode<EnumBigIntMemberType['id']>,
   readonly init: MaybeDetachedNode<EnumBigIntMemberType['init']>,
 };
 
-export type EnumBooleanBodyProps = {
+export type EnumBodyProps = {
   readonly members: ReadonlyArray<
-    MaybeDetachedNode<EnumBooleanBodyType['members'][number]>,
+    MaybeDetachedNode<EnumBodyType['members'][number]>,
   >,
-  readonly explicitType: EnumBooleanBodyType['explicitType'],
-  readonly hasUnknownMembers: EnumBooleanBodyType['hasUnknownMembers'],
+  readonly explicitType: EnumBodyType['explicitType'],
+  readonly hasUnknownMembers: EnumBodyType['hasUnknownMembers'],
 };
 
 export type EnumBooleanMemberProps = {
@@ -624,37 +612,14 @@ export type EnumDefaultedMemberProps = {
   readonly id: MaybeDetachedNode<EnumDefaultedMemberType['id']>,
 };
 
-export type EnumNumberBodyProps = {
-  readonly members: ReadonlyArray<
-    MaybeDetachedNode<EnumNumberBodyType['members'][number]>,
-  >,
-  readonly explicitType: EnumNumberBodyType['explicitType'],
-  readonly hasUnknownMembers: EnumNumberBodyType['hasUnknownMembers'],
-};
-
 export type EnumNumberMemberProps = {
   readonly id: MaybeDetachedNode<EnumNumberMemberType['id']>,
   readonly init: MaybeDetachedNode<EnumNumberMemberType['init']>,
 };
 
-export type EnumStringBodyProps = {
-  readonly members: ReadonlyArray<
-    MaybeDetachedNode<EnumStringBodyType['members'][number]>,
-  >,
-  readonly explicitType: EnumStringBodyType['explicitType'],
-  readonly hasUnknownMembers: EnumStringBodyType['hasUnknownMembers'],
-};
-
 export type EnumStringMemberProps = {
   readonly id: MaybeDetachedNode<EnumStringMemberType['id']>,
   readonly init: MaybeDetachedNode<EnumStringMemberType['init']>,
-};
-
-export type EnumSymbolBodyProps = {
-  readonly members: ReadonlyArray<
-    MaybeDetachedNode<EnumSymbolBodyType['members'][number]>,
-  >,
-  readonly hasUnknownMembers: EnumSymbolBodyType['hasUnknownMembers'],
 };
 
 export type ExistsTypeAnnotationProps = {};
@@ -2323,20 +2288,6 @@ export function EmptyTypeAnnotation(
   });
 }
 
-export function EnumBigIntBody(props: {
-  ...EnumBigIntBodyProps,
-  readonly parent?: ESNode,
-}): DetachedNode<EnumBigIntBodyType> {
-  const node = detachedProps<EnumBigIntBodyType>(props.parent as $FlowFixMe, {
-    type: 'EnumBigIntBody',
-    members: props.members.map(n => asDetachedNodeForCodeGen(n)),
-    explicitType: props.explicitType,
-    hasUnknownMembers: props.hasUnknownMembers,
-  });
-  setParentPointersInDirectChildren(node as $FlowFixMe);
-  return node;
-}
-
 export function EnumBigIntMember(props: {
   ...EnumBigIntMemberProps,
   readonly parent?: ESNode,
@@ -2350,12 +2301,12 @@ export function EnumBigIntMember(props: {
   return node;
 }
 
-export function EnumBooleanBody(props: {
-  ...EnumBooleanBodyProps,
+export function EnumBody(props: {
+  ...EnumBodyProps,
   readonly parent?: ESNode,
-}): DetachedNode<EnumBooleanBodyType> {
-  const node = detachedProps<EnumBooleanBodyType>(props.parent as $FlowFixMe, {
-    type: 'EnumBooleanBody',
+}): DetachedNode<EnumBodyType> {
+  const node = detachedProps<EnumBodyType>(props.parent as $FlowFixMe, {
+    type: 'EnumBody',
     members: props.members.map(n => asDetachedNodeForCodeGen(n)),
     explicitType: props.explicitType,
     hasUnknownMembers: props.hasUnknownMembers,
@@ -2409,20 +2360,6 @@ export function EnumDefaultedMember(props: {
   return node;
 }
 
-export function EnumNumberBody(props: {
-  ...EnumNumberBodyProps,
-  readonly parent?: ESNode,
-}): DetachedNode<EnumNumberBodyType> {
-  const node = detachedProps<EnumNumberBodyType>(props.parent as $FlowFixMe, {
-    type: 'EnumNumberBody',
-    members: props.members.map(n => asDetachedNodeForCodeGen(n)),
-    explicitType: props.explicitType,
-    hasUnknownMembers: props.hasUnknownMembers,
-  });
-  setParentPointersInDirectChildren(node as $FlowFixMe);
-  return node;
-}
-
 export function EnumNumberMember(props: {
   ...EnumNumberMemberProps,
   readonly parent?: ESNode,
@@ -2436,20 +2373,6 @@ export function EnumNumberMember(props: {
   return node;
 }
 
-export function EnumStringBody(props: {
-  ...EnumStringBodyProps,
-  readonly parent?: ESNode,
-}): DetachedNode<EnumStringBodyType> {
-  const node = detachedProps<EnumStringBodyType>(props.parent as $FlowFixMe, {
-    type: 'EnumStringBody',
-    members: props.members.map(n => asDetachedNodeForCodeGen(n)),
-    explicitType: props.explicitType,
-    hasUnknownMembers: props.hasUnknownMembers,
-  });
-  setParentPointersInDirectChildren(node as $FlowFixMe);
-  return node;
-}
-
 export function EnumStringMember(props: {
   ...EnumStringMemberProps,
   readonly parent?: ESNode,
@@ -2458,19 +2381,6 @@ export function EnumStringMember(props: {
     type: 'EnumStringMember',
     id: asDetachedNodeForCodeGen(props.id),
     init: asDetachedNodeForCodeGen(props.init),
-  });
-  setParentPointersInDirectChildren(node as $FlowFixMe);
-  return node;
-}
-
-export function EnumSymbolBody(props: {
-  ...EnumSymbolBodyProps,
-  readonly parent?: ESNode,
-}): DetachedNode<EnumSymbolBodyType> {
-  const node = detachedProps<EnumSymbolBodyType>(props.parent as $FlowFixMe, {
-    type: 'EnumSymbolBody',
-    members: props.members.map(n => asDetachedNodeForCodeGen(n)),
-    hasUnknownMembers: props.hasUnknownMembers,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;

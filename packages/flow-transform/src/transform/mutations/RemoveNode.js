@@ -68,13 +68,6 @@ export function createRemoveNodeMutation(
   };
 }
 
-const VALID_ENUM_MEMBER_PARENTS: ReadonlyArray<string> = [
-  'EnumBooleanBody',
-  'EnumNumberBody',
-  'EnumBigIntBody',
-  'EnumStringBody',
-  'EnumSymbolBody',
-];
 const VALID_FUNCTION_PARAMETER_PARENTS: ReadonlyArray<string> = [
   'ArrowFunctionExpression',
   'FunctionDeclaration',
@@ -125,7 +118,7 @@ function getRemovalParent(node: RemoveNodeMutation['node']): Readonly<{
       case 'EnumDefaultedMember':
       case 'EnumNumberMember':
       case 'EnumStringMember':
-        assertParent(VALID_ENUM_MEMBER_PARENTS);
+        assertParent('EnumBody');
         return 'members';
 
       // Components

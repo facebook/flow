@@ -27,6 +27,8 @@ import generate from '@babel/generator';
 
 export const BABEL_VISITOR_KEYS: VisitorKeys = {
   ...babelVisitorKeys,
+  EnumBigIntBody: ['members'],
+  EnumBigIntMember: ['id', 'init'],
   BigIntLiteralTypeAnnotation: [],
 };
 

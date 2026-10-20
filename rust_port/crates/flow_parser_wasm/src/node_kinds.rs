@@ -1536,7 +1536,7 @@ define_nodes! {
     // ---------------------------------------------------------------
     // Enums
     // ---------------------------------------------------------------
-    EnumBooleanBody = 182 {
+    BabelEnumBooleanBody = 182 as "EnumBooleanBody" {
         members: NodeList,
         explicitType: Boolean,
         hasUnknownMembers: Boolean,
@@ -1545,7 +1545,7 @@ define_nodes! {
         id: Node,
         init: Node,
     },
-    EnumNumberBody = 184 {
+    BabelEnumNumberBody = 184 as "EnumNumberBody" {
         members: NodeList,
         explicitType: Boolean,
         hasUnknownMembers: Boolean,
@@ -1554,7 +1554,7 @@ define_nodes! {
         id: Node,
         init: Node,
     },
-    EnumStringBody = 186 {
+    BabelEnumStringBody = 186 as "EnumStringBody" {
         members: NodeList,
         explicitType: Boolean,
         hasUnknownMembers: Boolean,
@@ -1563,14 +1563,14 @@ define_nodes! {
         id: Node,
         init: Node,
     },
-    EnumSymbolBody = 188 {
+    BabelEnumSymbolBody = 188 as "EnumSymbolBody" {
         members: NodeList,
         hasUnknownMembers: Boolean,
     },
     EnumDefaultedMember = 189 {
         id: Node,
     },
-    EnumBigIntBody = 190 {
+    BabelEnumBigIntBody = 190 as "EnumBigIntBody" {
         members: NodeList,
         explicitType: Boolean,
         hasUnknownMembers: Boolean,
@@ -1746,7 +1746,7 @@ define_nodes! {
         implicitDeclare: TrueBoolean,
     } from Statement::DeclareOpaqueType { loc, inner }
         {=> self.serialize_declare_opaque_type(loc, inner)},
-    EnumBody = 223 {
+    ESTreeEnumBody = 223 as "EnumBody" {
         members: NodeList,
         explicitType: String,
         hasUnknownMembers: Boolean,

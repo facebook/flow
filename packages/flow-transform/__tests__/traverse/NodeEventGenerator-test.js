@@ -24,7 +24,7 @@ describe('NodeEventGenerator', () => {
         'ExpressionStatement',
         'Identifier',
         'AnyTypeAnnotation',
-        'EnumSymbolBody',
+        'EnumBody',
         'ExpressionStatement > Identifier',
         'ExpressionStatement:exit',
         'Identifier[name="foo"].key',
@@ -43,6 +43,7 @@ describe('NodeEventGenerator', () => {
         'Foo > Bar',
         'Identifier > Foo',
         'Identifier:notexit',
+        'EnumSymbolBody',
       ]) {
         const emitter = new SafeEmitter();
         emitter.on(selector, () => {});
@@ -181,6 +182,16 @@ describe('NodeEventGenerator', () => {
         expect(emissions).toEqual(expectedEmissions(ast));
       });
     }
+
+    assertEmissions(
+      'enum E { A = 1 }',
+      ['EnumBody', 'EnumBody > EnumNumberMember', 'EnumNumberMember:exit'],
+      ast => [
+        ['EnumBody', ast.body[0].body],
+        ['EnumBody > EnumNumberMember', ast.body[0].body.members[0]],
+        ['EnumNumberMember:exit', ast.body[0].body.members[0]],
+      ],
+    );
 
     assertEmissions(
       'foo + bar;',
