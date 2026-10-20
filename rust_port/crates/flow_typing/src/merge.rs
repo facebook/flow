@@ -1881,11 +1881,24 @@ fn convert_type_to_type_desc_in_errors<'cx>(
         file_sig,
     );
     type TypeOrTypeDesc = type_or_type_desc::TypeOrTypeDescT<ALoc>;
+    // Errors from the same failed operation (e.g. every branch of a failed union speculation)
+    // reference the same types, so each distinct type is normalized once.
+    let mut descs: BTreeMap<Type, type_or_type_desc::ErrorTypeDesc<ALoc>> = BTreeMap::new();
     let mut convert = |tod: TypeOrTypeDesc| -> TypeOrTypeDesc {
         match tod {
-            TypeOrTypeDesc::Type(t) => TypeOrTypeDesc::TypeDesc(
-                flow_typing_ty_normalizer::no_flow::type_to_desc_for_errors(cx, &genv, &t),
-            ),
+            TypeOrTypeDesc::Type(t) => {
+                let desc = match descs.get(&t) {
+                    Some(desc) => desc.clone(),
+                    None => {
+                        let desc = flow_typing_ty_normalizer::no_flow::type_to_desc_for_errors(
+                            cx, &genv, &t,
+                        );
+                        descs.insert(t, desc.clone());
+                        desc
+                    }
+                };
+                TypeOrTypeDesc::TypeDesc(desc)
+            }
             TypeOrTypeDesc::TypeDesc(d) => TypeOrTypeDesc::TypeDesc(d),
         }
     };
