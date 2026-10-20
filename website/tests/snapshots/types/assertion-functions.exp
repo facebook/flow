@@ -44,8 +44,8 @@ Error ------------------------------------------------------------------ -:2:40
 Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    -:2:40
    2| function missingCheck(value: unknown): asserts value is string {} // ERROR
@@ -66,8 +66,8 @@ Error ------------------------------------------------------------------- -:6:5
 
 Cannot return from assertion function because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    -:6:5
    6|     return; // ERROR: value has not been narrowed

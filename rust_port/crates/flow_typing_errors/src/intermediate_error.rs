@@ -55,6 +55,7 @@ use flow_typing_type::type_::StandaloneCallThisData;
 use flow_typing_type::type_::SwitchRefinementCheckData;
 use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::TypeArgCompatibilityData;
+use flow_typing_type::type_::TypeGuardIncompatibilityData;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::UnionRepresentativeData;
@@ -2033,15 +2034,22 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::TypeGuardIncompatibility {
-                                guard_type,
-                                param_name,
-                            } => root(
+                            VirtualRootUseOp::TypeGuardIncompatibility(
+                                box TypeGuardIncompatibilityData {
+                                    guard_type_loc,
+                                    guard_type_reference_loc,
+                                    guard_type,
+                                    param_name,
+                                },
+                            ) => root_at_loc(
                                 loc,
                                 frames,
-                                guard_type,
+                                loc_of_aloc(guard_type_loc),
                                 RootMessage::RootCannotUseTypeGuard {
-                                    guard_type: guard_type.dupe(),
+                                    guard_type: MessageTypeReferenceData {
+                                        loc: guard_type_reference_loc.dupe(),
+                                        desc: printed_type_desc(guard_type),
+                                    },
                                     param_name: param_name.clone(),
                                 },
                                 custom_error_message,
@@ -2056,7 +2064,8 @@ where
                                 box PositiveTypeGuardConsistencyData {
                                     return_reason,
                                     param_reason,
-                                    guard_type_reason,
+                                    guard_type_reference_loc,
+                                    guard_type,
                                     is_return_false_statement,
                                     ..
                                 },
@@ -2066,7 +2075,10 @@ where
                                     Explanation::ExplanationTypeGuardPositiveConsistency {
                                         return_: return_reason.dupe(),
                                         param: param_reason.dupe(),
-                                        guard_type: guard_type_reason.dupe(),
+                                        guard_type: MessageTypeReferenceData {
+                                            loc: guard_type_reference_loc.dupe(),
+                                            desc: printed_type_desc(guard_type),
+                                        },
                                         is_return_false_statement: *is_return_false_statement,
                                     },
                                 );
@@ -2083,7 +2095,8 @@ where
                                 box AssertionFunctionConsistencyData {
                                     exit_reason,
                                     param_reason,
-                                    guard_type_reason,
+                                    guard_type_reference_loc,
+                                    guard_type,
                                     implicit_return,
                                 },
                             ) => {
@@ -2091,7 +2104,10 @@ where
                                 explanations.push(
                                     Explanation::ExplanationAssertionFunctionConsistency {
                                         param: param_reason.dupe(),
-                                        guard_type: guard_type_reason.dupe(),
+                                        guard_type: MessageTypeReferenceData {
+                                            loc: guard_type_reference_loc.dupe(),
+                                            desc: printed_type_desc(guard_type),
+                                        },
                                     },
                                 );
                                 root(
@@ -4184,7 +4200,7 @@ where
                     text(" at the return expression "),
                     ref_(return_),
                     text(" needs to be compatible with the guard type "),
-                    ref_(guard_type),
+                    ref_of_type_desc(&guard_type.loc, &guard_type.desc),
                     text("."),
                     text(" See 1. in "),
                     text(
@@ -4202,7 +4218,7 @@ where
                     text("The type of "),
                     ref_(param),
                     text(" needs to be compatible with the asserted type "),
-                    ref_(guard_type),
+                    ref_of_type_desc(&guard_type.loc, &guard_type.desc),
                     text(" wherever the function returns normally. Throw an error or call "),
                     text("another assertion function on every path where it is not"),
                 ])
@@ -5318,7 +5334,7 @@ where
                     RootKind::ShortExplanationRoot,
                     friendly::Message(vec![
                         text("The type predicate "),
-                        ref_(guard_type),
+                        ref_of_type_desc(&guard_type.loc, &guard_type.desc),
                         text(" needs to be compatible with parameter `"),
                         text(param_name),
                         text("`'s type"),

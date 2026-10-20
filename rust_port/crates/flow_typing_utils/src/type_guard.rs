@@ -53,6 +53,7 @@ use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_util::reason_of_t;
+use flow_typing_type::type_util::ref_loc_of_t;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 use flow_typing_visitors::type_visitor::predicate_default;
 use flow_utils_concurrency::job_error::JobError;
@@ -127,13 +128,15 @@ fn check_type_guard_consistency<'cx>(
                     Ok((t, neg_pred)) => {
                         // Positive
                         if !is_return_false_statement {
-                            let guard_type_reason = reason_of_t(type_guard);
                             let use_op = UseOp::Op(Arc::new(
                                 VirtualRootUseOp::PositiveTypeGuardConsistency(Box::new(
                                     PositiveTypeGuardConsistencyData {
                                         reason: reason.dupe(),
                                         param_reason: param_reason.dupe(),
-                                        guard_type_reason: guard_type_reason.dupe(),
+                                        guard_type_reference_loc: ref_loc_of_t(type_guard).dupe(),
+                                        guard_type: flow_js_utils::type_or_type_desc_for_error(
+                                            type_guard,
+                                        ),
                                         return_reason: return_reason.dupe(),
                                         is_return_false_statement,
                                     },
@@ -280,7 +283,8 @@ fn check_assertion_consistency<'cx>(
                     Box::new(AssertionFunctionConsistencyData {
                         exit_reason,
                         param_reason: param_reason.dupe(),
-                        guard_type_reason: reason_of_t(type_guard).dupe(),
+                        guard_type_reference_loc: ref_loc_of_t(type_guard).dupe(),
+                        guard_type: flow_js_utils::type_or_type_desc_for_error(type_guard),
                         implicit_return,
                     }),
                 )));

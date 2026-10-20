@@ -1386,7 +1386,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     | VirtualRootUseOp::ReactCreateElementCall(..)
                     | VirtualRootUseOp::ReactGetIntrinsic { .. }
                     | VirtualRootUseOp::RecordCreate(..)
-                    | VirtualRootUseOp::TypeGuardIncompatibility { .. }
+                    | VirtualRootUseOp::TypeGuardIncompatibility(..)
                     | VirtualRootUseOp::RenderTypeInstantiation { .. }
                     | VirtualRootUseOp::ComponentRestParamCompatibility { .. }
                     | VirtualRootUseOp::PositiveTypeGuardConsistency(..)

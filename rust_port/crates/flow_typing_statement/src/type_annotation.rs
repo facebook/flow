@@ -5611,10 +5611,14 @@ fn check_guard_type<'a>(
             _ => None,
         });
     if let Some(param_t) = param_t {
-        let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeGuardIncompatibility {
-            guard_type: type_util::reason_of_t(guard_t).dupe(),
-            param_name: guard_name.dupe(),
-        }));
+        let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeGuardIncompatibility(
+            Box::new(type_::TypeGuardIncompatibilityData {
+                guard_type_loc: type_util::loc_of_t(guard_t).dupe(),
+                guard_type_reference_loc: type_util::ref_loc_of_t(guard_t).dupe(),
+                guard_type: flow_js_utils::type_or_type_desc_for_error(guard_t),
+                param_name: guard_name.dupe(),
+            }),
+        )));
         cx.add_post_inference_subtyping_check(guard_t.dupe(), use_op, param_t.dupe());
     }
 }

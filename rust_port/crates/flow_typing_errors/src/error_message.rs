@@ -45,9 +45,12 @@ use flow_parser::parse_error::ParseError;
 use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
+use flow_typing_type::type_::AssertionFunctionConsistencyData;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
+use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
+use flow_typing_type::type_::TypeGuardIncompatibilityData;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::UnionRepresentativeData;
 use flow_typing_type::type_::VirtualFrameUseOp;
@@ -4478,13 +4481,19 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
         } => Explanation::ExplanationTypeGuardPositiveConsistency {
             return_: map_reason(return_),
             param: map_reason(param),
-            guard_type: map_reason(guard_type),
+            guard_type: MessageTypeReferenceData {
+                loc: f(&guard_type.loc),
+                desc: guard_type.desc.map_locs(f),
+            },
             is_return_false_statement,
         },
         Explanation::ExplanationAssertionFunctionConsistency { param, guard_type } => {
             Explanation::ExplanationAssertionFunctionConsistency {
                 param: map_reason(param),
-                guard_type: map_reason(guard_type),
+                guard_type: MessageTypeReferenceData {
+                    loc: f(&guard_type.loc),
+                    desc: guard_type.desc.map_locs(f),
+                },
             }
         }
         Explanation::ExplanationAdditionalUnionMembers(data) => {
@@ -6872,6 +6881,61 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             index: f(index.clone()),
                         }),
                     ))),
+                    VirtualRootUseOp::TypeGuardIncompatibility(
+                        box TypeGuardIncompatibilityData {
+                            guard_type_loc,
+                            guard_type_reference_loc,
+                            guard_type,
+                            param_name,
+                        },
+                    ) => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::TypeGuardIncompatibility(
+                        Box::new(TypeGuardIncompatibilityData {
+                            guard_type_loc: guard_type_loc.dupe(),
+                            guard_type_reference_loc: guard_type_reference_loc.dupe(),
+                            guard_type: f(guard_type.clone()),
+                            param_name: param_name.dupe(),
+                        }),
+                    ))),
+                    VirtualRootUseOp::PositiveTypeGuardConsistency(
+                        box PositiveTypeGuardConsistencyData {
+                            reason,
+                            return_reason,
+                            param_reason,
+                            guard_type_reference_loc,
+                            guard_type,
+                            is_return_false_statement,
+                        },
+                    ) => {
+                        VirtualUseOp::Op(Arc::new(VirtualRootUseOp::PositiveTypeGuardConsistency(
+                            Box::new(PositiveTypeGuardConsistencyData {
+                                reason: reason.dupe(),
+                                return_reason: return_reason.dupe(),
+                                param_reason: param_reason.dupe(),
+                                guard_type_reference_loc: guard_type_reference_loc.dupe(),
+                                guard_type: f(guard_type.clone()),
+                                is_return_false_statement: *is_return_false_statement,
+                            }),
+                        )))
+                    }
+                    VirtualRootUseOp::AssertionFunctionConsistency(
+                        box AssertionFunctionConsistencyData {
+                            exit_reason,
+                            param_reason,
+                            guard_type_reference_loc,
+                            guard_type,
+                            implicit_return,
+                        },
+                    ) => {
+                        VirtualUseOp::Op(Arc::new(VirtualRootUseOp::AssertionFunctionConsistency(
+                            Box::new(AssertionFunctionConsistencyData {
+                                exit_reason: exit_reason.dupe(),
+                                param_reason: param_reason.dupe(),
+                                guard_type_reference_loc: guard_type_reference_loc.dupe(),
+                                guard_type: f(guard_type.clone()),
+                                implicit_return: *implicit_return,
+                            }),
+                        )))
+                    }
                     VirtualRootUseOp::Speculation(inner_op) => {
                         VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
                             map_use_op(f, inner_op.as_ref().clone()),
@@ -12413,7 +12477,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 | VirtualRootUseOp::FunCallMethod(..)
                 | VirtualRootUseOp::FunReturnStatement { .. }
                 | VirtualRootUseOp::FunImplicitReturn(..) => Some(IncompatibleType),
-                VirtualRootUseOp::TypeGuardIncompatibility { .. }
+                VirtualRootUseOp::TypeGuardIncompatibility(..)
                 | VirtualRootUseOp::PositiveTypeGuardConsistency(..)
                 | VirtualRootUseOp::AssertionFunctionConsistency(..) => Some(IncompatibleTypeGuard),
                 _ => None,

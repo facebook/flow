@@ -1134,12 +1134,12 @@ pub enum Explanation<L: Dupe> {
     ExplanationTypeGuardPositiveConsistency {
         return_: VirtualReason<L>,
         param: VirtualReason<L>,
-        guard_type: VirtualReason<L>,
+        guard_type: MessageTypeReferenceData<L>,
         is_return_false_statement: bool,
     },
     ExplanationAssertionFunctionConsistency {
         param: VirtualReason<L>,
-        guard_type: VirtualReason<L>,
+        guard_type: MessageTypeReferenceData<L>,
     },
     ExplanationAdditionalUnionMembers(Box<ExplanationAdditionalUnionMembersData<L>>),
     ExplanationObjectLiteralNeedsRecordSyntax {
@@ -1320,7 +1320,7 @@ pub enum RootMessage<L: Dupe> {
         infer: Option<VirtualReasonDesc<L>>,
     },
     RootCannotUseTypeGuard {
-        guard_type: VirtualReason<L>,
+        guard_type: MessageTypeReferenceData<L>,
         param_name: FlowSmolStr,
     },
     RootCannotYield(Option<VirtualReasonDesc<L>>),

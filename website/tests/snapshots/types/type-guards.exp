@@ -302,7 +302,7 @@ Found 1 error
 === block 16 ===
 Error -------------------------------------------------------------------------- -:2:36
 
-The type predicate number [1] needs to be compatible with parameter `x`'s type: `number` [1] is incompatible with
+The type predicate `number` [1] needs to be compatible with parameter `x`'s type: `number` [1] is incompatible with
 `string` [2]. [incompatible-type-guard]
 
    -:2:36
@@ -401,7 +401,7 @@ Cannot return `((typeof x) === "number") || ((typeof x) === "boolean")` because:
  - Or `boolean` [1] is incompatible with `string` [3].
 
 The type of `x` [4] at the return expression `((typeof x) === "number") || ((typeof x) === "boolean")` [5] needs to be
-compatible with the guard type union type [6]. See 1. in
+compatible with the guard type `number | string` [6]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    -:3:36

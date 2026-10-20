@@ -1069,7 +1069,8 @@ pub struct PositiveTypeGuardConsistencyData<L: Dupe + PartialEq + Eq + PartialOr
     pub reason: VirtualReason<L>,
     pub return_reason: VirtualReason<L>,
     pub param_reason: VirtualReason<L>,
-    pub guard_type_reason: VirtualReason<L>,
+    pub guard_type_reference_loc: L,
+    pub guard_type: type_or_type_desc::TypeOrTypeDescT<L>,
     pub is_return_false_statement: bool,
 }
 
@@ -1089,8 +1090,27 @@ pub struct AssertionFunctionConsistencyData<L: Dupe + PartialEq + Eq + PartialOr
     /// of the function body.
     pub exit_reason: VirtualReason<L>,
     pub param_reason: VirtualReason<L>,
-    pub guard_type_reason: VirtualReason<L>,
+    pub guard_type_reference_loc: L,
+    pub guard_type: type_or_type_desc::TypeOrTypeDescT<L>,
     pub implicit_return: bool,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct TypeGuardIncompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub guard_type_loc: L,
+    pub guard_type_reference_loc: L,
+    pub guard_type: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub param_name: FlowSmolStr,
 }
 
 #[derive(
@@ -1341,10 +1361,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     EvalMappedType {
         mapped_type: VirtualReason<L>,
     },
-    TypeGuardIncompatibility {
-        guard_type: VirtualReason<L>,
-        param_name: FlowSmolStr,
-    },
+    TypeGuardIncompatibility(Box<TypeGuardIncompatibilityData<L>>),
     RenderTypeInstantiation {
         render_type: VirtualReason<L>,
     },
@@ -11570,7 +11587,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::RefinementCheck { .. } => "RefinementCheck",
         VirtualRootUseOp::SwitchRefinementCheck(..) => "SwitchRefinementCheck",
         VirtualRootUseOp::EvalMappedType { .. } => "EvalMappedType",
-        VirtualRootUseOp::TypeGuardIncompatibility { .. } => "TypeGuardIncompatibility",
+        VirtualRootUseOp::TypeGuardIncompatibility(..) => "TypeGuardIncompatibility",
         VirtualRootUseOp::RenderTypeInstantiation { .. } => "RenderTypeInstantiation",
         VirtualRootUseOp::ComponentRestParamCompatibility { .. } => {
             "ComponentRestParamCompatibility"

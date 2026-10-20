@@ -97,7 +97,7 @@ Cannot return `(typeof x) === 'number'` because `number` [1] is incompatible wit
 [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `(typeof x) === 'number'` [1] needs to be compatible with the guard type
-string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+`string` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    classes.js:23:14
    23|       return typeof x === 'number'; // error number ~> string
@@ -209,8 +209,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `true` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type-guard]
 
-The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type `number` [2]. See 1.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    classes.js:52:14
    52|       return true; // error unknown ~> number
@@ -342,8 +342,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `true` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type-guard]
 
-The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type `number` [2]. See 1.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    classes.js:119:14
    119|       return true; // error unknown ~> number
@@ -397,8 +397,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `true` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type-guard]
 
-The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type `number` [2]. See 1.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:10:12
    10|     return true; // error x: unknown ~> number
@@ -420,8 +420,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `true` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type-guard]
 
-The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type `number` [2]. See 1.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:15:12
    15|     return true; // error in this branch x: unknown ~> number
@@ -461,7 +461,7 @@ Cannot return `((typeof x) === 'number') || ((typeof x) === 'string')` because `
 `number` [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `((typeof x) === 'number') || ((typeof x) === 'string')` [4] needs to be
-compatible with the guard type number [2]. See 1. in
+compatible with the guard type `number` [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:45:3
@@ -488,7 +488,7 @@ Cannot return `(typeof x) === 'string'` because `string` [1] is incompatible wit
 [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `(typeof x) === 'string'` [1] needs to be compatible with the guard type
-number [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+`number` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:50:12
    50|     return typeof x === 'string'; // error x: string ~> number and (negation) number ~> empty
@@ -521,7 +521,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:55:35
 
-The type predicate string [1] needs to be compatible with parameter `x`'s type: `string` [1] is incompatible with
+The type predicate `string` [1] needs to be compatible with parameter `x`'s type: `string` [1] is incompatible with
 `number` [2]. [incompatible-type-guard]
 
    consistency.js:55:35
@@ -538,8 +538,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `x != null` because `number` [1] is incompatible with `string` [2]. [incompatible-type-guard]
 
-The type of `x` [3] at the return expression `x != null` [4] needs to be compatible with the guard type string [2]. See
-1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of `x` [3] at the return expression `x != null` [4] needs to be compatible with the guard type `string` [2].
+See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:56:5
    56|     x != null // error number ~> string
@@ -561,8 +561,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `x !== null` because `void` [1] is incompatible with `number` [2]. [incompatible-type-guard]
 
-The type of `x` [3] at the return expression `x !== null` [4] needs to be compatible with the guard type number [2]. See
-1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of `x` [3] at the return expression `x !== null` [4] needs to be compatible with the guard type `number` [2].
+See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:60:5
    60|     x !== null // error null | undefined ~> string
@@ -582,7 +582,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:71:24
 
-The type predicate string [1] needs to be compatible with parameter `x`'s type: `string` [1] is incompatible with
+The type predicate `string` [1] needs to be compatible with parameter `x`'s type: `string` [1] is incompatible with
 `number` [2]. [incompatible-type-guard]
 
    consistency.js:71:24
@@ -599,8 +599,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `x != null` because `number` [1] is incompatible with `string` [2]. [incompatible-type-guard]
 
-The type of `x` [3] at the return expression `x != null` [4] needs to be compatible with the guard type string [2]. See
-1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of `x` [3] at the return expression `x != null` [4] needs to be compatible with the guard type `string` [2].
+See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:72:5
    72|     x != null // error number ~> string
@@ -622,8 +622,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `x !== null` because `void` [1] is incompatible with `number` [2]. [incompatible-type-guard]
 
-The type of `x` [3] at the return expression `x !== null` [4] needs to be compatible with the guard type number [2]. See
-1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of `x` [3] at the return expression `x !== null` [4] needs to be compatible with the guard type `number` [2].
+See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:76:5
    76|     x !== null // error null | undefined ~> string
@@ -686,7 +686,7 @@ Cannot return `Array.isArray(...)` because in array element: `unknown` [1] is in
 [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `Array.isArray(...)` [4] needs to be compatible with the guard type
-read-only array type [5]. See 1. in
+`ReadonlyArray<A>` [5]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:125:10
@@ -854,7 +854,7 @@ Error --------------------------------------------------------------------------
 Cannot return `this.#prop(...)` because `number` [1] is incompatible with `string` [2]. [incompatible-type-guard]
 
 The type of `value` [3] at the return expression `this.#prop(...)` [4] needs to be compatible with the guard type
-string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+`string` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:213:12
    213|     return this.#prop(value); // no prop-missing error
@@ -891,7 +891,7 @@ Error --------------------------------------------------------------------------
 Cannot return `remote.#prop(...)` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
 
 The type of `value` [3] at the return expression `remote.#prop(...)` [4] needs to be compatible with the guard type
-string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+`string` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:226:12
    226|     return remote.#prop(value); // error prop-missing
@@ -3715,8 +3715,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `true` because `A` [1] is incompatible with `empty` [2]. [incompatible-type-guard]
 
-The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type empty [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `empty` [2]. See 1.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:32:14
    32|       return true; // error A ~> empty
@@ -3739,7 +3739,7 @@ Error --------------------------------------------------------------------------
 Cannot return `this instanceof B` because `B` [1] is incompatible with `Unrelated` [2]. [incompatible-type-guard]
 
 The type of this [3] at the return expression `this instanceof B` [4] needs to be compatible with the guard type
-intersection type [5]. See 1. in
+`B & Unrelated` [5]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:40:30
@@ -4213,7 +4213,7 @@ Cannot return `(typeof this.a) === 'number'` because inexact `A` [1] is incompat
 [incompatible-exact]
 
 The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard
-type object type [2]. See 1. in
+type `{a: number}` [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:328:14
@@ -4255,7 +4255,7 @@ Cannot return `(typeof this.a) === 'number'` because `A` [1] is not a subtype of
 are not subtypes of object types; consider rewriting `{a: number, ...}` [2] as an interface. [class-object-subtyping]
 
 The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard
-type object type [2]. See 1. in
+type `{a: number, ...}` [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:333:14
@@ -4296,8 +4296,8 @@ Error --------------------------------------------------------------------------
 Cannot return `true` because `A` [1] is not a subtype of `{...}` [2]. Class instances are not subtypes of object types;
 consider rewriting `{...}` [2] as an interface. [class-object-subtyping]
 
-The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
-1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `{...}` [2]. See 1.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:338:14
    338|       return true; // error class instances are not subtypes of object types
@@ -4321,7 +4321,7 @@ Cannot return `(typeof this.a) === 'number'` because inexact `A` [1] is incompat
 [incompatible-exact]
 
 The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard
-type object type [2]. See 1. in
+type `{a: number}` [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:343:14
@@ -4345,8 +4345,9 @@ Error --------------------------------------------------------------------------
 Cannot return `true` because `A` [1] is not a subtype of `{zzz: string, ...}` [2]. Class instances are not subtypes of
 object types; consider rewriting `{zzz: string, ...}` [2] as an interface. [class-object-subtyping]
 
-The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
-1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type
+`{zzz: string, ...}` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:348:14
    348|       return true; // error twice: class-object, and `zzz` missing
@@ -4369,8 +4370,9 @@ Error --------------------------------------------------------------------------
 Cannot return `true` because property `zzz` is missing in `A` [1] but exists in `{zzz: string, ...}` [2].
 [incompatible-type]
 
-The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
-1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type
+`{zzz: string, ...}` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:348:14
    348|       return true; // error twice: class-object, and `zzz` missing
@@ -4390,7 +4392,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:366:43
 
-The type predicate object type [1] needs to be compatible with parameter `x`'s type: `{a: number, ...}` [1] is
+The type predicate `{a: number, ...}` [1] needs to be compatible with parameter `x`'s type: `{a: number, ...}` [1] is
 incompatible with `A` [2]. [incompatible-type-guard]
 
    this_classes.js:366:43
@@ -4475,8 +4477,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `true` because `C<X>` [1] is incompatible with `D<X>` [2]. [incompatible-type-guard]
 
-The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `D` [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `D<X>` [2]. See 1.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_generics.js:18:14
    18|       return true; // error C ~> D
@@ -4500,8 +4502,8 @@ Cannot return `this.isDNumber()` because: [incompatible-type-guard]
  - Either in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
  - Or `C<X>` [4] is incompatible with `D<string>` [5].
 
-The type of this [6] at the return expression `this.isDNumber()` [7] needs to be compatible with the guard type `D` [5].
-See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The type of this [6] at the return expression `this.isDNumber()` [7] needs to be compatible with the guard type
+`D<string>` [5]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4986,8 +4988,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:19:59
 
-The type predicate array type [1] needs to be compatible with parameter `x`'s type: in array element: `unknown` [2] is
-not exactly the same as `X` [3]. [incompatible-type-guard]
+The type predicate `Array<unknown>` [1] needs to be compatible with parameter `x`'s type: in array element:
+`unknown` [2] is not exactly the same as `X` [3]. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<unknown>` [1] and `Array<X>` [4] exactly the same
@@ -5027,8 +5029,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:29:54
 
-The type predicate array type [1] needs to be compatible with parameter `x`'s type: in array element: `unknown` [2] is
-not exactly the same as `X` [3]. [incompatible-type-guard]
+The type predicate `Array<unknown>` [1] needs to be compatible with parameter `x`'s type: in array element:
+`unknown` [2] is not exactly the same as `X` [3]. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<unknown>` [1] and `Array<X>` [4] exactly the same
@@ -5053,8 +5055,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:30:54
 
-The type predicate array type [1] needs to be compatible with parameter `x`'s type: in array element: `unknown` [2] is
-not exactly the same as `X` [3]. [incompatible-type-guard]
+The type predicate `Array<unknown>` [1] needs to be compatible with parameter `x`'s type: in array element:
+`unknown` [2] is not exactly the same as `X` [3]. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<unknown>` [1] and `Array<X>` [4] exactly the same

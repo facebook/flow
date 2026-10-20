@@ -1661,7 +1661,6 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         | RootUseOp::ReactGetIntrinsic { literal: op }
         | RootUseOp::TypeApplication { type_: op }
         | RootUseOp::EvalMappedType { mapped_type: op }
-        | RootUseOp::TypeGuardIncompatibility { guard_type: op, .. }
         | RootUseOp::RenderTypeInstantiation { render_type: op }
         | RootUseOp::ComponentRestParamCompatibility { rest_param: op } => Some(op),
         RootUseOp::JSXCreateElement(box JSXCreateElementData { op, .. }) => Some(op),
@@ -1685,6 +1684,10 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         RootUseOp::FunCallMethod(data) => Some(&data.op),
         RootUseOp::FunImplicitReturn(data) => Some(&data.upper),
         RootUseOp::IndexedTypeAccess(data) => match &data.index {
+            TypeOrTypeDescT::Type(t) => Some(reason_of_t(t)),
+            TypeOrTypeDescT::TypeDesc(_) => None,
+        },
+        RootUseOp::TypeGuardIncompatibility(data) => match &data.guard_type {
             TypeOrTypeDescT::Type(t) => Some(reason_of_t(t)),
             TypeOrTypeDescT::TypeDesc(_) => None,
         },

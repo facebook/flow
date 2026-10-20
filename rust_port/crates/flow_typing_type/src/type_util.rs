@@ -83,6 +83,7 @@ use crate::type_::TypeAppTData;
 use crate::type_::TypeArgCompatibilityData;
 use crate::type_::TypeDestructorT;
 use crate::type_::TypeDestructorTInner;
+use crate::type_::TypeGuardIncompatibilityData;
 use crate::type_::TypeInner;
 use crate::type_::TypeStrictnessKind;
 use crate::type_::UnionRepresentativeData;
@@ -1244,13 +1245,17 @@ where
             EvalMappedType { mapped_type } => EvalMappedType {
                 mapped_type: mod_reason(mapped_type),
             },
-            TypeGuardIncompatibility {
+            TypeGuardIncompatibility(box TypeGuardIncompatibilityData {
+                guard_type_loc,
+                guard_type_reference_loc,
                 guard_type,
                 param_name,
-            } => TypeGuardIncompatibility {
-                guard_type: mod_reason(guard_type),
+            }) => TypeGuardIncompatibility(Box::new(TypeGuardIncompatibilityData {
+                guard_type_loc: f(guard_type_loc),
+                guard_type_reference_loc: f(guard_type_reference_loc),
+                guard_type: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), guard_type),
                 param_name,
-            },
+            })),
             RenderTypeInstantiation { render_type } => RenderTypeInstantiation {
                 render_type: mod_reason(render_type),
             },
@@ -1261,24 +1266,28 @@ where
                 reason,
                 return_reason,
                 param_reason,
-                guard_type_reason,
+                guard_type_reference_loc,
+                guard_type,
                 is_return_false_statement,
             }) => PositiveTypeGuardConsistency(Box::new(PositiveTypeGuardConsistencyData {
                 reason: mod_reason(reason),
                 return_reason: mod_reason(return_reason),
                 param_reason: mod_reason(param_reason),
-                guard_type_reason: mod_reason(guard_type_reason),
+                guard_type_reference_loc: f(guard_type_reference_loc),
+                guard_type: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), guard_type),
                 is_return_false_statement,
             })),
             AssertionFunctionConsistency(box AssertionFunctionConsistencyData {
                 exit_reason,
                 param_reason,
-                guard_type_reason,
+                guard_type_reference_loc,
+                guard_type,
                 implicit_return,
             }) => AssertionFunctionConsistency(Box::new(AssertionFunctionConsistencyData {
                 exit_reason: mod_reason(exit_reason),
                 param_reason: mod_reason(param_reason),
-                guard_type_reason: mod_reason(guard_type_reason),
+                guard_type_reference_loc: f(guard_type_reference_loc),
+                guard_type: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), guard_type),
                 implicit_return,
             })),
             UnknownUse => UnknownUse,

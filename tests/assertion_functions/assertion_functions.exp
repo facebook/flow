@@ -266,8 +266,8 @@ Error --------------------------------------------------------------------------
 Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    consistency.js:95:37
    95| function emptyBody(value: unknown): asserts value is string {} // error: unknown ~> string
@@ -308,8 +308,8 @@ Error --------------------------------------------------------------------------
 Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    consistency.js:99:42
    99| function wrongDirection(value: unknown): asserts value is string { // error: unknown ~> string
@@ -332,8 +332,8 @@ Error --------------------------------------------------------------------------
 Cannot return from assertion function at the end of its body because `number` [1] is incompatible with `string` [2].
 [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    consistency.js:105:55
    105| function partialNarrowing(value: ?(string | number)): asserts value is string { // error: number ~> string
@@ -355,8 +355,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return from assertion function because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    consistency.js:113:5
    113|     return; // error: unknown ~> string
@@ -396,8 +396,8 @@ Error --------------------------------------------------------------------------
 Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    consistency.js:122:37
    122| function swallowed(value: unknown): asserts value is string { // error: catch path falls through unrefined
@@ -474,8 +474,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return from assertion function because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    consistency.js:145:3
    145|   undefined; // error: unknown ~> string
@@ -869,7 +869,7 @@ Cannot find type guard parameter `y` [1] in the parameters of this function (typ
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:11:58
 
-The type predicate number [1] needs to be compatible with parameter `x`'s type: `number` [1] is incompatible with
+The type predicate `number` [1] needs to be compatible with parameter `x`'s type: `number` [1] is incompatible with
 `string` [2]. [incompatible-type-guard]
 
    invalid.js:11:58
