@@ -2,7 +2,7 @@
 
 exports[`TSDefToFlowDef object/mapped-objects 1`] = `
 "export type FlattenTokens<
-  T: {
+  T extends {
     [string]:
       | string
       | {
@@ -24,7 +24,7 @@ exports[`TSDefToFlowDef object/mapped-objects 1`] = `
     : T[Key],
 };
 
-type ObjectEntries<Obj: {+[string]: mixed, ...}> = {
+type ObjectEntries<Obj extends {+[string]: mixed, ...}> = {
   [Key in keyof Obj]?: [Key, Obj[Key]],
 };
 "

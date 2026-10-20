@@ -2,7 +2,7 @@
 
 exports[`TSDefToFlowDef conditional-types/infer 1`] = `
 "type ExtractValues<
-  T:
+  T extends
     | string
     | {
         +default: string,

@@ -1267,8 +1267,9 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
       node: TSESTree.TSMappedType,
     ): FlowESTree.ObjectTypeAnnotation {
       const keyTparam = Transform.TSTypeParameter(node.typeParameter);
-      const sourceType: FlowESTree.TypeAnnotationType = keyTparam.bound
-        ?.typeAnnotation as $FlowFixMe;
+      const sourceType = Transform.TSTypeAnnotationOpt(
+        node.typeParameter.constraint,
+      );
       // $FlowFixMe[cannot-write]
       keyTparam.bound = null;
       const prop = constructFlowNode<FlowESTree.ObjectTypeMappedTypeProperty>({
@@ -1922,16 +1923,13 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
         bound:
           node.constraint == null
             ? null
-            : constructFlowNode<FlowESTree.TypeAnnotation>({
-                type: 'TypeAnnotation',
-                typeAnnotation: Transform.TSTypeAnnotation(node.constraint),
-              }),
+            : Transform.TSTypeAnnotation(node.constraint),
         const: false,
         default:
           node.default == null
             ? null
             : Transform.TSTypeAnnotation(node.default),
-        usesExtendsBound: false,
+        usesExtendsBound: node.constraint != null,
         variance:
           (node.in && node.out) || (!node.in && !node.out)
             ? null

@@ -1835,7 +1835,7 @@ export interface TypeParameter extends BaseNode {
   readonly type: 'TypeParameter';
   readonly name: string;
   readonly const: boolean;
-  readonly bound: null | TypeAnnotation;
+  readonly bound: null | TypeAnnotationType;
   readonly variance: null | Variance;
   readonly default: null | TypeAnnotationType;
   readonly usesExtendsBound: boolean;

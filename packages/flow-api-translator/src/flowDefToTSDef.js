@@ -4586,7 +4586,7 @@ const getTransforms = (
         constraint:
           node.bound == null
             ? undefined
-            : transformTypeAnnotationType(node.bound.typeAnnotation),
+            : transformTypeAnnotationType(node.bound),
         default:
           node.default == null
             ? undefined

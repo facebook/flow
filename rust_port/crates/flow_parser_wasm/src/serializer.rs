@@ -1193,7 +1193,16 @@ impl<'a> Serializer<'a> {
         self.write_node_header(NodeKind::TypeParameter, &tp.loc);
         self.write_str(&tp.name.name);
         self.write_bool(tp.const_.is_some());
-        self.serialize_annotation_or_hint(&tp.bound);
+        match &tp.bound {
+            ast::types::AnnotationOrHint::Available(annot) => {
+                if self.is_babel() {
+                    self.serialize_type_annotation(annot);
+                } else {
+                    self.serialize_type(&annot.annotation);
+                }
+            }
+            ast::types::AnnotationOrHint::Missing(_) => self.write_null_node(),
+        }
         match &tp.variance {
             Some(v) => self.serialize_variance(v),
             None => self.write_null_node(),

@@ -11,7 +11,7 @@
 'use strict';
 
 import type {MaybeDetachedNode} from '../detachedNode';
-import type {Program} from 'flow-estree';
+import type {ESNode, Program} from 'flow-estree';
 
 import {mutateESTreeASTForPrettier} from 'flow-parser';
 import * as prettier from 'prettier';
@@ -48,6 +48,7 @@ export async function print(
   mutateESTreeASTForPrettier(program, visitorKeys);
 
   const prettierEstreePlugin = require('prettier/plugins/estree');
+  const estreePrinter = prettierEstreePlugin.printers.estree;
   const pluginParserName = visitorKeys != null ? 'typescript' : 'flow';
   const pluginParser =
     visitorKeys != null
@@ -71,7 +72,35 @@ export async function print(
               },
             },
           },
-          printers: prettierEstreePlugin.printers,
+          printers: {
+            ...prettierEstreePlugin.printers,
+            estree: {
+              ...estreePrinter,
+              print(
+                path: {node: ESNode},
+                options: {...},
+                print: (...properties: Array<string | number>) => unknown,
+                args: unknown,
+              ): unknown {
+                if (
+                  path.node.type === 'TypeParameter' &&
+                  path.node.bound != null &&
+                  !path.node.usesExtendsBound
+                ) {
+                  return estreePrinter.print(
+                    path,
+                    options,
+                    (...properties) => {
+                      const doc = print(...properties);
+                      return properties[0] === 'bound' ? [': ', doc] : doc;
+                    },
+                    args,
+                  );
+                }
+                return estreePrinter.print(path, options, print, args);
+              },
+            },
+          },
         },
       ],
     },
