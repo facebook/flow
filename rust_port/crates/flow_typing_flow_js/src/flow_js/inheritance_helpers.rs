@@ -288,6 +288,43 @@ pub(super) fn inst_structural_subtype<'cx>(
                 &lower,
             )? {
                 if let TypeInner::DefT(_, def_t) = lower.deref()
+                    && let DefTInner::ArrT(arr) = def_t.deref()
+                    && matches!(ukey.deref(), TypeInner::DefT(_, key_def) if matches!(key_def.deref(), DefTInner::NumGeneralT(_)))
+                {
+                    let polarity = if matches!(arr.deref(), ArrType::ArrayAT(_)) {
+                        Polarity::Neutral
+                    } else {
+                        Polarity::Positive
+                    };
+                    subtyping_kit::rec_flow_p(
+                        cx,
+                        env,
+                        Some(trace),
+                        UseOp::Frame(
+                            Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                                PropertyCompatibilityData {
+                                    prop: None,
+                                    lower: lreason.dupe(),
+                                    upper: reason_struct.dupe(),
+                                },
+                            ))),
+                            Arc::new(use_op.dupe()),
+                        ),
+                        true,
+                        polarity_lower.dupe(),
+                        polarity_upper.dupe(),
+                        &PropRef::Computed(ukey.dupe()),
+                        &PropertyType::OrdinaryField {
+                            type_: elemt_of_arrtype(arr),
+                            polarity,
+                        },
+                        &PropertyType::OrdinaryField {
+                            type_: uvalue.dupe(),
+                            polarity: *upolarity,
+                        },
+                    )?;
+                }
+                if let TypeInner::DefT(_, def_t) = lower.deref()
                     && let DefTInner::InstanceT(inst_t) = def_t.deref()
                 {
                     if !seen.insert(inst_t.inst.class_id.dupe()) {

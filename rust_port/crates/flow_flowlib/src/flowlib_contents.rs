@@ -38,7 +38,6 @@ flowlib_file!(LIB_ES2019_ARRAY_JS, "lib.es2019.array.js");
 flowlib_file!(LIB_ES2020_BIGINT_JS, "lib.es2020.bigint.js");
 flowlib_file!(LIB_ES2020_PROMISE_JS, "lib.es2020.promise.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
-flowlib_file!(LIB_ESNEXT_FLOAT16_JS, "lib.esnext.float16.js");
 flowlib_file!(LIB_ESNEXT_ITERATOR_JS, "lib.esnext.iterator.js");
 flowlib_file!(MISC_JS, "misc.js");
 flowlib_file!(REACT_JS, "react.js");
@@ -215,7 +214,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         tslib_contents::LIB_ESNEXT_DISPOSABLE_D_TS,
     ),
     ("lib.esnext.error.js", tslib_contents::LIB_ESNEXT_ERROR_D_TS),
-    ("lib.esnext.float16.js", LIB_ESNEXT_FLOAT16_JS),
+    (
+        "lib.esnext.float16.js",
+        tslib_contents::LIB_ESNEXT_FLOAT16_D_TS,
+    ),
     ("lib.esnext.intl.js", tslib_contents::LIB_ESNEXT_INTL_D_TS),
     ("lib.esnext.iterator.js", LIB_ESNEXT_ITERATOR_JS),
     (

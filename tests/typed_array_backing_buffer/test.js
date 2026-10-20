@@ -130,3 +130,16 @@ type TypeScriptDOMShapes =
 
 declare const domShape: TypeScriptDOMShapes;
 domShape as TypeScriptDOMShapes;
+
+const sharedFloat16 = new Float16Array(sharedArrayBuffer);
+sharedFloat16 as Float16Array<SharedArrayBuffer>;
+sharedFloat16 as Float16Array<ArrayBufferLike>;
+sharedFloat16 as Float16Array<ArrayBuffer>; // ERROR
+sharedFloat16.subarray() as Float16Array<SharedArrayBuffer>;
+sharedFloat16.map(value => value + 1) as Float16Array<ArrayBuffer>;
+
+const mappedFloat16 = Float16Array.from(['1', '2'], value => value.length);
+mappedFloat16 as Float16Array<ArrayBuffer>;
+mappedFloat16.forEach(value => value + 1);
+mappedFloat16.forEach(async value => value + 1);
+Float16Array.from(['1'], value => value); // ERROR

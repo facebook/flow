@@ -160,3 +160,27 @@ function reduce_with_union_test() {
     return [...acc, x];
   }, []);
 }
+
+function array_like_indexer_test() {
+  declare const mutable: Array<number>;
+  declare const readonly: ReadonlyArray<number>;
+  declare const tuple: [number, string];
+
+  mutable as ArrayLike<number>; // OK
+  readonly as ArrayLike<number | string>; // OK
+  tuple as ArrayLike<number | string>; // OK
+  mutable as ArrayLike<string>; // ERROR
+  readonly as ArrayLike<string>; // ERROR
+  tuple as ArrayLike<number>; // ERROR
+
+  declare function first<T>(values: ArrayLike<T>): T;
+  first(mutable) as number; // OK
+  first(readonly) as number; // OK
+  first(mutable) as string; // ERROR
+
+  interface MutableNumericIndexer {
+    [index: number]: number;
+  }
+  mutable as MutableNumericIndexer; // OK
+  readonly as MutableNumericIndexer; // ERROR
+}
