@@ -467,6 +467,7 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
         Ty::Bound(..)
         | Ty::Generic(..)
         | Ty::Symbol
+        | Ty::UniqueSymbol
         | Ty::Num
         | Ty::Str
         | Ty::Bool

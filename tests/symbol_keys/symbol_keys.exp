@@ -267,7 +267,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- class_operations.js:27:3
 
-Cannot get `p[b]` because property `[symbol]` is missing in `interface {[symbol]: C[symbol]}` [1]. [prop-missing]
+Cannot get `p[b]` because property `[symbol]` is missing in `interface {[symbol]: C[unique symbol]}` [1]. [prop-missing]
 
    class_operations.js:27:3
    27| p[b]; // ERROR: [b] not picked

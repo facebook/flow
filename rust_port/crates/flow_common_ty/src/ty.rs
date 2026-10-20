@@ -39,6 +39,7 @@ pub enum Ty<L> {
     Void,
     Null,
     Symbol,
+    UniqueSymbol,
     Num,
     Str,
     Bool,
@@ -1052,6 +1053,7 @@ pub fn mk_exact<L>(ty: Ty<L>) -> Ty<L> {
         | Ty::Void
         | Ty::Null
         | Ty::Symbol
+        | Ty::UniqueSymbol
         | Ty::Num
         | Ty::Str
         | Ty::Bool
@@ -1181,6 +1183,7 @@ where
             | Ty::Void
             | Ty::Null
             | Ty::Symbol
+            | Ty::UniqueSymbol
             | Ty::Num
             | Ty::Str
             | Ty::Bool
@@ -1704,6 +1707,7 @@ where
             | (Ty::Void, Ty::Void)
             | (Ty::Null, Ty::Null)
             | (Ty::Symbol, Ty::Symbol)
+            | (Ty::UniqueSymbol, Ty::UniqueSymbol)
             | (Ty::Num, Ty::Num)
             | (Ty::Str, Ty::Str)
             | (Ty::Bool, Ty::Bool)
@@ -2783,6 +2787,7 @@ where
             | Ty::Void
             | Ty::Null
             | Ty::Symbol
+            | Ty::UniqueSymbol
             | Ty::Num
             | Ty::Str
             | Ty::Bool
@@ -3262,6 +3267,7 @@ where
             | Ty::Void
             | Ty::Null
             | Ty::Symbol
+            | Ty::UniqueSymbol
             | Ty::Num
             | Ty::Str
             | Ty::Bool
@@ -4145,7 +4151,8 @@ pub fn tag_of_t<L>(_t: &Ty<L>) -> i32 {
         Ty::BigInt => 10,
         Ty::StrLit(_) => 11,
         Ty::Str => 12,
-        Ty::Symbol => 13,
+        Ty::UniqueSymbol => 13,
+        Ty::Symbol => 14,
         Ty::Bound(_) => 15,
         Ty::Generic(_) => 16,
         Ty::TypeOf(_) => 17,
@@ -4913,6 +4920,7 @@ impl<L: Dupe> Ty<L> {
             Ty::Void => Ty::Void,
             Ty::Null => Ty::Null,
             Ty::Symbol => Ty::Symbol,
+            Ty::UniqueSymbol => Ty::UniqueSymbol,
             Ty::Num => Ty::Num,
             Ty::Str => Ty::Str,
             Ty::Bool => Ty::Bool,

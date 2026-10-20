@@ -317,6 +317,7 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
                 match t.as_ref() {
                     Ty::Null | Ty::Void => TypeCategory::Nullish,
                     Ty::Symbol
+                    | Ty::UniqueSymbol
                     | Ty::Num
                     | Ty::Str
                     | Ty::Bool
@@ -5446,6 +5447,7 @@ where
                         Ty::Bool => features.push(text("boolean")),
                         Ty::BigInt => features.push(text("bigint")),
                         Ty::Symbol => features.push(text("symbol")),
+                        Ty::UniqueSymbol => features.push(text("unique symbol")),
                         Ty::Void => features.push(text("undefined")),
                         Ty::Null => features.push(text("null")),
                         _ => features.push(desc_of_type_desc(description)),

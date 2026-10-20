@@ -1480,7 +1480,8 @@ mod type_converter {
                 DefTInner::StrGeneralT(_) => Ok(Arc::new(ty::Ty::Str)),
                 DefTInner::BoolGeneralT => Ok(Arc::new(ty::Ty::Bool)),
                 DefTInner::BigIntGeneralT(_) => Ok(Arc::new(ty::Ty::BigInt)),
-                DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => Ok(Arc::new(ty::Ty::Symbol)),
+                DefTInner::SymbolT => Ok(Arc::new(ty::Ty::Symbol)),
+                DefTInner::UniqueSymbolT(_) => Ok(Arc::new(ty::Ty::UniqueSymbol)),
                 DefTInner::EmptyT => Ok(mk_empty(BotKind::EmptyType)),
                 DefTInner::NumericStrKeyT(num_lit) => {
                     Ok(Arc::new(ty::Ty::StrLit(num_lit.1.dupe())))
@@ -3592,7 +3593,7 @@ mod type_converter {
                     }
                     OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(name) => {
                         match name {
-                            Name::Symbol(_) => Arc::new(ty::Ty::Symbol),
+                            Name::Symbol(_) => Arc::new(ty::Ty::UniqueSymbol),
                             Name::Str(s) => Arc::new(ty::Ty::StrLit(s.dupe())),
                         }
                     }
@@ -3634,7 +3635,7 @@ mod type_converter {
             }
             D::PropertyType { name } => {
                 let index = match name {
-                    Name::Symbol(_) => Arc::new(ty::Ty::Symbol),
+                    Name::Symbol(_) => Arc::new(ty::Ty::UniqueSymbol),
                     Name::Str(s) => Arc::new(ty::Ty::StrLit(s.dupe())),
                 };
                 Ok(Arc::new(ty::Ty::IndexedAccess {

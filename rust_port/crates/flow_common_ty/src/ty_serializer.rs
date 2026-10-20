@@ -201,6 +201,12 @@ impl Serializer {
                 loc: LOC_NONE,
                 comments: None,
             }),
+            // A `unique symbol` annotation mints a new symbol, so the only spelling
+            // that an existing unique symbol satisfies is its widening.
+            Ty::UniqueSymbol => ast::types::Type::new(TypeInner::Symbol {
+                loc: LOC_NONE,
+                comments: None,
+            }),
             Ty::Num => ast::types::Type::new(TypeInner::Number {
                 loc: LOC_NONE,
                 comments: None,

@@ -296,6 +296,7 @@ fn type_impl<L: Dupe>(
         Ty::Bool => LayoutNode::atom("boolean".to_string()),
         Ty::BigInt => LayoutNode::atom("bigint".to_string()),
         Ty::Symbol => LayoutNode::atom("symbol".to_string()),
+        Ty::UniqueSymbol => LayoutNode::atom("unique symbol".to_string()),
 
         Ty::StrLit(raw) => layout::fuse(in_quotes(opts.prefer_single_quotes, raw)),
         Ty::NumLit(raw) => LayoutNode::atom(raw.to_string()),

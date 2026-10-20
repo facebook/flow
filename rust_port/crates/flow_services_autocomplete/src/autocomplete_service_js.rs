@@ -202,6 +202,7 @@ fn lsp_completion_of_type(ty_: &Ty<ALoc>) -> LspCompletionItemKind {
         | Ty::Top
         | Ty::Void
         | Ty::Symbol
+        | Ty::UniqueSymbol
         | Ty::Num
         | Ty::Str
         | Ty::Bool
