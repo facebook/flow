@@ -43,10 +43,6 @@ type NodeChildValueOrArray = NodeChildValue | ReadonlyArray<NodeChildValue>;
       return;
     }
 
-    if (node.type === 'VariableDeclaration') {
-      console.trace('wtf');
-    }
-
     const exclude = new Set<string>(excludeArr.concat(['parent']));
     const children = this._childVisitorKeys[node.type] ?? Object.keys(node);
     for (const key of children) {
