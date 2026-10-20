@@ -175,6 +175,7 @@ pub enum ParseError {
     OptionalChainNew,
     OptionalChainTemplate,
     OptionalMethodCannotBeAbstract,
+    OptionalReadonlyTupleElementNeedsParens,
     OverrideOnConstructor,
     ParameterAfterRestParameter,
     PrivateDelete,
@@ -736,6 +737,12 @@ impl fmt::Display for ParseError {
             }
             Self::OptionalMethodCannotBeAbstract => {
                 write!(f, "Optional methods can't be abstract.")
+            }
+            Self::OptionalReadonlyTupleElementNeedsParens => {
+                write!(
+                    f,
+                    "Optional readonly tuple elements must be parenthesized, e.g. `[(readonly T[])?]`."
+                )
             }
             Self::OverrideOnConstructor => {
                 write!(

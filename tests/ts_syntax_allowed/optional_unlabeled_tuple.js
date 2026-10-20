@@ -53,3 +53,27 @@ type W = [Alias?];
 
 // Required after optional should error
 type Invalid = [string?, number]; // ERROR
+
+// The inner array stays readonly while the containing tuple slot remains writable.
+declare const requiredReadonlyArray: [string, readonly Alias[]];
+requiredReadonlyArray[1] as readonly string[]; // OK
+requiredReadonlyArray[1][0] = ''; // ERROR
+requiredReadonlyArray[1] = ['']; // OK
+
+// Optional readonly arrays allow omission, check element types, and reject mutable casts.
+type OptionalReadonlyArray = [(readonly Alias[])?];
+[] as OptionalReadonlyArray; // OK
+[['']] as OptionalReadonlyArray; // OK
+[[1]] as OptionalReadonlyArray; // ERROR
+declare const optionalReadonlyArray: OptionalReadonlyArray;
+optionalReadonlyArray[0] as readonly string[] | void; // OK
+optionalReadonlyArray[0] as string[] | void; // ERROR
+
+// Optional readonly tuples allow omission, check tuple positions, and reject mutable casts.
+type OptionalReadonlyTuple = [(readonly [number, string])?];
+[] as OptionalReadonlyTuple; // OK
+[[1, '']] as OptionalReadonlyTuple; // OK
+[[1, 2]] as OptionalReadonlyTuple; // ERROR
+declare const optionalReadonlyTuple: OptionalReadonlyTuple;
+optionalReadonlyTuple[0] as readonly [number, string] | void; // OK
+optionalReadonlyTuple[0] as [number, string] | void; // ERROR

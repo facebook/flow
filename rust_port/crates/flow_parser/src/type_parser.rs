@@ -875,7 +875,11 @@ fn primary(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                 let leading = peek::comments(env);
                 eat::token(env)?;
                 let trailing = eat::trailing_comments(env);
-                let argument = prefix(env)?;
+                let argument = if token_needs_identifier_reparse_before_label(env) {
+                    generic_type_from_current_identifier_name(env)?
+                } else {
+                    prefix(env)?
+                };
                 Ok(types::ReadOnly {
                     argument,
                     comments: mk_comments_opt(Some(leading.into()), Some(trailing.into())),
@@ -1305,9 +1309,11 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                 let is_plus = matches!(peek::token(env), TokenKind::TPlus);
                 let is_minus_with_identifier = matches!(peek::token(env), TokenKind::TMinus)
                     && peek::current_token_is_followed_by_identifier(env);
-                // readonly foo: T
-                let is_readonly_with_identifier = matches!(peek::token(env), TokenKind::TReadonly)
-                    && peek::current_token_is_followed_by_identifier(env);
+                let readonly_loc = if peek::token(env) == &TokenKind::TReadonly {
+                    Some(peek::loc(env).dupe())
+                } else {
+                    None
+                };
                 // writeonly foo: T
                 let is_writeonly_with_identifier =
                     matches!(peek::token(env), TokenKind::TWriteonly)
@@ -1316,7 +1322,7 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                     // `-1` is a valid type but not a valid tuple label.
                     //   But `-foo` is only valid as a tuple label.
                     maybe_variance(env, false, false)?
-                } else if is_readonly_with_identifier || is_writeonly_with_identifier {
+                } else if is_writeonly_with_identifier {
                     maybe_variance(env, true, false)?
                 } else {
                     None
@@ -1333,8 +1339,28 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                 };
 
                 let annot = type_annotation_before_label(env)?;
+                let readonly_type_prefix =
+                    readonly_loc.is_some() && matches!(annot.deref(), TypeInner::ReadOnly { .. });
+                let (variance, annot) = match (readonly_loc, annot.deref()) {
+                    (Some(loc), TypeInner::ReadOnly { inner, .. })
+                        if peek::token(env) == &TokenKind::TColon
+                            || (peek::token(env) == &TokenKind::TPling
+                                && peek::token_after_current_is_colon(env)) =>
+                    {
+                        (
+                            Some(Variance {
+                                loc,
+                                kind: VarianceKind::Readonly,
+                                comments: inner.comments.dupe(),
+                            }),
+                            inner.argument.dupe(),
+                        )
+                    }
+                    _ => (variance, annot),
+                };
                 match peek::token(env) {
                     TokenKind::TPling => {
+                        let optional_loc = peek::loc(env).dupe();
                         eat::token(env)?; // eat T_PLING
                         if peek::token(env) == &TokenKind::TColon {
                             let name = reparse_type_annotation_as_identifier(env, &annot)?;
@@ -1355,6 +1381,12 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                         } else {
                             // Foo? — optional unlabeled element with identifier type
                             error_invalid_tuple_variance(env, &variance, &annot)?;
+                            if readonly_type_prefix {
+                                env.error_at(
+                                    optional_loc,
+                                    ParseError::OptionalReadonlyTupleElementNeedsParens,
+                                )?;
+                            }
                             Ok(ElementResult::TupleElement(
                                 types::tuple::Element::UnlabeledElement {
                                     loc: LOC_NONE,

@@ -1,0 +1,495 @@
+{
+  "body": [
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 17,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 1
+          }
+        },
+        "name": "ArrayElement",
+        "optional": false,
+        "range": [
+          5,
+          17
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 41,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        41
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 38,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 21,
+                  "line": 1
+                }
+              },
+              "operator": "readonly",
+              "range": [
+                21,
+                38
+              ],
+              "type": "TypeOperator",
+              "typeAnnotation": {
+                "elementType": {
+                  "loc": {
+                    "end": {
+                      "column": 36,
+                      "line": 1
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 30,
+                      "line": 1
+                    }
+                  },
+                  "range": [
+                    30,
+                    36
+                  ],
+                  "type": "NumberTypeAnnotation"
+                },
+                "loc": {
+                  "end": {
+                    "column": 38,
+                    "line": 1
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 30,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  30,
+                  38
+                ],
+                "type": "ArrayTypeAnnotation"
+              }
+            },
+            "loc": {
+              "end": {
+                "column": 39,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 21,
+                "line": 1
+              }
+            },
+            "optional": true,
+            "range": [
+              21,
+              39
+            ],
+            "type": "TupleTypeElement"
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 40,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 20,
+            "line": 1
+          }
+        },
+        "range": [
+          20,
+          40
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 17,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 2
+          }
+        },
+        "name": "TupleElement",
+        "optional": false,
+        "range": [
+          47,
+          59
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 41,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        42,
+        83
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 38,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 21,
+                  "line": 2
+                }
+              },
+              "operator": "readonly",
+              "range": [
+                63,
+                80
+              ],
+              "type": "TypeOperator",
+              "typeAnnotation": {
+                "elementTypes": [
+                  {
+                    "loc": {
+                      "end": {
+                        "column": 37,
+                        "line": 2
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 31,
+                        "line": 2
+                      }
+                    },
+                    "range": [
+                      73,
+                      79
+                    ],
+                    "type": "NumberTypeAnnotation"
+                  }
+                ],
+                "inexact": false,
+                "loc": {
+                  "end": {
+                    "column": 38,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 30,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  72,
+                  80
+                ],
+                "type": "TupleTypeAnnotation"
+              }
+            },
+            "loc": {
+              "end": {
+                "column": 39,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 21,
+                "line": 2
+              }
+            },
+            "optional": true,
+            "range": [
+              63,
+              81
+            ],
+            "type": "TupleTypeElement"
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 40,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 20,
+            "line": 2
+          }
+        },
+        "range": [
+          62,
+          82
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 19,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 3
+          }
+        },
+        "name": "GenericElement",
+        "optional": false,
+        "range": [
+          89,
+          103
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 42,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "range": [
+        84,
+        126
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 39,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 3
+                }
+              },
+              "operator": "readonly",
+              "range": [
+                107,
+                123
+              ],
+              "type": "TypeOperator",
+              "typeAnnotation": {
+                "elementType": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 37,
+                        "line": 3
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 32,
+                        "line": 3
+                      }
+                    },
+                    "name": "Value",
+                    "optional": false,
+                    "range": [
+                      116,
+                      121
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 37,
+                      "line": 3
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 32,
+                      "line": 3
+                    }
+                  },
+                  "range": [
+                    116,
+                    121
+                  ],
+                  "type": "GenericTypeAnnotation",
+                  "typeParameters": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 39,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 32,
+                    "line": 3
+                  }
+                },
+                "range": [
+                  116,
+                  123
+                ],
+                "type": "ArrayTypeAnnotation"
+              }
+            },
+            "loc": {
+              "end": {
+                "column": 40,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 23,
+                "line": 3
+              }
+            },
+            "optional": true,
+            "range": [
+              107,
+              124
+            ],
+            "type": "TupleTypeElement"
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 41,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 22,
+            "line": 3
+          }
+        },
+        "range": [
+          106,
+          125
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 39,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 38,
+          "line": 1
+        }
+      },
+      "message": "Optional readonly tuple elements must be parenthesized, e.g. `[(readonly T[])?]`."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 39,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 38,
+          "line": 2
+        }
+      },
+      "message": "Optional readonly tuple elements must be parenthesized, e.g. `[(readonly T[])?]`."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 40,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 39,
+          "line": 3
+        }
+      },
+      "message": "Optional readonly tuple elements must be parenthesized, e.g. `[(readonly T[])?]`."
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 42,
+      "line": 3
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    126
+  ],
+  "type": "Program"
+}

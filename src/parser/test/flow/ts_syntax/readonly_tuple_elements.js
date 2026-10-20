@@ -1,0 +1,12 @@
+type T = ReadonlyArray<[string, readonly ValueOrError[]]>;
+type Arrays = [readonly Value[], readonly string[], readonly NS.Value<T>[]];
+type Nested = [readonly [string, number], readonly (Value | Error)[]];
+type Optional = [(readonly Value[])?];
+type OptionalNested = [(readonly [Value])?, (readonly Value[])[]?];
+type Labels = [readonly values: Value[], readonly optional?: Value[]];
+type LabeledTypes = [key: string, values: readonly ValueOrError[]];
+type KeywordLabels = [readonly: string, readonly type: string];
+type Comments = [/* element */ readonly /* type */ Value[]];
+type Precedence = [readonly Value[] | Other, readonly Value[] & Other];
+type OperatorLabels = [readonly readonly: string, readonly keyof?: number];
+type LabelComments = [/* element */ readonly /* label */ values?: Value[]];

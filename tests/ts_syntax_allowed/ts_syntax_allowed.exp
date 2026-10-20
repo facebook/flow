@@ -393,6 +393,96 @@ References:
                        ^^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:60:1
+
+Cannot assign empty string to `requiredReadonlyArray[1][0]` because read-only arrays cannot be written to.
+[cannot-write]
+
+   60| requiredReadonlyArray[1][0] = ''; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:67:3
+
+Cannot cast array literal to `OptionalReadonlyArray` because in index `0` > array element: `1` [1] is incompatible with
+`Alias` [2]. [incompatible-type]
+
+   optional_unlabeled_tuple.js:67:3
+   67| [[1]] as OptionalReadonlyArray; // ERROR
+         ^ [1]
+
+References:
+   optional_unlabeled_tuple.js:64:41
+   64| type OptionalReadonlyArray = [(readonly Alias[])?];
+                                               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:70:1
+
+Cannot cast `optionalReadonlyArray[0]` to union type because: [incompatible-type]
+ - Either `ReadonlyArray<Alias>` [1] is incompatible with `Array<string>` [2].
+ - Or `ReadonlyArray<Alias>` [1] is incompatible with `void` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   optional_unlabeled_tuple.js:70:1
+   70| optionalReadonlyArray[0] as string[] | void; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   optional_unlabeled_tuple.js:64:32
+   64| type OptionalReadonlyArray = [(readonly Alias[])?];
+                                      ^^^^^^^^^^^^^^^^ [1]
+   optional_unlabeled_tuple.js:70:29
+   70| optionalReadonlyArray[0] as string[] | void; // ERROR
+                                   ^^^^^^^^ [2]
+   optional_unlabeled_tuple.js:70:40
+   70| optionalReadonlyArray[0] as string[] | void; // ERROR
+                                              ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:76:6
+
+Cannot cast array literal to `OptionalReadonlyTuple` because in index `0[1]`: `2` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   optional_unlabeled_tuple.js:76:6
+   76| [[1, 2]] as OptionalReadonlyTuple; // ERROR
+            ^ [1]
+
+References:
+   optional_unlabeled_tuple.js:73:50
+   73| type OptionalReadonlyTuple = [(readonly [number, string])?];
+                                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:79:1
+
+Cannot cast `optionalReadonlyTuple[0]` to union type because: [incompatible-type]
+ - Either tuple element at index `0` is read-only in `Readonly<[number, string]>` [1] but writable in
+   `[number, string]` [2].
+ - Or `Readonly<[number, string]>` [1] is incompatible with `void` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   optional_unlabeled_tuple.js:79:1
+   79| optionalReadonlyTuple[0] as [number, string] | void; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   optional_unlabeled_tuple.js:73:41
+   73| type OptionalReadonlyTuple = [(readonly [number, string])?];
+                                               ^^^^^^^^^^^^^^^^ [1]
+   optional_unlabeled_tuple.js:79:29
+   79| optionalReadonlyTuple[0] as [number, string] | void; // ERROR
+                                   ^^^^^^^^^^^^^^^^ [2]
+   optional_unlabeled_tuple.js:79:48
+   79| optionalReadonlyTuple[0] as [number, string] | void; // ERROR
+                                                      ^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------- polarity.js:3:20
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -935,6 +1025,14 @@ Cannot assign empty string to `readonly_array[0]` because read-only arrays canno
        ^^^^^^^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------ readonly_tuple_optional_unparenthesized.js:2:39
+
+Optional readonly tuple elements must be parenthesized, e.g. `[(readonly T[])?]`. [ParseError]
+
+   2| type ArrayElement = [readonly number[]?]; // ERROR
+                                            ^
+
+
 Error --------------------------------------------------------------------------------- readonly_type_precedence.js:14:3
 
 Cannot assign `'x'` to `f1[0]` because read-only arrays cannot be written to. [cannot-write]
@@ -1136,4 +1234,4 @@ Cannot assign empty string to `exported_with_ts_typenames.e.foo` because propert
 
 
 
-Found 85 errors
+Found 91 errors

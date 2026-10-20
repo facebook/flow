@@ -1,0 +1,2982 @@
+{
+  "body": [
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 6,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 1
+          }
+        },
+        "name": "T",
+        "optional": false,
+        "range": [
+          5,
+          6
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 58,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        58
+      ],
+      "right": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 22,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 9,
+              "line": 1
+            }
+          },
+          "name": "ReadonlyArray",
+          "optional": false,
+          "range": [
+            9,
+            22
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 57,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 1
+          }
+        },
+        "range": [
+          9,
+          57
+        ],
+        "type": "GenericTypeAnnotation",
+        "typeParameters": {
+          "loc": {
+            "end": {
+              "column": 57,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 22,
+              "line": 1
+            }
+          },
+          "params": [
+            {
+              "elementTypes": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 30,
+                      "line": 1
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 24,
+                      "line": 1
+                    }
+                  },
+                  "range": [
+                    24,
+                    30
+                  ],
+                  "type": "StringTypeAnnotation"
+                },
+                {
+                  "loc": {
+                    "end": {
+                      "column": 55,
+                      "line": 1
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 32,
+                      "line": 1
+                    }
+                  },
+                  "operator": "readonly",
+                  "range": [
+                    32,
+                    55
+                  ],
+                  "type": "TypeOperator",
+                  "typeAnnotation": {
+                    "elementType": {
+                      "id": {
+                        "loc": {
+                          "end": {
+                            "column": 53,
+                            "line": 1
+                          },
+                          "source": null,
+                          "start": {
+                            "column": 41,
+                            "line": 1
+                          }
+                        },
+                        "name": "ValueOrError",
+                        "optional": false,
+                        "range": [
+                          41,
+                          53
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 53,
+                          "line": 1
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 41,
+                          "line": 1
+                        }
+                      },
+                      "range": [
+                        41,
+                        53
+                      ],
+                      "type": "GenericTypeAnnotation",
+                      "typeParameters": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 55,
+                        "line": 1
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 41,
+                        "line": 1
+                      }
+                    },
+                    "range": [
+                      41,
+                      55
+                    ],
+                    "type": "ArrayTypeAnnotation"
+                  }
+                }
+              ],
+              "inexact": false,
+              "loc": {
+                "end": {
+                  "column": 56,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 1
+                }
+              },
+              "range": [
+                23,
+                56
+              ],
+              "type": "TupleTypeAnnotation"
+            }
+          ],
+          "range": [
+            22,
+            57
+          ],
+          "type": "TypeParameterInstantiation"
+        }
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 11,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 2
+          }
+        },
+        "name": "Arrays",
+        "optional": false,
+        "range": [
+          64,
+          70
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 76,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        59,
+        135
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "loc": {
+              "end": {
+                "column": 31,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 15,
+                "line": 2
+              }
+            },
+            "operator": "readonly",
+            "range": [
+              74,
+              90
+            ],
+            "type": "TypeOperator",
+            "typeAnnotation": {
+              "elementType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 29,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 24,
+                      "line": 2
+                    }
+                  },
+                  "name": "Value",
+                  "optional": false,
+                  "range": [
+                    83,
+                    88
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 29,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 24,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  83,
+                  88
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "loc": {
+                "end": {
+                  "column": 31,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 24,
+                  "line": 2
+                }
+              },
+              "range": [
+                83,
+                90
+              ],
+              "type": "ArrayTypeAnnotation"
+            }
+          },
+          {
+            "loc": {
+              "end": {
+                "column": 50,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 33,
+                "line": 2
+              }
+            },
+            "operator": "readonly",
+            "range": [
+              92,
+              109
+            ],
+            "type": "TypeOperator",
+            "typeAnnotation": {
+              "elementType": {
+                "loc": {
+                  "end": {
+                    "column": 48,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 42,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  101,
+                  107
+                ],
+                "type": "StringTypeAnnotation"
+              },
+              "loc": {
+                "end": {
+                  "column": 50,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 42,
+                  "line": 2
+                }
+              },
+              "range": [
+                101,
+                109
+              ],
+              "type": "ArrayTypeAnnotation"
+            }
+          },
+          {
+            "loc": {
+              "end": {
+                "column": 74,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 52,
+                "line": 2
+              }
+            },
+            "operator": "readonly",
+            "range": [
+              111,
+              133
+            ],
+            "type": "TypeOperator",
+            "typeAnnotation": {
+              "elementType": {
+                "id": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 69,
+                        "line": 2
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 64,
+                        "line": 2
+                      }
+                    },
+                    "name": "Value",
+                    "optional": false,
+                    "range": [
+                      123,
+                      128
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 69,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 61,
+                      "line": 2
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 63,
+                        "line": 2
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 61,
+                        "line": 2
+                      }
+                    },
+                    "name": "NS",
+                    "optional": false,
+                    "range": [
+                      120,
+                      122
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "range": [
+                    120,
+                    128
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "loc": {
+                  "end": {
+                    "column": 72,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 61,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  120,
+                  131
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": {
+                  "loc": {
+                    "end": {
+                      "column": 72,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 69,
+                      "line": 2
+                    }
+                  },
+                  "params": [
+                    {
+                      "id": {
+                        "loc": {
+                          "end": {
+                            "column": 71,
+                            "line": 2
+                          },
+                          "source": null,
+                          "start": {
+                            "column": 70,
+                            "line": 2
+                          }
+                        },
+                        "name": "T",
+                        "optional": false,
+                        "range": [
+                          129,
+                          130
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 71,
+                          "line": 2
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 70,
+                          "line": 2
+                        }
+                      },
+                      "range": [
+                        129,
+                        130
+                      ],
+                      "type": "GenericTypeAnnotation",
+                      "typeParameters": null
+                    }
+                  ],
+                  "range": [
+                    128,
+                    131
+                  ],
+                  "type": "TypeParameterInstantiation"
+                }
+              },
+              "loc": {
+                "end": {
+                  "column": 74,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 61,
+                  "line": 2
+                }
+              },
+              "range": [
+                120,
+                133
+              ],
+              "type": "ArrayTypeAnnotation"
+            }
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 75,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 14,
+            "line": 2
+          }
+        },
+        "range": [
+          73,
+          134
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 11,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 3
+          }
+        },
+        "name": "Nested",
+        "optional": false,
+        "range": [
+          141,
+          147
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 70,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "range": [
+        136,
+        206
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "loc": {
+              "end": {
+                "column": 40,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 15,
+                "line": 3
+              }
+            },
+            "operator": "readonly",
+            "range": [
+              151,
+              176
+            ],
+            "type": "TypeOperator",
+            "typeAnnotation": {
+              "elementTypes": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 31,
+                      "line": 3
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 25,
+                      "line": 3
+                    }
+                  },
+                  "range": [
+                    161,
+                    167
+                  ],
+                  "type": "StringTypeAnnotation"
+                },
+                {
+                  "loc": {
+                    "end": {
+                      "column": 39,
+                      "line": 3
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 33,
+                      "line": 3
+                    }
+                  },
+                  "range": [
+                    169,
+                    175
+                  ],
+                  "type": "NumberTypeAnnotation"
+                }
+              ],
+              "inexact": false,
+              "loc": {
+                "end": {
+                  "column": 40,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 24,
+                  "line": 3
+                }
+              },
+              "range": [
+                160,
+                176
+              ],
+              "type": "TupleTypeAnnotation"
+            }
+          },
+          {
+            "loc": {
+              "end": {
+                "column": 68,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 42,
+                "line": 3
+              }
+            },
+            "operator": "readonly",
+            "range": [
+              178,
+              204
+            ],
+            "type": "TypeOperator",
+            "typeAnnotation": {
+              "elementType": {
+                "loc": {
+                  "end": {
+                    "column": 65,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 52,
+                    "line": 3
+                  }
+                },
+                "range": [
+                  188,
+                  201
+                ],
+                "type": "UnionTypeAnnotation",
+                "types": [
+                  {
+                    "id": {
+                      "loc": {
+                        "end": {
+                          "column": 57,
+                          "line": 3
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 52,
+                          "line": 3
+                        }
+                      },
+                      "name": "Value",
+                      "optional": false,
+                      "range": [
+                        188,
+                        193
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 57,
+                        "line": 3
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 52,
+                        "line": 3
+                      }
+                    },
+                    "range": [
+                      188,
+                      193
+                    ],
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null
+                  },
+                  {
+                    "id": {
+                      "loc": {
+                        "end": {
+                          "column": 65,
+                          "line": 3
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 60,
+                          "line": 3
+                        }
+                      },
+                      "name": "Error",
+                      "optional": false,
+                      "range": [
+                        196,
+                        201
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 65,
+                        "line": 3
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 60,
+                        "line": 3
+                      }
+                    },
+                    "range": [
+                      196,
+                      201
+                    ],
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null
+                  }
+                ]
+              },
+              "loc": {
+                "end": {
+                  "column": 68,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 51,
+                  "line": 3
+                }
+              },
+              "range": [
+                187,
+                204
+              ],
+              "type": "ArrayTypeAnnotation"
+            }
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 69,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 14,
+            "line": 3
+          }
+        },
+        "range": [
+          150,
+          205
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 13,
+            "line": 4
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 4
+          }
+        },
+        "name": "Optional",
+        "optional": false,
+        "range": [
+          212,
+          220
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 38,
+          "line": 4
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 4
+        }
+      },
+      "range": [
+        207,
+        245
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 34,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 18,
+                  "line": 4
+                }
+              },
+              "operator": "readonly",
+              "range": [
+                225,
+                241
+              ],
+              "type": "TypeOperator",
+              "typeAnnotation": {
+                "elementType": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 32,
+                        "line": 4
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 27,
+                        "line": 4
+                      }
+                    },
+                    "name": "Value",
+                    "optional": false,
+                    "range": [
+                      234,
+                      239
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 32,
+                      "line": 4
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 27,
+                      "line": 4
+                    }
+                  },
+                  "range": [
+                    234,
+                    239
+                  ],
+                  "type": "GenericTypeAnnotation",
+                  "typeParameters": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 34,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 27,
+                    "line": 4
+                  }
+                },
+                "range": [
+                  234,
+                  241
+                ],
+                "type": "ArrayTypeAnnotation"
+              }
+            },
+            "loc": {
+              "end": {
+                "column": 36,
+                "line": 4
+              },
+              "source": null,
+              "start": {
+                "column": 17,
+                "line": 4
+              }
+            },
+            "optional": true,
+            "range": [
+              224,
+              243
+            ],
+            "type": "TupleTypeElement"
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 37,
+            "line": 4
+          },
+          "source": null,
+          "start": {
+            "column": 16,
+            "line": 4
+          }
+        },
+        "range": [
+          223,
+          244
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 19,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 5
+          }
+        },
+        "name": "OptionalNested",
+        "optional": false,
+        "range": [
+          251,
+          265
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 67,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 5
+        }
+      },
+      "range": [
+        246,
+        313
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 40,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 24,
+                  "line": 5
+                }
+              },
+              "operator": "readonly",
+              "range": [
+                270,
+                286
+              ],
+              "type": "TypeOperator",
+              "typeAnnotation": {
+                "elementTypes": [
+                  {
+                    "id": {
+                      "loc": {
+                        "end": {
+                          "column": 39,
+                          "line": 5
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 34,
+                          "line": 5
+                        }
+                      },
+                      "name": "Value",
+                      "optional": false,
+                      "range": [
+                        280,
+                        285
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 39,
+                        "line": 5
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 34,
+                        "line": 5
+                      }
+                    },
+                    "range": [
+                      280,
+                      285
+                    ],
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null
+                  }
+                ],
+                "inexact": false,
+                "loc": {
+                  "end": {
+                    "column": 40,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 33,
+                    "line": 5
+                  }
+                },
+                "range": [
+                  279,
+                  286
+                ],
+                "type": "TupleTypeAnnotation"
+              }
+            },
+            "loc": {
+              "end": {
+                "column": 42,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 23,
+                "line": 5
+              }
+            },
+            "optional": true,
+            "range": [
+              269,
+              288
+            ],
+            "type": "TupleTypeElement"
+          },
+          {
+            "elementType": {
+              "elementType": {
+                "loc": {
+                  "end": {
+                    "column": 61,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 45,
+                    "line": 5
+                  }
+                },
+                "operator": "readonly",
+                "range": [
+                  291,
+                  307
+                ],
+                "type": "TypeOperator",
+                "typeAnnotation": {
+                  "elementType": {
+                    "id": {
+                      "loc": {
+                        "end": {
+                          "column": 59,
+                          "line": 5
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 54,
+                          "line": 5
+                        }
+                      },
+                      "name": "Value",
+                      "optional": false,
+                      "range": [
+                        300,
+                        305
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 59,
+                        "line": 5
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 54,
+                        "line": 5
+                      }
+                    },
+                    "range": [
+                      300,
+                      305
+                    ],
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 61,
+                      "line": 5
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 54,
+                      "line": 5
+                    }
+                  },
+                  "range": [
+                    300,
+                    307
+                  ],
+                  "type": "ArrayTypeAnnotation"
+                }
+              },
+              "loc": {
+                "end": {
+                  "column": 64,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 44,
+                  "line": 5
+                }
+              },
+              "range": [
+                290,
+                310
+              ],
+              "type": "ArrayTypeAnnotation"
+            },
+            "loc": {
+              "end": {
+                "column": 65,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 44,
+                "line": 5
+              }
+            },
+            "optional": true,
+            "range": [
+              290,
+              311
+            ],
+            "type": "TupleTypeElement"
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 66,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 22,
+            "line": 5
+          }
+        },
+        "range": [
+          268,
+          312
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 11,
+            "line": 6
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 6
+          }
+        },
+        "name": "Labels",
+        "optional": false,
+        "range": [
+          319,
+          325
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 70,
+          "line": 6
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 6
+        }
+      },
+      "range": [
+        314,
+        384
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "elementType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 37,
+                      "line": 6
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 32,
+                      "line": 6
+                    }
+                  },
+                  "name": "Value",
+                  "optional": false,
+                  "range": [
+                    346,
+                    351
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 37,
+                    "line": 6
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 32,
+                    "line": 6
+                  }
+                },
+                "range": [
+                  346,
+                  351
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "loc": {
+                "end": {
+                  "column": 39,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 32,
+                  "line": 6
+                }
+              },
+              "range": [
+                346,
+                353
+              ],
+              "type": "ArrayTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 30,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 24,
+                  "line": 6
+                }
+              },
+              "name": "values",
+              "optional": false,
+              "range": [
+                338,
+                344
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 39,
+                "line": 6
+              },
+              "source": null,
+              "start": {
+                "column": 15,
+                "line": 6
+              }
+            },
+            "optional": false,
+            "range": [
+              329,
+              353
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": {
+              "kind": "readonly",
+              "loc": {
+                "end": {
+                  "column": 23,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 15,
+                  "line": 6
+                }
+              },
+              "range": [
+                329,
+                337
+              ],
+              "type": "Variance"
+            }
+          },
+          {
+            "elementType": {
+              "elementType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 66,
+                      "line": 6
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 61,
+                      "line": 6
+                    }
+                  },
+                  "name": "Value",
+                  "optional": false,
+                  "range": [
+                    375,
+                    380
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 66,
+                    "line": 6
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 61,
+                    "line": 6
+                  }
+                },
+                "range": [
+                  375,
+                  380
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "loc": {
+                "end": {
+                  "column": 68,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 61,
+                  "line": 6
+                }
+              },
+              "range": [
+                375,
+                382
+              ],
+              "type": "ArrayTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 58,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 50,
+                  "line": 6
+                }
+              },
+              "name": "optional",
+              "optional": false,
+              "range": [
+                364,
+                372
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 68,
+                "line": 6
+              },
+              "source": null,
+              "start": {
+                "column": 41,
+                "line": 6
+              }
+            },
+            "optional": true,
+            "range": [
+              355,
+              382
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": {
+              "kind": "readonly",
+              "loc": {
+                "end": {
+                  "column": 49,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 41,
+                  "line": 6
+                }
+              },
+              "range": [
+                355,
+                363
+              ],
+              "type": "Variance"
+            }
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 69,
+            "line": 6
+          },
+          "source": null,
+          "start": {
+            "column": 14,
+            "line": 6
+          }
+        },
+        "range": [
+          328,
+          383
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 17,
+            "line": 7
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 7
+          }
+        },
+        "name": "LabeledTypes",
+        "optional": false,
+        "range": [
+          390,
+          402
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 67,
+          "line": 7
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 7
+        }
+      },
+      "range": [
+        385,
+        452
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 32,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 26,
+                  "line": 7
+                }
+              },
+              "range": [
+                411,
+                417
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 24,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 21,
+                  "line": 7
+                }
+              },
+              "name": "key",
+              "optional": false,
+              "range": [
+                406,
+                409
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 32,
+                "line": 7
+              },
+              "source": null,
+              "start": {
+                "column": 21,
+                "line": 7
+              }
+            },
+            "optional": false,
+            "range": [
+              406,
+              417
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": null
+          },
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 65,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 42,
+                  "line": 7
+                }
+              },
+              "operator": "readonly",
+              "range": [
+                427,
+                450
+              ],
+              "type": "TypeOperator",
+              "typeAnnotation": {
+                "elementType": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 63,
+                        "line": 7
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 51,
+                        "line": 7
+                      }
+                    },
+                    "name": "ValueOrError",
+                    "optional": false,
+                    "range": [
+                      436,
+                      448
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 63,
+                      "line": 7
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 51,
+                      "line": 7
+                    }
+                  },
+                  "range": [
+                    436,
+                    448
+                  ],
+                  "type": "GenericTypeAnnotation",
+                  "typeParameters": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 65,
+                    "line": 7
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 51,
+                    "line": 7
+                  }
+                },
+                "range": [
+                  436,
+                  450
+                ],
+                "type": "ArrayTypeAnnotation"
+              }
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 40,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 34,
+                  "line": 7
+                }
+              },
+              "name": "values",
+              "optional": false,
+              "range": [
+                419,
+                425
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 65,
+                "line": 7
+              },
+              "source": null,
+              "start": {
+                "column": 34,
+                "line": 7
+              }
+            },
+            "optional": false,
+            "range": [
+              419,
+              450
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": null
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 66,
+            "line": 7
+          },
+          "source": null,
+          "start": {
+            "column": 20,
+            "line": 7
+          }
+        },
+        "range": [
+          405,
+          451
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 18,
+            "line": 8
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 8
+          }
+        },
+        "name": "KeywordLabels",
+        "optional": false,
+        "range": [
+          458,
+          471
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 63,
+          "line": 8
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 8
+        }
+      },
+      "range": [
+        453,
+        516
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 38,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 32,
+                  "line": 8
+                }
+              },
+              "range": [
+                485,
+                491
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 30,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 22,
+                  "line": 8
+                }
+              },
+              "name": "readonly",
+              "optional": false,
+              "range": [
+                475,
+                483
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 38,
+                "line": 8
+              },
+              "source": null,
+              "start": {
+                "column": 22,
+                "line": 8
+              }
+            },
+            "optional": false,
+            "range": [
+              475,
+              491
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": null
+          },
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 61,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 55,
+                  "line": 8
+                }
+              },
+              "range": [
+                508,
+                514
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 53,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 49,
+                  "line": 8
+                }
+              },
+              "name": "type",
+              "optional": false,
+              "range": [
+                502,
+                506
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 61,
+                "line": 8
+              },
+              "source": null,
+              "start": {
+                "column": 40,
+                "line": 8
+              }
+            },
+            "optional": false,
+            "range": [
+              493,
+              514
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": {
+              "kind": "readonly",
+              "loc": {
+                "end": {
+                  "column": 48,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 40,
+                  "line": 8
+                }
+              },
+              "range": [
+                493,
+                501
+              ],
+              "type": "Variance"
+            }
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 62,
+            "line": 8
+          },
+          "source": null,
+          "start": {
+            "column": 21,
+            "line": 8
+          }
+        },
+        "range": [
+          474,
+          515
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 13,
+            "line": 9
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 9
+          }
+        },
+        "name": "Comments",
+        "optional": false,
+        "range": [
+          522,
+          530
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 60,
+          "line": 9
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 9
+        }
+      },
+      "range": [
+        517,
+        577
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "loc": {
+              "end": {
+                "column": 58,
+                "line": 9
+              },
+              "source": null,
+              "start": {
+                "column": 31,
+                "line": 9
+              }
+            },
+            "operator": "readonly",
+            "range": [
+              548,
+              575
+            ],
+            "type": "TypeOperator",
+            "typeAnnotation": {
+              "elementType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 56,
+                      "line": 9
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 51,
+                      "line": 9
+                    }
+                  },
+                  "name": "Value",
+                  "optional": false,
+                  "range": [
+                    568,
+                    573
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 56,
+                    "line": 9
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 51,
+                    "line": 9
+                  }
+                },
+                "range": [
+                  568,
+                  573
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "loc": {
+                "end": {
+                  "column": 58,
+                  "line": 9
+                },
+                "source": null,
+                "start": {
+                  "column": 51,
+                  "line": 9
+                }
+              },
+              "range": [
+                568,
+                575
+              ],
+              "type": "ArrayTypeAnnotation"
+            }
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 59,
+            "line": 9
+          },
+          "source": null,
+          "start": {
+            "column": 16,
+            "line": 9
+          }
+        },
+        "range": [
+          533,
+          576
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 15,
+            "line": 10
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 10
+          }
+        },
+        "name": "Precedence",
+        "optional": false,
+        "range": [
+          583,
+          593
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 71,
+          "line": 10
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 10
+        }
+      },
+      "range": [
+        578,
+        649
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "loc": {
+              "end": {
+                "column": 43,
+                "line": 10
+              },
+              "source": null,
+              "start": {
+                "column": 19,
+                "line": 10
+              }
+            },
+            "range": [
+              597,
+              621
+            ],
+            "type": "UnionTypeAnnotation",
+            "types": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 35,
+                    "line": 10
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 19,
+                    "line": 10
+                  }
+                },
+                "operator": "readonly",
+                "range": [
+                  597,
+                  613
+                ],
+                "type": "TypeOperator",
+                "typeAnnotation": {
+                  "elementType": {
+                    "id": {
+                      "loc": {
+                        "end": {
+                          "column": 33,
+                          "line": 10
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 28,
+                          "line": 10
+                        }
+                      },
+                      "name": "Value",
+                      "optional": false,
+                      "range": [
+                        606,
+                        611
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 33,
+                        "line": 10
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 28,
+                        "line": 10
+                      }
+                    },
+                    "range": [
+                      606,
+                      611
+                    ],
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 35,
+                      "line": 10
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 28,
+                      "line": 10
+                    }
+                  },
+                  "range": [
+                    606,
+                    613
+                  ],
+                  "type": "ArrayTypeAnnotation"
+                }
+              },
+              {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 43,
+                      "line": 10
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 38,
+                      "line": 10
+                    }
+                  },
+                  "name": "Other",
+                  "optional": false,
+                  "range": [
+                    616,
+                    621
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 43,
+                    "line": 10
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 38,
+                    "line": 10
+                  }
+                },
+                "range": [
+                  616,
+                  621
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              }
+            ]
+          },
+          {
+            "loc": {
+              "end": {
+                "column": 69,
+                "line": 10
+              },
+              "source": null,
+              "start": {
+                "column": 45,
+                "line": 10
+              }
+            },
+            "range": [
+              623,
+              647
+            ],
+            "type": "IntersectionTypeAnnotation",
+            "types": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 61,
+                    "line": 10
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 45,
+                    "line": 10
+                  }
+                },
+                "operator": "readonly",
+                "range": [
+                  623,
+                  639
+                ],
+                "type": "TypeOperator",
+                "typeAnnotation": {
+                  "elementType": {
+                    "id": {
+                      "loc": {
+                        "end": {
+                          "column": 59,
+                          "line": 10
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 54,
+                          "line": 10
+                        }
+                      },
+                      "name": "Value",
+                      "optional": false,
+                      "range": [
+                        632,
+                        637
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 59,
+                        "line": 10
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 54,
+                        "line": 10
+                      }
+                    },
+                    "range": [
+                      632,
+                      637
+                    ],
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 61,
+                      "line": 10
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 54,
+                      "line": 10
+                    }
+                  },
+                  "range": [
+                    632,
+                    639
+                  ],
+                  "type": "ArrayTypeAnnotation"
+                }
+              },
+              {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 69,
+                      "line": 10
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 64,
+                      "line": 10
+                    }
+                  },
+                  "name": "Other",
+                  "optional": false,
+                  "range": [
+                    642,
+                    647
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 69,
+                    "line": 10
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 64,
+                    "line": 10
+                  }
+                },
+                "range": [
+                  642,
+                  647
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              }
+            ]
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 70,
+            "line": 10
+          },
+          "source": null,
+          "start": {
+            "column": 18,
+            "line": 10
+          }
+        },
+        "range": [
+          596,
+          648
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 19,
+            "line": 11
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 11
+          }
+        },
+        "name": "OperatorLabels",
+        "optional": false,
+        "range": [
+          655,
+          669
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 75,
+          "line": 11
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 11
+        }
+      },
+      "range": [
+        650,
+        725
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 48,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 42,
+                  "line": 11
+                }
+              },
+              "range": [
+                692,
+                698
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 40,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 32,
+                  "line": 11
+                }
+              },
+              "name": "readonly",
+              "optional": false,
+              "range": [
+                682,
+                690
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 48,
+                "line": 11
+              },
+              "source": null,
+              "start": {
+                "column": 23,
+                "line": 11
+              }
+            },
+            "optional": false,
+            "range": [
+              673,
+              698
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": {
+              "kind": "readonly",
+              "loc": {
+                "end": {
+                  "column": 31,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 11
+                }
+              },
+              "range": [
+                673,
+                681
+              ],
+              "type": "Variance"
+            }
+          },
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 73,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 67,
+                  "line": 11
+                }
+              },
+              "range": [
+                717,
+                723
+              ],
+              "type": "NumberTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 64,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 59,
+                  "line": 11
+                }
+              },
+              "name": "keyof",
+              "optional": false,
+              "range": [
+                709,
+                714
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 73,
+                "line": 11
+              },
+              "source": null,
+              "start": {
+                "column": 50,
+                "line": 11
+              }
+            },
+            "optional": true,
+            "range": [
+              700,
+              723
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": {
+              "kind": "readonly",
+              "loc": {
+                "end": {
+                  "column": 58,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 50,
+                  "line": 11
+                }
+              },
+              "range": [
+                700,
+                708
+              ],
+              "type": "Variance"
+            }
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 74,
+            "line": 11
+          },
+          "source": null,
+          "start": {
+            "column": 22,
+            "line": 11
+          }
+        },
+        "range": [
+          672,
+          724
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 18,
+            "line": 12
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 12
+          }
+        },
+        "name": "LabelComments",
+        "optional": false,
+        "range": [
+          731,
+          744
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 75,
+          "line": 12
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 12
+        }
+      },
+      "range": [
+        726,
+        801
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "elementType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 71,
+                      "line": 12
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 66,
+                      "line": 12
+                    }
+                  },
+                  "name": "Value",
+                  "optional": false,
+                  "range": [
+                    792,
+                    797
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 71,
+                    "line": 12
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 66,
+                    "line": 12
+                  }
+                },
+                "range": [
+                  792,
+                  797
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "loc": {
+                "end": {
+                  "column": 73,
+                  "line": 12
+                },
+                "source": null,
+                "start": {
+                  "column": 66,
+                  "line": 12
+                }
+              },
+              "range": [
+                792,
+                799
+              ],
+              "type": "ArrayTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 63,
+                  "line": 12
+                },
+                "source": null,
+                "start": {
+                  "column": 57,
+                  "line": 12
+                }
+              },
+              "name": "values",
+              "optional": false,
+              "range": [
+                783,
+                789
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 73,
+                "line": 12
+              },
+              "source": null,
+              "start": {
+                "column": 36,
+                "line": 12
+              }
+            },
+            "optional": true,
+            "range": [
+              762,
+              799
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": {
+              "kind": "readonly",
+              "loc": {
+                "end": {
+                  "column": 44,
+                  "line": 12
+                },
+                "source": null,
+                "start": {
+                  "column": 36,
+                  "line": 12
+                }
+              },
+              "range": [
+                762,
+                770
+              ],
+              "type": "Variance"
+            }
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 74,
+            "line": 12
+          },
+          "source": null,
+          "start": {
+            "column": 21,
+            "line": 12
+          }
+        },
+        "range": [
+          747,
+          800
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 30,
+          "line": 9
+        },
+        "source": null,
+        "start": {
+          "column": 17,
+          "line": 9
+        }
+      },
+      "range": [
+        534,
+        547
+      ],
+      "type": "Block",
+      "value": " element "
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 50,
+          "line": 9
+        },
+        "source": null,
+        "start": {
+          "column": 40,
+          "line": 9
+        }
+      },
+      "range": [
+        557,
+        567
+      ],
+      "type": "Block",
+      "value": " type "
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 35,
+          "line": 12
+        },
+        "source": null,
+        "start": {
+          "column": 22,
+          "line": 12
+        }
+      },
+      "range": [
+        748,
+        761
+      ],
+      "type": "Block",
+      "value": " element "
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 56,
+          "line": 12
+        },
+        "source": null,
+        "start": {
+          "column": 45,
+          "line": 12
+        }
+      },
+      "range": [
+        771,
+        782
+      ],
+      "type": "Block",
+      "value": " label "
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 75,
+      "line": 12
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    801
+  ],
+  "type": "Program"
+}
