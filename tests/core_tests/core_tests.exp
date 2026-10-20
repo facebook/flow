@@ -310,6 +310,130 @@ References:
                                             ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- proxy.js:16:1
+
+Cannot cast `proxy.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   proxy.js:16:1
+   16| proxy.value as string; // ERROR
+       ^^^^^^^^^^^
+
+References:
+   proxy.js:3:24
+    3| const target = {value: 1};
+                              ^ [1]
+   proxy.js:16:16
+   16| proxy.value as string; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- proxy.js:22:1
+
+Cannot cast `revocable.proxy.value` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   proxy.js:22:1
+   22| revocable.proxy.value as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   proxy.js:3:24
+    3| const target = {value: 1};
+                              ^ [1]
+   proxy.js:22:26
+   22| revocable.proxy.value as string; // ERROR
+                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- proxy.js:24:11
+
+Cannot get `revocable.value` because property `value` is missing in
+`{proxy: {value: number} & interface {}, revoke: () => void}` [1]. [prop-missing]
+
+   proxy.js:24:11
+    24| revocable.value; // ERROR: properties belong to the wrapped proxy
+                  ^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.proxy.js:118:71
+   118|     revocable<T extends object>(target: T, handler: ProxyHandler<T>): { proxy: T; revoke: () => void; };
+                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- proxy.js:26:11
+
+Cannot call `Proxy` because in type argument `T`: `number` [1], a primitive, cannot be used as a subtype of
+`interface {}` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype
+of an interface. [incompatible-type]
+
+   proxy.js:26:11
+   26| new Proxy(1, {}); // ERROR: targets must be objects
+                 ^ [1]
+
+References:
+   <BUILTINS>/lib.es2015.proxy.js:20:34
+   20| interface ProxyHandler<T extends object> {
+                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- proxy.js:26:11
+
+Cannot call `Proxy` because in type argument `T`: `number` [1], a primitive, cannot be used as a subtype of
+`interface {}` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype
+of an interface. [incompatible-type]
+
+   proxy.js:26:11
+    26| new Proxy(1, {}); // ERROR: targets must be objects
+                  ^ [1]
+
+References:
+   <BUILTINS>/lib.es2015.proxy.js:127:20
+   127|     new <T extends object>(target: T, handler: ProxyHandler<T>): T;
+                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- proxy.js:27:36
+
+Cannot call `Proxy` with object literal bound to `handler` because in the indexer property of the return value of
+property `ownKeys`: [incompatible-type]
+ - Either `1` [1] is incompatible with `string` [2].
+ - Or `1` [1] is incompatible with `symbol` [3].
+
+   proxy.js:27:36
+   27| new Proxy(target, {ownKeys: () => [1]}); // ERROR: keys must be strings or symbols
+                                          ^ [1]
+
+References:
+   <BUILTINS>/lib.es2015.proxy.js:87:36
+   87|     ownKeys?(target: T): ArrayLike<string | symbol>;
+                                          ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.proxy.js:87:45
+   87|     ownKeys?(target: T): ArrayLike<string | symbol>;
+                                                   ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- proxy.js:28:31
+
+Cannot call `Proxy` with object literal bound to `handler` because: [incompatible-type]
+ - object literal [1] is incompatible with `ProxyHandler` [2]
+    - in property `has` > the return value: `"yes"` [3] is incompatible with `boolean` [4]
+
+   proxy.js:28:31
+    28| new Proxy(target, {has: () => 'yes'}); // ERROR: the trap must return a boolean
+                                      ^^^^^ [3]
+
+References:
+   proxy.js:28:19
+    28| new Proxy(target, {has: () => 'yes'}); // ERROR: the trap must return a boolean
+                          ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.proxy.js:127:48
+   127|     new <T extends object>(target: T, handler: ProxyHandler<T>): T;
+                                                       ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.proxy.js:75:42
+    75|     has?(target: T, p: string | symbol): boolean;
+                                                 ^^^^^^^ [4]
+
+
 Error --------------------------------------------------------------------------------------------------- reflect.js:5:1
 
 Cannot cast `Reflect.get(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -642,4 +766,4 @@ References:
 
 
 
-Found 34 errors
+Found 41 errors

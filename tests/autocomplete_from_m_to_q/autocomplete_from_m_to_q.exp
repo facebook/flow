@@ -427,7 +427,7 @@ Flags: --pretty
     {"name":"parseFloat","type":"(string: unknown) => number"},
     {"name":"parseInt","type":"(string: unknown, radix?: number) => number"},
     {"name":"Promise","type":"PromiseConstructor"},
-    {"name":"Proxy","type":"typeof Proxy"},
+    {"name":"Proxy","type":"ProxyConstructor"},
     {
       "name":"queueMicrotask",
       "type":"<TArguments extends ReadonlyArray<unknown>>(callback: (...args: TArguments) => unknown) => void"
