@@ -1684,7 +1684,9 @@ fn destructuring_function_param(
     allow_optional: bool,
 ) -> Result<types::function::Param<Loc, Loc>, Rollback> {
     let (loc, param) = with_loc(None, env, |env| {
-        let pattern = pattern_parser::pattern(env, allow_optional, ParseError::StrictParamName)?;
+        let pattern = env.with_ambient_context(true, |env| {
+            pattern_parser::pattern(env, allow_optional, ParseError::StrictParamName)
+        })?;
         Ok(types::function::ParamKind::Destructuring(pattern))
     })?;
     Ok(types::function::Param { loc, param })
@@ -1700,7 +1702,7 @@ fn function_param_list_without_parens(
     ) -> Result<types::function::Param<Loc, Loc>, Rollback> {
         match peek::token(env).clone() {
             TokenKind::TLcurly | TokenKind::TLbracket => {
-                if env.is_d_ts() {
+                if env.is_ts() {
                     destructuring_function_param(env, allow_optional)
                 } else {
                     let annot = type_inner(env)?;
@@ -2051,9 +2053,9 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
             }
             _ => {
                 if matches!(peek::token(env), TokenKind::TLcurly | TokenKind::TLbracket)
-                    && env.is_d_ts()
+                    && env.is_ts()
                 {
-                    // In .d.ts files, ({...} or ([... could be a parenthesized type or
+                    // In TypeScript, ({...} or ([... could be a parenthesized type or
                     // a destructuring function parameter. Try parsing as type first.
                     fn error_callback(_err: ParseError) -> Result<(), Rollback> {
                         Err(Rollback)
