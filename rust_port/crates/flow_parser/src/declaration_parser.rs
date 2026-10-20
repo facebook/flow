@@ -338,14 +338,20 @@ pub(super) fn parse_function_params(
     ) -> Result<class::Property<Loc, Loc>, Rollback> {
         let variance = parse_variance(env, true, false, false)?;
         let leading = peek::comments(env);
-        let name_id = main_parser::parse_identifier(env, None)?;
+        let (
+            _,
+            pattern::Identifier {
+                name: name_id,
+                annot,
+                optional,
+            },
+        ) = main_parser::parse_identifier_with_type(env, true, None)?;
         let name_loc = name_id.loc.dupe();
         let key = expression::object::Key::Identifier(Identifier::new(IdentifierInner {
             loc: name_loc.dupe(),
             name: name_id.name.dupe(),
             comments: None,
         }));
-        let annot = type_parser::parse_annotation_opt(env)?;
         let value = if peek::token(env) == &TokenKind::TAssign {
             expect::token(env, TokenKind::TAssign)?;
             class::property::Value::Initialized(expression_parser::assignment(env)?)
@@ -360,7 +366,7 @@ pub(super) fn parse_function_params(
             annot,
             static_: false,
             override_: false,
-            optional: false,
+            optional,
             variance,
             ts_accessibility,
             decorators: [].into(),
