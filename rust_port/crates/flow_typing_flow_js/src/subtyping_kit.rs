@@ -768,6 +768,14 @@ fn funt_to_funt_check<'cx>(
     let is_asserts = |guard: &Option<flow_typing_type::type_::TypeGuard>| {
         guard.as_deref().is_some_and(|guard| guard.is_asserts())
     };
+    if ft1
+        .strictness_kind
+        .join(ft2.strictness_kind)
+        .is_typescript_loose()
+        && is_asserts(&ft2.type_guard)
+    {
+        return Ok(());
+    }
     let assertion_kind_mismatch =
         is_asserts(&ft1.type_guard) != is_asserts(&ft2.type_guard) && ft2.type_guard.is_some();
     if !assertion_kind_mismatch {

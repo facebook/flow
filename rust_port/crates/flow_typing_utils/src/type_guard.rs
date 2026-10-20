@@ -400,6 +400,7 @@ pub fn check_type_guard<'cx>(
         };
         let check_consistency = |cx: &mut Context<'cx>, binding_loc: &ALoc| match (kind, type_guard)
         {
+            _ if cx.type_strictness_kind().is_typescript_loose() => Ok(()),
             (TypeGuardKind::Asserts, _) => check_assertion_consistency(
                 cx,
                 reason,

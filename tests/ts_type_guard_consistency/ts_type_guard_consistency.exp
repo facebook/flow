@@ -1,0 +1,301 @@
+Error -------------------------------------------------------------------------------------------- assertions.d.ts:17:10
+
+Cannot extend `Parent` [1] with `Bad` because in property `check`: `string` [2] is incompatible with
+`(this: this, value: unknown) => asserts value is string` [3]. [incompatible-type]
+
+   assertions.d.ts:17:10
+   17|   check: string;
+                ^^^^^^ [2]
+
+References:
+   assertions.d.ts:16:30
+   16| export interface Bad extends Parent { // ERROR
+                                    ^^^^^^ [1]
+   assertions.d.ts:9:3
+    9|   check(value: unknown): asserts value is string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- flow.js:2:10
+
+Cannot return `true` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
+
+The type of `value` [3] at the return expression `true` [4] needs to be compatible with the guard type string [2]. See
+1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   flow.js:2:10
+   2|   return true; // ERROR
+               ^^^^ [4]
+
+References:
+   flow.js:1:23
+   1| function guard(value: unknown): value is string {
+                            ^^^^^^^ [1]
+   flow.js:1:42
+   1| function guard(value: unknown): value is string {
+                                               ^^^^^^ [2]
+   flow.js:1:16
+   1| function guard(value: unknown): value is string {
+                     ^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- flow.js:5:37
+
+Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type-guard]
+
+The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
+Throw an error or call another assertion function on every path where it is not.
+
+   flow.js:5:37
+   5| function assertion(value: unknown): asserts value is string {} // ERROR
+                                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow.js:5:27
+   5| function assertion(value: unknown): asserts value is string {} // ERROR
+                                ^^^^^^^ [1]
+   flow.js:5:54
+   5| function assertion(value: unknown): asserts value is string {} // ERROR
+                                                           ^^^^^^ [2]
+   flow.js:5:20
+   5| function assertion(value: unknown): asserts value is string {} // ERROR
+                         ^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- flow.js:7:41
+
+Cannot return from assertion function at the end of its body because `value` [1] may still be falsy here: it may be
+`unknown` [2]. Throw an error or call another assertion function on every path where it is falsy.
+[incompatible-type-guard]
+
+   flow.js:7:41
+   7| function bareAssertion(value: unknown): asserts value {} // ERROR
+                                              ^^^^^^^^^^^^^
+
+References:
+   flow.js:7:49
+   7| function bareAssertion(value: unknown): asserts value {} // ERROR
+                                                      ^^^^^ [1]
+   flow.js:7:31
+   7| function bareAssertion(value: unknown): asserts value {} // ERROR
+                                    ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.ts:25:29
+
+Cannot assign `incompatibleParam` to `badParam` because in the first parameter: `number` [1] is incompatible with
+`unknown` [2]. [incompatible-type]
+
+   subtyping.ts:25:29
+   25| const badParam: Assertion = incompatibleParam; // ERROR
+                                   ^^^^^^^^^^^^^^^^^
+
+References:
+   subtyping.ts:17:42
+   17| declare const incompatibleParam: (value: number) => void;
+                                                ^^^^^^ [1]
+   subtyping.ts:10:26
+   10| type Assertion = (value: unknown) => asserts value is string;
+                                ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.ts:26:55
+
+Cannot assign `plainVoid` to `badGuard` because `(value: unknown) => void` [1], a non-type-guard function, is
+incompatible with `(value: unknown) => value is string` [2], which is a type-guard function. [function-predicate]
+
+   subtyping.ts:26:55
+   26| const badGuard: (value: unknown) => value is string = plainVoid; // ERROR
+                                                             ^^^^^^^^^
+
+References:
+   subtyping.ts:12:26
+   12| declare const plainVoid: (value: unknown) => void;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.ts:26:17
+   26| const badGuard: (value: unknown) => value is string = plainVoid; // ERROR
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.ts:26:55
+
+Cannot assign `plainVoid` to `badGuard` because in the return value: `void` [1] is incompatible with `boolean` [2].
+[incompatible-type]
+
+   subtyping.ts:26:55
+   26| const badGuard: (value: unknown) => value is string = plainVoid; // ERROR
+                                                             ^^^^^^^^^
+
+References:
+   subtyping.ts:12:46
+   12| declare const plainVoid: (value: unknown) => void;
+                                                    ^^^^ [1]
+   subtyping.ts:26:37
+   26| const badGuard: (value: unknown) => value is string = plainVoid; // ERROR
+                                           ^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.ts:27:59
+
+Cannot assign `guard` to `badGuardType` because in the type predicate: `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   subtyping.ts:27:59
+   27| const badGuardType: (value: unknown) => value is string = guard; // ERROR
+                                                                 ^^^^^
+
+References:
+   subtyping.ts:14:51
+   14| declare const guard: (value: unknown) => value is number;
+                                                         ^^^^^^ [1]
+   subtyping.ts:27:50
+   27| const badGuardType: (value: unknown) => value is string = guard; // ERROR
+                                                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.ts:28:48
+
+Cannot assign `typedAssertion` to `badReturn` because in the return value: `void` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
+
+   subtyping.ts:28:48
+   28| const badReturn: (value: unknown) => boolean = typedAssertion; // ERROR
+                                                      ^^^^^^^^^^^^^^
+
+References:
+   subtyping.ts:15:51
+   15| declare const typedAssertion: (value: unknown) => asserts value is number;
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.ts:28:38
+   28| const badReturn: (value: unknown) => boolean = typedAssertion; // ERROR
+                                            ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.ts:33:23
+
+Cannot assign `value` to `bad` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   subtyping.ts:33:23
+   33|   const bad: number = value; // ERROR
+                             ^^^^^
+
+References:
+   subtyping.ts:10:55
+   10| type Assertion = (value: unknown) => asserts value is string;
+                                                             ^^^^^^ [1]
+   subtyping.ts:33:14
+   33|   const bad: number = value; // ERROR
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:66:25
+
+Cannot assign `value` to `bad` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.ts:66:25
+   66|     const bad: number = value; // ERROR
+                               ^^^^^
+
+References:
+   test.ts:8:47
+    8| function alwaysTrue(value: unknown): value is string {
+                                                     ^^^^^^ [1]
+   test.ts:66:16
+   66|     const bad: number = value; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:73:23
+
+Cannot assign `value` to `bad` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.ts:73:23
+   73|   const bad: number = value; // ERROR
+                             ^^^^^
+
+References:
+   test.ts:30:59
+   30| function emptyAssertion(value: unknown): asserts value is string {}
+                                                                 ^^^^^^ [1]
+   test.ts:73:14
+   73|   const bad: number = value; // ERROR
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:76:53
+
+The type predicate string [1] needs to be compatible with parameter `value`'s type: `string` [1] is incompatible with
+`number` [2]. [incompatible-type-guard]
+
+   test.ts:76:53
+   76| function incompatibleGuard(value: number): value is string { // ERROR
+                                                           ^^^^^^ [1]
+
+References:
+   test.ts:76:35
+   76| function incompatibleGuard(value: number): value is string { // ERROR
+                                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:80:65
+
+The type predicate string [1] needs to be compatible with parameter `value`'s type: `string` [1] is incompatible with
+`number` [2]. [incompatible-type-guard]
+
+   test.ts:80:65
+   80| function incompatibleAssertion(value: number): asserts value is string {} // ERROR
+                                                                       ^^^^^^ [1]
+
+References:
+   test.ts:80:39
+   80| function incompatibleAssertion(value: number): asserts value is string {} // ERROR
+                                             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:83:10
+
+Cannot return `'yes'` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+
+   test.ts:83:10
+   83|   return 'yes'; // ERROR
+                ^^^^^ [1]
+
+References:
+   test.ts:82:44
+   82| function nonBooleanReturn(value: unknown): value is string {
+                                                  ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:87:10
+
+Cannot return `true` because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
+
+   test.ts:87:10
+   87|   return true; // ERROR
+                ^^^^ [1]
+
+References:
+   test.ts:86:41
+   86| function nonVoidReturn(value: unknown): asserts value is string {
+                                               ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:90:40
+
+Cannot find type guard parameter `missing` [1] in the parameters of this function (type). [function-predicate]
+
+   90| function unboundGuard(value: unknown): missing is string { // ERROR
+                                              ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:94:52
+
+Cannot find type guard parameter `missing` [1] in the parameters of this function (type). [function-predicate]
+
+   94| function unboundAssertion(value: unknown): asserts missing is string {} // ERROR
+                                                          ^^^^^^^ [1]
+
+
+
+Found 18 errors
