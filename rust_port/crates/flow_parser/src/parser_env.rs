@@ -2072,6 +2072,13 @@ pub(crate) mod peek {
         })
     }
 
+    pub(crate) fn class_member_continuation_allows_modifier(env: &mut ParserEnv) -> bool {
+        let lex_mode = env.lex_mode();
+        lexer_lookahead1_matches(env, |token| {
+            token == &TokenKind::TMult || lookahead1_kind_is_object_key(lex_mode, token, true)
+        })
+    }
+
     pub(crate) fn async_token_continues_on_same_line(env: &mut ParserEnv) -> bool {
         token(env) == &TokenKind::TAsync
             && match offset_after_current_trivia(env) {

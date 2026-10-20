@@ -2007,11 +2007,11 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     };
 
     let is_public = matches!(peek::token(env), TokenKind::TPublic)
-        && peek::current_token_is_followed_by_object_key(env, true);
+        && peek::class_member_continuation_allows_modifier(env);
     let is_private = matches!(peek::token(env), TokenKind::TPrivate)
-        && peek::current_token_is_followed_by_object_key(env, true);
+        && peek::class_member_continuation_allows_modifier(env);
     let is_protected = matches!(peek::token(env), TokenKind::TProtected)
-        && peek::current_token_is_followed_by_object_key(env, true);
+        && peek::class_member_continuation_allows_modifier(env);
     let (ts_accessibility, leading_accessibility) = if is_public {
         let loc = peek::loc(env).dupe();
         let leading = peek::comments(env);
@@ -2080,7 +2080,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     let abstract_ = matches!(
         peek::token(env),
         TokenKind::TIdentifier { raw, .. } if raw == "abstract"
-    ) && peek::current_token_is_followed_by_object_key(env, true);
+    ) && peek::class_member_continuation_allows_modifier(env);
     let leading_abstract = if abstract_ {
         let leading = peek::comments(env);
         eat::token(env)?;
@@ -2092,7 +2092,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     let override_ = matches!(
         peek::token(env),
         TokenKind::TIdentifier { raw, .. } if raw == "override"
-    ) && peek::current_token_is_followed_by_object_key(env, true);
+    ) && peek::class_member_continuation_allows_modifier(env);
     let leading_override = if override_ {
         let leading = peek::comments(env);
         eat::token(env)?;

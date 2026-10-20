@@ -1,0 +1,1887 @@
+{
+  "body": [
+    {
+      "body": {
+        "body": [
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 8,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 3,
+                  "line": 2
+                }
+              },
+              "name": "plain",
+              "optional": false,
+              "range": [
+                32,
+                37
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 13,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 2
+              }
+            },
+            "range": [
+              31,
+              42
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 13,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 11,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  40,
+                  42
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 13,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 8,
+                  "line": 2
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                37,
+                42
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 13,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 12,
+                  "line": 3
+                }
+              },
+              "name": "m",
+              "optional": false,
+              "range": [
+                55,
+                56
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 28,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 3
+              }
+            },
+            "override": true,
+            "range": [
+              45,
+              71
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "directive": null,
+                    "expression": {
+                      "argument": {
+                        "loc": {
+                          "end": {
+                            "column": 25,
+                            "line": 3
+                          },
+                          "source": null,
+                          "start": {
+                            "column": 24,
+                            "line": 3
+                          }
+                        },
+                        "range": [
+                          67,
+                          68
+                        ],
+                        "raw": "1",
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "delegate": false,
+                      "loc": {
+                        "end": {
+                          "column": 25,
+                          "line": 3
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 18,
+                          "line": 3
+                        }
+                      },
+                      "range": [
+                        61,
+                        68
+                      ],
+                      "type": "YieldExpression"
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 26,
+                        "line": 3
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 18,
+                        "line": 3
+                      }
+                    },
+                    "range": [
+                      61,
+                      69
+                    ],
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "loc": {
+                  "end": {
+                    "column": 28,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 16,
+                    "line": 3
+                  }
+                },
+                "range": [
+                  59,
+                  71
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 28,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 13,
+                  "line": 3
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                56,
+                71
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 25,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 10,
+                  "line": 4
+                }
+              },
+              "name": "publicGenerator",
+              "optional": false,
+              "range": [
+                82,
+                97
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 30,
+                "line": 4
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 4
+              }
+            },
+            "range": [
+              74,
+              102
+            ],
+            "static": false,
+            "tsAccessibility": "public",
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 30,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 28,
+                    "line": 4
+                  }
+                },
+                "range": [
+                  100,
+                  102
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 30,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 25,
+                  "line": 4
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                97,
+                102
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 5
+                }
+              },
+              "name": "privateGenerator",
+              "optional": false,
+              "range": [
+                114,
+                130
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 32,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 5
+              }
+            },
+            "range": [
+              105,
+              135
+            ],
+            "static": false,
+            "tsAccessibility": "private",
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 32,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 30,
+                    "line": 5
+                  }
+                },
+                "range": [
+                  133,
+                  135
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 32,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 27,
+                  "line": 5
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                130,
+                135
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 31,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 13,
+                  "line": 6
+                }
+              },
+              "name": "protectedGenerator",
+              "optional": false,
+              "range": [
+                149,
+                167
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 36,
+                "line": 6
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 6
+              }
+            },
+            "range": [
+              138,
+              172
+            ],
+            "static": false,
+            "tsAccessibility": "protected",
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 36,
+                    "line": 6
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 34,
+                    "line": 6
+                  }
+                },
+                "range": [
+                  170,
+                  172
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 36,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 31,
+                  "line": 6
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                167,
+                172
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 19,
+                  "line": 7
+                }
+              },
+              "name": "publicOverride",
+              "optional": false,
+              "range": [
+                192,
+                206
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 38,
+                "line": 7
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 7
+              }
+            },
+            "override": true,
+            "range": [
+              175,
+              211
+            ],
+            "static": false,
+            "tsAccessibility": "public",
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 38,
+                    "line": 7
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 36,
+                    "line": 7
+                  }
+                },
+                "range": [
+                  209,
+                  211
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 38,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 33,
+                  "line": 7
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                206,
+                211
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 35,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 20,
+                  "line": 8
+                }
+              },
+              "name": "privateOverride",
+              "optional": false,
+              "range": [
+                232,
+                247
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 40,
+                "line": 8
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 8
+              }
+            },
+            "override": true,
+            "range": [
+              214,
+              252
+            ],
+            "static": false,
+            "tsAccessibility": "private",
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 40,
+                    "line": 8
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 38,
+                    "line": 8
+                  }
+                },
+                "range": [
+                  250,
+                  252
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 40,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 35,
+                  "line": 8
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                247,
+                252
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 39,
+                  "line": 9
+                },
+                "source": null,
+                "start": {
+                  "column": 22,
+                  "line": 9
+                }
+              },
+              "name": "protectedOverride",
+              "optional": false,
+              "range": [
+                275,
+                292
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 44,
+                "line": 9
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 9
+              }
+            },
+            "override": true,
+            "range": [
+              255,
+              297
+            ],
+            "static": false,
+            "tsAccessibility": "protected",
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 44,
+                    "line": 9
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 42,
+                    "line": 9
+                  }
+                },
+                "range": [
+                  295,
+                  297
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 44,
+                  "line": 9
+                },
+                "source": null,
+                "start": {
+                  "column": 39,
+                  "line": 9
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                292,
+                297
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 10
+                },
+                "source": null,
+                "start": {
+                  "column": 19,
+                  "line": 10
+                }
+              },
+              "name": "staticOverride",
+              "optional": false,
+              "range": [
+                317,
+                331
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 38,
+                "line": 10
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 10
+              }
+            },
+            "override": true,
+            "range": [
+              300,
+              336
+            ],
+            "static": true,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 38,
+                    "line": 10
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 36,
+                    "line": 10
+                  }
+                },
+                "range": [
+                  334,
+                  336
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 38,
+                  "line": 10
+                },
+                "source": null,
+                "start": {
+                  "column": 33,
+                  "line": 10
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                331,
+                336
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 46,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 26,
+                  "line": 11
+                }
+              },
+              "name": "publicStaticOverride",
+              "optional": false,
+              "range": [
+                363,
+                383
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 51,
+                "line": 11
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 11
+              }
+            },
+            "override": true,
+            "range": [
+              339,
+              388
+            ],
+            "static": true,
+            "tsAccessibility": "public",
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 51,
+                    "line": 11
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 49,
+                    "line": 11
+                  }
+                },
+                "range": [
+                  386,
+                  388
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 51,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 46,
+                  "line": 11
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                383,
+                388
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": true,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 16,
+                  "line": 12
+                },
+                "source": null,
+                "start": {
+                  "column": 13,
+                  "line": 12
+                }
+              },
+              "name": "key",
+              "optional": false,
+              "range": [
+                402,
+                405
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 22,
+                "line": 12
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 12
+              }
+            },
+            "override": true,
+            "range": [
+              391,
+              411
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 22,
+                    "line": 12
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 20,
+                    "line": 12
+                  }
+                },
+                "range": [
+                  409,
+                  411
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 22,
+                  "line": 12
+                },
+                "source": null,
+                "start": {
+                  "column": 17,
+                  "line": 12
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                406,
+                411
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 24,
+                  "line": 13
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 13
+                }
+              },
+              "name": "privateName",
+              "optional": false,
+              "range": [
+                423,
+                436
+              ],
+              "type": "PrivateIdentifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 29,
+                "line": 13
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 13
+              }
+            },
+            "override": true,
+            "range": [
+              414,
+              441
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 29,
+                    "line": 13
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 27,
+                    "line": 13
+                  }
+                },
+                "range": [
+                  439,
+                  441
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 29,
+                  "line": 13
+                },
+                "source": null,
+                "start": {
+                  "column": 24,
+                  "line": 13
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                436,
+                441
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 21,
+                  "line": 14
+                },
+                "source": null,
+                "start": {
+                  "column": 12,
+                  "line": 14
+                }
+              },
+              "range": [
+                454,
+                463
+              ],
+              "raw": "\"literal\"",
+              "type": "Literal",
+              "value": "literal"
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 26,
+                "line": 14
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 14
+              }
+            },
+            "override": true,
+            "range": [
+              444,
+              468
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 26,
+                    "line": 14
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 24,
+                    "line": 14
+                  }
+                },
+                "range": [
+                  466,
+                  468
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 26,
+                  "line": 14
+                },
+                "source": null,
+                "start": {
+                  "column": 21,
+                  "line": 14
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                463,
+                468
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 37,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 26,
+                  "line": 15
+                }
+              },
+              "name": "withComment",
+              "optional": false,
+              "range": [
+                495,
+                506
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 42,
+                "line": 15
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 15
+              }
+            },
+            "override": true,
+            "range": [
+              471,
+              511
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 42,
+                    "line": 15
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 40,
+                    "line": 15
+                  }
+                },
+                "range": [
+                  509,
+                  511
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 42,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 37,
+                  "line": 15
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                506,
+                511
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 14,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 3,
+                  "line": 17
+                }
+              },
+              "name": "withNewline",
+              "optional": false,
+              "range": [
+                526,
+                537
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 19,
+                "line": 17
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 16
+              }
+            },
+            "override": true,
+            "range": [
+              514,
+              542
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 19,
+                    "line": 17
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 17,
+                    "line": 17
+                  }
+                },
+                "range": [
+                  540,
+                  542
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 19,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 14,
+                  "line": 17
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                537,
+                542
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 32,
+                  "line": 18
+                },
+                "source": null,
+                "start": {
+                  "column": 18,
+                  "line": 18
+                }
+              },
+              "name": "asyncGenerator",
+              "optional": false,
+              "range": [
+                561,
+                575
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 37,
+                "line": 18
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 18
+              }
+            },
+            "override": true,
+            "range": [
+              545,
+              580
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": true,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 37,
+                    "line": 18
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 35,
+                    "line": 18
+                  }
+                },
+                "range": [
+                  578,
+                  580
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 37,
+                  "line": 18
+                },
+                "source": null,
+                "start": {
+                  "column": 32,
+                  "line": 18
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                575,
+                580
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 45,
+                  "line": 19
+                },
+                "source": null,
+                "start": {
+                  "column": 25,
+                  "line": 19
+                }
+              },
+              "name": "publicAsyncGenerator",
+              "optional": false,
+              "range": [
+                606,
+                626
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 50,
+                "line": 19
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 19
+              }
+            },
+            "override": true,
+            "range": [
+              583,
+              631
+            ],
+            "static": false,
+            "tsAccessibility": "public",
+            "type": "MethodDefinition",
+            "value": {
+              "async": true,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 50,
+                    "line": 19
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 48,
+                    "line": 19
+                  }
+                },
+                "range": [
+                  629,
+                  631
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": true,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 50,
+                  "line": 19
+                },
+                "source": null,
+                "start": {
+                  "column": 45,
+                  "line": 19
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                626,
+                631
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 10,
+                  "line": 20
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 20
+                }
+              },
+              "name": "override",
+              "optional": false,
+              "range": [
+                634,
+                642
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 15,
+                "line": 20
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 20
+              }
+            },
+            "range": [
+              634,
+              647
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 15,
+                    "line": 20
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 13,
+                    "line": 20
+                  }
+                },
+                "range": [
+                  645,
+                  647
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 15,
+                  "line": 20
+                },
+                "source": null,
+                "start": {
+                  "column": 10,
+                  "line": 20
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                642,
+                647
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 8,
+                  "line": 21
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 21
+                }
+              },
+              "name": "public",
+              "optional": false,
+              "range": [
+                650,
+                656
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 13,
+                "line": 21
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 21
+              }
+            },
+            "range": [
+              650,
+              661
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 13,
+                    "line": 21
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 11,
+                    "line": 21
+                  }
+                },
+                "range": [
+                  659,
+                  661
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 13,
+                  "line": 21
+                },
+                "source": null,
+                "start": {
+                  "column": 8,
+                  "line": 21
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                656,
+                661
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          }
+        ],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 22
+          },
+          "source": null,
+          "start": {
+            "column": 27,
+            "line": 1
+          }
+        },
+        "range": [
+          27,
+          663
+        ],
+        "type": "ClassBody"
+      },
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 13,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 6,
+            "line": 1
+          }
+        },
+        "name": "Derived",
+        "optional": false,
+        "range": [
+          6,
+          13
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 22
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        663
+      ],
+      "superClass": {
+        "loc": {
+          "end": {
+            "column": 26,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 22,
+            "line": 1
+          }
+        },
+        "name": "Base",
+        "optional": false,
+        "range": [
+          22,
+          26
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "superTypeArguments": null,
+      "type": "ClassDeclaration",
+      "typeParameters": null
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 24,
+          "line": 15
+        },
+        "source": null,
+        "start": {
+          "column": 11,
+          "line": 15
+        }
+      },
+      "range": [
+        480,
+        493
+      ],
+      "type": "Block",
+      "value": " comment "
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 1,
+      "line": 22
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    663
+  ],
+  "type": "Program"
+}
