@@ -84,6 +84,7 @@ use crate::type_::TypeDestructorT;
 use crate::type_::TypeDestructorTInner;
 use crate::type_::TypeInner;
 use crate::type_::TypeStrictnessKind;
+use crate::type_::UnionRepresentativeData;
 use crate::type_::UseOp;
 use crate::type_::UseT;
 use crate::type_::UseTInner;
@@ -1427,9 +1428,15 @@ where
                     upper: mod_reason(upper),
                 }
             }
-            UnionRepresentative { union } => UnionRepresentative {
-                union: mod_reason(union),
-            },
+            UnionRepresentative(box UnionRepresentativeData {
+                loc,
+                reference_loc,
+                union,
+            }) => UnionRepresentative(Box::new(UnionRepresentativeData {
+                loc: f(loc),
+                reference_loc: f(reference_loc),
+                union: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), union),
+            })),
         }
     }
 

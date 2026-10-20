@@ -1775,16 +1775,21 @@ pub fn union_representative_use_op(
     representative: &Type,
     use_op: UseOp,
 ) -> UseOp {
+    use flow_typing_type::type_::UnionRepresentativeData;
     use flow_typing_type::type_::VirtualFrameUseOp;
     use flow_typing_type::type_::VirtualUseOp;
-    use flow_typing_type::type_util::reason_of_t;
+    use flow_typing_type::type_util;
 
     match cx.find_resolved(representative) {
         Some(resolved) if matches!(&*resolved, TypeInner::UnionT(_, _)) => use_op,
         _ => VirtualUseOp::Frame(
-            Arc::new(VirtualFrameUseOp::UnionRepresentative {
-                union: reason_of_t(l).dupe(),
-            }),
+            Arc::new(VirtualFrameUseOp::UnionRepresentative(Box::new(
+                UnionRepresentativeData {
+                    loc: type_util::loc_of_t(l).dupe(),
+                    reference_loc: type_util::ref_loc_of_t(l).dupe(),
+                    union: type_or_type_desc_for_error(l),
+                },
+            ))),
             Arc::new(use_op),
         ),
     }

@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- errors.js:9:1
 
-Cannot cast `k` to string literal `c` because in at least one member of key set [1]: `"a"` [2] is incompatible with
+Cannot cast `k` to string literal `c` because in at least one member of `K` [1]: `"a"` [2] is incompatible with
 `"c"` [3]. [incompatible-type]
 
    errors.js:9:1

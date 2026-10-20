@@ -13393,7 +13393,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:34:29
 
-Cannot cast `x.taste` to string literal `Good` because in at least one member of `x.taste` [1]: `"Bad"` [2] is
+Cannot cast `x.taste` to string literal `Good` because in at least one member of `"Bad" | "Good"` [1]: `"Bad"` [2] is
 incompatible with `"Good"` [3]. [incompatible-type]
 
    tagged_union.js:34:29
@@ -13425,8 +13425,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:35:8
 
-Cannot cast `x.raw` to string literal `No` because in at least one member of `x.raw` [1]: `"Maybe"` [2] is incompatible
-with `"No"` [3]. [incompatible-type]
+Cannot cast `x.raw` to string literal `No` because in at least one member of `"Maybe" | "No"` [1]: `"Maybe"` [2] is
+incompatible with `"No"` [3]. [incompatible-type]
 
    tagged_union.js:35:8
    35|   else x.raw as 'No'; // error, Carrot.raw = Maybe

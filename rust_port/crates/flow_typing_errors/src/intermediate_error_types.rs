@@ -1217,7 +1217,7 @@ pub enum Frame<L: Dupe> {
     FrameReturnValue {
         incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
     },
-    FrameUnionRepresentative(VirtualReason<L>),
+    FrameUnionRepresentative(MessageTypeReferenceData<L>),
 }
 
 #[derive(
@@ -2400,7 +2400,7 @@ pub enum Message<L: Dupe> {
     MessageStandaloneCallRequiresReceiver(VirtualReason<L>),
 
     MessageIncompatibleWithUnionRepresentative {
-        union: VirtualReason<L>,
+        union: MessageTypeReferenceData<L>,
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },

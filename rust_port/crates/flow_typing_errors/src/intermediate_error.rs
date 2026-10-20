@@ -56,6 +56,7 @@ use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::TypeArgCompatibilityData;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UnionEnum;
+use flow_typing_type::type_::UnionRepresentativeData;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_::VirtualUseOp;
@@ -512,7 +513,7 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         | TypeGuardCompatibility
         | RendersCompatibility
         | ReactDeepReadOnly(..)
-        | UnionRepresentative { .. } => frame,
+        | UnionRepresentative(..) => frame,
     }
 }
 
@@ -765,6 +766,14 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
     };
 
     original_errors.filter(retain_error)
+}
+
+/// A use-op type that missed post-inference normalization has nothing to print.
+fn printed_type_desc<L: Dupe>(type_desc: &TypeOrTypeDescT<L>) -> ErrorTypeDesc<L> {
+    match type_desc {
+        TypeOrTypeDescT::Type(_) => ErrorTypeDesc::Unknown,
+        TypeOrTypeDescT::TypeDesc(desc) => desc.clone(),
+    }
 }
 
 fn mk_error<L: Dupe>(
@@ -2418,15 +2427,24 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::UnionRepresentative { union } => {
-                            let frame_loc = loc_of_aloc(&union.loc);
+                        VirtualFrameUseOp::UnionRepresentative(box UnionRepresentativeData {
+                            loc: union_loc,
+                            reference_loc,
+                            union,
+                        }) => {
+                            let frame_loc = loc_of_aloc(union_loc);
                             let final_loc = if frame_loc.contains(&loc) {
                                 loc
                             } else {
                                 frame_loc
                             };
                             let (mut all_frames, explanations) = frames;
-                            all_frames.push(ErrorFrame::FrameUnionRepresentative(union.dupe()));
+                            all_frames.push(ErrorFrame::FrameUnionRepresentative(
+                                MessageTypeReferenceData {
+                                    loc: reference_loc.dupe(),
+                                    desc: printed_type_desc(union),
+                                },
+                            ));
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -3370,12 +3388,19 @@ where
                     },
                 ),
 
-                VirtualFrameUseOp::UnionRepresentative { union } => mk_use_op_error_reason(
+                VirtualFrameUseOp::UnionRepresentative(box UnionRepresentativeData {
+                    loc: union_loc,
+                    reference_loc,
                     union,
+                }) => mk_use_op_error(
+                    loc_of_aloc(union_loc),
                     inner_use_op.as_ref().clone(),
                     additional_explanation.clone(),
                     Message::MessageIncompatibleWithUnionRepresentative {
-                        union: union.dupe(),
+                        union: MessageTypeReferenceData {
+                            loc: reference_loc.dupe(),
+                            desc: printed_type_desc(union),
+                        },
                         lower: lower.dupe(),
                         upper: upper.dupe(),
                     },
@@ -4778,7 +4803,10 @@ where
             ),
             FrameUnionRepresentative(union) => (
                 None,
-                friendly::Message(vec![text("at least one member of "), ref_(union)]),
+                friendly::Message(vec![
+                    text("at least one member of "),
+                    ref_of_type_desc(&union.loc, &union.desc),
+                ]),
             ),
         }
     };
@@ -5500,7 +5528,7 @@ where
                 upper,
             } => friendly::Message(vec![
                 text("at least one member of "),
-                ref_(union),
+                ref_of_type_desc(&union.loc, &union.desc),
                 text(", e.g. "),
                 ref_(lower),
                 text(", is incompatible with "),

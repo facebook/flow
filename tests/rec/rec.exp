@@ -86,8 +86,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
-Cannot call `cases[type.kind]` because in at least one member of `type.kind` [1] > the first argument: property `e` is
-missing in `B` [2] but exists in `A` [3]. [incompatible-type]
+Cannot call `cases[type.kind]` because in at least one member of `"a" | "b" | "c"` [1] > the first argument: property
+`e` is missing in `B` [2] but exists in `A` [3]. [incompatible-type]
 
    issue6155.js:15:28
    15|     return (type) => cases[type.kind](type);
@@ -104,8 +104,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
-Cannot call `cases[type.kind]` because in at least one member of `type.kind` [1] > the first argument: property `e` is
-missing in `C` [2] but exists in `A` [3]. [incompatible-type]
+Cannot call `cases[type.kind]` because in at least one member of `"a" | "b" | "c"` [1] > the first argument: property
+`e` is missing in `C` [2] but exists in `A` [3]. [incompatible-type]
 
    issue6155.js:15:28
    15|     return (type) => cases[type.kind](type);
@@ -123,7 +123,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
 Cannot call `cases[type.kind]` because: [incompatible-type]
- - in at least one member of `type.kind` [1]: `type` [2] is incompatible with `A` [3]
+ - in at least one member of `"a" | "b" | "c"` [1]: `type` [2] is incompatible with `A` [3]
     - in the first argument > property `kind`: `"b"` [4] is not exactly the same as `"a"` [5]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
@@ -159,7 +159,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
 Cannot call `cases[type.kind]` because: [incompatible-type]
- - in at least one member of `type.kind` [1]: `type` [2] is incompatible with `A` [3]
+ - in at least one member of `"a" | "b" | "c"` [1]: `type` [2] is incompatible with `A` [3]
     - in the first argument > property `kind`: `"c"` [4] is not exactly the same as `"a"` [5]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,

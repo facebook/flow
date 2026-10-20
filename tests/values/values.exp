@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:23:3
 
-Cannot cast `x` to empty because in at least one member of `Values` [1]: `"a"` [1] is incompatible with `empty` [2].
+Cannot cast `x` to empty because in at least one member of `"a" | "b"` [1]: `"a"` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    arrays.js:23:3

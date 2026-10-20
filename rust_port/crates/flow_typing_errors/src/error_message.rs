@@ -48,6 +48,7 @@ use flow_type_sig::signature_error::SignatureError;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::UnionEnum;
+use flow_typing_type::type_::UnionRepresentativeData;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_::VirtualUseOp;
@@ -6859,14 +6860,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }
                     _ => VirtualUseOp::Op(root),
                 },
-                VirtualUseOp::Frame(frame_rc, inner_op)
-                    if matches!(
-                        frame_rc.as_ref(),
-                        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(..)
-                    ) =>
-                {
-                    let (lower, upper, lower_t, upper_t, name, custom_error_loc) =
-                        if let VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
+                VirtualUseOp::Frame(frame_rc, inner_op) => {
+                    let frame_rc = match frame_rc.as_ref() {
+                        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
                             box OpaqueTypeCustomErrorCompatibilityData {
                                 lower,
                                 upper,
@@ -6875,14 +6871,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                 name,
                                 custom_error_loc,
                             },
-                        ) = frame_rc.as_ref()
-                        {
-                            (lower, upper, lower_t, upper_t, name, custom_error_loc)
-                        } else {
-                            unreachable!()
-                        };
-                    VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
+                        ) => Arc::new(VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
                             Box::new(OpaqueTypeCustomErrorCompatibilityData {
                                 lower: lower.dupe(),
                                 upper: upper.dupe(),
@@ -6892,13 +6881,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                 custom_error_loc: custom_error_loc.dupe(),
                             }),
                         )),
+                        VirtualFrameUseOp::UnionRepresentative(box UnionRepresentativeData {
+                            loc,
+                            reference_loc,
+                            union,
+                        }) => Arc::new(VirtualFrameUseOp::UnionRepresentative(Box::new(
+                            UnionRepresentativeData {
+                                loc: loc.dupe(),
+                                reference_loc: reference_loc.dupe(),
+                                union: f(union.clone()),
+                            },
+                        ))),
+                        _ => frame_rc.dupe(),
+                    };
+                    VirtualUseOp::Frame(
+                        frame_rc,
                         Arc::new(map_use_op(f, inner_op.as_ref().clone())),
                     )
                 }
-                VirtualUseOp::Frame(frame, inner_op) => VirtualUseOp::Frame(
-                    frame.clone(),
-                    Arc::new(map_use_op(f, inner_op.as_ref().clone())),
-                ),
             }
         }
         fn map_explanation<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(

@@ -471,8 +471,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:5
 
-Cannot cast `x` to number because in at least one member of `Key` [1]: `"1"` [2] is incompatible with `number` [3].
-[incompatible-type]
+Cannot cast `x` to number because in at least one member of `"1" | "2"` [1]: `"1"` [2] is incompatible with
+`number` [3]. [incompatible-type]
 
    test.js:42:5
    42|     x as number; // ERROR
@@ -496,7 +496,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:47:17
 
-Cannot call `f` because in type argument `Key` > at least one member of `Key` [1]: `"1"` [2] is incompatible with
+Cannot call `f` because in type argument `Key` > at least one member of `"1" | "2"` [1]: `"1"` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    test.js:47:17
@@ -521,8 +521,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:5
 
-Cannot cast `x` to number because in at least one member of `K` [1]: `"1"` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast `x` to number because in at least one member of `"1" | "2"` [1]: `"1"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    test.js:62:5
    62|     x as number; // ERROR

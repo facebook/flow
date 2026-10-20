@@ -56,8 +56,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- index.js:55:14
 
-Cannot return `c ? invariant() : invariant()` because in at least one member of conditional [1]: `void` [2] is
-incompatible with `string` [3]. [incompatible-type]
+Cannot return `c ? invariant() : invariant()` because in at least one member of `void` [1]: `void` [2] is incompatible
+with `string` [3]. [incompatible-type]
 
    index.js:55:14
    55|   return c ? invariant() : invariant(); // Error: invariant must be a top-level statement call

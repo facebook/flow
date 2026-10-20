@@ -101,7 +101,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:47:3
 
-Cannot cast `x` to `typeof b` because in at least one member of union type [1]: `0n` [2] is incompatible with `1n` [3].
+Cannot cast `x` to `typeof b` because in at least one member of `0n | 1n` [1]: `0n` [2] is incompatible with `1n` [3].
 [incompatible-type]
 
    bigint.js:47:3

@@ -191,8 +191,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- maybe.js:12:12
 
-Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in at least one member of key set [1] > the
-indexer property: `?string` [2] is not exactly the same as `?number` [3]. [incompatible-type]
+Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in at least one member of
+`"int" | "string"` [1] > the indexer property: `?string` [2] is not exactly the same as `?number` [3].
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: ?string}` [4] and `{[string]: ?number}` [5] exactly the same
@@ -400,11 +401,11 @@ References:
 
 Error -------------------------------------------------------------------------------------- union_representative.js:4:1
 
-Incorrect arguments passed to `Object.assign` because in at least one member of property `a` [1]: `"A"` [2] is
+Incorrect arguments passed to `Object.assign` because in at least one member of `"A" | "B"` [1]: `"A"` [2] is
 incompatible with `En` [3]. [incompatible-type]
 
    union_representative.js:4:1
-   4| Object.assign(tgt, src); // error: "A" ~> En, in at least one member of property `a`
+   4| Object.assign(tgt, src); // error: "A" ~> En, in at least one member of `"A" | "B"`
       ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:

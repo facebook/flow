@@ -1142,6 +1142,23 @@ pub struct OpaqueTypeCustomErrorCompatibilityData<L: Dupe + PartialEq + Eq + Par
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct UnionRepresentativeData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub loc: L,
+    pub reference_loc: L,
+    pub union: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropertyCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub prop: Option<Name>,
     pub lower: VirtualReason<L>,
@@ -1400,9 +1417,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },
-    UnionRepresentative {
-        union: VirtualReason<L>,
-    },
+    UnionRepresentative(Box<UnionRepresentativeData<L>>),
 }
 
 #[derive(Debug, Clone, Dupe)]
@@ -11592,7 +11607,7 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualFrameUseOp::EnumRepresentationTypeCompatibility { .. } => {
             "EnumRepresentationTypeCompatibility"
         }
-        VirtualFrameUseOp::UnionRepresentative { .. } => "UnionRepresentative",
+        VirtualFrameUseOp::UnionRepresentative(..) => "UnionRepresentative",
     }
 }
 

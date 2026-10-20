@@ -793,8 +793,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:3
 
-Cannot cast `r2[2]` to empty because in at least one member of inferred union of array element types (alternatively,
-provide an annotation to summarize the array element type) [1]: `1` [2] is incompatible with `empty` [3].
+Cannot cast `r2[2]` to empty because in at least one member of `1 | 2` [1]: `1` [2] is incompatible with `empty` [3].
 [incompatible-type]
 
    upper_non_t.js:103:3

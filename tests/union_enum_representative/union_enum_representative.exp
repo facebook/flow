@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------- union_enum_representative.js:26:3
 
-Cannot call `createObjectFrom` because in type argument `TKey` > at least one member of `TKey` [1]: `35` [2] is
-incompatible with `string` [3]. [incompatible-type]
+Cannot call `createObjectFrom` because in type argument `TKey` > at least one member of
+`35 | 36 | 37 | 38 | 39 | 40` [1]: `35` [2] is incompatible with `string` [3]. [incompatible-type]
 
    union_enum_representative.js:26:3
    26|   Keys.END,
@@ -21,7 +21,7 @@ References:
 
 Error ------------------------------------------------------------------------------- union_enum_representative.js:30:49
 
-Cannot call `createObjectFrom` because in type argument `TKey` > at least one member of `TKey` [1]: `35` [2] is
+Cannot call `createObjectFrom` because in type argument `TKey` > at least one member of `35 | 36` [1]: `35` [2] is
 incompatible with `string` [3]. [incompatible-type]
 
    union_enum_representative.js:30:49
@@ -42,7 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------- union_enum_representative.js:35:13
 
-Cannot call `needsString` with `k` bound to `x` because in at least one member of union type [1]: `38` [2] is
+Cannot call `needsString` with `k` bound to `x` because in at least one member of `38 | 40 | 37` [1]: `38` [2] is
 incompatible with `string` [3]. [incompatible-type]
 
    union_enum_representative.js:35:13
@@ -63,7 +63,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:39:2
 
-Cannot cast `nums` to string because in at least one member of union type [1]: `1` [2] is incompatible with
+Cannot cast `nums` to string because in at least one member of `1 | 2 | 3` [1]: `1` [2] is incompatible with
 `string` [3]. [incompatible-type]
 
    union_enum_representative.js:39:2
@@ -135,7 +135,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:47:2
 
-Cannot cast `strs` to number because in at least one member of union type [1]: `"a"` [2] is incompatible with
+Cannot cast `strs` to number because in at least one member of `"a" | "b" | "c"` [1]: `"a"` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    union_enum_representative.js:47:2
@@ -174,7 +174,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:63:1
 
-Cannot call `codes` because in at least one member of union type [1]: `10` [2] is not a function. [not-a-function]
+Cannot call `codes` because in at least one member of `10 | 20 | 30` [1]: `10` [2] is not a function. [not-a-function]
 
    union_enum_representative.js:63:1
    63| codes(); // error: number is not callable, via catch-all
