@@ -20,7 +20,7 @@ Error --------------------------------------------------------------------------
 
 Cannot return `true` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type-guard]
 
-The type of `value` [3] at the return expression `true` [4] needs to be compatible with the guard type string [2]. See
+The type of `value` [3] at the return expression `true` [4] needs to be compatible with the guard type `string` [2]. See
 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    flow.js:2:10
@@ -44,8 +44,8 @@ Error --------------------------------------------------------------------------
 Cannot return from assertion function at the end of its body because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type-guard]
 
-The type of `value` [3] needs to be compatible with the asserted type string [2] wherever the function returns normally.
-Throw an error or call another assertion function on every path where it is not.
+The type of `value` [3] needs to be compatible with the asserted type `string` [2] wherever the function returns
+normally. Throw an error or call another assertion function on every path where it is not.
 
    flow.js:5:37
    5| function assertion(value: unknown): asserts value is string {} // ERROR
@@ -225,7 +225,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.ts:76:53
 
-The type predicate string [1] needs to be compatible with parameter `value`'s type: `string` [1] is incompatible with
+The type predicate `string` [1] needs to be compatible with parameter `value`'s type: `string` [1] is incompatible with
 `number` [2]. [incompatible-type-guard]
 
    test.ts:76:53
@@ -240,7 +240,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.ts:80:65
 
-The type predicate string [1] needs to be compatible with parameter `value`'s type: `string` [1] is incompatible with
+The type predicate `string` [1] needs to be compatible with parameter `value`'s type: `string` [1] is incompatible with
 `number` [2]. [incompatible-type-guard]
 
    test.ts:80:65
