@@ -59,7 +59,8 @@ Cannot use if statements with in `declare namespace`. The statement will be igno
 
 Error ------------------------------------------------------------------------------------------------- exported.js:12:3
 
-Cannot use value export statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
+Cannot use variable declaration statements with in `declare namespace`. The statement will be ignored.
+[unsupported-syntax]
 
    12|   export const CONSTANT = 'foo'; // unsupported
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

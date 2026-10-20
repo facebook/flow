@@ -1,145 +1,418 @@
 {
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":1}},
-  "range":[0,109],
-  "body":[
+  "body": [
     {
-      "type":"DeclareModule",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":1}},
-      "range":[0,109],
-      "id":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":20}},
-        "range":[15,20],
-        "value":"foo",
-        "raw":"\"foo\""
-      },
-      "body":{
-        "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":7,"column":1}},
-        "range":[21,109],
-        "body":[
+      "body": {
+        "body": [
           {
-            "type":"DeclareNamespace",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":5,"column":3}},
-            "range":[25,79],
-            "global":true,
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":8}},
-              "range":[25,31],
-              "name":"global",
-              "typeAnnotation":null,
-              "optional":false
-            },
-            "body":{
-              "type":"BlockStatement",
-              "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":5,"column":3}},
-              "range":[32,79],
-              "body":[
+            "body": {
+              "body": [
                 {
-                  "type":"InterfaceDeclaration",
-                  "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":20}},
-                  "range":[38,54],
-                  "id":{
-                    "type":"Identifier",
-                    "loc":{"source":null,"start":{"line":3,"column":14},"end":{"line":3,"column":17}},
-                    "range":[48,51],
-                    "name":"Foo",
-                    "typeAnnotation":null,
-                    "optional":false
-                  },
-                  "typeParameters":null,
-                  "body":{
-                    "type":"ObjectTypeAnnotation",
-                    "loc":{"source":null,"start":{"line":3,"column":18},"end":{"line":3,"column":20}},
-                    "range":[52,54],
-                    "exact":false,
-                    "properties":[],
-                    "indexers":[],
-                    "callProperties":[],
-                    "internalSlots":[]
-                  },
-                  "extends":[]
-                },
-                {
-                  "type":"VariableDeclaration",
-                  "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":20}},
-                  "range":[59,75],
-                  "declarations":[
-                    {
-                      "type":"VariableDeclarator",
-                      "loc":{"source":null,"start":{"line":4,"column":8},"end":{"line":4,"column":19}},
-                      "range":[63,74],
-                      "id":{
-                        "type":"Identifier",
-                        "loc":{"source":null,"start":{"line":4,"column":8},"end":{"line":4,"column":19}},
-                        "range":[63,74],
-                        "name":"bar",
-                        "typeAnnotation":{
-                          "type":"TypeAnnotation",
-                          "loc":{"source":null,"start":{"line":4,"column":11},"end":{"line":4,"column":19}},
-                          "range":[66,74],
-                          "typeAnnotation":{
-                            "type":"StringTypeAnnotation",
-                            "loc":{"source":null,"start":{"line":4,"column":13},"end":{"line":4,"column":19}},
-                            "range":[68,74]
-                          }
-                        },
-                        "optional":false
+                  "body": {
+                    "callProperties": [],
+                    "exact": false,
+                    "indexers": [],
+                    "internalSlots": [],
+                    "loc": {
+                      "end": {
+                        "column": 20,
+                        "line": 3
                       },
-                      "init":null
-                    }
-                  ],
-                  "kind":"var"
-                }
-              ]
-            },
-            "implicitDeclare":true,
-            "keyword":"namespace"
-          },
-          {
-            "type":"ExportNamedDeclaration",
-            "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":27}},
-            "range":[82,107],
-            "declaration":{
-              "type":"VariableDeclaration",
-              "loc":{"source":null,"start":{"line":6,"column":9},"end":{"line":6,"column":27}},
-              "range":[89,107],
-              "declarations":[
-                {
-                  "type":"VariableDeclarator",
-                  "loc":{"source":null,"start":{"line":6,"column":15},"end":{"line":6,"column":26}},
-                  "range":[95,106],
-                  "id":{
-                    "type":"Identifier",
-                    "loc":{"source":null,"start":{"line":6,"column":15},"end":{"line":6,"column":26}},
-                    "range":[95,106],
-                    "name":"baz",
-                    "typeAnnotation":{
-                      "type":"TypeAnnotation",
-                      "loc":{"source":null,"start":{"line":6,"column":18},"end":{"line":6,"column":26}},
-                      "range":[98,106],
-                      "typeAnnotation":{
-                        "type":"NumberTypeAnnotation",
-                        "loc":{"source":null,"start":{"line":6,"column":20},"end":{"line":6,"column":26}},
-                        "range":[100,106]
+                      "source": null,
+                      "start": {
+                        "column": 18,
+                        "line": 3
                       }
                     },
-                    "optional":false
+                    "properties": [],
+                    "range": [
+                      52,
+                      54
+                    ],
+                    "type": "ObjectTypeAnnotation"
                   },
-                  "init":null
+                  "extends": [],
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 17,
+                        "line": 3
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 14,
+                        "line": 3
+                      }
+                    },
+                    "name": "Foo",
+                    "optional": false,
+                    "range": [
+                      48,
+                      51
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 20,
+                      "line": 3
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 4,
+                      "line": 3
+                    }
+                  },
+                  "range": [
+                    38,
+                    54
+                  ],
+                  "type": "InterfaceDeclaration",
+                  "typeParameters": null
+                },
+                {
+                  "declarations": [
+                    {
+                      "id": {
+                        "loc": {
+                          "end": {
+                            "column": 19,
+                            "line": 4
+                          },
+                          "source": null,
+                          "start": {
+                            "column": 8,
+                            "line": 4
+                          }
+                        },
+                        "name": "bar",
+                        "optional": false,
+                        "range": [
+                          63,
+                          74
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": {
+                          "loc": {
+                            "end": {
+                              "column": 19,
+                              "line": 4
+                            },
+                            "source": null,
+                            "start": {
+                              "column": 11,
+                              "line": 4
+                            }
+                          },
+                          "range": [
+                            66,
+                            74
+                          ],
+                          "type": "TypeAnnotation",
+                          "typeAnnotation": {
+                            "loc": {
+                              "end": {
+                                "column": 19,
+                                "line": 4
+                              },
+                              "source": null,
+                              "start": {
+                                "column": 13,
+                                "line": 4
+                              }
+                            },
+                            "range": [
+                              68,
+                              74
+                            ],
+                            "type": "StringTypeAnnotation"
+                          }
+                        }
+                      },
+                      "init": null,
+                      "loc": {
+                        "end": {
+                          "column": 19,
+                          "line": 4
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 8,
+                          "line": 4
+                        }
+                      },
+                      "range": [
+                        63,
+                        74
+                      ],
+                      "type": "VariableDeclarator"
+                    }
+                  ],
+                  "kind": "var",
+                  "loc": {
+                    "end": {
+                      "column": 20,
+                      "line": 4
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 4,
+                      "line": 4
+                    }
+                  },
+                  "range": [
+                    59,
+                    75
+                  ],
+                  "type": "VariableDeclaration"
                 }
               ],
-              "kind":"const"
+              "loc": {
+                "end": {
+                  "column": 3,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 9,
+                  "line": 2
+                }
+              },
+              "range": [
+                32,
+                79
+              ],
+              "type": "BlockStatement"
             },
-            "specifiers":[],
-            "source":null,
-            "exportKind":"value"
+            "global": true,
+            "id": {
+              "loc": {
+                "end": {
+                  "column": 8,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 2
+                }
+              },
+              "name": "global",
+              "optional": false,
+              "range": [
+                25,
+                31
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "implicitDeclare": true,
+            "keyword": "namespace",
+            "loc": {
+              "end": {
+                "column": 3,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 2
+              }
+            },
+            "range": [
+              25,
+              79
+            ],
+            "type": "DeclareNamespace"
+          },
+          {
+            "declaration": {
+              "declarations": [
+                {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 26,
+                        "line": 6
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 15,
+                        "line": 6
+                      }
+                    },
+                    "name": "baz",
+                    "optional": false,
+                    "range": [
+                      95,
+                      106
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": {
+                      "loc": {
+                        "end": {
+                          "column": 26,
+                          "line": 6
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 18,
+                          "line": 6
+                        }
+                      },
+                      "range": [
+                        98,
+                        106
+                      ],
+                      "type": "TypeAnnotation",
+                      "typeAnnotation": {
+                        "loc": {
+                          "end": {
+                            "column": 26,
+                            "line": 6
+                          },
+                          "source": null,
+                          "start": {
+                            "column": 20,
+                            "line": 6
+                          }
+                        },
+                        "range": [
+                          100,
+                          106
+                        ],
+                        "type": "NumberTypeAnnotation"
+                      }
+                    }
+                  },
+                  "init": null,
+                  "loc": {
+                    "end": {
+                      "column": 26,
+                      "line": 6
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 15,
+                      "line": 6
+                    }
+                  },
+                  "range": [
+                    95,
+                    106
+                  ],
+                  "type": "VariableDeclarator"
+                }
+              ],
+              "kind": "const",
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 9,
+                  "line": 6
+                }
+              },
+              "range": [
+                89,
+                107
+              ],
+              "type": "DeclareVariable"
+            },
+            "default": false,
+            "loc": {
+              "end": {
+                "column": 27,
+                "line": 6
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 6
+              }
+            },
+            "range": [
+              82,
+              107
+            ],
+            "source": null,
+            "specifiers": [],
+            "type": "DeclareExportDeclaration"
           }
-        ]
-      }
+        ],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 7
+          },
+          "source": null,
+          "start": {
+            "column": 21,
+            "line": 1
+          }
+        },
+        "range": [
+          21,
+          109
+        ],
+        "type": "BlockStatement"
+      },
+      "id": {
+        "loc": {
+          "end": {
+            "column": 20,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 1
+          }
+        },
+        "range": [
+          15,
+          20
+        ],
+        "raw": "\"foo\"",
+        "type": "Literal",
+        "value": "foo"
+      },
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 7
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        109
+      ],
+      "type": "DeclareModule"
     }
   ],
-  "comments":[]
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 1,
+      "line": 7
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    109
+  ],
+  "type": "Program"
 }

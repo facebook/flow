@@ -14,6 +14,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use crate::ast::Comment;
 use crate::ast::Identifier;
 use crate::ast::StringLiteral;
+use crate::ast::Syntax;
 use crate::ast::VariableKind;
 use crate::ast::class;
 use crate::ast::expression;
@@ -2756,6 +2757,76 @@ fn import_equals_declaration_with_id(
     }))
 }
 
+fn export_declaration_statement(
+    stmt: statement::Statement<Loc, Loc>,
+    comments: Option<Syntax<Loc, ()>>,
+    ambient: bool,
+) -> StatementInner<Loc, Loc> {
+    use statement::declare_export_declaration::Declaration;
+
+    let declaration = match stmt.deref() {
+        StatementInner::VariableDeclaration { loc, inner }
+            if ambient && ast_utils::is_ambient_variable_declaration(inner) =>
+        {
+            Some(Declaration::Variable {
+                loc: loc.dupe(),
+                declaration: Arc::new(statement::DeclareVariable {
+                    kind: inner.kind,
+                    declarations: inner.declarations.dupe(),
+                    comments: inner.comments.clone(),
+                }),
+            })
+        }
+        StatementInner::DeclareVariable { loc, inner } => Some(Declaration::Variable {
+            loc: loc.dupe(),
+            declaration: inner.dupe(),
+        }),
+        StatementInner::DeclareClass { loc, inner } => Some(Declaration::Class {
+            loc: loc.dupe(),
+            declaration: inner.dupe(),
+        }),
+        StatementInner::DeclareFunction { loc, inner } => Some(Declaration::Function {
+            loc: loc.dupe(),
+            declaration: inner.dupe(),
+        }),
+        StatementInner::ComponentDeclaration { loc, inner } if inner.body.is_none() => {
+            Some(Declaration::Component {
+                loc: loc.dupe(),
+                declaration: Arc::new(statement::DeclareComponent {
+                    id: inner.id.dupe(),
+                    tparams: inner.tparams.clone(),
+                    params: inner.params.clone(),
+                    renders: inner.renders.clone(),
+                    comments: inner.comments.clone(),
+                }),
+            })
+        }
+        _ => None,
+    };
+    match declaration {
+        Some(declaration) => StatementInner::DeclareExportDeclaration {
+            loc: LOC_NONE,
+            inner: Arc::new(statement::DeclareExportDeclaration {
+                default: None,
+                declaration: Some(declaration),
+                specifiers: None,
+                source: None,
+                comments,
+            }),
+        },
+        None => StatementInner::ExportNamedDeclaration {
+            loc: LOC_NONE,
+            inner: Arc::new(statement::ExportNamedDeclaration {
+                declaration: Some(stmt),
+                specifiers: None,
+                source: None,
+                export_kind: statement::ExportKind::ExportValue,
+                comments,
+            }),
+        },
+    }
+}
+
 fn export_declaration(
     env: &mut ParserEnv,
     decorators: Vec<class::Decorator<Loc, Loc>>,
@@ -3146,16 +3217,11 @@ fn export_declaration(
             TokenKind::TLet | TokenKind::TConst | TokenKind::TVar => {
                 with_loc(Some(start_loc), env, |env| {
                     let stmt = parse_statement_list_item(env, decorators.clone())?;
-                    Ok(StatementInner::ExportNamedDeclaration {
-                        loc: LOC_NONE,
-                        inner: Arc::new(statement::ExportNamedDeclaration {
-                            declaration: Some(stmt),
-                            specifiers: None,
-                            source: None,
-                            export_kind: statement::ExportKind::ExportValue,
-                            comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
-                        }),
-                    })
+                    Ok(export_declaration_statement(
+                        stmt,
+                        ast_utils::mk_comments_opt(Some(leading.into()), None),
+                        in_ambient_context,
+                    ))
                 })
                 .map(|(loc, mut inner)| {
                     *inner.loc_mut() = loc;
@@ -3383,120 +3449,14 @@ fn export_declaration(
                         *inner.loc_mut() = loc;
                         statement::Statement::new(inner)
                     })
-                } else if peek::is_class(env) {
+                } else if peek::is_class(env) || peek::is_function(env) || peek::is_hook(env) || peek::is_component(env) {
                     with_loc(Some(start_loc), env, |env| {
-                        let stmt = object_parser::class_declaration(env, decorators)?;
-                        Ok(StatementInner::ExportNamedDeclaration {
-                            loc: LOC_NONE,
-                            inner: Arc::new(statement::ExportNamedDeclaration {
-                                declaration: Some(stmt),
-                                specifiers: None,
-                                source: None,
-                                export_kind: statement::ExportKind::ExportValue,
-                                comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
-                            }),
-                        })
-                    })
-                    .map(|(loc, mut inner)| {
-                        *inner.loc_mut() = loc;
-                        statement::Statement::new(inner)
-                    })
-                } else if peek::is_function(env) || peek::is_hook(env) {
-                    with_loc(Some(start_loc), env, |env| {
-                        env.error_on_decorators(&decorators)?;
-                        let stmt = declaration_parser::parse_function(env)?;
-                        // If function is implicitly a declare function, produce a DeclareExport
-                        match &*stmt {
-                            StatementInner::DeclareFunction { loc: fn_loc, inner: decl_func } => {
-                                Ok(StatementInner::DeclareExportDeclaration {
-                                    loc: LOC_NONE,
-                                    inner: Arc::new(statement::DeclareExportDeclaration {
-                                        default: None,
-                                        declaration: Some(
-                                            statement::declare_export_declaration::Declaration::Function {
-                                                loc: fn_loc.dupe(),
-                                                declaration: decl_func.dupe(),
-                                            },
-                                        ),
-                                        specifiers: None,
-                                        source: None,
-                                        comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
-                                    }),
-                                })
-                            }
-                            _ => {
-                                Ok(StatementInner::ExportNamedDeclaration {
-                                    loc: LOC_NONE,
-                                    inner: Arc::new(statement::ExportNamedDeclaration {
-                                        declaration: Some(stmt),
-                                        specifiers: None,
-                                        source: None,
-                                        export_kind: statement::ExportKind::ExportValue,
-                                        comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
-                                    }),
-                                })
-                            }
-                        }
-                    })
-                    .map(|(loc, mut inner)| {
-                        *inner.loc_mut() = loc;
-                        statement::Statement::new(inner)
-                    })
-                } else if peek::is_component(env) {
-                    with_loc(Some(start_loc), env, |env| {
-                        let stmt = declaration_parser::parse_component(env)?;
-                        // If component is implicitly a declare component, produce a DeclareExport
-                        match &*stmt {
-                            StatementInner::ComponentDeclaration {
-                                loc: comp_loc,
-                                inner,
-                            } if inner.body.is_none() => {
-                                let statement::ComponentDeclaration {
-                                    body: _,
-                                    id,
-                                    tparams,
-                                    params,
-                                    renders,
-                                    comments,
-                                    sig_loc: _,
-                                    async_: _,
-                                } = (**inner).clone();
-                                let decl_comp = statement::DeclareComponent {
-                                    id,
-                                    tparams,
-                                    params,
-                                    renders,
-                                    comments,
-                                };
-                                Ok(StatementInner::DeclareExportDeclaration {
-                                    loc: LOC_NONE,
-                                    inner: Arc::new(statement::DeclareExportDeclaration {
-                                        default: None,
-                                        declaration: Some(
-                                            statement::declare_export_declaration::Declaration::Component {
-                                                loc: comp_loc.dupe(),
-                                                declaration: Arc::new(decl_comp),
-                                            },
-                                        ),
-                                        specifiers: None,
-                                        source: None,
-                                        comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
-                                    }),
-                                })
-                            }
-                            _ => {
-                                Ok(StatementInner::ExportNamedDeclaration {
-                                    loc: LOC_NONE,
-                                    inner: Arc::new(statement::ExportNamedDeclaration {
-                                        declaration: Some(stmt),
-                                        specifiers: None,
-                                        source: None,
-                                        export_kind: statement::ExportKind::ExportValue,
-                                        comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
-                                    }),
-                                })
-                            }
-                        }
+                        let stmt = parse_statement_list_item(env, decorators)?;
+                        Ok(export_declaration_statement(
+                            stmt,
+                            ast_utils::mk_comments_opt(Some(leading.into()), None),
+                            in_ambient_context,
+                        ))
                     })
                     .map(|(loc, mut inner)| {
                         *inner.loc_mut() = loc;

@@ -141,7 +141,7 @@ Cannot use value export statements in a library file. The statement will be igno
 
 Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:4:3
 
-Cannot use value export statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
+Cannot use variable declaration statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
 
    4|   export const foo = ''; // error
         ^^^^^^^^^^^^^^^^^^^^^^
@@ -382,7 +382,7 @@ Cannot use value export statements in a library file. The statement will be igno
 
 Error ------------------------------------------------------------------------------- libs/unsupported-statements.js:4:3
 
-Cannot use value export statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
+Cannot use variable declaration statements with in `declare module`. The statement will be ignored. [unsupported-syntax]
 
    4|   export const foo = ''; // error
         ^^^^^^^^^^^^^^^^^^^^^^

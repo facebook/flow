@@ -633,6 +633,15 @@ pub enum DeclarationContext {
     DeclareGlobal,
 }
 
+pub fn is_ambient_variable_declaration<M: Dupe, T: Dupe>(
+    declaration: &statement::VariableDeclaration<M, T>,
+) -> bool {
+    declaration
+        .declarations
+        .iter()
+        .all(|decl| decl.init.is_none() && pattern_has_type_annotation(&decl.id))
+}
+
 pub fn acceptable_statement_in_declaration_context<M: Dupe, T: Dupe>(
     context: DeclarationContext,
     x: &statement::Statement<M, T>,
@@ -640,7 +649,28 @@ pub fn acceptable_statement_in_declaration_context<M: Dupe, T: Dupe>(
     match x.deref() {
         statement::StatementInner::Block { .. } => Err("block"),
         statement::StatementInner::Break { .. } => Err("break"),
-        statement::StatementInner::ClassDeclaration { .. } => Err("class declaration"),
+        statement::StatementInner::ClassDeclaration { inner, .. } => {
+            use class::BodyElement;
+            let is_ambient = inner.class_decorators.is_empty()
+                && inner.body.body.iter().all(|element| match element {
+                    BodyElement::Method(_) | BodyElement::StaticBlock(_) => false,
+                    BodyElement::Property(property) => {
+                        !matches!(property.value, class::property::Value::Initialized(_))
+                    }
+                    BodyElement::PrivateField(field) => {
+                        !matches!(field.value, class::property::Value::Initialized(_))
+                    }
+                    BodyElement::DeclareMethod(_)
+                    | BodyElement::AbstractMethod(_)
+                    | BodyElement::AbstractProperty(_)
+                    | BodyElement::IndexSignature(_) => true,
+                });
+            if is_ambient {
+                Ok(())
+            } else {
+                Err("class declaration")
+            }
+        }
         statement::StatementInner::ComponentDeclaration { inner, .. } if inner.body.is_none() => {
             Ok(())
         }
@@ -651,10 +681,22 @@ pub fn acceptable_statement_in_declaration_context<M: Dupe, T: Dupe>(
         statement::StatementInner::ExportDefaultDeclaration { .. } => Err("export default"),
         statement::StatementInner::ExportNamedDeclaration { inner, .. } => match context {
             DeclarationContext::DeclareGlobal => Err("export declaration"),
-            _ => match inner.export_kind {
-                statement::ExportKind::ExportValue => Err("value export"),
-                statement::ExportKind::ExportType => Ok(()),
-            },
+            _ => {
+                if let Some(declaration) = &inner.declaration {
+                    acceptable_statement_in_declaration_context(context, declaration)
+                } else if context == DeclarationContext::DeclareNamespace && inner.source.is_none()
+                    || inner.export_kind == statement::ExportKind::ExportType
+                    || matches!(
+                        &inner.specifiers,
+                        Some(statement::export_named_declaration::Specifier::ExportSpecifiers(specs))
+                            if !export_specifiers_has_value_export(inner.export_kind, specs)
+                    )
+                {
+                    Ok(())
+                } else {
+                    Err("value export")
+                }
+            }
         },
         statement::StatementInner::Expression { .. } => Err("expression"),
         statement::StatementInner::For { .. } => Err("for"),
@@ -670,11 +712,7 @@ pub fn acceptable_statement_in_declaration_context<M: Dupe, T: Dupe>(
         statement::StatementInner::Throw { .. } => Err("throw"),
         statement::StatementInner::Try { .. } => Err("try"),
         statement::StatementInner::VariableDeclaration { inner, .. } => {
-            // Allow variable declarations if all have type annotations and no initializers (ambient)
-            let is_ambient_declarator = |decl: &statement::variable::Declarator<M, T>| {
-                decl.init.is_none() && pattern_has_type_annotation(&decl.id)
-            };
-            if inner.declarations.iter().all(is_ambient_declarator) {
+            if is_ambient_variable_declaration(inner) {
                 Ok(())
             } else {
                 Err("variable declaration")
@@ -786,12 +824,16 @@ pub fn is_type_only_declaration_statement<M: Dupe, T: Dupe>(
             .body
             .iter()
             .all(is_type_only_declaration_statement),
-        statement::StatementInner::ExportNamedDeclaration { inner, .. } => {
-            match inner.export_kind {
-                statement::ExportKind::ExportValue => false,
-                statement::ExportKind::ExportType => true,
-            }
-        }
+        statement::StatementInner::ExportNamedDeclaration { inner, .. } => match &inner.declaration
+        {
+            Some(declaration) => is_type_only_declaration_statement(declaration),
+            None => match &inner.specifiers {
+                Some(statement::export_named_declaration::Specifier::ExportSpecifiers(specs)) => {
+                    !export_specifiers_has_value_export(inner.export_kind, specs)
+                }
+                _ => inner.export_kind == statement::ExportKind::ExportType,
+            },
+        },
         statement::StatementInner::Block { .. }
         | statement::StatementInner::Break { .. }
         | statement::StatementInner::ClassDeclaration { .. }
