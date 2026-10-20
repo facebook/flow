@@ -316,6 +316,9 @@ pub(super) fn mk_type_destructor<'cx>(
     let conditional_has_implicit_instantiation_tvar = matches!(d, Destructor::ConditionalType(_))
         && frozen_implicit_instantiation_tvar(cx, &env.solving_implicit_instantiation(), t)
             .is_some();
+    if !conditional_has_implicit_instantiation_tvar && let Some(cached_t) = evaluated.get(&id) {
+        return Ok(cached_t.dupe());
+    }
     if id.from_type_sig()
         && !conditional_has_implicit_instantiation_tvar
         && type_subst::free_var_finder(
@@ -333,106 +336,91 @@ pub(super) fn mk_type_destructor<'cx>(
         )
         .is_empty()
     {
-        let result = match evaluated.get(&id) {
-            Some(cached_t) => cached_t.dupe(),
-            None => {
-                let use_op_clone = use_op.dupe();
-                let reason_clone = reason.dupe();
-                let d_clone = d.clone();
-                let trace = DepthTrace::dummy_trace();
-                let evaluation_error = Rc::new(RefCell::new(None));
-                let evaluation_error_for_map = Rc::clone(&evaluation_error);
-                let eval_t_fallback = Type::new(TypeInner::EvalT {
-                    type_: t.dupe(),
-                    defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
-                        use_op.dupe(),
-                        reason.dupe(),
-                        Rc::new(d.clone()),
-                    )),
-                    id: id.dupe(),
-                });
-                let result = flow_js_utils::map_on_resolved_type(
+        let use_op_clone = use_op.dupe();
+        let reason_clone = reason.dupe();
+        let d_clone = d.clone();
+        let trace = DepthTrace::dummy_trace();
+        let evaluation_error = Rc::new(RefCell::new(None));
+        let evaluation_error_for_map = Rc::clone(&evaluation_error);
+        let eval_t_fallback = Type::new(TypeInner::EvalT {
+            type_: t.dupe(),
+            defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+                use_op.dupe(),
+                reason.dupe(),
+                Rc::new(d.clone()),
+            )),
+            id: id.dupe(),
+        });
+        let result = flow_js_utils::map_on_resolved_type(
+            cx,
+            reason.dupe(),
+            t.dupe(),
+            move |cx, t| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                let env = &FlowJsEnv::entry();
+                match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                     cx,
-                    reason.dupe(),
-                    t.dupe(),
-                    move |cx, t| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-                        let env = &FlowJsEnv::entry();
-                        match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                    reason_clone.dupe(),
+                    |cx, tvar_reason, tvar_id| {
+                        let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                        let errors = cx.errors();
+                        let cache_snapshot = cx.take_cache_snapshot();
+                        let result = evaluate_type_destructor(
                             cx,
-                            reason_clone.dupe(),
-                            |cx, tvar_reason, tvar_id| {
-                                let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                                let errors = cx.errors();
-                                let cache_snapshot = cx.take_cache_snapshot();
-                                let result = evaluate_type_destructor(
-                                    cx,
-                                    env,
-                                    trace,
-                                    use_op_clone.dupe(),
-                                    &reason_clone,
-                                    &t,
-                                    &d_clone,
-                                    &tvar,
-                                );
-                                cx.restore_cache_snapshot(cache_snapshot);
-                                cx.reset_errors(errors);
-                                result
-                            },
-                        ) {
-                            Ok(result) => Ok(result),
-                            Err(err) => {
-                                *evaluation_error_for_map.borrow_mut() = Some(err);
-                                Ok(eval_t_fallback.dupe())
-                            }
-                        }
+                            env,
+                            trace,
+                            use_op_clone.dupe(),
+                            &reason_clone,
+                            &t,
+                            &d_clone,
+                            &tvar,
+                        );
+                        cx.restore_cache_snapshot(cache_snapshot);
+                        cx.reset_errors(errors);
+                        result
                     },
-                );
-                if let Some(err) = evaluation_error.borrow_mut().take() {
-                    return Err(err);
+                ) {
+                    Ok(result) => Ok(result),
+                    Err(err) => {
+                        *evaluation_error_for_map.borrow_mut() = Some(err);
+                        Ok(eval_t_fallback.dupe())
+                    }
                 }
-                result
-            }
-        };
+            },
+        );
+        if let Some(err) = evaluation_error.borrow_mut().take() {
+            return Err(err);
+        }
         let mut evaluated = cx.evaluated();
         evaluated.insert(id, result.dupe());
         cx.set_evaluated(evaluated);
         Ok(result)
     } else {
-        let cached = (!conditional_has_implicit_instantiation_tvar)
-            .then(|| evaluated.get(&id))
-            .flatten();
-        let result = match cached {
-            Some(cached_t) => cached_t.dupe(),
-            None => {
-                let use_op_clone = use_op.dupe();
-                let reason_clone = reason.dupe();
-                let t_clone = t.dupe();
-                let d_clone = d.clone();
-                let id_clone = id.dupe();
-                flow_typing_tvar::mk_no_wrap_where(
+        let use_op_clone = use_op.dupe();
+        let reason_clone = reason.dupe();
+        let t_clone = t.dupe();
+        let d_clone = d.clone();
+        let id_clone = id.dupe();
+        let result = flow_typing_tvar::mk_no_wrap_where(
+            cx,
+            reason.dupe(),
+            move |cx, tvar_reason, tvar_id| {
+                let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                let mut evaluated = cx.evaluated();
+                evaluated.insert(id_clone, Type::new(TypeInner::OpenT(tvar.dupe())));
+                cx.set_evaluated(evaluated);
+                evaluate_type_destructor(
                     cx,
-                    reason.dupe(),
-                    move |cx, tvar_reason, tvar_id| {
-                        let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                        let mut evaluated = cx.evaluated();
-                        evaluated.insert(id_clone, Type::new(TypeInner::OpenT(tvar.dupe())));
-                        cx.set_evaluated(evaluated);
-                        evaluate_type_destructor(
-                            cx,
-                            env,
-                            trace,
-                            use_op_clone,
-                            &reason_clone,
-                            &t_clone,
-                            &d_clone,
-                            &tvar,
-                        )
-                    },
-                )?
-            }
-        };
-        if cached.is_none()
-            && !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, t)
+                    env,
+                    trace,
+                    use_op_clone,
+                    &reason_clone,
+                    &t_clone,
+                    &d_clone,
+                    &tvar,
+                )
+            },
+        )?;
+        if !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, t)
             && !flow_js_utils::tvar_visitors::has_unresolved_tvars_in_destructors(cx, d)
         {
             crate::tvar_resolver::resolve(
