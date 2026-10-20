@@ -151,6 +151,36 @@ struct PredicateResultCollector {
     disjoint_fallback: TypeCollector,
 }
 
+// The concretized right-hand sides of the binary tests in one predicate run. A right-hand side
+// does not depend on the member of the refined type being tested, so it is concretized once
+// instead of once per member.
+#[derive(Default)]
+struct RhsConcretizations(RefCell<Vec<(Type, PredicateConcretetizerVariant, Rc<[Type]>)>>);
+
+impl RhsConcretizations {
+    fn get_or_concretize<'cx>(
+        &self,
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        variant: PredicateConcretetizerVariant,
+        r: &Type,
+    ) -> Result<Rc<[Type]>, FlowJsException> {
+        if let Some((_, _, ts)) = self
+            .0
+            .borrow()
+            .iter()
+            .find(|(t, v, _)| t.ptr_eq(r) && *v == variant)
+        {
+            return Ok(ts.dupe());
+        }
+        let ts: Rc<[Type]> =
+            FlowJs::possible_concrete_types_for_predicate(variant, cx, env, reason_of_t(r), r)?
+                .into();
+        self.0.borrow_mut().push((r.dupe(), variant, ts.dupe()));
+        Ok(ts)
+    }
+}
+
 // Simple wrapper to protect against using non-concretized types in type-guard
 // filtering operations (see `intersect` below).
 struct ConcretizedType(Type);
@@ -356,8 +386,8 @@ fn concretize_binary_rhs_and_run_binary_predicate<'cx>(
     sense: bool,
     b: &BinaryTest,
     result_collector: &PredicateResultCollector,
+    rhs_concretizations: &RhsConcretizations,
 ) -> Result<(), FlowJsException> {
-    let reason = reason_of_t(r);
     let variant = match b {
         BinaryTest::InstanceofTest => {
             PredicateConcretetizerVariant::ConcretizeRHSForInstanceOfPredicateTest
@@ -367,7 +397,7 @@ fn concretize_binary_rhs_and_run_binary_predicate<'cx>(
         }
         BinaryTest::EqTest => PredicateConcretetizerVariant::ConcretizeRHSForLiteralPredicateTest,
     };
-    let ts = FlowJs::possible_concrete_types_for_predicate(variant, cx, env, reason, r)?;
+    let ts = rhs_concretizations.get_or_concretize(cx, env, variant, r)?;
     for r in ts.iter() {
         binary_predicate(cx, env, trace, sense, b, l, r, result_collector)?;
     }
@@ -385,6 +415,7 @@ fn predicate_no_concretization<'cx>(
     result_collector: &PredicateResultCollector,
     l: &Type,
     p: &Predicate,
+    rhs_concretizations: &RhsConcretizations,
 ) -> Result<(), FlowJsException> {
     match p.deref() {
         // deconstruction of &&
@@ -405,7 +436,17 @@ fn predicate_no_concretization<'cx>(
                 l,
                 concretization_variant_of_predicate(p1),
                 &intermediate_result_collector,
-                &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p1_clone),
+                &|cx, trace, rc, l| {
+                    predicate_no_concretization(
+                        cx,
+                        env,
+                        trace,
+                        rc,
+                        l,
+                        &p1_clone,
+                        rhs_concretizations,
+                    )
+                },
             )?;
             if *changed.borrow() {
                 report_changes_to_input(result_collector);
@@ -421,7 +462,15 @@ fn predicate_no_concretization<'cx>(
                     concretization_variant_of_predicate(p2),
                     result_collector,
                     &|cx, trace, rc, l| {
-                        predicate_no_concretization(cx, env, trace, rc, l, &p2_clone)
+                        predicate_no_concretization(
+                            cx,
+                            env,
+                            trace,
+                            rc,
+                            l,
+                            &p2_clone,
+                            rhs_concretizations,
+                        )
                     },
                 )?;
             }
@@ -437,7 +486,17 @@ fn predicate_no_concretization<'cx>(
                 l,
                 concretization_variant_of_predicate(p1),
                 result_collector,
-                &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p1_clone),
+                &|cx, trace, rc, l| {
+                    predicate_no_concretization(
+                        cx,
+                        env,
+                        trace,
+                        rc,
+                        l,
+                        &p1_clone,
+                        rhs_concretizations,
+                    )
+                },
             )?;
             let p2_clone = p2.dupe();
             concretize_and_run_predicate(
@@ -447,7 +506,17 @@ fn predicate_no_concretization<'cx>(
                 l,
                 concretization_variant_of_predicate(p2),
                 result_collector,
-                &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p2_clone),
+                &|cx, trace, rc, l| {
+                    predicate_no_concretization(
+                        cx,
+                        env,
+                        trace,
+                        rc,
+                        l,
+                        &p2_clone,
+                        rhs_concretizations,
+                    )
+                },
             )?;
             Ok(())
         }
@@ -461,6 +530,7 @@ fn predicate_no_concretization<'cx>(
             true,
             b,
             result_collector,
+            rhs_concretizations,
         ),
         PredicateInner::NotP(inner) => {
             match inner.deref() {
@@ -473,6 +543,7 @@ fn predicate_no_concretization<'cx>(
                     false,
                     b,
                     result_collector,
+                    rhs_concretizations,
                 ),
                 // typeof _ ~ "boolean"
                 PredicateInner::BoolP(_) => {
@@ -618,22 +689,44 @@ fn predicate_no_concretization<'cx>(
                     prop_non_void_test(cx, env, key, r, false, l, result_collector)
                 }
                 // classical logic i guess
-                PredicateInner::NotP(inner_p) => {
-                    predicate_no_concretization(cx, env, trace, result_collector, l, inner_p)
-                }
+                PredicateInner::NotP(inner_p) => predicate_no_concretization(
+                    cx,
+                    env,
+                    trace,
+                    result_collector,
+                    l,
+                    inner_p,
+                    rhs_concretizations,
+                ),
                 PredicateInner::AndP(p1, p2) => {
                     let de_morgan = Predicate::new(PredicateInner::OrP(
                         Predicate::new(PredicateInner::NotP(p1.dupe())),
                         Predicate::new(PredicateInner::NotP(p2.dupe())),
                     ));
-                    predicate_no_concretization(cx, env, trace, result_collector, l, &de_morgan)
+                    predicate_no_concretization(
+                        cx,
+                        env,
+                        trace,
+                        result_collector,
+                        l,
+                        &de_morgan,
+                        rhs_concretizations,
+                    )
                 }
                 PredicateInner::OrP(p1, p2) => {
                     let de_morgan = Predicate::new(PredicateInner::AndP(
                         Predicate::new(PredicateInner::NotP(p1.dupe())),
                         Predicate::new(PredicateInner::NotP(p2.dupe())),
                     ));
-                    predicate_no_concretization(cx, env, trace, result_collector, l, &de_morgan)
+                    predicate_no_concretization(
+                        cx,
+                        env,
+                        trace,
+                        result_collector,
+                        l,
+                        &de_morgan,
+                        rhs_concretizations,
+                    )
                 }
                 // Latent predicate
                 PredicateInner::LatentP(pred_funcall_info, idx) => {
@@ -3079,6 +3172,7 @@ fn run_predicate_track_changes_with_env<'cx>(
         disjoint_fallback: TypeCollector::create(),
     };
     let p_clone = p.dupe();
+    let rhs_concretizations = RhsConcretizations::default();
     flow_js_utils::flow_js_result_to_job_error(concretize_and_run_predicate(
         cx,
         env,
@@ -3086,7 +3180,9 @@ fn run_predicate_track_changes_with_env<'cx>(
         t,
         concretization_variant_of_predicate(p),
         &result_collector,
-        &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p_clone),
+        &|cx, trace, rc, l| {
+            predicate_no_concretization(cx, env, trace, rc, l, &p_clone, &rhs_concretizations)
+        },
     ))?;
     let collected: Vec<Type> = result_collector
         .collector
@@ -3148,6 +3244,7 @@ pub(super) fn collect_predicate_for_filtering_with_env<'cx>(
         disjoint_fallback: TypeCollector::create(),
     };
     let p_clone = p.dupe();
+    let rhs_concretizations = RhsConcretizations::default();
     flow_js_utils::flow_js_result_to_job_error(concretize_and_run_predicate(
         cx,
         env,
@@ -3155,7 +3252,9 @@ pub(super) fn collect_predicate_for_filtering_with_env<'cx>(
         t,
         concretization_variant_of_predicate(p),
         &result_collector,
-        &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p_clone),
+        &|cx, trace, rc, l| {
+            predicate_no_concretization(cx, env, trace, rc, l, &p_clone, &rhs_concretizations)
+        },
     ))?;
     Ok(result_collector.collector)
 }
