@@ -10,6 +10,7 @@
 
 'use strict';
 
+import {parse} from '../../__test_utils__/parse';
 import {SimpleTraverser} from '../../oxidized-src/traverse/SimpleTraverser';
 
 describe('SimpleTraverser', () => {
@@ -57,5 +58,41 @@ describe('SimpleTraverser', () => {
 
     expect(enteredNodes).toEqual([fakeAst, fakeAst.body[0], fakeAst.body[1]]);
     expect(exitedNodes).toEqual([fakeAst.body[0], fakeAst.body[1], fakeAst]);
+  });
+
+  it('traverses conditionally emitted node properties', () => {
+    const ast = parse(
+      `
+        export default function(): Foo;
+        declare class C { p: number = value; }
+      `,
+      {sourceFilename: 'definition.d.ts'},
+    );
+    const visitedIdentifiers = [];
+    SimpleTraverser.traverse(ast, {
+      enter(node) {
+        if (node.type === 'Identifier') {
+          visitedIdentifiers.push(node.name);
+        }
+      },
+      leave() {},
+    });
+
+    expect(visitedIdentifiers).toEqual(['Foo', 'C', 'p', 'value']);
+  });
+
+  it('traverses tagged-template type arguments', () => {
+    const ast = parse('tag<T>`${value}`;');
+    const visitedIdentifiers: Array<string> = [];
+    SimpleTraverser.traverse(ast, {
+      enter(node) {
+        if (node.type === 'Identifier') {
+          visitedIdentifiers.push(node.name);
+        }
+      },
+      leave() {},
+    });
+
+    expect(visitedIdentifiers).toEqual(['tag', 'T', 'value']);
   });
 });

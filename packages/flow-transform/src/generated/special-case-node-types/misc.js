@@ -65,6 +65,7 @@ export function ArrowFunctionExpression(props: {
   const node = detachedProps<ArrowFunctionExpressionType>(props.parent, {
     type: 'ArrowFunctionExpression',
     id: null,
+    generator: false,
     // $FlowExpectedError[incompatible-use]
     expression: props.body.type !== 'BlockStatement',
     params: props.params.map(n => asDetachedNode(n)),

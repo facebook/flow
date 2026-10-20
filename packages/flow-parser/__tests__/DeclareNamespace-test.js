@@ -56,7 +56,6 @@ describe('DeclareNamespace', () => {
                      "type": "VariableDeclarator",
                    },
                  ],
-                 "implicitDeclare": false,
                  "kind": "const",
                  "type": "DeclareVariable",
                },
@@ -70,7 +69,6 @@ describe('DeclareNamespace', () => {
              "type": "Identifier",
              "typeAnnotation": null,
            },
-           "implicitDeclare": false,
            "keyword": "namespace",
            "type": "DeclareNamespace",
          },
@@ -128,15 +126,16 @@ describe('DeclareNamespace', () => {
   });
 
   test('global namespace marker', () => {
-    expect(parse('declare global {}')).toMatchObject({
+    const ast = parse('declare global {}');
+    expect(ast).toMatchObject({
       body: [
         expect.objectContaining({
           type: 'DeclareNamespace',
           global: true,
-          implicitDeclare: false,
           keyword: 'namespace',
         }),
       ],
     });
+    expect(ast.body[0]).not.toHaveProperty('implicitDeclare');
   });
 });

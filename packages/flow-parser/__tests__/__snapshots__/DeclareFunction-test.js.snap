@@ -60,7 +60,6 @@ exports[`DeclareFunction explicit declare 1`] = `
           },
         },
       },
-      "implicitDeclare": false,
       "predicate": null,
       "type": "DeclareFunction",
     },

@@ -16,12 +16,17 @@ import {
   isClassMember,
   isConstructorTypeAnnotation,
   isDeclareClassExtendsCall,
+  isDeclareMethodDefinition,
   isExportAssignment,
+  isExportNamespaceSpecifier,
+  isExpression,
   isExternalModuleReference,
   isImportEqualsDeclaration,
   isImportType,
   isNamespaceExportDeclaration,
+  isNonNullExpression,
   isObjectTypePrivateField,
+  isParameterProperty,
   isSatisfiesExpression,
   isTemplateLiteralTypeAnnotation,
   isTupleTypeElement,
@@ -388,6 +393,57 @@ describe('TypeScript-compatible syntax', () => {
     }
 
     expect(namespace.declaration).toMatchObject({type: 'DeclareNamespace'});
+  });
+
+  test('non-null expressions', () => {
+    const ast = parse('value!;', {assertOperator: true});
+    const [statement] = ast.body;
+    if (statement.type !== 'ExpressionStatement') {
+      throw new Error('expected an expression statement');
+    }
+
+    expect(isNonNullExpression(statement.expression)).toBe(true);
+    expect(isExpression(statement.expression)).toBe(true);
+  });
+
+  test('parameter properties', () => {
+    const [declaration] = parse(
+      'class C { constructor(public value: number) {} }',
+      {sourceFilename: 'definition.d.ts'},
+    ).body;
+    if (declaration.type !== 'ClassDeclaration') {
+      throw new Error('expected a class declaration');
+    }
+
+    const constructor = declaration.body.body[0];
+    if (constructor.type !== 'MethodDefinition') {
+      throw new Error('expected a method definition');
+    }
+    expect(isParameterProperty(constructor.value.params[0])).toBe(true);
+  });
+
+  test('declare method definitions', () => {
+    const [declaration] = parse('class C { method(): void; }', {
+      sourceFilename: 'definition.d.ts',
+    }).body;
+    if (declaration.type !== 'ClassDeclaration') {
+      throw new Error('expected a class declaration');
+    }
+
+    const method = declaration.body.body[0];
+    expect(isDeclareMethodDefinition(method)).toBe(true);
+    expect(isClassMember(method)).toBe(true);
+  });
+
+  test('declare export namespace specifiers', () => {
+    const [declaration] = parse(
+      'declare export * as Namespace from "module";',
+    ).body;
+    if (declaration.type !== 'DeclareExportDeclaration') {
+      throw new Error('expected a declare export declaration');
+    }
+
+    expect(declaration.specifiers.some(isExportNamespaceSpecifier)).toBe(true);
   });
 });
 

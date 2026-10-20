@@ -67,7 +67,6 @@ describe('DeclareEnum', () => {
              "type": "Identifier",
              "typeAnnotation": null,
            },
-           "implicitDeclare": false,
            "type": "DeclareEnum",
          },
          {
@@ -78,6 +77,12 @@ describe('DeclareEnum', () => {
      }
     `);
     expectEspreeAlignment(testCase);
+  });
+
+  test('const enum', () => {
+    expect(parseForSnapshot('declare const enum E {A = 1}')).toMatchObject({
+      body: [{type: 'DeclareEnum', const: true}],
+    });
   });
 
   test('Babel', () => {

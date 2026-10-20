@@ -183,6 +183,7 @@ export function iife(
     type: 'ArrowFunctionExpression',
     params,
     expression: false,
+    generator: false,
     async: false,
     predicate: null,
     returnType: null,

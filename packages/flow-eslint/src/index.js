@@ -24,6 +24,7 @@ type ParseForESLintOptions = Readonly<{
 function parse(code: string, options?: ParseForESLintOptions): Program {
   const parserOptions = {
     allowReturnOutsideFunction: true,
+    assertOperator: options?.assertOperator ?? false,
     flow: 'all' as 'all',
     sourceType: options?.sourceType ?? ('module' as 'module'),
     tokens: true,

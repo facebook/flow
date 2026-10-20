@@ -105,6 +105,11 @@
         "type": "NodePtr",
         "name": "typeAnnotation",
         "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": true
       }
     ]
   },
@@ -151,6 +156,11 @@
       {
         "type": "NodeBoolean",
         "name": "expression",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "generator",
         "optional": false
       },
       {
@@ -819,6 +829,11 @@
         "type": "NodePtr",
         "name": "body",
         "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "const",
+        "optional": true
       }
     ]
   },
@@ -1029,7 +1044,7 @@
       {
         "type": "NodeBoolean",
         "name": "implicitDeclare",
-        "optional": false
+        "optional": true
       }
     ]
   },
@@ -1157,6 +1172,11 @@
         "type": "NodePtr",
         "name": "body",
         "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "const",
+        "optional": true
       }
     ]
   },
@@ -1305,6 +1325,11 @@
       {
         "type": "NodePtr",
         "name": "declaration",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "exportKind",
         "optional": false
       }
     ]
@@ -1499,6 +1524,11 @@
         "type": "NodeBoolean",
         "name": "async",
         "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "expression",
+        "optional": false
       }
     ]
   },
@@ -1544,6 +1574,11 @@
       {
         "type": "NodeBoolean",
         "name": "async",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "expression",
         "optional": false
       }
     ]
@@ -1759,6 +1794,11 @@
         "type": "NodeLabel",
         "name": "importKind",
         "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "phase",
+        "optional": false
       }
     ]
   },
@@ -1812,6 +1852,11 @@
         "type": "NodePtr",
         "name": "options",
         "optional": true
+      },
+      {
+        "type": "NodeLabel",
+        "name": "phase",
+        "optional": false
       }
     ]
   },
@@ -2683,6 +2728,11 @@
         "type": "NodePtr",
         "name": "typeAnnotation",
         "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": true
       }
     ]
   },
@@ -2978,6 +3028,16 @@
       {
         "type": "NodeLabel",
         "name": "name",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
         "optional": false
       }
     ]
@@ -3428,6 +3488,11 @@
         "type": "NodePtr",
         "name": "quasi",
         "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeArguments",
+        "optional": true
       }
     ]
   },

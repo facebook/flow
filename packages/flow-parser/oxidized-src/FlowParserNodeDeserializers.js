@@ -266,16 +266,18 @@ module.exports = [
 
   // 23: ComponentDeclaration
   function () {
-    return {
+    const node = {
       type: 'ComponentDeclaration',
       loc: this.addEmptyLoc(),
-      body: this.deserializeNode(),
-      id: this.deserializeNode(),
-      params: this.deserializeNodeList(),
-      rendersType: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      async: this.deserializeBoolean(),
     };
+    node.body = this.deserializeNode();
+    node.id = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    node.params = this.deserializeNodeList();
+    node.rendersType = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.async = this.deserializeBoolean();
+    return node;
   },
 
   // 24: HookDeclaration
@@ -294,12 +296,14 @@ module.exports = [
 
   // 25: EnumDeclaration
   function () {
-    return {
+    const node = {
       type: 'EnumDeclaration',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      body: this.deserializeNode(),
     };
+    node.id = this.deserializeNode();
+    node.body = this.deserializeNode();
+    if (this.deserializeBoolean()) node['const'] = true;
+    return node;
   },
 
   // 26: InterfaceDeclaration
@@ -424,11 +428,16 @@ module.exports = [
 
   // 37: ExportDefaultDeclaration
   function () {
-    return {
+    const node = {
       type: 'ExportDefaultDeclaration',
       loc: this.addEmptyLoc(),
-      declaration: this.deserializeNode(),
     };
+    node.declaration = this.deserializeNode();
+    {
+      const value = this.deserializeString();
+      if (value != null) node['exportKind'] = value;
+    }
+    return node;
   },
 
   // 38: ExportAllDeclaration
@@ -532,6 +541,7 @@ module.exports = [
       body: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
       returnType: this.deserializeNode(),
+      generator: this.deserializeBoolean(),
       async: this.deserializeBoolean(),
       id: this.deserializeNode(),
       predicate: this.deserializeNode(),
@@ -715,12 +725,16 @@ module.exports = [
 
   // 64: TaggedTemplateExpression
   function () {
-    return {
+    const node = {
       type: 'TaggedTemplateExpression',
       loc: this.addEmptyLoc(),
-      tag: this.deserializeNode(),
-      quasi: this.deserializeNode(),
     };
+    node.tag = this.deserializeNode();
+    node.quasi = this.deserializeNode();
+    if (this.deserializeBoolean()) {
+      node['typeArguments'] = this.deserializeNode();
+    }
+    return node;
   },
 
   // 65: TemplateLiteral
@@ -885,22 +899,26 @@ module.exports = [
 
   // 78: ObjectPattern
   function () {
-    return {
+    const node = {
       type: 'ObjectPattern',
       loc: this.addEmptyLoc(),
-      properties: this.deserializeNodeList(),
-      typeAnnotation: this.deserializeNode(),
     };
+    node.properties = this.deserializeNodeList();
+    node.typeAnnotation = this.deserializeNode();
+    if (this.deserializeBoolean()) node['optional'] = true;
+    return node;
   },
 
   // 79: ArrayPattern
   function () {
-    return {
+    const node = {
       type: 'ArrayPattern',
       loc: this.addEmptyLoc(),
-      elements: this.deserializeNodeList(),
-      typeAnnotation: this.deserializeNode(),
     };
+    node.elements = this.deserializeNodeList();
+    node.typeAnnotation = this.deserializeNode();
+    if (this.deserializeBoolean()) node['optional'] = true;
+    return node;
   },
 
   // 80: RestElement
@@ -1136,13 +1154,14 @@ module.exports = [
 
   // 98: DeclareVariable
   function () {
-    return {
+    const node = {
       type: 'DeclareVariable',
       loc: this.addEmptyLoc(),
-      declarations: this.deserializeNodeList(),
-      kind: this.deserializeString(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.declarations = this.deserializeNodeList();
+    node.kind = this.deserializeString();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 99: DeclareFunction
@@ -1156,7 +1175,7 @@ module.exports = [
       const value = this.deserializeNode();
       if (value != null) node['typeAnnotation'] = value;
     }
-    node.implicitDeclare = this.deserializeBoolean();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
     node.predicate = this.deserializeNode();
     return node;
   },
@@ -1173,33 +1192,35 @@ module.exports = [
     node.implements = this.deserializeNodeList();
     node.mixins = this.deserializeNodeList();
     node.body = this.deserializeNode();
-    node.implicitDeclare = this.deserializeBoolean();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
     if (this.deserializeBoolean()) node['abstract'] = true;
     return node;
   },
 
   // 101: DeclareComponent
   function () {
-    return {
+    const node = {
       type: 'DeclareComponent',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      params: this.deserializeNodeList(),
-      rest: this.deserializeNode(),
-      rendersType: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.id = this.deserializeNode();
+    node.params = this.deserializeNodeList();
+    node.rest = this.deserializeNode();
+    node.rendersType = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 102: DeclareHook
   function () {
-    return {
+    const node = {
       type: 'DeclareHook',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.id = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 103: DeclareModule
@@ -1223,74 +1244,81 @@ module.exports = [
 
   // 105: DeclareExportDeclaration
   function () {
-    return {
+    const node = {
       type: 'DeclareExportDeclaration',
       loc: this.addEmptyLoc(),
-      default: this.deserializeBoolean(),
-      declaration: this.deserializeNode(),
-      specifiers: this.deserializeNodeList(),
-      source: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.default = this.deserializeBoolean();
+    node.declaration = this.deserializeNode();
+    node.specifiers = this.deserializeNodeList();
+    node.source = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 106: DeclareExportAllDeclaration
   function () {
-    return {
+    const node = {
       type: 'DeclareExportAllDeclaration',
       loc: this.addEmptyLoc(),
-      source: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.source = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 107: DeclareNamespace
   function () {
-    return {
+    const node = {
       type: 'DeclareNamespace',
       loc: this.addEmptyLoc(),
-      global: this.deserializeBoolean(),
-      id: this.deserializeNode(),
-      body: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
-      keyword: this.deserializeString(),
     };
+    node.global = this.deserializeBoolean();
+    node.id = this.deserializeNode();
+    node.body = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    node.keyword = this.deserializeString();
+    return node;
   },
 
   // 108: DeclareInterface
   function () {
-    return {
+    const node = {
       type: 'DeclareInterface',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      body: this.deserializeNode(),
-      extends: this.deserializeNodeList(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.id = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.body = this.deserializeNode();
+    node.extends = this.deserializeNodeList();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 109: DeclareTypeAlias
   function () {
-    return {
+    const node = {
       type: 'DeclareTypeAlias',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      right: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.id = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.right = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 110: DeclareEnum
   function () {
-    return {
+    const node = {
       type: 'DeclareEnum',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      body: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.id = this.deserializeNode();
+    node.body = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    if (this.deserializeBoolean()) node['const'] = true;
+    return node;
   },
 
   // 111: TypeAnnotation
@@ -2413,17 +2441,18 @@ module.exports = [
 
   // 222: DeclareOpaqueType
   function () {
-    return {
+    const node = {
       type: 'DeclareOpaqueType',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      impltype: this.deserializeNode(),
-      lowerBound: this.deserializeNode(),
-      upperBound: this.deserializeNode(),
-      supertype: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.id = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.impltype = this.deserializeNode();
+    node.lowerBound = this.deserializeNode();
+    node.upperBound = this.deserializeNode();
+    node.supertype = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 223: EnumBody
@@ -2483,18 +2512,19 @@ module.exports = [
 
   // 228: DeclareComponentAmbient
   function () {
-    return {
+    const node = {
       type: 'DeclareComponent',
       loc: this.addEmptyLoc(),
-      body: this.deserializeNode(),
-      id: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
-      params: this.deserializeNodeList(),
-      rest: this.deserializeNode(),
-      rendersType: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      async: this.deserializeBoolean(),
     };
+    node.body = this.deserializeNode();
+    node.id = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    node.params = this.deserializeNodeList();
+    node.rest = this.deserializeNode();
+    node.rendersType = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.async = this.deserializeBoolean();
+    return node;
   },
 
   // 229: ThisTypeAnnotation
@@ -3000,15 +3030,16 @@ module.exports = [
 
   // 264: BabelDeclareOpaqueType
   function () {
-    return {
+    const node = {
       type: 'DeclareOpaqueType',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      impltype: this.deserializeNode(),
-      supertype: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.id = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.impltype = this.deserializeNode();
+    node.supertype = this.deserializeNode();
+    if (this.deserializeBoolean()) node['implicitDeclare'] = true;
+    return node;
   },
 
   // 265: BabelExportAllDeclaration

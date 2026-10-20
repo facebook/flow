@@ -229,6 +229,7 @@ impl<'a> Serializer<'a> {
                 self.serialize_identifier_node(&inner.id);
                 self.serialize_enum_body(&inner.body);
                 self.write_bool(self.implicit_declare_from_loc(loc));
+                self.write_bool(inner.const_);
             }
             StatementInner::NamespaceExportDeclaration { loc, inner } => {
                 self.write_node_header(NodeKind::NamespaceExportDeclaration, loc);
@@ -363,6 +364,7 @@ impl<'a> Serializer<'a> {
                 self.write_node_header(NodeKind::TaggedTemplateExpression, loc);
                 self.serialize_expression(&inner.tag);
                 self.serialize_template_literal(&inner.quasi.0, &inner.quasi.1);
+                self.serialize_tagged_template_type_arguments(&inner.targs);
             }
             ExpressionInner::TemplateLiteral { loc, inner } => {
                 self.serialize_template_literal(loc, inner);
@@ -494,6 +496,9 @@ impl<'a> Serializer<'a> {
                 self.write_str("unique");
                 self.write_node_header(NodeKind::SymbolTypeAnnotation, symbol_loc);
             }
+            TypeInner::Renders { loc, inner } => {
+                self.serialize_renders_type_dispatch(loc, inner);
+            }
             TypeInner::StringLiteral { loc, literal } => {
                 self.write_node_header(NodeKind::StringLiteralTypeAnnotation, loc);
                 self.write_string_literal_value(&literal.value, &literal.raw);
@@ -562,9 +567,6 @@ impl<'a> Serializer<'a> {
             }
             TypeInner::Function { loc, inner } => {
                 self.serialize_function_type(loc, inner);
-            }
-            TypeInner::Renders { loc, inner } => {
-                self.serialize_renders_type_dispatch(loc, inner);
             }
             TypeInner::TemplateLiteral { loc, inner } => {
                 self.serialize_template_literal_type(loc, inner);

@@ -596,6 +596,7 @@ function stripUnusedDefs(
           importKind: stmt.importKind,
           source: stmt.source,
           attributes: stmt.attributes,
+          phase: stmt.phase,
         });
       }
       return detachedStmt;
@@ -1178,7 +1179,6 @@ function convertVariableDeclaration(
         }),
       ],
       kind: stmt.kind,
-      implicitDeclare: false,
     }),
     annotDeps,
   ];
@@ -1218,6 +1218,7 @@ function convertRequireToImport(
           }),
         ],
         attributes: [],
+        phase: null,
       }),
       [],
     ];
@@ -1248,6 +1249,7 @@ function convertRequireToImport(
         source: asDetachedNode(sourceArg),
         specifiers,
         attributes: [],
+        phase: null,
       }),
       [],
     ];
@@ -1274,6 +1276,7 @@ function convertImportDeclaration(
       importKind: stmt.importKind,
       source: stmt.source,
       attributes: [],
+      phase: stmt.phase,
     }),
     [],
   ];
@@ -2053,6 +2056,12 @@ function convertFunctionParameters(
           );
           return [resultParams, resultParam, [...paramsDeps, ...deps]];
         }
+        case 'ParameterProperty':
+          throw translationError(
+            param,
+            'FunctionParameter: Parameter properties are not supported',
+            context,
+          );
       }
     },
     [[], null, []],

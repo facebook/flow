@@ -219,6 +219,14 @@ class Referencer extends Visitor {
     ClassVisitor.visit(this, node);
   }
 
+  visitExpressionTarget(node: ESNode): ESNode {
+    let target = node;
+    while (target.type === 'NonNullExpression') {
+      target = target.argument;
+    }
+    return target;
+  }
+
   visitForIn(node: ForInStatement | ForOfStatement): void {
     if (node.left.type === 'VariableDeclaration' && node.left.kind !== 'var') {
       this.scopeManager.nestForScope(node);
@@ -417,7 +425,7 @@ class Referencer extends Visitor {
   }
 
   AssignmentExpression(node: AssignmentExpression): void {
-    const left = node.left;
+    const left = this.visitExpressionTarget(node.left);
     if (PatternVisitor.isPattern(left)) {
       if (node.operator === '=') {
         this.visitPattern(
@@ -848,13 +856,15 @@ class Referencer extends Visitor {
 
   TaggedTemplateExpression(node: TaggedTemplateExpression): void {
     this.visit(node.tag);
+    this.visitType(node.typeArguments);
     this.visit(node.quasi);
   }
 
   UpdateExpression(node: UpdateExpression): void {
-    if (PatternVisitor.isPattern(node.argument)) {
+    const argument = this.visitExpressionTarget(node.argument);
+    if (PatternVisitor.isPattern(argument)) {
       this.visitPattern(
-        node.argument,
+        argument,
         pattern => {
           this.currentScope().referenceValue(
             pattern,

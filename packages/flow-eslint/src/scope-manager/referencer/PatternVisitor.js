@@ -22,6 +22,7 @@ import type {
   Identifier,
   MemberExpression,
   ObjectPattern,
+  ParameterProperty,
   Property,
   RestElement,
   SpreadElement,
@@ -51,7 +52,8 @@ function isPattern(node: ESNode): boolean {
     node.type === 'ArrayPattern' ||
     node.type === 'SpreadElement' ||
     node.type === 'RestElement' ||
-    node.type === 'AssignmentPattern'
+    node.type === 'AssignmentPattern' ||
+    node.type === 'ParameterProperty'
   );
 }
 
@@ -149,6 +151,23 @@ class PatternVisitor extends VisitorBase {
     if (pattern.typeAnnotation) {
       this._typeAnnotationCallback(pattern.typeAnnotation, pattern);
     }
+  }
+
+  ParameterProperty(pattern: ParameterProperty): void {
+    const key = pattern.key;
+    if (key.type === 'Identifier') {
+      this.visit(key);
+      if (pattern.typeAnnotation != null) {
+        this._typeAnnotationCallback(pattern.typeAnnotation, key);
+      }
+    } else if (pattern.computed) {
+      this.rightHandNodes.push(key);
+    }
+
+    if (pattern.value != null) {
+      this.rightHandNodes.push(pattern.value);
+    }
+    this.rightHandNodes.push(...pattern.decorators);
   }
 
   Property(property: Property): void {

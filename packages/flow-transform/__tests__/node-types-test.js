@@ -34,6 +34,12 @@ describe('generated node builders', () => {
         exportKind: 'type',
       }),
     ).toMatchObject({exportKind: 'type'});
+
+    expect(
+      t.ExportDefaultDeclaration({
+        declaration: id,
+      }),
+    ).toMatchObject({exportKind: 'value'});
   });
 
   test('preserves optional object type indexers', () => {
@@ -84,8 +90,97 @@ describe('generated node builders', () => {
       }),
     ).toMatchObject({
       type: 'ObjectTypePrivateField',
-      key: {type: 'PrivateIdentifier', name: 'field'},
+      key: {
+        type: 'PrivateIdentifier',
+        name: 'field',
+        typeAnnotation: null,
+        optional: false,
+      },
     });
+  });
+
+  test('builds tagged templates with type arguments', () => {
+    const template = t.TaggedTemplateExpression({
+      tag: t.Identifier({name: 'tag'}),
+      quasi: t.TemplateLiteral({quasis: [], expressions: []}),
+      typeArguments: t.TypeParameterInstantiation({
+        params: [t.StringTypeAnnotation()],
+      }),
+    });
+    expect(template).toMatchObject({
+      typeArguments: {
+        type: 'TypeParameterInstantiation',
+      },
+    });
+
+    expect(template).toHaveProperty('typeArguments.parent', template);
+  });
+
+  test('builds nodes with required compatibility fields', () => {
+    const body = t.BlockStatement({body: []});
+
+    expect(
+      t.ArrowFunctionExpression({params: [], body, async: false}),
+    ).toMatchObject({generator: false});
+    expect(
+      t.FunctionExpression({
+        id: null,
+        params: [],
+        body,
+        typeParameters: null,
+        returnType: null,
+        predicate: null,
+        generator: false,
+        async: false,
+      }),
+    ).toMatchObject({expression: false});
+    expect(
+      t.ImportDeclaration({
+        specifiers: [],
+        source: t.StringLiteral({value: 'module', raw: '"module"'}),
+        attributes: [],
+        importKind: 'value',
+        phase: null,
+      }),
+    ).toMatchObject({phase: null});
+  });
+
+  test('preserves optional pattern and const enum fields', () => {
+    expect(
+      t.ArrayPattern({
+        elements: [],
+        typeAnnotation: null,
+        optional: true,
+      }),
+    ).toMatchObject({optional: true});
+    expect(
+      t.ObjectPattern({
+        properties: [],
+        typeAnnotation: null,
+        optional: true,
+      }),
+    ).toMatchObject({optional: true});
+
+    const enumBody = () =>
+      t.EnumNumberBody({
+        members: [],
+        explicitType: true,
+        hasUnknownMembers: false,
+      });
+    expect(
+      t.EnumDeclaration({
+        id: t.Identifier({name: 'E'}),
+        body: enumBody(),
+        const: true,
+      }),
+    ).toMatchObject({const: true});
+    expect(
+      t.DeclareEnum({
+        id: t.Identifier({name: 'D'}),
+        body: enumBody(),
+        const: true,
+      }),
+    ).toMatchObject({const: true});
   });
 
   test('builds optional tuple type elements', () => {

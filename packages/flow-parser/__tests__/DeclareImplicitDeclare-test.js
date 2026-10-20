@@ -18,7 +18,7 @@ describe('Declare implicitDeclare markers', () => {
     enableExperimentalComponentSyntax: true,
   };
 
-  test('explicit declare forms serialize implicitDeclare=false', () => {
+  test('explicit declare forms omit implicitDeclare', () => {
     const cases = [
       ['DeclareClass', 'declare class Foo {}'],
       ['DeclareComponent', 'declare component Foo();'],
@@ -34,10 +34,9 @@ describe('Declare implicitDeclare markers', () => {
     ];
 
     for (const [type, source] of cases) {
-      expect(parse(source, parserOptions).body[0]).toMatchObject({
-        type,
-        implicitDeclare: false,
-      });
+      const declaration = parse(source, parserOptions).body[0];
+      expect(declaration).toMatchObject({type});
+      expect(declaration).not.toHaveProperty('implicitDeclare');
     }
   });
 

@@ -210,6 +210,9 @@ class TypeVisitor extends Visitor {
       }
     } else {
       for (const specifier of node.specifiers) {
+        if (specifier.type === 'ExportNamespaceSpecifier') {
+          continue;
+        }
         if (specifier.exportKind === 'type') {
           this._referencer.currentScope().referenceType(specifier.local);
         } else {

@@ -101,7 +101,6 @@ function mapDeclareComponent(node: DeclareComponent): DeclareVariable {
     type: 'DeclareVariable',
     declarations: [declareVariableDeclarator(id, node)],
     kind: 'const',
-    implicitDeclare: false,
     loc: node.loc,
     range: node.range,
     parent: node.parent,
@@ -609,6 +608,7 @@ function mapComponentDeclaration(
     returnType,
     body: node.body,
     async: node.async ?? false,
+    expression: false,
     generator: false,
     predicate: null,
     loc: node.loc,
@@ -622,7 +622,6 @@ function mapComponentDeclaration(
 function mapDeclareHook(node: DeclareHook): DeclareFunction {
   return {
     type: 'DeclareFunction',
-    implicitDeclare: false,
     id: {
       type: 'Identifier',
       name: node.id.name,
@@ -665,6 +664,7 @@ function mapHookDeclaration(node: HookDeclaration): FunctionDeclaration {
     returnType: node.returnType,
     body: node.body,
     async: node.async ?? false,
+    expression: false,
     generator: false,
     predicate: null,
     loc: node.loc,

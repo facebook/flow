@@ -702,6 +702,15 @@ const LITERAL_COLLAPSED_KINDS: &[&str] = &[
     "StringLiteral",
 ];
 
+/// NodeKinds retained only to preserve the append-only wire IDs. The current
+/// serializer never emits them, so they have no corresponding ESTree surface.
+const UNEMITTED_WIRE_KINDS: &[&str] = &[
+    "EnumBody",
+    "RendersType",
+    "RendersMaybeType",
+    "RendersStarType",
+];
+
 /// Hard-coded visitor-key overrides applied after the schema-driven map is
 /// built. The first four mirror the overrides in upstream
 /// `genESTreeVisitorKeys.js`. The remainder reconcile the schema's
@@ -721,6 +730,10 @@ const VISITOR_KEY_OVERRIDES: &[(&str, &[&str])] = &[
     (
         "ArrowFunctionExpression",
         &["params", "body", "typeParameters", "returnType", "predicate"],
+    ),
+    (
+        "TaggedTemplateExpression",
+        &["tag", "typeArguments", "quasi"],
     ),
     (
         "ClassDeclaration",
@@ -881,7 +894,10 @@ module.exports = {{
 
     for def in SCHEMA.iter() {
         // Skip Literal subtypes that upstream collapses into `Literal: []`.
-        if def.name.starts_with("Babel") || LITERAL_COLLAPSED_KINDS.contains(&def.name) {
+        if def.name.starts_with("Babel")
+            || LITERAL_COLLAPSED_KINDS.contains(&def.name)
+            || UNEMITTED_WIRE_KINDS.contains(&def.name)
+        {
             continue;
         }
         // Literal itself is custom-encoded and has no Node/NodeList children
@@ -894,12 +910,13 @@ module.exports = {{
         let upstream_excluded = excluded_visitor_props(def.estree_type);
         let extra_excluded = extra_visitor_excludes(def.estree_type);
         let mut entry: Vec<&'static str> = Vec::new();
-        // Only include Node / NodeList properties (matches upstream
-        // `ALLOWED_ARG_TYPES = {NodePtr, NodeList}`). `extra_pre_props` and
-        // `extra_post_props` are always non-Node (Booleans for the existing
-        // schema), but iterate them in upstream order all the same.
+        // Only include node-valued properties. `MaybeNode` is a wire-level
+        // presence encoding for a nullable ESTree child.
         let consider = |name: &'static str, ty: &PropType, entry: &mut Vec<&'static str>| {
-            if matches!(ty, PropType::Node | PropType::NodeList)
+            if matches!(
+                ty,
+                PropType::Node | PropType::NodeList | PropType::OptionalNode | PropType::MaybeNode
+            )
                 && !upstream_excluded.contains(&name)
                 && !extra_excluded.contains(&name)
             {
@@ -925,7 +942,10 @@ module.exports = {{
     // Per-node insertions for upstream-only fields not in the Rust schema
     // (synthesized by the JS adapter — see `extra_visitor_inserts`).
     for def in SCHEMA.iter() {
-        if def.name.starts_with("Babel") || LITERAL_COLLAPSED_KINDS.contains(&def.name) {
+        if def.name.starts_with("Babel")
+            || LITERAL_COLLAPSED_KINDS.contains(&def.name)
+            || UNEMITTED_WIRE_KINDS.contains(&def.name)
+        {
             continue;
         }
         let inserts = extra_visitor_inserts(def.estree_type);
@@ -1060,8 +1080,6 @@ const DEFAULT_FLOW_ESTREE_TYPES_PATH: &str =
 ///   type. e.g. `MemberExpression` exists upstream as
 ///   `MemberExpressionWith{Computed,NonComputed}Name` plus
 ///   `export type MemberExpression = …`.
-/// - **Unsupported TS-only nodes** — these kinds are not emitted by the Flow
-///   parser adapter.
 /// - **Custom-encoded** — `Literal` (the only `custom_emit` kind) is
 ///   modeled as the `Literal` union over BigInt/Boolean/Null/
 ///   Numeric/RegExp/StringLiteral, not as a standalone interface.
@@ -1077,27 +1095,18 @@ const KNOWN_TYPES_WITHOUT_INTERFACE: &[&str] = &[
     "ExportNamedDeclaration",    // → ExportNamedDeclarationWith{Specifiers,Declaration}
     "DeclareExportDeclaration",  // → DeclareExportDeclaration{NamedWith{Declaration,Specifiers},Default}
     "TypeOperator",              // → Renders{,Star,Question}TypeOperator
-    "RendersType",               // → Renders{,Star,Question}TypeOperator (same union)
     // Custom-encoded literal collapse.
     "Literal",                   // → Literal = BigIntLiteral | BooleanLiteral | …
     // Optional-chain refinements: types.js merges these into CallExpression /
     // MemberExpression with `+optional: boolean`.
     "OptionalCallExpression",
     "OptionalMemberExpression",
-    // TS-only kinds that are not surfaced via the Flow parser adapter.
-    "ExportNamespaceSpecifier",
-    "NonNullExpression",
-    "ParameterProperty",
-    "DeclareMethodDefinition",
-    "RendersMaybeType",
-    "RendersStarType",
-    "EnumBody",
 ];
 
 /// Pure cross-check: returns the list of NodeDef `estree_type` names from
 /// `schema` that have no matching `export interface <name>` /
 /// `export interface <name>\n` / `export type <name> =` declaration in
-/// `types_source`, are not Babel-only nodes, AND are not in
+/// `types_source`, are emitted non-Babel nodes, AND are not in
 /// `KNOWN_TYPES_WITHOUT_INTERFACE`. Caller decides whether to hard-fail.
 /// Extracted so unit tests can verify the hard-fail path without invoking
 /// `std::process::exit`.
@@ -1105,6 +1114,7 @@ fn estree_types_missing_kinds(schema: &[NodeDef], types_source: &str) -> Vec<&'s
     let mut missing: Vec<&'static str> = Vec::new();
     for def in schema.iter() {
         if def.name.starts_with("Babel")
+            || UNEMITTED_WIRE_KINDS.contains(&def.name)
             || KNOWN_TYPES_WITHOUT_INTERFACE.contains(&def.estree_type)
             || missing.contains(&def.estree_type)
         {
@@ -1187,29 +1197,10 @@ const PREDICATE_SPECIAL_NODES: &[&str] = &["Identifier", "JSXIdentifier", "JSXTe
 /// - **Optional-chain refinements** — upstream merges `OptionalCallExpression`
 ///   / `OptionalMemberExpression` into `CallExpression` / `MemberExpression`
 ///   with `+optional: boolean`, so they're absent from upstream JSON.
-/// - **Renders refinements** — upstream models `RendersType` as a union of
-///   `Renders{,Star,Question}TypeOperator`; the union has no predicate.
-/// - **`EnumBody`** — upstream models this as a union of the per-type bodies
-///   (`Enum{BigInt,Boolean,Number,String,Symbol}Body`); the union has no
-///   predicate.
-/// - **Unsupported TS-only kinds** — upstream Hermes parses TypeScript; these
-///   kinds are not emitted by the Flow parser adapter.
 const PREDICATE_EXCLUDED_TYPES: &[&str] = &[
     // Optional-chain refinements collapsed into Call/Member by upstream.
     "OptionalCallExpression",
     "OptionalMemberExpression",
-    // Renders refinement union — upstream emits per-variant interfaces only.
-    "RendersType",
-    // Enum body union — upstream emits per-type body predicates only.
-    "EnumBody",
-    // TS-only kinds not surfaced via the Flow parser adapter, so upstream JSON
-    // has no entry.
-    "ExportNamespaceSpecifier",
-    "NonNullExpression",
-    "ParameterProperty",
-    "DeclareMethodDefinition",
-    "RendersMaybeType",
-    "RendersStarType",
     // Flow-only kinds that exist in our SCHEMA but not in upstream Hermes
     // ESTree JSON (so upstream emits no predicate for them).
     "InterpreterDirective",
@@ -1358,12 +1349,13 @@ const PREDICATE_TOKENS: &[(&str, &str, &str)] = &[
 
 /// Generate `flow-estree/src/generated/predicates.js`.
 ///
-/// The output mirrors upstream `hermes-estree/src/generated/predicates.js`:
-/// a `/*:: import type { … } from '../types'; */` block followed by per-node
+/// The output follows upstream `hermes-estree/src/generated/predicates.js`'s
+/// layout while also covering Flow-specific serialized nodes: a
+/// `/*:: import type { … } from '../types'; */` block followed by per-node
 /// type-guard predicates, then literal/comment predicates, then 90+ token
-/// predicates. The body is generated mechanically from `SCHEMA` (with the
-/// upstream skip lists baked in) plus the hand-curated `PREDICATE_TOKENS`
-/// table copied verbatim from upstream's `genPredicateFunctions.js`.
+/// predicates. The body is generated mechanically from `SCHEMA` plus the
+/// hand-curated `PREDICATE_TOKENS` table copied from upstream's
+/// `genPredicateFunctions.js`.
 fn generate_estree_predicates() {
     // Build the bare-node estree-type list from SCHEMA + extras, then sort
     // case-insensitively (matches upstream JSON's ordering, which puts
@@ -1377,6 +1369,9 @@ fn generate_estree_predicates() {
     let mut bare_nodes: Vec<&'static str> = Vec::new();
     for def in SCHEMA.iter() {
         if def.name.starts_with("Babel") {
+            continue;
+        }
+        if UNEMITTED_WIRE_KINDS.contains(&def.name) {
             continue;
         }
         if LITERAL_COLLAPSED_KINDS.contains(&def.name) {
@@ -1663,8 +1658,30 @@ mod tests {
         );
     }
 
-    /// Today's invariant: every SCHEMA NodeKind is declared in Flow's types.js
-    /// or is in the exclusion list.
+    /// Wire-only compatibility entries are not part of the ESTree surface.
+    #[test]
+    fn estree_types_cross_check_ignores_unemitted_wire_kinds() {
+        let kind = UNEMITTED_WIRE_KINDS[0];
+        let synthetic_schema: &[NodeDef] = &[NodeDef {
+            kind_id: 9999,
+            name: kind,
+            estree_type: kind,
+            properties: &[],
+            extra_pre_props: &[],
+            extra_post_props: &[],
+            nested_object_props: &[],
+            custom_emit: false,
+        }];
+
+        let missing = estree_types_missing_kinds(synthetic_schema, "");
+        assert!(
+            missing.is_empty(),
+            "unemitted wire kinds should not require public ESTree types, got {missing:?}",
+        );
+    }
+
+    /// Today's invariant: every emitted SCHEMA NodeKind is declared in Flow's
+    /// types.js or is in the public-type exclusion list.
     #[test]
     fn estree_types_cross_check_passes_for_real_schema_today() {
         let path = std::env::var("FLOW_ESTREE_TYPES_JS")

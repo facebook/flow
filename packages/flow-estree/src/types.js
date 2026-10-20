@@ -168,6 +168,8 @@ export type ESNode =
   | PropertyDefinition
   | AbstractMethodDefinition
   | AbstractPropertyDefinition
+  | DeclareMethodDefinition
+  | ParameterProperty
   | ModuleDeclaration
   | ModuleSpecifier
   | ImportAttribute
@@ -232,15 +234,20 @@ export type ESNode =
 export type BindingName = Identifier | BindingPattern;
 export type BindingPattern = ArrayPattern | ObjectPattern;
 export type RestElementPattern = AssignmentPattern | BindingName | RestElement;
-export type FunctionParameter = AssignmentPattern | BindingName | RestElement;
+export type FunctionParameter =
+  AssignmentPattern | BindingName | RestElement | ParameterProperty;
 export type DestructuringPattern =
-  BindingName | AssignmentPattern | MemberExpression | RestElement;
+  | BindingName
+  | AssignmentPattern
+  | MemberExpression
+  | NonNullExpression
+  | RestElement;
 
 interface BaseFunction extends BaseNode {
   readonly params: ReadonlyArray<FunctionParameter>;
   readonly async: boolean;
 
-  readonly predicate: null | InferredPredicate;
+  readonly predicate: null | InferredPredicate | DeclaredPredicate;
   readonly returnType: null | TypeAnnotation;
   readonly typeParameters: null | TypeParameterDeclaration;
 }
@@ -312,7 +319,7 @@ export interface EmptyStatement extends BaseNode {
 
 export interface BlockStatement extends BaseNode {
   readonly type: 'BlockStatement';
-  readonly body: ReadonlyArray<Statement>;
+  readonly body: ReadonlyArray<Statement | ModuleDeclaration>;
 }
 
 export interface StaticBlock extends BaseNode {
@@ -399,7 +406,8 @@ export interface ForStatement extends BaseNode {
 }
 
 interface BaseForXStatement extends BaseNode {
-  readonly left: VariableDeclaration | BindingName | MemberExpression;
+  readonly left:
+    VariableDeclaration | BindingName | MemberExpression | NonNullExpression;
   readonly right: Expression;
   readonly body: Statement;
 }
@@ -431,6 +439,7 @@ export interface ComponentDeclaration extends BaseNode {
   readonly async: boolean;
   readonly body: BlockStatement;
   readonly id: Identifier;
+  readonly implicitDeclare?: true;
   readonly params: ReadonlyArray<ComponentParameterAndRestElement>;
   readonly rendersType: null | RendersType;
   readonly typeParameters: null | TypeParameterDeclaration;
@@ -451,6 +460,7 @@ export interface FunctionDeclaration extends BaseFunction {
   /** It is null when a function declaration is a part of the `export default function` statement */
   readonly id: Identifier | null;
   readonly body: BlockStatement;
+  readonly expression: boolean;
   readonly generator: boolean;
 }
 
@@ -498,6 +508,7 @@ export type Expression =
   | AsExpression
   | AsConstExpression
   | SatisfiesExpression
+  | NonNullExpression
   | MatchExpression
   | RecordExpression
   | JSXFragment
@@ -612,6 +623,7 @@ export interface FunctionExpression extends BaseFunction {
   readonly id?: Identifier | null;
   readonly type: 'FunctionExpression';
   readonly body: BlockStatement;
+  readonly expression: boolean;
   readonly generator: boolean;
 }
 
@@ -648,7 +660,7 @@ export type BinaryExpression = BinaryExpressionWithoutIn | BinaryExpressionIn;
 export interface AssignmentExpression extends BaseNode {
   readonly type: 'AssignmentExpression';
   readonly operator: AssignmentOperator;
-  readonly left: BindingName | MemberExpression;
+  readonly left: BindingName | MemberExpression | NonNullExpression;
   readonly right: Expression;
 }
 
@@ -735,6 +747,8 @@ export interface Identifier extends BaseNode {
 export interface PrivateIdentifier extends BaseNode {
   readonly type: 'PrivateIdentifier';
   readonly name: string;
+  readonly typeAnnotation: TypeAnnotation | null;
+  readonly optional: boolean;
 }
 
 export type Literal =
@@ -856,6 +870,7 @@ export interface ArrowFunctionExpression extends BaseFunction {
   readonly type: 'ArrowFunctionExpression';
   readonly expression: boolean;
   readonly body: BlockStatement | Expression;
+  readonly generator: false;
   // hermes emits this - but it's always null
   readonly id: null;
   // note - arrow functions cannot be generators
@@ -877,6 +892,7 @@ export interface TaggedTemplateExpression extends BaseNode {
   readonly type: 'TaggedTemplateExpression';
   readonly tag: Expression;
   readonly quasi: TemplateLiteral;
+  readonly typeArguments: TypeParameterInstantiation | null;
 }
 
 export interface TemplateElement extends BaseNode {
@@ -895,6 +911,7 @@ export interface ObjectPattern extends BaseNode {
   readonly properties: ReadonlyArray<DestructuringObjectProperty | RestElement>;
   // if used as a VariableDeclarator.id
   readonly typeAnnotation: TypeAnnotation | null;
+  readonly optional?: true;
 }
 
 export interface ArrayPattern extends BaseNode {
@@ -902,6 +919,7 @@ export interface ArrayPattern extends BaseNode {
   // an element will be null if the pattern contains a hole: `[a,,b]`
   readonly elements: ReadonlyArray<?DestructuringPattern>;
   readonly typeAnnotation: TypeAnnotation | null;
+  readonly optional?: true;
 }
 
 export interface RestElement extends BaseNode {
@@ -937,6 +955,7 @@ export type ClassPropertyNameNonComputed =
 export type ClassMember =
   | PropertyDefinition
   | MethodDefinition
+  | DeclareMethodDefinition
   | AbstractMethodDefinition
   | AbstractPropertyDefinition
   | ObjectTypeIndexer
@@ -1017,7 +1036,36 @@ export interface PropertyDefinitionWithNonComputedName extends PropertyDefinitio
   readonly computed: false;
 }
 
+export interface ParameterProperty extends BaseNode {
+  readonly type: 'ParameterProperty';
+  readonly key: PropertyName;
+  readonly value: Expression | null;
+  readonly typeAnnotation: TypeAnnotation | null;
+  readonly computed: boolean;
+  readonly static: boolean;
+  readonly variance: Variance | null;
+  readonly tsAccessibility: TSAccessibility | null;
+  readonly declare: boolean;
+  readonly optional: boolean;
+  readonly decorators: ReadonlyArray<Decorator>;
+
+  readonly parent: AFunction;
+}
+
 export type TSAccessibility = 'private' | 'protected' | 'public';
+
+export interface DeclareMethodDefinition extends BaseNode {
+  readonly type: 'DeclareMethodDefinition';
+  readonly key: PropertyName;
+  readonly value: TypeAnnotation;
+  readonly static: boolean;
+  readonly optional: boolean;
+  readonly computed: boolean;
+  readonly kind: 'get' | 'set' | null;
+  readonly override: boolean;
+
+  readonly parent: ClassBody;
+}
 
 export type AbstractMethodDefinition =
   | AbstractMethodDefinitionWithComputedName
@@ -1096,7 +1144,8 @@ export type ModuleSpecifier =
   | ImportSpecifier
   | ImportDefaultSpecifier
   | ImportNamespaceSpecifier
-  | ExportSpecifier;
+  | ExportSpecifier
+  | ExportNamespaceSpecifier;
 
 export interface ImportDeclaration extends BaseNode {
   readonly type: 'ImportDeclaration';
@@ -1105,12 +1154,13 @@ export interface ImportDeclaration extends BaseNode {
   >;
   readonly source: StringLiteral;
   readonly attributes: ReadonlyArray<ImportAttribute>;
+  readonly phase: 'defer' | null;
 
   readonly importKind: 'value' | 'type' | 'typeof';
 }
 export interface ImportAttribute extends BaseNode {
   readonly type: 'ImportAttribute';
-  readonly key: Identifier;
+  readonly key: Identifier | StringLiteral;
   readonly value: StringLiteral;
 
   readonly parent: ImportDeclaration;
@@ -1129,6 +1179,7 @@ export interface ImportExpression extends BaseNode {
   readonly type: 'ImportExpression';
   readonly source: Expression;
   readonly options: Expression | null;
+  readonly phase: 'defer' | null;
 }
 
 export interface ExternalModuleReference extends BaseNode {
@@ -1165,7 +1216,9 @@ export type DefaultDeclaration =
   | FunctionDeclaration
   | ClassDeclaration
   | ComponentDeclaration
-  | HookDeclaration;
+  | HookDeclaration
+  | EnumDeclaration
+  | RecordDeclaration;
 export type NamedDeclaration =
   | DefaultDeclaration
   | VariableDeclaration
@@ -1204,6 +1257,13 @@ export interface ExportSpecifier extends BaseNode {
   readonly exportKind: 'value' | 'type';
 }
 
+export interface ExportNamespaceSpecifier extends BaseNode {
+  readonly type: 'ExportNamespaceSpecifier';
+  readonly exported: Identifier;
+
+  readonly parent: DeclareExportDeclaration;
+}
+
 export interface NamespaceExportDeclaration extends BaseNode {
   readonly type: 'NamespaceExportDeclaration';
   readonly id: Identifier;
@@ -1212,6 +1272,7 @@ export interface NamespaceExportDeclaration extends BaseNode {
 export interface ExportDefaultDeclaration extends BaseNode {
   readonly type: 'ExportDefaultDeclaration';
   readonly declaration: DefaultDeclaration | Expression;
+  readonly exportKind: 'value';
 }
 
 export interface ExportAllDeclaration extends BaseNode {
@@ -1463,7 +1524,7 @@ export interface ObjectTypeInternalSlot extends BaseNode {
   readonly optional: boolean;
   readonly static: boolean;
   readonly method: boolean;
-  readonly value: TypeAnnotation;
+  readonly value: TypeAnnotationType;
 
   readonly parent: ObjectTypeAnnotation;
 }
@@ -1598,7 +1659,7 @@ export interface ObjectTypeAnnotation extends BaseNode {
 }
 interface ObjectTypePropertyBase extends BaseNode {
   readonly type: 'ObjectTypeProperty';
-  readonly key: ObjectPropertyKey;
+  readonly key: Expression;
   readonly value: TypeAnnotationType;
   readonly method: boolean;
   readonly optional: boolean;
@@ -1724,6 +1785,11 @@ export interface SatisfiesExpression extends BaseNode {
   readonly expression: Expression;
   readonly typeAnnotation: TypeAnnotationType;
 }
+export interface NonNullExpression extends BaseNode {
+  readonly type: 'NonNullExpression';
+  readonly argument: Expression;
+  readonly chain: boolean;
+}
 
 interface BaseInterfaceNode extends BaseNode {
   readonly body: ObjectTypeAnnotation;
@@ -1748,7 +1814,7 @@ export interface InterfaceExtends extends BaseNode {
 
 export interface ClassImplements extends BaseNode {
   readonly type: 'ClassImplements';
-  readonly id: Identifier;
+  readonly id: Identifier | QualifiedTypeIdentifier;
   readonly typeParameters: null | TypeParameterInstantiation;
 
   readonly parent: AClass | DeclareClass;
@@ -1782,18 +1848,33 @@ export interface TypeParameterInstantiation extends BaseNode {
   readonly type: 'TypeParameterInstantiation';
   readonly params: ReadonlyArray<TypeAnnotationType>;
 
-  readonly parent: GenericTypeAnnotation | CallExpression | NewExpression;
+  readonly parent:
+    | GenericTypeAnnotation
+    | CallExpression
+    | NewExpression
+    | TaggedTemplateExpression;
 }
+
+type EnumBody =
+  | EnumNumberBody
+  | EnumBigIntBody
+  | EnumStringBody
+  | EnumBooleanBody
+  | EnumSymbolBody;
+// Error recovery can preserve heterogeneous member variants in any body kind.
+type EnumMember =
+  | EnumNumberMember
+  | EnumBigIntMember
+  | EnumStringMember
+  | EnumBooleanMember
+  | EnumDefaultedMember;
+type EnumMemberName = Identifier | StringLiteral;
 
 export interface EnumDeclaration extends BaseNode {
   readonly type: 'EnumDeclaration';
+  readonly const?: true;
   readonly id: Identifier;
-  readonly body:
-    | EnumNumberBody
-    | EnumBigIntBody
-    | EnumStringBody
-    | EnumBooleanBody
-    | EnumSymbolBody;
+  readonly body: EnumBody;
 }
 
 interface BaseEnumBody extends BaseNode {
@@ -1805,82 +1886,78 @@ interface BaseInferrableEnumBody extends BaseEnumBody {
 
 export interface EnumNumberBody extends BaseInferrableEnumBody {
   readonly type: 'EnumNumberBody';
-  // enum number members cannot be defaulted
-  readonly members: ReadonlyArray<EnumNumberMember>;
+  readonly members: ReadonlyArray<EnumMember>;
   readonly explicitType: boolean;
 
-  readonly parent: EnumDeclaration;
+  readonly parent: EnumDeclaration | DeclareEnum;
 }
 
 export interface EnumNumberMember extends BaseNode {
   readonly type: 'EnumNumberMember';
-  readonly id: Identifier;
+  readonly id: EnumMemberName;
   readonly init: NumericLiteral;
 
-  readonly parent: EnumNumberBody;
+  readonly parent: EnumBody;
 }
 
 export interface EnumBigIntBody extends BaseInferrableEnumBody {
   readonly type: 'EnumBigIntBody';
-  // enum bigint members cannot be defaulted
-  readonly members: ReadonlyArray<EnumBigIntMember>;
+  readonly members: ReadonlyArray<EnumMember>;
   readonly explicitType: boolean;
 
-  readonly parent: EnumDeclaration;
+  readonly parent: EnumDeclaration | DeclareEnum;
 }
 
 export interface EnumBigIntMember extends BaseNode {
   readonly type: 'EnumBigIntMember';
-  readonly id: Identifier;
+  readonly id: EnumMemberName;
   readonly init: BigIntLiteral;
 
-  readonly parent: EnumBigIntBody;
+  readonly parent: EnumBody;
 }
 
 export interface EnumStringBody extends BaseInferrableEnumBody {
   readonly type: 'EnumStringBody';
-  readonly members: ReadonlyArray<EnumStringMember | EnumDefaultedMember>;
+  readonly members: ReadonlyArray<EnumMember>;
 
-  readonly parent: EnumDeclaration;
+  readonly parent: EnumDeclaration | DeclareEnum;
 }
 
 export interface EnumStringMember extends BaseNode {
   readonly type: 'EnumStringMember';
-  readonly id: Identifier;
+  readonly id: EnumMemberName;
   readonly init: StringLiteral;
 
-  readonly parent: EnumStringBody;
+  readonly parent: EnumBody;
 }
 
 export interface EnumBooleanBody extends BaseInferrableEnumBody {
   readonly type: 'EnumBooleanBody';
-  // enum boolean members cannot be defaulted
-  readonly members: ReadonlyArray<EnumBooleanMember>;
+  readonly members: ReadonlyArray<EnumMember>;
 
-  readonly parent: EnumDeclaration;
+  readonly parent: EnumDeclaration | DeclareEnum;
 }
 
 export interface EnumBooleanMember extends BaseNode {
   readonly type: 'EnumBooleanMember';
-  readonly id: Identifier;
+  readonly id: EnumMemberName;
   readonly init: BooleanLiteral;
 
-  readonly parent: EnumBooleanBody;
+  readonly parent: EnumBody;
 }
 
 export interface EnumSymbolBody extends BaseEnumBody {
   readonly type: 'EnumSymbolBody';
-  // enum symbol members can only be defaulted
-  readonly members: ReadonlyArray<EnumDefaultedMember>;
+  readonly members: ReadonlyArray<EnumMember>;
 
-  readonly parent: EnumDeclaration;
+  readonly parent: EnumDeclaration | DeclareEnum;
 }
 
 export interface EnumDefaultedMember extends BaseNode {
   readonly type: 'EnumDefaultedMember';
-  readonly id: Identifier;
+  readonly id: EnumMemberName;
 
-  readonly parent: EnumStringBody | EnumSymbolBody;
+  readonly parent: EnumBody;
 }
 
 /*****************
@@ -1912,6 +1989,7 @@ export interface DeclareClass extends BaseNode {
   readonly implements: ReadonlyArray<ClassImplements>;
   readonly body: ObjectTypeAnnotation;
   readonly mixins: ReadonlyArray<InterfaceExtends>;
+  readonly implicitDeclare?: true;
   readonly abstract?: true;
 }
 
@@ -1925,6 +2003,8 @@ export interface DeclareClassExtendsCall extends BaseNode {
 
 export interface DeclareComponent extends BaseNode {
   readonly type: 'DeclareComponent';
+  readonly async?: boolean;
+  readonly body?: null;
   readonly id: Identifier;
   // The Flow parser emits the same param shape it uses for
   // `ComponentDeclaration` — `ComponentParameter`/`RestElement` in `params`,
@@ -1937,7 +2017,7 @@ export interface DeclareComponent extends BaseNode {
   readonly rest: null | ComponentTypeParameter;
   readonly typeParameters: null | TypeParameterDeclaration;
   readonly rendersType: null | RendersType;
-  readonly implicitDeclare: boolean;
+  readonly implicitDeclare?: true;
 }
 
 export interface DeclareHook extends BaseNode {
@@ -1948,21 +2028,22 @@ export interface DeclareHook extends BaseNode {
       readonly typeAnnotation: HookTypeAnnotation,
     },
   };
-  readonly implicitDeclare: boolean;
+  readonly implicitDeclare?: true;
 }
 
 export interface DeclareVariable extends BaseNode {
   readonly type: 'DeclareVariable';
   readonly declarations: ReadonlyArray<VariableDeclarator>;
   readonly kind: 'var' | 'let' | 'const';
-  readonly implicitDeclare: boolean;
+  readonly implicitDeclare?: true;
 }
 
 export interface DeclareEnum extends BaseNode {
   readonly type: 'DeclareEnum';
+  readonly const?: true;
   readonly id: Identifier;
-  readonly body:
-    EnumNumberBody | EnumStringBody | EnumBooleanBody | EnumSymbolBody;
+  readonly body: EnumBody;
+  readonly implicitDeclare?: true;
 }
 
 export interface DeclareFunction extends BaseNode {
@@ -1977,7 +2058,7 @@ export interface DeclareFunction extends BaseNode {
   readonly typeAnnotation?: interface extends TypeAnnotation {
     readonly typeAnnotation: FunctionTypeAnnotation,
   };
-  readonly implicitDeclare: boolean;
+  readonly implicitDeclare?: true;
   readonly predicate: InferredPredicate | DeclaredPredicate | null;
 }
 
@@ -1992,33 +2073,40 @@ export interface DeclareNamespace extends BaseNode {
   readonly global: boolean;
   readonly id: Identifier;
   readonly body: BlockStatement;
-  readonly implicitDeclare: boolean;
+  readonly implicitDeclare?: true;
   readonly keyword: 'namespace' | 'module';
 }
 
 export interface DeclareInterface extends BaseInterfaceDeclaration {
   readonly type: 'DeclareInterface';
+  readonly implicitDeclare?: true;
 }
 
 export interface DeclareTypeAlias extends BaseTypeAlias {
   readonly type: 'DeclareTypeAlias';
+  readonly implicitDeclare?: true;
 }
 
 export interface DeclareOpaqueType extends BaseOpaqueType {
   readonly type: 'DeclareOpaqueType';
   readonly impltype: null;
+  readonly implicitDeclare?: true;
 }
 
 export interface DeclareExportAllDeclaration extends BaseNode {
   readonly type: 'DeclareExportAllDeclaration';
   readonly source: StringLiteral;
+  readonly implicitDeclare?: true;
 }
 
 interface DeclareExportDeclarationBase extends BaseNode {
   readonly type: 'DeclareExportDeclaration';
-  readonly specifiers: ReadonlyArray<ExportSpecifier>;
+  readonly specifiers: ReadonlyArray<
+    ExportSpecifier | ExportNamespaceSpecifier,
+  >;
   readonly source: StringLiteral | null;
   readonly default: boolean;
+  readonly implicitDeclare?: true;
 }
 export interface DeclareExportDefaultDeclaration extends DeclareExportDeclarationBase {
   readonly type: 'DeclareExportDeclaration';
@@ -2042,10 +2130,12 @@ export interface DeclareExportDeclarationNamedWithDeclaration extends DeclareExp
     | DeclareComponent
     | DeclareHook
     | DeclareInterface
+    | InterfaceDeclaration
     | DeclareNamespace
     | DeclareOpaqueType
     | DeclareVariable
-    | DeclareEnum;
+    | DeclareEnum
+    | TypeAlias;
   readonly default: false;
   readonly source: null;
   // default cannot have specifiers and a declaration
@@ -2057,7 +2147,9 @@ export interface DeclareExportDeclarationNamedWithSpecifiers extends DeclareExpo
   readonly declaration: null;
   readonly default: false;
   readonly source: StringLiteral;
-  readonly specifiers: ReadonlyArray<ExportSpecifier>;
+  readonly specifiers: ReadonlyArray<
+    ExportSpecifier | ExportNamespaceSpecifier,
+  >;
 }
 export type DeclareExportDeclaration =
   | DeclareExportDefaultDeclaration
@@ -2220,7 +2312,7 @@ export interface MatchStatement extends BaseNode {
 export interface MatchStatementCase extends BaseNode {
   readonly type: 'MatchStatementCase';
   readonly pattern: MatchPattern;
-  readonly body: BlockStatement;
+  readonly body: Statement;
   readonly guard: Expression | null;
 }
 

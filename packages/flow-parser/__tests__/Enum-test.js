@@ -88,6 +88,12 @@ describe('Enum', () => {
     expectEspreeAlignment(testCase);
   });
 
+  test('const enum', () => {
+    expect(parseForSnapshot('const enum E {A = 1}')).toMatchObject({
+      body: [{type: 'EnumDeclaration', const: true}],
+    });
+  });
+
   describe('Transform', () => {
     const options = {
       transformOptions: {TransformEnumSyntax: {enable: true}},

@@ -79,6 +79,7 @@ import type {
   DeclareFunction,
   DeclareHook,
   DeclareInterface,
+  DeclareMethodDefinition,
   DeclareModule,
   DeclareModuleExports,
   DeclareNamespace,
@@ -105,6 +106,7 @@ import type {
   ExportAssignment,
   ExportDefaultDeclaration,
   ExportNamedDeclaration,
+  ExportNamespaceSpecifier,
   ExportSpecifier,
   ExpressionStatement,
   ExternalModuleReference,
@@ -175,6 +177,7 @@ import type {
   NamespaceExportDeclaration,
   NeverTypeAnnotation,
   NewExpression,
+  NonNullExpression,
   NullableTypeAnnotation,
   NullLiteralTypeAnnotation,
   NumberLiteralTypeAnnotation,
@@ -191,6 +194,7 @@ import type {
   ObjectTypeSpreadProperty,
   OpaqueType,
   OptionalIndexedAccessType,
+  ParameterProperty,
   PrivateIdentifier,
   Program,
   Property,
@@ -492,6 +496,11 @@ export function isDeclareInterface(node /*: ESNode | Token */) /*: implies node 
 }
     
 
+export function isDeclareMethodDefinition(node /*: ESNode | Token */) /*: implies node is DeclareMethodDefinition */ {
+  return node.type === 'DeclareMethodDefinition';
+}
+    
+
 export function isDeclareModule(node /*: ESNode | Token */) /*: implies node is DeclareModule */ {
   return node.type === 'DeclareModule';
 }
@@ -619,6 +628,11 @@ export function isExportDefaultDeclaration(node /*: ESNode | Token */) /*: impli
 
 export function isExportNamedDeclaration(node /*: ESNode | Token */) /*: implies node is ExportNamedDeclaration */ {
   return node.type === 'ExportNamedDeclaration';
+}
+    
+
+export function isExportNamespaceSpecifier(node /*: ESNode | Token */) /*: implies node is ExportNamespaceSpecifier */ {
+  return node.type === 'ExportNamespaceSpecifier';
 }
     
 
@@ -972,6 +986,11 @@ export function isNewExpression(node /*: ESNode | Token */) /*: implies node is 
 }
     
 
+export function isNonNullExpression(node /*: ESNode | Token */) /*: implies node is NonNullExpression */ {
+  return node.type === 'NonNullExpression';
+}
+    
+
 export function isNullableTypeAnnotation(node /*: ESNode | Token */) /*: implies node is NullableTypeAnnotation */ {
   return node.type === 'NullableTypeAnnotation';
 }
@@ -1049,6 +1068,11 @@ export function isOpaqueType(node /*: ESNode | Token */) /*: implies node is Opa
 
 export function isOptionalIndexedAccessType(node /*: ESNode | Token */) /*: implies node is OptionalIndexedAccessType */ {
   return node.type === 'OptionalIndexedAccessType';
+}
+    
+
+export function isParameterProperty(node /*: ESNode | Token */) /*: implies node is ParameterProperty */ {
+  return node.type === 'ParameterProperty';
 }
     
 

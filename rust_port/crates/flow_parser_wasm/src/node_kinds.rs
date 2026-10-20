@@ -25,7 +25,7 @@
 //! # Adding a new AST node
 //!
 //! 1. Add an entry to the `define_nodes!` invocation below. Use the next
-//!    available ID (currently 219+). List properties in the exact order the
+//!    available ID (currently 279+). List properties in the exact order the
 //!    serializer will write them.
 //!
 //!    For nodes in the top-level dispatch (Statement/Expression/Type), add a
@@ -550,6 +550,7 @@ define_nodes! {
     ComponentDeclaration = 23 {
         body: Node,
         id: Node,
+        implicitDeclare: TrueBoolean,
         params: NodeList,
         rendersType: Node,
         typeParameters: Node,
@@ -567,7 +568,8 @@ define_nodes! {
     EnumDeclaration = 25 {
         id: Node,
         body: Node,
-    } from Statement::EnumDeclaration { loc, inner }
+    } post { const: TrueBoolean }
+        from Statement::EnumDeclaration { loc, inner }
         {=> self.serialize_enum_declaration(loc, inner)},
     InterfaceDeclaration = 26 {
         id: Node,
@@ -638,6 +640,7 @@ define_nodes! {
         {=> self.serialize_export_named_declaration(loc, inner)},
     ExportDefaultDeclaration = 37 {
         declaration: Node,
+        exportKind: MaybeString,
     } from Statement::ExportDefaultDeclaration { loc, inner }
         {=> self.serialize_export_default_declaration(loc, inner)},
     ExportAllDeclaration = 38 {
@@ -691,6 +694,7 @@ define_nodes! {
         body: Node,
         typeParameters: Node,
         returnType: Node,
+        generator: Boolean,
         async: Boolean,
         id: Node,
         predicate: Node,
@@ -843,9 +847,11 @@ define_nodes! {
     TaggedTemplateExpression = 64 {
         tag: Node,
         quasi: Node,
+        typeArguments: MaybeNode,
     } from Expression::TaggedTemplate { loc, inner } {
             self.serialize_expression(&inner.tag),
             self.serialize_template_literal(&inner.quasi.0, &inner.quasi.1),
+            self.serialize_tagged_template_type_arguments(&inner.targs),
         },
     TemplateLiteral = 65 {
         quasis: NodeList,
@@ -943,10 +949,12 @@ define_nodes! {
     ObjectPattern = 78 {
         properties: NodeList,
         typeAnnotation: Node,
+        optional: TrueBoolean,
     },
     ArrayPattern = 79 {
         elements: NodeList,
         typeAnnotation: Node,
+        optional: TrueBoolean,
     },
     RestElement = 80 {
         argument: Node,
@@ -1082,13 +1090,13 @@ define_nodes! {
     DeclareVariable = 98 {
         declarations: NodeList,
         kind: String,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     } from Statement::DeclareVariable { loc, inner }
         {=> self.serialize_declare_variable(loc, inner)},
     DeclareFunction = 99 {
         id: Node,
         typeAnnotation: OptionalNode,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
         predicate: Node,
     } from Statement::DeclareFunction { loc, inner }
         {=> self.serialize_declare_function(loc, inner)},
@@ -1099,7 +1107,7 @@ define_nodes! {
         implements: NodeList,
         mixins: NodeList,
         body: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
         abstract: TrueBoolean,
     } from Statement::DeclareClass { loc, inner }
         {=> self.serialize_declare_class(loc, inner)},
@@ -1109,12 +1117,12 @@ define_nodes! {
         rest: Node,
         rendersType: Node,
         typeParameters: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     } from Statement::DeclareComponent { loc, inner }
         {=> self.serialize_declare_component(loc, inner)},
     DeclareHook = 102 {
         id: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     },
     DeclareModule = 103 {
         id: Node,
@@ -1131,18 +1139,18 @@ define_nodes! {
         declaration: Node,
         specifiers: NodeList,
         source: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     } from Statement::DeclareExportDeclaration { loc, inner }
         {=> self.serialize_declare_export_declaration(loc, inner)},
     DeclareExportAllDeclaration = 106 {
         source: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     },
     DeclareNamespace = 107 {
         global: Boolean,
         id: Node,
         body: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
         keyword: String,
     }
         from Statement::DeclareNamespace { loc, inner }
@@ -1152,14 +1160,14 @@ define_nodes! {
         typeParameters: Node,
         body: Node,
         extends: NodeList,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     } from Statement::DeclareInterface { loc, inner }
         {=> self.serialize_declare_interface(loc, inner)},
     DeclareTypeAlias = 109 {
         id: Node,
         typeParameters: Node,
         right: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     } from Statement::DeclareTypeAlias { loc, inner } {
             self.serialize_identifier_node(&inner.id),
             self.serialize_type_params_opt(&inner.tparams),
@@ -1169,11 +1177,13 @@ define_nodes! {
     DeclareEnum = 110 {
         id: Node,
         body: Node,
-        implicitDeclare: Boolean,
-    } from Statement::DeclareEnum { loc, inner } {
+        implicitDeclare: TrueBoolean,
+    } post { const: TrueBoolean }
+        from Statement::DeclareEnum { loc, inner } {
             self.serialize_identifier_node(&inner.id),
             self.serialize_enum_body(&inner.body),
             self.write_bool(self.implicit_declare_from_loc(loc)),
+            self.write_bool(inner.const_),
         },
 
     // ---------------------------------------------------------------
@@ -1254,7 +1264,9 @@ define_nodes! {
       from Type::UniqueSymbol { loc, symbol_loc, .. } {
             self.write_str("unique"),
             self.write_node_header(NodeKind::SymbolTypeAnnotation, symbol_loc),
-        },
+        }
+      from Type::Renders { loc, inner }
+        {=> self.serialize_renders_type_dispatch(loc, inner)},
     StringLiteralTypeAnnotation = 131 {
         value: String,
         raw: String,
@@ -1680,12 +1692,13 @@ define_nodes! {
         {=> self.serialize_function_type(loc, inner)},
 
     // ---------------------------------------------------------------
-    // Renders types (Flow component renders)
+    // Reserved renders-type wire slots
     // ---------------------------------------------------------------
+    // These node kinds are no longer emitted: renders annotations serialize
+    // as TypeOperator. Keep their slots so later wire IDs remain stable.
     RendersType = 215 {
         argument: Node,
-    } from Type::Renders { loc, inner }
-        {=> self.serialize_renders_type_dispatch(loc, inner)},
+    },
     RendersMaybeType = 216 {
         argument: Node,
     },
@@ -1730,7 +1743,7 @@ define_nodes! {
         lowerBound: Node,
         upperBound: Node,
         supertype: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     } from Statement::DeclareOpaqueType { loc, inner }
         {=> self.serialize_declare_opaque_type(loc, inner)},
     EnumBody = 223 {
@@ -1780,7 +1793,7 @@ define_nodes! {
     DeclareComponentAmbient = 228 as "DeclareComponent" {
         body: Node,
         id: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
         params: NodeList,
         rest: Node,
         rendersType: Node,
@@ -1986,7 +1999,7 @@ define_nodes! {
         typeParameters: Node,
         impltype: Node,
         supertype: Node,
-        implicitDeclare: Boolean,
+        implicitDeclare: TrueBoolean,
     },
     BabelExportAllDeclaration = 265 as "ExportAllDeclaration" {
         source: Node,

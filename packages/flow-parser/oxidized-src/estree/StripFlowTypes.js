@@ -38,8 +38,13 @@ export function transformProgram(
           return node.expression;
         }
 
+        case 'NonNullExpression': {
+          return node.argument;
+        }
+
         case 'CallExpression':
-        case 'NewExpression': {
+        case 'NewExpression':
+        case 'TaggedTemplateExpression': {
           if (node.typeArguments != null) {
             return nodeWith(node, {typeArguments: null});
           }

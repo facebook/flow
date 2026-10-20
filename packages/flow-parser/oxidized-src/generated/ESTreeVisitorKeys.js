@@ -194,6 +194,7 @@ module.exports = {
   ],
   DeclareFunction: [
     'id',
+    'typeAnnotation',
     'predicate',
   ],
   DeclareHook: [
@@ -254,9 +255,6 @@ module.exports = {
   EnumBigIntMember: [
     'id',
     'init',
-  ],
-  EnumBody: [
-    'members',
   ],
   EnumBooleanBody: [
     'members',
@@ -634,6 +632,7 @@ module.exports = {
     'key',
     'value',
     'variance',
+    'init',
   ],
   ObjectTypeSpreadProperty: [
     'argument',
@@ -711,15 +710,6 @@ module.exports = {
   RecordExpressionProperties: [
     'properties',
   ],
-  RendersMaybeType: [
-    'argument',
-  ],
-  RendersStarType: [
-    'argument',
-  ],
-  RendersType: [
-    'argument',
-  ],
   RestElement: [
     'argument',
   ],
@@ -753,6 +743,7 @@ module.exports = {
   SymbolTypeAnnotation: [],
   TaggedTemplateExpression: [
     'tag',
+    'typeArguments',
     'quasi',
   ],
   TemplateElement: [],

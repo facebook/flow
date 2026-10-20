@@ -44,7 +44,7 @@ function mapEnumDeclaration(node: EnumDeclaration, options: ParserOptions) {
       : callExpression(ident('require'), [stringLiteral('flow-enums-runtime')]);
   const mirrored =
     body.type === 'EnumStringBody' &&
-    (!members.length || members[0].type === 'EnumDefaultedMember');
+    members.every(member => member.type === 'EnumDefaultedMember');
   const enumExpression = mirrored
     ? callExpression(
         {
@@ -58,7 +58,13 @@ function mapEnumDeclaration(node: EnumDeclaration, options: ParserOptions) {
         [
           {
             type: 'ArrayExpression',
-            elements: members.map(member => stringLiteral(member.id.name)),
+            elements: members.map(member =>
+              stringLiteral(
+                member.id.type === 'Identifier'
+                  ? member.id.name
+                  : member.id.value,
+              ),
+            ),
             trailingComma: false,
             ...etc(),
           },
@@ -76,7 +82,11 @@ function mapEnumDeclaration(node: EnumDeclaration, options: ParserOptions) {
                 // calculation of `mirrored`.
                 member.type === 'EnumDefaultedMember'
                   ? callExpression(ident('Symbol'), [
-                      stringLiteral(member.id.name),
+                      stringLiteral(
+                        member.id.type === 'Identifier'
+                          ? member.id.name
+                          : member.id.value,
+                      ),
                     ])
                   : member.init,
               kind: 'init',

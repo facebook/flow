@@ -177,6 +177,7 @@ function mapRecordDeclaration(
       type: 'FunctionExpression',
       id: null,
       params: [constructorParam],
+      expression: false,
       body: {
         type: 'BlockStatement',
         body: ownProperties.map(({key}) => {

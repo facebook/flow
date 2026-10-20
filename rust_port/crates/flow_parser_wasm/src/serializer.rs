@@ -729,10 +729,11 @@ impl<'a> Serializer<'a> {
         use ast::expression::ExpressionInner;
         match &**expr {
             ExpressionInner::OptionalMember { loc, inner }
-                if !matches!(
-                    inner.optional,
-                    ast::expression::OptionalMemberKind::AssertNonnull
-                ) =>
+                if !self.is_babel()
+                    || !matches!(
+                        inner.optional,
+                        ast::expression::OptionalMemberKind::AssertNonnull
+                    ) =>
             {
                 if self.is_babel() {
                     self.serialize_babel_optional_member(loc, inner);
@@ -742,10 +743,11 @@ impl<'a> Serializer<'a> {
                 }
             }
             ExpressionInner::OptionalCall { loc, inner }
-                if !matches!(
-                    inner.optional,
-                    ast::expression::OptionalCallKind::AssertNonnull
-                ) =>
+                if !self.is_babel()
+                    || !matches!(
+                        inner.optional,
+                        ast::expression::OptionalCallKind::AssertNonnull
+                    ) =>
             {
                 if self.is_babel() {
                     self.serialize_babel_optional_call(loc, inner);
@@ -757,8 +759,7 @@ impl<'a> Serializer<'a> {
             ExpressionInner::OptionalMember { loc, inner } => {
                 // AssertNonnull (`expr!.foo`): emit MemberExpression with
                 // `optional: false` and the object wrapped in NonNullExpression
-                // (chain: true). Not part of the optional-chain rewrite, so no
-                // ChainExpression wrap.
+                // (chain: true) in Babel output.
                 self.write_node_header(
                     if self.is_babel() {
                         NodeKind::BabelMemberExpression
@@ -803,23 +804,26 @@ impl<'a> Serializer<'a> {
     fn serialize_optional_chain_child(&mut self, expr: &ast::expression::Expression<Loc, Loc>) {
         use ast::expression::ExpressionInner;
         match &**expr {
-            ExpressionInner::OptionalMember { loc, inner }
-                if !matches!(
-                    inner.optional,
-                    ast::expression::OptionalMemberKind::AssertNonnull
-                ) =>
-            {
+            ExpressionInner::OptionalMember { loc, inner } => {
                 self.serialize_optional_member_as_member_expression(loc, inner);
             }
-            ExpressionInner::OptionalCall { loc, inner }
-                if !matches!(
-                    inner.optional,
-                    ast::expression::OptionalCallKind::AssertNonnull
-                ) =>
-            {
+            ExpressionInner::OptionalCall { loc, inner } => {
                 self.serialize_optional_call_as_call_expression(loc, inner);
             }
             _ => self.serialize_expression(expr),
+        }
+    }
+
+    fn serialize_asserted_chain_child(&mut self, expr: &ast::expression::Expression<Loc, Loc>) {
+        use ast::expression::ExpressionInner;
+        if let ExpressionInner::Unary { loc, inner } = &**expr
+            && inner.operator == ast::expression::UnaryOperator::Nonnull
+        {
+            self.write_node_header(NodeKind::NonNullExpression, loc);
+            self.serialize_asserted_chain_child(&inner.argument);
+            self.write_bool(false);
+        } else {
+            self.serialize_optional_chain_child(expr);
         }
     }
 
@@ -834,7 +838,13 @@ impl<'a> Serializer<'a> {
     ) {
         // 55: MemberExpression — object(Node) property(Node) computed(Bool) optional(Bool)
         self.write_node_header(NodeKind::MemberExpression, loc);
-        self.serialize_optional_chain_child(&inner.member.object);
+        if inner.optional == ast::expression::OptionalMemberKind::AssertNonnull {
+            self.write_node_header(NodeKind::NonNullExpression, loc);
+            self.serialize_asserted_chain_child(&inner.member.object);
+            self.write_bool(true);
+        } else {
+            self.serialize_optional_chain_child(&inner.member.object);
+        }
         self.serialize_member_property(&inner.member.property);
         self.write_bool(matches!(
             &inner.member.property,
@@ -897,7 +907,13 @@ impl<'a> Serializer<'a> {
             },
             loc,
         );
-        self.serialize_optional_chain_child(&inner.call.callee);
+        if inner.optional == ast::expression::OptionalCallKind::AssertNonnull {
+            self.write_node_header(NodeKind::NonNullExpression, loc);
+            self.serialize_asserted_chain_child(&inner.call.callee);
+            self.write_bool(true);
+        } else {
+            self.serialize_optional_chain_child(&inner.call.callee);
+        }
         self.serialize_call_type_args_opt(&inner.call.targs);
         self.serialize_arg_list(&inner.call.arguments);
         self.write_bool(matches!(
@@ -1140,11 +1156,21 @@ impl<'a> Serializer<'a> {
         }
     }
 
-    fn serialize_babel_pattern_optional(&mut self, loc: &Loc) {
-        let present = self.babel_flags(loc) & COMPONENT_PATTERN_OPTIONAL_FLAG != 0;
+    fn serialize_babel_pattern_optional(&mut self, loc: &Loc, optional: bool) {
+        let present = optional || self.babel_flags(loc) & COMPONENT_PATTERN_OPTIONAL_FLAG != 0;
         self.write_bool(present);
         if present {
-            self.write_bool(false);
+            self.write_bool(optional);
+        }
+    }
+
+    fn serialize_tagged_template_type_arguments(
+        &mut self,
+        targs: &Option<ast::expression::CallTypeArgs<Loc, Loc>>,
+    ) {
+        self.write_bool(!self.is_babel());
+        if !self.is_babel() {
+            self.serialize_call_type_args_opt(targs);
         }
     }
 
@@ -1231,7 +1257,7 @@ impl<'a> Serializer<'a> {
     fn serialize_pattern(&mut self, pat: &ast::pattern::Pattern<Loc, Loc>) {
         match pat {
             ast::pattern::Pattern::Object { loc, inner } => {
-                // 78: ObjectPattern — properties(NodeList) typeAnnotation(Node)
+                // 78: ObjectPattern — properties(NodeList) typeAnnotation(Node) optional(TrueBoolean)
                 self.write_node_header(
                     if self.is_babel() {
                         NodeKind::BabelObjectPattern
@@ -1246,11 +1272,13 @@ impl<'a> Serializer<'a> {
                 }
                 self.serialize_annotation_or_hint(&inner.annot);
                 if self.is_babel() {
-                    self.serialize_babel_pattern_optional(loc);
+                    self.serialize_babel_pattern_optional(loc, inner.optional);
+                } else {
+                    self.write_bool(inner.optional);
                 }
             }
             ast::pattern::Pattern::Array { loc, inner } => {
-                // 79: ArrayPattern — elements(NodeList) typeAnnotation(Node)
+                // 79: ArrayPattern — elements(NodeList) typeAnnotation(Node) optional(TrueBoolean)
                 self.write_node_header(
                     if self.is_babel() {
                         NodeKind::BabelArrayPattern
@@ -1265,7 +1293,9 @@ impl<'a> Serializer<'a> {
                 }
                 self.serialize_annotation_or_hint(&inner.annot);
                 if self.is_babel() {
-                    self.serialize_babel_pattern_optional(loc);
+                    self.serialize_babel_pattern_optional(loc, inner.optional);
+                } else {
+                    self.write_bool(inner.optional);
                 }
             }
             ast::pattern::Pattern::Identifier { loc, inner } => {
@@ -1408,7 +1438,7 @@ impl<'a> Serializer<'a> {
                     self.serialize_pattern_object_property(property);
                 }
                 self.write_null_node();
-                self.serialize_babel_pattern_optional(loc);
+                self.serialize_babel_pattern_optional(loc, inner.optional);
             }
             ast::pattern::Pattern::Array { loc, inner } => {
                 self.write_node_header(NodeKind::BabelArrayPattern, loc);
@@ -1417,7 +1447,7 @@ impl<'a> Serializer<'a> {
                     self.serialize_pattern_array_element(element);
                 }
                 self.write_null_node();
-                self.serialize_babel_pattern_optional(loc);
+                self.serialize_babel_pattern_optional(loc, inner.optional);
             }
             ast::pattern::Pattern::Expression { inner, .. } => {
                 self.serialize_expression(inner);
@@ -2107,11 +2137,14 @@ impl<'a> Serializer<'a> {
         self.write_node_header(wire_kind, loc);
 
         if kind == NodeKind::ArrowFunctionExpression {
-            // ArrowFunctionExpression: params body typeParameters returnType async id predicate expression
+            // ArrowFunctionExpression: params body typeParameters returnType generator async id predicate expression
             self.serialize_function_params(&func.params);
             self.serialize_function_body(&func.body);
             self.serialize_type_params_opt(&func.tparams);
             self.serialize_return_type(&func.return_);
+            if !self.is_babel() {
+                self.write_bool(false);
+            }
             self.write_bool(func.async_);
             match &func.id {
                 Some(id) => self.serialize_identifier_node(id),
@@ -3045,7 +3078,7 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         decl: &ast::statement::ExportDefaultDeclaration<Loc, Loc>,
     ) {
-        // 37: ExportDefaultDeclaration — declaration(Node)
+        // 37: ExportDefaultDeclaration — declaration(Node) exportKind(MaybeString)
         self.write_node_header(NodeKind::ExportDefaultDeclaration, loc);
         match &decl.declaration {
             ast::statement::export_default_declaration::Declaration::Declaration(stmt) => {
@@ -3055,6 +3088,7 @@ impl<'a> Serializer<'a> {
                 self.serialize_expression(expr);
             }
         }
+        self.write_str_opt((!self.is_babel()).then_some("value"));
     }
 
     fn serialize_export_assignment(
@@ -3721,6 +3755,7 @@ impl<'a> Serializer<'a> {
         self.write_node_header(NodeKind::EnumDeclaration, loc);
         self.serialize_identifier_node(&decl.id);
         self.serialize_enum_body(&decl.body);
+        self.write_bool(decl.const_);
     }
 
     fn serialize_enum_body(&mut self, body: &ast::statement::enum_declaration::Body<Loc>) {
@@ -3887,7 +3922,7 @@ impl<'a> Serializer<'a> {
             && decl.source.is_some();
 
         if is_export_all {
-            // 106: DeclareExportAllDeclaration — source(Node) implicitDeclare(Boolean)
+            // 106: DeclareExportAllDeclaration — source(Node) implicitDeclare(TrueBoolean)
             self.write_node_header(NodeKind::DeclareExportAllDeclaration, loc);
             if let Some((src_loc, src_lit)) = &decl.source {
                 self.write_string_literal(src_loc, &src_lit.value, &src_lit.raw);
@@ -3897,7 +3932,7 @@ impl<'a> Serializer<'a> {
         }
 
         // 105: DeclareExportDeclaration — default declaration specifiers source
-        // implicitDeclare(Boolean)
+        // implicitDeclare(TrueBoolean)
         self.write_node_header(NodeKind::DeclareExportDeclaration, loc);
         self.write_bool(decl.default.is_some());
         // declaration
@@ -3950,6 +3985,7 @@ impl<'a> Serializer<'a> {
                         self.serialize_identifier_node(&declaration.id);
                         self.serialize_enum_body(&declaration.body);
                         self.write_bool(self.implicit_declare_from_loc(loc));
+                        self.write_bool(declaration.const_);
                     }
                     Declaration::Namespace { loc, declaration } => {
                         self.serialize_declare_namespace(loc, declaration);
@@ -4030,9 +4066,7 @@ impl<'a> Serializer<'a> {
             None => self.write_null_node(),
         }
         self.serialize_identifier_node(&inner.id);
-        if implicit_declare {
-            self.write_bool(true);
-        }
+        self.write_bool(implicit_declare);
         // params NodeList. Both body=Some (ComponentDeclaration) and body=None
         // (DeclareComponentAmbient) use value-position ComponentParameter(97)
         // with rest appended as RestElement(80), matching OCaml parser output.
@@ -4132,7 +4166,7 @@ impl<'a> Serializer<'a> {
             }
             return;
         }
-        // 98: DeclareVariable — declarations(NodeList) kind(String) implicitDeclare(Boolean)
+        // 98: DeclareVariable — declarations(NodeList) kind(String) implicitDeclare(TrueBoolean)
         self.write_node_header(NodeKind::DeclareVariable, loc);
         self.serialize_variable_declarator_list(&inner.declarations);
         self.write_str(inner.kind.as_str());
@@ -4153,13 +4187,13 @@ impl<'a> Serializer<'a> {
                 if f.effect == ast::function::Effect::Hook
         );
         if is_hook {
-            // 102: DeclareHook — id(Node) implicitDeclare(Boolean)
+            // 102: DeclareHook — id(Node) implicitDeclare(TrueBoolean)
             self.write_node_header(NodeKind::DeclareHook, loc);
             self.serialize_typed_identifier_opt(&inner.id, &inner.annot);
             self.write_bool(inner.implicit_declare);
         } else {
             // 99: DeclareFunction — id(Node) typeAnnotation(Node)
-            // implicitDeclare(Boolean) predicate(Node)
+            // implicitDeclare(TrueBoolean) predicate(Node)
             self.write_node_header(NodeKind::DeclareFunction, loc);
             self.serialize_typed_identifier_opt(&inner.id, &inner.annot);
             if inner.id.is_none() {
@@ -4181,7 +4215,7 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::DeclareClass<Loc, Loc>,
     ) {
         // 100: DeclareClass — id typeParameters extends implements mixins body
-        // implicitDeclare(Boolean) abstract(TrueBoolean)
+        // implicitDeclare(TrueBoolean) abstract(TrueBoolean)
         self.write_node_header(NodeKind::DeclareClass, loc);
         self.serialize_identifier_node(&inner.id);
         self.serialize_type_params_opt(&inner.tparams);
@@ -4222,7 +4256,7 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::DeclareComponent<Loc, Loc>,
     ) {
         // 101: DeclareComponent — id params rest rendersType typeParameters
-        // implicitDeclare(Boolean).
+        // implicitDeclare(TrueBoolean).
         // The OCaml parser emits value-position ComponentParameter for declare
         // component params (same shape as ComponentDeclaration), with rest
         // appended as RestElement in the params list.
@@ -4270,7 +4304,7 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::DeclareNamespace<Loc, Loc>,
     ) {
         // 107: DeclareNamespace — global(Boolean) id(Node) body(Node)
-        // implicitDeclare(Boolean) keyword(String)
+        // implicitDeclare(TrueBoolean) keyword(String)
         self.write_node_header(NodeKind::DeclareNamespace, loc);
         self.write_bool(matches!(
             &inner.id,
@@ -4297,7 +4331,7 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::Interface<Loc, Loc>,
     ) {
-        // 108: DeclareInterface — id typeParameters body extends implicitDeclare(Boolean)
+        // 108: DeclareInterface — id typeParameters body extends implicitDeclare(TrueBoolean)
         self.write_node_header(NodeKind::DeclareInterface, loc);
         self.serialize_identifier_node(&inner.id);
         self.serialize_type_params_opt(&inner.tparams);
@@ -4315,7 +4349,7 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::OpaqueType<Loc, Loc>,
     ) {
         // DeclareOpaqueType — id typeParameters impltype lowerBound upperBound
-        // supertype implicitDeclare(Boolean)
+        // supertype implicitDeclare(TrueBoolean)
         self.write_node_header(
             if self.is_babel() {
                 NodeKind::BabelDeclareOpaqueType
@@ -4473,9 +4507,6 @@ impl<'a> Serializer<'a> {
         // Every variant emits TypeOperator with
         // operator: "renders" | "renders?" | "renders*" and
         // typeAnnotation: <argument>; same as `serialize_renders_annotation`.
-        // The unused RendersType, RendersMaybeType, RendersStarType node kinds
-        // (215-217) stay in the schema because the wire protocol is
-        // append-only — removing them would shift every later kind ID.
         let operator = match inner.variant {
             ast::types::RendersVariant::Normal => "renders",
             ast::types::RendersVariant::Maybe => "renders?",

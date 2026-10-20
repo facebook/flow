@@ -172,6 +172,7 @@ exports[`HookDeclaration Export default hook ESTree 1`] = `
         "type": "HookDeclaration",
         "typeParameters": null,
       },
+      "exportKind": "value",
       "type": "ExportDefaultDeclaration",
     },
   ],

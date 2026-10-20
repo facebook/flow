@@ -276,6 +276,7 @@ export type ArrayPatternProps = {
   readonly typeAnnotation?: ?MaybeDetachedNode<
     ArrayPatternType['typeAnnotation'],
   >,
+  readonly optional?: ?ArrayPatternType['optional'],
 };
 
 export type ArrayTypeAnnotationProps = {
@@ -513,6 +514,7 @@ export type DeclaredPredicateProps = {
 export type DeclareEnumProps = {
   readonly id: MaybeDetachedNode<DeclareEnumType['id']>,
   readonly body: MaybeDetachedNode<DeclareEnumType['body']>,
+  readonly const?: ?DeclareEnumType['const'],
 };
 
 export type DeclareExportAllDeclarationProps = {
@@ -570,7 +572,7 @@ export type DeclareVariableProps = {
     MaybeDetachedNode<DeclareVariableType['declarations'][number]>,
   >,
   readonly kind: DeclareVariableType['kind'],
-  readonly implicitDeclare: DeclareVariableType['implicitDeclare'],
+  readonly implicitDeclare?: ?DeclareVariableType['implicitDeclare'],
 };
 
 export type DecoratorProps = {
@@ -615,6 +617,7 @@ export type EnumBooleanMemberProps = {
 export type EnumDeclarationProps = {
   readonly id: MaybeDetachedNode<EnumDeclarationType['id']>,
   readonly body: MaybeDetachedNode<EnumDeclarationType['body']>,
+  readonly const?: ?EnumDeclarationType['const'],
 };
 
 export type EnumDefaultedMemberProps = {
@@ -816,6 +819,7 @@ export type ImportDeclarationProps = {
     MaybeDetachedNode<ImportDeclarationType['attributes'][number]>,
   >,
   readonly importKind: ImportDeclarationType['importKind'],
+  readonly phase: ImportDeclarationType['phase'],
 };
 
 export type ImportDefaultSpecifierProps = {
@@ -834,6 +838,7 @@ export type ImportEqualsDeclarationProps = {
 export type ImportExpressionProps = {
   readonly source: MaybeDetachedNode<ImportExpressionType['source']>,
   readonly options?: ?MaybeDetachedNode<ImportExpressionType['options']>,
+  readonly phase: ImportExpressionType['phase'],
 };
 
 export type ImportNamespaceSpecifierProps = {
@@ -1158,6 +1163,7 @@ export type ObjectPatternProps = {
   readonly typeAnnotation?: ?MaybeDetachedNode<
     ObjectPatternType['typeAnnotation'],
   >,
+  readonly optional?: ?ObjectPatternType['optional'],
 };
 
 export type ObjectTypeAnnotationProps = {
@@ -1414,6 +1420,9 @@ export type SymbolTypeAnnotationProps = {};
 export type TaggedTemplateExpressionProps = {
   readonly tag: MaybeDetachedNode<TaggedTemplateExpressionType['tag']>,
   readonly quasi: MaybeDetachedNode<TaggedTemplateExpressionType['quasi']>,
+  readonly typeArguments?: ?MaybeDetachedNode<
+    TaggedTemplateExpressionType['typeArguments'],
+  >,
 };
 
 export type TemplateLiteralProps = {
@@ -1666,6 +1675,7 @@ export function ArrayPattern(props: {
     type: 'ArrayPattern',
     elements: props.elements.map(n => asDetachedNodeForCodeGen(n)),
     typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
+    optional: props.optional,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -2143,6 +2153,7 @@ export function DeclareEnum(props: {
     type: 'DeclareEnum',
     id: asDetachedNodeForCodeGen(props.id),
     body: asDetachedNodeForCodeGen(props.body),
+    const: props.const,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -2377,6 +2388,7 @@ export function EnumDeclaration(props: {
     type: 'EnumDeclaration',
     id: asDetachedNodeForCodeGen(props.id),
     body: asDetachedNodeForCodeGen(props.body),
+    const: props.const,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -2512,6 +2524,7 @@ export function ExportDefaultDeclaration(props: {
     {
       type: 'ExportDefaultDeclaration',
       declaration: asDetachedNodeForCodeGen(props.declaration),
+      exportKind: 'value',
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -2623,6 +2636,7 @@ export function FunctionDeclaration(props: {
       predicate: asDetachedNodeForCodeGen(props.predicate),
       generator: props.generator,
       async: props.async,
+      expression: false,
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -2645,6 +2659,7 @@ export function FunctionExpression(props: {
       predicate: asDetachedNodeForCodeGen(props.predicate),
       generator: props.generator,
       async: props.async,
+      expression: false,
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -2777,6 +2792,7 @@ export function ImportDeclaration(props: {
       source: asDetachedNodeForCodeGen(props.source),
       attributes: props.attributes?.map(n => asDetachedNodeForCodeGen(n)),
       importKind: props.importKind,
+      phase: props.phase,
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -2824,6 +2840,7 @@ export function ImportExpression(props: {
     type: 'ImportExpression',
     source: asDetachedNodeForCodeGen(props.source),
     options: asDetachedNodeForCodeGen(props.options),
+    phase: props.phase,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -3642,6 +3659,7 @@ export function ObjectPattern(props: {
     type: 'ObjectPattern',
     properties: props.properties.map(n => asDetachedNodeForCodeGen(n)),
     typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
+    optional: props.optional,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -3818,6 +3836,8 @@ export function PrivateIdentifier(props: {
     {
       type: 'PrivateIdentifier',
       name: props.name,
+      typeAnnotation: null,
+      optional: false,
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -4171,6 +4191,7 @@ export function TaggedTemplateExpression(props: {
       type: 'TaggedTemplateExpression',
       tag: asDetachedNodeForCodeGen(props.tag),
       quasi: asDetachedNodeForCodeGen(props.quasi),
+      typeArguments: asDetachedNodeForCodeGen(props.typeArguments),
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);

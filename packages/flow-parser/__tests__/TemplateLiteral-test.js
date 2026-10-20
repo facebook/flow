@@ -76,6 +76,32 @@ describe('TemplateLiteral', () => {
     expectEspreeAlignment(testCase);
   });
 
+  test('Babel omits tagged-template type arguments', () => {
+    const ast = parse('tag<T>`value`;', {babel: true});
+    const statement = ast.program.body[0];
+    if (
+      statement.type !== 'ExpressionStatement' ||
+      statement.expression.type !== 'TaggedTemplateExpression'
+    ) {
+      throw new Error('expected a tagged template expression');
+    }
+    expect(statement.expression).not.toHaveProperty('typeArguments');
+  });
+
+  test('ESTree preserves tagged-template type arguments', () => {
+    const ast = parse('tag<T>`value`;');
+    const statement = ast.body[0];
+    if (
+      statement.type !== 'ExpressionStatement' ||
+      statement.expression.type !== 'TaggedTemplateExpression'
+    ) {
+      throw new Error('expected a tagged template expression');
+    }
+    expect(statement.expression.typeArguments).toMatchObject({
+      type: 'TypeParameterInstantiation',
+    });
+  });
+
   test('Babel', () => {
     // Babel template literals with source locations
     expect(parseForSnapshot(testCase.code, {babel: true}))

@@ -62,6 +62,7 @@ export function isClassMember(node /*: ESNode */) /*: implies node is ClassMembe
   return (
     node.type === 'PropertyDefinition' ||
     node.type === 'MethodDefinition' ||
+    node.type === 'DeclareMethodDefinition' ||
     node.type === 'AbstractMethodDefinition' ||
     node.type === 'AbstractPropertyDefinition' ||
     node.type === 'ObjectTypeIndexer' ||
@@ -174,6 +175,7 @@ export function isExpression(node /*: ESNode */) /*: implies node is Expression 
     node.type === 'AsExpression' ||
     node.type === 'AsConstExpression' ||
     node.type === 'SatisfiesExpression' ||
+    node.type === 'NonNullExpression' ||
     node.type === 'JSXFragment' ||
     node.type === 'JSXElement' ||
     node.type === 'MatchExpression' ||

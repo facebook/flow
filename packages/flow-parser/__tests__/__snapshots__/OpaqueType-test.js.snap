@@ -8,7 +8,6 @@ exports[`OpaqueType Basic Babel 1`] = `
         "name": "Foo",
         "type": "Identifier",
       },
-      "implicitDeclare": false,
       "impltype": null,
       "supertype": null,
       "type": "DeclareOpaqueType",
@@ -46,7 +45,6 @@ exports[`OpaqueType Basic ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
-      "implicitDeclare": false,
       "impltype": null,
       "lowerBound": {
         "id": {

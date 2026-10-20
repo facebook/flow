@@ -1713,6 +1713,7 @@ exports[`ComponentDeclaration ref and normal params default exported ESTree 1`] 
         "type": "ComponentDeclaration",
         "typeParameters": null,
       },
+      "exportKind": "value",
       "type": "ExportDefaultDeclaration",
     },
   ],

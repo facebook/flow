@@ -894,7 +894,29 @@ function mapMatchStatement(node: MatchStatement): Statement {
       label: shallowCloneNode(topLabel),
       ...etc(),
     };
-    const bodyStatements = body.body.concat(breakNode);
+    const bodyStatements: Array<Statement> = [];
+    if (body.type === 'BlockStatement') {
+      body.body.forEach(statement => {
+        switch (statement.type) {
+          case 'ImportDeclaration':
+          case 'ImportEqualsDeclaration':
+          case 'ExportNamedDeclaration':
+          case 'ExportDefaultDeclaration':
+          case 'ExportAllDeclaration':
+          case 'ExportAssignment':
+          case 'NamespaceExportDeclaration':
+          case 'DeclareExportDeclaration':
+          case 'DeclareExportAllDeclaration':
+          case 'DeclareModuleExports':
+            throw new Error('Unexpected module declaration in match body');
+          default:
+            bodyStatements.push(statement);
+        }
+      });
+      bodyStatements.push(breakNode);
+    } else {
+      bodyStatements.push(body, breakNode);
+    }
     // If we have a guard, then we use a nested if statement
     // `if (<guard>) return <body>`
     const guardedBodyStatements: Array<Statement> =

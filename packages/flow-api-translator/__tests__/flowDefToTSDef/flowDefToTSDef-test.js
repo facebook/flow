@@ -95,6 +95,58 @@ describe('flowDefToTSDef TypeScript-compatible syntax', () => {
       translateFlowDefToTSDef('declare export {type Foo};', prettierConfig),
     ).resolves.toContain('export {type Foo};');
   });
+
+  test('recovers from unsupported bigint enums', async () => {
+    await expect(
+      translateFlowDefToTSDef(
+        'declare enum E of bigint { A = 1n }',
+        prettierConfig,
+      ),
+    ).resolves.toContain('Unsupported feature: Translating "bigint enums"');
+  });
+
+  test('translates string-literal enum member names', async () => {
+    await expect(
+      translateFlowDefToTSDef(
+        "declare enum E { 'a-b' = 'x', 'c-d' = 'y' }",
+        prettierConfig,
+      ),
+    ).resolves.toContain("declare enum E {\n  'a-b' = 'x',\n  'c-d' = 'y',\n}");
+  });
+
+  test('translates defaulted string-literal enum member names', async () => {
+    await expect(
+      translateFlowDefToTSDef("declare enum E { 'a-b', C }", prettierConfig),
+    ).resolves.toContain("declare enum E {\n  'a-b' = 'a-b',\n  C = 'C',\n}");
+  });
+
+  test('translates qualified class implements', async () => {
+    await expect(
+      translateFlowDefToTSDef(
+        'declare class C implements NS.I {}',
+        prettierConfig,
+      ),
+    ).resolves.toContain('declare class C implements NS.I {}');
+  });
+
+  test('translates declare export namespace specifiers', async () => {
+    await expect(
+      translateFlowDefToTSDef(
+        "declare export * as NS from 'module';",
+        prettierConfig,
+      ),
+    ).resolves.toContain("export * as NS from 'module';");
+  });
+
+  test('translates declare export interface and type alias', async () => {
+    const result = await translateFlowDefToTSDef(
+      'declare export interface I {}\ndeclare export type T = string;',
+      prettierConfig,
+    );
+
+    expect(result).toContain('export interface I {}');
+    expect(result).toContain('export type T = string;');
+  });
 });
 
 describe('flowToTSDef default export doc comments', () => {

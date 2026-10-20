@@ -22,6 +22,22 @@ const imports: Array<string> = [];
 const nodeTypeFunctions: Array<string> = [];
 const nodePropTypes: Array<string> = [];
 
+const FIXED_NODE_PROPERTIES: ReadonlyMap<
+  string,
+  ReadonlyMap<string, string>,
+> = new Map([
+  ['ExportDefaultDeclaration', new Map([['exportKind', "'value'"]])],
+  ['FunctionDeclaration', new Map([['expression', 'false']])],
+  ['FunctionExpression', new Map([['expression', 'false']])],
+  [
+    'PrivateIdentifier',
+    new Map([
+      ['typeAnnotation', 'null'],
+      ['optional', 'false'],
+    ]),
+  ],
+]);
+
 // These nodes are implemented in flow-transform's special-case node builders.
 const NODES_WITH_SPECIAL_HANDLING = new Set([
   'ArrowFunctionExpression',
@@ -74,7 +90,10 @@ export function ${node.name}(props: {
 export type ${node.name}Props = {
   ${node.arguments
     .map(arg => {
-      if (EXCLUDE_PROPERTIES_FROM_NODE.get(node.name)?.has(arg.name)) {
+      if (
+        EXCLUDE_PROPERTIES_FROM_NODE.get(node.name)?.has(arg.name) ||
+        FIXED_NODE_PROPERTIES.get(node.name)?.has(arg.name)
+      ) {
         return null;
       }
       const baseType = `${node.name}Type['${arg.name}']`;
@@ -107,6 +126,10 @@ export function ${node.name}(props: {
       .map(arg => {
         if (EXCLUDE_PROPERTIES_FROM_NODE.get(node.name)?.has(arg.name)) {
           return null;
+        }
+        const fixedValue = FIXED_NODE_PROPERTIES.get(node.name)?.get(arg.name);
+        if (fixedValue != null) {
+          return `${arg.name}: ${fixedValue}`;
         }
         switch (arg.type) {
           case 'NodePtr':

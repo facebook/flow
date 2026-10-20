@@ -16,6 +16,7 @@ import type {
   ClassBody,
   ClassDeclaration,
   ClassExpression,
+  DeclareMethodDefinition,
   ESNode,
   Identifier,
   MethodDefinition,
@@ -173,6 +174,13 @@ class ClassVisitor extends Visitor {
     }
     this.visitType(node.typeAnnotation);
     this.visitType(node.variance);
+  }
+
+  DeclareMethodDefinition(node: DeclareMethodDefinition): void {
+    if (node.computed) {
+      this._referencer.visit(node.key);
+    }
+    this.visitType(node.value);
   }
 
   ObjectTypeIndexer(node: ObjectTypeIndexer): void {

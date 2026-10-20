@@ -39,6 +39,7 @@ exports[`ArrowFunctionExpression \`id\` field exists and is \`null\` ESTree 1`] 
           "value": 0,
         },
         "expression": true,
+        "generator": false,
         "id": null,
         "params": [],
         "predicate": null,

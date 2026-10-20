@@ -432,9 +432,21 @@ const getTransforms = (
         FlowESTree.isDeclareEnum(node),
       );
     }
+    if (body.type === 'EnumBigIntBody') {
+      return unsupportedDeclaration(
+        node,
+        'bigint enums',
+        node.id,
+        FlowESTree.isDeclareEnum(node),
+      );
+    }
 
     const members: Array<TSESTree.TSEnumMemberNonComputedName> = [];
     for (const member of body.members) {
+      const memberId =
+        member.id.type === 'Identifier'
+          ? transform.Identifier(member.id, false)
+          : transform.StringLiteral(member.id);
       switch (member.type) {
         case 'EnumDefaultedMember': {
           if (body.type === 'EnumNumberBody') {
@@ -448,13 +460,16 @@ const getTransforms = (
             type: 'TSEnumMember',
             loc: DUMMY_LOC,
             computed: false,
-            id: transform.Identifier(member.id, false),
-            initializer: {
-              type: 'Literal',
-              loc: DUMMY_LOC,
-              raw: `"${member.id.name}"`,
-              value: member.id.name,
-            } as TSESTree.StringLiteral,
+            id: memberId,
+            initializer:
+              member.id.type === 'Identifier'
+                ? ({
+                    type: 'Literal',
+                    loc: DUMMY_LOC,
+                    raw: `"${member.id.name}"`,
+                    value: member.id.name,
+                  } as TSESTree.StringLiteral)
+                : transform.StringLiteral(member.id),
           });
           break;
         }
@@ -465,12 +480,19 @@ const getTransforms = (
             type: 'TSEnumMember',
             loc: DUMMY_LOC,
             computed: false,
-            id: transform.Identifier(member.id, false),
+            id: memberId,
             initializer:
               member.init.literalType === 'string'
                 ? transform.StringLiteral(member.init)
                 : transform.NumericLiteral(member.init),
           });
+          break;
+        case 'EnumBigIntMember':
+        case 'EnumBooleanMember':
+          throw unexpectedTranslationError(
+            member,
+            `Unexpected ${member.type} in ${body.type}`,
+          );
       }
     }
 
@@ -1078,7 +1100,10 @@ const getTransforms = (
       return {
         type: 'TSClassImplements',
         loc: DUMMY_LOC,
-        expression: transform.Identifier(node.id, false),
+        expression:
+          node.id.type === 'QualifiedTypeIdentifier'
+            ? transform.QualifiedTypeIdentifier(node.id)
+            : transform.Identifier(node.id, false),
         typeArguments: transform.TypeParameterInstantiation(
           node.typeParameters,
         ),
@@ -1324,6 +1349,7 @@ const getTransforms = (
       | TSESTree.ExportNamedDeclaration
       | Array<TSESTree.ExportNamedDeclaration>
       | TSESTree.ExportDefaultDeclaration
+      | TSESTree.ExportAllDeclaration
       | [
           (
             | TSESTree.VariableDeclaration
@@ -1554,7 +1580,15 @@ const getTransforms = (
               // flow does not support declared type exports with specifiers
               exportKind: 'value',
               source: null,
-              specifiers: node.specifiers.map(transform.ExportSpecifier),
+              specifiers: node.specifiers.map(specifier => {
+                if (specifier.type === 'ExportNamespaceSpecifier') {
+                  throw unexpectedTranslationError(
+                    specifier,
+                    'Unexpected export namespace specifier without a source',
+                  );
+                }
+                return transform.ExportSpecifier(specifier);
+              }),
             } as TSESTree.ExportNamedDeclarationWithoutSourceWithMultiple;
           }
 
@@ -1598,6 +1632,15 @@ const getTransforms = (
                     exportKind: 'type',
                   },
                 ];
+              case 'InterfaceDeclaration':
+                return [
+                  {
+                    declaration: transform.InterfaceDeclaration(
+                      node.declaration,
+                    ),
+                    exportKind: 'type',
+                  },
+                ];
               case 'DeclareNamespace':
                 return [
                   {
@@ -1613,6 +1656,13 @@ const getTransforms = (
                 return [
                   {
                     declaration: transform.DeclareOpaqueType(node.declaration),
+                    exportKind: 'type',
+                  },
+                ];
+              case 'TypeAlias':
+                return [
+                  {
+                    declaration: transform.TypeAlias(node.declaration),
                     exportKind: 'type',
                   },
                 ];
@@ -1715,6 +1765,19 @@ const getTransforms = (
 
           return mappedDeclarations.flat();
         } else {
+          const namespaceSpecifier = node.specifiers.find(
+            specifier => specifier.type === 'ExportNamespaceSpecifier',
+          );
+          if (namespaceSpecifier != null) {
+            return {
+              type: 'ExportAllDeclaration',
+              loc: DUMMY_LOC,
+              assertions: [],
+              exportKind: 'value',
+              source: transform.StringLiteral(node.source),
+              exported: transform.Identifier(namespaceSpecifier.exported),
+            };
+          }
           return {
             type: 'ExportNamedDeclaration',
             loc: DUMMY_LOC,
@@ -1724,7 +1787,15 @@ const getTransforms = (
             // flow does not support declared type exports with a source
             exportKind: 'value',
             source: transform.StringLiteral(node.source),
-            specifiers: node.specifiers.map(transform.ExportSpecifier),
+            specifiers: node.specifiers.map(specifier => {
+              if (specifier.type === 'ExportNamespaceSpecifier') {
+                throw unexpectedTranslationError(
+                  specifier,
+                  'Unexpected export namespace specifier',
+                );
+              }
+              return transform.ExportSpecifier(specifier);
+            }),
           } as TSESTree.ExportNamedDeclarationWithSource;
         }
       }
@@ -4109,7 +4180,7 @@ const getTransforms = (
         const key =
           node.key.type === 'Identifier'
             ? transform.Identifier(node.key)
-            : node.key.literalType === 'string'
+            : node.key.type === 'Literal' && node.key.literalType === 'string'
               ? transform.StringLiteral(node.key)
               : null;
 

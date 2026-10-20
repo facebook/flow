@@ -548,7 +548,6 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
           },
           optional: false,
         },
-        implicitDeclare: false,
         predicate: null,
       });
     }
@@ -610,6 +609,7 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
             ? 'typeof'
             : node.importKind,
         attributes: [],
+        phase: null,
         specifiers,
       });
     }
@@ -876,7 +876,6 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
           },
           optional: false,
         },
-        implicitDeclare: false,
         predicate: null,
       });
     }
@@ -1346,7 +1345,6 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
         global: false,
         id: Transform.Identifier(node.id),
         body,
-        implicitDeclare: false,
         keyword: 'namespace',
       });
     }
@@ -1746,6 +1744,8 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
                   ? (constructFlowNode<FlowESTree.PrivateIdentifier>({
                       type: 'PrivateIdentifier',
                       name: key.name,
+                      optional: false,
+                      typeAnnotation: null,
                     }) as $FlowFixMe)
                   : constructFlowNode<FlowESTree.StringLiteral>({
                       type: 'Literal',
@@ -1801,6 +1801,8 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
             ? (constructFlowNode<FlowESTree.PrivateIdentifier>({
                 type: 'PrivateIdentifier',
                 name: originalKey.name,
+                optional: false,
+                typeAnnotation: null,
               }) as $FlowFixMe)
             : constructFlowNode<FlowESTree.StringLiteral>({
                 type: 'Literal',
@@ -2077,7 +2079,6 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
             }),
           ],
           kind: node.kind,
-          implicitDeclare: false,
         });
       });
     }
