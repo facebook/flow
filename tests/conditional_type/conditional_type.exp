@@ -373,7 +373,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:25:33
 
-Cannot access number literal `0` on `Parameters` because `Readonly<[]>` [1] only has 0 elements, so index 0 is out of
+Cannot access `0` on `Parameters<() => number>` because `Readonly<[]>` [1] only has 0 elements, so index 0 is out of
 bounds. [invalid-tuple-index]
 
    extraction.js:25:33

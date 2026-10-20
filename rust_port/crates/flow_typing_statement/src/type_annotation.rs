@@ -1743,10 +1743,13 @@ fn convert_inner<'a>(
             let object_type = object_ast.loc().1.dupe();
             let index_ast = convert_inner(cx, env, &inner.index)?;
             let index_type = index_ast.loc().1.dupe();
-            let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::IndexedTypeAccess {
-                object: type_util::reason_of_t(&object_type).dupe(),
-                index: type_util::reason_of_t(&index_type).dupe(),
-            }));
+            let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::IndexedTypeAccess(Box::new(
+                type_::IndexedTypeAccessData {
+                    index_loc: type_util::loc_of_t(&index_type).dupe(),
+                    object: flow_js_utils::type_or_type_desc_for_error(&object_type),
+                    index: flow_js_utils::type_or_type_desc_for_error(&index_type),
+                },
+            ))));
             let destructor = match index_ast.deref() {
                 TypeInner::StringLiteral { literal, .. } => type_::Destructor::PropertyType {
                     name: Name::new(literal.value.dupe()),
@@ -8508,7 +8511,6 @@ fn optional_indexed_access<'a>(
     let index_ast = convert_inner(cx, env, index)?;
     let (_, index_type) = index_ast.loc();
     let index_type = index_type.dupe();
-    let index_reason = type_util::reason_of_t(&index_type).dupe();
     let (object_t, object_ast) = match _object.deref() {
         ast::types::TypeInner::OptionalIndexedAccess {
             loc: obj_loc,
@@ -8522,10 +8524,13 @@ fn optional_indexed_access<'a>(
         }
     };
     let lhs_reason = type_util::reason_of_t(&object_t).dupe();
-    let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::IndexedTypeAccess {
-        object: lhs_reason.dupe(),
-        index: index_reason,
-    }));
+    let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::IndexedTypeAccess(Box::new(
+        type_::IndexedTypeAccessData {
+            index_loc: type_util::loc_of_t(&index_type).dupe(),
+            object: flow_js_utils::type_or_type_desc_for_error(&object_t),
+            index: flow_js_utils::type_or_type_desc_for_error(&index_type),
+        },
+    ))));
     let non_maybe_destructor = match index_ast.deref() {
         ast::types::TypeInner::StringLiteral { literal, .. } => {
             let name = Name::new(literal.value.dupe());

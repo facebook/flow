@@ -46,6 +46,7 @@ use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_type::type_::DroType;
+use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::UnionRepresentativeData;
@@ -6860,6 +6861,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         lower: lower.dupe(),
                         upper: Box::new(f(upper.clone())),
                     })),
+                    VirtualRootUseOp::IndexedTypeAccess(box IndexedTypeAccessData {
+                        index_loc,
+                        object,
+                        index,
+                    }) => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::IndexedTypeAccess(
+                        Box::new(IndexedTypeAccessData {
+                            index_loc: index_loc.dupe(),
+                            object: f(object.clone()),
+                            index: f(index.clone()),
+                        }),
+                    ))),
                     VirtualRootUseOp::Speculation(inner_op) => {
                         VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
                             map_use_op(f, inner_op.as_ref().clone()),

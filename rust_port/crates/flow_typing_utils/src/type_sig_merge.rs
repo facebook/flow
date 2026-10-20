@@ -2274,12 +2274,13 @@ fn merge_annot<'cx>(
             let reason = reason::mk_reason(RIndexedAccess { optional: true }, loc.dupe());
             let object_type = merge_impl(env, cx, file, obj, false, false);
             let index_type = merge_impl(env, cx, file, index, false, false);
-            let object_reason = type_util::reason_of_t(&object_type).dupe();
-            let index_reason = type_util::reason_of_t(&index_type).dupe();
-            let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::IndexedTypeAccess {
-                object: object_reason,
-                index: index_reason,
-            }));
+            let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::IndexedTypeAccess(Box::new(
+                type_::IndexedTypeAccessData {
+                    index_loc: type_util::loc_of_t(&index_type).dupe(),
+                    object: flow_js_utils::type_or_type_desc_for_error(&object_type),
+                    index: flow_js_utils::type_or_type_desc_for_error(&index_type),
+                },
+            ))));
             let id = eval_id_of_aloc(cx, loc.dupe());
             let oia_index = match index {
                 Pack::Packed::Annot(annot) => match annot.as_ref() {

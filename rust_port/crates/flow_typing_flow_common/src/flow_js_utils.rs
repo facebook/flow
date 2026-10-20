@@ -1684,7 +1684,10 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         RootUseOp::FunCall(data) => Some(&data.op),
         RootUseOp::FunCallMethod(data) => Some(&data.op),
         RootUseOp::FunImplicitReturn(data) => Some(&data.upper),
-        RootUseOp::IndexedTypeAccess { index, .. } => Some(index),
+        RootUseOp::IndexedTypeAccess(data) => match &data.index {
+            TypeOrTypeDescT::Type(t) => Some(reason_of_t(t)),
+            TypeOrTypeDescT::TypeDesc(_) => None,
+        },
         RootUseOp::InferBoundCompatibilityCheck { infer, .. } => Some(infer),
         RootUseOp::ReactCreateElementCall(data) => Some(&data.op),
         RootUseOp::RecordCreate(data) => Some(&data.op),

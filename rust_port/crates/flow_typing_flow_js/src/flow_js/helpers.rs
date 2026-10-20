@@ -1357,7 +1357,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     | VirtualRootUseOp::FunReturnStatement { .. }
                     | VirtualRootUseOp::GetExport(..)
                     | VirtualRootUseOp::GetProperty(..)
-                    | VirtualRootUseOp::IndexedTypeAccess { .. }
+                    | VirtualRootUseOp::IndexedTypeAccess(..)
                     | VirtualRootUseOp::InferBoundCompatibilityCheck { .. }
                     | VirtualRootUseOp::EvalMappedType { .. }
                     | VirtualRootUseOp::SetProperty(..)

@@ -1233,8 +1233,8 @@ pub enum Frame<L: Dupe> {
 )]
 pub enum RootMessage<L: Dupe> {
     RootCannotAccessIndex {
-        index: Option<VirtualReasonDesc<L>>,
-        object_: Option<VirtualReasonDesc<L>>,
+        index: ErrorTypeDesc<L>,
+        object_: ErrorTypeDesc<L>,
     },
     RootCannotAddComputedProperty,
     RootCannotAssign {

@@ -1048,6 +1048,23 @@ pub struct SwitchRefinementCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct IndexedTypeAccessData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub index_loc: L,
+    pub object: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub index: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PositiveTypeGuardConsistencyData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub reason: VirtualReason<L>,
     pub return_reason: VirtualReason<L>,
@@ -1292,10 +1309,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     },
     GetExport(VirtualReason<L>),
     GetProperty(VirtualReason<L>),
-    IndexedTypeAccess {
-        object: VirtualReason<L>,
-        index: VirtualReason<L>,
-    },
+    IndexedTypeAccess(Box<IndexedTypeAccessData<L>>),
     InitField {
         op: VirtualReason<L>,
         body: VirtualReason<L>,
@@ -11543,7 +11557,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::GeneratorYield { .. } => "GeneratorYield",
         VirtualRootUseOp::GetExport { .. } => "GetExport",
         VirtualRootUseOp::GetProperty { .. } => "GetProperty",
-        VirtualRootUseOp::IndexedTypeAccess { .. } => "IndexedTypeAccess",
+        VirtualRootUseOp::IndexedTypeAccess(..) => "IndexedTypeAccess",
         VirtualRootUseOp::InferBoundCompatibilityCheck { .. } => "InferBoundCompatibilityCheck",
         VirtualRootUseOp::JSXCreateElement(..) => "JSXCreateElement",
         VirtualRootUseOp::ReactCreateElementCall(..) => "ReactCreateElementCall",

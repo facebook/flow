@@ -42,6 +42,7 @@ use flow_typing_type::type_::FunImplicitReturnData;
 use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
+use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::JSXCreateElementData;
 use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
@@ -1843,13 +1844,17 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::IndexedTypeAccess { object, index } => root(
+                            VirtualRootUseOp::IndexedTypeAccess(box IndexedTypeAccessData {
+                                index_loc,
+                                object,
+                                index,
+                            }) => root_at_loc(
                                 loc,
                                 frames,
-                                index,
+                                loc_of_aloc(index_loc),
                                 RootMessage::RootCannotAccessIndex {
-                                    index: index.desc.clone(),
-                                    object_: object.desc.clone(),
+                                    index: printed_type_desc(index),
+                                    object_: printed_type_desc(object),
                                 },
                                 custom_error_message,
                             ),
@@ -4987,9 +4992,9 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot access "),
-                        friendly::desc_of_reason_desc(index.as_ref()),
+                        desc_of_type_desc(index),
                         text(" on "),
-                        friendly::desc_of_reason_desc(object_.as_ref()),
+                        desc_of_type_desc(object_),
                     ]),
                 ),
                 RootMessage::RootCannotAddComputedProperty => (

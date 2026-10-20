@@ -4376,7 +4376,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:6:23
 
-Cannot access number literal `0` on `typeof y` because `void` [1] does not have properties. [incompatible-use]
+Cannot access `0` on `ReadonlyArray<{c: number, ...}> | void` because `void` [1] does not have properties.
+[incompatible-use]
 
    typeof.js:6:23
    6|   type T = (typeof y)[0]; // error: undefined does not have properties

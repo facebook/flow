@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- errors.js:12:13
 
-Cannot access string literal `p` on object type because property `p` is missing in `{}` [1]. [prop-missing]
+Cannot access `"p"` on `{}` because property `p` is missing in `{}` [1]. [prop-missing]
 
    errors.js:12:13
    12| type A = {}['p']; // We should get an error on this line.
@@ -140,7 +140,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- errors2.js:6:12
 
-Cannot access string literal `p` on object type because property `p` is missing in `{}` [1]. [prop-missing]
+Cannot access `"p"` on `{}` because property `p` is missing in `{}` [1]. [prop-missing]
 
    errors2.js:6:12
    6| null as {}['p']; // Error should point here.
@@ -154,7 +154,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- errors2.js:8:13
 
-Cannot access string literal `p` on object type because property `p` is missing in `{}` [1]. [prop-missing]
+Cannot access `"p"` on `{}` because property `p` is missing in `{}` [1]. [prop-missing]
 
    errors2.js:8:13
    8| type A = {}['p']; // Error should point here.
@@ -182,7 +182,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- errors2.js:15:34
 
-Cannot access string literal `p` on object type because property `p` is missing in `{}` [1]. [prop-missing]
+Cannot access `"p"` on `{}` because property `p` is missing in `{}` [1]. [prop-missing]
 
    errors2.js:15:34
    15| declare function f1<O>(o: O): {}['p']; // Error should point here.

@@ -48,6 +48,7 @@ use crate::type_::GetPrivatePropTData;
 use crate::type_::GetPropTData;
 use crate::type_::HasOwnPropTData;
 use crate::type_::ImplicitInstantiationTvarData;
+use crate::type_::IndexedTypeAccessData;
 use crate::type_::JSXCreateElementData;
 use crate::type_::MapTypeTData;
 use crate::type_::MethodTData;
@@ -1168,10 +1169,15 @@ where
             },
             GetExport(reason) => GetExport(mod_reason(reason)),
             GetProperty(reason) => GetProperty(mod_reason(reason)),
-            IndexedTypeAccess { object, index } => IndexedTypeAccess {
-                object: mod_reason(object),
-                index: mod_reason(index),
-            },
+            IndexedTypeAccess(box IndexedTypeAccessData {
+                index_loc,
+                object,
+                index,
+            }) => IndexedTypeAccess(Box::new(IndexedTypeAccessData {
+                index_loc: f(index_loc),
+                object: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), object),
+                index: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), index),
+            })),
             InferBoundCompatibilityCheck { bound, infer } => InferBoundCompatibilityCheck {
                 bound: mod_reason(bound),
                 infer: mod_reason(infer),

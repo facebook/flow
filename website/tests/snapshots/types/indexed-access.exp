@@ -10,8 +10,7 @@ No errors!
 === block 4 ===
 Error ----------------------------------------------------------------------- -:6:19
 
-Cannot access number literal `2` on `Pair` because `Pair` [1] only has 2 elements, so index 2 is out of bounds.
-[invalid-tuple-index]
+Cannot access `2` on `Pair` because `Pair` [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
 
    -:6:19
    6| const wrong: Pair[2] = true; // Error - `Pair` only has two elements
