@@ -17,8 +17,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:21:26
 
-Cannot cast object literal to object type because property `foo` is missing in object literal [1] but exists in
-`{foo: () => string}` [2]. [incompatible-type]
+Cannot cast object literal to `{foo: () => string}` because property `foo` is missing in object literal [1] but exists
+in `{foo: () => string}` [2]. [incompatible-type]
 
    A.js:21:26
    21| var Good = Object.assign({} as {foo: () => string}, MyEventEmitter.prototype, {
@@ -280,7 +280,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- scope.js:32:3
 
-Cannot cast `obj.attr` to number because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `obj.attr` to `number` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    scope.js:32:3
    32|   obj.attr as number;
@@ -297,8 +297,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:5:28
 
-Cannot cast `Object.assign(...)` to object type because in property `foo`: `void | string` [1] is not exactly the same
-as `void | number` [2]. [incompatible-type]
+Cannot cast `Object.assign(...)` to `{foo?: number}` because in property `foo`: `void | string` [1] is not exactly the
+same as `void | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo?: string}` [3] and `{foo?: number}` [4] exactly the same
@@ -323,8 +323,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:6:28
 
-Cannot cast `Object.assign(...)` to object type because in property `foo`: `void | string` [1] is not exactly the same
-as `void | number` [2]. [incompatible-type]
+Cannot cast `Object.assign(...)` to `{foo?: number}` because in property `foo`: `void | string` [1] is not exactly the
+same as `void | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo?: string}` [3] and `{foo?: number}` [4] exactly the same
@@ -349,8 +349,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:7:42
 
-Cannot cast `Object.assign(...)` to object type because in property `bar`: `void | number` [1] is not exactly the same
-as `void | boolean` [2]. [incompatible-type]
+Cannot cast `Object.assign(...)` to `{bar?: boolean, foo?: string}` because in property `bar`: `void | number` [1] is
+not exactly the same as `void | boolean` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
 - Either make `{bar?: number, foo?: string}` [3] and `{bar?: boolean, foo?: string}` [4] exactly the same
@@ -375,8 +375,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:10:26
 
-Cannot cast `Object.assign(...)` to object type because in property `b`: `void | string` [1] is not exactly the same as
-`void | true` [2]. [incompatible-type]
+Cannot cast `Object.assign(...)` to `{a?: number, b?: true, c?: boolean}` because in property `b`: `void | string` [1]
+is not exactly the same as `void | true` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
 - Either make `{a?: number, b?: string, c?: boolean}` [3] and `{a?: number, b?: true, c?: boolean}` [4] exactly the same

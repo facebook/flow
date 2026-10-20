@@ -126,7 +126,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ array_lib.js:71:3
 
-Cannot cast `Array.from(...)` to array type because in array element: `string` [1] is not exactly the same as
+Cannot cast `Array.from(...)` to `Array<empty>` because in array element: `string` [1] is not exactly the same as
 `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -186,8 +186,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ array_lib.js:80:3
 
-Cannot cast `arrayLike` to `$ArrayLike` because property `@@iterator` is missing in `ArrayLike<string>` [1] but exists
-in `interface {readonly length: number; readonly [indexer: number]: string}` [2]. [incompatible-type]
+Cannot cast `arrayLike` to `$ArrayLike<string>` because property `@@iterator` is missing in `ArrayLike<string>` [1] but
+exists in `interface {readonly length: number; readonly [indexer: number]: string}` [2]. [incompatible-type]
 
    array_lib.js:80:3
    80|   arrayLike as $ArrayLike<string>; // ERROR
@@ -232,8 +232,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:172:3
 
-Cannot cast `mutable` to `ArrayLike` because in the indexer property: `number` [1] is incompatible with `string` [2].
-[incompatible-type]
+Cannot cast `mutable` to `ArrayLike<string>` because in the indexer property: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    array_lib.js:172:3
    172|   mutable as ArrayLike<string>; // ERROR
@@ -250,8 +250,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:173:3
 
-Cannot cast `readonly` to `ArrayLike` because in the indexer property: `number` [1] is incompatible with `string` [2].
-[incompatible-type]
+Cannot cast `readonly` to `ArrayLike<string>` because in the indexer property: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    array_lib.js:173:3
    173|   readonly as ArrayLike<string>; // ERROR
@@ -268,8 +268,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:174:3
 
-Cannot cast `tuple` to `ArrayLike` because in the indexer property: `string` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast `tuple` to `ArrayLike<number>` because in the indexer property: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    array_lib.js:174:3
    174|   tuple as ArrayLike<number>; // ERROR
@@ -286,7 +286,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:179:3
 
-Cannot cast `first(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `first(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    array_lib.js:179:3
    179|   first(mutable) as string; // ERROR

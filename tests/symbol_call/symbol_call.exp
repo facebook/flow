@@ -125,7 +125,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:36:1
 
-Cannot cast `key` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `key` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keys.js:36:1
    36| key as string; // ERROR: a symbol is not a string
@@ -393,7 +393,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- shadow.js:11:1
 
-Cannot cast `shadowed` to symbol because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
+Cannot cast `shadowed` to `symbol` because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
 
    shadow.js:11:1
    11| shadowed as symbol; // ERROR: nothing minted a symbol here
@@ -420,7 +420,7 @@ expression. [signature-verification-failure]
 
 Error ----------------------------------------------------------------------------------------------- shadow_for.js:13:1
 
-Cannot cast `shadowed` to symbol because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
+Cannot cast `shadowed` to `symbol` because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
 
    shadow_for.js:13:1
    13| shadowed as symbol; // ERROR: nothing minted a symbol here
@@ -447,7 +447,7 @@ expression. [signature-verification-failure]
 
 Error -------------------------------------------------------------------------------------------- shadow_hoisted.js:7:1
 
-Cannot cast `early` to symbol because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
+Cannot cast `early` to `symbol` because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
 
    shadow_hoisted.js:7:1
    7| early as symbol; // ERROR: nothing minted a symbol here
@@ -474,7 +474,7 @@ expression. [signature-verification-failure]
 
 Error --------------------------------------------------------------------------------------------- shadow_scope.js:10:3
 
-Cannot cast `inner` to symbol because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
+Cannot cast `inner` to `symbol` because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
 
    shadow_scope.js:10:3
    10|   inner as symbol; // ERROR: nothing minted a symbol here
@@ -495,7 +495,7 @@ Found 34 errors
 Custom global Symbol libdef:
 Error --------------------------------------------------------------------------------------------------------- a.js:9:1
 
-Cannot cast `k` to number because unique symbol [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `k` to `number` because unique symbol [1] is incompatible with `number` [2]. [incompatible-type]
 
    a.js:9:1
    9| k as number; // ERROR: minted, so not the declared return type

@@ -40,7 +40,7 @@ No errors!
 === block 3 ===
 Error ---------------------------------------------------------------------------------------- -:12:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:12:3
    12|   x as string; // Error

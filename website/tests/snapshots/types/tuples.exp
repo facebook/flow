@@ -251,8 +251,8 @@ Found 2 errors
 === block 21 ===
 Error -------------------------------------------------------------------------------- -:6:1
 
-Cannot cast array literal to required of `AllOptional` because `Readonly<[]>` [1] has 0 elements but `AllOptional` [2]
-has 2 elements. [invalid-tuple-arity]
+Cannot cast array literal to `Required<AllOptional>` because `Readonly<[]>` [1] has 0 elements but `AllOptional` [2] has
+2 elements. [invalid-tuple-arity]
 
    -:6:1
    6| [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
@@ -272,8 +272,8 @@ No errors!
 === block 23 ===
 Error -------------------------------------------------------------------------------- -:4:1
 
-Cannot cast `b` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
-`[0, 1 | void, 2]` [2]. [invalid-tuple-arity]
+Cannot cast `b` to `[0, 1 | void, 2]` because array literal [1] has an unknown number of elements, so is incompatible
+with `[0, 1 | void, 2]` [2]. [invalid-tuple-arity]
 
    -:4:1
    4| b as [0, 1 | void, 2]; // ERROR
@@ -289,8 +289,8 @@ References:
 
 Error ------------------------------------------------------------------------------- -:10:1
 
-Cannot cast `e` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
-`[0, foo?: 1, bar?: 2]` [2]. [invalid-tuple-arity]
+Cannot cast `e` to `[0, foo?: 1, bar?: 2]` because array literal [1] has an unknown number of elements, so is
+incompatible with `[0, foo?: 1, bar?: 2]` [2]. [invalid-tuple-arity]
 
    -:10:1
    10| e as [0, foo?: 1, bar?: 2]; // ERROR
@@ -313,7 +313,7 @@ No errors!
 === block 25 ===
 Error -------------------------------------------------------------------------------- -:4:1
 
-Cannot cast `y` to tuple type because array literal [1] has 2 or more elements (inexact tuple) but
+Cannot cast `y` to `[number, number]` because array literal [1] has 2 or more elements (inexact tuple) but
 `[number, number]` [2] has 2 elements. [invalid-tuple-arity]
 
    -:4:1

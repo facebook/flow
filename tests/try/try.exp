@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- catch-param.js:18:3
 
-Cannot cast `e` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `e` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    catch-param.js:18:3
    18|   e as empty; // ERROR - is `unknown`
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- catch-param.js:31:3
 
-Cannot cast `e` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `e` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    catch-param.js:31:3
    31|   e as empty; // ERROR - is `unknown`
@@ -43,7 +43,7 @@ Invalid catch parameter type annotation. Annotation must be `any` or `unknown` i
 
 Error -------------------------------------------------------------------------------------------- finally-merge.js:11:5
 
-Cannot cast `p` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `p` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    finally-merge.js:11:5
    11|     p as number; // Error
@@ -60,7 +60,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- finally-merge.js:24:5
 
-Cannot cast `o.p` to number because `"hey"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `o.p` to `number` because `"hey"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    finally-merge.js:24:5
    24|     o.p as number; // Error

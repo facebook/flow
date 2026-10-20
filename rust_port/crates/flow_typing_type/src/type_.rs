@@ -1249,7 +1249,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     },
     Cast {
         lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        upper: Box<type_or_type_desc::TypeOrTypeDescT<L>>,
     },
     ClassExtendsCheck {
         def: VirtualReason<L>,

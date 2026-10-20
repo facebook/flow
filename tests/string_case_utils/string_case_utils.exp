@@ -494,7 +494,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:63:1
 
-Cannot cast `'FOO'` to `Y` because `"FOO"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
+Cannot cast `'FOO'` to `Y<"FOO">` because `"FOO"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    lowercase.js:63:1
    63| 'FOO' as Y<'FOO'>; // ERROR
@@ -508,7 +508,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:64:1
 
-Cannot cast `'anything'` to `Y` because `"anything"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
+Cannot cast `'anything'` to `Y<"FOO">` because `"anything"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    lowercase.js:64:1
    64| 'anything' as Y<'FOO'>; // ERROR
@@ -844,7 +844,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:59:1
 
-Cannot cast `'foo'` to `X` because `"foo"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
+Cannot cast `'foo'` to `X<"foo">` because `"foo"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    uppercase.js:59:1
    59| 'foo' as X<'foo'>; // ERROR
@@ -858,7 +858,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:60:1
 
-Cannot cast `'anything'` to `X` because `"anything"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
+Cannot cast `'anything'` to `X<"foo">` because `"anything"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    uppercase.js:60:1
    60| 'anything' as X<'foo'>; // ERROR

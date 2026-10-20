@@ -212,7 +212,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:117:1
 
-Cannot cast `'str'` to `U` because `"str"` [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot cast `'str'` to `T` because `"str"` [1] is incompatible with `T` [2]. [incompatible-type]
 
    import_type.js:117:1
    117| 'str' as U; // error

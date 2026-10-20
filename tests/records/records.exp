@@ -30,7 +30,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- declaration.js:20:3
 
-Cannot cast `x.a` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.a` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declaration.js:20:3
    20|   x.a as empty; // ERROR: `number`
@@ -77,7 +77,7 @@ Cannot assign function to `R.random` because property `random` is not writable. 
 
 Error --------------------------------------------------------------------------------------------- declaration.js:143:3
 
-Cannot cast `R.zero` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `R.zero` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declaration.js:143:3
    143|   R.zero as empty; // ERROR: `number`
@@ -141,8 +141,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:212:3
 
-Cannot cast `x` to object type because `R` [1] is not a subtype of `{readonly a: number}` [2]. Records are not subtypes
-of object types; consider rewriting `{readonly a: number}` [2] as an interface. [class-object-subtyping]
+Cannot cast `x` to `{readonly a: number}` because `R` [1] is not a subtype of `{readonly a: number}` [2]. Records are
+not subtypes of object types; consider rewriting `{readonly a: number}` [2] as an interface. [class-object-subtyping]
 
    declaration.js:212:3
    212|   x as {readonly a: number}; // ERROR
@@ -159,8 +159,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:213:3
 
-Cannot cast `x` to object type because `R` [1] is not a subtype of `{readonly a: number, ...}` [2]. Records are not
-subtypes of object types; consider rewriting `{readonly a: number, ...}` [2] as an interface. [class-object-subtyping]
+Cannot cast `x` to `{readonly a: number, ...}` because `R` [1] is not a subtype of `{readonly a: number, ...}` [2].
+Records are not subtypes of object types; consider rewriting `{readonly a: number, ...}` [2] as an interface.
+[class-object-subtyping]
 
    declaration.js:213:3
    213|   x as {readonly a: number, ...}; // ERROR
@@ -599,7 +600,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:13:3
 
-Cannot cast `x` to empty because `RNamed` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `RNamed` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:13:3
    13|   x as empty; // ERROR
@@ -661,7 +662,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:25:3
 
-Cannot cast `x` to empty because `RDefault` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `RDefault` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:25:3
    25|   x as empty; // ERROR
@@ -966,7 +967,7 @@ Use a record expression directly instead of `new` with an object literal. For ex
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:10:3
 
-Cannot cast `x.static` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.static` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:10:3
    10|   x.static as empty; // ERROR: `string`
@@ -983,7 +984,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:13:3
 
-Cannot cast `x.async` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.async` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:13:3
    13|   x.async as empty; // ERROR: `number`
@@ -1000,7 +1001,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:29:3
 
-Cannot cast `x.static()` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.static()` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:29:3
    29|   x.static() as empty; // ERROR: `number`
@@ -1017,7 +1018,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:32:3
 
-Cannot cast `x.async()` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.async()` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:32:3
    32|   x.async() as empty; // ERROR: `string`
@@ -1034,7 +1035,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:42:3
 
-Cannot cast `R.async` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `R.async` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:42:3
    42|   R.async as empty; // ERROR: `number`
@@ -1051,7 +1052,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:54:3
 
-Cannot cast `R.async()` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `R.async()` to `empty` because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:54:3
    54|   R.async() as empty; // ERROR: `boolean`

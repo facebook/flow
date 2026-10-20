@@ -21,7 +21,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- delegate_yield.js:17:5
 
-Cannot cast `x` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `x` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    delegate_yield.js:17:5
    17|     x as void; // error: number ~> void
@@ -55,7 +55,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generator.js:23:5
 
-Cannot cast `line` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `line` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    generator.js:23:5
    23|     line as void; // error: string ~> void
@@ -72,8 +72,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- iterator_object.js:8:1
 
-Cannot cast `gen()` to `AsyncIteratorObject` because in type argument `TReturn` [1]: `string` [2] is incompatible with
-`number` [3]. [incompatible-type]
+Cannot cast `gen()` to `AsyncIteratorObject<number, number, boolean>` because in type argument `TReturn` [1]:
+`string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    iterator_object.js:8:1
      8| gen() as AsyncIteratorObject<number, number, boolean>; // Error: string ~> number
@@ -93,7 +93,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- return.js:6:3
 
-Cannot cast `result.value` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `result.value` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    return.js:6:3
    6|   result.value as void; // error: string | number ~> void
@@ -110,7 +110,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- return.js:6:3
 
-Cannot cast `result.value` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `result.value` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    return.js:6:3
    6|   result.value as void; // error: string | number ~> void
@@ -127,7 +127,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:5
 
-Cannot cast `result.value` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `result.value` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    return.js:20:5
    20|     result.value as string; // error: number | void ~> string
@@ -144,7 +144,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:5
 
-Cannot cast `result.value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `result.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    return.js:20:5
    20|     result.value as string; // error: number | void ~> string
@@ -161,7 +161,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:12:7
 
-Cannot cast `value` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `value` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    throw.js:12:7
    12|       value as void; // error: number ~> void
@@ -178,7 +178,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:29:7
 
-Cannot cast `value` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `value` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    throw.js:29:7
    29|       value as void; // error: number ~> void

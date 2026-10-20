@@ -712,7 +712,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:582:9
 
-Cannot cast `x && x.y` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x && x.y` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:582:9
    582|   (x && x.y) as number; // error, x.y is a string (no error about x)
@@ -729,7 +729,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:590:4
 
-Cannot cast `a ?? false` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a ?? false` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:590:4
    590|   (a ?? false) as empty; // should error on `a` and `false`
@@ -746,7 +746,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:590:4
 
-Cannot cast `a ?? false` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a ?? false` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:590:4
    590|   (a ?? false) as empty; // should error on `a` and `false`
@@ -763,7 +763,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:590:9
 
-Cannot cast `a ?? false` to empty because `false` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a ?? false` to `empty` because `false` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:590:9
    590|   (a ?? false) as empty; // should error on `a` and `false`
@@ -788,7 +788,7 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
 
 Error ------------------------------------------------------------------------------------------------- logical.js:596:4
 
-Cannot cast `b && false` to empty because `indirection3` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `b && false` to `empty` because `indirection3` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:596:4
    596|   (b && false) as empty; // should only error on `b`
@@ -805,7 +805,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:596:4
 
-Cannot cast `b && false` to empty because `indirection4` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `b && false` to `empty` because `indirection4` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:596:4
    596|   (b && false) as empty; // should only error on `b`
@@ -822,7 +822,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:615:3
 
-Cannot cast `nullableStringOrNumber` to string because `0` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `nullableStringOrNumber` to `string` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    logical.js:615:3
    615|   nullableStringOrNumber as string; // error: number ~> string

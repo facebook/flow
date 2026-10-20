@@ -30,7 +30,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:52:6
 
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps<typeof A>` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    component_props.js:52:6
@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:56:6
 
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps<typeof B>` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    component_props.js:56:6
@@ -60,8 +60,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:58:9
 
-Cannot cast `{...}` to `React.ComponentProps` because properties `p` and `ref` are missing in `{...}` [1] but exist in
-`{p: ?number, readonly ref?: React.RefSetter<C>, ...}` [2]. [incompatible-type]
+Cannot cast `{...}` to `React.ComponentProps<typeof C>` because properties `p` and `ref` are missing in `{...}` [1] but
+exist in `{p: ?number, readonly ref?: React.RefSetter<C>, ...}` [2]. [incompatible-type]
 
    component_props.js:58:9
    58| ({}) as {...} as React.ComponentProps<typeof C>; // Error: missing property `p`
@@ -75,7 +75,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:60:6
 
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps<typeof C>` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    component_props.js:60:6
@@ -90,8 +90,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:62:9
 
-Cannot cast `{...}` to `React.ComponentProps` because properties `p` and `ref` are missing in `{...}` [1] but exist in
-`{p: ?number, readonly ref?: React.RefSetter<D>, ...}` [2]. [incompatible-type]
+Cannot cast `{...}` to `React.ComponentProps<typeof D>` because properties `p` and `ref` are missing in `{...}` [1] but
+exist in `{p: ?number, readonly ref?: React.RefSetter<D>, ...}` [2]. [incompatible-type]
 
    component_props.js:62:9
    62| ({}) as {...} as React.ComponentProps<typeof D>; // Error: missing property `p`
@@ -105,7 +105,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:64:6
 
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps<typeof D>` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    component_props.js:64:6
@@ -120,8 +120,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:71:2
 
-Cannot cast object literal to `React.ComponentProps` because property `p` is extra in object literal [1] but missing in
-`{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast object literal to `React.ComponentProps<typeof F>` because property `p` is extra in object literal [1] but
+missing in `{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    component_props.js:71:2
    71| ({p: 42}) as React.ComponentProps<typeof F>; // Error: extra property `p`
@@ -135,8 +135,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:72:2
 
-Cannot cast object literal to `React.ComponentProps` because property `p` is extra in object literal [1] but missing in
-`{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast object literal to `React.ComponentProps<typeof F>` because property `p` is extra in object literal [1] but
+missing in `{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    component_props.js:72:2
    72| ({p: 'foo'}) as React.ComponentProps<typeof F>; // Error: extra property `p`
@@ -150,7 +150,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:76:6
 
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps<typeof G>` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    component_props.js:76:6
@@ -165,8 +165,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:78:2
 
-Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast object literal to `React.ComponentProps<typeof H>` because object literal [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    component_props.js:78:2
    78| ({}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
@@ -205,8 +205,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:79:2
 
-Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast object literal to `React.ComponentProps<typeof H>` because object literal [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    component_props.js:79:2
    79| ({p: 42}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
@@ -245,8 +245,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:80:2
 
-Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast object literal to `React.ComponentProps<typeof H>` because object literal [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    component_props.js:80:2
    80| ({p: 'foo'}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
@@ -285,7 +285,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:84:6
 
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps<typeof I>` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    component_props.js:84:6
@@ -300,8 +300,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:86:2
 
-Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast object literal to `React.ComponentProps<typeof J>` because object literal [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    component_props.js:86:2
    86| ({}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
@@ -340,8 +340,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:87:2
 
-Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast object literal to `React.ComponentProps<typeof J>` because object literal [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    component_props.js:87:2
    87| ({p: 42}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
@@ -380,8 +380,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:88:2
 
-Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast object literal to `React.ComponentProps<typeof J>` because object literal [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    component_props.js:88:2
    88| ({p: 'foo'}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
@@ -420,7 +420,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ component_props.js:98:1
 
-Cannot cast `componentPropsResult` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `componentPropsResult` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    component_props.js:98:1
    98| componentPropsResult as string; // error: number ~> string
@@ -437,7 +438,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- component_props.js:105:1
 
-Cannot cast `functionComponentPropsResult` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `functionComponentPropsResult` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    component_props.js:105:1
@@ -455,7 +456,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- contravariant_refsetter.js:9:1
 
-Cannot cast `x` to `React.RefSetter` because in type argument `T` [1]: [incompatible-type]
+Cannot cast `x` to `React.RefSetter<number | string | boolean>` because in type argument `T` [1]: [incompatible-type]
  - Either `boolean` [2] is incompatible with `number` [3].
  - Or `boolean` [2] is incompatible with `string` [4].
 
@@ -480,7 +481,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:10:1
 
-Cannot cast `y` to `React.RefSetter` because in type argument `T` [1]: [incompatible-type]
+Cannot cast `y` to `React.RefSetter<number | string | boolean>` because in type argument `T` [1]: [incompatible-type]
  - Either `boolean` [2] is incompatible with `number` [3].
  - Or `boolean` [2] is incompatible with `string` [4].
 
@@ -1422,7 +1423,7 @@ References:
 
 Error ------------------------------------------------------------------------- react_util_types_monomorphization.js:7:3
 
-Cannot cast `config.foo` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `config.foo` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    react_util_types_monomorphization.js:7:3
    7|   config.foo as string; // error: mixed ~> string
@@ -1453,7 +1454,7 @@ References:
 
 Error ------------------------------------------------------------------------ react_util_types_monomorphization.js:12:3
 
-Cannot cast `ref.props.foo` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `ref.props.foo` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    react_util_types_monomorphization.js:12:3
    12|   ref.props.foo as string; // error: mixed ~> string
@@ -1535,7 +1536,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:13:20
 
-Cannot cast `foo` to union type because: [incompatible-type]
+Cannot cast `foo` to `Bar | null` because: [incompatible-type]
  - Either `Foo` [1] is incompatible with `Bar` [2].
  - Or `Foo` [1] is incompatible with `null` [3].
 
@@ -1903,7 +1904,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useContext_hook.js:52:3
 
-Cannot cast `bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `bar` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useContext_hook.js:52:3
    52|   bar as string; // Error: number is incompatible with string
@@ -2396,7 +2397,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `state.count` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2413,7 +2414,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `state.count` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2430,7 +2431,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `state.count` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2447,7 +2448,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `state.count` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2464,7 +2465,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `state.count` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2584,7 +2585,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- useState_hook.js:8:1
 
-Cannot cast `count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `count` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useState_hook.js:8:1
    8| count as string; // Error: number is incompatible with string

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:11:3
 
-Cannot cast `x` to `EnumValue` because in the enum's representation type: `string` [1] is incompatible with
+Cannot cast `x` to `EnumValue<number>` because in the enum's representation type: `string` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    abstract-enum-value.js:11:3
@@ -18,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:12:3
 
-Cannot cast `x` to `EnumValue` because in the enum's representation type: `string` [1] is incompatible with
+Cannot cast `x` to `EnumValue<{foo: 1}>` because in the enum's representation type: `string` [1] is incompatible with
 `{foo: 1}` [2]. [incompatible-type]
 
    abstract-enum-value.js:12:3
@@ -67,7 +67,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:22:3
 
-Cannot cast `x` to empty because `EnumValue<string>` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `EnumValue<string>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    abstract-enum-value.js:22:3
    22|   x as empty; // ERROR
@@ -101,7 +101,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:24:3
 
-Cannot cast `x` to number because `EnumValue<string>` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `EnumValue<string>` [1] is incompatible with `number` [2]. [incompatible-type]
 
    abstract-enum-value.js:24:3
    24|   x as number; // ERROR
@@ -118,7 +118,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:34:3
 
-Cannot cast `x` to boolean because `EnumValue<T>` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x` to `boolean` because `EnumValue<T>` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    abstract-enum-value.js:34:3
    34|   x as boolean; // ERROR
@@ -135,7 +135,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:35:3
 
-Cannot cast `x` to `EnumValue` because in the enum's representation type: `number` [1] is incompatible with
+Cannot cast `x` to `EnumValue<boolean>` because in the enum's representation type: `number` [1] is incompatible with
 `boolean` [2]. [incompatible-type]
 
    abstract-enum-value.js:35:3
@@ -153,7 +153,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:35:3
 
-Cannot cast `x` to `EnumValue` because in the enum's representation type: `string` [1] is incompatible with
+Cannot cast `x` to `EnumValue<boolean>` because in the enum's representation type: `string` [1] is incompatible with
 `boolean` [2]. [incompatible-type]
 
    abstract-enum-value.js:35:3
@@ -171,7 +171,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:44:3
 
-Cannot cast `x` to `EnumValue` because `void` [1] is incompatible with `EnumValue<string>` [2]. [incompatible-type]
+Cannot cast `x` to `EnumValue<string>` because `void` [1] is incompatible with `EnumValue<string>` [2].
+[incompatible-type]
 
    abstract-enum-value.js:44:3
    44|   x as EnumValue<string>; // ERROR
@@ -258,8 +259,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:19:3
 
-Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1] > type argument `TRepresentationType` [2]:
-`string` [3] is incompatible with `boolean` [4]. [incompatible-type]
+Cannot cast `x` to `Enum<EnumValue<boolean>>` because in type argument `TEnumValue` [1] > type argument
+`TRepresentationType` [2]: `string` [3] is incompatible with `boolean` [4]. [incompatible-type]
 
    abstract-enum.js:19:3
     19|   x as Enum<EnumValue<boolean>>; // ERROR
@@ -282,7 +283,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:20:3
 
-Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1]: `EnumValue<string>` [2] is incompatible with
+Cannot cast `x` to `Enum<E>` because in type argument `TEnumValue` [1]: `EnumValue<string>` [2] is incompatible with
 `E` [3]. [incompatible-type]
 
    abstract-enum.js:20:3
@@ -362,7 +363,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:36:1
 
-Cannot cast `S.A` to nullable string because `S` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `S.A` to `?string` because `S` [1] is incompatible with `string` [2]. [incompatible-type]
 
 You can explicitly cast your enum value to a string using `<expr> as string`.
 
@@ -381,7 +382,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:50:1
 
-Cannot cast `B.A` to number because `B` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `B.A` to `number` because `B` [1] is incompatible with `number` [2]. [incompatible-type]
 
    cast.js:50:1
    50| B.A as number; // Error
@@ -398,7 +399,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:51:1
 
-Cannot cast `S.A` to boolean because `S` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `S.A` to `boolean` because `S` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    cast.js:51:1
    51| S.A as boolean; // Error
@@ -415,7 +416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:52:1
 
-Cannot cast `N.A` to boolean because `N` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `N.A` to `boolean` because `N` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    cast.js:52:1
    52| N.A as boolean; // Error
@@ -432,7 +433,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:53:1
 
-Cannot cast `Y.A` to boolean because `Y` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `Y.A` to `boolean` because `Y` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    cast.js:53:1
    53| Y.A as boolean; // Error
@@ -449,7 +450,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:54:1
 
-Cannot cast `X.A` to string because `B` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `X.A` to `string` because `B` [1] is incompatible with `string` [2]. [incompatible-type]
 
    cast.js:54:1
    54| X.A as string; // Error
@@ -466,7 +467,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
 
-Cannot cast `BS.A` to union type because: [incompatible-type]
+Cannot cast `BS.A` to `string | boolean` because: [incompatible-type]
  - Either `B` [1] is incompatible with `boolean` [2].
     - You can explicitly cast your enum value to a boolean using `<expr> as boolean`.
  - Or `B` [1] is incompatible with `string` [3].
@@ -492,7 +493,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
 
-Cannot cast `BS.A` to union type because: [incompatible-type]
+Cannot cast `BS.A` to `string | boolean` because: [incompatible-type]
  - Either `S` [1] is incompatible with `string` [2].
     - You can explicitly cast your enum value to a string using `<expr> as string`.
  - Or `S` [1] is incompatible with `boolean` [3].
@@ -518,7 +519,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:68:1
 
-Cannot cast `sb` to union type because: [incompatible-type]
+Cannot cast `sb` to `string | boolean` because: [incompatible-type]
  - Either `S` [1] is incompatible with `string` [2].
     - You can explicitly cast your enum value to a string using `<expr> as string`.
  - Or `S` [1] is incompatible with `boolean` [3].
@@ -544,7 +545,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:68:1
 
-Cannot cast `sb` to union type because: [incompatible-type]
+Cannot cast `sb` to `string | boolean` because: [incompatible-type]
  - Either `B` [1] is incompatible with `boolean` [2].
     - You can explicitly cast your enum value to a boolean using `<expr> as boolean`.
  - Or `B` [1] is incompatible with `string` [3].
@@ -570,7 +571,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:70:1
 
-Cannot cast `S.A` to interface type because `S` [1] is incompatible with `interface {}` [2]. [incompatible-type]
+Cannot cast `S.A` to `interface {}` because `S` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    cast.js:70:1
    70| S.A as interface {}; // Error
@@ -587,7 +588,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:71:1
 
-Cannot cast `S.A` to empty because `S` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `S.A` to `empty` because `S` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    cast.js:71:1
    71| S.A as empty; // Error
@@ -604,7 +605,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- computed-property.js:14:1
 
-Cannot cast `o` to object type because in the indexer property's key: `"A"` [1] is incompatible with `E` [2].
+Cannot cast `o` to `{A: number, ...}` because in the indexer property's key: `"A"` [1] is incompatible with `E` [2].
 [incompatible-type]
 
    computed-property.js:14:1
@@ -622,7 +623,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- computed-property.js:15:1
 
-Cannot cast `o[E.A]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o[E.A]` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    computed-property.js:15:1
    15| o[E.A] as empty; // ERROR
@@ -695,7 +696,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- computed-property.js:28:1
 
-Cannot cast `k` to read-only array type because in array element: `string` [1] is incompatible with `E` [2].
+Cannot cast `k` to `ReadonlyArray<E>` because in array element: `string` [1] is incompatible with `E` [2].
 [incompatible-type]
 
    computed-property.js:28:1
@@ -752,7 +753,7 @@ part of the build system (whatever you use) rather than Flow itself. [unsupporte
 
 Error -------------------------------------------------------------------------------------------------- declared.js:9:1
 
-Cannot cast `E.A` to empty because `E` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `E.A` to `empty` because `E` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declared.js:9:1
    9| E.A as empty; // ERROR
@@ -769,7 +770,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- declared.js:17:1
 
-Cannot cast `F.N` to empty because `F` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `F.N` to `empty` because `F` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declared.js:17:1
    17| F.N as empty; // ERROR
@@ -786,7 +787,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:16:1
 
-Cannot cast `F` to `EO` because `F` [1] is incompatible with `E` [2]. [incompatible-type]
+Cannot cast `F` to enum `E` because `F` [1] is incompatible with `E` [2]. [incompatible-type]
 
    enum-object.js:16:1
    16| F as EO; // Error: types are incompatible
@@ -817,7 +818,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:28:3
 
-Cannot cast `x` to `EO` because `void` [1] is incompatible with enum `E` [2]. [incompatible-type]
+Cannot cast `x` to enum `E` because `void` [1] is incompatible with enum `E` [2]. [incompatible-type]
 
    enum-object.js:28:3
    28|   x as EO; // Error
@@ -834,7 +835,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:32:3
 
-Cannot cast `x` to undefined because enum `E` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `x` to `void` because enum `E` [1] is incompatible with `void` [2]. [incompatible-type]
 
    enum-object.js:32:3
    32|   x as void; // Error
@@ -851,7 +852,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:37:3
 
-Cannot cast `x` to undefined because enum `E` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `x` to `void` because enum `E` [1] is incompatible with `void` [2]. [incompatible-type]
 
    enum-object.js:37:3
    37|   x as void; // Error
@@ -868,7 +869,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:43:3
 
-Cannot cast `x` to `EO` because `void` [1] is incompatible with enum `E` [2]. [incompatible-type]
+Cannot cast `x` to enum `E` because `void` [1] is incompatible with enum `E` [2]. [incompatible-type]
 
    enum-object.js:43:3
    43|   x as EO; // Error
@@ -885,7 +886,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:47:3
 
-Cannot cast `x` to undefined because enum `E` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `x` to `void` because enum `E` [1] is incompatible with `void` [2]. [incompatible-type]
 
    enum-object.js:47:3
    47|   x as void; // Error
@@ -902,7 +903,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:53:3
 
-Cannot cast `x` to `EO` because `void` [1] is incompatible with enum `E` [2]. [incompatible-type]
+Cannot cast `x` to enum `E` because `void` [1] is incompatible with enum `E` [2]. [incompatible-type]
 
    enum-object.js:53:3
    53|   x as EO; // Error
@@ -950,7 +951,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:76:1
 
-Cannot cast `E` to interface type because enum `E` [1] is incompatible with `interface {}` [2]. [incompatible-type]
+Cannot cast `E` to `interface {}` because enum `E` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    enum-object.js:76:1
    76| E as interface {}; // Error
@@ -967,7 +968,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- enum-object.js:77:1
 
-Cannot cast `E` to interface type because enum `E` [1] is incompatible with `interface {A: E; B: E}` [2].
+Cannot cast `E` to `interface {A: E; B: E}` because enum `E` [1] is incompatible with `interface {A: E; B: E}` [2].
 [incompatible-type]
 
    enum-object.js:77:1
@@ -3005,7 +3006,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import-declared.js:6:1
 
-Cannot cast `F.M` to boolean because `F` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `F.M` to `boolean` because `F` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    import-declared.js:6:1
     6| F.M as boolean; // ERROR
@@ -3022,7 +3023,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-declared.js:11:1
 
-Cannot cast `H.X` to boolean because `H` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `H.X` to `boolean` because `H` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    import-declared.js:11:1
    11| H.X as boolean; // ERROR
@@ -3192,7 +3193,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- methods.js:44:1
 
-Cannot cast `E.getName(...)` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `E.getName(...)` to `boolean` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    methods.js:44:1
    44| E.getName(E.B) as boolean; // Error - wrong type
@@ -3300,7 +3301,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:19:3
 
-Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bVoidable` to `void` because `B` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:19:3
    19|   bVoidable as void; // Error
@@ -3317,7 +3318,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:24:3
 
-Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bVoidable` to `void` because `B` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:24:3
    24|   bVoidable as void; // Error
@@ -3368,7 +3369,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:39:3
 
-Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bVoidable` to `void` because `B` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:39:3
    39|   bVoidable as void; // Error
@@ -3419,7 +3420,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:51:3
 
-Cannot cast `bMaybe` to null because `B` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `bMaybe` to `null` because `B` [1] is incompatible with `null` [2]. [incompatible-type]
 
    refinement.js:51:3
    51|   bMaybe as null; // Error
@@ -3436,7 +3437,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:52:3
 
-Cannot cast `bMaybe` to undefined because `B` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bMaybe` to `void` because `B` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:52:3
    52|   bMaybe as void; // Error
@@ -3487,7 +3488,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:62:3
 
-Cannot cast `bMaybe` to null because `B` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `bMaybe` to `null` because `B` [1] is incompatible with `null` [2]. [incompatible-type]
 
    refinement.js:62:3
    62|   bMaybe as null; // Error
@@ -3504,7 +3505,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:63:3
 
-Cannot cast `bMaybe` to undefined because `B` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bMaybe` to `void` because `B` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:63:3
    63|   bMaybe as void; // Error
@@ -3521,7 +3522,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:70:3
 
-Cannot cast `bBoolVoid` to undefined because `B` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bBoolVoid` to `void` because `B` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:70:3
    70|   bBoolVoid as void; // Error
@@ -3538,7 +3539,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:70:3
 
-Cannot cast `bBoolVoid` to undefined because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bBoolVoid` to `void` because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:70:3
    70|   bBoolVoid as void; // Error
@@ -3572,7 +3573,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:78:3
 
-Cannot cast `bBoolVoid` to boolean because `void` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `bBoolVoid` to `boolean` because `void` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    refinement.js:78:3
    78|   bBoolVoid as boolean; // Error
@@ -3606,7 +3607,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:80:3
 
-Cannot cast `bBoolVoid` to union type because: [incompatible-type]
+Cannot cast `bBoolVoid` to `B | boolean` because: [incompatible-type]
  - Either `void` [1] is incompatible with `B` [2].
  - Or `void` [1] is incompatible with `boolean` [3].
 
@@ -3628,7 +3629,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:84:3
 
-Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bVoidable` to `void` because `B` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:84:3
    84|   bVoidable as void; // Error
@@ -3662,7 +3663,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:91:3
 
-Cannot cast `bVoidable` to undefined because `B` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bVoidable` to `void` because `B` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:91:3
    91|   bVoidable as void; // Error
@@ -3679,7 +3680,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:98:3
 
-Cannot cast `bEmpty` to undefined because `BEmpty` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bEmpty` to `void` because `BEmpty` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:98:3
    98|   bEmpty as void; // Error
@@ -3713,7 +3714,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:113:3
 
-Cannot cast `bTrue` to undefined because `BTrue` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bTrue` to `void` because `BTrue` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:113:3
    113|   bTrue as void; // Error
@@ -3764,7 +3765,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:133:3
 
-Cannot cast `bFalse` to boolean literal `true` because `BFalse` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `bFalse` to `true` because `BFalse` [1] is incompatible with `true` [2]. [incompatible-type]
 
    refinement.js:133:3
    133|   bFalse as true; // Error
@@ -3798,7 +3799,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:153:3
 
-Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `nVoidable` to `void` because `N` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:153:3
    153|   nVoidable as void; // Error
@@ -3815,7 +3816,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:158:3
 
-Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `nVoidable` to `void` because `N` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:158:3
    158|   nVoidable as void; // Error
@@ -3883,7 +3884,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:175:3
 
-Cannot cast `nMaybe` to null because `N` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `nMaybe` to `null` because `N` [1] is incompatible with `null` [2]. [incompatible-type]
 
    refinement.js:175:3
    175|   nMaybe as null; // Error
@@ -3900,7 +3901,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:176:3
 
-Cannot cast `nMaybe` to undefined because `N` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `nMaybe` to `void` because `N` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:176:3
    176|   nMaybe as void; // Error
@@ -3917,7 +3918,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:183:3
 
-Cannot cast `nNumVoid` to undefined because `N` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `nNumVoid` to `void` because `N` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:183:3
    183|   nNumVoid as void; // Error
@@ -3934,7 +3935,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:183:3
 
-Cannot cast `nNumVoid` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `nNumVoid` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:183:3
    183|   nNumVoid as void; // Error
@@ -3968,7 +3969,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:191:3
 
-Cannot cast `nNumVoid` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `nNumVoid` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:191:3
    191|   nNumVoid as number; // Error
@@ -4002,7 +4003,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:193:3
 
-Cannot cast `nNumVoid` to union type because: [incompatible-type]
+Cannot cast `nNumVoid` to `N | number` because: [incompatible-type]
  - Either `void` [1] is incompatible with `N` [2].
  - Or `void` [1] is incompatible with `number` [3].
 
@@ -4024,7 +4025,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:197:3
 
-Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `nVoidable` to `void` because `N` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:197:3
    197|   nVoidable as void; // Error
@@ -4058,7 +4059,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:204:3
 
-Cannot cast `nVoidable` to undefined because `N` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `nVoidable` to `void` because `N` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:204:3
    204|   nVoidable as void; // Error
@@ -4075,7 +4076,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:214:3
 
-Cannot cast `nTruthy` to undefined because `NTruthy` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `nTruthy` to `void` because `NTruthy` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:214:3
    214|   nTruthy as void; // Error
@@ -4126,7 +4127,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:239:3
 
-Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `sVoidable` to `void` because `S` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:239:3
    239|   sVoidable as void; // Error
@@ -4143,7 +4144,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:244:3
 
-Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `sVoidable` to `void` because `S` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:244:3
    244|   sVoidable as void; // Error
@@ -4211,7 +4212,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:261:3
 
-Cannot cast `sMaybe` to null because `S` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `sMaybe` to `null` because `S` [1] is incompatible with `null` [2]. [incompatible-type]
 
    refinement.js:261:3
    261|   sMaybe as null; // Error
@@ -4228,7 +4229,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:262:3
 
-Cannot cast `sMaybe` to undefined because `S` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `sMaybe` to `void` because `S` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:262:3
    262|   sMaybe as void; // Error
@@ -4245,7 +4246,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:269:3
 
-Cannot cast `sStrVoid` to undefined because `S` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `sStrVoid` to `void` because `S` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:269:3
    269|   sStrVoid as void; // Error
@@ -4262,7 +4263,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:269:3
 
-Cannot cast `sStrVoid` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `sStrVoid` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:269:3
    269|   sStrVoid as void; // Error
@@ -4296,7 +4297,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:277:3
 
-Cannot cast `sStrVoid` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `sStrVoid` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinement.js:277:3
    277|   sStrVoid as string; // Error
@@ -4330,7 +4331,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:279:3
 
-Cannot cast `sStrVoid` to union type because: [incompatible-type]
+Cannot cast `sStrVoid` to `S | string` because: [incompatible-type]
  - Either `void` [1] is incompatible with `S` [2].
  - Or `void` [1] is incompatible with `string` [3].
 
@@ -4352,7 +4353,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:283:3
 
-Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `sVoidable` to `void` because `S` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:283:3
    283|   sVoidable as void; // Error
@@ -4386,7 +4387,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:290:3
 
-Cannot cast `sVoidable` to undefined because `S` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `sVoidable` to `void` because `S` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:290:3
    290|   sVoidable as void; // Error
@@ -4403,7 +4404,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:300:3
 
-Cannot cast `sTruthy` to undefined because `STruthy` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `sTruthy` to `void` because `STruthy` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:300:3
    300|   sTruthy as void; // Error
@@ -4596,7 +4597,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:365:3
 
-Cannot cast `bigVoidable` to undefined because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bigVoidable` to `void` because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:365:3
    365|   bigVoidable as void; // Error
@@ -4613,7 +4614,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:370:3
 
-Cannot cast `bigVoidable` to undefined because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bigVoidable` to `void` because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:370:3
    370|   bigVoidable as void; // Error
@@ -4681,7 +4682,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:387:3
 
-Cannot cast `bigMaybe` to null because `Big` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `bigMaybe` to `null` because `Big` [1] is incompatible with `null` [2]. [incompatible-type]
 
    refinement.js:387:3
    387|   bigMaybe as null; // Error
@@ -4698,7 +4699,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:388:3
 
-Cannot cast `bigMaybe` to undefined because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bigMaybe` to `void` because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:388:3
    388|   bigMaybe as void; // Error
@@ -4715,7 +4716,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:395:3
 
-Cannot cast `bigBigintVoid` to undefined because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bigBigintVoid` to `void` because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:395:3
    395|   bigBigintVoid as void; // Error
@@ -4732,7 +4733,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:395:3
 
-Cannot cast `bigBigintVoid` to undefined because `bigint` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bigBigintVoid` to `void` because `bigint` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:395:3
    395|   bigBigintVoid as void; // Error
@@ -4766,7 +4767,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:403:3
 
-Cannot cast `bigBigintVoid` to bigint because `void` [1] is incompatible with `bigint` [2]. [incompatible-type]
+Cannot cast `bigBigintVoid` to `bigint` because `void` [1] is incompatible with `bigint` [2]. [incompatible-type]
 
    refinement.js:403:3
    403|   bigBigintVoid as bigint; // Error
@@ -4800,7 +4801,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:405:3
 
-Cannot cast `bigBigintVoid` to union type because: [incompatible-type]
+Cannot cast `bigBigintVoid` to `Big | bigint` because: [incompatible-type]
  - Either `void` [1] is incompatible with `Big` [2].
  - Or `void` [1] is incompatible with `bigint` [3].
 
@@ -4822,7 +4823,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:409:3
 
-Cannot cast `bigVoidable` to undefined because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bigVoidable` to `void` because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:409:3
    409|   bigVoidable as void; // Error
@@ -4856,7 +4857,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:416:3
 
-Cannot cast `bigVoidable` to undefined because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bigVoidable` to `void` because `Big` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:416:3
    416|   bigVoidable as void; // Error
@@ -4873,7 +4874,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:426:3
 
-Cannot cast `bigTruthy` to undefined because `BigTruthy` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `bigTruthy` to `void` because `BigTruthy` [1] is incompatible with `void` [2]. [incompatible-type]
 
    refinement.js:426:3
    426|   bigTruthy as void; // Error
@@ -5020,7 +5021,7 @@ Cannot instantiate `Readonly` because enum `E` [1] is not an object, array, or t
 
 Error -------------------------------------------------------------------------------------------- utility-types.js:19:1
 
-Cannot cast `'A'` to key set because property `A` is missing in enum `E` [1]. [incompatible-use]
+Cannot cast `'A'` to `keyof typeof E` because property `A` is missing in enum `E` [1]. [incompatible-use]
 
    utility-types.js:19:1
    19| 'A' as keyof typeof E; // Error: TODO: improve error
@@ -5085,7 +5086,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- value-of.js:6:3
 
-Cannot cast `x.valueOf()` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.valueOf()` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    value-of.js:6:3
    6|   x.valueOf() as empty; // ERROR
@@ -5102,7 +5103,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- value-of.js:15:3
 
-Cannot cast `x.valueOf()` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.valueOf()` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    value-of.js:15:3
    15|   x.valueOf() as empty; // ERROR
@@ -5119,7 +5120,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- value-of.js:19:3
 
-Cannot cast `x.valueOf()` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.valueOf()` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    value-of.js:19:3
    19|   x.valueOf() as empty; // ERROR

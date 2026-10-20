@@ -231,7 +231,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- use_export_namespace.js:4:1
 
-Cannot cast `ExportedNS.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `ExportedNS.x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_export_namespace.js:4:1
    4| ExportedNS.x as empty; // error: number ~> empty
@@ -357,7 +357,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_functions_no_semi.js:9:1
 
-Cannot cast `noSemi(...)` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `noSemi(...)` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_functions_no_semi.js:9:1
    9| noSemi(1) as empty; // ERROR
@@ -374,7 +374,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ use_generic_functions.js:13:1
 
-Cannot cast `identity<...>(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `identity<...>(...)` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use_generic_functions.js:13:1
    13| identity<string>("hello") as number; // ERROR - string not assignable to number
@@ -391,7 +391,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- use_generic_functions.js:14:13
 
-Cannot cast `map<...>(...)` to array type because in array element: `string` [1] is not exactly the same as
+Cannot cast `map<...>(...)` to `Array<number>` because in array element: `string` [1] is not exactly the same as
 `number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -645,7 +645,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- use_implicit_functions.js:19:1
 
-Cannot cast `named(...)` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `named(...)` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_implicit_functions.js:19:1
    19| named('s') as empty; // ERROR
@@ -662,7 +662,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- use_implicit_functions.js:23:1
 
-Cannot cast `def(...)` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `def(...)` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_implicit_functions.js:23:1
    23| def(0) as empty; // ERROR
@@ -779,7 +779,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- use_optional_methods.js:7:1
 
-Cannot cast `instance.optionalMethod` to function type because `void` [1] is incompatible with
+Cannot cast `instance.optionalMethod` to `(x: number) => void` because `void` [1] is incompatible with
 `(x: number) => void` [2]. [incompatible-type]
 
    use_optional_methods.js:7:1
@@ -797,7 +797,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_optional_methods.js:11:1
 
-Cannot cast `OptionalMethods.optionalStaticMethod` to function type because `void` [1] is incompatible with
+Cannot cast `OptionalMethods.optionalStaticMethod` to `() => string` because `void` [1] is incompatible with
 `() => string` [2]. [incompatible-type]
 
    use_optional_methods.js:11:1
@@ -815,7 +815,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_optional_methods.js:15:1
 
-Cannot cast `instance.optionalGeneric` to function type because `void` [1] is incompatible with `(x: T) => T` [2].
+Cannot cast `instance.optionalGeneric` to `<T>(x: T) => T` because `void` [1] is incompatible with `(x: T) => T` [2].
 [incompatible-type]
 
    use_optional_methods.js:15:1
@@ -913,7 +913,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- use_variables.js:23:1
 
-Cannot cast `named` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `named` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_variables.js:23:1
    23| named as empty; // ERROR

@@ -18,7 +18,7 @@ No errors!
 ======editing a contributor rebuilds globals======
 Error -------------------------------------------------------------------------------------------------- consumer.js:1:1
 
-Cannot cast `AugmentedGlobal` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `AugmentedGlobal` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:1:1
    1| AugmentedGlobal as string; // ERROR
@@ -125,7 +125,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ======ordinary dependency edit stays incremental======
 Error ------------------------------------------------------------------------------------------------ dependent.ts:10:1
 
-Cannot cast `dependencyValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `dependencyValue` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    dependent.ts:10:1
    10| dependencyValue as string; // ERROR

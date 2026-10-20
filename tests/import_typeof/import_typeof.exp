@@ -92,8 +92,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:54:7
 
-Cannot cast function to `functionFoo1T` because in the return value: `void` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast function to `(x: number) => number` because in the return value: `void` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    import_typeof.js:54:7
    54| (() => {}) as functionFoo1T; // Error: return types are not compatible
@@ -107,8 +107,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:63:7
 
-Cannot cast function to `functionFoo2T` because in the return value: `void` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast function to `(x: number) => number` because in the return value: `void` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    import_typeof.js:63:7
    63| (() => {}) as functionFoo2T; // Error: return types are not compatible
@@ -122,8 +122,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:72:7
 
-Cannot cast function to `functionFoo3T` because in the return value: `void` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast function to `(x: number) => number` because in the return value: `void` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    import_typeof.js:72:7
    72| (() => {}) as functionFoo3T; // Error: return types are not compatible
@@ -137,8 +137,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:81:7
 
-Cannot cast function to `functionFoo4T` because in the return value: `void` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast function to `(x: number) => number` because in the return value: `void` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    import_typeof.js:81:7
    81| (() => {}) as functionFoo4T; // Error: return types are not compatible
@@ -232,7 +232,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:146:2
 
-Cannot cast object literal to `E` because property `a` is extra in object literal [1] but missing in `{}` [2]. Exact
+Cannot cast object literal to `{}` because property `a` is extra in object literal [1] but missing in `{}` [2]. Exact
 objects do not accept extra props. [incompatible-type]
 
    import_typeof.js:146:2
@@ -247,7 +247,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:155:1
 
-Cannot cast `'str'` to `C` because `"str"` [1] is incompatible with class `C` [2]. [incompatible-type]
+Cannot cast `'str'` to class `C` because `"str"` [1] is incompatible with class `C` [2]. [incompatible-type]
 
    import_typeof.js:155:1
    155| 'str' as C; // Error
@@ -261,7 +261,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:164:1
 
-Cannot cast `'str'` to `CPrime` because `"str"` [1] is incompatible with class `C` [2]. [incompatible-type]
+Cannot cast `'str'` to class `C` because `"str"` [1] is incompatible with class `C` [2]. [incompatible-type]
 
    import_typeof.js:164:1
    164| 'str' as CPrime; // Error

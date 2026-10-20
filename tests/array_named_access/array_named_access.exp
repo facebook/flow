@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:17:1
 
-Cannot cast `arr['length']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `arr['length']` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:17:1
     17| arr['length'] as string; // ERROR: number is not string
@@ -53,7 +53,7 @@ Cannot assign `3` to `arr['map']` because property `map` is not writable. [canno
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:1
 
-Cannot cast `arr['0']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `arr['0']` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:28:1
    28| arr['0'] as string; // ERROR: number is not string
@@ -78,7 +78,7 @@ Cannot assign `5` to `ro['0']` because read-only arrays cannot be written to. [c
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:1
 
-Cannot cast `tup['0']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `tup['0']` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:42:1
    42| tup['0'] as string; // ERROR: number is not string
@@ -124,7 +124,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:1
 
-Cannot cast `tup['length']` to number literal `3` because `2` [1] is incompatible with `3` [2]. [incompatible-type]
+Cannot cast `tup['length']` to `3` because `2` [1] is incompatible with `3` [2]. [incompatible-type]
 
    test.js:47:1
    47| tup['length'] as 3; // ERROR: the length is 2, not 3

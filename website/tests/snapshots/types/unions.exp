@@ -97,7 +97,7 @@ No errors!
 === block 10 ===
 Error ------------------------------------------------------------------------------- -:12:5
 
-Cannot cast `payload` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `payload` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:12:5
    12|     payload as string; // Error! payload is still PayloadMap[T]

@@ -398,7 +398,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- name_capture.js:12:1
 
-Cannot cast `capture(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `capture(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    name_capture.js:12:1
    12| capture('') as string; // ERROR: B is number, not string

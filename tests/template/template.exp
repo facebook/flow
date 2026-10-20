@@ -42,7 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:34:5
 
-Cannot cast `quasis.raw` to empty because `ReadonlyArray<string>` [1] is incompatible with `empty` [2].
+Cannot cast `quasis.raw` to `empty` because `ReadonlyArray<string>` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    tagged_template.js:34:5
@@ -60,7 +60,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:43:3
 
-Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_template.js:43:3
     43|   x as empty; // ERROR
@@ -93,7 +93,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:54:3
 
-Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_template.js:54:3
     54|   x as empty; // ERROR
@@ -110,7 +110,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- template.js:3:1
 
-Cannot cast template string to number because `"baz"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast template string to `number` because `"baz"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    template.js:3:1
    3| `baz` as number; // ERROR

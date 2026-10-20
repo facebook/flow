@@ -8,8 +8,8 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ------------------------------------------------------------------------------- fully_resolved_unification.js:20:1
 
-Cannot cast `x` to array type because in array element: `empty` [1] is not exactly the same as `{bar: string}` [2].
-[incompatible-type]
+Cannot cast `x` to `Array<{bar: string}>` because in array element: `empty` [1] is not exactly the same as
+`{bar: string}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<empty>` [1] and `Array<{bar: string}>` [3] exactly the same

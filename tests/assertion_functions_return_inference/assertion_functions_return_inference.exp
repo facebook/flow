@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:12:3
 
-Cannot cast `result` to `Promise` because in type argument `R` [1]: `number` [2] is incompatible with `void` [3].
+Cannot cast `result` to `Promise<void>` because in type argument `R` [1]: `number` [2] is incompatible with `void` [3].
 [incompatible-type]
 
    test.js:12:3
@@ -21,7 +21,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:3
 
-Cannot cast `sometimes` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `sometimes` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:47:3
@@ -39,7 +39,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:51:3
 
-Cannot cast `trueArgument` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `trueArgument` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:51:3
@@ -57,7 +57,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:55:3
 
-Cannot cast `unknownArgument` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `unknownArgument` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:55:3
@@ -75,7 +75,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:59:3
 
-Cannot cast `missingArgument` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `missingArgument` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:59:3
@@ -93,7 +93,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:63:3
 
-Cannot cast `otherParameter` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `otherParameter` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:63:3
@@ -111,7 +111,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:67:3
 
-Cannot cast `precedingSpread` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `precedingSpread` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:67:3
@@ -129,7 +129,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:3
 
-Cannot cast `typeGuard` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `typeGuard` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:71:3
@@ -147,7 +147,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:75:3
 
-Cannot cast `optional` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `optional` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:75:3
@@ -165,7 +165,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:81:3
 
-Cannot cast `nested` to function type because in the return value: `void` [1] is incompatible with `empty` [2].
+Cannot cast `nested` to `() => empty` because in the return value: `void` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    test.js:81:3

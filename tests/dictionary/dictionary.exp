@@ -77,7 +77,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:79:3
 
-Cannot cast `o.toString()` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `o.toString()` to `boolean` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    dictionary.js:79:3
     79|   o.toString() as boolean; // error: string ~> boolean
@@ -1525,7 +1525,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:60:3
 
-Cannot cast `x.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.foo` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    incompatible.js:60:3
    60|   x.foo as string; // error

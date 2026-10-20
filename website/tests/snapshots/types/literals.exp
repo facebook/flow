@@ -36,8 +36,7 @@ Found 1 error
 === block 3 ===
 Error ------------------------------------------------------------------------------ -:6:1
 
-Cannot cast `l` to string literal `success` because `string` [1] is incompatible with `"success"` [2].
-[incompatible-type]
+Cannot cast `l` to `"success"` because `string` [1] is incompatible with `"success"` [2]. [incompatible-type]
 
    -:6:1
    6| l as "success"; // Error — l has been widened to string
@@ -57,7 +56,7 @@ Found 1 error
 === block 4 ===
 Error ------------------------------------------------------------------------------ -:6:1
 
-Cannot cast `o.x` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `o.x` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    -:6:1
    6| o.x as 1;      // Error — o.x is number
@@ -73,7 +72,7 @@ References:
 
 Error ----------------------------------------------------------------------------- -:12:1
 
-Cannot cast `arr[0]` to string literal `a` because `string` [1] is incompatible with `"a"` [2]. [incompatible-type]
+Cannot cast `arr[0]` to `"a"` because `string` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    -:12:1
    12| arr[0] as "a";                     // Error — arr[0] is string

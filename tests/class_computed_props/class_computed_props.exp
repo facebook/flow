@@ -25,7 +25,7 @@ annotation at property `s2`: [signature-verification-failure]
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:10:1
 
-Cannot cast `e.foo` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `e.foo` to `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    consumer.js:10:1
    10| e.foo as 2; // ERROR: 1 is not 2
@@ -42,7 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:11:1
 
-Cannot cast `e.go()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `e.go()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:11:1
    11| e.go() as string; // ERROR: number is not string
@@ -59,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:12:1
 
-Cannot cast `e.ext` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `e.ext` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:12:1
    12| e.ext as string; // ERROR: number is not string
@@ -93,7 +93,7 @@ simple key in object: [signature-verification-failure]
 
 Error ---------------------------------------------------------------------------------------------------- local.js:18:1
 
-Cannot cast `c.foo` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `c.foo` to `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    local.js:18:1
    18| c.foo as 2; // ERROR: 1 is not 2
@@ -110,7 +110,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:19:1
 
-Cannot cast `c[2]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `c[2]` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    local.js:19:1
    19| c[2] as number; // ERROR: string is not number
@@ -150,7 +150,7 @@ string literal, number literal, or `unique symbol`. [illegal-key]
 
 Error ----------------------------------------------------------------------------------------------- member_key.js:13:1
 
-Cannot cast `c.mem` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `c.mem` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    member_key.js:13:1
    13| c.mem as string; // ERROR: number is not string
@@ -167,7 +167,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- methods.js:18:1
 
-Cannot cast `c.go(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `c.go(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    methods.js:18:1
    18| c.go(1) as string; // ERROR: number is not string

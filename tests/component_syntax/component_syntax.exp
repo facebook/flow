@@ -611,7 +611,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:10:3
 
-Cannot cast `foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `foo` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    component_type_checking.js:10:3
    10|   foo as string; // ERROR
@@ -628,7 +628,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:12:3
 
-Cannot cast `bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `bar` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    component_type_checking.js:12:3
    12|   bar as string; // ERROR
@@ -653,7 +653,7 @@ Cannot resolve name `baz`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:16:3
 
-Cannot cast `a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    component_type_checking.js:16:3
    16|   a as string; // ERROR
@@ -702,7 +702,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:26:3
 
-Cannot cast `rest` to empty because `{foo: number}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `rest` to `empty` because `{foo: number}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    component_type_checking.js:26:3
    26|   rest as empty; // ERROR
@@ -777,8 +777,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- config.js:4:1
 
-Cannot cast `config` to object type because property `n` is read-only in `{readonly n: number}` [1] but writable in
-`{n: number | string}` [2]. [incompatible-variance]
+Cannot cast `config` to `{n: number | string}` because property `n` is read-only in `{readonly n: number}` [1] but
+writable in `{n: number | string}` [2]. [incompatible-variance]
 
    config.js:4:1
    4| config as {n: number | string}; // error: n is not read-only in {n: number | string}
@@ -795,8 +795,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- config_imported.js:3:1
 
-Cannot cast `config` to object type because property `n` is read-only in `{readonly n: number}` [1] but writable in
-`{n: number | string}` [2]. [incompatible-variance]
+Cannot cast `config` to `{n: number | string}` because property `n` is read-only in `{readonly n: number}` [1] but
+writable in `{n: number | string}` [2]. [incompatible-variance]
 
    config_imported.js:3:1
    3| config as {n: number | string}; // error: n is not read-only in {n: number | string}
@@ -813,7 +813,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- cycle1.js:15:1
 
-Cannot cast `Bar` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-type]
+Cannot cast `Bar` to component Baz because component Foo [1] is incompatible with component Baz [2]. [incompatible-type]
 
    cycle1.js:15:1
    15| Bar as typeof Baz; // ERROR
@@ -830,7 +830,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- cycle1.js:16:1
 
-Cannot cast `Foo` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-type]
+Cannot cast `Foo` to component Baz because component Foo [1] is incompatible with component Baz [2]. [incompatible-type]
 
    cycle1.js:16:1
    16| Foo as typeof Baz; // ERROR
@@ -847,7 +847,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- cycle1.js:17:1
 
-Cannot cast `Baz` to `typeof Bar` because component Baz [1] is incompatible with component Foo [2]. [incompatible-type]
+Cannot cast `Baz` to component Foo because component Baz [1] is incompatible with component Foo [2]. [incompatible-type]
 
    cycle1.js:17:1
    17| Baz as typeof Bar; // ERROR
@@ -1244,8 +1244,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:51:1
 
-Cannot cast `Baz` to component because indexed `{readonly [string]: unknown}` [1] is incompatible with exact `{}` [2].
-[incompatible-indexer]
+Cannot cast `Baz` to `component(...unknown)` because indexed `{readonly [string]: unknown}` [1] is incompatible with
+exact `{}` [2]. [incompatible-indexer]
 
    errors.js:51:1
    51| Baz as component(...unknown);
@@ -1553,7 +1553,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:1
 
-Cannot cast `Foo.displayName` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `Foo.displayName` to `empty` because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:21:1
    21| Foo.displayName as empty; // error, displayName is a string
@@ -1570,7 +1570,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:1
 
-Cannot cast `Foo.displayName` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `Foo.displayName` to `empty` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:21:1
    21| Foo.displayName as empty; // error, displayName is a string
@@ -1587,7 +1587,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:1
 
-Cannot cast `Foo.displayName` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `Foo.displayName` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:21:1
    21| Foo.displayName as empty; // error, displayName is a string
@@ -1787,7 +1787,8 @@ References:
 
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:14:2
 
-Cannot cast `<Bar />` to `Foo` because `{...}` [1] is incompatible with `Foo` element [2]. [incompatible-type]
+Cannot cast `<Bar />` to `React.RendersExactly<typeof FooType>` because `{...}` [1] is incompatible with `Foo`
+element [2]. [incompatible-type]
 
    import_component_in_type_position.js:14:2
    14| (<Bar />) as Foo; // ERROR
@@ -2078,7 +2079,7 @@ Cannot use `number` [1] as the type argument of renders type. [invalid-render]
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:13:1
 
-Cannot cast `Bar` to `typeof Foo` because component Bar [1] is incompatible with component Foo [2]. [incompatible-type]
+Cannot cast `Bar` to component Foo because component Bar [1] is incompatible with component Foo [2]. [incompatible-type]
 
    nominal.js:13:1
    13| Bar as typeof Foo; // ERROR
@@ -2095,7 +2096,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:14:1
 
-Cannot cast `Foo` to `typeof Bar` because component Foo [1] is incompatible with component Bar [2]. [incompatible-type]
+Cannot cast `Foo` to component Bar because component Foo [1] is incompatible with component Bar [2]. [incompatible-type]
 
    nominal.js:14:1
    14| Foo as typeof Bar; // ERROR
@@ -2112,8 +2113,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:17:1
 
-Cannot cast `Foo` to `React.ComponentType` because property `foo` is extra in `{readonly foo: number}` [1] but missing
-in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `Foo` to `React.ComponentType<{foo: number}>` because property `foo` is extra in
+`{readonly foo: number}` [1] but missing in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    nominal.js:17:1
    17| Foo as React.ComponentType<{foo: number}>; // ERROR
@@ -2225,7 +2226,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:13:1
 
-Cannot cast `x` to `Poly` because in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
+Cannot cast `x` to `Poly<string>` because in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    poly.js:13:1
@@ -2282,7 +2283,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- propsof.js:8:3
 
-Cannot cast `foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `foo` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:8:3
    8|   foo as empty; // foo is string
@@ -2299,7 +2300,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- propsof.js:9:3
 
-Cannot cast `bar` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `bar` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:9:3
    9|   bar as empty; // bar is number
@@ -2316,7 +2317,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `Iterable<?React.Node, void, void>` [1] is incompatible with
+Cannot cast `intrinsicProp.children` to `empty` because `Iterable<?React.Node, void, void>` [1] is incompatible with
 `empty` [2]. [incompatible-type]
 
    propsof.js:14:1
@@ -2334,7 +2335,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `React.Portal` [1] is incompatible with `empty` [2].
+Cannot cast `intrinsicProp.children` to `empty` because `React.Portal` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    propsof.js:14:1
@@ -2352,7 +2353,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `boolean` [1] is incompatible with `empty` [2].
+Cannot cast `intrinsicProp.children` to `empty` because `boolean` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    propsof.js:14:1
@@ -2370,7 +2371,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to `empty` because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2387,7 +2388,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to `empty` because `number` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2404,7 +2406,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to `empty` because `string` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2421,7 +2424,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to `empty` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2438,7 +2441,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to `empty` because `{...}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2542,7 +2546,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- provider.js:11:5
 
-Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    provider.js:11:5
    11|     x as empty;
@@ -2587,8 +2591,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: `null` [1] is incompatible with
-`{current: typeof Reffed}` [2]. [incompatible-type]
+Cannot cast `Foo` to `component(ref: React.RefSetter<string>)` because in property `ref`: `null` [1] is incompatible
+with `{current: typeof Reffed}` [2]. [incompatible-type]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2605,8 +2609,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: `void` [1] is incompatible with
-`{current: typeof Reffed}` [2]. [incompatible-type]
+Cannot cast `Foo` to `component(ref: React.RefSetter<string>)` because in property `ref`: `void` [1] is incompatible
+with `{current: typeof Reffed}` [2]. [incompatible-type]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2623,8 +2627,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: inexact `(string | null) => void | (() => void)` [1] is
-incompatible with exact `{current: typeof Reffed}` [2]. [incompatible-exact]
+Cannot cast `Foo` to `component(ref: React.RefSetter<string>)` because in property `ref`: inexact
+`(string | null) => void | (() => void)` [1] is incompatible with exact `{current: typeof Reffed}` [2].
+[incompatible-exact]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2641,8 +2646,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: inexact `{writeonly current: string | null, ...}` [1] is
-incompatible with exact `{current: typeof Reffed}` [2]. [incompatible-exact]
+Cannot cast `Foo` to `component(ref: React.RefSetter<string>)` because in property `ref`: inexact
+`{writeonly current: string | null, ...}` [1] is incompatible with exact `{current: typeof Reffed}` [2].
+[incompatible-exact]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2659,8 +2665,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: property `current` is write-only in
-`{writeonly current: string | null, ...}` [1] but readable in `{current: typeof Reffed}` [2]. [incompatible-variance]
+Cannot cast `Foo` to `component(ref: React.RefSetter<string>)` because in property `ref`: property `current` is
+write-only in `{writeonly current: string | null, ...}` [1] but readable in `{current: typeof Reffed}` [2].
+[incompatible-variance]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2677,7 +2684,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref.current`: [incompatible-type]
+Cannot cast `Foo` to `component(ref: React.RefSetter<string>)` because in property `ref.current`: [incompatible-type]
  - Either component Reffed [1] is incompatible with `string` [2].
  - Or component Reffed [1] is incompatible with `null` [3].
 
@@ -2702,8 +2709,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: `null` [1] is incompatible with
-`{current: typeof Reffed}` [2]. [incompatible-type]
+Cannot cast `Foo` to `component(ref: React.RefSetter<typeof Reffed>)` because in property `ref`: `null` [1] is
+incompatible with `{current: typeof Reffed}` [2]. [incompatible-type]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err
@@ -2720,8 +2727,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: `void` [1] is incompatible with
-`{current: typeof Reffed}` [2]. [incompatible-type]
+Cannot cast `Foo` to `component(ref: React.RefSetter<typeof Reffed>)` because in property `ref`: `void` [1] is
+incompatible with `{current: typeof Reffed}` [2]. [incompatible-type]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err
@@ -2738,8 +2745,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: inexact `(typeof Reffed | null) => void | (() => void)` [1] is
-incompatible with exact `{current: typeof Reffed}` [2]. [incompatible-exact]
+Cannot cast `Foo` to `component(ref: React.RefSetter<typeof Reffed>)` because in property `ref`: inexact
+`(typeof Reffed | null) => void | (() => void)` [1] is incompatible with exact `{current: typeof Reffed}` [2].
+[incompatible-exact]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err
@@ -2756,8 +2764,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: inexact `{writeonly current: typeof Reffed | null, ...}` [1]
-is incompatible with exact `{current: typeof Reffed}` [2]. [incompatible-exact]
+Cannot cast `Foo` to `component(ref: React.RefSetter<typeof Reffed>)` because in property `ref`: inexact
+`{writeonly current: typeof Reffed | null, ...}` [1] is incompatible with exact `{current: typeof Reffed}` [2].
+[incompatible-exact]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err
@@ -2774,8 +2783,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: property `current` is write-only in
-`{writeonly current: typeof Reffed | null, ...}` [1] but readable in `{current: typeof Reffed}` [2].
+Cannot cast `Foo` to `component(ref: React.RefSetter<typeof Reffed>)` because in property `ref`: property `current` is
+write-only in `{writeonly current: typeof Reffed | null, ...}` [1] but readable in `{current: typeof Reffed}` [2].
 [incompatible-variance]
 
    refs.js:13:1
@@ -2793,7 +2802,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
 
-Cannot cast `Bar` to component because in the first parameter of property `ref`: [incompatible-type]
+Cannot cast `Bar` to `component(ref: (string | null) => void)` because in the first parameter of property `ref`:
+[incompatible-type]
  - Either component Reffed [1] is incompatible with `string` [2].
  - Or component Reffed [1] is incompatible with `null` [3].
 
@@ -2818,8 +2828,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:1
 
-Cannot cast `Baz` to component because in property `ref` > type argument `T` [1]: `string` [2] is incompatible with
-component Reffed [3]. [incompatible-type]
+Cannot cast `Baz` to `component(ref: React.RefSetter<string>)` because in property `ref` > type argument `T` [1]:
+`string` [2] is incompatible with component Reffed [3]. [incompatible-type]
 
    refs.js:17:1
     17| Baz as component(ref: React.RefSetter<string>); // err
@@ -3067,7 +3077,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rest_constraints.js:9:3
 
-Cannot cast `bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `bar` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    rest_constraints.js:9:3
    9|   bar as string; // ERROR
@@ -3354,7 +3364,7 @@ be optional. [incompatible-type]
 
 Error ------------------------------------------------------------------------------------------------ signature.js:48:3
 
-Cannot cast `x` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    signature.js:48:3
    48|   x as number; // ERROR
@@ -3371,7 +3381,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:50:3
 
-Cannot cast `rest` to object type because `void` [1] is incompatible with `{foo: number}` [2]. [incompatible-type]
+Cannot cast `rest` to `{foo: number}` because `void` [1] is incompatible with `{foo: number}` [2]. [incompatible-type]
 
    signature.js:50:3
    50|   rest as {foo: number}; // ERROR, rest is optional in the body, as typed
@@ -3388,7 +3398,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:67:3
 
-Cannot cast `bar` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `bar` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    signature.js:67:3
    67|   bar as number; // ERROR, bar is optional
@@ -3420,7 +3430,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:78:3
 
-Cannot cast `ariaLabel` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `ariaLabel` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    signature.js:78:3
    78|   ariaLabel as string; // ERROR, ariaLabel is optional

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- expression.js:15:1
 
-Cannot cast `[].p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `[].p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:15:1
    15| (([] as empty) as T).p as empty;
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:15:3
 
-Cannot cast array literal to empty because `Array<empty>` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast array literal to `empty` because `Array<empty>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:15:3
    15| (([] as empty) as T).p as empty;
@@ -31,7 +31,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:16:1
 
-Cannot cast `[...].p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `[...].p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:16:1
    16| (([1] as empty) as T).p as empty;
@@ -48,7 +48,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:16:3
 
-Cannot cast array literal to empty because array literal [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast array literal to `empty` because array literal [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:16:3
    16| (([1] as empty) as T).p as empty;
@@ -62,7 +62,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:17:1
 
-Cannot cast `[...].p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `[...].p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:17:1
    17| (([1, 2, 3] as empty) as T).p as empty;
@@ -79,7 +79,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:17:3
 
-Cannot cast array literal to empty because array literal [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast array literal to `empty` because array literal [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:17:3
    17| (([1, 2, 3] as empty) as T).p as empty;
@@ -93,7 +93,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:18:1
 
-Cannot cast `((...) => { ... }).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `((...) => { ... }).p` to `empty` because `unknown` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    expression.js:18:1
    18| (((() => {}) as empty) as T).p as empty;
@@ -110,7 +111,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:18:4
 
-Cannot cast function to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast function to `empty` because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:18:4
    18| (((() => {}) as empty) as T).p as empty;
@@ -124,7 +125,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:19:1
 
-Cannot cast `((...) => 42).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `((...) => 42).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:19:1
    19| (((() => 42) as empty) as T).p as empty;
@@ -141,7 +142,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:19:4
 
-Cannot cast function to empty because `() => 42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast function to `empty` because `() => 42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:19:4
    19| (((() => 42) as empty) as T).p as empty;
@@ -155,7 +156,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:20:1
 
-Cannot cast `((...) => ({...})).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `((...) => ({...})).p` to `empty` because `unknown` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    expression.js:20:1
    20| (((() => ({})) as empty) as T).p as empty;
@@ -172,7 +174,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:20:4
 
-Cannot cast function to empty because `() => {}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast function to `empty` because `() => {}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:20:4
    20| (((() => ({})) as empty) as T).p as empty;
@@ -186,7 +188,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:21:1
 
-Cannot cast `(a = 42).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(a = 42).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:21:1
    21| (((a = 42) as empty) as T).p as empty;
@@ -203,7 +205,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:21:8
 
-Cannot cast `a = 42` to empty because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a = 42` to `empty` because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:21:8
    21| (((a = 42) as empty) as T).p as empty;
@@ -217,7 +219,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:22:1
 
-Cannot cast `(a >>>= 42).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(a >>>= 42).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:22:1
    22| (((a >>>= 42) as empty) as T).p as empty;
@@ -234,7 +236,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:22:4
 
-Cannot cast `a >>>= 42` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a >>>= 42` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:22:4
    22| (((a >>>= 42) as empty) as T).p as empty;
@@ -251,7 +253,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:23:1
 
-Cannot cast `({...} = {...}).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `({...} = {...}).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:23:1
    23| ((({a} = {a: 42}) as empty) as T).p as empty;
@@ -268,7 +270,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:23:10
 
-Cannot cast `{...} = {...}` to empty because object literal [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `{...} = {...}` to `empty` because object literal [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:23:10
    23| ((({a} = {a: 42}) as empty) as T).p as empty;
@@ -282,7 +284,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:24:1
 
-Cannot cast `([...] = [...]).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `([...] = [...]).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:24:1
    24| ((([a] = [42]) as empty) as T).p as empty;
@@ -299,7 +301,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:24:10
 
-Cannot cast `[...] = [...]` to empty because array literal [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `[...] = [...]` to `empty` because array literal [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:24:10
    24| ((([a] = [42]) as empty) as T).p as empty;
@@ -313,7 +315,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:25:1
 
-Cannot cast `(a = a = 42).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(a = a = 42).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:25:1
    25| (((a = a = 42) as empty) as T).p as empty;
@@ -330,7 +332,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:25:12
 
-Cannot cast `a = a = 42` to empty because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a = a = 42` to `empty` because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:25:12
    25| (((a = a = 42) as empty) as T).p as empty;
@@ -344,7 +346,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:26:1
 
-Cannot cast `(1 + 2).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(1 + 2).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:26:1
    26| ((1 + 2 as empty) as T).p as empty;
@@ -361,7 +363,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:26:3
 
-Cannot cast `1 + 2` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `1 + 2` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:26:3
    26| ((1 + 2 as empty) as T).p as empty;
@@ -375,7 +377,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:27:1
 
-Cannot cast `(1 + 2 + 3).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(1 + 2 + 3).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:27:1
    27| ((1 + 2 + 3 as empty) as T).p as empty;
@@ -392,7 +394,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:27:3
 
-Cannot cast `1 + 2 + 3` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `1 + 2 + 3` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:27:3
    27| ((1 + 2 + 3 as empty) as T).p as empty;
@@ -406,7 +408,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:28:1
 
-Cannot cast `(1 - (2 + 3)).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(1 - (2 + 3)).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:28:1
    28| ((1 - (2 + 3) as empty) as T).p as empty;
@@ -423,7 +425,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:28:3
 
-Cannot cast `1 - (2 + 3)` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `1 - (2 + 3)` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:28:3
    28| ((1 - (2 + 3) as empty) as T).p as empty;
@@ -437,7 +439,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:29:1
 
-Cannot cast `((1 + 2) * (3 + 4)).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `((1 + 2) * (3 + 4)).p` to `empty` because `unknown` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    expression.js:29:1
    29| (((1 + 2) * (3 + 4) as empty) as T).p as empty;
@@ -454,7 +457,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:29:3
 
-Cannot cast `(1 + 2) * (3 + 4)` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(1 + 2) * (3 + 4)` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:29:3
    29| (((1 + 2) * (3 + 4) as empty) as T).p as empty;
@@ -468,7 +471,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:30:1
 
-Cannot cast `(1 + (2 * (3 + 4))).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(1 + (2 * (3 + 4))).p` to `empty` because `unknown` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    expression.js:30:1
    30| (((1 + 2 * (3 + 4)) as empty) as T).p as empty;
@@ -485,7 +489,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:30:4
 
-Cannot cast `1 + (2 * (3 + 4))` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `1 + (2 * (3 + 4))` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:30:4
    30| (((1 + 2 * (3 + 4)) as empty) as T).p as empty;
@@ -499,7 +503,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:31:1
 
-Cannot cast `f().p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `f().p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:31:1
    31| ((f() as empty) as T).p as empty;
@@ -516,7 +520,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:31:3
 
-Cannot cast `f()` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `f()` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:31:3
    31| ((f() as empty) as T).p as empty;
@@ -533,7 +537,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:32:1
 
-Cannot cast `f(...).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `f(...).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:32:1
    32| ((f(42) as empty) as T).p as empty;
@@ -550,7 +554,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:32:3
 
-Cannot cast `f(...)` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `f(...)` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:32:3
    32| ((f(42) as empty) as T).p as empty;
@@ -567,7 +571,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:33:1
 
-Cannot cast `class { ... }.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `class { ... }.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:33:1
    33| (((class {}) as empty) as T).p as empty;
@@ -584,7 +588,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:33:4
 
-Cannot cast `class { ... }` to empty because class `<<anonymous class>>` [1] is incompatible with `empty` [2].
+Cannot cast `class { ... }` to `empty` because class `<<anonymous class>>` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    expression.js:33:4
@@ -599,7 +603,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:34:1
 
-Cannot cast `(1 ? 2 : 3).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(1 ? 2 : 3).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:34:1
    34| (((1 ? 2 : 3) as empty) as T).p as empty;
@@ -616,7 +620,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:34:8
 
-Cannot cast `1 ? 2 : 3` to empty because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `1 ? 2 : 3` to `empty` because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:34:8
    34| (((1 ? 2 : 3) as empty) as T).p as empty;
@@ -630,7 +634,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:34:12
 
-Cannot cast `1 ? 2 : 3` to empty because `3` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `1 ? 2 : 3` to `empty` because `3` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:34:12
    34| (((1 ? 2 : 3) as empty) as T).p as empty;
@@ -644,7 +648,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:35:1
 
-Cannot cast `((1 ? 2 : 3) ? 4 : 5).p` to empty because `unknown` [1] is incompatible with `empty` [2].
+Cannot cast `((1 ? 2 : 3) ? 4 : 5).p` to `empty` because `unknown` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    expression.js:35:1
@@ -662,7 +666,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:35:18
 
-Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because `4` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(1 ? 2 : 3) ? 4 : 5` to `empty` because `4` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:35:18
    35| ((((1 ? 2 : 3) ? 4 : 5) as empty) as T).p as empty;
@@ -676,7 +680,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:35:22
 
-Cannot cast `(1 ? 2 : 3) ? 4 : 5` to empty because `5` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(1 ? 2 : 3) ? 4 : 5` to `empty` because `5` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:35:22
    35| ((((1 ? 2 : 3) ? 4 : 5) as empty) as T).p as empty;
@@ -698,7 +702,8 @@ This condition is truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------- expression.js:36:1
 
-Cannot cast `function () { ... }.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `function () { ... }.p` to `empty` because `unknown` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    expression.js:36:1
    36| (((function () {}) as empty) as T).p as empty;
@@ -715,7 +720,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:36:4
 
-Cannot cast function to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast function to `empty` because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:36:4
    36| (((function () {}) as empty) as T).p as empty;
@@ -729,7 +734,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:37:1
 
-Cannot cast `a.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:37:1
    37| ((a as empty) as T).p as empty;
@@ -746,7 +751,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:37:3
 
-Cannot cast `a` to empty because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a` to `empty` because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:37:3
    37| ((a as empty) as T).p as empty;
@@ -763,7 +768,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:38:1
 
-Cannot cast `import('./expression').p` to empty because `unknown` [1] is incompatible with `empty` [2].
+Cannot cast `import('./expression').p` to `empty` because `unknown` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    expression.js:38:1
@@ -781,7 +786,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:38:3
 
-Cannot cast `import('./expression')` to empty because `Promise<{readonly default: {}}>` [1] is incompatible with
+Cannot cast `import('./expression')` to `empty` because `Promise<{readonly default: {}}>` [1] is incompatible with
 `empty` [2]. [incompatible-type]
 
    expression.js:38:3
@@ -796,7 +801,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:39:1
 
-Cannot cast `<MyComponent />.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `<MyComponent />.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:39:1
    39| ((<MyComponent /> as empty) as T).p as empty;
@@ -813,7 +818,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:39:3
 
-Cannot cast `<MyComponent />` to empty because React element [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `<MyComponent />` to `empty` because React element [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:39:3
    39| ((<MyComponent /> as empty) as T).p as empty;
@@ -827,7 +832,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:40:1
 
-Cannot cast `<>...</>.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `<>...</>.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:40:1
    40| ((<>foo</> as empty) as T).p as empty;
@@ -859,7 +864,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:41:1
 
-Cannot cast `'foo'.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `'foo'.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:41:1
    41| (('foo' as empty) as T).p as empty;
@@ -876,7 +881,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:41:3
 
-Cannot cast `'foo'` to empty because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `'foo'` to `empty` because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:41:3
    41| (('foo' as empty) as T).p as empty;
@@ -890,7 +895,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:42:1
 
-Cannot cast `'abcdefghij...'.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `'abcdefghij...'.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:42:1
    42| (('abcdefghijklmnopqrstuvwxyz' as empty) as T).p as empty;
@@ -907,7 +912,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:42:3
 
-Cannot cast `'abcdefghij...'` to empty because `"abcdefghijklmnopqrstuvwxyz"` [1] is incompatible with `empty` [2].
+Cannot cast `'abcdefghij...'` to `empty` because `"abcdefghijklmnopqrstuvwxyz"` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    expression.js:42:3
@@ -922,7 +927,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:43:1
 
-Cannot cast `42.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `42.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:43:1
    43| ((42 as empty) as T).p as empty;
@@ -939,7 +944,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:43:3
 
-Cannot cast `42` to empty because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `42` to `empty` because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:43:3
    43| ((42 as empty) as T).p as empty;
@@ -953,7 +958,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:44:1
 
-Cannot cast `true.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `true.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:44:1
    44| ((true as empty) as T).p as empty;
@@ -970,7 +975,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:44:3
 
-Cannot cast `true` to empty because `true` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `true` to `empty` because `true` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:44:3
    44| ((true as empty) as T).p as empty;
@@ -984,7 +989,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:45:1
 
-Cannot cast `false.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `false.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:45:1
    45| ((false as empty) as T).p as empty;
@@ -1001,7 +1006,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:45:3
 
-Cannot cast `false` to empty because `false` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `false` to `empty` because `false` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:45:3
    45| ((false as empty) as T).p as empty;
@@ -1015,7 +1020,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:46:1
 
-Cannot cast `null.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `null.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:46:1
    46| ((null as empty) as T).p as empty;
@@ -1032,7 +1037,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:46:3
 
-Cannot cast `null` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `null` to `empty` because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:46:3
    46| ((null as empty) as T).p as empty;
@@ -1046,7 +1051,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:47:1
 
-Cannot cast `o.p.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o.p.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:47:1
    47| ((o.p as empty) as T).p as empty;
@@ -1063,7 +1068,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:47:3
 
-Cannot cast `o.p` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o.p` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:47:3
    47| ((o.p as empty) as T).p as empty;
@@ -1080,7 +1085,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:48:1
 
-Cannot cast `(new f()).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(new f()).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:48:1
    48| ((new f() as empty) as T).p as empty;
@@ -1112,7 +1117,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:49:1
 
-Cannot cast `(new f(...)).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(new f(...)).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:49:1
    49| ((new f(42) as empty) as T).p as empty;
@@ -1144,7 +1149,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:50:1
 
-Cannot cast `{...}.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `{...}.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:50:1
    50| ((({}) as empty) as T).p as empty;
@@ -1161,7 +1166,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:50:4
 
-Cannot cast object literal to empty because object literal [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast object literal to `empty` because object literal [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:50:4
    50| ((({}) as empty) as T).p as empty;
@@ -1175,7 +1180,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:51:1
 
-Cannot cast `3.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `3.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:51:1
    51| (((1, 2, 3) as empty) as T).p as empty;
@@ -1192,7 +1197,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:51:10
 
-Cannot cast `3` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `3` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:51:10
    51| (((1, 2, 3) as empty) as T).p as empty;
@@ -1217,7 +1222,7 @@ Cannot use `class { ... }` [1] as a superclass. Only variables and member expres
 
 Error ----------------------------------------------------------------------------------------------- expression.js:56:5
 
-Cannot cast `super.m.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `super.m.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:56:5
    56|     ((super.m as empty) as T).p as empty;
@@ -1234,7 +1239,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:59:1
 
-Cannot cast `f`...`.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `f`...`.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:59:1
    59| ((f`foobar` as empty) as T).p as empty;
@@ -1251,7 +1256,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:59:3
 
-Cannot cast template string to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast template string to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:59:3
    59| ((f`foobar` as empty) as T).p as empty;
@@ -1268,7 +1273,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:60:1
 
-Cannot cast ``...`.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast ``...`.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:60:1
    60| ((`foobar` as empty) as T).p as empty;
@@ -1285,7 +1290,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:60:3
 
-Cannot cast template string to empty because `"foobar"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast template string to `empty` because `"foobar"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:60:3
    60| ((`foobar` as empty) as T).p as empty;
@@ -1299,7 +1304,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:62:3
 
-Cannot cast `this.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `this.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:62:3
    62|   ((this as empty) as T).p as empty;
@@ -1316,7 +1321,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:62:5
 
-Cannot cast `this` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `this` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:62:5
    62|   ((this as empty) as T).p as empty;
@@ -1352,7 +1357,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:64:1
 
-Cannot cast `42.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `42.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:64:1
    64| (((42 as string) as empty) as T).p as empty;
@@ -1369,7 +1374,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:64:4
 
-Cannot cast `42` to string because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `42` to `string` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    expression.js:64:4
    64| (((42 as string) as empty) as T).p as empty;
@@ -1383,7 +1388,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:64:10
 
-Cannot cast `42` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `42` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:64:10
    64| (((42 as string) as empty) as T).p as empty;
@@ -1397,7 +1402,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:65:1
 
-Cannot cast `(-42).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(-42).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:65:1
    65| ((-42 as empty) as T).p as empty;
@@ -1414,7 +1419,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:65:3
 
-Cannot cast `-42` to empty because `-42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `-42` to `empty` because `-42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:65:3
    65| ((-42 as empty) as T).p as empty;
@@ -1428,7 +1433,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:66:1
 
-Cannot cast `(!42).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(!42).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:66:1
    66| ((!42 as empty) as T).p as empty;
@@ -1445,7 +1450,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:66:3
 
-Cannot cast `!42` to empty because `false` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `!42` to `empty` because `false` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:66:3
    66| ((!42 as empty) as T).p as empty;
@@ -1459,7 +1464,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:67:1
 
-Cannot cast `(++a).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(++a).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:67:1
    67| ((++a as empty) as T).p as empty;
@@ -1476,7 +1481,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:67:3
 
-Cannot cast `++a` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `++a` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:67:3
    67| ((++a as empty) as T).p as empty;
@@ -1490,7 +1495,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:68:1
 
-Cannot cast `(a++).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(a++).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:68:1
    68| ((a++ as empty) as T).p as empty;
@@ -1507,7 +1512,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:68:3
 
-Cannot cast `a++` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a++` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:68:3
    68| ((a++ as empty) as T).p as empty;
@@ -1521,7 +1526,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:70:3
 
-Cannot cast `yield.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `yield.p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:70:3
    70|   (((yield) as empty) as T).p as empty;
@@ -1538,7 +1543,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:70:6
 
-Cannot cast `yield` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `yield` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:70:6
    70|   (((yield) as empty) as T).p as empty;
@@ -1555,7 +1560,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:71:3
 
-Cannot cast `(yield 42).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(yield 42).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:71:3
    71|   (((yield 42) as empty) as T).p as empty;
@@ -1572,7 +1577,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:71:6
 
-Cannot cast `yield 42` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `yield 42` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:71:6
    71|   (((yield 42) as empty) as T).p as empty;
@@ -1589,7 +1594,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:74:3
 
-Cannot cast `(yield* g1()).p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `(yield* g1()).p` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:74:3
    74|   (((yield* g1()) as empty) as T).p as empty;
@@ -1606,7 +1611,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:74:6
 
-Cannot cast `yield* g1()` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `yield* g1()` to `empty` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:74:6
    74|   (((yield* g1()) as empty) as T).p as empty;

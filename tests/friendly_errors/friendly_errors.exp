@@ -252,7 +252,7 @@ References:
 
 Error ------------------------------------------------------------------------------- class-refinement-env-merge.js:12:5
 
-Cannot cast `this.p` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `this.p` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    class-refinement-env-merge.js:12:5
    12|     this.p as number;
@@ -269,7 +269,7 @@ References:
 
 Error ------------------------------------------------------------------------------- class-refinement-env-merge.js:12:5
 
-Cannot cast `this.p` to number because `"foo"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `this.p` to `number` because `"foo"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    class-refinement-env-merge.js:12:5
    12|     this.p as number;
@@ -286,7 +286,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ desc-class-properties.js:16:5
 
-Cannot cast `this.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `this.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    desc-class-properties.js:16:5
    16|     this.a as number; // Error: string ~> number
@@ -303,7 +303,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ desc-class-properties.js:17:5
 
-Cannot cast `super.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `super.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    desc-class-properties.js:17:5
    17|     super.a as number; // Error: string ~> number
@@ -320,7 +320,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ desc-class-properties.js:18:5
 
-Cannot cast `this.b` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `this.b` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    desc-class-properties.js:18:5
    18|     this.b as number; // Error: string ~> number
@@ -337,7 +337,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ desc-class-properties.js:19:5
 
-Cannot cast `this.#c` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `this.#c` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    desc-class-properties.js:19:5
    19|     this.#c as number; // Error: string ~> number
@@ -354,7 +354,7 @@ References:
 
 Error --------------------------------------------------------------------------------- indexer-key-compatibility.js:7:1
 
-Cannot cast `o` to object type because in the indexer property's key: `number` [1] is not exactly the same as
+Cannot cast `o` to `{[k: string]: any}` because in the indexer property's key: `number` [1] is not exactly the same as
 `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -383,8 +383,8 @@ References:
 
 Error ----------------------------------------------------------------------------- loc-primary-for-covariant-ops.js:8:8
 
-Cannot cast `any` to function type because in the first parameter > property `p`: `string` [1] is not exactly the same
-as `number` [2]. [incompatible-type]
+Cannot cast `any` to `(x: {p: string, ...}) => void` because in the first parameter > property `p`: `string` [1] is not
+exactly the same as `number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: string, ...}` [3] and `{p: number, ...}` [4] exactly the same
@@ -412,8 +412,8 @@ References:
 
 Error ---------------------------------------------------------------------------- loc-primary-for-covariant-ops.js:11:8
 
-Cannot cast `any` to `X` because in type argument `T` [1] > property `p`: `string` [2] is not exactly the same as
-`number` [3]. [incompatible-type]
+Cannot cast `any` to `X<{p: string, ...}>` because in type argument `T` [1] > property `p`: `string` [2] is not exactly
+the same as `number` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: string, ...}` [4] and `{p: number, ...}` [5] exactly the same
@@ -878,7 +878,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:15:1
 
-Cannot cast `x1` to empty because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x1` to `empty` because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:15:1
    15| x1 as empty; // X ~> empty. Ref should point to first `new X()`.
@@ -895,7 +895,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:16:1
 
-Cannot cast `x2` to empty because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x2` to `empty` because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:16:1
    16| x2 as empty; // X ~> empty. Ref should point to first `X` annotation.
@@ -912,7 +912,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:17:1
 
-Cannot cast `x3` to empty because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x3` to `empty` because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:17:1
    17| x3 as empty; // X ~> empty. Ref should point to first `new X()`.
@@ -929,7 +929,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:18:1
 
-Cannot cast `x4` to empty because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x4` to `empty` because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:18:1
    18| x4 as empty; // X ~> empty. Ref should point to first `X` annotation.
@@ -946,7 +946,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:19:1
 
-Cannot cast `x5` to empty because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x5` to `empty` because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:19:1
    19| x5 as empty; // X ~> empty. Ref should point to second `X` annotation.
@@ -963,7 +963,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:20:1
 
-Cannot cast `x6` to empty because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x6` to `empty` because `X` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:20:1
    20| x6 as empty; // X ~> empty. Ref should point to second `X` annotation.
@@ -980,7 +980,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:29:1
 
-Cannot cast `y1` to empty because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y1` to `empty` because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:29:1
    29| y1 as empty; // number ~> empty. Ref should point to 42.
@@ -997,7 +997,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:30:1
 
-Cannot cast `y2` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y2` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:30:1
    30| y2 as empty; // number ~> empty. Ref should point to first `number` annotation.
@@ -1014,7 +1014,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:31:1
 
-Cannot cast `y3` to empty because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y3` to `empty` because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:31:1
    31| y3 as empty; // number ~> empty. Ref should point to 42.
@@ -1031,7 +1031,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:32:1
 
-Cannot cast `y4` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y4` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:32:1
    32| y4 as empty; // number ~> empty. Ref should point to first `number` annotation.
@@ -1048,7 +1048,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:33:1
 
-Cannot cast `y5` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y5` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:33:1
    33| y5 as empty; // number ~> empty. Ref should point to second `number` annotation.
@@ -1065,7 +1065,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:34:1
 
-Cannot cast `y6` to empty because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y6` to `empty` because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    loc-reference.js:34:1
    34| y6 as empty; // number ~> empty. Ref should point to 42.
@@ -1082,7 +1082,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:37:3
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    loc-reference.js:37:3
    37|   x as number; // string ~> number. Ref should point to `x: string`.
@@ -1099,7 +1099,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:41:3
 
-Cannot cast `x` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
    loc-reference.js:41:3
    41|   x as number; // T ~> number. Ref should point to `x: T`.
@@ -1175,8 +1175,8 @@ Invalid left-hand side in assignment expression. [invalid-lhs]
 
 Error ----------------------------------------------------------------------------------------------------- order.js:9:6
 
-Cannot cast object literal to object type because in property `a`: `42` [1] is incompatible with `boolean` [2].
-[incompatible-type]
+Cannot cast object literal to `{a: boolean, c: number, ...}` because in property `a`: `42` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    order.js:9:6
     9|   a: 42,
@@ -1190,8 +1190,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- order.js:11:6
 
-Cannot cast object literal to object type because in property `c`: `true` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast object literal to `{a: boolean, c: number, ...}` because in property `c`: `true` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    order.js:11:6
    11|   c: true,
@@ -1205,7 +1205,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- order.js:10:6
 
-Cannot cast `'foo'` to empty because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `'foo'` to `empty` because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    order.js:10:6
    10|   b: 'foo' as empty,
@@ -1219,7 +1219,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:12:8
 
-Cannot cast `any` to object type because property `p` is read-only in `{readonly p: T, ...}` [1] but writable in
+Cannot cast `any` to `{p: T, ...}` because property `p` is read-only in `{readonly p: T, ...}` [1] but writable in
 `{p: T, ...}` [2]. [incompatible-variance]
 
    prop-variance.js:12:8
@@ -1234,8 +1234,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:14:8
 
-Cannot cast `any` to object type because property `p` is read-only in `{readonly p: T, ...}` [1] but write-only in
-`{writeonly p: T, ...}` [2]. [incompatible-variance]
+Cannot cast `any` to `{writeonly p: T, ...}` because property `p` is read-only in `{readonly p: T, ...}` [1] but
+write-only in `{writeonly p: T, ...}` [2]. [incompatible-variance]
 
    prop-variance.js:14:8
    14| any as {readonly p: T, ...} as {writeonly p: T, ...}; // Error: read-only ~> write-only
@@ -1249,7 +1249,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:15:8
 
-Cannot cast `any` to object type because property `p` is write-only in `{writeonly p: T, ...}` [1] but readable in
+Cannot cast `any` to `{p: T, ...}` because property `p` is write-only in `{writeonly p: T, ...}` [1] but readable in
 `{p: T, ...}` [2]. [incompatible-variance]
 
    prop-variance.js:15:8
@@ -1264,8 +1264,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:16:8
 
-Cannot cast `any` to object type because property `p` is write-only in `{writeonly p: T, ...}` [1] but read-only in
-`{readonly p: T, ...}` [2]. [incompatible-variance]
+Cannot cast `any` to `{readonly p: T, ...}` because property `p` is write-only in `{writeonly p: T, ...}` [1] but
+read-only in `{readonly p: T, ...}` [2]. [incompatible-variance]
 
    prop-variance.js:16:8
    16| any as {writeonly p: T, ...} as {readonly p: T, ...}; // Error: write-only ~> read-only

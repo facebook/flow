@@ -222,7 +222,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:24:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `Z?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -244,7 +244,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:28:1
 
-Cannot cast `true` to indexed access because: [incompatible-type]
+Cannot cast `true` to `Y["a"]?.["b"]["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -266,7 +266,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:32:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `Y["a"]?.["b"]?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -288,7 +288,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:36:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `Y["a"]?.["opt_b"]?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -310,7 +310,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:39:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `Z?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -332,7 +332,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:46:1
 
-Cannot cast `true` to indexed access because: [incompatible-type]
+Cannot cast `true` to `U["a"]?.["b"]["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -354,7 +354,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:50:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `U["a"]?.["b"]?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -376,7 +376,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:54:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `U["a"]?.["opt_b"]?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -398,7 +398,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:59:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `MaybeZ?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -420,7 +420,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:64:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `VoidZ?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -442,7 +442,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:68:1
 
-Cannot cast `1` to optional indexed access because `1` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `1` to `void?.["c"]` because `1` [1] is incompatible with `void` [2]. [incompatible-type]
 
    optional.js:68:1
    68| 1 as void?.['c']; // Error
@@ -456,7 +456,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:71:1
 
-Cannot cast `1` to optional indexed access because `1` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `1` to `empty?.["x"]` because `1` [1] is incompatible with `void` [2]. [incompatible-type]
 
    optional.js:71:1
    71| 1 as empty?.['x']; // Error
@@ -470,7 +470,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:79:1
 
-Cannot cast `f(...)` to boolean literal `true` because `number` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `f(...)` to `true` because `number` [1] is incompatible with `true` [2]. [incompatible-type]
 
    optional.js:79:1
    79| f(z, 'c') as true; // Error - wrong type
@@ -487,7 +487,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:79:1
 
-Cannot cast `f(...)` to boolean literal `true` because `void` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `f(...)` to `true` because `void` [1] is incompatible with `true` [2]. [incompatible-type]
 
    optional.js:79:1
    79| f(z, 'c') as true; // Error - wrong type
@@ -518,7 +518,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:84:1
 
-Cannot cast `f(...)` to boolean literal `true` because `number` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `f(...)` to `true` because `number` [1] is incompatible with `true` [2]. [incompatible-type]
 
    optional.js:84:1
    84| f(mz, 'c') as true; // Error - wrong type
@@ -535,7 +535,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:84:1
 
-Cannot cast `f(...)` to boolean literal `true` because `void` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `f(...)` to `true` because `void` [1] is incompatible with `true` [2]. [incompatible-type]
 
    optional.js:84:1
    84| f(mz, 'c') as true; // Error - wrong type
@@ -588,7 +588,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:103:1
 
-Cannot cast `'xx'` to optional indexed access because: [incompatible-type]
+Cannot cast `'xx'` to `O?.["bar"]` because: [incompatible-type]
  - Either `"xx"` [1] is incompatible with `number` [2].
  - Or `"xx"` [1] is incompatible with `void` [3].
 
@@ -610,7 +610,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:117:1
 
-Cannot cast `'xx'` to optional indexed access because: [incompatible-type]
+Cannot cast `'xx'` to `C?.["bar"]` because: [incompatible-type]
  - Either `"xx"` [1] is incompatible with `number` [2].
  - Or `"xx"` [1] is incompatible with `void` [3].
 
@@ -660,7 +660,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- optional_import.js:5:1
 
-Cannot cast `true` to optional indexed access because: [incompatible-type]
+Cannot cast `true` to `MaybeZ?.["c"]` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `void` [3].
 
@@ -682,7 +682,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ reentrant_alias.js:13:1
 
-Cannot cast `a[0]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `a[0]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    reentrant_alias.js:13:1
    13| a[0] as string; // ERROR
@@ -699,7 +699,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- reentrant_alias_use.js:5:1
 
-Cannot cast `a[0]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `a[0]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    reentrant_alias_use.js:5:1
    5| a[0] as string; // ERROR
@@ -768,7 +768,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:1
 
-Cannot cast `1` to indexed access because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `1` to `Obj["baz"]` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:34:1
    34| 1 as Obj['baz']; // Error
@@ -782,7 +782,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:1
 
-Cannot cast `f(...)` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `f(...)` to `string` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:42:1
    42| f(o) as string; // Error
@@ -863,7 +863,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:1
 
-Cannot cast `'xx'` to indexed access because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `'xx'` to `O["bar"]` because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:65:1
    65| 'xx' as O['bar']; // Error
@@ -877,7 +877,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:74:1
 
-Cannot cast `'xx'` to indexed access because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `'xx'` to `C["bar"]` because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:74:1
    74| 'xx' as C['bar']; // Error
@@ -891,7 +891,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:83:1
 
-Cannot cast `'xx'` to indexed access because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `'xx'` to `I["bar"]` because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:83:1
    83| 'xx' as I['bar']; // ERROR
@@ -905,7 +905,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:89:8
 
-Cannot cast function to indexed access because in the return value: `true` [1] is incompatible with `number` [2].
+Cannot cast function to `M["method"]` because in the return value: `true` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:89:8
@@ -920,7 +920,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:94:5
 
-Cannot cast `f()` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `f()` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:94:5
    94|     f() as empty; // ERROR
@@ -937,7 +937,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unions.js:7:1
 
-Cannot cast `v` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `v` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    unions.js:7:1
    7| v as string; // error
@@ -954,7 +954,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unions.js:8:1
 
-Cannot cast `v` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `v` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    unions.js:8:1
    8| v as number; // error
@@ -990,7 +990,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:21:1
 
-Cannot cast `w` to indexed access because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `w` to `M["a"]` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    unions.js:21:1
    21| w as M['a']; // error

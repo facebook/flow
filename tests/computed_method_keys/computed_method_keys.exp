@@ -32,7 +32,7 @@ Illegal name. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:28:1
 
-Cannot cast `one.m()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `one.m()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:28:1
    28| one.m() as string; // ERROR: number is not string
@@ -49,7 +49,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:32:1
 
-Cannot cast `num[42]()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `num[42]()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:32:1
    32| num[42]() as string; // ERROR: number is not string
@@ -66,7 +66,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:36:1
 
-Cannot cast `neg[-1]()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `neg[-1]()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:36:1
    36| neg[-1]() as string; // ERROR: number is not string
@@ -83,7 +83,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:41:1
 
-Cannot cast `mixed.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `mixed.run()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:41:1
    41| mixed.run() as string; // ERROR: number is not string
@@ -100,7 +100,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:45:1
 
-Cannot cast `poly.id(...)` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `poly.id(...)` to `string` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:45:1
    45| poly.id(1) as string; // ERROR: number is not string
@@ -117,7 +117,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:49:1
 
-Cannot cast `ot.f()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `ot.f()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:49:1
    49| ot.f() as string; // ERROR: number is not string
@@ -134,7 +134,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:53:1
 
-Cannot cast `fromConst.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `fromConst.run()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:53:1
    53| fromConst.run() as string; // ERROR: number is not string
@@ -151,7 +151,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:57:1
 
-Cannot cast `fromQualified.go()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `fromQualified.go()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:57:1
    57| fromQualified.go() as string; // ERROR: number is not string
@@ -168,7 +168,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:61:1
 
-Cannot cast `fromPrimitiveKeyword.prim()` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `fromPrimitiveKeyword.prim()` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    imp.js:61:1
@@ -200,7 +200,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:68:1
 
-Cannot cast `lf.a()` to string literal `p` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
+Cannot cast `lf.a()` to `"p"` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
 
    imp.js:68:1
    68| lf.a() as 'p'; // ERROR: 'q' is not 'p'
@@ -217,7 +217,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:72:1
 
-Cannot cast `vf.a()` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
+Cannot cast `vf.a()` to `"q"` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    imp.js:72:1
    72| vf.a() as 'q'; // ERROR: 'p' is not 'q'
@@ -234,7 +234,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:76:1
 
-Cannot cast `vl.a()` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
+Cannot cast `vl.a()` to `"q"` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    imp.js:76:1
    76| vl.a() as 'q'; // ERROR: 'p' is not 'q'
@@ -251,7 +251,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:80:1
 
-Cannot cast `tv.a()` to string literal `q` because `"z"` [1] is incompatible with `"q"` [2]. [incompatible-type]
+Cannot cast `tv.a()` to `"q"` because `"z"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    imp.js:80:1
    80| tv.a() as 'q'; // ERROR: 'z' is not 'q'
@@ -268,7 +268,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:84:1
 
-Cannot cast `al.a` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
+Cannot cast `al.a` to `"q"` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    imp.js:84:1
    84| al.a as 'q'; // ERROR: 'p' is not 'q'
@@ -285,7 +285,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:88:1
 
-Cannot cast `af.a()` to string literal `p` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
+Cannot cast `af.a()` to `"p"` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
 
    imp.js:88:1
    88| af.a() as 'p'; // ERROR: the accessor lost the name, so 'q' is not 'p'
@@ -302,7 +302,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:94:1
 
-Cannot cast `holder.dm()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `holder.dm()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:94:1
    94| holder.dm() as string; // ERROR: number is not string
@@ -335,7 +335,7 @@ Unexpected computed key, expected a literal or a possibly-qualified reference [P
 
 Error --------------------------------------------------------------------------------------------------- within.js:17:1
 
-Cannot cast `i['m']()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `i['m']()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:17:1
    17| i['m']() as string; // ERROR: number is not string
@@ -352,7 +352,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:27:1
 
-Cannot cast `c['dm']()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `c['dm']()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:27:1
    27| c['dm']() as string; // ERROR: number is not string
@@ -369,7 +369,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:33:1
 
-Cannot cast `ot.f()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `ot.f()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:33:1
    33| ot.f() as string; // ERROR: number is not string
@@ -386,7 +386,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:41:1
 
-Cannot cast `oi['x']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `oi['x']` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:41:1
    41| oi['x'] as string; // ERROR: number is not string
@@ -403,7 +403,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:48:1
 
-Cannot cast `mx.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `mx.run()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:48:1
    48| mx.run() as string; // ERROR: number is not string
@@ -420,7 +420,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:56:1
 
-Cannot cast `neg[-1]()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `neg[-1]()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:56:1
    56| neg[-1]() as string; // ERROR: number is not string
@@ -437,7 +437,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:67:1
 
-Cannot cast `prim.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `prim.run()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:67:1
    67| prim.run() as string; // ERROR: number is not string
@@ -454,7 +454,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:77:1
 
-Cannot cast `bare.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `bare.run()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:77:1
    77| bare.run() as string; // ERROR: number is not string
@@ -471,7 +471,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:86:1
 
-Cannot cast `qual.go()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `qual.go()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:86:1
    86| qual.go() as string; // ERROR: number is not string
@@ -496,7 +496,7 @@ Illegal name. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------------- within.js:101:1
 
-Cannot cast `poly.id(...)` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `poly.id(...)` to `string` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:101:1
    101| poly.id(1) as string; // ERROR: number is not string
@@ -521,7 +521,7 @@ Optional method signature is not enabled. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------------- within.js:123:1
 
-Cannot cast `lf.a()` to string literal `p` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
+Cannot cast `lf.a()` to `"p"` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
 
    within.js:123:1
    123| lf.a() as 'p'; // ERROR: 'q' is not 'p'
@@ -538,7 +538,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:133:1
 
-Cannot cast `vf.a()` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
+Cannot cast `vf.a()` to `"q"` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    within.js:133:1
    133| vf.a() as 'q'; // ERROR: 'p' is not 'q'
@@ -555,7 +555,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:140:1
 
-Cannot cast `vl.a()` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
+Cannot cast `vl.a()` to `"q"` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    within.js:140:1
    140| vl.a() as 'q'; // ERROR: 'p' is not 'q'
@@ -572,7 +572,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:151:1
 
-Cannot cast `tv.a()` to string literal `q` because `"z"` [1] is incompatible with `"q"` [2]. [incompatible-type]
+Cannot cast `tv.a()` to `"q"` because `"z"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    within.js:151:1
    151| tv.a() as 'q'; // ERROR: 'z' is not 'q'
@@ -589,7 +589,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:161:1
 
-Cannot cast `al.a` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
+Cannot cast `al.a` to `"q"` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    within.js:161:1
    161| al.a as 'q'; // ERROR: 'p' is not 'q'
@@ -606,7 +606,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:168:1
 
-Cannot cast `af.a()` to string literal `p` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
+Cannot cast `af.a()` to `"p"` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
 
    within.js:168:1
    168| af.a() as 'p'; // ERROR: the accessor lost the name, so 'q' is not 'p'

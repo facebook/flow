@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:12:1
 
-Cannot cast `cond(...)` to undefined because `0` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `cond(...)` to `void` because `0` [1] is incompatible with `void` [2]. [incompatible-type]
 
    call.js:12:1
    12| cond(test, 0, "") as void; // errors: number|string ~> void
@@ -31,7 +31,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:12:1
 
-Cannot cast `cond(...)` to undefined because `""` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `cond(...)` to `void` because `""` [1] is incompatible with `void` [2]. [incompatible-type]
 
    call.js:12:1
    12| cond(test, 0, "") as void; // errors: number|string ~> void
@@ -48,7 +48,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:15:1
 
-Cannot cast `cond<...>(...)` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `cond<...>(...)` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    call.js:15:1
    15| cond<number>(test, 0, "") as void; // error: string ~> number, number ~> void
@@ -94,7 +94,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:23:1
 
-Cannot cast `o1.m<...>(...)` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `o1.m<...>(...)` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    call.js:23:1
    23| o1.m<string>(0) as void; // error: number ~> string, string ~> void
@@ -125,7 +125,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:27:1
 
-Cannot cast `o2.m<...>(...)` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `o2.m<...>(...)` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    call.js:27:1
    27| o2.m<string>(0) as void; // error: number ~> string, string ~> void
@@ -156,7 +156,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:32:1
 
-Cannot cast `o3.m<...>(...)` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `o3.m<...>(...)` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    call.js:32:1
    32| o3.m<string>(0) as void; // error: number ~> string, string ~> void
@@ -235,7 +235,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ new.js:10:1
 
-Cannot cast `c1.x` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `c1.x` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    new.js:10:1
    10| c1.x as void; // error: number|string ~> void
@@ -252,7 +252,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ new.js:10:1
 
-Cannot cast `c1.x` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `c1.x` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    new.js:10:1
    10| c1.x as void; // error: number|string ~> void
@@ -283,7 +283,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ new.js:15:1
 
-Cannot cast `c2.x` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `c2.x` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    new.js:15:1
    15| c2.x as void; // error: string ~> void

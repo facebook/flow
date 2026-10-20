@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------- interface_merging_libdefs.js:5:1
 
-Cannot cast `merged_props.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `merged_props.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    interface_merging_libdefs.js:5:1
    5| merged_props.a as number; // error: string ~> number
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------- interface_merging_libdefs.js:6:1
 
-Cannot cast `merged_props.b` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `merged_props.b` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    interface_merging_libdefs.js:6:1
    6| merged_props.b as string; // error: number ~> string
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------- interface_merging_libdefs.js:26:1
 
-Cannot cast `three_way.first` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `three_way.first` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    interface_merging_libdefs.js:26:1
    26| three_way.first as number; // error: string ~> number
@@ -51,7 +51,8 @@ References:
 
 Error -------------------------------------------------------------------------------- interface_merging_libdefs.js:32:1
 
-Cannot cast `varianceMerged.get()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `varianceMerged.get()` to `number` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    interface_merging_libdefs.js:32:1
    32| varianceMerged.get() as number; // error: string is not number
@@ -83,7 +84,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- user_export.js:47:1
 
-Cannot cast `userMerged` to `UserMerged` because in type argument `T` [1]: `string` [2] is incompatible with
+Cannot cast `userMerged` to `UserMerged<number>` because in type argument `T` [1]: `string` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    user_export.js:47:1
@@ -104,7 +105,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- user_export.js:48:1
 
-Cannot cast `userContravariant` to `UserContravariant` because in type argument `T` [1]: [incompatible-type]
+Cannot cast `userContravariant` to `UserContravariant<unknown>` because in type argument `T` [1]: [incompatible-type]
  - Either `unknown` [2] is incompatible with `string` [3].
  - Or `unknown` [2] is incompatible with `number` [4].
 
@@ -129,7 +130,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- user_import.js:20:1
 
-Cannot cast `userMerged` to `UserMerged` because in type argument `T` [1]: `string` [2] is incompatible with
+Cannot cast `userMerged` to `UserMerged<number>` because in type argument `T` [1]: `string` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    user_import.js:20:1
@@ -150,7 +151,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- user_import.js:21:1
 
-Cannot cast `userContravariant` to `UserContravariant` because in type argument `T` [1]: [incompatible-type]
+Cannot cast `userContravariant` to `UserContravariant<unknown>` because in type argument `T` [1]: [incompatible-type]
  - Either `unknown` [2] is incompatible with `string` [3].
  - Or `unknown` [2] is incompatible with `number` [4].
 

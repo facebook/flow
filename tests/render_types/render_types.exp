@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------- annotation_inference_regression_test/test.js:2:1
 
-Cannot cast `1` to `R` because number literal `1` [1] does not render `C` [2]. [incompatible-type]
+Cannot cast `1` to `renders C` because number literal `1` [1] does not render `C` [2]. [incompatible-type]
 
    annotation_inference_regression_test/test.js:2:1
    2| 1 as R; // error
@@ -283,8 +283,8 @@ References:
 
 Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:3:1
 
-Cannot cast `x` to `ExactReactElement_DEPRECATED` because `{readonly type: () => null}` [1] is incompatible with
-`ExactReactElement_DEPRECATED<() => null, React.ComponentProps<() => null>>` [2]. [incompatible-type]
+Cannot cast `x` to `ExactReactElement_DEPRECATED<() => null>` because `{readonly type: () => null}` [1] is incompatible
+with `ExactReactElement_DEPRECATED<() => null, React.ComponentProps<() => null>>` [2]. [incompatible-type]
 
    no_spoofing_element_types.js:3:1
    3| x as ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
@@ -911,7 +911,7 @@ Cannot use `string` [1] as the type argument of renders type. [invalid-render]
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:38:3
 
-Cannot cast `rendersFooOrBar` to `typeof rendersFooOrRendersBar` because: [incompatible-type]
+Cannot cast `rendersFooOrBar` to `renders Foo | renders Bar` because: [incompatible-type]
  - Either renders `Bar` [1] does not render `Foo` [2].
  - Or renders `Foo` [1] does not render `Bar` [3].
 
@@ -1203,7 +1203,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:112:3
 
-Cannot cast `rendersFooOrBar` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `rendersFooOrBar` to `empty` because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    renders_to_renders.js:112:3
    112|   rendersFooOrBar as empty; // ERROR
@@ -1366,7 +1366,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:126:3
 
-Cannot cast `rendersBaz` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `rendersBaz` to `empty` because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    renders_to_renders.js:126:3
    126|   rendersBaz as empty; // ERROR

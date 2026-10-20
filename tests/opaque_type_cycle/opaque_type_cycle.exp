@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:6:3
 
-Cannot cast `x` to `typeof y` because `number` [1] is incompatible with `num` [2]. [incompatible-type]
+Cannot cast `x` to `num` because `number` [1] is incompatible with `num` [2]. [incompatible-type]
 
    test3.js:6:3
    6|   x as typeof y;

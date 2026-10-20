@@ -47,7 +47,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:12:1
 
-Cannot cast `C.name` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `C.name` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    declare_class.js:12:1
    12| C.name as number; // error, it's a string

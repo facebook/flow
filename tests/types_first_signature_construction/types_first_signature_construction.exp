@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Cannot cast `f1(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `f1(...)` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:3:1
    3| f1(0) as number;
@@ -101,7 +101,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:1
 
-Cannot cast `f2(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `f2(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:6:1
    6| f2("") as string;
@@ -154,7 +154,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
-Cannot cast `(new c).x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `(new c).x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:16:1
    16| (new c).x as number;

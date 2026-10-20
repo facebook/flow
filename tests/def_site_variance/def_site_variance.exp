@@ -30,7 +30,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:3
 
-Cannot cast `v1` to `Variance` because in type argument `Out` [1]: `A` [2] is incompatible with `B` [3].
+Cannot cast `v1` to `Variance<B, A>` because in type argument `Out` [1]: `A` [2] is incompatible with `B` [3].
 [incompatible-type]
 
    test.js:13:3
@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:3
 
-Cannot cast `v1` to `Variance` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3].
+Cannot cast `v1` to `Variance<B, A>` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3].
 [incompatible-type]
 
    test.js:13:3
@@ -222,7 +222,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- test_keyword.js:13:3
 
-Cannot cast `v1` to `Variance` because in type argument `Out` [1]: `A` [2] is incompatible with `B` [3].
+Cannot cast `v1` to `Variance<B, A>` because in type argument `Out` [1]: `A` [2] is incompatible with `B` [3].
 [incompatible-type]
 
    test_keyword.js:13:3
@@ -243,7 +243,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- test_keyword.js:13:3
 
-Cannot cast `v1` to `Variance` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3].
+Cannot cast `v1` to `Variance<B, A>` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3].
 [incompatible-type]
 
    test_keyword.js:13:3

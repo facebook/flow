@@ -25,7 +25,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:2:7
 
-Cannot cast `1` to boolean because `1` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `1` to `boolean` because `1` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    -:2:7
    2| 1 === 1 as boolean; // Error!
@@ -45,7 +45,7 @@ No errors!
 === block 5 ===
 Error ------------------------------------------------------------------------------- -:6:1
 
-Cannot cast `value` to string because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value` to `string` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:6:1
    6| value as string; // Error!
@@ -65,7 +65,7 @@ Found 1 error
 === block 6 ===
 Error ------------------------------------------------------------------------------- -:9:1
 
-Cannot cast `newValue` to number literal `42` because `number` [1] is incompatible with `42` [2]. [incompatible-type]
+Cannot cast `newValue` to `42` because `number` [1] is incompatible with `42` [2]. [incompatible-type]
 
    -:9:1
    9| newValue as 42;     // Error!
@@ -85,8 +85,8 @@ Found 1 error
 === block 7 ===
 Error ------------------------------------------------------------------------------ -:3:18
 
-Cannot cast `fooObj` to object type because property `bar` is missing in object literal [1] but exists in
-`{bar: string, foo: number}` [2]. [incompatible-type]
+Cannot cast `fooObj` to `{bar: string, foo: number}` because property `bar` is missing in object literal [1] but exists
+in `{bar: string, foo: number}` [2]. [incompatible-type]
 
    -:3:18
    3| const otherObj = fooObj as {foo: number, bar: string};  // ERROR
@@ -106,7 +106,7 @@ Found 1 error
 === block 8 ===
 Error ------------------------------------------------------------------------------- -:5:1
 
-Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:5:1
    5| value as string; // Error!
@@ -122,7 +122,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:9:1
 
-Cannot cast `newValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `newValue` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:9:1
    9| newValue as number; // Error!

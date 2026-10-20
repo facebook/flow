@@ -1060,9 +1060,12 @@ where
                 var: var.map(mod_reason),
                 init: mod_reason(init),
             },
-            Cast { lower, upper } => Cast {
+            Cast {
+                lower,
+                upper: box upper,
+            } => Cast {
                 lower: mod_reason(lower),
-                upper: mod_reason(upper),
+                upper: Box::new(type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper)),
             },
             ClassExtendsCheck { def, extends } => ClassExtendsCheck {
                 def: mod_reason(def),

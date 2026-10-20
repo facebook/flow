@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:6:1
 
-Cannot cast `f(...)` to number because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `f(...)` to `number` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    anonymous_default_export_usage.js:6:1
    6| f("hello") as number; // ERROR - string is not number
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:7:1
 
-Cannot cast `f(...)` to string because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `f(...)` to `string` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    anonymous_default_export_usage.js:7:1
    7| f(42) as string; // ERROR - number is not string
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- basic_types.js:1:1
 
-Cannot cast `null` to undefined because `null` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `null` to `void` because `null` [1] is incompatible with `void` [2]. [incompatible-type]
 
    basic_types.js:1:1
    1| null as undefined; // error
@@ -48,7 +48,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- basic_types.js:6:7
 
-Cannot cast `''` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `''` to `empty` because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    basic_types.js:6:7
    6| '' as unknown as never; // error
@@ -62,7 +62,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:24:1
 
-Cannot cast `s` to string literal `bar` because `"foo"` [1] is incompatible with `"bar"` [2]. [incompatible-type]
+Cannot cast `s` to `"bar"` because `"foo"` [1] is incompatible with `"bar"` [2]. [incompatible-type]
 
    declare_var_extras.js:24:1
    24| s as 'bar'; // ERROR - 'foo' !== 'bar'
@@ -79,7 +79,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:25:1
 
-Cannot cast `n` to number literal `20` because `10` [1] is incompatible with `20` [2]. [incompatible-type]
+Cannot cast `n` to `20` because `10` [1] is incompatible with `20` [2]. [incompatible-type]
 
    declare_var_extras.js:25:1
    25| n as 20; // ERROR - 10 !== 20
@@ -96,7 +96,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:26:1
 
-Cannot cast `bi` to bigint literal `200n` because `100n` [1] is incompatible with `200n` [2]. [incompatible-type]
+Cannot cast `bi` to `200n` because `100n` [1] is incompatible with `200n` [2]. [incompatible-type]
 
    declare_var_extras.js:26:1
    26| bi as 200n; // ERROR - 100n !== 200n
@@ -219,7 +219,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_indexer.js:3:1
 
-Cannot cast `t["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `t["foo"]` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_indexer.js:3:1
    3| t["foo"] as number; // ERROR - undefined is not number
@@ -236,7 +236,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_indexer.js:7:1
 
-Cannot cast `s["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `s["foo"]` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_indexer.js:7:1
    7| s["foo"] as number; // ERROR - undefined is not number
@@ -253,7 +253,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- optional_indexer.js:13:1
 
-Cannot cast `c["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `c["foo"]` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_indexer.js:13:1
    13| c["foo"] as number; // ERROR - undefined is not number
@@ -270,7 +270,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- optional_indexer.js:19:1
 
-Cannot cast `i["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `i["foo"]` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_indexer.js:19:1
    19| i["foo"] as number; // ERROR - undefined is not number
@@ -348,7 +348,8 @@ References:
 
 Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:45:2
 
-Cannot cast array literal to `C` because in index `0`: `""` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast array literal to `C<string>` because in index `0`: `""` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    optional_unlabeled_tuple.js:45:2
    45| [''] as C<string>; // ERROR
@@ -424,8 +425,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:15:1
 
-Cannot cast `covariant` to `Covariant` because in type argument `T` [1]: `"foo"` [2] is incompatible with `"bar"` [3].
-[incompatible-type]
+Cannot cast `covariant` to `Covariant<"bar">` because in type argument `T` [1]: `"foo"` [2] is incompatible with
+`"bar"` [3]. [incompatible-type]
 
    polarity.js:15:1
    15| covariant as Covariant<'bar'>; // error
@@ -453,8 +454,8 @@ Cannot assign `'foo'` to `covariant.prop` because property `prop` is not writabl
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:21:1
 
-Cannot cast `contravariant` to `Contravariant` because in type argument `T` [1]: `string` [2] is incompatible with
-`unknown` [3]. [incompatible-type]
+Cannot cast `contravariant` to `Contravariant<unknown>` because in type argument `T` [1]: `string` [2] is incompatible
+with `unknown` [3]. [incompatible-type]
 
    polarity.js:21:1
    21| contravariant as Contravariant<unknown>; // error
@@ -474,8 +475,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:25:1
 
-Cannot cast `invariant` to `Invariant` because in type argument `T` [1]: `string` [2] is incompatible with `"foo"` [3].
-[incompatible-type]
+Cannot cast `invariant` to `Invariant<string>` because in type argument `T` [1]: `string` [2] is incompatible with
+`"foo"` [3]. [incompatible-type]
 
    polarity.js:25:1
    25| invariant as Invariant<string>; // error
@@ -511,7 +512,7 @@ Cannot assign `'hello'` to `ro_obj.b` because property `b` is not writable. [can
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:36:1
 
-Cannot cast `imported_covariant` to `exported.Covariant` because in type argument `T` [1]: `"foo"` [2] is incompatible
+Cannot cast `imported_covariant` to `Covariant<"bar">` because in type argument `T` [1]: `"foo"` [2] is incompatible
 with `"bar"` [3]. [incompatible-type]
 
    polarity.js:36:1
@@ -540,7 +541,7 @@ Cannot assign `'foo'` to `imported_covariant.prop` because property `prop` is no
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:42:1
 
-Cannot cast `imported_contravariant` to `exported.Contravariant` because in type argument `T` [1]: `string` [2] is
+Cannot cast `imported_contravariant` to `Contravariant<unknown>` because in type argument `T` [1]: `string` [2] is
 incompatible with `unknown` [3]. [incompatible-type]
 
    polarity.js:42:1
@@ -561,7 +562,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:46:1
 
-Cannot cast `imported_invariant` to `exported.Invariant` because in type argument `T` [1]: `string` [2] is incompatible
+Cannot cast `imported_invariant` to `Invariant<string>` because in type argument `T` [1]: `string` [2] is incompatible
 with `"foo"` [3]. [incompatible-type]
 
    polarity.js:46:1
@@ -626,8 +627,8 @@ References:
 
 Error ------------------------------------------------------------------------------- property_value_initializer.js:15:1
 
-Cannot cast `c.code` to string literal `wrong` because `"NEXT_STATIC_GEN_BAILOUT"` [1] is incompatible with
-`"wrong"` [2]. [incompatible-type]
+Cannot cast `c.code` to `"wrong"` because `"NEXT_STATIC_GEN_BAILOUT"` [1] is incompatible with `"wrong"` [2].
+[incompatible-type]
 
    property_value_initializer.js:15:1
    15| c.code as "wrong"; // ERROR - incompatible literal types
@@ -644,7 +645,7 @@ References:
 
 Error ------------------------------------------------------------------------------- property_value_initializer.js:17:1
 
-Cannot cast `c.neg` to number literal `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `c.neg` to `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
 
    property_value_initializer.js:17:1
    17| c.neg as 1; // ERROR - -1 !== 1
@@ -661,7 +662,7 @@ References:
 
 Error ------------------------------------------------------------------------------- property_value_initializer.js:19:1
 
-Cannot cast `c.big` to bigint literal `0n` because `100n` [1] is incompatible with `0n` [2]. [incompatible-type]
+Cannot cast `c.big` to `0n` because `100n` [1] is incompatible with `0n` [2]. [incompatible-type]
 
    property_value_initializer.js:19:1
    19| c.big as 0n; // ERROR - incompatible literal types
@@ -678,7 +679,7 @@ References:
 
 Error ------------------------------------------------------------------------------- property_value_initializer.js:21:1
 
-Cannot cast `c.negBig` to bigint literal `100n` because `-100n` [1] is incompatible with `100n` [2]. [incompatible-type]
+Cannot cast `c.negBig` to `100n` because `-100n` [1] is incompatible with `100n` [2]. [incompatible-type]
 
    property_value_initializer.js:21:1
    21| c.negBig as 100n; // ERROR - incompatible literal types
@@ -759,8 +760,7 @@ Initializer in a `declare` class property must be a literal (string, number, big
 
 Error ------------------------------------------------------------------------- property_value_initializer_import.js:5:1
 
-Cannot cast `e.code` to string literal `wrong` because `"EXPORTED_VALUE"` [1] is incompatible with `"wrong"` [2].
-[incompatible-type]
+Cannot cast `e.code` to `"wrong"` because `"EXPORTED_VALUE"` [1] is incompatible with `"wrong"` [2]. [incompatible-type]
 
    property_value_initializer_import.js:5:1
    5| e.code as "wrong"; // ERROR - incompatible literal types
@@ -777,8 +777,7 @@ References:
 
 Error ------------------------------------------------------------------------- property_value_initializer_import.js:7:1
 
-Cannot cast `ExportedConstants.BUFFER_SIZE` to number literal `0` because `256` [1] is incompatible with `0` [2].
-[incompatible-type]
+Cannot cast `ExportedConstants.BUFFER_SIZE` to `0` because `256` [1] is incompatible with `0` [2]. [incompatible-type]
 
    property_value_initializer_import.js:7:1
    7| ExportedConstants.BUFFER_SIZE as 0; // ERROR - incompatible literal types
@@ -795,7 +794,7 @@ References:
 
 Error ------------------------------------------------------------------------- property_value_initializer_import.js:9:1
 
-Cannot cast `e.neg` to number literal `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `e.neg` to `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
 
    property_value_initializer_import.js:9:1
    9| e.neg as 1; // ERROR
@@ -812,8 +811,7 @@ References:
 
 Error ------------------------------------------------------------------------ property_value_initializer_import.js:11:1
 
-Cannot cast `literal` to string literal `goodbye` because `"hello"` [1] is incompatible with `"goodbye"` [2].
-[incompatible-type]
+Cannot cast `literal` to `"goodbye"` because `"hello"` [1] is incompatible with `"goodbye"` [2]. [incompatible-type]
 
    property_value_initializer_import.js:11:1
    11| literal as "goodbye"; // ERROR
@@ -839,7 +837,7 @@ and tuple types you can use `Readonly<T>`. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------- readonly_of_arr_tuple.js:4:1
 
-Cannot cast `foo[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `foo[0]` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    readonly_of_arr_tuple.js:4:1
    4| foo[0] as number; // error: string ~> number
@@ -864,7 +862,7 @@ Cannot assign empty string to `foo[0]` because tuple element at index `0` [1] is
 
 Error ------------------------------------------------------------------------------------- readonly_of_arr_tuple.js:6:1
 
-Cannot cast `bar[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `bar[0]` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    readonly_of_arr_tuple.js:6:1
    6| bar[0] as number; // error: string ~> number
@@ -889,7 +887,7 @@ Cannot assign empty string to `bar[0]` because read-only arrays cannot be writte
 
 Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:11:1
 
-Cannot cast `readonly_tuple[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `readonly_tuple[0]` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    readonly_of_arr_tuple.js:11:1
    11| readonly_tuple[0] as number; // error: string ~> number
@@ -914,7 +912,7 @@ Cannot assign empty string to `readonly_tuple[0]` because tuple element at index
 
 Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:13:1
 
-Cannot cast `readonly_array[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `readonly_array[0]` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    readonly_of_arr_tuple.js:13:1
    13| readonly_array[0] as number; // error: string ~> number
@@ -971,7 +969,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- satisfies.js:4:1
 
-Cannot cast `"hello"` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `"hello"` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    satisfies.js:4:1
    4| "hello" satisfies number; // ERROR: string is not a number — the subtype check still runs

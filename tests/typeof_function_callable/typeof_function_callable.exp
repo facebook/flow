@@ -1,7 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot cast `M` to boolean literal `false` because `MapConstructor` [1] is incompatible with `false` [2].
-[incompatible-type]
+Cannot cast `M` to `false` because `MapConstructor` [1] is incompatible with `false` [2]. [incompatible-type]
 
    test.js:5:1
     5| M as false; // error: `MapConstructor` ~> `false`
@@ -18,8 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
-Cannot cast `S` to boolean literal `false` because `SymbolConstructor` [1] is incompatible with `false` [2].
-[incompatible-type]
+Cannot cast `S` to `false` because `SymbolConstructor` [1] is incompatible with `false` [2]. [incompatible-type]
 
    test.js:7:1
     7| S as false; // error: `SymbolConstructor` ~> `false`
@@ -36,8 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:1
 
-Cannot cast `P` to boolean literal `false` because `PromiseConstructor` [1] is incompatible with `false` [2].
-[incompatible-type]
+Cannot cast `P` to `false` because `PromiseConstructor` [1] is incompatible with `false` [2]. [incompatible-type]
 
    test.js:9:1
     9| P as false; // error: `PromiseConstructor` ~> `false`

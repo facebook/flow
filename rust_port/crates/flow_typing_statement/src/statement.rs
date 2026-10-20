@@ -6830,7 +6830,7 @@ fn expression_<'a>(
             let infer_t = e_prime.loc().1.dupe();
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
                 lower: mk_expression_reason(&inner.expression),
-                upper: reason_of_t(&t).dupe(),
+                upper: Box::new(flow_js_utils::type_or_type_desc_for_error(&t)),
             }));
             tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
             flow_js_utils::flow_js_result_to_job_error(type_operation_utils::perform_type_cast(
@@ -6857,7 +6857,7 @@ fn expression_<'a>(
             let infer_t = e_prime.loc().1.dupe();
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
                 lower: mk_expression_reason(&inner.expression),
-                upper: reason_of_t(&t).dupe(),
+                upper: Box::new(flow_js_utils::type_or_type_desc_for_error(&t)),
             }));
             tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
             flow_js_utils::flow_js_result_to_job_error(type_operation_utils::perform_type_cast(
@@ -6913,7 +6913,7 @@ fn expression_<'a>(
                 let infer_t = e_prime.loc().1.dupe();
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
                     lower: mk_expression_reason(&inner.expression),
-                    upper: reason_of_t(&t_annot).dupe(),
+                    upper: Box::new(flow_js_utils::type_or_type_desc_for_error(&t_annot)),
                 }));
                 tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
                 flow_js_utils::flow_js_result_to_job_error(
@@ -15663,7 +15663,9 @@ pub fn mk_class_sig<'a>(
                                     let infer_t = e_prime.loc().1.dupe();
                                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
                                         lower: mk_expression_reason(&sub_expr_c),
-                                        upper: reason_of_t(&t_c).dupe(),
+                                        upper: Box::new(
+                                            flow_js_utils::type_or_type_desc_for_error(&t_c),
+                                        ),
                                     }));
                                     tvar_resolver::resolve(
                                         cx,
@@ -15753,7 +15755,11 @@ pub fn mk_class_sig<'a>(
                                         let infer_t = e_prime.loc().1.dupe();
                                         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
                                             lower: mk_expression_reason(&cast.expression),
-                                            upper: reason_of_t(&t_annot).dupe(),
+                                            upper: Box::new(
+                                                flow_js_utils::type_or_type_desc_for_error(
+                                                    &t_annot,
+                                                ),
+                                            ),
                                         }));
                                         tvar_resolver::resolve(
                                             cx,

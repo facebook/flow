@@ -288,7 +288,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:1
 
-Cannot cast `arrayOnlyView` to `ArrayBufferView` because: [incompatible-type]
+Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is incompatible with `SharedArrayBuffer` [3]
     - in property `slice` > the return value: property `[toStringTag]` is missing in `ArrayBuffer` [4] but exists in
       `SharedArrayBuffer` [5]
@@ -317,7 +317,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:1
 
-Cannot cast `arrayOnlyView` to `ArrayBufferView` because: [incompatible-type]
+Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is incompatible with `SharedArrayBuffer` [3]
     - in property `slice` > the return value: property `grow` is missing in `ArrayBuffer` [4] but exists in
       `SharedArrayBuffer` [5]
@@ -346,7 +346,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:1
 
-Cannot cast `arrayOnlyView` to `ArrayBufferView` because: [incompatible-type]
+Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is incompatible with `SharedArrayBuffer` [3]
     - in property `slice` > the return value: property `growable` is missing in `ArrayBuffer` [4] but exists in
       `SharedArrayBuffer` [5]
@@ -375,8 +375,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:1
 
-Cannot cast `arrayOnlyView` to `ArrayBufferView` because in type argument `TArrayBuffer` [1]: property `[toStringTag]`
-is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
+Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because in type argument `TArrayBuffer` [1]:
+property `[toStringTag]` is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
 
    test.js:111:1
     111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
@@ -396,8 +396,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:1
 
-Cannot cast `arrayOnlyView` to `ArrayBufferView` because in type argument `TArrayBuffer` [1]: property `grow` is missing
-in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
+Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because in type argument `TArrayBuffer` [1]:
+property `grow` is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
 
    test.js:111:1
     111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
@@ -417,8 +417,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:1
 
-Cannot cast `arrayOnlyView` to `ArrayBufferView` because in type argument `TArrayBuffer` [1]: property `growable` is
-missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
+Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because in type argument `TArrayBuffer` [1]:
+property `growable` is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
 
    test.js:111:1
     111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
@@ -438,7 +438,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because: [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `SharedArrayBuffer` [2] is incompatible with `ArrayBuffer` [3]
     - in property `slice` > the return value: property `detached` is missing in `SharedArrayBuffer` [4] but exists in
       `ArrayBuffer` [5]
@@ -467,7 +467,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because: [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `SharedArrayBuffer` [2] is incompatible with `ArrayBuffer` [3]
     - in property `slice` > the return value: property `resizable` is missing in `SharedArrayBuffer` [4] but exists in
       `ArrayBuffer` [5]
@@ -496,7 +496,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because: [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `SharedArrayBuffer` [2] is incompatible with `ArrayBuffer` [3]
     - in property `slice` > the return value: property `resize` is missing in `SharedArrayBuffer` [4] but exists in
       `ArrayBuffer` [5]
@@ -525,7 +525,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because: [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `SharedArrayBuffer` [2] is incompatible with `ArrayBuffer` [3]
     - in property `slice` > the return value: property `transfer` is missing in `SharedArrayBuffer` [4] but exists in
       `ArrayBuffer` [5]
@@ -554,7 +554,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because: [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `SharedArrayBuffer` [2] is incompatible with `ArrayBuffer` [3]
     - in property `slice` > the return value: property `transferToFixedLength` is missing in `SharedArrayBuffer` [4] but
       exists in `ArrayBuffer` [5]
@@ -583,8 +583,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because in type argument `TArrayBuffer` [1]: property `detached` is
-missing in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because in type argument `TArrayBuffer` [1]: property
+`detached` is missing in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
 
    test.js:137:1
    137| sharedFloat16 as Float16Array<ArrayBuffer>; // ERROR
@@ -604,8 +604,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because in type argument `TArrayBuffer` [1]: property `resizable` is
-missing in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because in type argument `TArrayBuffer` [1]: property
+`resizable` is missing in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
 
    test.js:137:1
    137| sharedFloat16 as Float16Array<ArrayBuffer>; // ERROR
@@ -625,8 +625,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because in type argument `TArrayBuffer` [1]: property `resize` is missing
-in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because in type argument `TArrayBuffer` [1]: property
+`resize` is missing in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
 
    test.js:137:1
    137| sharedFloat16 as Float16Array<ArrayBuffer>; // ERROR
@@ -646,8 +646,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because in type argument `TArrayBuffer` [1]: property `transfer` is
-missing in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because in type argument `TArrayBuffer` [1]: property
+`transfer` is missing in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
 
    test.js:137:1
    137| sharedFloat16 as Float16Array<ArrayBuffer>; // ERROR
@@ -667,7 +667,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot cast `sharedFloat16` to `Float16Array` because in type argument `TArrayBuffer` [1]: property
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because in type argument `TArrayBuffer` [1]: property
 `transferToFixedLength` is missing in `SharedArrayBuffer` [2] but exists in `ArrayBuffer` [3]. [incompatible-type]
 
    test.js:137:1

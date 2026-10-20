@@ -48,7 +48,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ contextual_jsx.js:33:42
 
-Cannot cast `v` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `v` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    contextual_jsx.js:33:42
    33| <PolyObjectComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
@@ -65,7 +65,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ contextual_jsx.js:34:38
 
-Cannot cast `v` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `v` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    contextual_jsx.js:34:38
    34| <PolyFnComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
@@ -159,7 +159,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- no_infer.js:19:1
 
-Cannot cast `3` to `ConditionalNoInferToplevel` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `3` to `ConditionalNoInferToplevel<string>` because `3` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    no_infer.js:19:1
    19| 3 as ConditionalNoInferToplevel<string>; // error: number ~> string
@@ -173,7 +174,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- no_infer.js:23:1
 
-Cannot cast `3` to `ConditionalNoInferNested` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `3` to `ConditionalNoInferNested<string>` because `3` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    no_infer.js:23:1
    23| 3 as ConditionalNoInferNested<string>; // error: number ~> string
@@ -239,8 +241,8 @@ An annotation on rest parameter `args` is required because Flow cannot infer its
 
 Error ---------------------------------------------------------------------------------------- typeapp_expansion.js:54:3
 
-Cannot cast `Spreaded` to `Opaque` because in type argument `T` [1]: property `foo` is missing in `{...}` [2] but exists
-in `{foo: string, ...}` [3]. [incompatible-type]
+Cannot cast `Spreaded` to `Opaque<{...}>` because in type argument `T` [1]: property `foo` is missing in `{...}` [2] but
+exists in `{foo: string, ...}` [3]. [incompatible-type]
 
    typeapp_expansion.js:54:3
    54|   Spreaded as Opaque<{...}>; // error: {} ~> Foo
@@ -793,7 +795,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:3
 
-Cannot cast `r2[2]` to empty because in at least one member of `1 | 2` [1]: `1` [2] is incompatible with `empty` [3].
+Cannot cast `r2[2]` to `empty` because in at least one member of `1 | 2` [1]: `1` [2] is incompatible with `empty` [3].
 [incompatible-type]
 
    upper_non_t.js:103:3
@@ -884,7 +886,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:132:3
 
-Cannot cast `v1` to empty because `[x: number, y: string]` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `v1` to `empty` because `[x: number, y: string]` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    upper_non_t.js:132:3
    132|   v1 as empty; // error: tuple ~> empty
@@ -901,7 +903,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:138:3
 
-Cannot cast `f4` to empty because `[c: boolean, d: Date]` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `f4` to `empty` because `[c: boolean, d: Date]` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    upper_non_t.js:138:3
    138|   f4 as empty; // error: tuple ~> empty

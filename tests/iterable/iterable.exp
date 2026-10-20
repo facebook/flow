@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- array.js:7:1
 
-Cannot cast array literal to `Iterable` because in property `@@iterator` > the return value > type argument `Yield` [1]:
-`"hi"` [2] is incompatible with `number` [3]. [incompatible-type]
+Cannot cast array literal to `Iterable<number>` because in property `@@iterator` > the return value > type argument
+`Yield` [1]: `"hi"` [2] is incompatible with `number` [3]. [incompatible-type]
 
    array.js:7:1
     7| ['hi'] as Iterable<number>; // Error string ~> number
@@ -21,8 +21,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- array.js:8:1
 
-Cannot cast array literal to `Iterable` because in property `@@iterator` > the return value > type argument `Yield` [1]:
-`1` [2] is incompatible with `string` [3]. [incompatible-type]
+Cannot cast array literal to `Iterable<string>` because in property `@@iterator` > the return value > type argument
+`Yield` [1]: `1` [2] is incompatible with `string` [3]. [incompatible-type]
 
    array.js:8:1
     8| ['hi', 1] as Iterable<string>; // Error number ~> string
@@ -164,7 +164,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:3:1
 
-Cannot cast `new String(...)` to `Iterable` because in property `@@iterator` > the return value > type argument
+Cannot cast `new String(...)` to `Iterable<number>` because in property `@@iterator` > the return value > type argument
 `Yield` [1]: `string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    string.js:3:1

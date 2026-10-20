@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- consumer.js:21:3
 
-Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `element.htmlOnly` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:21:3
    21|   element.htmlOnly as string; // ERROR: the refinement is not `any` or `empty`
@@ -17,7 +17,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:27:3
 
-Cannot cast `unknownValue.tagName` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `unknownValue.tagName` to `number` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    consumer.js:27:3
    27|   unknownValue.tagName as number; // ERROR: `unknown` refines to the instance type
@@ -34,7 +35,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:32:3
 
-Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `element.htmlOnly` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:32:3
    32|   element.htmlOnly as string; // ERROR: inherited construct signatures refine
@@ -51,7 +52,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:37:3
 
-Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `element.htmlOnly` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:37:3
    37|   element.htmlOnly as string; // ERROR: every overload returns an HTML-like instance
@@ -138,7 +139,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:82:3
 
-Cannot cast `multiParentBase.child` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `multiParentBase.child` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    consumer.js:82:3
@@ -156,7 +157,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:83:3
 
-Cannot cast `multiParentBase` to empty because `MultiParentChild` [1] is incompatible with `empty` [2].
+Cannot cast `multiParentBase` to `empty` because `MultiParentChild` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    consumer.js:83:3
@@ -174,7 +175,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:88:3
 
-Cannot cast `multiParentBase.base` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `multiParentBase.base` to `number` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    consumer.js:88:3
    88|   multiParentBase.base as number; // ERROR: the negative branch retains the base interface
@@ -205,7 +207,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ consumer.js:100:3
 
-Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `element.htmlOnly` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:100:3
    100|   element.htmlOnly as string; // ERROR: the refinement is the `prototype` type

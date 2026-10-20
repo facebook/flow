@@ -170,7 +170,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- empty.js:76:3
 
-Cannot cast `si` to `Set` because in type argument `T` [1]: `string` [2] is incompatible with `number` [3].
+Cannot cast `si` to `Set<number>` because in type argument `T` [1]: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    empty.js:76:3
@@ -263,7 +263,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:17:3
 
-Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    providers_closure.js:17:3
    17|   x as empty; // error, just to show that x is not empty
@@ -280,7 +280,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:21:3
 
-Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    providers_closure.js:21:3
    21|   x as empty; // error similarly
@@ -297,7 +297,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:22:3
 
-Cannot cast `y` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `y` to `number` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    providers_closure.js:22:3
    22|   y as number; // error b/c y was fully havoced
@@ -314,7 +314,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:32:1
 
-Cannot cast `z` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `z` to `number` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    providers_closure.js:32:1
    32| z as number; // should fail, initial type of z was null
@@ -331,7 +331,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:42:3
 
-Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    providers_closure.js:42:3
    42|   x as empty; // error, just to show that x is not empty
@@ -348,7 +348,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:46:3
 
-Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    providers_closure.js:46:3
    46|   x as empty; // error similarly
@@ -365,7 +365,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:47:3
 
-Cannot cast `y` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `y` to `number` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    providers_closure.js:47:3
    47|   y as number; // error b/c y was fully havoced
@@ -416,7 +416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:3
 
-Cannot cast `x` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `x` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    test.js:23:3
    23|   x as void; // should error
@@ -433,7 +433,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:5
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:33:5
    33|     x as number; // should fail

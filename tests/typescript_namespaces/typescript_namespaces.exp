@@ -113,7 +113,7 @@ References:
 
 Error ------------------------------------------------------------------------------ declare_class_then_interface.js:9:1
 
-Cannot cast `d.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `d.x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declare_class_then_interface.js:9:1
    9| d.x as string; // ERROR
@@ -130,7 +130,7 @@ References:
 
 Error ----------------------------------------------------------------------------- declare_class_then_interface.js:10:1
 
-Cannot cast `d.y` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `d.y` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declare_class_then_interface.js:10:1
    10| d.y as string; // ERROR
@@ -147,7 +147,7 @@ References:
 
 Error ----------------------------------------------------------------------------- declare_class_then_interface.js:10:1
 
-Cannot cast `d.y` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `d.y` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declare_class_then_interface.js:10:1
    10| d.y as string; // ERROR
@@ -220,8 +220,8 @@ References:
 
 Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:14:1
 
-Cannot cast `LibOrder.Inner.Leaf.nearest` to string literal `outer` because `Shared` [1] is incompatible with
-`"outer"` [2]. [incompatible-type]
+Cannot cast `LibOrder.Inner.Leaf.nearest` to `"outer"` because `Shared` [1] is incompatible with `"outer"` [2].
+[incompatible-type]
 
    libdef_namespace_type_reads.js:14:1
    14| LibOrder.Inner.Leaf.nearest as "outer"; // err: "inner" ~> "outer"
@@ -238,7 +238,7 @@ References:
 
 Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:17:1
 
-Cannot cast `LibValueOrder.Inner.Leaf.nearestValue` to string literal `outer` because `"inner"` [1] is incompatible with
+Cannot cast `LibValueOrder.Inner.Leaf.nearestValue` to `"outer"` because `"inner"` [1] is incompatible with
 `"outer"` [2]. [incompatible-type]
 
    libdef_namespace_type_reads.js:17:1
@@ -256,8 +256,8 @@ References:
 
 Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:20:1
 
-Cannot cast `LibNestedMerge.Inner.value` to string literal `other` because `Shared` [1] is incompatible with
-`"other"` [2]. [incompatible-type]
+Cannot cast `LibNestedMerge.Inner.value` to `"other"` because `Shared` [1] is incompatible with `"other"` [2].
+[incompatible-type]
 
    libdef_namespace_type_reads.js:20:1
    20| LibNestedMerge.Inner.value as "other"; // err: "nested" ~> "other"
@@ -274,8 +274,8 @@ References:
 
 Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:22:1
 
-Cannot cast `LibNestedMerge.Inner.valueFromTypeof` to string literal `other` because `"nested value"` [1] is
-incompatible with `"other"` [2]. [incompatible-type]
+Cannot cast `LibNestedMerge.Inner.valueFromTypeof` to `"other"` because `"nested value"` [1] is incompatible with
+`"other"` [2]. [incompatible-type]
 
    libdef_namespace_type_reads.js:22:1
    22| LibNestedMerge.Inner.valueFromTypeof as "other"; // err: "nested value" ~> "other"
@@ -292,7 +292,7 @@ References:
 
 Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:10:1
 
-Cannot cast `LocalMulti.value` to number because `Shared` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `LocalMulti.value` to `number` because `Shared` [1] is incompatible with `number` [2]. [incompatible-type]
 
    local_multiple_namespaces.js:10:1
    10| LocalMulti.value as number; // err: string ~> number
@@ -309,7 +309,7 @@ References:
 
 Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:21:1
 
-Cannot cast `LocalOther.value` to string because `Shared` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `LocalOther.value` to `string` because `Shared` [1] is incompatible with `string` [2]. [incompatible-type]
 
    local_multiple_namespaces.js:21:1
    21| LocalOther.value as string; // err: number ~> string
@@ -382,8 +382,8 @@ References:
 
 Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:88:1
 
-Cannot cast `LocalOrder.Inner.Leaf.nearest` to string literal `outer` because `Shared` [1] is incompatible with
-`"outer"` [2]. [incompatible-type]
+Cannot cast `LocalOrder.Inner.Leaf.nearest` to `"outer"` because `Shared` [1] is incompatible with `"outer"` [2].
+[incompatible-type]
 
    local_multiple_namespaces.js:88:1
    88| LocalOrder.Inner.Leaf.nearest as "outer"; // err: "inner" ~> "outer"
@@ -400,8 +400,8 @@ References:
 
 Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:90:1
 
-Cannot cast `LocalOrder.Inner.Leaf.nearestValue` to string literal `outer` because `"inner"` [1] is incompatible with
-`"outer"` [2]. [incompatible-type]
+Cannot cast `LocalOrder.Inner.Leaf.nearestValue` to `"outer"` because `"inner"` [1] is incompatible with `"outer"` [2].
+[incompatible-type]
 
    local_multiple_namespaces.js:90:1
    90| LocalOrder.Inner.Leaf.nearestValue as "outer"; // err: "inner" ~> "outer"
@@ -418,8 +418,8 @@ References:
 
 Error ------------------------------------------------------------------------------- local_multiple_namespaces.js:106:1
 
-Cannot cast `LocalNestedMerge.Inner.value` to string literal `other` because `Shared` [1] is incompatible with
-`"other"` [2]. [incompatible-type]
+Cannot cast `LocalNestedMerge.Inner.value` to `"other"` because `Shared` [1] is incompatible with `"other"` [2].
+[incompatible-type]
 
    local_multiple_namespaces.js:106:1
    106| LocalNestedMerge.Inner.value as "other"; // err: "nested" ~> "other"

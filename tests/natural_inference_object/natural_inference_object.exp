@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- enforced.js:2:1
 
-Cannot cast `foo` to object type because property `bar` is missing in object literal [1] but exists in
+Cannot cast `foo` to `{bar?: string}` because property `bar` is missing in object literal [1] but exists in
 `{bar?: string}` [2]. [incompatible-type]
 
 This optional property of `{bar?: string}` [2] is invariantly typed. To fix,
@@ -23,7 +23,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- enforced.js:5:1
 
-Cannot cast `bar` to object type because in property `baz`: `number` [1] is not exactly the same as
+Cannot cast `bar` to `{baz: string | number}` because in property `baz`: `number` [1] is not exactly the same as
 `string | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `baz` is invariantly typed. To fix the error,
@@ -52,8 +52,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- enforced.js:8:1
 
-Cannot cast `bazArray` to array type because in array element: `{baz: number}` [1] is not exactly the same as
-`{baz: string | number}` [2]. [incompatible-type]
+Cannot cast `bazArray` to `Array<{baz: string | number}>` because in array element: `{baz: number}` [1] is not exactly
+the same as `{baz: string | number}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either annotate array literal [3] with `Array<{baz: string | number}>` [4]

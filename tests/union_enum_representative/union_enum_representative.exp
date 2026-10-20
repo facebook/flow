@@ -63,7 +63,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:39:2
 
-Cannot cast `nums` to string because in at least one member of `1 | 2 | 3` [1]: `1` [2] is incompatible with
+Cannot cast `nums` to `string` because in at least one member of `1 | 2 | 3` [1]: `1` [2] is incompatible with
 `string` [3]. [incompatible-type]
 
    union_enum_representative.js:39:2
@@ -84,7 +84,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:43:2
 
-Cannot cast `mixed` to null because `1` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `mixed` to `null` because `1` [1] is incompatible with `null` [2]. [incompatible-type]
 
    union_enum_representative.js:43:2
    43| (mixed as null);
@@ -101,7 +101,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:43:2
 
-Cannot cast `mixed` to null because `"two"` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `mixed` to `null` because `"two"` [1] is incompatible with `null` [2]. [incompatible-type]
 
    union_enum_representative.js:43:2
    43| (mixed as null);
@@ -118,7 +118,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:43:2
 
-Cannot cast `mixed` to null because `true` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `mixed` to `null` because `true` [1] is incompatible with `null` [2]. [incompatible-type]
 
    union_enum_representative.js:43:2
    43| (mixed as null);
@@ -135,7 +135,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:47:2
 
-Cannot cast `strs` to number because in at least one member of `"a" | "b" | "c"` [1]: `"a"` [2] is incompatible with
+Cannot cast `strs` to `number` because in at least one member of `"a" | "b" | "c"` [1]: `"a"` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    union_enum_representative.js:47:2

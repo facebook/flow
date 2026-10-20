@@ -103,7 +103,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- call_consumer.js:10:1
 
-Cannot cast `table[annotated]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `table[annotated]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    call_consumer.js:10:1
    10| table[annotated] as string; // ERROR: number is not string
@@ -162,7 +162,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- class_consumer.js:10:1
 
-Cannot cast `e[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `e[key1]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_consumer.js:10:1
    10| e[key1] as string; // ERROR: number is incompatible with string
@@ -187,7 +187,7 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------------------- class_expr.js:16:1
 
-Cannot cast `c[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `c[key1]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_expr.js:16:1
    16| c[key1] as string; // ERROR: number is incompatible with string
@@ -204,7 +204,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- class_local.js:25:1
 
-Cannot cast `c[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `c[key1]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_local.js:25:1
    25| c[key1] as string; // ERROR: number is incompatible with string
@@ -221,7 +221,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- class_local.js:26:1
 
-Cannot cast `c[key2]()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `c[key2]()` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    class_local.js:26:1
    26| c[key2]() as number; // ERROR: string is incompatible with number
@@ -281,7 +281,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- class_operations.js:35:1
 
-Cannot cast `m[a]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `m[a]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_operations.js:35:1
    35| m[a] as string; // ERROR: number is not string (a did not merge with b)
@@ -298,7 +298,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- class_operations.js:42:1
 
-Cannot cast `other` to key set because property `[symbol]` is missing in `C` [1]. [prop-missing]
+Cannot cast `other` to `keyof C` because property `[symbol]` is missing in `C` [1]. [prop-missing]
 
    class_operations.js:42:1
    42| other as keyof C; // ERROR: `other` is not a key of `C`
@@ -330,7 +330,7 @@ class. [invalid-override]
 
 Error -------------------------------------------------------------------------------------------- indexed_access.js:8:1
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    indexed_access.js:8:1
     8| x as string; // ERROR: the member keyed by `Keys.a` is `number`, not `string`
@@ -347,7 +347,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- indexed_access.js:13:1
 
-Cannot cast `y` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `y` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    indexed_access.js:13:1
    13| y as number; // ERROR: the member keyed by `Keys.b` is `string`, not `number`
@@ -364,7 +364,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ interface_local.js:24:1
 
-Cannot cast `i[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `i[key1]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    interface_local.js:24:1
    24| i[key1] as string; // ERROR: number is incompatible with string
@@ -381,7 +381,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ interface_local.js:25:1
 
-Cannot cast `i[key2]()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `i[key2]()` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    interface_local.js:25:1
    25| i[key2]() as number; // ERROR: string is incompatible with number
@@ -412,7 +412,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ interface_member_expr.js:14:1
 
-Cannot cast `i[Keys.a]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `i[Keys.a]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    interface_member_expr.js:14:1
    14| i[Keys.a] as string; // ERROR: number is incompatible with string
@@ -471,7 +471,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- keyof.js:43:1
 
-Cannot cast `sym2` to key set because property `[symbol]` is missing in `SymOnly` [1]. [prop-missing]
+Cannot cast `sym2` to `keyof SymOnly` because property `[symbol]` is missing in `SymOnly` [1]. [prop-missing]
 
    keyof.js:43:1
    43| sym2 as keyof SymOnly; // ERROR: sym2 is not a key of SymOnly
@@ -519,7 +519,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- keyof_annotation.js:12:1
 
-Cannot cast `key` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `key` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_annotation.js:12:1
    12| key as string; // ERROR: the key is a `unique symbol`, not a string
@@ -536,7 +536,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- keyof_annotation.js:18:1
 
-Cannot cast `ikey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `ikey` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_annotation.js:18:1
    18| ikey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -553,7 +553,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- keyof_annotation.js:22:1
 
-Cannot cast `ckey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `ckey` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_annotation.js:22:1
    22| ckey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -570,7 +570,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- keyof_annotation.js:28:1
 
-Cannot cast `akey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `akey` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_annotation.js:28:1
    28| akey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -587,7 +587,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:20:1
 
-Cannot cast `aliasKey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `aliasKey` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:20:1
    20| aliasKey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -604,7 +604,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:28:1
 
-Cannot cast `condKey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `condKey` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:28:1
    28| condKey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -621,7 +621,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:36:1
 
-Cannot cast `condStrKey` to `typeof s` because `string` [1] is incompatible with unique symbol [2]. [incompatible-type]
+Cannot cast `condStrKey` to `unique symbol` because `string` [1] is incompatible with unique symbol [2].
+[incompatible-type]
 
    keyof_deferred_key.js:36:1
    36| condStrKey as typeof s; // ERROR: the key is a string, not a symbol
@@ -638,7 +639,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:43:1
 
-Cannot cast `importedKey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `importedKey` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:43:1
    43| importedKey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -655,7 +656,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:51:1
 
-Cannot cast `keysOf(...)` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `keysOf(...)` to `string` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:51:1
    51| keysOf(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
@@ -672,7 +673,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:52:1
 
-Cannot cast `keysOf(...)` to `typeof t` because unique symbol [1] is incompatible with unique symbol [2].
+Cannot cast `keysOf(...)` to `unique symbol` because unique symbol [1] is incompatible with unique symbol [2].
 [incompatible-type]
 
    keyof_deferred_key.js:52:1
@@ -690,7 +691,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:58:1
 
-Cannot cast `keysOf(...)` to `typeof s` because `string` [1] is incompatible with unique symbol [2]. [incompatible-type]
+Cannot cast `keysOf(...)` to `unique symbol` because `string` [1] is incompatible with unique symbol [2].
+[incompatible-type]
 
    keyof_deferred_key.js:58:1
    58| keysOf(strDict) as typeof s; // ERROR: the key is a string, not a symbol
@@ -707,7 +709,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:65:1
 
-Cannot cast `keysOfDict(...)` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `keysOfDict(...)` to `string` because unique symbol [1] is incompatible with `string` [2].
+[incompatible-type]
 
    keyof_deferred_key.js:65:1
    65| keysOfDict(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
@@ -724,7 +727,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- keyof_deferred_key.js:69:10
 
-Cannot cast `keysOf<...>(...)` to string because unique symbol [1] is incompatible with `string` [2].
+Cannot cast `keysOf<...>(...)` to `string` because unique symbol [1] is incompatible with `string` [2].
 [incompatible-type]
 
    keyof_deferred_key.js:69:10
@@ -739,7 +742,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:78:1
 
-Cannot cast `keysOfBounded(...)` to string because unique symbol [1] is incompatible with `string` [2].
+Cannot cast `keysOfBounded(...)` to `string` because unique symbol [1] is incompatible with `string` [2].
 [incompatible-type]
 
    keyof_deferred_key.js:78:1
@@ -757,7 +760,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- keyof_instance.js:12:1
 
-Cannot cast `other` to key set because property `[symbol]` is missing in `I` [1]. [prop-missing]
+Cannot cast `other` to `keyof I` because property `[symbol]` is missing in `I` [1]. [prop-missing]
 
    keyof_instance.js:12:1
    12| other as keyof I; // ERROR: `other` is not a key of `I`
@@ -771,7 +774,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- mapped_homomorphic.js:13:1
 
-Cannot cast `m[Keys.a]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `m[Keys.a]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    mapped_homomorphic.js:13:1
    13| m[Keys.a] as string; // ERROR: number is not string (key `a` kept distinct)
@@ -788,7 +791,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- mapped_homomorphic.js:18:1
 
-Cannot cast `p[Keys.a]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `p[Keys.a]` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    mapped_homomorphic.js:18:1
    18| p[Keys.a] as number; // ERROR: the property is optional, so it may be void
@@ -805,7 +808,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- mapped_remap.js:10:1
 
-Cannot cast `m[Keys.a]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `m[Keys.a]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    mapped_remap.js:10:1
    10| m[Keys.a] as string; // ERROR: number is not string (a did not merge with b)
@@ -1381,7 +1384,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ typeof_identity.js:10:1
 
-Cannot cast `t` to `typeof s` because unique symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
+Cannot cast `t` to `unique symbol` because unique symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
 
    typeof_identity.js:10:1
    10| t as typeof s; // ERROR: a distinct unique symbol, not merged into `symbol`
@@ -1398,7 +1401,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ typeof_identity.js:11:1
 
-Cannot cast `gen` to `typeof s` because `symbol` [1] is incompatible with unique symbol [2]. [incompatible-type]
+Cannot cast `gen` to `unique symbol` because `symbol` [1] is incompatible with unique symbol [2]. [incompatible-type]
 
    typeof_identity.js:11:1
    11| gen as typeof s; // ERROR: generic `symbol` is not the unique symbol `s`
@@ -1415,7 +1418,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- value_as_type.js:15:1
 
-Cannot cast `o[s]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `o[s]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    value_as_type.js:15:1
    15| o[s] as string; // ERROR: number is not string
@@ -1446,7 +1449,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- value_consumer.js:9:1
 
-Cannot cast `o[s]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `o[s]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    value_consumer.js:9:1
    9| o[s] as string; // ERROR: number is not string

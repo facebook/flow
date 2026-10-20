@@ -79,7 +79,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:44:3
 
-Cannot cast `ret1[0]` to number literal `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `ret1[0]` to `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
 
    test.js:44:3
    44|   ret1[0] as 2; // error
@@ -96,7 +96,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:3
 
-Cannot cast `ret2[0]` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
+Cannot cast `ret2[0]` to `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    test.js:45:3
    45|   ret2[0] as 3; // error
@@ -113,7 +113,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:52:3
 
-Cannot cast `nonTup` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
+Cannot cast `nonTup` to `[1, 2, 3]` because array literal [1] has an unknown number of elements, so is incompatible with
 `[1, 2, 3]` [2]. [invalid-tuple-arity]
 
    test.js:52:3
@@ -131,7 +131,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:59:3
 
-Cannot cast `nonTup` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
+Cannot cast `nonTup` to `[1, 2, 3]` because array literal [1] has an unknown number of elements, so is incompatible with
 `[1, 2, 3]` [2]. [invalid-tuple-arity]
 
    test.js:59:3

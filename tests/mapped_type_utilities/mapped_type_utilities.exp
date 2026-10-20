@@ -85,8 +85,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:31:3
 
-Cannot cast `noFoo` to object type because `interface {bar: number; baz: number}` [1] is not a subtype of
-`{bar: number, baz: number, ...}` [2]. Class instances are not subtypes of object types; consider rewriting
+Cannot cast `noFoo` to `{bar: number, baz: number, ...}` because `interface {bar: number; baz: number}` [1] is not a
+subtype of `{bar: number, baz: number, ...}` [2]. Class instances are not subtypes of object types; consider rewriting
 `{bar: number, baz: number, ...}` [2] as an interface. [class-object-subtyping]
 
    omit.js:31:3
@@ -118,8 +118,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:47:3
 
-Cannot cast `noFoo` to object type because `interface {bar: number; baz: number}` [1] is not a subtype of
-`{bar: number, baz: number, ...}` [2]. Class instances are not subtypes of object types; consider rewriting
+Cannot cast `noFoo` to `{bar: number, baz: number, ...}` because `interface {bar: number; baz: number}` [1] is not a
+subtype of `{bar: number, baz: number, ...}` [2]. Class instances are not subtypes of object types; consider rewriting
 `{bar: number, baz: number, ...}` [2] as an interface. [class-object-subtyping]
 
    omit.js:47:3
@@ -137,7 +137,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:54:3
 
-Cannot cast `x` to object type because property `foo` is read-only in `{readonly foo: 1}` [1] but writable in
+Cannot cast `x` to `{foo: 1}` because property `foo` is read-only in `{readonly foo: 1}` [1] but writable in
 `{foo: 1}` [2]. [incompatible-variance]
 
    omit.js:54:3
@@ -269,7 +269,7 @@ Cannot assign `3` to `pickedO1.foo` because property `foo` is not writable. [can
 
 Error ------------------------------------------------------------------------------------------------------ pick.js:9:1
 
-Cannot cast `pickedO1.bar` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `pickedO1.bar` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    pick.js:9:1
       9| pickedO1.bar as string; // ERROR bar is optional
@@ -286,7 +286,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ pick.js:9:1
 
-Cannot cast `pickedO1.bar` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `pickedO1.bar` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    pick.js:9:1
    9| pickedO1.bar as string; // ERROR bar is optional
@@ -331,8 +331,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- record.js:5:1
 
-Cannot cast `exact` to object type because property `bar` is extra in `{bar: number, foo: number}` [1] but missing in
-`{foo: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `exact` to `{foo: number}` because property `bar` is extra in `{bar: number, foo: number}` [1] but missing
+in `{foo: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    record.js:5:1
    5| exact as {foo: number}; // ERROR, mising bar
@@ -349,8 +349,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:10:1
 
-Cannot cast `indexed` to object type because indexed `{[string]: number, foo: number}` [1] is incompatible with exact
-`{foo: number}` [2]. [incompatible-indexer]
+Cannot cast `indexed` to `{foo: number}` because indexed `{[string]: number, foo: number}` [1] is incompatible with
+exact `{foo: number}` [2]. [incompatible-indexer]
 
    record.js:10:1
    10| indexed as {foo: number}; // ERROR, missing indexer
@@ -367,7 +367,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:16:1
 
-Cannot cast `numIndexed` to object type because indexed `{[number]: string}` [1] is incompatible with exact
+Cannot cast `numIndexed` to `{"1": string}` because indexed `{[number]: string}` [1] is incompatible with exact
 `{"1": string}` [2]. [incompatible-indexer]
 
    record.js:16:1
@@ -385,7 +385,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:22:1
 
-Cannot cast `symIndexed` to object type because indexed `{[symbol]: boolean}` [1] is incompatible with exact
+Cannot cast `symIndexed` to `{foo: boolean}` because indexed `{[symbol]: boolean}` [1] is incompatible with exact
 `{foo: boolean}` [2]. [incompatible-indexer]
 
    record.js:22:1
@@ -403,7 +403,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:22:1
 
-Cannot cast `symIndexed` to object type because in the indexer property's key: `"foo"` [1] is incompatible with
+Cannot cast `symIndexed` to `{foo: boolean}` because in the indexer property's key: `"foo"` [1] is incompatible with
 `symbol` [2]. [incompatible-type]
 
    record.js:22:1

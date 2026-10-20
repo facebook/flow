@@ -72,7 +72,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:10:1
 
-Cannot cast `0` to `NonNullable` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `0` to `NonNullable<null>` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    non_maybe_type.js:10:1
    10| 0 as NonNullable<null>; // error
@@ -86,7 +86,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:17:1
 
-Cannot cast `null` to `NonNullable` because `null` [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `null` to `NonNullable<unknown>` because `null` [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:17:1
    17| null as NonNullable<unknown>;
@@ -100,7 +100,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:18:1
 
-Cannot cast `undefined` to `NonNullable` because `void` [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `undefined` to `NonNullable<unknown>` because `void` [1] is incompatible with `unknown` [2].
+[incompatible-type]
 
    non_maybe_type.js:18:1
    18| undefined as NonNullable<unknown>;
@@ -114,7 +115,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:49:1
 
-Cannot cast `'hi'` to `NonNullable` because `"hi"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `'hi'` to `NonNullable<empty>` because `"hi"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    non_maybe_type.js:49:1
    49| 'hi' as NonNullable<empty>; // Error
@@ -337,7 +338,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:26:1
 
-Cannot cast `fn6(...)` to function type because in the first parameter: `A` [1] is incompatible with `B` [2].
+Cannot cast `fn6(...)` to `(B) => void` because in the first parameter: `A` [1] is incompatible with `B` [2].
 [incompatible-type]
 
    tvar3.js:26:1
@@ -387,7 +388,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:1
 
-Cannot cast `fn8(...)` to function type because in the first parameter: `A` [1] is incompatible with `C` [2].
+Cannot cast `fn8(...)` to `(C) => void` because in the first parameter: `A` [1] is incompatible with `C` [2].
 [incompatible-type]
 
    tvar3.js:28:1
@@ -621,7 +622,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:18:3
 
-Cannot cast `x` to `Readonly` because: [incompatible-type]
+Cannot cast `x` to `Readonly<TupleUnion>` because: [incompatible-type]
  - Either in index `0`: `3` [1] is incompatible with `1` [2].
  - Or in index `0`: `3` [1] is incompatible with `2` [3].
 

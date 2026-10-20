@@ -41,8 +41,8 @@ Cannot implement `{[string]: number}` [1] because it is not an interface. [canno
 
 Error ------------------------------------------------------------------------------------------ class_to_object.ts:18:1
 
-Cannot cast `a` to object type because property `missing` is missing in `Animal` [1] but exists in
-`{missing: boolean, name: string}` [2]. [incompatible-type]
+Cannot cast `a` to `{missing: boolean, name: string}` because property `missing` is missing in `Animal` [1] but exists
+in `{missing: boolean, name: string}` [2]. [incompatible-type]
 
    class_to_object.ts:18:1
    18| a satisfies {name: string; missing: boolean}; // ERROR: `missing` not in Animal
@@ -59,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ class_to_object.ts:21:1
 
-Cannot cast `a` to object type because in property `name`: `string` [1] is incompatible with `number` [2].
+Cannot cast `a` to `{name: number}` because in property `name`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    class_to_object.ts:21:1
@@ -140,7 +140,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- function_to_object.ts:15:1
 
-Cannot cast `f` to object type because `() => void` [1] is incompatible with `{x: number}` [2]. [incompatible-type]
+Cannot cast `f` to `{x: number}` because `() => void` [1] is incompatible with `{x: number}` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -159,8 +159,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- function_to_object.ts:19:1
 
-Cannot cast `f` to object type because `() => void` [1] is incompatible with indexed `{[k: string]: number}` [2].
-[incompatible-function-indexer]
+Cannot cast `f` to `{[k: string]: number}` because `() => void` [1] is incompatible with indexed
+`{[k: string]: number}` [2]. [incompatible-function-indexer]
 
    function_to_object.ts:19:1
    19| f satisfies {[k: string]: number}; // ERROR: function vs indexed object
@@ -177,8 +177,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_usage.js:16:1
 
-Cannot cast `f` to object type because `() => void` [1] is incompatible with indexed `{[k: string]: number}` [2].
-[incompatible-function-indexer]
+Cannot cast `f` to `{[k: string]: number}` because `() => void` [1] is incompatible with indexed
+`{[k: string]: number}` [2]. [incompatible-function-indexer]
 
    function_usage.js:16:1
    16| f as {[k: string]: number}; // ERROR: function vs indexed object
@@ -272,7 +272,7 @@ References:
 
 Error -------------------------------------------------------------------------------- object_slice_ts_interface.js:23:1
 
-Cannot cast `valueSpread.extra` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `valueSpread.extra` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_slice_ts_interface.js:23:1
    23| valueSpread.extra as empty; // ERROR: the result is not any

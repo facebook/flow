@@ -461,7 +461,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:21:30
 
-Cannot cast `(new B3<...>()).bar()` to `A2` because in type argument `X` [1]: `string` [2] is incompatible with
+Cannot cast `(new B3<...>()).bar()` to `A2<number>` because in type argument `X` [1]: `string` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    import.js:21:30
@@ -479,7 +479,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:22:1
 
-Cannot cast `(new B3()).qux(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `(new B3()).qux(...)` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    import.js:22:1
    22| (new B3() as A2<number>).qux(0) as string; // ERROR

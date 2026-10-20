@@ -8,7 +8,7 @@ Cannot assign `'23456'` to `frozenObject.bar` because property `bar` is not writ
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:15:1
 
-Cannot cast `frozenObject` to object type because property `bar` is read-only in `{readonly bar: "12345"}` [1] but
+Cannot cast `frozenObject` to `{bar: "12345"}` because property `bar` is read-only in `{readonly bar: "12345"}` [1] but
 writable in `{bar: "12345"}` [2]. [incompatible-variance]
 
    downstream.js:15:1
@@ -26,8 +26,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:16:1
 
-Cannot cast `frozenObject` to object type because in property `bar`: `"12345"` [1] is incompatible with `"1234"` [2].
-[incompatible-type]
+Cannot cast `frozenObject` to `{readonly bar: "1234"}` because in property `bar`: `"12345"` [1] is incompatible with
+`"1234"` [2]. [incompatible-type]
 
    downstream.js:16:1
    16| frozenObject as {readonly bar: '1234'}; // error '12345' ~> '1234'
@@ -44,8 +44,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:17:1
 
-Cannot cast `frozenObject` to object type because property `baz` is missing in `{readonly bar: "12345"}` [1] but exists
-in `{readonly bar: "12345", baz: "12345"}` [2]. [incompatible-type]
+Cannot cast `frozenObject` to `{readonly bar: "12345", baz: "12345"}` because property `baz` is missing in
+`{readonly bar: "12345"}` [1] but exists in `{readonly bar: "12345", baz: "12345"}` [2]. [incompatible-type]
 
    downstream.js:17:1
    17| frozenObject as {readonly bar: '12345', baz: '12345'}; // error baz is missing in frozenObject
@@ -124,7 +124,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:27:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `bar` is read-only in
+Cannot cast `frozenObjectWithSpread` to `{bar: "12345", baz: number}` because property `bar` is read-only in
 `{readonly bar: "12345", readonly baz: number}` [1] but writable in `{bar: "12345", baz: number}` [2] and property `baz`
 is read-only in `{readonly bar: "12345", readonly baz: number}` [1] but writable in `{bar: "12345", baz: number}` [2].
 [incompatible-variance]
@@ -144,8 +144,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:28:1
 
-Cannot cast `frozenObjectWithSpread` to object type because in property `bar`: `"12345"` [1] is incompatible with
-`"1234"` [2]. [incompatible-type]
+Cannot cast `frozenObjectWithSpread` to `{readonly bar: "1234", readonly baz: number}` because in property `bar`:
+`"12345"` [1] is incompatible with `"1234"` [2]. [incompatible-type]
 
    downstream.js:28:1
    28| frozenObjectWithSpread as {readonly bar: '1234', readonly baz: number}; // error '12345' ~> '1234'
@@ -162,7 +162,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:29:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in
+Cannot cast `frozenObjectWithSpread` to `{readonly bar: "12345"}` because property `baz` is extra in
 `{readonly bar: "12345", readonly baz: number}` [1] but missing in `{readonly bar: "12345"}` [2]. Exact objects do not
 accept extra props. [incompatible-type]
 
@@ -189,7 +189,7 @@ Incorrect arguments passed to `Object.assign` because property `bar` is not writ
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:37:1
 
-Cannot cast `frozenInexact` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2].
+Cannot cast `frozenInexact` to `{}` because inexact `{...}` [1] is incompatible with exact `{}` [2].
 [incompatible-exact]
 
    downstream.js:37:1
@@ -207,8 +207,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:39:1
 
-Cannot cast `frozenNegativeNumber.foo` to number literal `1` because `-1` [1] is incompatible with `1` [2].
-[incompatible-type]
+Cannot cast `frozenNegativeNumber.foo` to `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
 
    downstream.js:39:1
    39| frozenNegativeNumber.foo as 1; // error -1 ~> 1
@@ -225,7 +224,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:41:1
 
-Cannot cast `1` to `typeof frozenNegativeNumber.foo` because `1` [1] is incompatible with `-1` [2]. [incompatible-type]
+Cannot cast `1` to `-1` because `1` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    downstream.js:41:1
    41| 1 as typeof frozenNegativeNumber.foo; // error 1 ~> -1
@@ -257,7 +256,7 @@ Cannot assign `'23456'` to `frozenObject.bar` because property `bar` is not writ
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:21:1
 
-Cannot cast `frozenObject` to object type because property `bar` is read-only in `{readonly bar: "12345"}` [1] but
+Cannot cast `frozenObject` to `{bar: "12345"}` because property `bar` is read-only in `{readonly bar: "12345"}` [1] but
 writable in `{bar: "12345"}` [2]. [incompatible-variance]
 
    object_freeze.js:21:1
@@ -275,8 +274,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:22:1
 
-Cannot cast `frozenObject` to object type because in property `bar`: `"12345"` [1] is incompatible with `"1234"` [2].
-[incompatible-type]
+Cannot cast `frozenObject` to `{readonly bar: "1234"}` because in property `bar`: `"12345"` [1] is incompatible with
+`"1234"` [2]. [incompatible-type]
 
    object_freeze.js:22:1
    22| frozenObject as {readonly bar: '1234'}; // error '12345' ~> '1234'
@@ -293,8 +292,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:23:1
 
-Cannot cast `frozenObject` to object type because property `baz` is missing in `{readonly bar: "12345"}` [1] but exists
-in `{readonly bar: "12345", baz: "12345"}` [2]. [incompatible-type]
+Cannot cast `frozenObject` to `{readonly bar: "12345", baz: "12345"}` because property `baz` is missing in
+`{readonly bar: "12345"}` [1] but exists in `{readonly bar: "12345", baz: "12345"}` [2]. [incompatible-type]
 
    object_freeze.js:23:1
    23| frozenObject as {readonly bar: '12345', baz: '12345'}; // error baz is missing in frozenObject
@@ -383,7 +382,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:33:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `bar` is read-only in
+Cannot cast `frozenObjectWithSpread` to `{bar: "12345", baz: number}` because property `bar` is read-only in
 `{readonly bar: "12345", readonly baz: number}` [1] but writable in `{bar: "12345", baz: number}` [2] and property `baz`
 is read-only in `{readonly bar: "12345", readonly baz: number}` [1] but writable in `{bar: "12345", baz: number}` [2].
 [incompatible-variance]
@@ -403,8 +402,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:34:1
 
-Cannot cast `frozenObjectWithSpread` to object type because in property `bar`: `"12345"` [1] is incompatible with
-`"1234"` [2]. [incompatible-type]
+Cannot cast `frozenObjectWithSpread` to `{readonly bar: "1234", readonly baz: number}` because in property `bar`:
+`"12345"` [1] is incompatible with `"1234"` [2]. [incompatible-type]
 
    object_freeze.js:34:1
    34| frozenObjectWithSpread as {readonly bar: '1234', readonly baz: number}; // error '12345' ~> '1234'
@@ -421,7 +420,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:35:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in
+Cannot cast `frozenObjectWithSpread` to `{readonly bar: "12345"}` because property `baz` is extra in
 `{readonly bar: "12345", readonly baz: number}` [1] but missing in `{readonly bar: "12345"}` [2]. Exact objects do not
 accept extra props. [incompatible-type]
 
@@ -448,7 +447,7 @@ Incorrect arguments passed to `Object.assign` because property `bar` is not writ
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:43:1
 
-Cannot cast `frozenInexact` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2].
+Cannot cast `frozenInexact` to `{}` because inexact `{...}` [1] is incompatible with exact `{}` [2].
 [incompatible-exact]
 
    object_freeze.js:43:1
@@ -466,8 +465,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:45:1
 
-Cannot cast `frozenNegativeNumber.foo` to number literal `1` because `-1` [1] is incompatible with `1` [2].
-[incompatible-type]
+Cannot cast `frozenNegativeNumber.foo` to `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
 
    object_freeze.js:45:1
    45| frozenNegativeNumber.foo as 1; // error -1 ~> 1
@@ -484,7 +482,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:47:1
 
-Cannot cast `1` to `typeof frozenNegativeNumber.foo` because `1` [1] is incompatible with `-1` [2]. [incompatible-type]
+Cannot cast `1` to `-1` because `1` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    object_freeze.js:47:1
    47| 1 as typeof frozenNegativeNumber.foo; // error 1 ~> -1

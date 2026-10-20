@@ -344,7 +344,7 @@ Cannot expect number as the return type of function because `number` [1] is inco
 
 Error ----------------------------------------------------------------------------------------------------- void.js:12:1
 
-Cannot cast `f(...)` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `f(...)` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    void.js:12:1
    12| f(true) as void; // error: string ~> void

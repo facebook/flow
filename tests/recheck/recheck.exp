@@ -32,7 +32,7 @@ References:
 Found 2 errors
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:18
 
-Cannot cast `foo(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `foo(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    a2.js:5:18
    5| module.exports = foo("") as string;
@@ -79,7 +79,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:18
 
-Cannot cast `foo(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `foo(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    a2.js:5:18
    5| module.exports = foo("") as string;
@@ -228,7 +228,7 @@ No errors!
 Test f:
 Error -------------------------------------------------------------------------------------------------------- f2.js:4:1
 
-Cannot cast `c` to object type because in property `x`: `string` [1] is not exactly the same as `number` [2].
+Cannot cast `c` to `{x: number, ...}` because in property `x`: `string` [1] is not exactly the same as `number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
@@ -261,7 +261,7 @@ No errors!
 No errors!
 Error -------------------------------------------------------------------------------------------------------- f2.js:4:1
 
-Cannot cast `c` to object type because in property `x`: `string` [1] is not exactly the same as `number` [2].
+Cannot cast `c` to `{x: number, ...}` because in property `x`: `string` [1] is not exactly the same as `number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
@@ -336,7 +336,7 @@ No errors!
 Test m:
 Error -------------------------------------------------------------------------------------------------------- m3.js:6:1
 
-Cannot cast `x` to `T` because in type argument `X` [1]: `string` [2] is incompatible with `number` [3].
+Cannot cast `x` to `T<number>` because in type argument `X` [1]: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    m3.js:6:1

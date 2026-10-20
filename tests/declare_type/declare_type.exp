@@ -61,7 +61,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- import_declare_type.js:30:1
 
-Cannot cast `'lol'` to `Id` because `"lol"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `'lol'` to `Id<number>` because `"lol"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_declare_type.js:30:1
    30| 'lol' as Id<number>; // error : string ~> number

@@ -129,7 +129,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
 
-Cannot cast `[].concat(...)[1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `[].concat(...)[1]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test17.js:7:1
    7| ([] as Array<empty>).concat([0, 1])[1] as string;
@@ -146,7 +146,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
 
-Cannot cast `[].concat(...)[1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `[].concat(...)[1]` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test17.js:7:1
    7| ([] as Array<empty>).concat([0, 1])[1] as string;
@@ -285,7 +285,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test33.js:10:1
 
-Cannot cast `bar()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `bar()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test33.js:10:1
    10| bar() as string; // error: number ~> string
@@ -302,7 +302,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test34.js:8:5
 
-Cannot cast `x.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.foo` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test34.js:8:5
     8|     x.foo as empty; // error: string ~> empty
@@ -319,7 +319,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test35.js:8:1
 
-Cannot cast `ret` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `ret` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test35.js:8:1
    8| ret as empty; // err, string ~> empty (matched case 2)
@@ -336,7 +336,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test36.js:6:3
 
-Cannot cast `x` to array type because in array element: `string` [1] is incompatible with `number` [2].
+Cannot cast `x` to `Array<number>` because in array element: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test36.js:6:3
@@ -354,7 +354,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test36.js:6:3
 
-Cannot cast `x` to array type because in array element: `string` [1] is incompatible with `number` [2].
+Cannot cast `x` to `Array<number>` because in array element: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test36.js:6:3

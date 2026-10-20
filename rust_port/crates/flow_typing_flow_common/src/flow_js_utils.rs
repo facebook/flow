@@ -1666,7 +1666,12 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         | RootUseOp::ComponentRestParamCompatibility { rest_param: op } => Some(op),
         RootUseOp::JSXCreateElement(box JSXCreateElementData { op, .. }) => Some(op),
         RootUseOp::AssignVar { var, init } => var.as_ref().or(Some(init)),
-        RootUseOp::Cast { upper, .. } => Some(upper),
+        RootUseOp::Cast {
+            upper: box upper, ..
+        } => match upper {
+            TypeOrTypeDescT::Type(t) => Some(reason_of_t(t)),
+            TypeOrTypeDescT::TypeDesc(_) => None,
+        },
         RootUseOp::ClassExtendsCheck { extends, .. } => Some(extends),
         RootUseOp::ClassImplementsCheck(data) => Some(&data.implements),
         RootUseOp::ClassOwnProtoCheck(_) => None,

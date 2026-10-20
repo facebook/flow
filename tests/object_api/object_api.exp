@@ -31,8 +31,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:27:1
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: number]` [1] is not
-exactly the same as `[string, empty]` [2]. [incompatible-type]
+Cannot cast `Object.entries(...)` to `Array<[string, empty]>` because in array element:
+`[key: string, value: number]` [1] is not exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: number]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -54,8 +54,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:28:1
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: unknown]` [1] is not
-exactly the same as `[string, empty]` [2]. [incompatible-type]
+Cannot cast `Object.entries(...)` to `Array<[string, empty]>` because in array element:
+`[key: string, value: unknown]` [1] is not exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: unknown]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -77,8 +77,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:29:1
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: string | "a", value: unknown]` [1] is
-not exactly the same as `[string, empty]` [2]. [incompatible-type]
+Cannot cast `Object.entries(...)` to `Array<[string, empty]>` because in array element:
+`[key: string | "a", value: unknown]` [1] is not exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string | "a", value: unknown]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -100,8 +100,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:30:1
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: number | boolean]` [1]
-is not exactly the same as `[string, empty]` [2]. [incompatible-type]
+Cannot cast `Object.entries(...)` to `Array<[string, empty]>` because in array element:
+`[key: string, value: number | boolean]` [1] is not exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: number | boolean]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -123,8 +123,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:31:1
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: unknown]` [1] is not
-exactly the same as `[string, empty]` [2]. [incompatible-type]
+Cannot cast `Object.entries(...)` to `Array<[string, empty]>` because in array element:
+`[key: string, value: unknown]` [1] is not exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: unknown]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -146,8 +146,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:32:1
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: "a" | "b", value: unknown]` [1] is not
-exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
+Cannot cast `Object.entries(...)` to `Array<["a" | "b", empty]>` because in array element:
+`[key: "a" | "b", value: unknown]` [1] is not exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: "a" | "b", value: unknown]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
@@ -169,8 +169,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:33:1
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: "a" | "b", value: unknown]` [1] is not
-exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
+Cannot cast `Object.entries(...)` to `Array<["a" | "b", empty]>` because in array element:
+`[key: "a" | "b", value: unknown]` [1] is not exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: "a" | "b", value: unknown]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
@@ -192,7 +192,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:34:1
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: number]` [1] is not
+Cannot cast `Object.entries(...)` to `Array<empty>` because in array element: `[key: string, value: number]` [1] is not
 exactly the same as `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -285,7 +285,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- object_keys.js:3:1
 
-Cannot cast `Object.keys(...)` to undefined because `Array<"one" | "two">` [1] is incompatible with `void` [2].
+Cannot cast `Object.keys(...)` to `void` because `Array<"one" | "two">` [1] is incompatible with `void` [2].
 [incompatible-type]
 
    object_keys.js:3:1
@@ -300,7 +300,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- object_keys.js:7:3
 
-Cannot cast `k` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `k` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    object_keys.js:7:3
    7|   k as number // error: string ~> number
@@ -317,7 +317,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:24:1
 
-Cannot cast `Object.keys(...)` to array type because in array element: `"prop"` [1] is not exactly the same as
+Cannot cast `Object.keys(...)` to `Array<"error">` because in array element: `"prop"` [1] is not exactly the same as
 `"error"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -340,7 +340,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:31:1
 
-Cannot cast `Object.keys(...)` to array type because in array element: `"bar_prop"` [1] is not exactly the same as
+Cannot cast `Object.keys(...)` to `Array<"error">` because in array element: `"bar_prop"` [1] is not exactly the same as
 `"error"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -363,7 +363,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:37:5
 
-Cannot cast `Object.keys(...)` to array type because in array element: `"hi"` [1] is not exactly the same as
+Cannot cast `Object.keys(...)` to `Array<"bye">` because in array element: `"hi"` [1] is not exactly the same as
 `"bye"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -389,7 +389,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:43:5
 
-Cannot cast `Object.keys(...)` to array type because in array element: `string` [1] is not exactly the same as
+Cannot cast `Object.keys(...)` to `Array<"123">` because in array element: `string` [1] is not exactly the same as
 `"123"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -412,7 +412,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:49:5
 
-Cannot cast `Object.keys(...)` to array type because in array element: `"hi"` [1] is not exactly the same as
+Cannot cast `Object.keys(...)` to `Array<"bye">` because in array element: `"hi"` [1] is not exactly the same as
 `"bye"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -435,7 +435,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:55:5
 
-Cannot cast `Object.keys(...)` to array type because in array element: `"123"` [1] is not exactly the same as
+Cannot cast `Object.keys(...)` to `Array<"456">` because in array element: `"123"` [1] is not exactly the same as
 `"456"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -458,8 +458,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:67:1
 
-Cannot cast `Object.keys(...)` to array type because in array element: `"x" | "y"` [1] is not exactly the same as
-`"$value" | "$key"` [2]. [incompatible-type]
+Cannot cast `Object.keys(...)` to `Array<"$value" | "$key">` because in array element: `"x" | "y"` [1] is not exactly
+the same as `"$value" | "$key"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"x" | "y">` [1] and `Array<"$value" | "$key">` [3] exactly the same
@@ -555,7 +555,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:86:3
 
-Cannot cast `Object.keys(...)[0]` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `Object.keys(...)[0]` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_keys.js:86:3
    86|   Object.keys(opaqueDict)[0] as empty; // ERROR
@@ -1024,7 +1024,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:27:1
 
-Cannot cast `Object.values(...)` to array type because in array element: `number` [1] is not exactly the same as
+Cannot cast `Object.values(...)` to `Array<empty>` because in array element: `number` [1] is not exactly the same as
 `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1050,7 +1050,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:28:1
 
-Cannot cast `Object.values(...)` to array type because in array element: `unknown` [1] is not exactly the same as
+Cannot cast `Object.values(...)` to `Array<empty>` because in array element: `unknown` [1] is not exactly the same as
 `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1073,7 +1073,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:29:1
 
-Cannot cast `Object.values(...)` to array type because in array element: `unknown` [1] is not exactly the same as
+Cannot cast `Object.values(...)` to `Array<empty>` because in array element: `unknown` [1] is not exactly the same as
 `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1096,8 +1096,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:30:1
 
-Cannot cast `Object.values(...)` to array type because in array element: `number | boolean` [1] is not exactly the same
-as `empty` [2]. [incompatible-type]
+Cannot cast `Object.values(...)` to `Array<empty>` because in array element: `number | boolean` [1] is not exactly the
+same as `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number | boolean>` [1] and `Array<empty>` [3] exactly the same
@@ -1119,7 +1119,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:31:1
 
-Cannot cast `Object.values(...)` to array type because in array element: `unknown` [1] is not exactly the same as
+Cannot cast `Object.values(...)` to `Array<empty>` because in array element: `unknown` [1] is not exactly the same as
 `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1142,7 +1142,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:32:1
 
-Cannot cast `Object.values(...)` to array type because in array element: `unknown` [1] is not exactly the same as
+Cannot cast `Object.values(...)` to `Array<empty>` because in array element: `unknown` [1] is not exactly the same as
 `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1165,7 +1165,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:33:1
 
-Cannot cast `Object.values(...)` to array type because in array element: `unknown` [1] is not exactly the same as
+Cannot cast `Object.values(...)` to `Array<empty>` because in array element: `unknown` [1] is not exactly the same as
 `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1258,7 +1258,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:3:1
 
-Cannot cast `o1_proto.toString` to empty because `(this: Object) => string` [1] is incompatible with `empty` [2].
+Cannot cast `o1_proto.toString` to `empty` because `(this: Object) => string` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    proto.js:3:1
@@ -1276,7 +1276,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:7:1
 
-Cannot cast `o2.__proto__.p` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o2.__proto__.p` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    proto.js:7:1
    7| o2.__proto__.p as empty; // error: number ~> empty
@@ -1293,7 +1293,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- proto.js:13:1
 
-Cannot cast `C1_proto.bind` to empty because: [incompatible-type]
+Cannot cast `C1_proto.bind` to `empty` because: [incompatible-type]
  - Either `(this: empty, thisArg: ThisParameterType<empty>) => OmitThisParameter<empty>` [1] is incompatible with
    `empty` [2].
  - Or `(this: (this: empty, ...args: [...empty, ...empty]) => empty, thisArg: empty, ...args: empty) => (.....` [3] is

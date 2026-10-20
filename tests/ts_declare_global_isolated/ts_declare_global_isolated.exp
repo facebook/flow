@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- consumer.js:4:1
 
-Cannot cast `globalBox.value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `globalBox.value` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    consumer.js:4:1
     4| globalBox.value as number; // ERROR
@@ -39,7 +39,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:20:1
 
-Cannot cast `mapped.next()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `mapped.next()` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    consumer.js:20:1
    20| mapped.next() as number; // ERROR
@@ -64,7 +64,7 @@ Cannot resolve name `ScopedIteratorConstructor`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------------- normalizer_consumer.js:4:1
 
-Cannot cast `stream` to empty because `Stream` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `stream` to `empty` because `Stream` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    normalizer_consumer.js:4:1
    4| stream as empty; // ERROR
@@ -81,7 +81,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- normalizer_consumer.js:7:1
 
-Cannot cast `imported` to empty because `Imported` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `imported` to `empty` because `Imported` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    normalizer_consumer.js:7:1
    7| imported as empty; // ERROR

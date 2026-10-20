@@ -42,7 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:42:3
 
-Cannot cast `abc` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `abc` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:42:3
    42|   abc as "def" // error "abc" ~> "def"
@@ -59,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:44:8
 
-Cannot cast `_` to `typeof abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:44:8
    44|   _ as "def" as typeof abc; // error "def" ~> "abc"
@@ -73,7 +73,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:49:3
 
-Cannot cast `one` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `one` to `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    imported.js:49:3
    49|   one as 2 // error 1 ~> 2
@@ -90,7 +90,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:51:3
 
-Cannot cast `minusOne` to number literal `0` because `-1` [1] is incompatible with `0` [2]. [incompatible-type]
+Cannot cast `minusOne` to `0` because `-1` [1] is incompatible with `0` [2]. [incompatible-type]
 
    imported.js:51:3
    51|   minusOne as 0; // error -1 ~> 0
@@ -107,7 +107,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:53:8
 
-Cannot cast `_` to `typeof one` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `_` to `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:53:8
    53|   _ as 2 as typeof one; // error 2 ~> 1
@@ -121,7 +121,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:55:8
 
-Cannot cast `_` to `typeof minusOne` because `0` [1] is incompatible with `-1` [2]. [incompatible-type]
+Cannot cast `_` to `-1` because `0` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    imported.js:55:8
    55|   _ as 0 as typeof minusOne; // error 0 ~> -1
@@ -135,7 +135,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:60:3
 
-Cannot cast `tru` to boolean literal `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
+Cannot cast `tru` to `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    imported.js:60:3
    60|   tru as false // error true ~> false
@@ -152,7 +152,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:62:3
 
-Cannot cast `notTru` to boolean literal `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `notTru` to `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    imported.js:62:3
    62|   notTru as true // error false ~> true
@@ -169,7 +169,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:64:8
 
-Cannot cast `_` to `typeof tru` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `_` to `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    imported.js:64:8
    64|   _ as false as typeof tru; // error false ~> true
@@ -183,7 +183,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:65:8
 
-Cannot cast `_` to `typeof notTru` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
+Cannot cast `_` to `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    imported.js:65:8
    65|   _ as true as typeof notTru; // error true ~> false
@@ -197,7 +197,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:71:3
 
-Cannot cast `bigOne` to bigint literal `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
+Cannot cast `bigOne` to `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
 
    imported.js:71:3
    71|   bigOne as 2n // error 1n ~> 2n
@@ -214,7 +214,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:73:8
 
-Cannot cast `_` to `typeof bigOne` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
+Cannot cast `_` to `1n` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    imported.js:73:8
    73|   _ as 2n as typeof bigOne; // error 2n ~> 1n
@@ -228,7 +228,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:78:3
 
-Cannot cast `abcRef` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `abcRef` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:78:3
    78|   abcRef as "def" // error "abc" ~> "def"
@@ -245,7 +245,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:80:8
 
-Cannot cast `_` to `typeof abcRef` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:80:8
    80|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
@@ -259,7 +259,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:85:3
 
-Cannot cast `oneRef` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `oneRef` to `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    imported.js:85:3
    85|   oneRef as 2 // error 1 ~> 2
@@ -276,7 +276,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:87:8
 
-Cannot cast `_` to `typeof oneRef` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `_` to `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:87:8
    87|   _ as 2 as typeof oneRef; // error 2 ~> 1
@@ -290,7 +290,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:92:3
 
-Cannot cast `truRef` to boolean literal `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
+Cannot cast `truRef` to `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    imported.js:92:3
    92|   truRef as false // error true ~> false
@@ -307,7 +307,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:94:8
 
-Cannot cast `_` to `typeof truRef` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `_` to `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    imported.js:94:8
    94|   _ as false as typeof truRef; // error false ~> true
@@ -321,7 +321,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:99:3
 
-Cannot cast `bigOneRef` to bigint literal `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
+Cannot cast `bigOneRef` to `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
 
    imported.js:99:3
    99|   bigOneRef as 2n // error 1n ~> 2n
@@ -338,7 +338,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:101:8
 
-Cannot cast `_` to `typeof bigOneRef` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
+Cannot cast `_` to `1n` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    imported.js:101:8
    101|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
@@ -352,7 +352,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:105:3
 
-Cannot cast `obj.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `obj.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:105:3
    105|   obj.abc as "abc"; // error string ~> "abc"
@@ -369,7 +369,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:106:3
 
-Cannot cast `obj.one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `obj.one` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:106:3
    106|   obj.one as 1; // error number ~> 1
@@ -386,8 +386,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:107:3
 
-Cannot cast `obj.tru` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
-[incompatible-type]
+Cannot cast `obj.tru` to `true` because `boolean` [1] is incompatible with `true` [2]. [incompatible-type]
 
    imported.js:107:3
    107|   obj.tru as true; // error boolean ~> true
@@ -404,7 +403,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:108:3
 
-Cannot cast `obj.bigOne` to bigint literal `1n` because `bigint` [1] is incompatible with `1n` [2]. [incompatible-type]
+Cannot cast `obj.bigOne` to `1n` because `bigint` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    imported.js:108:3
    108|   obj.bigOne as 1n; // error bigint ~> 1n
@@ -421,8 +420,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:112:3
 
-Cannot cast `spread.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `spread.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:112:3
    112|   spread.abc as "abc"; // error string ~> "abc"
@@ -439,7 +437,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:113:3
 
-Cannot cast `spread.one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `spread.one` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:113:3
    113|   spread.one as 1; // error number ~> 1
@@ -456,8 +454,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:114:3
 
-Cannot cast `spread.tru` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
-[incompatible-type]
+Cannot cast `spread.tru` to `true` because `boolean` [1] is incompatible with `true` [2]. [incompatible-type]
 
    imported.js:114:3
    114|   spread.tru as true; // error boolean ~> true
@@ -474,8 +471,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:115:3
 
-Cannot cast `spread.bigOne` to bigint literal `1n` because `bigint` [1] is incompatible with `1n` [2].
-[incompatible-type]
+Cannot cast `spread.bigOne` to `1n` because `bigint` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    imported.js:115:3
    115|   spread.bigOne as 1n; // error bigint ~> 1n
@@ -492,8 +488,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:119:3
 
-Cannot cast `objRefs.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `objRefs.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:119:3
    119|   objRefs.abc as "abc"; // error string ~> "abc"
@@ -510,8 +505,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:120:3
 
-Cannot cast `objRefs.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `objRefs.abcRef` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:120:3
    120|   objRefs.abcRef as "abc"; // error string ~> "abc"
@@ -528,8 +522,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:121:3
 
-Cannot cast `spreadObjRefs.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `spreadObjRefs.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:121:3
    121|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
@@ -546,8 +539,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:122:3
 
-Cannot cast `spreadObjRefs.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `spreadObjRefs.abcRef` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:122:3
    122|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
@@ -564,8 +556,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:128:3
 
-Cannot cast `asConst.abc` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2].
-[incompatible-type]
+Cannot cast `asConst.abc` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:128:3
    128|   asConst.abc as "def"; // error "abc" ~> "def"
@@ -582,8 +573,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:129:3
 
-Cannot cast `asConst.abcRef` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2].
-[incompatible-type]
+Cannot cast `asConst.abcRef` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:129:3
    129|   asConst.abcRef as "def"; // error "abc" ~> "def"
@@ -600,7 +590,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:130:8
 
-Cannot cast `_` to `typeof asConst.abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:130:8
    130|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
@@ -614,7 +604,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:131:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:131:8
    131|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
@@ -628,7 +618,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:132:8
 
-Cannot cast `_` to `typeof asConst.abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:132:8
    132|   _ as string as typeof asConst.abc; // error string ~> "abc"
@@ -642,7 +632,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:133:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:133:8
    133|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
@@ -656,7 +646,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:144:3
 
-Cannot cast `x.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `x.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:144:3
    144|   x.abc as "abc"; // error string ~> "abc"
@@ -673,8 +663,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:145:3
 
-Cannot cast `x.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `x.abcRef` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:145:3
    145|   x.abcRef as "abc"; // error string ~> "abc"
@@ -691,7 +680,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:149:3
 
-Cannot cast `x.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `x.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:149:3
    149|   x.abc as "abc"; // error string ~> "abc"
@@ -708,8 +697,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:150:3
 
-Cannot cast `x.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `x.abcRef` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:150:3
    150|   x.abcRef as "abc"; // error string ~> "abc"
@@ -726,7 +714,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:159:3
 
-Cannot cast `obj` to object type because in property `f`: `number` [1] is not exactly the same as `1` [2].
+Cannot cast `obj` to `{f: 1}` because in property `f`: `number` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -755,7 +743,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:172:3
 
-Cannot cast `obj1` to object type because in property `f`: `number | 1` [1] is not exactly the same as `1` [2].
+Cannot cast `obj1` to `{f: 1}` because in property `f`: `number | 1` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -784,7 +772,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:173:3
 
-Cannot cast `obj1` to object type because in property `f`: `number | 1` [1] is not exactly the same as `2` [2].
+Cannot cast `obj1` to `{f: 2}` because in property `f`: `number | 1` [1] is not exactly the same as `2` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -813,7 +801,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:178:3
 
-Cannot cast `obj2` to object type because in property `f`: `number` [1] is not exactly the same as `1` [2].
+Cannot cast `obj2` to `{f: 1}` because in property `f`: `number` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -842,7 +830,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:179:3
 
-Cannot cast `obj2` to object type because in property `f`: `number` [1] is not exactly the same as `2` [2].
+Cannot cast `obj2` to `{f: 2}` because in property `f`: `number` [1] is not exactly the same as `2` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -886,7 +874,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:210:3
 
-Cannot cast `n_` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `n_` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:210:3
    210|   n_ as 1; // error number ~> 1
@@ -1007,7 +995,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:269:5
 
-Cannot cast `v` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `v` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:269:5
    269|     v as 1; // error number ~> 1
@@ -1024,7 +1012,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:341:3
 
-Cannot cast `foo(...)` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `foo(...)` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:341:3
    341|   foo(() => abc) as 'def'; // error "abc" ~> "def"
@@ -1041,7 +1029,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:347:3
 
-Cannot cast `foo(...)` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `foo(...)` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:347:3
    347|   foo([abc]) as 'def'; // error "abc" ~> "def"
@@ -1058,7 +1046,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:357:3
 
-Cannot cast `m` to string literal `abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `m` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:357:3
    357|   m as 'abc'; // error 'def' ~> 'abc'
@@ -1075,7 +1063,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:358:3
 
-Cannot cast `m` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `m` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:358:3
    358|   m as 'def'; // error 'abc' ~> 'def'
@@ -1092,7 +1080,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:364:3
 
-Cannot cast `x` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `x` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:364:3
    364|   x as 'def'; // error 'abc' ~> 'def'
@@ -1109,7 +1097,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:367:3
 
-Cannot cast `o1` to object type because in property `f`: `string` [1] is not exactly the same as `"abc"` [2].
+Cannot cast `o1` to `{f: "abc"}` because in property `f`: `string` [1] is not exactly the same as `"abc"` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -1181,7 +1169,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:37:3
 
-Cannot cast `abc` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `abc` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:37:3
    37|   abc as "def" // error "abc" ~> "def"
@@ -1198,7 +1186,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:39:8
 
-Cannot cast `_` to `typeof abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:39:8
    39|   _ as "def" as typeof abc; // error "def" ~> "abc"
@@ -1212,7 +1200,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:44:3
 
-Cannot cast `one` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `one` to `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    local.js:44:3
    44|   one as 2 // error 1 ~> 2
@@ -1229,7 +1217,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:46:3
 
-Cannot cast `minusOne` to number literal `0` because `-1` [1] is incompatible with `0` [2]. [incompatible-type]
+Cannot cast `minusOne` to `0` because `-1` [1] is incompatible with `0` [2]. [incompatible-type]
 
    local.js:46:3
    46|   minusOne as 0; // error -1 ~> 0
@@ -1246,7 +1234,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:48:8
 
-Cannot cast `_` to `typeof one` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `_` to `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:48:8
    48|   _ as 2 as typeof one; // error 2 ~> 1
@@ -1260,7 +1248,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:50:8
 
-Cannot cast `_` to `typeof minusOne` because `0` [1] is incompatible with `-1` [2]. [incompatible-type]
+Cannot cast `_` to `-1` because `0` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    local.js:50:8
    50|   _ as 0 as typeof minusOne; // error 0 ~> -1
@@ -1274,7 +1262,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:55:3
 
-Cannot cast `tru` to boolean literal `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
+Cannot cast `tru` to `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    local.js:55:3
    55|   tru as false // error true ~> false
@@ -1291,7 +1279,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:57:3
 
-Cannot cast `notTru` to boolean literal `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `notTru` to `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    local.js:57:3
    57|   notTru as true // error false ~> true
@@ -1308,7 +1296,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:59:8
 
-Cannot cast `_` to `typeof tru` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `_` to `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    local.js:59:8
    59|   _ as false as typeof tru; // error false ~> true
@@ -1322,7 +1310,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:60:8
 
-Cannot cast `_` to `typeof notTru` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
+Cannot cast `_` to `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    local.js:60:8
    60|   _ as true as typeof notTru; // error true ~> false
@@ -1336,7 +1324,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:66:3
 
-Cannot cast `bigOne` to bigint literal `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
+Cannot cast `bigOne` to `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
 
    local.js:66:3
    66|   bigOne as 2n // error 1n ~> 2n
@@ -1353,7 +1341,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:68:8
 
-Cannot cast `_` to `typeof bigOne` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
+Cannot cast `_` to `1n` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    local.js:68:8
    68|   _ as 2n as typeof bigOne; // error 2n ~> 1n
@@ -1367,7 +1355,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:73:3
 
-Cannot cast `abcRef` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `abcRef` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:73:3
    73|   abcRef as "def" // error "abc" ~> "def"
@@ -1384,7 +1372,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:75:8
 
-Cannot cast `_` to `typeof abcRef` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:75:8
    75|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
@@ -1398,7 +1386,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:80:3
 
-Cannot cast `oneRef` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `oneRef` to `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    local.js:80:3
    80|   oneRef as 2 // error 1 ~> 2
@@ -1415,7 +1403,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:82:8
 
-Cannot cast `_` to `typeof oneRef` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `_` to `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:82:8
    82|   _ as 2 as typeof oneRef; // error 2 ~> 1
@@ -1429,7 +1417,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:87:3
 
-Cannot cast `truRef` to boolean literal `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
+Cannot cast `truRef` to `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    local.js:87:3
    87|   truRef as false // error true ~> false
@@ -1446,7 +1434,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:89:8
 
-Cannot cast `_` to `typeof truRef` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `_` to `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    local.js:89:8
    89|   _ as false as typeof truRef; // error false ~> true
@@ -1460,7 +1448,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:94:3
 
-Cannot cast `bigOneRef` to bigint literal `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
+Cannot cast `bigOneRef` to `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
 
    local.js:94:3
    94|   bigOneRef as 2n // error 1n ~> 2n
@@ -1477,7 +1465,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:96:8
 
-Cannot cast `_` to `typeof bigOneRef` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
+Cannot cast `_` to `1n` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    local.js:96:8
    96|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
@@ -1491,7 +1479,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:100:3
 
-Cannot cast `obj.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `obj.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:100:3
    100|   obj.abc as "abc"; // error string ~> "abc"
@@ -1508,7 +1496,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:101:3
 
-Cannot cast `obj.one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `obj.one` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:101:3
    101|   obj.one as 1; // error number ~> 1
@@ -1525,8 +1513,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:102:3
 
-Cannot cast `obj.tru` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
-[incompatible-type]
+Cannot cast `obj.tru` to `true` because `boolean` [1] is incompatible with `true` [2]. [incompatible-type]
 
    local.js:102:3
    102|   obj.tru as true; // error boolean ~> true
@@ -1543,7 +1530,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:103:3
 
-Cannot cast `obj.bigOne` to bigint literal `1n` because `bigint` [1] is incompatible with `1n` [2]. [incompatible-type]
+Cannot cast `obj.bigOne` to `1n` because `bigint` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    local.js:103:3
    103|   obj.bigOne as 1n; // error bigint ~> 1n
@@ -1560,8 +1547,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:107:3
 
-Cannot cast `spread.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `spread.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:107:3
    107|   spread.abc as "abc"; // error string ~> "abc"
@@ -1578,7 +1564,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:108:3
 
-Cannot cast `spread.one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `spread.one` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:108:3
    108|   spread.one as 1; // error number ~> 1
@@ -1595,8 +1581,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:109:3
 
-Cannot cast `spread.tru` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
-[incompatible-type]
+Cannot cast `spread.tru` to `true` because `boolean` [1] is incompatible with `true` [2]. [incompatible-type]
 
    local.js:109:3
    109|   spread.tru as true; // error boolean ~> true
@@ -1613,8 +1598,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:110:3
 
-Cannot cast `spread.bigOne` to bigint literal `1n` because `bigint` [1] is incompatible with `1n` [2].
-[incompatible-type]
+Cannot cast `spread.bigOne` to `1n` because `bigint` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    local.js:110:3
    110|   spread.bigOne as 1n; // error bigint ~> 1n
@@ -1631,8 +1615,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:114:3
 
-Cannot cast `objRefs.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `objRefs.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:114:3
    114|   objRefs.abc as "abc"; // error string ~> "abc"
@@ -1649,8 +1632,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:115:3
 
-Cannot cast `objRefs.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `objRefs.abcRef` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:115:3
    115|   objRefs.abcRef as "abc"; // error string ~> "abc"
@@ -1667,8 +1649,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:116:3
 
-Cannot cast `spreadObjRefs.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `spreadObjRefs.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:116:3
    116|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
@@ -1685,8 +1666,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:117:3
 
-Cannot cast `spreadObjRefs.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `spreadObjRefs.abcRef` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:117:3
    117|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
@@ -1703,8 +1683,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:123:3
 
-Cannot cast `asConst.abc` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2].
-[incompatible-type]
+Cannot cast `asConst.abc` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:123:3
    123|   asConst.abc as "def"; // error "abc" ~> "def"
@@ -1721,8 +1700,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:124:3
 
-Cannot cast `asConst.abcRef` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2].
-[incompatible-type]
+Cannot cast `asConst.abcRef` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:124:3
    124|   asConst.abcRef as "def"; // error "abc" ~> "def"
@@ -1739,7 +1717,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:125:8
 
-Cannot cast `_` to `typeof asConst.abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:125:8
    125|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
@@ -1753,7 +1731,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:126:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:126:8
    126|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
@@ -1767,7 +1745,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:127:8
 
-Cannot cast `_` to `typeof asConst.abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:127:8
    127|   _ as string as typeof asConst.abc; // error string ~> "abc"
@@ -1781,7 +1759,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:128:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `_` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:128:8
    128|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
@@ -1795,7 +1773,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:139:3
 
-Cannot cast `x.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `x.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:139:3
    139|   x.abc as "abc"; // error string ~> "abc"
@@ -1812,8 +1790,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:140:3
 
-Cannot cast `x.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `x.abcRef` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:140:3
    140|   x.abcRef as "abc"; // error string ~> "abc"
@@ -1830,7 +1807,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:144:3
 
-Cannot cast `x.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `x.abc` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:144:3
    144|   x.abc as "abc"; // error string ~> "abc"
@@ -1847,8 +1824,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:145:3
 
-Cannot cast `x.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
-[incompatible-type]
+Cannot cast `x.abcRef` to `"abc"` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:145:3
    145|   x.abcRef as "abc"; // error string ~> "abc"
@@ -1865,7 +1841,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:154:3
 
-Cannot cast `obj` to object type because in property `f`: `number` [1] is not exactly the same as `1` [2].
+Cannot cast `obj` to `{f: 1}` because in property `f`: `number` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -1894,7 +1870,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:167:3
 
-Cannot cast `obj1` to object type because in property `f`: `number | 1` [1] is not exactly the same as `1` [2].
+Cannot cast `obj1` to `{f: 1}` because in property `f`: `number | 1` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -1923,7 +1899,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:168:3
 
-Cannot cast `obj1` to object type because in property `f`: `number | 1` [1] is not exactly the same as `2` [2].
+Cannot cast `obj1` to `{f: 2}` because in property `f`: `number | 1` [1] is not exactly the same as `2` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -1952,7 +1928,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:173:3
 
-Cannot cast `obj2` to object type because in property `f`: `number` [1] is not exactly the same as `1` [2].
+Cannot cast `obj2` to `{f: 1}` because in property `f`: `number` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -1981,7 +1957,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:174:3
 
-Cannot cast `obj2` to object type because in property `f`: `number` [1] is not exactly the same as `2` [2].
+Cannot cast `obj2` to `{f: 2}` because in property `f`: `number` [1] is not exactly the same as `2` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -2010,7 +1986,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:192:3
 
-Cannot cast `o1.f` to union type because `string` [1] is incompatible with `"a" | "b"` [2]. [incompatible-type]
+Cannot cast `o1.f` to `"a" | "b"` because `string` [1] is incompatible with `"a" | "b"` [2]. [incompatible-type]
 
    local.js:192:3
    192|   o1.f as "a" | "b"; // error string ~> "a" | "b"
@@ -2027,7 +2003,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:192:3
 
-Cannot cast `o1.f` to union type because `string` [1] is incompatible with `"a" | "b"` [2]. [incompatible-type]
+Cannot cast `o1.f` to `"a" | "b"` because `string` [1] is incompatible with `"a" | "b"` [2]. [incompatible-type]
 
    local.js:192:3
    192|   o1.f as "a" | "b"; // error string ~> "a" | "b"
@@ -2044,7 +2020,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:196:3
 
-Cannot cast `o2.f` to union type because `string` [1] is incompatible with `"foo" | "a"` [2]. [incompatible-type]
+Cannot cast `o2.f` to `"foo" | "a"` because `string` [1] is incompatible with `"foo" | "a"` [2]. [incompatible-type]
 
    local.js:196:3
    196|   o2.f as "foo" | "a"; // error string ~> "foo" | "a"
@@ -2061,7 +2037,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:200:3
 
-Cannot cast `o3.f` to union type because: [incompatible-type]
+Cannot cast `o3.f` to `{a: "a"} | "foo"` because: [incompatible-type]
  - Either in property `a`: `string` [1] is incompatible with `"a"` [2].
  - Or object literal [3] is incompatible with `"foo"` [4].
 
@@ -2104,7 +2080,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:222:3
 
-Cannot cast `n_` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `n_` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:222:3
    222|   n_ as 1; // error number ~> 1
@@ -2225,7 +2201,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:281:5
 
-Cannot cast `v` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `v` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:281:5
    281|     v as 1; // error number ~> 1
@@ -2266,7 +2242,7 @@ This condition is truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- local.js:399:3
 
-Cannot cast `foo(...)` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `foo(...)` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:399:3
    399|   foo(() => abc) as 'def'; // error "abc" ~> "def"
@@ -2283,7 +2259,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:405:3
 
-Cannot cast `foo(...)` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `foo(...)` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:405:3
    405|   foo([abc]) as 'def'; // error "abc" ~> "def"
@@ -2300,7 +2276,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:415:3
 
-Cannot cast `m1` to string literal `a` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
+Cannot cast `m1` to `"a"` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    local.js:415:3
    415|   m1 as 'a'; // error 'b' ~> 'a'
@@ -2317,7 +2293,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:416:3
 
-Cannot cast `m1` to string literal `b` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
+Cannot cast `m1` to `"b"` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    local.js:416:3
    416|   m1 as 'b'; // error 'a' ~> 'b'
@@ -2334,7 +2310,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:423:3
 
-Cannot cast `m2` to string literal `abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
+Cannot cast `m2` to `"abc"` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:423:3
    423|   m2 as 'abc'; // error 'def' ~> 'abc'
@@ -2351,7 +2327,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:424:3
 
-Cannot cast `m2` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `m2` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:424:3
    424|   m2 as 'def'; // error 'abc' ~> 'def'
@@ -2368,7 +2344,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:430:3
 
-Cannot cast `x` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
+Cannot cast `x` to `"def"` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:430:3
    430|   x as 'def'; // error 'abc' ~> 'def'
@@ -2385,7 +2361,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:433:3
 
-Cannot cast `o1` to object type because in property `f`: `string` [1] is not exactly the same as `"abc"` [2].
+Cannot cast `o1` to `{f: "abc"}` because in property `f`: `string` [1] is not exactly the same as `"abc"` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -2456,7 +2432,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:470:3
 
-Cannot cast `arr[0]` to union type because `number` [1] is incompatible with `1 | 2` [2]. [incompatible-type]
+Cannot cast `arr[0]` to `1 | 2` because `number` [1] is incompatible with `1 | 2` [2]. [incompatible-type]
 
    local.js:470:3
    470|   arr[0] as 1|2; // error number ~> 1|2
@@ -2473,7 +2449,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:476:3
 
-Cannot cast `one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `one` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:476:3
    476|   one as 1; // error number ~> 1
@@ -2490,7 +2466,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:477:3
 
-Cannot cast `one` to number literal `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `one` to `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
 
    local.js:477:3
    477|   one as 2; // error number ~> 2
@@ -2507,8 +2483,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:484:16
 
-Cannot cast object literal to `Readonly` because in property `a`: `"a"` [1] is incompatible with `"b"` [2].
-[incompatible-type]
+Cannot cast object literal to `Readonly<{[Name]: "b"}>` because in property `a`: `"a"` [1] is incompatible with
+`"b"` [2]. [incompatible-type]
 
    local.js:484:16
    484|   ({[KeyName]: KeyName} as Readonly<{[Name]: 'b'}>); // error 'a' ~> 'b'
@@ -2525,7 +2501,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:493:5
 
-Cannot cast `x` to number because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    local.js:493:5
    493|     x as number; // error string ~> number
@@ -2556,7 +2532,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:572:3
 
-Cannot cast `x2` to number literal `-3` because `-2` [1] is incompatible with `-3` [2]. [incompatible-type]
+Cannot cast `x2` to `-3` because `-2` [1] is incompatible with `-3` [2]. [incompatible-type]
 
    local.js:572:3
    572|   x2 as -3; // error -2 ~> -3
@@ -2573,7 +2549,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:575:3
 
-Cannot cast `x3` to number literal `-2` because `2` [1] is incompatible with `-2` [2]. [incompatible-type]
+Cannot cast `x3` to `-2` because `2` [1] is incompatible with `-2` [2]. [incompatible-type]
 
    local.js:575:3
    575|   x3 as -2; // error 2 ~> -2
@@ -2590,7 +2566,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:581:3
 
-Cannot cast `objx2.x2` to number literal `-2` because `number` [1] is incompatible with `-2` [2]. [incompatible-type]
+Cannot cast `objx2.x2` to `-2` because `number` [1] is incompatible with `-2` [2]. [incompatible-type]
 
    local.js:581:3
    581|   objx2.x2 as -2; // error number ~> -2
@@ -2607,7 +2583,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:587:3
 
-Cannot cast `b2` to bigint literal `-3n` because `-2n` [1] is incompatible with `-3n` [2]. [incompatible-type]
+Cannot cast `b2` to `-3n` because `-2n` [1] is incompatible with `-3n` [2]. [incompatible-type]
 
    local.js:587:3
    587|   b2 as -3n; // error -2n ~> -3n
@@ -2624,7 +2600,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:590:3
 
-Cannot cast `b3` to bigint literal `-2n` because `2n` [1] is incompatible with `-2n` [2]. [incompatible-type]
+Cannot cast `b3` to `-2n` because `2n` [1] is incompatible with `-2n` [2]. [incompatible-type]
 
    local.js:590:3
    590|   b3 as -2n; // error 2n ~> -2n
@@ -2641,7 +2617,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:612:3
 
-Cannot cast template string to string literal `b` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
+Cannot cast template string to `"b"` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    local.js:612:3
    612|   `a` as 'b'; // error
@@ -2811,7 +2787,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:127:3
 
-Cannot cast `x4` to string literal `y` because `string` [1] is incompatible with `"y"` [2]. [incompatible-type]
+Cannot cast `x4` to `"y"` because `string` [1] is incompatible with `"y"` [2]. [incompatible-type]
 
    nested_generic_calls.js:127:3
    127|   x4 as 'y'; // error string ~> 'y'
@@ -2865,7 +2841,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- react.js:9:7
 
-Cannot cast `e` to empty because `Event` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `e` to `empty` because `Event` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    react.js:9:7
    9|       e as empty; // error empty ~> Event

@@ -103,7 +103,7 @@ Cannot use import declaration statements with in `declare namespace`. The statem
 
 Error ------------------------------------------------------------------------------------------------- exported.js:30:1
 
-Cannot cast `exported_merged.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_merged.foo` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:30:1
    30| exported_merged.foo as empty; // error: string ~> empty
@@ -134,7 +134,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:41:1
 
-Cannot cast `default_merged.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `default_merged.foo` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:41:1
    41| default_merged.foo as empty; // error: string ~> empty
@@ -208,7 +208,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:72:1
 
-Cannot cast `exported_ns.bar1` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.bar1` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:72:1
    72| exported_ns.bar1 as empty; // error: number ~> empty
@@ -225,7 +225,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:73:1
 
-Cannot cast `exported_ns.bar2` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.bar2` to `empty` because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:73:1
    73| exported_ns.bar2 as empty; // error: boolean ~> empty
@@ -242,7 +242,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:74:1
 
-Cannot cast `exported_ns.bar3` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.bar3` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:74:1
    74| exported_ns.bar3 as empty; // error: string ~> empty
@@ -259,7 +259,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:75:1
 
-Cannot cast `exported_ns.f(...)` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.f(...)` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:75:1
    75| exported_ns.f(3) as empty; // error: number ~> empty
@@ -319,7 +319,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:79:1
 
-Cannot cast `exported_ns.B.C` to empty because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.B.C` to `empty` because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:79:1
    79| exported_ns.B.C as empty; // error: enum ~> empty
@@ -352,7 +352,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:81:1
 
-Cannot cast `exported_ns.CONSTANT` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.CONSTANT` to `empty` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:81:1
    81| exported_ns.CONSTANT as empty; // prop-missing
@@ -382,7 +382,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:84:1
 
-Cannot cast `direct_export_ns.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `direct_export_ns.x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exported.js:84:1
    84| direct_export_ns.x as empty; // error: number ~> empty
@@ -413,7 +413,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- libdef_test.js:1:1
 
-Cannot cast `ns_v.a` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `ns_v.a` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    libdef_test.js:1:1
    1| ns_v.a as empty; // error: string ~> empty
@@ -430,7 +430,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- libdef_test.js:2:1
 
-Cannot cast `ns_v.b` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `ns_v.b` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    libdef_test.js:2:1
    2| ns_v.b as empty; // error: string ~> empty
@@ -469,7 +469,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- libdef_test.js:5:1
 
-Cannot cast `ns_v_and_then_t` to empty because `{readonly a: string}` [1] is incompatible with `empty` [2].
+Cannot cast `ns_v_and_then_t` to `empty` because `{readonly a: string}` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    libdef_test.js:5:1
@@ -487,7 +487,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- libdef_test.js:6:1
 
-Cannot cast `ns_t_and_then_v` to empty because `{readonly a: string}` [1] is incompatible with `empty` [2].
+Cannot cast `ns_t_and_then_v` to `empty` because `{readonly a: string}` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    libdef_test.js:6:1
@@ -520,7 +520,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- libdef_test.js:12:1
 
-Cannot cast `(new ns_decl_merge_class.Box()).b` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `(new ns_decl_merge_class.Box()).b` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    libdef_test.js:12:1
@@ -538,7 +538,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- libdef_test.js:14:1
 
-Cannot cast `(new ns_decl_merge_class_reverse.Box()).a` to number because `string` [1] is incompatible with
+Cannot cast `(new ns_decl_merge_class_reverse.Box()).a` to `number` because `string` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    libdef_test.js:14:1
@@ -556,7 +556,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- libdef_test.js:18:1
 
-Cannot cast `ns_decl_merge_overload.f(...)` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `ns_decl_merge_overload.f(...)` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    libdef_test.js:18:1
@@ -588,7 +588,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- libdef_test.js:26:1
 
-Cannot cast `ns_decl_merge_type_then_value_namespace.Inner.x` to string because `number` [1] is incompatible with
+Cannot cast `ns_decl_merge_type_then_value_namespace.Inner.x` to `string` because `number` [1] is incompatible with
 `string` [2]. [incompatible-type]
 
    libdef_test.js:26:1
@@ -682,7 +682,7 @@ Cannot resolve name `React`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------- type_only_react_namespace.js:5:3
 
-Cannot cast `Array` to `Node` because: [incompatible-type]
+Cannot cast `Array` to `React.Node` because: [incompatible-type]
  - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or class `Array` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Array` [1] but exists in `Iterable<?React.Node, void, void>` [4].
@@ -711,7 +711,7 @@ References:
 
 Error -------------------------------------------------------------------------------- type_only_react_namespace.js:12:3
 
-Cannot cast `Array` to `Node` because: [incompatible-type]
+Cannot cast `Array` to `React.Node` because: [incompatible-type]
  - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ComponentProps<any>>` [2].
  - Or class `Array` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Array` [1] but exists in `Iterable<?React.Node, void, void>` [4].
@@ -740,7 +740,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- typing_test.js:7:1
 
-Cannot cast `both_type_and_value.bar1` to empty because `number` [1] is incompatible with `empty` [2].
+Cannot cast `both_type_and_value.bar1` to `empty` because `number` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    typing_test.js:7:1
@@ -758,7 +758,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- typing_test.js:8:1
 
-Cannot cast `both_type_and_value.bar2` to empty because `boolean` [1] is incompatible with `empty` [2].
+Cannot cast `both_type_and_value.bar2` to `empty` because `boolean` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    typing_test.js:8:1
@@ -833,7 +833,7 @@ Cannot use import declaration statements with in `declare namespace`. The statem
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:26:1
 
-Cannot cast `unsupported_statements.a` to empty because `number` [1] is incompatible with `empty` [2].
+Cannot cast `unsupported_statements.a` to `empty` because `number` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    typing_test.js:26:1
@@ -851,7 +851,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:28:1
 
-Cannot cast `unsupported_statements.B.D` to empty because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `unsupported_statements.B.D` to `empty` because `B` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    typing_test.js:28:1
    28| unsupported_statements.B.D as empty; // error: enum ~> empty
@@ -868,7 +869,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:31:1
 
-Cannot cast `exported_ns.bar1` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.bar1` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:31:1
    31| exported_ns.bar1 as empty; // error: number ~> empty
@@ -885,7 +886,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:32:1
 
-Cannot cast `exported_ns.bar2` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.bar2` to `empty` because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:32:1
    32| exported_ns.bar2 as empty; // error: boolean ~> empty
@@ -902,7 +903,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:33:1
 
-Cannot cast `exported_ns.bar3` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.bar3` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:33:1
    33| exported_ns.bar3 as empty; // error: string ~> empty
@@ -919,7 +920,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:34:1
 
-Cannot cast `exported_ns.f(...)` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.f(...)` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:34:1
    34| exported_ns.f(3) as empty; // error: number ~> empty
@@ -979,7 +980,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:38:1
 
-Cannot cast `exported_ns.B.C` to empty because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.B.C` to `empty` because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:38:1
    38| exported_ns.B.C as empty; // error: enum ~> empty
@@ -1012,7 +1013,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:40:1
 
-Cannot cast `exported_ns.CONSTANT` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_ns.CONSTANT` to `empty` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:40:1
    40| exported_ns.CONSTANT as empty; // error: prop-missing
@@ -1042,7 +1043,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:44:1
 
-Cannot cast `direct_export_ns.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `direct_export_ns.x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:44:1
    44| direct_export_ns.x as empty; // error: number ~> empty
@@ -1073,7 +1074,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:47:1
 
-Cannot cast `exported_merged.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `exported_merged.foo` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:47:1
    47| exported_merged.foo as empty; // error: string ~> empty
@@ -1104,7 +1105,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:51:1
 
-Cannot cast `default_merged.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `default_merged.foo` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typing_test.js:51:1
    51| default_merged.foo as empty; // error: string ~> empty
@@ -1222,7 +1223,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:77:1
 
-Cannot cast `merged_declared_fn.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `merged_declared_fn.foo` to `empty` because `string` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    typing_test.js:77:1
    77| merged_declared_fn.foo as empty; // error: string ~> empty
@@ -1253,7 +1255,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:88:1
 
-Cannot cast `merged_runtime_fn.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `merged_runtime_fn.foo` to `empty` because `string` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    typing_test.js:88:1
    88| merged_runtime_fn.foo as empty; // error: string ~> empty
@@ -1312,7 +1315,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typing_test.js:123:2
 
-Cannot cast `(new NsWithDeclMerge()).x` to empty because `number` [1] is incompatible with `empty` [2].
+Cannot cast `(new NsWithDeclMerge()).x` to `empty` because `number` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    typing_test.js:123:2

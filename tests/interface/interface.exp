@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- array.js:4:1
 
-Cannot cast `a` to interface type because in the return value of property `pop`: [incompatible-type]
+Cannot cast `a` to `interface {}` because in the return value of property `pop`: [incompatible-type]
  - Either `number` [1] is incompatible with `boolean` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -82,8 +82,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- extends_class.js:21:1
 
-Cannot cast `box` to `Box` because in type argument `T` [1]: property `extra` is missing in `Array<string>` [2] but
-exists in `StringArrayWithExtra` [3]. [incompatible-type]
+Cannot cast `box` to `Box<Array<string>>` because in type argument `T` [1]: property `extra` is missing in
+`Array<string>` [2] but exists in `StringArrayWithExtra` [3]. [incompatible-type]
 
    extends_class.js:21:1
    21| box as Box<Array<string>>; // Error: `extra` is missing in `Array<string>`, and nothing else
@@ -543,8 +543,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:11:1
 
-Cannot cast `f` to interface type because `() => void` [1] is incompatible with `interface {xxx: boolean}` [2].
-[incompatible-type]
+Cannot cast `f` to `interface {xxx: boolean}` because `() => void` [1] is incompatible with
+`interface {xxx: boolean}` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -563,8 +563,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:21:1
 
-Cannot cast `build` to interface type because `() => S` [1] is incompatible with `interface {foo: boolean}` [2].
-[incompatible-type]
+Cannot cast `build` to `interface {foo: boolean}` because `() => S` [1] is incompatible with
+`interface {foo: boolean}` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -728,8 +728,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:77:3
 
-Cannot cast `x` to interface type because in the indexer property: `number | string` [1] is not exactly the same as
-`number` [2]. [incompatible-type]
+Cannot cast `x` to `interface {[Keys]: number}` because in the indexer property: `number | string` [1] is not exactly
+the same as `number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[Keys]: number | string}` [3] and `{[Keys]: number}` [4] exactly the same
@@ -757,8 +757,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:78:3
 
-Cannot cast `x` to interface type because in the indexer property: `string` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast `x` to `interface {readonly [Keys]: number}` because in the indexer property: `string` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    indexer.js:78:3
    78|   x as interface {readonly [Keys]: number}; // ERROR
@@ -775,8 +775,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:83:3
 
-Cannot cast `x` to interface type because in the indexer property: `string` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast `x` to `interface {[Keys]: number}` because in the indexer property: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    indexer.js:83:3
    83|   x as interface {[Keys]: number}; // ERROR
@@ -793,8 +793,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:84:3
 
-Cannot cast `x` to interface type because in the indexer property: `string` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast `x` to `interface {readonly [Keys]: number}` because in the indexer property: `string` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    indexer.js:84:3
    84|   x as interface {readonly [Keys]: number}; // ERROR
@@ -811,7 +811,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:117:3
 
-Cannot cast `x[1]` to string because `ChildValue` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x[1]` to `string` because `ChildValue` [1] is incompatible with `string` [2]. [incompatible-type]
 
    indexer.js:117:3
    117|   x[1] as string; // ERROR
@@ -828,7 +828,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:129:3
 
-Cannot cast `values` to array type because in array element: `string` [1] is not exactly the same as `number` [2].
+Cannot cast `values` to `Array<number>` because in array element: `string` [1] is not exactly the same as `number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -857,7 +857,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:167:3
 
-Cannot cast `x['bar']` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x['bar']` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    indexer.js:167:3
    167|   x['bar'] as empty; // ERROR
@@ -874,7 +874,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:175:3
 
-Cannot cast `x['foo']` to empty because `(this: D) => null` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x['foo']` to `empty` because `(this: D) => null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    indexer.js:175:3
    175|   x['foo'] as empty; // ERROR
@@ -891,7 +891,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:178:3
 
-Cannot cast `x['xxx']` to empty because `() => number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x['xxx']` to `empty` because `() => number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    indexer.js:178:3
    178|   x['xxx'] as empty; // ERROR
@@ -1005,7 +1005,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:16:3
 
-Cannot cast `o.p` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o.p` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    inline.js:16:3
    16|   o.p as empty; // error: number ~> empty
@@ -1022,7 +1022,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:17:3
 
-Cannot cast `o.q` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o.q` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    inline.js:17:3
    17|   o.q as empty; // error: string ~> empty
@@ -1100,7 +1100,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:34:3
 
-Cannot cast `x` to interface type because in property `foo`: `number` [1] is incompatible with `string` [2].
+Cannot cast `x` to `interface {foo: string}` because in property `foo`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    inline.js:34:3
@@ -1183,7 +1183,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:38:1
 
-Cannot cast `o2["b"]` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `o2["b"]` to `boolean` because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    interface.js:38:1
    38| o2["b"] as boolean; // error
@@ -1200,8 +1200,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:43:1
 
-Cannot cast `o3` to interface type because in the indexer property: `number` [1] is not exactly the same as
-`boolean` [2]. [incompatible-type]
+Cannot cast `o3` to `interface {[string]: boolean}` because in the indexer property: `number` [1] is not exactly the
+same as `boolean` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{[string]: boolean}` [4] exactly the same
@@ -1229,8 +1229,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:44:7
 
-Cannot cast object literal to interface type because in property `x`: `3` [1] is incompatible with `boolean` [2].
-[incompatible-type]
+Cannot cast object literal to `interface {[string]: boolean}` because in property `x`: `3` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    interface.js:44:7
    44| ({x : 3} as interface {[string] : boolean}); // error
@@ -1244,8 +1244,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:46:1
 
-Cannot cast `o3` to interface type because in the indexer property's key: `string` [1] is not exactly the same as
-`number` [2]. [incompatible-type]
+Cannot cast `o3` to `interface {[number]: number}` because in the indexer property's key: `string` [1] is not exactly
+the same as `number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{[number]: number}` [4] exactly the same
@@ -1273,9 +1273,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:47:2
 
-Cannot cast object literal to interface type because property `x` is missing in `{[number]: number}` [1] but exists in
-object literal [2]. Any property that does not exist in `{[number]: number}` [1] must be compatible with its indexer
-`number` [3]. [incompatible-type]
+Cannot cast object literal to `interface {[number]: number}` because property `x` is missing in `{[number]: number}` [1]
+but exists in object literal [2]. Any property that does not exist in `{[number]: number}` [1] must be compatible with
+its indexer `number` [3]. [incompatible-type]
 
    interface.js:47:2
    47| ({x : 3} as interface {[number] : number}); // error
@@ -1292,8 +1292,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:51:1
 
-Cannot cast `o4` to interface type because in the indexer property's key: `"asdf"` [1] is not exactly the same as
-`string` [2]. [incompatible-type]
+Cannot cast `o4` to `interface {[string]: number}` because in the indexer property's key: `"asdf"` [1] is not exactly
+the same as `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: "asdf"]: number}` [3] and `{[string]: number}` [4] exactly the same
@@ -1321,8 +1321,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:59:1
 
-Cannot cast `o6` to interface type because in the indexer property's key: `string` [1] is not exactly the same as
-`"asdf"` [2]. [incompatible-type]
+Cannot cast `o6` to `interface {[key: "asdf"]: number}` because in the indexer property's key: `string` [1] is not
+exactly the same as `"asdf"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{[key: "asdf"]: number}` [4] exactly the same
@@ -1350,7 +1350,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- merging.js:9:1
 
-Cannot cast `merged_a.s` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `merged_a.s` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    merging.js:9:1
    9| merged_a.s as number; // error: string ~> number
@@ -1367,7 +1367,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- merging.js:10:1
 
-Cannot cast `merged_a.b` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `merged_a.b` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    merging.js:10:1
    10| merged_a.b as string; // error: number ~> string
@@ -1405,7 +1405,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- merging.js:38:1
 
-Cannot cast `three_way.first` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `three_way.first` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    merging.js:38:1
    38| three_way.first as number; // error: string ~> number
@@ -1464,7 +1464,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:1:1
 
-Cannot cast `undefined` to interface type because `void` [1] is incompatible with `interface {}` [2].
+Cannot cast `undefined` to `interface {}` because `void` [1] is incompatible with `interface {}` [2].
 [incompatible-type]
 
    primitives.js:1:1
@@ -1479,7 +1479,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:2:1
 
-Cannot cast `null` to interface type because `null` [1] is incompatible with `interface {}` [2]. [incompatible-type]
+Cannot cast `null` to `interface {}` because `null` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    primitives.js:2:1
    2| null as interface {}; // ERROR
@@ -1493,7 +1493,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:5:3
 
-Cannot cast `1` to interface type because `1` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You
+Cannot cast `1` to `interface {}` because `1` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You
 can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
@@ -1509,7 +1509,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:7:3
 
-Cannot cast `x` to interface type because `number` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
+Cannot cast `x` to `interface {}` because `number` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
 You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
@@ -1528,7 +1528,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:13:3
 
-Cannot cast `true` to interface type because `true` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
+Cannot cast `true` to `interface {}` because `true` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
 You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
@@ -1544,7 +1544,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:15:3
 
-Cannot cast `x` to interface type because `boolean` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
+Cannot cast `x` to `interface {}` because `boolean` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
 You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
@@ -1563,7 +1563,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:21:3
 
-Cannot cast `x` to interface type because `symbol` [1] is incompatible with `interface {}` [2]. [incompatible-type]
+Cannot cast `x` to `interface {}` because `symbol` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    primitives.js:21:3
    21|   x as interface {}; // ERROR
@@ -1580,7 +1580,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:4:1
 
-Cannot cast `s` to interface type because `string` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
+Cannot cast `s` to `interface {}` because `string` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
 You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
@@ -1638,8 +1638,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:32:1
 
-Cannot cast `new DerivedWithStringField()` to interface type because in property `foo`: `string` [1] is incompatible
-with `number` [2]. [incompatible-type]
+Cannot cast `new DerivedWithStringField()` to `interface {[string]: number}` because in property `foo`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    subtyping.js:32:1
    32| new DerivedWithStringField() as interface {[string]: number}; // error, inherited `foo` is incompatible
@@ -1729,8 +1729,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:116:1
 
-Cannot cast `new NumericProperty()` to interface type because in property `0`: `string` [1] is incompatible with
-`number` [2]. [incompatible-type]
+Cannot cast `new NumericProperty()` to `interface {[number]: number}` because in property `0`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    subtyping.js:116:1
    116| new NumericProperty() as interface {[number]: number}; // error
@@ -1762,7 +1762,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
-Cannot cast `k.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `k.x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:7:1
    7| k.x as string; // error: x is number
@@ -1809,7 +1809,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
-Cannot cast `e.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `e.x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:18:1
    18| e.x as string; // error: x is number
@@ -1826,7 +1826,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
-Cannot cast `e.z` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `e.z` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:20:1
    20| e.z as string; // error: z is number
@@ -1875,7 +1875,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:5:3
 
-Cannot cast `k.x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `k.x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test3.js:5:3
    5|   k.x as number; // error: x is string in K
@@ -1892,7 +1892,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:6:3
 
-Cannot cast `k.y` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `k.y` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test3.js:6:3
    6|   k.y as number; // error: y is string in I
@@ -1952,7 +1952,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:12:1
 
-Cannot cast `a.x` to empty because `(this: A) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a.x` to `empty` because `(this: A) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test5.js:12:1
    12| a.x as empty; // error: function ~> empty
@@ -1969,7 +1969,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:15:1
 
-Cannot cast `b.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `b.x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test5.js:15:1
    15| b.x as empty; // error: number ~> empty
@@ -1986,7 +1986,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- top.js:3:1
 
-Cannot cast `x` to interface type because `unknown` [1] is incompatible with `interface {}` [2]. [incompatible-type]
+Cannot cast `x` to `interface {}` because `unknown` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    top.js:3:1
    3| x as interface {}; // ERROR
@@ -2011,7 +2011,7 @@ Cannot assign `3` to `x.foo` because property `foo` is not writable. [cannot-wri
 
 Error -------------------------------------------------------------------------------------------------- utility.js:33:1
 
-Cannot cast `b` to `Readonly` because property `qux` is missing in `B` [1] but exists in
+Cannot cast `b` to `Readonly<K>` because property `qux` is missing in `B` [1] but exists in
 `interface {readonly baz: boolean; readonly foo: number; readonly qux: string}` [2]. [incompatible-type]
 
    utility.js:33:1

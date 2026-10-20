@@ -4,7 +4,7 @@
 ======a changed source file reuses saved state======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -29,7 +29,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -58,7 +58,7 @@ Found 4 errors
 ======cold scratch matches a changed source file======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -83,7 +83,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -133,7 +133,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -180,7 +180,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -212,7 +212,7 @@ Found 4 errors
 ======case 2: global becomes non-global falls back to a scratch check======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -257,7 +257,7 @@ Found 4 errors
 ======cold scratch matches case 2: global becomes non-global======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -305,7 +305,7 @@ Found 4 errors
 ======case 3: global remains global after content change falls back to a scratch check======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -338,7 +338,7 @@ Cannot resolve name `savedGlobal`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -359,7 +359,7 @@ Found 4 errors
 ======cold scratch matches case 3: global remains global after content change======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -392,7 +392,7 @@ Cannot resolve name `savedGlobal`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -430,7 +430,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -475,7 +475,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -505,7 +505,7 @@ Found 4 errors
 ======a newly created external declaration reuses saved state======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -522,7 +522,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:5:1
 
-Cannot cast `addedExternal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `addedExternal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:5:1
    5| addedExternal as empty;
@@ -539,7 +539,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -568,7 +568,7 @@ Found 4 errors
 ======cold scratch matches a newly created external declaration======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -585,7 +585,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:5:1
 
-Cannot cast `addedExternal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `addedExternal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:5:1
    5| addedExternal as empty;
@@ -602,7 +602,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -640,7 +640,7 @@ Unexpected token `;`, expected a type [ParseError]
 
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -665,7 +665,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -702,7 +702,7 @@ Unexpected token `;`, expected a type [ParseError]
 
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -727,7 +727,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -759,7 +759,7 @@ Found 5 errors
 ======a known global named by the delta falls back to a scratch check======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -784,7 +784,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -813,7 +813,7 @@ Found 4 errors
 ======cold scratch matches a known global named by the delta======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -838,7 +838,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -878,7 +878,7 @@ Unexpected token `;`, expected a type [ParseError]
 
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -931,7 +931,7 @@ Unexpected token `;`, expected a type [ParseError]
 
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -979,7 +979,7 @@ Found 5 errors
 ======a deleted known global falls back to a scratch check======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -1024,7 +1024,7 @@ Found 4 errors
 ======cold scratch matches a deleted known global======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -1072,7 +1072,7 @@ Found 4 errors
 ======a renamed known global falls back to a scratch check======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -1105,7 +1105,7 @@ Cannot resolve name `savedGlobal`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -1126,7 +1126,7 @@ Found 4 errors
 ======cold scratch matches a renamed known global======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -1159,7 +1159,7 @@ Cannot resolve name `savedGlobal`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -1183,7 +1183,7 @@ Found 4 errors
 ======a newly created global falls back to a scratch check======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -1208,7 +1208,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1225,7 +1225,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -1246,7 +1246,7 @@ Found 4 errors
 ======cold scratch matches a newly created global======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -1271,7 +1271,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1288,7 +1288,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -1328,7 +1328,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1345,7 +1345,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -1382,7 +1382,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1399,7 +1399,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -1516,7 +1516,7 @@ The Flow server is currently in lazy mode and is only checking 2/6 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 Error ------------------------------------------------------------------------------------------------------- use.js:5:1
 
-Cannot cast `addedExternal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `addedExternal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:5:1
    5| addedExternal as empty;
@@ -1533,7 +1533,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1569,7 +1569,7 @@ The Flow server is currently in lazy mode and is only checking 2/6 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 Error ------------------------------------------------------------------------------------------------------- use.js:5:1
 
-Cannot cast `addedExternal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `addedExternal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:5:1
    5| addedExternal as empty;
@@ -1586,7 +1586,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1664,7 +1664,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1681,7 +1681,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -1717,7 +1717,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1734,7 +1734,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- use.js:7:1
 
-Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `renamedSavedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:7:1
    7| renamedSavedGlobal as empty;
@@ -1797,7 +1797,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ======a fixed global falls back to a scratch check======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -1822,7 +1822,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;
@@ -1851,7 +1851,7 @@ Found 4 errors
 ======cold scratch matches a fixed global======
 Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
 
-Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `persistedExternal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    saved-use.js:5:1
    5| persistedExternal as number;
@@ -1876,7 +1876,7 @@ Cannot resolve module `./created-external`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:6:1
 
-Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `savedGlobal` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use.js:6:1
    6| savedGlobal as empty;

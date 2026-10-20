@@ -23,7 +23,7 @@ Cannot assign `1` to `JSON.parse` because property `parse` is not writable. [can
 
 Error -------------------------------------------------------------------------------------------- json_stringify.js:7:1
 
-Cannot cast `JSON.stringify(...)` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `JSON.stringify(...)` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    json_stringify.js:7:1
       7| JSON.stringify(bad1) as string;
@@ -144,7 +144,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:34:5
 
-Cannot cast `x.get(...)` to boolean because `void` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x.get(...)` to `boolean` because `void` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    map.js:34:5
    34|     x.get('foo') as boolean; // error, string | void
@@ -161,7 +161,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:34:5
 
-Cannot cast `x.get(...)` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x.get(...)` to `boolean` because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    map.js:34:5
    34|     x.get('foo') as boolean; // error, string | void
@@ -312,7 +312,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- reflect.js:5:1
 
-Cannot cast `Reflect.get(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `Reflect.get(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    reflect.js:5:1
    5| Reflect.get(target, 'value') as string; // ERROR
@@ -343,7 +343,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- reflect.js:12:5
 
-Cannot cast `descriptor.value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `descriptor.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    reflect.js:12:5
    12|     descriptor.value as string; // ERROR
@@ -360,8 +360,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- reflect.js:17:1
 
-Cannot cast `Reflect.ownKeys(...)` to array type because in array element: `string | symbol` [1] is not exactly the same
-as `string` [2]. [incompatible-type]
+Cannot cast `Reflect.ownKeys(...)` to `Array<string>` because in array element: `string | symbol` [1] is not exactly the
+same as `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string | symbol>` [3] and `Array<string>` [4] exactly the same
@@ -389,7 +389,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- reflect.js:20:1
 
-Cannot cast `Reflect.getPrototypeOf(...)` to interface type because `null` [1] is incompatible with `interface {}` [2].
+Cannot cast `Reflect.getPrototypeOf(...)` to `interface {}` because `null` [1] is incompatible with `interface {}` [2].
 [incompatible-type]
 
    reflect.js:20:1
@@ -461,7 +461,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- reflect.js:34:1
 
-Cannot cast `Reflect.construct<...>(...)` to string because `Constructed` [1] is incompatible with `string` [2].
+Cannot cast `Reflect.construct<...>(...)` to `string` because `Constructed` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    reflect.js:34:1

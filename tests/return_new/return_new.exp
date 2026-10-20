@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------- concretization.js:9:1
 
-Cannot cast `new MaybeObject()` to number because `MaybeObject` [1] is incompatible with `number` [2].
+Cannot cast `new MaybeObject()` to `number` because `MaybeObject` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    concretization.js:9:1
@@ -15,7 +15,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- concretization.js:9:1
 
-Cannot cast `new MaybeObject()` to number because `{x: number}` [1] is incompatible with `number` [2].
+Cannot cast `new MaybeObject()` to `number` because `{x: number}` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    concretization.js:9:1
@@ -30,8 +30,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:21:1
 
-Cannot cast `new Intersection()` to object type because property `z` is missing in `{x: number}` [1] but exists in
-`{x: number, z: string, ...}` [2]. [incompatible-type]
+Cannot cast `new Intersection()` to `{x: number, z: string, ...}` because property `z` is missing in `{x: number}` [1]
+but exists in `{x: number, z: string, ...}` [2]. [incompatible-type]
 
    concretization.js:21:1
    21| new Intersection() as {x: number, z: string, ...}; // error
@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:22:1
 
-Cannot cast `new Intersection()` to number because `{x: number}` [1] is incompatible with `number` [2].
+Cannot cast `new Intersection()` to `number` because `{x: number}` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    concretization.js:22:1
@@ -60,7 +60,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:28:1
 
-Cannot cast `new NumberFirst()` to number because `NumberFirst` [1] is incompatible with `number` [2].
+Cannot cast `new NumberFirst()` to `number` because `NumberFirst` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    concretization.js:28:1
@@ -75,7 +75,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:34:1
 
-Cannot cast `new FunctionReturn()` to number because `() => void` [1] is incompatible with `number` [2].
+Cannot cast `new FunctionReturn()` to `number` because `() => void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    concretization.js:34:1
@@ -90,7 +90,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:40:1
 
-Cannot cast `new StringReturn()` to string because `StringReturn` [1] is incompatible with `string` [2].
+Cannot cast `new StringReturn()` to `string` because `StringReturn` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    concretization.js:40:1

@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------- declare_enum.ts:12:1
 
-Cannot cast `E.A` to number literal `0` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
+Cannot cast `E.A` to `0` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
 
    declare_enum.ts:12:1
    12| E.A satisfies 0; // ERROR: A is computed, not the literal `0`
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declare_enum.ts:21:1
 
-Cannot cast `F.B` to number literal `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `F.B` to `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
 
    declare_enum.ts:21:1
    21| F.B satisfies 2; // ERROR: B is computed in an ambient enum
@@ -48,7 +48,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- exhaustive.ts:25:7
 
-Cannot cast `d` to empty because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `d` to `empty` because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exhaustive.ts:25:7
    25|       d satisfies never; // ERROR: Down (2) not handled
@@ -201,7 +201,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- invalid.ts:25:1
 
-Cannot cast `Mixed.B` to number literal `0` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
+Cannot cast `Mixed.B` to `0` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
 
    invalid.ts:25:1
    25| Mixed.B satisfies 0; // ERROR: B is computed, not the literal `0`
@@ -263,8 +263,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- reverse.ts:14:1
 
-Cannot cast `Color[1]` to string literal `Red` because `string` [1] is incompatible with `"Red"` [2].
-[incompatible-type]
+Cannot cast `Color[1]` to `"Red"` because `string` [1] is incompatible with `"Red"` [2]. [incompatible-type]
 
    reverse.ts:14:1
    14| Color[1] satisfies "Red"; // ERROR
@@ -310,7 +309,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- use_ambient.ts:12:1
 
-Cannot cast `E.A` to number literal `0` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
+Cannot cast `E.A` to `0` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
 
    use_ambient.ts:12:1
    12| E.A satisfies 0; // ERROR: A is computed, not the literal `0`
@@ -327,7 +326,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- use_ambient.ts:17:1
 
-Cannot cast `F.B` to number literal `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
+Cannot cast `F.B` to `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
 
    use_ambient.ts:17:1
    17| F.B satisfies 2; // ERROR: B is computed in an ambient enum

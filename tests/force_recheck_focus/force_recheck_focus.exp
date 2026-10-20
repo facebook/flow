@@ -21,7 +21,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:8:1
 
-Cannot cast `y` to undefined because `"y"` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `y` to `void` because `"y"` [1] is incompatible with `void` [2]. [incompatible-type]
 
    b.js:8:1
    8| y as void; // error

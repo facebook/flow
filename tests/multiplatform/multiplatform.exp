@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- android_only_use.android.js:2:1
 
-Cannot cast `require(...).foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `require(...).foo` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    android_only_use.android.js:2:1
    2| require('./android_and_common').foo as string; // error: android_and_common.android is actually imported
@@ -265,7 +265,7 @@ platforms: `android`, `ios`. Support for the `ios` platform is missing. [missing
 
 Error ------------------------------------------------------------------------------------- test_interface_import.js:8:1
 
-Cannot cast `o1` to empty because `MyType` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o1` to `empty` because `MyType` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test_interface_import.js:8:1
    8| o1 as empty; // error

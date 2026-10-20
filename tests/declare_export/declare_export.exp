@@ -1057,7 +1057,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-let-const.js:5:1
 
-Cannot cast `l` to empty because `"let"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `l` to `empty` because `"let"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import-let-const.js:5:1
    5| l as empty; // ERROR
@@ -1074,7 +1074,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-let-const.js:8:1
 
-Cannot cast `c` to empty because `"const"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `c` to `empty` because `"const"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import-let-const.js:8:1
    8| c as empty; // ERROR

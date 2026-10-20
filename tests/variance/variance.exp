@@ -818,8 +818,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:207:18
 
-Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
-`{p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{p: A, ...}>` because in array element: `{readonly p: A, ...}` [1] is not exactly the same
+as `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{readonly p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
@@ -844,8 +844,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:209:18
 
-Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
-`{p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{p: A, ...}>` because in array element: `{writeonly p: A, ...}` [1] is not exactly the
+same as `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{writeonly p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
@@ -870,8 +870,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:210:18
 
-Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
-`{readonly p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{readonly p: A, ...}>` because in array element: `{p: A, ...}` [1] is not exactly the same
+as `{readonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{readonly p: A, ...}>` [4] exactly the same
@@ -896,8 +896,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:214:18
 
-Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
-`{readonly p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{readonly p: A, ...}>` because in array element: `{writeonly p: A, ...}` [1] is not
+exactly the same as `{readonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{writeonly p: A, ...}>` [3] and `Array<{readonly p: A, ...}>` [4] exactly the same
@@ -922,8 +922,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:215:18
 
-Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
-`{writeonly p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{writeonly p: A, ...}>` because in array element: `{p: A, ...}` [1] is not exactly the
+same as `{writeonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{writeonly p: A, ...}>` [4] exactly the same
@@ -948,8 +948,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:216:18
 
-Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
-`{writeonly p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{writeonly p: A, ...}>` because in array element: `{readonly p: A, ...}` [1] is not
+exactly the same as `{writeonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{readonly p: A, ...}>` [3] and `Array<{writeonly p: A, ...}>` [4] exactly the same
@@ -1845,8 +1845,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:207:18
 
-Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
-`{p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{p: A, ...}>` because in array element: `{readonly p: A, ...}` [1] is not exactly the same
+as `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{readonly p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
@@ -1871,8 +1871,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:209:18
 
-Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
-`{p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{p: A, ...}>` because in array element: `{writeonly p: A, ...}` [1] is not exactly the
+same as `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{writeonly p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
@@ -1897,8 +1897,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:210:18
 
-Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
-`{readonly p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{readonly p: A, ...}>` because in array element: `{p: A, ...}` [1] is not exactly the same
+as `{readonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{readonly p: A, ...}>` [4] exactly the same
@@ -1923,8 +1923,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:214:18
 
-Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
-`{readonly p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{readonly p: A, ...}>` because in array element: `{writeonly p: A, ...}` [1] is not
+exactly the same as `{readonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{writeonly p: A, ...}>` [3] and `Array<{readonly p: A, ...}>` [4] exactly the same
@@ -1949,8 +1949,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:215:18
 
-Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
-`{writeonly p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{writeonly p: A, ...}>` because in array element: `{p: A, ...}` [1] is not exactly the
+same as `{writeonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{writeonly p: A, ...}>` [4] exactly the same
@@ -1975,8 +1975,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:216:18
 
-Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
-`{writeonly p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to `Array<{writeonly p: A, ...}>` because in array element: `{readonly p: A, ...}` [1] is not
+exactly the same as `{writeonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{readonly p: A, ...}>` [3] and `Array<{writeonly p: A, ...}>` [4] exactly the same

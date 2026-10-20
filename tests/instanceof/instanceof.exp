@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ any.js:10:5
 
-Cannot cast `a` to empty because `A` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a` to `empty` because `A` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    any.js:10:5
    10|     a as empty; // error A ~> empty
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ any.js:13:5
 
-Cannot cast `a` to empty because `P<any>` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a` to `empty` because `P<any>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    any.js:13:5
    13|     a as empty; // error P ~> empty
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ any.js:14:5
 
-Cannot cast `a.n` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a.n` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    any.js:14:5
    14|     a.n as empty; // error number ~> empty
@@ -51,7 +51,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- cyclic_super.js:15:3
 
-Cannot cast `self` to empty because `Unrelated` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `self` to `empty` because `Unrelated` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    cyclic_super.js:15:3
    15|   self as empty; // error: Unrelated ~> empty
@@ -68,7 +68,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- cyclic_super.js:19:3
 
-Cannot cast `self` to empty because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `self` to `empty` because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    cyclic_super.js:19:3
    19|   self as empty; // error: Self ~> empty
@@ -85,7 +85,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- cyclic_super.js:23:3
 
-Cannot cast `self` to empty because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `self` to `empty` because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    cyclic_super.js:23:3
    23|   self as empty; // error: Self ~> empty
@@ -102,7 +102,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- cyclic_super.js:28:3
 
-Cannot cast `self` to empty because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `self` to `empty` because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    cyclic_super.js:28:3
    28|   self as empty; // error: Self ~> empty
@@ -119,7 +119,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- cyclic_super.js:40:3
 
-Cannot cast `loop` to empty because `Unrelated` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `loop` to `empty` because `Unrelated` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    cyclic_super.js:40:3
    40|   loop as empty; // error: Unrelated ~> empty
@@ -136,7 +136,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- cyclic_super.js:47:3
 
-Cannot cast `either` to empty because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `either` to `empty` because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    cyclic_super.js:47:3
    47|   either as empty; // error: Self ~> empty
@@ -153,7 +153,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- cyclic_super.js:47:3
 
-Cannot cast `either` to empty because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `either` to `empty` because `Self` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    cyclic_super.js:47:3
    47|   either as empty; // error: Self ~> empty
@@ -265,7 +265,7 @@ The right-hand side of an `instanceof` expression must be an object, but got `un
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:132:5
 
-Cannot cast `x` to empty because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    instanceof.js:132:5
    132|     x as empty; //error
@@ -282,7 +282,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:145:5
 
-Cannot cast `x` to empty because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    instanceof.js:145:5
    145|     x as empty; //error
@@ -313,7 +313,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:159:5
 
-Cannot cast `x` to empty because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    instanceof.js:159:5
    159|     x as empty; //error
@@ -330,7 +330,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:187:3
 
-Cannot cast `multiParentBase.child` to number because `string` [1] is incompatible with `number` [2].
+Cannot cast `multiParentBase.child` to `number` because `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    instanceof.js:187:3
@@ -348,7 +348,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:188:3
 
-Cannot cast `multiParentBase` to empty because `MultiParentChild` [1] is incompatible with `empty` [2].
+Cannot cast `multiParentBase` to `empty` because `MultiParentChild` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    instanceof.js:188:3
@@ -366,7 +366,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:193:3
 
-Cannot cast `multiParentBase.base` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `multiParentBase.base` to `number` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    instanceof.js:193:3
    193|   multiParentBase.base as number; // error
@@ -398,7 +399,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:223:3
 
-Cannot cast `childOfSecondParent` to empty because `ChildOfSecondParent` [1] is incompatible with `empty` [2].
+Cannot cast `childOfSecondParent` to `empty` because `ChildOfSecondParent` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    instanceof.js:223:3
@@ -416,7 +417,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mixed.js:4:5
 
-Cannot cast `x` to number because `C` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `C` [1] is incompatible with `number` [2]. [incompatible-type]
 
    mixed.js:4:5
    4|     x as number;
@@ -462,7 +463,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objproto.js:4:3
 
-Cannot cast `c.p` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `c.p` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    objproto.js:4:3
    4|   c.p as empty; // error: string ~> empty

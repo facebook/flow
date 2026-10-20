@@ -81,7 +81,7 @@ signature over that type, label the key, as in `[key: K]`. [illegal-key]
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:41:1
 
-Cannot cast `one.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `one.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:41:1
    41| one.a as string; // ERROR: number is not string
@@ -141,7 +141,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:55:1
 
-Cannot cast `mixed.bar` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `mixed.bar` to `number` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imp.js:55:1
    55| mixed.bar as number; // ERROR: boolean is not number, so this is not the indexer
@@ -172,7 +172,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:61:1
 
-Cannot cast `opt.a` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `opt.a` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imp.js:61:1
    61| opt.a as number; // ERROR: the property is optional, so `void` is not a number
@@ -203,7 +203,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:70:1
 
-Cannot cast `fromConst.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `fromConst.foo` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:70:1
    70| fromConst.foo as string; // ERROR: number is not string
@@ -248,7 +248,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:85:1
 
-Cannot cast `plainWins.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `plainWins.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imp.js:85:1
    85| plainWins.a as number; // ERROR: string is not number
@@ -265,7 +265,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:89:1
 
-Cannot cast `literalWins.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `literalWins.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:89:1
    89| literalWins.a as string; // ERROR: number is not string
@@ -282,7 +282,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:93:1
 
-Cannot cast `valueThenPlain.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `valueThenPlain.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imp.js:93:1
    93| valueThenPlain.a as number; // ERROR: string is not number
@@ -299,7 +299,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:97:1
 
-Cannot cast `plainThenValue.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `plainThenValue.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:97:1
    97| plainThenValue.a as string; // ERROR: number is not string
@@ -316,7 +316,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- imp.js:101:1
 
-Cannot cast `valueThenMethod.a` to number because `(this: ValueThenMethod) => void` [1] is incompatible with
+Cannot cast `valueThenMethod.a` to `number` because `(this: ValueThenMethod) => void` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    imp.js:101:1
@@ -370,7 +370,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- imp.js:119:1
 
-Cannot cast `mergedHolder.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `mergedHolder.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imp.js:119:1
    119| mergedHolder.a as number; // ERROR: string is not number
@@ -387,7 +387,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- imp.js:123:1
 
-Cannot cast `accessorFirst.p` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `accessorFirst.p` to `number` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imp.js:123:1
    123| accessorFirst.p as number; // ERROR: boolean is not number
@@ -404,7 +404,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- imp.js:127:1
 
-Cannot cast `accessorLast.p` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `accessorLast.p` to `boolean` because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    imp.js:127:1
    127| accessorLast.p as boolean; // ERROR: number is not boolean
@@ -421,7 +421,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- imp.js:131:1
 
-Cannot cast `accessorMiddle.p` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `accessorMiddle.p` to `boolean` because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    imp.js:131:1
    131| accessorMiddle.p as boolean; // ERROR: number is not boolean
@@ -496,7 +496,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- imp.js:155:1
 
-Cannot cast `holder.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `holder.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    imp.js:155:1
    155| holder.a as string; // ERROR: number is not string
@@ -528,7 +528,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_keys.js:12:1
 
-Cannot cast `oneAlias['a']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `oneAlias['a']` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    type_keys.js:12:1
    12| oneAlias['a'] as string; // ERROR: number is not string
@@ -573,7 +573,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_keys.js:25:1
 
-Cannot cast `keyofOne['a']` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `keyofOne['a']` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_keys.js:25:1
    25| keyofOne['a'] as number; // ERROR: string is not number
@@ -799,7 +799,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- value_keys.js:10:1
 
-Cannot cast `fromConst.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `fromConst.foo` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    value_keys.js:10:1
    10| fromConst.foo as string; // ERROR: number is not string
@@ -890,7 +890,7 @@ signature instead, label the key, as in `[key: K]`. [illegal-key]
 
 Error ----------------------------------------------------------------------------------------------- value_keys.js:67:1
 
-Cannot cast `(new WithValueKey()).dk` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `(new WithValueKey()).dk` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    value_keys.js:67:1
@@ -908,7 +908,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- value_keys.js:68:1
 
-Cannot cast `WithValueKey.dk` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `WithValueKey.dk` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    value_keys.js:68:1
    68| WithValueKey.dk as number; // ERROR: string is not number
@@ -948,7 +948,7 @@ signature instead, label the key, as in `[key: K]`. [illegal-key]
 
 Error ----------------------------------------------------------------------------------------------- value_keys.js:97:1
 
-Cannot cast `valueThenPlain.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `valueThenPlain.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    value_keys.js:97:1
    97| valueThenPlain.a as number; // ERROR: string is not number
@@ -965,7 +965,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value_keys.js:105:1
 
-Cannot cast `plainThenValue.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `plainThenValue.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    value_keys.js:105:1
    105| plainThenValue.a as string; // ERROR: number is not string
@@ -982,7 +982,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value_keys.js:113:1
 
-Cannot cast `valueThenMethod.a` to number because `(this: ValueThenMethod) => void` [1] is incompatible with
+Cannot cast `valueThenMethod.a` to `number` because `(this: ValueThenMethod) => void` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    value_keys.js:113:1
@@ -1118,7 +1118,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value_keys.js:181:1
 
-Cannot cast `accessorFirst.p` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `accessorFirst.p` to `number` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    value_keys.js:181:1
    181| accessorFirst.p as number; // ERROR: boolean is not number
@@ -1135,7 +1135,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value_keys.js:190:1
 
-Cannot cast `accessorLast.p` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `accessorLast.p` to `boolean` because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    value_keys.js:190:1
    190| accessorLast.p as boolean; // ERROR: number is not boolean
@@ -1152,7 +1152,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value_keys.js:204:1
 
-Cannot cast `accessorMiddle.p` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `accessorMiddle.p` to `boolean` because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    value_keys.js:204:1
    204| accessorMiddle.p as boolean; // ERROR: number is not boolean
@@ -1183,7 +1183,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value_keys.js:223:1
 
-Cannot cast `optValue.foo` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `optValue.foo` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    value_keys.js:223:1
    223| optValue.foo as number; // ERROR: the property is optional, so `void` is not a number
@@ -1208,7 +1208,7 @@ Cannot assign `'x'` to `readOnlyValueKey.shared` because property `shared` is no
 
 Error ---------------------------------------------------------------------------------------------------- within.js:8:1
 
-Cannot cast `one.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `one.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:8:1
    8| one.a as string; // ERROR: number is not string
@@ -1291,7 +1291,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:54:1
 
-Cannot cast `mixed.bar` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `mixed.bar` to `number` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    within.js:54:1
    54| mixed.bar as number; // ERROR: boolean is not number, so this is not the indexer
@@ -1322,7 +1322,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:66:1
 
-Cannot cast `opt.a` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `opt.a` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    within.js:66:1
    66| opt.a as number; // ERROR: the property is optional, so `void` is not a number
@@ -1347,7 +1347,7 @@ Optional indexer (`?:`) is not enabled. [unsupported-syntax]
 
 Error --------------------------------------------------------------------------------------------------- within.js:79:1
 
-Cannot cast `labeled['a']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `labeled['a']` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:79:1
    79| labeled['a'] as string; // ERROR: number is not string
@@ -1378,7 +1378,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:86:1
 
-Cannot cast `inlineIface.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `inlineIface.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:86:1
    86| inlineIface.a as string; // ERROR: number is not string
@@ -1395,7 +1395,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:95:1
 
-Cannot cast `(new Holder()).a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `(new Holder()).a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:95:1
    95| new Holder().a as string; // ERROR: number is not string
@@ -1448,7 +1448,7 @@ Cannot get `accessorSplit.a` because property `a` is not readable. [cannot-read]
 
 Error -------------------------------------------------------------------------------------------------- within.js:120:1
 
-Cannot cast `plainWins.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `plainWins.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    within.js:120:1
    120| plainWins.a as number; // ERROR: string is not number
@@ -1465,7 +1465,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:128:1
 
-Cannot cast `literalWins.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `literalWins.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    within.js:128:1
    128| literalWins.a as string; // ERROR: number is not string

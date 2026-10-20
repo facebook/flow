@@ -102,7 +102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- filter_primitives.js:8:5
 
-Cannot cast `'b'` to `typeof maybeStr` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
+Cannot cast `'b'` to `"a"` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    filter_primitives.js:8:5
    8|     'b' as typeof maybeStr; // error 'b' ~> 'a'
@@ -116,7 +116,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- filter_primitives.js:13:5
 
-Cannot cast `2` to `typeof maybeNum` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `2` to `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    filter_primitives.js:13:5
    13|     2 as typeof maybeNum; // error 2 ~> 1
@@ -130,7 +130,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- filter_primitives.js:18:5
 
-Cannot cast `false` to `typeof maybeBool` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot cast `false` to `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    filter_primitives.js:18:5
    18|     false as typeof maybeBool; // error false ~> true
@@ -144,7 +144,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- filter_primitives.js:23:5
 
-Cannot cast `2n` to `typeof maybeBigInt` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
+Cannot cast `2n` to `1n` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    filter_primitives.js:23:5
    23|     2n as typeof maybeBigInt; // error 2n ~> 1n
@@ -325,7 +325,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:107:5
 
-Cannot cast `x.y` to string because `123` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.y` to `string` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap.js:107:5
    107|     x.y as string; // error, this got widened to a number
@@ -342,7 +342,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:125:5
 
-Cannot cast `x.y` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.y` to `string` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap.js:125:5
    125|     x.y as string; // error, could also be boolean
@@ -359,7 +359,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:135:5
 
-Cannot cast `x.y` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x.y` to `boolean` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    heap.js:135:5
    135|     x.y as boolean; // error, string
@@ -376,7 +376,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:135:5
 
-Cannot cast `x.y` to boolean because `"foo"` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x.y` to `boolean` because `"foo"` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    heap.js:135:5
    135|     x.y as boolean; // error, string
@@ -393,7 +393,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:135:5
 
-Cannot cast `x.y` to boolean because `"bar"` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x.y` to `boolean` because `"bar"` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    heap.js:135:5
    135|     x.y as boolean; // error, string
@@ -410,7 +410,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:146:5
 
-Cannot cast `x.y` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.y` to `string` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap.js:146:5
    146|     x.y as string; // error
@@ -427,7 +427,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:159:5
 
-Cannot cast `x.y` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.y` to `string` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap.js:159:5
    159|     x.y as string; // error
@@ -444,7 +444,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:159:5
 
-Cannot cast `x.y` to string because `false` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.y` to `string` because `false` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap.js:159:5
    159|     x.y as string; // error
@@ -461,7 +461,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:172:5
 
-Cannot cast `x.y` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.y` to `string` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap.js:172:5
    172|     x.y as string; // error
@@ -478,7 +478,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:172:5
 
-Cannot cast `x.y` to string because `123` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.y` to `string` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap.js:172:5
    172|     x.y as string; // error
@@ -495,7 +495,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:188:5
 
-Cannot cast `x` to string literal `b` because `string` [1] is incompatible with `"b"` [2]. [incompatible-type]
+Cannot cast `x` to `"b"` because `string` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    heap.js:188:5
    188|     x as 'b'; // error (but only once, string !~> 'b'; 'a' is irrelevant)
@@ -526,7 +526,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:193:5
 
-Cannot cast `x` to intersection type because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string & number` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap.js:193:5
    193|     x as string & number;
@@ -543,7 +543,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:193:5
 
-Cannot cast `x` to intersection type because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `string & number` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap.js:193:5
    193|     x as string & number;
@@ -560,7 +560,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- lex.js:6:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    lex.js:6:3
    6|   x as string; // error: number ~> string
@@ -577,7 +577,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ lex.js:15:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    lex.js:15:3
    15|   x as string; // error: number ~> string
@@ -594,7 +594,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ lex.js:25:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    lex.js:25:3
    25|   x as string; // error: number ~> string
@@ -611,7 +611,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ lex.js:35:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    lex.js:35:3
    35|   x as string; // error: number ~> string

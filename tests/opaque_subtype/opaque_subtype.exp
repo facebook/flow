@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- both_bounds.js:8:1
 
-Cannot cast `kind` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `kind` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    both_bounds.js:8:1
    8| kind as number; // error
@@ -145,7 +145,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
 
-Cannot cast `o` to `A` because: [incompatible-type]
+Cannot cast `o` to `A<number>` because: [incompatible-type]
  - Either in property `value`: `string` [1] is incompatible with `number` [2].
  - Or in property `tag`: `1` [3] is incompatible with `2` [4].
 
@@ -170,7 +170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
 
-Cannot cast `o` to `A` because: [incompatible-type]
+Cannot cast `o` to `A<number>` because: [incompatible-type]
  - Either in property `tag`: `2` [1] is incompatible with `1` [2].
  - Or in property `value`: `string` [3] is incompatible with `number` [4].
 
@@ -195,7 +195,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- distribute.js:15:1
 
-Cannot cast `maybeStr` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `maybeStr` to `string` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    distribute.js:15:1
    15| maybeStr as string; // error - ?string not <: string
@@ -212,7 +212,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- distribute.js:15:1
 
-Cannot cast `maybeStr` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `maybeStr` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    distribute.js:15:1
    15| maybeStr as string; // error - ?string not <: string
@@ -229,7 +229,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- distribute.js:26:1
 
-Cannot cast `plainMaybe` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `plainMaybe` to `string` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    distribute.js:26:1
    26| plainMaybe as string; // error - ?string not <: string
@@ -246,7 +246,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- distribute.js:26:1
 
-Cannot cast `plainMaybe` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `plainMaybe` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    distribute.js:26:1
    26| plainMaybe as string; // error - ?string not <: string

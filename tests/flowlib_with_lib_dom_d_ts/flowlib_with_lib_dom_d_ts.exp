@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:15:1
 
-Cannot cast `elements[index]` to number because `Element` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `elements[index]` to `number` because `Element` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:15:1
    15| elements[index] as number; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
-Cannot cast `htmlElements[index]` to number because `HTMLElement` [1] is incompatible with `number` [2].
+Cannot cast `htmlElements[index]` to `number` because `HTMLElement` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:16:1
@@ -35,7 +35,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:1
 
-Cannot cast `element.align` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `element.align` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:31:1
       31| element.align as number; // ERROR
@@ -52,7 +52,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:1
 
-Cannot cast `promise` to `Promise` because in type argument `R` [1]: `HTMLDivElement` [2] is incompatible with
+Cannot cast `promise` to `Promise<string>` because in type argument `R` [1]: `HTMLDivElement` [2] is incompatible with
 `string` [3]. [incompatible-type]
 
    test.js:32:1

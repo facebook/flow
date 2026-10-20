@@ -569,7 +569,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- exact.js:6:3
 
-Cannot cast `x` to `X` because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
+Cannot cast `x` to `$Exact<X>` because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    exact.js:6:3
    6|   x as $Exact<X>; // nope
@@ -586,7 +586,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- exact.js:7:16
 
-Cannot cast `42` to `X` because `{}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `42` to `$Exact<X>` because `{}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exact.js:7:16
    7|   42 as any as {} as $Exact<X>; // nope
@@ -600,7 +600,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- intersection.js:8:3
 
-Cannot cast `x` to intersection type because: [incompatible-type]
+Cannot cast `x` to `number & string & boolean` because: [incompatible-type]
  - Either `number` [1] is incompatible with `boolean` [2].
  - Or `string` [1] is incompatible with `boolean` [2].
 
@@ -653,7 +653,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:20:5
 
-Cannot cast `x` to union type because: [incompatible-type]
+Cannot cast `x` to `null | void` because: [incompatible-type]
  - Either `number` [1] is incompatible with `null` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -675,7 +675,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:31:5
 
-Cannot cast `y` to union type because: [incompatible-type]
+Cannot cast `y` to `null | void` because: [incompatible-type]
  - Either `number` [1] is incompatible with `null` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -731,7 +731,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:44:5
 
-Cannot cast `z` to union type because: [incompatible-type]
+Cannot cast `z` to `null | void` because: [incompatible-type]
  - Either `number` [1] is incompatible with `null` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -770,7 +770,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:55:5
 
-Cannot cast `xu` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `xu` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    maybe.js:55:5
    55|     xu as void; // nope
@@ -787,7 +787,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:59:3
 
-Cannot cast `yu` to union type because: [incompatible-type]
+Cannot cast `yu` to `void | number` because: [incompatible-type]
  - Either `null` [1] is incompatible with `void` [2].
  - Or `null` [1] is incompatible with `number` [3].
 
@@ -829,7 +829,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:61:3
 
-Cannot cast `yu` to union type because: [incompatible-type]
+Cannot cast `yu` to `Y | X` because: [incompatible-type]
  - Either `void` [1] is incompatible with `empty` [2].
  - Or `void` [1] is incompatible with `empty` [3].
 
@@ -851,7 +851,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:67:5
 
-Cannot cast `yu` to union type because: [incompatible-type]
+Cannot cast `yu` to `null | void` because: [incompatible-type]
  - Either `number` [1] is incompatible with `null` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -924,7 +924,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:81:5
 
-Cannot cast `zu` to union type because: [incompatible-type]
+Cannot cast `zu` to `null | void` because: [incompatible-type]
  - Either `number` [1] is incompatible with `null` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -946,7 +946,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:88:3
 
-Cannot cast `b.x` to union type because: [incompatible-type]
+Cannot cast `b.x` to `Y | void` because: [incompatible-type]
  - Either `number` [1] is incompatible with `empty` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -971,7 +971,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:94:3
 
-Cannot cast `c` to union type because: [incompatible-type]
+Cannot cast `c` to `null | void` because: [incompatible-type]
  - Either `number` [1] is incompatible with `null` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -1209,8 +1209,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- react.js:13:3
 
-Cannot cast `a` to `React.ComponentType` because in type argument `P` [1]: `empty` [2] is incompatible with
-`{a: number, ...}` [3]. [incompatible-type]
+Cannot cast `a` to `React.ComponentType<{a: number, ...}>` because in type argument `P` [1]: `empty` [2] is incompatible
+with `{a: number, ...}` [3]. [incompatible-type]
 
    react.js:13:3
     13|   a as React.ComponentType<{a: number, ...}>; // nope, contravariance
@@ -1230,8 +1230,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- react.js:14:3
 
-Cannot cast `b` to `React.Component` because in type argument `Props` [1]: `{readonly a: number, ...}` [2] is
-incompatible with `empty` [3]. [incompatible-type]
+Cannot cast `b` to `Component<P>` because in type argument `Props` [1]: `{readonly a: number, ...}` [2] is incompatible
+with `empty` [3]. [incompatible-type]
 
    react.js:14:3
     14|   b as React.Component<P>; // nope
@@ -1274,7 +1274,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:11:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:11:5
    11|     x as string; // nope
@@ -1291,7 +1291,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:13:3
 
-Cannot cast `x` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinements.js:13:3
    13|   x as number; // nope
@@ -1308,7 +1308,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:18:5
 
-Cannot cast `x` to string because `C` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `C` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:18:5
    18|     x as string; // nope
@@ -1342,7 +1342,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ rest.js:4:3
 
-Cannot cast `x` to `Omit` because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `Omit<{...X, ...Y, ...}, keyof Y>` because `{...}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    rest.js:4:3
    4|   x as Omit<{...X, ...Y, ...}, keyof Y>; // nope
@@ -1359,7 +1360,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ rest.js:5:3
 
-Cannot cast `y` to `Omit` because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y` to `Omit<{...X, ...Y, ...}, keyof Y>` because `{...}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    rest.js:5:3
    5|   y as Omit<{...X, ...Y, ...}, keyof Y>; // nope
@@ -1376,8 +1378,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:10:3
 
-Cannot cast `rest` to object type because property `x` is missing in `{...}` [1] but exists in `{x: number, ...}` [2].
-[incompatible-type]
+Cannot cast `rest` to `{...X, ...Y, ...}` because property `x` is missing in `{...}` [1] but exists in
+`{x: number, ...}` [2]. [incompatible-type]
 
    rest.js:10:3
    10|   rest as {...X, ...Y, ...}; //no, because x is missing
@@ -1394,7 +1396,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:12:3
 
-Cannot cast `rest` to object type because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `rest` to `{...X, ...}` because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    rest.js:12:3
    12|   rest as {...X, ...}; // no, because X's props could have been overwritten
@@ -1411,7 +1413,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spreads.js:4:4
 
-Cannot cast object literal to object type because object literal [1] is incompatible with `empty` [2].
+Cannot cast object literal to `{...X, ...}` because object literal [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    spreads.js:4:4
@@ -1426,7 +1428,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spreads.js:6:4
 
-Cannot cast object literal to object type because object literal [1] is incompatible with `empty` [2].
+Cannot cast object literal to `{...Y, ...X, ...}` because object literal [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    spreads.js:6:4
@@ -1441,7 +1443,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spreads.js:7:4
 
-Cannot cast object literal to object type because object literal [1] is incompatible with `empty` [2].
+Cannot cast object literal to `{...X, ...Y, ...}` because object literal [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    spreads.js:7:4
@@ -1456,7 +1458,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:11:4
 
-Cannot cast object literal to object type because object literal [1] is incompatible with `empty` [2].
+Cannot cast object literal to `{...X, ...Z, ...Y, ...}` because object literal [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    spreads.js:11:4
@@ -1471,7 +1473,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:24:3
 
-Cannot cast `x` to object type because `unknown` [1] is incompatible with `{...}` [2]. [incompatible-type]
+Cannot cast `x` to `{...X, ...}` because `unknown` [1] is incompatible with `{...}` [2]. [incompatible-type]
 
    spreads.js:24:3
    24|   x as {...X, ...}; // nope
@@ -1522,7 +1524,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:53:3
 
-Cannot cast `x` to object type because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `{...X & Y, ...}` because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    spreads.js:53:3
    53|   x as {...X & Y, ...}; // nope
@@ -1642,7 +1644,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:4:3
 
-Cannot cast `x` to union type because: [incompatible-type]
+Cannot cast `x` to `number | string` because: [incompatible-type]
  - Either `boolean` [1] is incompatible with `number` [2].
  - Or `boolean` [1] is incompatible with `string` [3].
 
@@ -1664,7 +1666,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:3
 
-Cannot cast `x` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    union.js:9:3
    9|   x as number; // nope

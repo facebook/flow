@@ -189,7 +189,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- error_messages.js:5:1
 
-Cannot cast `w` to null because `{a: number, b?: number, c: number, ...}` [1] is incompatible with `null` [2].
+Cannot cast `w` to `null` because `{a: number, b?: number, c: number, ...}` [1] is incompatible with `null` [2].
 [incompatible-type]
 
    error_messages.js:5:1
@@ -207,7 +207,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- error_messages.js:9:1
 
-Cannot cast `x` to null because `{a: number, b?: number, c: number, ...}` [1] is incompatible with `null` [2].
+Cannot cast `x` to `null` because `{a: number, b?: number, c: number, ...}` [1] is incompatible with `null` [2].
 [incompatible-type]
 
    error_messages.js:9:1
@@ -225,7 +225,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_messages.js:13:1
 
-Cannot cast `y` to null because `{a: number, b?: number, ...}` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `y` to `null` because `{a: number, b?: number, ...}` [1] is incompatible with `null` [2].
+[incompatible-type]
 
    error_messages.js:13:1
    13| y as null; // Error
@@ -242,7 +243,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_messages.js:17:1
 
-Cannot cast `z` to null because `{a: string, b?: number, ...}` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `z` to `null` because `{a: string, b?: number, ...}` [1] is incompatible with `null` [2].
+[incompatible-type]
 
    error_messages.js:17:1
    17| z as null; // Error
@@ -259,7 +261,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_messages.js:23:1
 
-Cannot cast `a` to null because `{a: number, b?: number, c: number, ...}` [1] is incompatible with `null` [2].
+Cannot cast `a` to `null` because `{a: number, b?: number, c: number, ...}` [1] is incompatible with `null` [2].
 [incompatible-type]
 
    error_messages.js:23:1
@@ -277,7 +279,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_messages.js:27:1
 
-Cannot cast `b` to null because `{a: number, b?: number, c: number, ...}` [1] is incompatible with `null` [2].
+Cannot cast `b` to `null` because `{a: number, b?: number, c: number, ...}` [1] is incompatible with `null` [2].
 [incompatible-type]
 
    error_messages.js:27:1
@@ -295,7 +297,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_messages.js:31:1
 
-Cannot cast `c` to null because `{a: number, b?: number, ...}` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `c` to `null` because `{a: number, b?: number, ...}` [1] is incompatible with `null` [2].
+[incompatible-type]
 
    error_messages.js:31:1
    31| c as null; // Error
@@ -312,7 +315,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_messages.js:35:1
 
-Cannot cast `d` to null because `{a: string, b?: number, ...}` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `d` to `null` because `{a: string, b?: number, ...}` [1] is incompatible with `null` [2].
+[incompatible-type]
 
    error_messages.js:35:1
    35| d as null; // Error

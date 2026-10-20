@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- importer.js:20:1
 
-Cannot cast `prototypeOnly.instanceProp` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `prototypeOnly.instanceProp` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    importer.js:20:1

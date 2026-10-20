@@ -42,7 +42,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- import_dynamic_dep.js:3:3
 
-Cannot cast `y` to empty because `{readonly default: number}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y` to `empty` because `{readonly default: number}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    import_dynamic_dep.js:3:3
    3|   y as empty; // error: number ~> empty
@@ -58,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ test-multiple-export-2.js:4:1
 
-Cannot cast `a.f` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `a.f` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test-multiple-export-2.js:4:1
    4| a.f as number;

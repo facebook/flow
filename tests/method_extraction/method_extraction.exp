@@ -40,7 +40,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:17:3
 
-Cannot cast `y(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `y(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructors.js:17:3
    17|   y('value') as string; // ERROR - number is incompatible with string

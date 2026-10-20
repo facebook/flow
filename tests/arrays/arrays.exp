@@ -136,7 +136,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:67:1
 
-Cannot cast array literal to array type because in array element: `number` [1] is incompatible with `string` [2].
+Cannot cast array literal to `Array<string>` because in array element: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    spread.js:67:1
@@ -154,7 +154,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- subtyping.js:5:3
 
-Cannot cast `arr` to array type because in array element: `Dog` [1] is not exactly the same as `Animal` [2].
+Cannot cast `arr` to `Array<Animal>` because in array element: `Dog` [1] is not exactly the same as `Animal` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -183,7 +183,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:10:3
 
-Cannot cast `arr` to array type because in array element: `{foo: string, ...}` [1] is not exactly the same as
+Cannot cast `arr` to `Array<{...}>` because in array element: `{foo: string, ...}` [1] is not exactly the same as
 `{...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -212,7 +212,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:15:3
 
-Cannot cast `arr` to array type because in array element: `{foo: string}` [1] is not exactly the same as `{}` [2].
+Cannot cast `arr` to `Array<{}>` because in array element: `{foo: string}` [1] is not exactly the same as `{}` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,

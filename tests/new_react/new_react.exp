@@ -387,7 +387,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:2
 
-Cannot cast function to partial `State` because inexact `() => void` [1] is incompatible with exact
+Cannot cast function to `Partial<State>` because inexact `() => void` [1] is incompatible with exact
 `{bar?: number, foo?: number}` [2]. [incompatible-exact]
 
    state6.js:45:2

@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ call.js:2:1
 
-Cannot cast `y` to object type because `{[string]: boolean}` [1] is incompatible with `Function` [2].
+Cannot cast `y` to `{(number): string, ...}` because `{[string]: boolean}` [1] is incompatible with `Function` [2].
 [incompatible-type]
 
    call.js:2:1
@@ -86,8 +86,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ call.js:2:1
 
-Cannot cast `y` to object type because a call signature declaring the expected parameter / return type is missing in
-`{[string]: boolean}` [1] but exists in `{(number): string, ...}` [2]. [incompatible-type]
+Cannot cast `y` to `{(number): string, ...}` because a call signature declaring the expected parameter / return type is
+missing in `{[string]: boolean}` [1] but exists in `{(number): string, ...}` [2]. [incompatible-type]
 
    call.js:2:1
    2| y as {(number): string, ...};

@@ -53,7 +53,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:20:1
 
-Cannot cast `newVal4` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `newVal4` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    error.js:20:1
    20| newVal4 as string; // The error should point here.
@@ -70,8 +70,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_position.js:11:1
 
-Cannot cast `foo` to `typeof bar` because in the first parameter: property `x` is extra in `{readonly x?: any}` [1] but
-missing in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `foo` to `<TValue>(props: Props2<TValue>) => null` because in the first parameter: property `x` is extra in
+`{readonly x?: any}` [1] but missing in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    error_position.js:11:1
    11| foo as typeof bar;
@@ -117,7 +117,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- inout.js:7:1
 
-Cannot cast `x` to `C` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3]. [incompatible-type]
+Cannot cast `x` to `C<A>` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3]. [incompatible-type]
 
    inout.js:7:1
    7| x as C<A>; // error: A ~> B in default-expanded type

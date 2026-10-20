@@ -1,7 +1,7 @@
 === block 1 ===
 Error ------------------------------------------------------------------ -:10:3
 
-Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `value` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:10:3
    10|   value as number; // ERROR: value is now a string
@@ -21,7 +21,7 @@ Found 1 error
 === block 2 ===
 Error ------------------------------------------------------------------ -:11:3
 
-Cannot cast `name` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+Cannot cast `name` to `null` because `string` [1] is incompatible with `null` [2]. [incompatible-type]
 
    -:11:3
    11|   name as null; // ERROR
@@ -110,7 +110,7 @@ No errors!
 === block 5 ===
 Error ------------------------------------------------------------------- -:7:3
 
-Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:7:3
    7|   value as string; // ERROR: this call did not narrow value
@@ -130,7 +130,7 @@ Found 1 error
 === block 6 ===
 Error ------------------------------------------------------------------ -:14:3
 
-Cannot cast `message.text` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `message.text` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:14:3
    14|   message.text as number; // ERROR: text is a string

@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:34:3
 
-Cannot cast `exact` to object type because an index signature declaring the expected key / value type is read-only in
-`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
+Cannot cast `exact` to `{[string]: number}` because an index signature declaring the expected key / value type is
+read-only in `{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:34:3
    34|   exact as {[string]: number}; // ERROR
@@ -18,8 +18,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:37:3
 
-Cannot cast `readonly` to object type because an index signature declaring the expected key / value type is read-only in
-`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
+Cannot cast `readonly` to `{[string]: number}` because an index signature declaring the expected key / value type is
+read-only in `{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:37:3
    37|   readonly as {[string]: number}; // ERROR
@@ -36,8 +36,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:40:3
 
-Cannot cast `partial` to object type because an index signature declaring the expected key / value type is read-only in
-`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
+Cannot cast `partial` to `{[string]: number}` because an index signature declaring the expected key / value type is
+read-only in `{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:40:3
    40|   partial as {[string]: number}; // ERROR
@@ -54,8 +54,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:43:3
 
-Cannot cast `required` to object type because an index signature declaring the expected key / value type is read-only in
-`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
+Cannot cast `required` to `{[string]: number}` because an index signature declaring the expected key / value type is
+read-only in `{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:43:3
    43|   required as {[string]: number}; // ERROR
@@ -72,8 +72,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:46:3
 
-Cannot cast `omit` to object type because an index signature declaring the expected key / value type is read-only in
-`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
+Cannot cast `omit` to `{[string]: number}` because an index signature declaring the expected key / value type is
+read-only in `{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:46:3
    46|   omit as {[string]: number}; // ERROR
@@ -90,8 +90,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:49:3
 
-Cannot cast `mapped` to object type because an index signature declaring the expected key / value type is read-only in
-`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
+Cannot cast `mapped` to `{[string]: number}` because an index signature declaring the expected key / value type is
+read-only in `{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:49:3
    49|   mapped as {[string]: number}; // ERROR
@@ -108,8 +108,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:55:3
 
-Cannot cast `exact` to object type because an index signature declaring the expected key / value type is write-only in
-`{writeonly [string]: unknown}` [1] but readable in `{[string]: unknown}` [2]. [incompatible-variance]
+Cannot cast `exact` to `{[string]: unknown}` because an index signature declaring the expected key / value type is
+write-only in `{writeonly [string]: unknown}` [1] but readable in `{[string]: unknown}` [2]. [incompatible-variance]
 
    dict_polarity.js:55:3
    55|   exact as {[string]: unknown}; // ERROR
@@ -126,8 +126,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:61:3
 
-Cannot cast `partial` to object type because an index signature declaring the expected key / value type is write-only in
-`{writeonly [string]: unknown}` [1] but readable in `{[string]: unknown}` [2]. [incompatible-variance]
+Cannot cast `partial` to `{[string]: unknown}` because an index signature declaring the expected key / value type is
+write-only in `{writeonly [string]: unknown}` [1] but readable in `{[string]: unknown}` [2]. [incompatible-variance]
 
    dict_polarity.js:61:3
    61|   partial as {[string]: unknown}; // ERROR
@@ -144,8 +144,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:64:3
 
-Cannot cast `required` to object type because an index signature declaring the expected key / value type is write-only
-in `{writeonly [string]: unknown}` [1] but readable in `{[string]: unknown}` [2]. [incompatible-variance]
+Cannot cast `required` to `{[string]: unknown}` because an index signature declaring the expected key / value type is
+write-only in `{writeonly [string]: unknown}` [1] but readable in `{[string]: unknown}` [2]. [incompatible-variance]
 
    dict_polarity.js:64:3
    64|   required as {[string]: unknown}; // ERROR
@@ -162,8 +162,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:67:3
 
-Cannot cast `omit` to object type because an index signature declaring the expected key / value type is write-only in
-`{writeonly [string]: unknown}` [1] but readable in `{[string]: unknown}` [2]. [incompatible-variance]
+Cannot cast `omit` to `{[string]: unknown}` because an index signature declaring the expected key / value type is
+write-only in `{writeonly [string]: unknown}` [1] but readable in `{[string]: unknown}` [2]. [incompatible-variance]
 
    dict_polarity.js:67:3
    67|   omit as {[string]: unknown}; // ERROR
@@ -180,8 +180,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- dict_polarity.js:70:3
 
-Cannot cast `mapped` to object type because an index signature declaring the expected key / value type is write-only in
-`{writeonly [string]: number}` [1] but readable in `{[string]: number}` [2]. [incompatible-variance]
+Cannot cast `mapped` to `{[string]: number}` because an index signature declaring the expected key / value type is
+write-only in `{writeonly [string]: number}` [1] but readable in `{[string]: number}` [2]. [incompatible-variance]
 
    dict_polarity.js:70:3
    70|   mapped as {[string]: number}; // ERROR

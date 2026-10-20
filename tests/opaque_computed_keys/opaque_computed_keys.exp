@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- defs.js:13:1
 
-Cannot cast `obj` to object type because property `other` is missing in object literal [1] but exists in
+Cannot cast `obj` to `{other: string}` because property `other` is missing in object literal [1] but exists in
 `{other: string}` [2]. [incompatible-type]
 
    defs.js:13:1
@@ -18,7 +18,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- defs.js:13:1
 
-Cannot cast `obj` to object type because property `special` is extra in object literal [1] but missing in
+Cannot cast `obj` to `{other: string}` because property `special` is extra in object literal [1] but missing in
 `{other: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    defs.js:13:1
@@ -36,7 +36,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ main.js:9:1
 
-Cannot cast `obj` to object type because in the indexer property's key: `Op` [1] is not exactly the same as
+Cannot cast `obj` to `{[string]: string}` because in the indexer property's key: `Op` [1] is not exactly the same as
 `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -65,8 +65,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:10:1
 
-Cannot cast `obj` to object type because indexed object literal [1] is incompatible with exact `{special: string}` [2].
-[incompatible-indexer]
+Cannot cast `obj` to `{special: string}` because indexed object literal [1] is incompatible with exact
+`{special: string}` [2]. [incompatible-indexer]
 
    main.js:10:1
    10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
@@ -83,8 +83,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:10:1
 
-Cannot cast `obj` to object type because in the indexer property's key: `"special"` [1] is incompatible with `Op` [2].
-[incompatible-type]
+Cannot cast `obj` to `{special: string}` because in the indexer property's key: `"special"` [1] is incompatible with
+`Op` [2]. [incompatible-type]
 
    main.js:10:1
    10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value

@@ -132,7 +132,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:32:1
 
-Cannot cast `a.foo` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `a.foo` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:32:1
    32| a.foo as number; // Error, foo does not appear in all branches
@@ -146,7 +146,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:33:1
 
-Cannot cast `a.bar` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `a.bar` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:33:1
    33| a.bar as number; // Error, bar does not appear in all branches
@@ -160,7 +160,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:34:1
 
-Cannot cast `a.baz` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `a.baz` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:34:1
    34| a.baz as number; // Error, baz does not appear in all branches
@@ -174,7 +174,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:35:1
 
-Cannot cast `a.qux` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `a.qux` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:35:1
    35| a.qux as number; // Error, qux does not appear in all branches
@@ -188,7 +188,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:62:1
 
-Cannot cast `b.foo` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `b.foo` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:62:1
    62| b.foo as number; // Error, foo does not appear in all branches
@@ -202,7 +202,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:63:1
 
-Cannot cast `b.bar` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `b.bar` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:63:1
    63| b.bar as number; // Error, bar does not appear in all branches
@@ -216,7 +216,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:64:1
 
-Cannot cast `b.baz` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `b.baz` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:64:1
    64| b.baz as number; // Error, baz does not appear in all branches
@@ -230,7 +230,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:65:1
 
-Cannot cast `b.qux` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `b.qux` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:65:1
    65| b.qux as number; // Error, qux does not appear in all branches
@@ -328,7 +328,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:131:1
 
-Cannot cast `optional_spread.foo` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `optional_spread.foo` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:131:1
    131| optional_spread.foo as number; // Error, foo does not appear in all branches, might be undefined
@@ -359,7 +359,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:132:1
 
-Cannot cast `optional_spread.bar` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `optional_spread.bar` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:132:1
    132| optional_spread.bar as number; // Error, bar does not appear in all branches, might be undefined
@@ -405,7 +405,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:133:1
 
-Cannot cast `optional_spread.baz` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `optional_spread.baz` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:133:1
    133| optional_spread.baz as number; // Error, baz does not appear in all branches, might be undefined
@@ -451,7 +451,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:134:1
 
-Cannot cast `optional_spread.qux` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `optional_spread.qux` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_widening.js:134:1
    134| optional_spread.qux as number; // Error, qux does not appear in all branches, might be undefined
@@ -482,7 +482,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:193:1
 
-Cannot cast `indexer_spread2.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.foo` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:193:1
    193| indexer_spread2.foo as string; // Error, number ~> string
@@ -499,7 +500,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:193:1
 
-Cannot cast `indexer_spread2.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.foo` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:193:1
    193| indexer_spread2.foo as string; // Error, number ~> string
@@ -516,7 +518,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:193:1
 
-Cannot cast `indexer_spread2.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.foo` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:193:1
    193| indexer_spread2.foo as string; // Error, number ~> string
@@ -533,7 +536,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:193:1
 
-Cannot cast `indexer_spread2.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.foo` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:193:1
    193| indexer_spread2.foo as string; // Error, number ~> string
@@ -550,7 +554,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:194:1
 
-Cannot cast `indexer_spread2.bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.bar` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:194:1
    194| indexer_spread2.bar as string; // Error, possibly number or undefined
@@ -567,7 +572,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:194:1
 
-Cannot cast `indexer_spread2.bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.bar` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:194:1
    194| indexer_spread2.bar as string; // Error, possibly number or undefined
@@ -584,7 +590,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:194:1
 
-Cannot cast `indexer_spread2.bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.bar` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:194:1
    194| indexer_spread2.bar as string; // Error, possibly number or undefined
@@ -601,7 +608,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:195:1
 
-Cannot cast `indexer_spread2.baz` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.baz` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:195:1
    195| indexer_spread2.baz as string; // Error, possibly number or undefined
@@ -618,7 +626,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:195:1
 
-Cannot cast `indexer_spread2.baz` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.baz` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:195:1
    195| indexer_spread2.baz as string; // Error, possibly number or undefined
@@ -635,7 +644,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:195:1
 
-Cannot cast `indexer_spread2.baz` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.baz` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:195:1
    195| indexer_spread2.baz as string; // Error, possibly number or undefined
@@ -652,7 +662,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:196:1
 
-Cannot cast `indexer_spread2.qux` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.qux` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:196:1
    196| indexer_spread2.qux as string; // Error, Possibly number or undefined
@@ -669,7 +680,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:196:1
 
-Cannot cast `indexer_spread2.qux` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.qux` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:196:1
    196| indexer_spread2.qux as string; // Error, Possibly number or undefined
@@ -686,7 +698,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:196:1
 
-Cannot cast `indexer_spread2.qux` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `indexer_spread2.qux` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    type_widening.js:196:1
    196| indexer_spread2.qux as string; // Error, Possibly number or undefined
@@ -703,7 +716,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type_widening.js:216:1
 
-Cannot cast `indexer_on_second_spread.foo` to number because `string` [1] is incompatible with `number` [2].
+Cannot cast `indexer_on_second_spread.foo` to `number` because `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    type_widening.js:216:1

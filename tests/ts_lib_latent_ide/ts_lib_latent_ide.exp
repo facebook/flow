@@ -65,7 +65,7 @@ Cannot resolve name `IdeG`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:3:1
 
-Cannot cast `ideValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `ideValue` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use.js:3:1
    3| ideValue as number;
@@ -166,7 +166,7 @@ Cannot resolve name `IdeG`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------- use.js:3:1
 
-Cannot cast `ideValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `ideValue` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use.js:3:1
    3| ideValue as number;

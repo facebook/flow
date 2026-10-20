@@ -17,8 +17,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- regexp.js:5:1
 
-Cannot cast `regExp[Symbol.matchAll]` to function type because in the `this` parameter: `RegExp` [1] is incompatible
-with `unknown`. [incompatible-type]
+Cannot cast `regExp[Symbol.matchAll]` to `(str: string) => Iterator<RegExp$matchResult>` because in the `this`
+parameter: `RegExp` [1] is incompatible with `unknown`. [incompatible-type]
 
    regexp.js:5:1
       5| regExp[Symbol.matchAll] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp`
@@ -32,8 +32,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- regexp.js:13:1
 
-Cannot cast `matches` to `RegExpStringIterator` because in type argument `T` [1]: `null` [2] is incompatible with
-`RegExpExecArray` [3]. [incompatible-type]
+Cannot cast `matches` to `RegExpStringIterator<RegExpMatchArray | null>` because in type argument `T` [1]: `null` [2] is
+incompatible with `RegExpExecArray` [3]. [incompatible-type]
 
    regexp.js:13:1
    13| matches as RegExpStringIterator<RegExpMatchArray | null>; // error: invariant
@@ -53,8 +53,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- regexp.js:14:1
 
-Cannot cast `matches` to `RegExpStringIterator` because in type argument `T` [1]: property `index` (did you mean
-`indexOf`?) is missing in `Array<string>` [2] but exists in `RegExpMatchArray` [3]. [incompatible-type]
+Cannot cast `matches` to `RegExpStringIterator<Array<string>>` because in type argument `T` [1]: property `index` (did
+you mean `indexOf`?) is missing in `Array<string>` [2] but exists in `RegExpMatchArray` [3]. [incompatible-type]
 
    regexp.js:14:1
    14| matches as RegExpStringIterator<Array<string>>; // error: invariant, so `Array<string>` needs `index` and `input`
@@ -74,8 +74,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- regexp.js:14:1
 
-Cannot cast `matches` to `RegExpStringIterator` because in type argument `T` [1]: property `input` is missing in
-`Array<string>` [2] but exists in `RegExpMatchArray` [3]. [incompatible-type]
+Cannot cast `matches` to `RegExpStringIterator<Array<string>>` because in type argument `T` [1]: property `input` is
+missing in `Array<string>` [2] but exists in `RegExpMatchArray` [3]. [incompatible-type]
 
    regexp.js:14:1
    14| matches as RegExpStringIterator<Array<string>>; // error: invariant, so `Array<string>` needs `index` and `input`

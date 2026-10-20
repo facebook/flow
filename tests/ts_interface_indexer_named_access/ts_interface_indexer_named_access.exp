@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------- annotation_consumer.js:5:1
 
-Cannot cast `tsRead` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `tsRead` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    annotation_consumer.js:5:1
    5| tsRead as string; // ERROR: the indexer value is a number
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- annotation_consumer.js:9:1
 
-Cannot cast `alias` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `alias` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    annotation_consumer.js:9:1
    9| alias as string; // ERROR: the indexer value is a number
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- annotation_consumer.js:16:1
 
-Cannot cast `flowReadInTs` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `flowReadInTs` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    annotation_consumer.js:16:1
    16| flowReadInTs as string; // ERROR: the indexer value is a number
@@ -51,7 +51,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- annotation_consumer.js:19:1
 
-Cannot cast `aliasInTs` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `aliasInTs` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    annotation_consumer.js:19:1
    19| aliasInTs as string; // ERROR: the indexer value is a number
@@ -82,7 +82,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- consumer.js:6:1
 
-Cannot cast `tsValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `tsValue` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:6:1
    6| tsValue as string; // ERROR: the indexer value is a number
@@ -113,7 +113,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:16:1
 
-Cannot cast `flowValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `flowValue` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:16:1
    16| flowValue as string; // ERROR: the indexer value is a number
@@ -160,7 +160,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:32:1
 
-Cannot cast `inheritedFlowValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `inheritedFlowValue` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    consumer.js:32:1
    32| inheritedFlowValue as string; // ERROR: inherited indexer value is a number
@@ -254,7 +254,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- ts_consumer.ts:7:1
 
-Cannot cast `flowValueInTs` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `flowValueInTs` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    ts_consumer.ts:7:1
    7| flowValueInTs as string; // ERROR: the indexer value is a number
@@ -285,7 +285,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ typescript.ts:9:1
 
-Cannot cast `internalValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `internalValue` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    typescript.ts:9:1
    9| internalValue as string; // ERROR: the indexer value is a number
@@ -317,7 +317,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- typescript.ts:27:1
 
-Cannot cast `inheritedValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `inheritedValue` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    typescript.ts:27:1
    27| inheritedValue as string; // ERROR: inherited indexer value is a number

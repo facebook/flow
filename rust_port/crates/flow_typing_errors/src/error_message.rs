@@ -6853,6 +6853,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         ) -> VirtualUseOp<L> {
             match use_op {
                 VirtualUseOp::Op(root) => match root.as_ref() {
+                    VirtualRootUseOp::Cast {
+                        lower,
+                        upper: box upper,
+                    } => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Cast {
+                        lower: lower.dupe(),
+                        upper: Box::new(f(upper.clone())),
+                    })),
                     VirtualRootUseOp::Speculation(inner_op) => {
                         VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
                             map_use_op(f, inner_op.as_ref().clone()),

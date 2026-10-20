@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- array.js:7:1
 
-Cannot cast `x[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x[0]` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    array.js:7:1
    7| x[0] as number; // ERROR
@@ -39,7 +39,7 @@ Cannot assign `"b"` to `x[0]` because read-only arrays cannot be written to. [ca
 
 Error ---------------------------------------------------------------------------------------------------- array.js:10:1
 
-Cannot cast `x` to array type because `ReadonlyArray<string>` [1] is incompatible with `Array<string>` [2].
+Cannot cast `x` to `Array<string>` because `ReadonlyArray<string>` [1] is incompatible with `Array<string>` [2].
 [incompatible-type]
 
    array.js:10:1
@@ -79,7 +79,7 @@ Cannot assign `"b"` to `x[0]` because read-only arrays cannot be written to. [ca
 
 Error ---------------------------------------------------------------------------------------------------- array.js:42:3
 
-Cannot cast `x` to array type because `ReadonlyArray<U>` [1] is incompatible with `Array<U>` [2]. [incompatible-type]
+Cannot cast `x` to `Array<U>` because `ReadonlyArray<U>` [1] is incompatible with `Array<U>` [2]. [incompatible-type]
 
    array.js:42:3
    42|   x as Array<U>; // ERROR
@@ -96,8 +96,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:49:3
 
-Cannot cast `x` to `ReadonlyValues` because in type argument `U` [1]: `string` [2] is incompatible with `number` [3].
-[incompatible-type]
+Cannot cast `x` to `ReadonlyValues<number>` because in type argument `U` [1]: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
 
    array.js:49:3
    49|   x as ReadonlyValues<number>; // ERROR

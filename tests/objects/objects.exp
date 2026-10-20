@@ -213,8 +213,8 @@ References:
 
 Error -------------------------------------------------------------------------- different_call_prop_no_fast_path.js:8:1
 
-Cannot cast `MyThunk` to `ThunkType` because in the return value: `number` [1] is incompatible with `string` [2].
-[incompatible-type]
+Cannot cast `MyThunk` to `ThunkType<string>` because in the return value: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    different_call_prop_no_fast_path.js:8:1
    8| MyThunk as ThunkType<string>; // error: number ~> string
@@ -259,7 +259,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:6:1
 
-Cannot cast `x[123]` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x[123]` to `boolean` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    objects.js:6:1
    6| x[123] as boolean; // error, string !~> boolean
@@ -276,7 +276,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:7:1
 
-Cannot cast `x.bar` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x.bar` to `boolean` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    objects.js:7:1
    7| x.bar as boolean; // error, string !~> boolean
@@ -293,7 +293,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:8:1
 
-Cannot cast `x['123']` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `x['123']` to `boolean` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    objects.js:8:1
    8| x['123'] as boolean; // error, string !~> boolean
@@ -395,8 +395,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:18:1
 
-Cannot cast `y['hasOwnProperty']` to string because `(prop: unknown) => boolean` [1] is incompatible with `string` [2].
-[incompatible-type]
+Cannot cast `y['hasOwnProperty']` to `string` because `(prop: unknown) => boolean` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    objects.js:18:1
     18| y['hasOwnProperty'] as string; // error, prototype method is not a string

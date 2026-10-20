@@ -77,7 +77,7 @@ Cannot resolve module `SomeOtherModule`. [cannot-resolve-module]
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:1
 
-Cannot cast `min.fun()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `min.fun()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    foo/bar/nested_test.js:7:1
    7| min.fun() as string;
@@ -94,7 +94,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:1
 
-Cannot cast `corge.fun()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `corge.fun()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    foo/bar/nested_test.js:8:1
    8| corge.fun() as string;
@@ -235,7 +235,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:1
 
-Cannot cast `Implicit.fun()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `Implicit.fun()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:4:1
    4| Implicit.fun() as string;
@@ -252,7 +252,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `Flow.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `Flow.x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:8:1
    8| Flow.x as empty; // error: should be number
@@ -269,7 +269,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
-Cannot cast `NotFlowShadowed.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `NotFlowShadowed.x` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:20:1
    20| NotFlowShadowed.x as empty; // error: should be number

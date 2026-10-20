@@ -163,7 +163,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- a.js:7:1
 
-Cannot cast `require(...)` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `require(...)` to `empty` because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    a.js:7:1
    7| require('c') as empty; // error: boolean ~> empty
@@ -220,7 +220,7 @@ Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
 
 Error -------------------------------------------------------------------------------------------------------- a.js:17:1
 
-Cannot cast `require(...)` to empty because `{readonly a: number}` [1] is incompatible with `empty` [2].
+Cannot cast `require(...)` to `empty` because `{readonly a: number}` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    a.js:17:1
@@ -404,7 +404,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- a.js:7:1
 
-Cannot cast `require(...)` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `require(...)` to `empty` because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    a.js:7:1
    7| require('c') as empty; // error: boolean ~> empty
@@ -461,7 +461,7 @@ Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
 
 Error -------------------------------------------------------------------------------------------------------- a.js:17:1
 
-Cannot cast `require(...)` to empty because `{readonly a: number}` [1] is incompatible with `empty` [2].
+Cannot cast `require(...)` to `empty` because `{readonly a: number}` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    a.js:17:1

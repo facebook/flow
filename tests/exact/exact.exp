@@ -18,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_continues.js:3:8
 
-Cannot cast `any` to object type because inexact `{p: number, ...}` [1] is incompatible with exact `{p: string}` [2].
+Cannot cast `any` to `{p: string}` because inexact `{p: number, ...}` [1] is incompatible with exact `{p: string}` [2].
 [incompatible-exact]
 
    error_continues.js:3:8
@@ -33,7 +33,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error_continues.js:3:12
 
-Cannot cast `any` to object type because in property `p`: `number` [1] is not exactly the same as `string` [2].
+Cannot cast `any` to `{p: string}` because in property `p`: `number` [1] is not exactly the same as `string` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -175,9 +175,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- multiple_props.js:10:1
 
-Cannot cast `foo` to object type because property `a`, property `b`, property `c`, property `d`, and 2 others are extra
-in `{a: string, b: string, c: string, d: string, e: string, f: string}` [1] but missing in `{}` [2]. Exact objects do
-not accept extra props. [incompatible-type]
+Cannot cast `foo` to `{}` because property `a`, property `b`, property `c`, property `d`, and 2 others are extra in
+`{a: string, b: string, c: string, d: string, e: string, f: string}` [1] but missing in `{}` [2]. Exact objects do not
+accept extra props. [incompatible-type]
 
    multiple_props.js:10:1
    10| foo as {}; // error
@@ -202,7 +202,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:18:3
 
-Cannot cast `x.some` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.some` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:18:3
    18|   x.some as string; // ERROR
@@ -216,7 +216,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:19:3
 
-Cannot cast `x['some']` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x['some']` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:19:3
    19|   x['some'] as string; // ERROR
@@ -258,7 +258,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:28:3
 
-Cannot cast `some` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `some` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:28:3
    28|   some as string; // ERROR
@@ -289,7 +289,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:47:3
 
-Cannot cast `obj.some` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `obj.some` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:47:3
    47|   obj.some as string; // ERROR
@@ -303,7 +303,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:54:3
 
-Cannot cast `some` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `some` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:54:3
    54|   some as string; // ERROR
@@ -410,7 +410,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:11:1
 
-Cannot cast `u` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
+Cannot cast `u` to `{}` because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    not_object.js:11:1
    11| u as {};
@@ -427,7 +427,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:14:1
 
-Cannot cast `v` to object type because `number` [1] is incompatible with `{}` [2]. [incompatible-type]
+Cannot cast `v` to `{}` because `number` [1] is incompatible with `{}` [2]. [incompatible-type]
 
    not_object.js:14:1
    14| v as {};
@@ -444,7 +444,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:14:1
 
-Cannot cast `v` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
+Cannot cast `v` to `{}` because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    not_object.js:14:1
    14| v as {};
@@ -652,7 +652,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:3:2
 
-Cannot cast object literal to union type because property `q` is extra in object literal [1] but missing in
+Cannot cast object literal to `{p: "A"} | {p: "B"}` because property `q` is extra in object literal [1] but missing in
 `{p: "A"}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    union.js:3:2
@@ -667,7 +667,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:4:2
 
-Cannot cast object literal to union type because object literal [1] is incompatible with `empty` [2].
+Cannot cast object literal to `{p: "A"} | {p: "B"}` because object literal [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    union.js:4:2

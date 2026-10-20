@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- method.js:42:1
 
-Cannot cast `result.info.serialize(...)` to string because `null` [1] is incompatible with `string` [2].
+Cannot cast `result.info.serialize(...)` to `string` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    method.js:42:1
@@ -18,7 +18,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- method.js:42:1
 
-Cannot cast `result.info.serialize(...)` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `result.info.serialize(...)` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    method.js:42:1
@@ -36,7 +36,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- method.js:46:1
 
-Cannot cast `optionalResult?.info.serialize(...)` to string because `null` [1] is incompatible with `string` [2].
+Cannot cast `optionalResult?.info.serialize(...)` to `string` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    method.js:46:1
@@ -54,7 +54,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- method.js:46:1
 
-Cannot cast `optionalResult?.info.serialize(...)` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `optionalResult?.info.serialize(...)` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    method.js:46:1
@@ -72,7 +72,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- method.js:51:1
 
-Cannot cast `plainResult.info.serialize(...)` to string because `null` [1] is incompatible with `string` [2].
+Cannot cast `plainResult.info.serialize(...)` to `string` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    method.js:51:1
@@ -90,7 +90,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- method.js:51:1
 
-Cannot cast `plainResult.info.serialize(...)` to string because `number` [1] is incompatible with `string` [2].
+Cannot cast `plainResult.info.serialize(...)` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    method.js:51:1
@@ -108,7 +108,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- method.js:56:1
 
-Cannot cast `stringResult.info.serialize(...)` to number because `null` [1] is incompatible with `number` [2].
+Cannot cast `stringResult.info.serialize(...)` to `number` because `null` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    method.js:56:1
@@ -126,7 +126,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- method.js:56:1
 
-Cannot cast `stringResult.info.serialize(...)` to number because `"dog"` [1] is incompatible with `number` [2].
+Cannot cast `stringResult.info.serialize(...)` to `number` because `"dog"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    method.js:56:1

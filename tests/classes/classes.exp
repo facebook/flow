@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- B.js:6:1
 
-Cannot cast `b.foo` to number because `(this: B, x: number) => void` [1] is incompatible with `number` [2].
+Cannot cast `b.foo` to `number` because `(this: B, x: number) => void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    B.js:6:1
@@ -36,7 +36,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- C.js:8:1
 
-Cannot cast `c.foo` to number because `(this: C, x: string) => void` [1] is incompatible with `number` [2].
+Cannot cast `c.foo` to `number` because `(this: C, x: string) => void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    C.js:8:1
@@ -225,7 +225,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:10:1
 
-Cannot cast `C` to object type because in property `p`: `string` [1] is not exactly the same as `number` [2].
+Cannot cast `C` to `{p: number, ...}` because in property `p`: `string` [1] is not exactly the same as `number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -254,8 +254,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:13:1
 
-Cannot cast `o` to statics of `C` because `{p: number, ...}` [1] is incompatible with `Class<C>` [2].
-[incompatible-type]
+Cannot cast `o` to `Class<C>` because `{p: number, ...}` [1] is incompatible with `Class<C>` [2]. [incompatible-type]
 
    statics.js:13:1
    13| o as Class<C>; // error, object type incompatible with class type
@@ -272,7 +271,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:20:1
 
-Cannot cast `Dup1.x` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `Dup1.x` to `empty` because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    statics.js:20:1
    20| Dup1.x as empty; // function ~> empty
@@ -289,7 +288,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:27:1
 
-Cannot cast `Dup2.x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `Dup2.x` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    statics.js:27:1
    27| Dup2.x as empty; // string ~> empty

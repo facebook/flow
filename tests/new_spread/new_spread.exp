@@ -62,7 +62,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:23:1
 
-Cannot cast `o2` to object type because in property `p`: `void | T` [1] is not exactly the same as `T` [2].
+Cannot cast `o2` to `{p: T, ...}` because in property `p`: `void | T` [1] is not exactly the same as `T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -108,7 +108,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:36:1
 
-Cannot cast `o4` to object type because inexact `{p: T, ...}` [1] is incompatible with exact `{p: T}` [2].
+Cannot cast `o4` to `{p: T}` because inexact `{p: T, ...}` [1] is incompatible with exact `{p: T}` [2].
 [incompatible-exact]
 
    type.js:36:1
@@ -256,7 +256,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:74:1
 
-Cannot cast `o9` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
+Cannot cast `o9` to `{p?: T, q: U, ...}` because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -317,7 +317,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:6:1
 
-Cannot cast `o1` to object type because in property `p`: `unknown` [1] is not exactly the same as `void | T` [2].
+Cannot cast `o1` to `{p?: T, ...}` because in property `p`: `unknown` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -363,7 +363,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:12:1
 
-Cannot cast `o2` to object type because in the indexer property: `unknown` [1] is not exactly the same as `T` [2].
+Cannot cast `o2` to `{[string]: T}` because in the indexer property: `unknown` [1] is not exactly the same as `T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -409,7 +409,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:18:1
 
-Cannot cast `o3` to object type because in property `p`: `unknown` [1] is not exactly the same as `T` [2].
+Cannot cast `o3` to `{p: T, ...}` because in property `p`: `unknown` [1] is not exactly the same as `T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -452,8 +452,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- type_dict.js:5:1
 
-Cannot cast `o1` to object type because in property `p`: `U` [1] is not exactly the same as `void | T | U` [2].
-[incompatible-type]
+Cannot cast `o1` to `{[string]: T, p?: T | U}` because in property `p`: `U` [1] is not exactly the same as
+`void | T | U` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[string]: T, p: U}` [3] and `{[string]: T, p?: T | U}` [4] exactly the same
@@ -495,7 +495,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:7:3
 
-Cannot cast `x` to number because `{...}` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `{...}` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_empty.js:7:3
    7|   x as number; // Error: mixed ~> number,
@@ -527,8 +527,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:11
 
-Cannot cast `spread(...)` to object type because in property `p`: `0` [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast `spread(...)` to `{readonly p: empty, readonly q: empty}` because in property `p`: `0` [1] is incompatible
+with `empty` [2]. [incompatible-type]
 
    type_generic.js:3:11
    3| spread({p:0},{q:0}) as {readonly p:empty,readonly q:empty}; // number ~> empty (x2)
@@ -542,8 +542,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:17
 
-Cannot cast `spread(...)` to object type because in property `q`: `0` [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast `spread(...)` to `{readonly p: empty, readonly q: empty}` because in property `q`: `0` [1] is incompatible
+with `empty` [2]. [incompatible-type]
 
    type_generic.js:3:17
    3| spread({p:0},{q:0}) as {readonly p:empty,readonly q:empty}; // number ~> empty (x2)
@@ -557,8 +557,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_instance.js:6:1
 
-Cannot cast `o1` to object type because in property `p`: `number & (string | number)` [1] is not exactly the same as
-`void | number` [2]. [incompatible-type]
+Cannot cast `o1` to `{p?: number, ...}` because in property `p`: `number & (string | number)` [1] is not exactly the
+same as `void | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: number & (string | number), ...}` [3] and `{p?: number, ...}` [4] exactly the same
@@ -614,7 +614,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:7:1
 
-Cannot cast `o2.someProp` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o2.someProp` to `empty` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_mixed.js:7:1
    7| o2.someProp as empty; // Error someProp does not exist
@@ -642,7 +642,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:11:1
 
-Cannot cast `o3.a` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o3.a` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_mixed.js:11:1
    11| o3.a as empty; // Error: number ~> empty
@@ -659,7 +659,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:12:1
 
-Cannot cast `o3.b` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o3.b` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_mixed.js:12:1
    12| o3.b as empty; // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
@@ -676,7 +676,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:12:1
 
-Cannot cast `o3.b` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `o3.b` to `empty` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_mixed.js:12:1
    12| o3.b as empty; // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
@@ -762,7 +762,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:10:1
 
-Cannot cast `o1` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
+Cannot cast `o1` to `{}` because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    type_void.js:10:1
    10| o1 as {}; // error
@@ -779,7 +779,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:11:1
 
-Cannot cast `o1` to object type because property `p` is missing in `{...}` [1] but exists in `{p: T, ...}` [2].
+Cannot cast `o1` to `{p: T, ...}` because property `p` is missing in `{...}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type_void.js:11:1
@@ -797,7 +797,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:19:1
 
-Cannot cast `o2` to object type because property `p` is missing in `{}` [1] but exists in `{p: T, ...}` [2].
+Cannot cast `o2` to `{p: T, ...}` because property `p` is missing in `{}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type_void.js:19:1
@@ -830,7 +830,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:26:1
 
-Cannot cast `o3` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
+Cannot cast `o3` to `{}` because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    type_void.js:26:1
    26| o3 as {}; // error
@@ -847,7 +847,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:27:1
 
-Cannot cast `o3` to object type because property `p` is missing in `{...}` [1] but exists in `{p: T, ...}` [2].
+Cannot cast `o3` to `{p: T, ...}` because property `p` is missing in `{...}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type_void.js:27:1
@@ -865,7 +865,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:35:1
 
-Cannot cast `o4` to object type because property `p` is missing in `{}` [1] but exists in `{p: T, ...}` [2].
+Cannot cast `o4` to `{p: T, ...}` because property `p` is missing in `{}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type_void.js:35:1
@@ -930,7 +930,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:50:1
 
-Cannot cast `o6` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
+Cannot cast `o6` to `{p?: T, ...}` because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,

@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------- class_position.js:24:1
 
-Cannot cast `WrongC` to statics of `Bar` because in the return value: property `b` is missing in `Wrong` [1] but exists
-in `Bar` [2]. [incompatible-type]
+Cannot cast `WrongC` to `Class<Bar>` because in the return value: property `b` is missing in `Wrong` [1] but exists in
+`Bar` [2]. [incompatible-type]
 
    class_position.js:24:1
    24| WrongC as Class<Bar>; // ERROR: the construct signature returns Wrong, not Bar
@@ -18,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- class_position.js:42:1
 
-Cannot cast `InheritsWrongC` to statics of `Bar` because in the return value: property `b` is missing in `Wrong` [1] but
+Cannot cast `InheritsWrongC` to `Class<Bar>` because in the return value: property `b` is missing in `Wrong` [1] but
 exists in `Bar` [2]. [incompatible-type]
 
    class_position.js:42:1
@@ -36,7 +36,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- class_position.js:57:1
 
-Cannot cast `MultiC` to statics of `Bar` because: [incompatible-type]
+Cannot cast `MultiC` to `Class<Bar>` because: [incompatible-type]
  - Either in the return value: property `b` is missing in `Str` [1] but exists in `Bar` [2].
  - Or in the return value: property `b` is missing in `Num` [3] but exists in `Bar` [2].
 
@@ -58,7 +58,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- class_position.js:64:1
 
-Cannot cast `plain` to statics of `Bar` because a construct signature declaring the expected parameter / return type is
+Cannot cast `plain` to `Class<Bar>` because a construct signature declaring the expected parameter / return type is
 missing in `Plain` [1] but exists in `Class<Bar>` [2]. [incompatible-type]
 
    class_position.js:64:1
@@ -76,7 +76,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- class_position.js:69:1
 
-Cannot cast `cls` to statics of `Cls` because `Cls` [1] is incompatible with `Class<Cls>` [2]. [incompatible-type]
+Cannot cast `cls` to `Class<Cls>` because `Cls` [1] is incompatible with `Class<Cls>` [2]. [incompatible-type]
 
    class_position.js:69:1
    69| cls as Class<Cls>; // ERROR
@@ -166,7 +166,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- extends_ctor.js:86:1
 
-Cannot cast `stringBox.value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `stringBox.value` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    extends_ctor.js:86:1
    86| stringBox.value as number; // ERROR
@@ -211,7 +211,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- extends_ctor_usage.js:11:1
 
-Cannot cast `exportedStringBox.value` to number because `string` [1] is incompatible with `number` [2].
+Cannot cast `exportedStringBox.value` to `number` because `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    extends_ctor_usage.js:11:1

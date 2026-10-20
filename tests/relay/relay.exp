@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- Profile.js:21:5
 
-Cannot cast `this.props.foo` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `this.props.foo` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    Profile.js:21:5
    21|     this.props.foo as empty; // Error: number ~> empty
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Profile.js:22:5
 
-Cannot cast `this.props.user.id` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `this.props.user.id` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    Profile.js:22:5
    22|     this.props.user.id as empty; // Error: string ~> empty
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Profile.js:23:5
 
-Cannot cast `this.props.user.name` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `this.props.user.name` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    Profile.js:23:5
    23|     this.props.user.name as empty; // Error: string ~> empty
@@ -51,7 +51,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Profile.js:24:5
 
-Cannot cast `this.props.user.pic.id` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `this.props.user.pic.id` to `empty` because `string` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    Profile.js:24:5
    24|     this.props.user.pic.id as empty; // Error: string ~> empty
@@ -83,7 +84,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- ProfilePic.js:19:5
 
-Cannot cast `this.props.image.url` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `this.props.image.url` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ProfilePic.js:19:5
    19|     this.props.image.url as empty; // Error: string ~> empty

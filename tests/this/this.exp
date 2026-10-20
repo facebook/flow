@@ -206,7 +206,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- This.js:35:1
 
-Cannot cast `this` to undefined because `Object` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `this` to `void` because `Object` [1] is incompatible with `void` [2]. [incompatible-type]
 
    This.js:35:1
    35| this as void;

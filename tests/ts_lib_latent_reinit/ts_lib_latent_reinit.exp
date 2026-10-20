@@ -14,7 +14,7 @@ Found 1 error
 ======Absent to global rebuilds builtins in place======
 Error ------------------------------------------------------------------------------------------------------- use.js:1:1
 
-Cannot cast `ReinitGlobal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `ReinitGlobal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use.js:1:1
    1| ReinitGlobal as number;
@@ -63,7 +63,7 @@ Found 2 errors
 ======Invalid to global rebuilds the builtin======
 Error ------------------------------------------------------------------------------------------------------- use.js:1:1
 
-Cannot cast `ReinitGlobal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `ReinitGlobal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use.js:1:1
    1| ReinitGlobal as number;
@@ -98,7 +98,7 @@ Found 1 error
 ======Live and clean global states agree======
 Error ------------------------------------------------------------------------------------------------------- use.js:1:1
 
-Cannot cast `ReinitGlobal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `ReinitGlobal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use.js:1:1
    1| ReinitGlobal as number;
@@ -117,7 +117,7 @@ References:
 Found 1 error
 Error ------------------------------------------------------------------------------------------------------- use.js:1:1
 
-Cannot cast `ReinitGlobal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `ReinitGlobal` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use.js:1:1
    1| ReinitGlobal as number;
@@ -152,7 +152,7 @@ Found 1 error
 ======A batch can add multiple globals and an ordinary provider======
 Error ------------------------------------------------------------------------------------------------- batch-use.js:3:1
 
-Cannot cast `BatchGlobalA` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `BatchGlobalA` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    batch-use.js:3:1
    3| BatchGlobalA as number;
@@ -169,7 +169,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- batch-use.js:4:1
 
-Cannot cast `BatchGlobalB` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `BatchGlobalB` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    batch-use.js:4:1
    4| BatchGlobalB as string;
@@ -186,7 +186,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- batch-use.js:5:1
 
-Cannot cast `ordinaryValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `ordinaryValue` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    batch-use.js:5:1
    5| ordinaryValue as number;

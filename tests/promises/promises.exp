@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ all.js:11:3
 
-Cannot cast `a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    all.js:11:3
    11|   a as number;  // Error: string ~> number
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:12:3
 
-Cannot cast `b` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+Cannot cast `b` to `boolean` because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    all.js:12:3
    12|   b as boolean; // Error: number ~> boolean
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:13:3
 
-Cannot cast `c` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `c` to `string` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    all.js:13:3
    13|   c as string;  // Error: boolean ~> string
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:17:5
 
-Cannot cast `x` to undefined because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `x` to `void` because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
 
    all.js:17:5
    17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:17:5
 
-Cannot cast `x` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `x` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    all.js:17:5
    17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -85,7 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:17:5
 
-Cannot cast `x` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `x` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    all.js:17:5
    17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -168,7 +168,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:31:7
 
-Cannot cast `first.status` to empty because `"rejected"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `first.status` to `empty` because `"rejected"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    allSettled.js:31:7
    31|       first.status as empty // Error: 'rejected' case was not covered
@@ -248,7 +248,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ any.js:23:3
 
-Cannot cast `Promise.any(...)` to `Promise` because in type argument `R` [1]: `string` [2] is incompatible with
+Cannot cast `Promise.any(...)` to `Promise<number>` because in type argument `R` [1]: `string` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    any.js:23:3
@@ -312,7 +312,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- finally.js:12:1
 
-Cannot cast `p.finally(...)` to `Promise` because in type argument `R` [1]: `number` [2] is incompatible with
+Cannot cast `p.finally(...)` to `Promise<string>` because in type argument `R` [1]: `number` [2] is incompatible with
 `string` [3]. [incompatible-type]
 
    finally.js:12:1
@@ -834,7 +834,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- resolve_void.js:1:1
 
-Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1]: `void` [2] is incompatible with
+Cannot cast `Promise.resolve()` to `Promise<number>` because in type argument `R` [1]: `void` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    resolve_void.js:1:1
@@ -852,8 +852,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- resolve_void.js:3:17
 
-Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1]: `void` [2] is incompatible with
-`number` [3]. [incompatible-type]
+Cannot cast `Promise.resolve(...)` to `Promise<number>` because in type argument `R` [1]: `void` [2] is incompatible
+with `number` [3]. [incompatible-type]
 
    resolve_void.js:3:17
      3| Promise.resolve(undefined) as Promise<number>; // error
@@ -929,8 +929,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- withResolvers.js:8:1
 
-Cannot cast `promise` to `Promise` because in type argument `R` [1]: `number` [2] is incompatible with `string` [3].
-[incompatible-type]
+Cannot cast `promise` to `Promise<string>` because in type argument `R` [1]: `number` [2] is incompatible with
+`string` [3]. [incompatible-type]
 
    withResolvers.js:8:1
      8| promise as Promise<string>; // Error: number ~> string

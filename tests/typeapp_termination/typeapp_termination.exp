@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- soundness.js:8:5
 
-Cannot cast `x` to `Bak` because in type argument `T` [1]: `unknown` [2] is incompatible with `empty` [3].
+Cannot cast `x` to `Bak<empty>` because in type argument `T` [1]: `unknown` [2] is incompatible with `empty` [3].
 [incompatible-type]
 
    soundness.js:8:5
@@ -21,7 +21,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ soundness.js:13:5
 
-Cannot cast `x` to union type because: [incompatible-type]
+Cannot cast `x` to `Bak<number> | Bak<string>` because: [incompatible-type]
  - Either in property `foo`: `boolean` [1] is incompatible with `number` [2].
  - Or in property `foo`: `boolean` [1] is incompatible with `string` [3].
 

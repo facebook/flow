@@ -463,8 +463,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:29:1
 
-Cannot cast `test.call.apply(...)` to undefined because `number` [1] is incompatible with `void` [2].
-[incompatible-type]
+Cannot cast `test.call.apply(...)` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    apply.js:29:1
    29| test.call.apply(test, [0, 123, 'foo']) as void;
@@ -481,7 +480,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:34:1
 
-Cannot cast `test.bind.apply(...)` to function type because `[number]` [1] has 1 element but
+Cannot cast `test.bind.apply(...)` to `(b: number) => number` because `[number]` [1] has 1 element but
 `[a: string, b: number]` [2] has 2 elements. [invalid-tuple-arity]
 
    apply.js:34:1
@@ -1001,7 +1000,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- function.js:4:1
 
-Cannot cast `x.length` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.length` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function.js:4:1
      4| x.length as empty; // ERROR
@@ -1018,7 +1017,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- function.js:5:1
 
-Cannot cast `y.length` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y.length` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function.js:5:1
      5| y.length as empty; // ERROR
@@ -1035,7 +1034,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- function.js:7:1
 
-Cannot cast `x.name` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x.name` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function.js:7:1
     7| x.name as empty; // ERROR
@@ -1052,7 +1051,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- function.js:8:1
 
-Cannot cast `y.name` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `y.name` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function.js:8:1
     8| y.name as empty; // ERROR
@@ -1173,7 +1172,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:53:1
 
-Cannot cast `empty_rest()` to empty because `Readonly<[]>` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `empty_rest()` to `empty` because `Readonly<[]>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    rest.js:53:1
    53| empty_rest() as empty; // Error Array ~> empty
@@ -1264,7 +1263,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- rest_type.js:31:21
 
-Cannot cast `f()` to empty because `Readonly<[]>` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `f()` to `empty` because `Readonly<[]>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    rest_type.js:31:21
    31| ((f: empty_rest) => f() as empty); // Error Array ~> empty

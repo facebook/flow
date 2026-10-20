@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------- class_imports.js:8:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_imports.js:8:3
    8|   x as string; // error number ~> string
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_imports.js:13:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_imports.js:13:3
    13|   x as string; // error number ~> string
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_imports.js:19:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_imports.js:19:3
    19|   x as string; // error number ~> string
@@ -51,7 +51,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_imports.js:24:3
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_imports.js:24:3
    24|   x as string; // error number ~> string
@@ -130,7 +130,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:30:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    classes.js:30:5
    30|     x as string; // error number ~> string
@@ -147,7 +147,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:33:5
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    classes.js:33:5
    33|     x as number; // error string ~> number
@@ -266,7 +266,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:98:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    classes.js:98:5
    98|     x as string; // error number ~> string
@@ -283,7 +283,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:102:5
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    classes.js:102:5
    102|     x as number; // error string ~> number
@@ -363,7 +363,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:134:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    classes.js:134:5
    134|     x as string; // error number ~> string
@@ -1015,7 +1015,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:48:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    inferred.js:48:5
    48|     x as string; // error number ~> string
@@ -1032,7 +1032,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:50:5
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    inferred.js:50:5
    50|     x as number; // error no refinement due to one-sided type guard
@@ -1049,7 +1049,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:51:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    inferred.js:51:5
    51|     x as string; // error no refinement due to one-sided type guard
@@ -1066,8 +1066,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:54:3
 
-Cannot cast `fn` to function type because one-sided `value` [1] is incompatible with default type guard [2].
-[function-predicate]
+Cannot cast `fn` to `(value: unknown) => value is number` because one-sided `value` [1] is incompatible with default
+type guard [2]. [function-predicate]
 
    inferred.js:54:3
    54|   fn as (value: unknown) => value is number; // error one-sided incompatible with two-sided
@@ -1084,8 +1084,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:60:3
 
-Cannot cast `fn` to function type because `(value: unknown) => boolean` [1], a non-type-guard function, is incompatible
-with `(value: unknown) => implies value is number` [2], which is a type-guard function. [function-predicate]
+Cannot cast `fn` to `(value: unknown) => implies value is number` because `(value: unknown) => boolean` [1], a
+non-type-guard function, is incompatible with `(value: unknown) => implies value is number` [2], which is a type-guard
+function. [function-predicate]
 
    inferred.js:60:3
    60|   fn as (value: unknown) => implies value is number; // error non type guard
@@ -1102,8 +1103,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:61:3
 
-Cannot cast `fn` to function type because `(value: unknown) => boolean` [1], a non-type-guard function, is incompatible
-with `(value: unknown) => value is number` [2], which is a type-guard function. [function-predicate]
+Cannot cast `fn` to `(value: unknown) => value is number` because `(value: unknown) => boolean` [1], a non-type-guard
+function, is incompatible with `(value: unknown) => value is number` [2], which is a type-guard function.
+[function-predicate]
 
    inferred.js:61:3
    61|   fn as (value: unknown) => value is number; // error non type guard
@@ -1120,7 +1122,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:70:3
 
-Cannot cast `u` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `u` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    inferred.js:70:3
    70|   u as number; // error string ~> number
@@ -1137,7 +1139,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:80:3
 
-Cannot cast `u2` to number literal `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
+Cannot cast `u2` to `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
 
    inferred.js:80:3
    80|   u2 as 4; // TODO(T225771563) okay
@@ -1154,7 +1156,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:81:3
 
-Cannot cast `u2` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
+Cannot cast `u2` to `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    inferred.js:81:3
    81|   u2 as 3; // error 4 ~> 3
@@ -1171,7 +1173,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:93:3
 
-Cannot cast `u1` to number literal `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
+Cannot cast `u1` to `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
 
    inferred.js:93:3
    93|   u1 as 4; // TODO(T225771563) okay
@@ -1188,7 +1190,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:94:3
 
-Cannot cast `u1` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
+Cannot cast `u1` to `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    inferred.js:94:3
    94|   u1 as 3; // error 4 ~> 3
@@ -1205,7 +1207,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:99:3
 
-Cannot cast `u2` to number literal `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
+Cannot cast `u2` to `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
 
    inferred.js:99:3
    99|   u2 as 4; // error number ~> 4
@@ -1263,7 +1265,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:158:3
 
-Cannot cast `fn` to function type because one-sided `x` [1] is incompatible with default type guard [2].
+Cannot cast `fn` to `(x: ?number) => x is number` because one-sided `x` [1] is incompatible with default type guard [2].
 [function-predicate]
 
    inferred.js:158:3
@@ -1281,8 +1283,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:161:3
 
-Cannot cast `fn1` to `typeof fn` because in the type predicate: `null` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast `fn1` to `(x: ?number) => implies x is number` because in the type predicate: `null` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    inferred.js:161:3
    161|   fn1 as typeof fn; // error ?number ~> number
@@ -1299,8 +1301,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:161:3
 
-Cannot cast `fn1` to `typeof fn` because in the type predicate: `void` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot cast `fn1` to `(x: ?number) => implies x is number` because in the type predicate: `void` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    inferred.js:161:3
    161|   fn1 as typeof fn; // error ?number ~> number
@@ -1317,8 +1319,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:186:3
 
-Cannot cast `fn` to function type because `(x: unknown) => void | false | boolean` [1], a non-type-guard function, is
-incompatible with `(x: unknown) => implies x is unknown` [2], which is a type-guard function. [function-predicate]
+Cannot cast `fn` to `(x: unknown) => implies x is unknown` because `(x: unknown) => void | false | boolean` [1], a
+non-type-guard function, is incompatible with `(x: unknown) => implies x is unknown` [2], which is a type-guard
+function. [function-predicate]
 
    inferred.js:186:3
    186|   fn as (x: unknown) => implies x is unknown; // error non-type guard function
@@ -1335,8 +1338,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:186:3
 
-Cannot cast `fn` to function type because in the return value: `void` [1] is incompatible with `boolean` [2].
-[incompatible-type]
+Cannot cast `fn` to `(x: unknown) => implies x is unknown` because in the return value: `void` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    inferred.js:186:3
    186|   fn as (x: unknown) => implies x is unknown; // error non-type guard function
@@ -1353,7 +1356,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- intersect.js:7:5
 
-Cannot cast `x` to string literal `b` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
+Cannot cast `x` to `"b"` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    intersect.js:7:5
    7|     x as 'b'; // error 'a' ~> 'b'
@@ -1370,7 +1373,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- intersect.js:8:5
 
-Cannot cast `x` to string literal `c` because `"a"` [1] is incompatible with `"c"` [2]. [incompatible-type]
+Cannot cast `x` to `"c"` because `"a"` [1] is incompatible with `"c"` [2]. [incompatible-type]
 
    intersect.js:8:5
    8|     x as 'c'; // error 'a' ~> 'c'
@@ -1387,7 +1390,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intersect.js:19:5
 
-Cannot cast `x` to string literal `b` because `"c"` [1] is incompatible with `"b"` [2]. [incompatible-type]
+Cannot cast `x` to `"b"` because `"c"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    intersect.js:19:5
    19|     x as 'b'; // error 'c' ~> 'b'
@@ -1532,7 +1535,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:25:3
 
-Cannot cast `x` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
    invalid.js:25:3
    25|   x as number; // error no refining effect
@@ -1624,7 +1627,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:20:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    objects.js:20:5
    20|     x as string; // error number ~> string
@@ -1641,7 +1644,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:23:5
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    objects.js:23:5
    23|     x as number; // error string ~> number
@@ -1658,8 +1661,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:29:4
 
-Cannot cast `obj` to object type because in property `m` > the type predicate: `number` [1] is incompatible with
-`string` [2]. [incompatible-type]
+Cannot cast `obj` to `{m(x: unknown): x is string, ...}` because in property `m` > the type predicate: `number` [1] is
+incompatible with `string` [2]. [incompatible-type]
 
    objects.js:29:4
    29|   (obj as { // error number ~> string
@@ -1746,7 +1749,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:28:3
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    patterns_and_rest.js:28:3
    28|   x as number; // TODO error string ~> number
@@ -1777,7 +1780,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ refinement.js:7:5
 
-Cannot cast `y` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `y` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinement.js:7:5
    7|     y as string; // error number ~> string
@@ -1794,7 +1797,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:20:5
 
-Cannot cast `x1` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x1` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:20:5
    20|     x1 as number; // error string ~> number
@@ -1811,7 +1814,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:24:5
 
-Cannot cast `x2` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x2` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:24:5
    24|     x2 as number; // error string ~> number
@@ -1828,7 +1831,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:28:5
 
-Cannot cast `x3` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x3` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:28:5
    28|     x3 as number; // error string ~> number
@@ -1845,7 +1848,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:32:5
 
-Cannot cast `x4` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x4` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:32:5
    32|     x4 as number; // error string ~> number
@@ -2280,7 +2283,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:136:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinement.js:136:5
    136|     x as string; // error number ~> string
@@ -2297,7 +2300,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:139:5
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:139:5
    139|     x as number; // error string ~> number
@@ -2314,7 +2317,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:144:5
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:144:5
    144|     x as number; // error string ~> number
@@ -2331,7 +2334,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:146:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinement.js:146:5
    146|     x as string; // error string ~> number
@@ -2348,7 +2351,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:151:5
 
-Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:151:5
    151|     x as number; // error string ~> number
@@ -2365,7 +2368,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:152:5
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinement.js:152:5
    152|     x as string; // error number ~> string
@@ -2382,7 +2385,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:175:5
 
-Cannot cast `maybeNumber` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `maybeNumber` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    refinement.js:175:5
    175|     maybeNumber as empty; // error number ~> empty
@@ -2399,7 +2402,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:185:5
 
-Cannot cast `anyVal` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `anyVal` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    refinement.js:185:5
    185|     anyVal as empty; // error number ~> empty
@@ -2416,7 +2419,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:202:5
 
-Cannot cast `x` to empty because `$FbtResultBase` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `$FbtResultBase` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    refinement.js:202:5
    202|     x as empty; // error Fbt ~> empty
@@ -2433,7 +2436,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:202:5
 
-Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    refinement.js:202:5
    202|     x as empty; // error Fbt ~> empty
@@ -2475,7 +2478,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:225:5
 
-Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    refinement.js:225:5
    225|     x as empty; // error string ~> empty
@@ -2492,7 +2495,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:235:5
 
-Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinement.js:235:5
    235|     value as string; // error number ~> string
@@ -2509,7 +2512,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:237:5
 
-Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinement.js:237:5
    237|     value as string; // error number ~> string
@@ -2526,7 +2529,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:238:5
 
-Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `value` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinement.js:238:5
    238|     value as number; // error string ~> number
@@ -3124,7 +3127,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- this.js:59:5
 
-Cannot cast `b` to empty because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `b` to `empty` because `B` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    this.js:59:5
    59|     b as empty; // error - not refining else branch
@@ -3192,7 +3195,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- this.js:91:5
 
-Cannot cast `isB` to function type because in the `this` parameter: `A` [1] is incompatible with `unknown`.
+Cannot cast `isB` to `() => boolean` because in the `this` parameter: `A` [1] is incompatible with `unknown`.
 [incompatible-type]
 
    this.js:91:5
@@ -3336,7 +3339,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:143:5
 
-Cannot cast `x` to `D` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
+Cannot cast `x` to `D<string>` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    this.js:143:5
@@ -3357,7 +3360,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:152:5
 
-Cannot cast `x` to `D` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
+Cannot cast `x` to `D<string>` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    this.js:152:5
@@ -3378,7 +3381,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:157:5
 
-Cannot cast `x` to `D` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
+Cannot cast `x` to `D<string>` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    this.js:157:5
@@ -3456,7 +3459,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:213:5
 
-Cannot cast `b` to empty because `BImported` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `b` to `empty` because `BImported` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    this.js:213:5
    213|     b as empty; // error - not refining else branch
@@ -3507,7 +3510,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:238:5
 
-Cannot cast `isB` to function type because in the `this` parameter: `AImported` [1] is incompatible with `unknown`.
+Cannot cast `isB` to `() => boolean` because in the `this` parameter: `AImported` [1] is incompatible with `unknown`.
 [incompatible-type]
 
    this.js:238:5
@@ -4191,7 +4194,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:312:5
 
-Cannot cast `isB` to function type because in the `this` parameter: `A` [1] is incompatible with `unknown`.
+Cannot cast `isB` to `() => boolean` because in the `this` parameter: `A` [1] is incompatible with `unknown`.
 [incompatible-type]
 
    this_classes.js:312:5
@@ -4546,7 +4549,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:39:5
 
-Cannot cast `c` to `D` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
+Cannot cast `c` to `D<string>` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    this_generics.js:39:5
@@ -4567,7 +4570,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:41:5
 
-Cannot cast `c` to `D` because `C<number>` [1] is incompatible with `D<number>` [2]. [incompatible-type]
+Cannot cast `c` to `D<number>` because `C<number>` [1] is incompatible with `D<number>` [2]. [incompatible-type]
 
    this_generics.js:41:5
    41|     c as D<number>; // error
@@ -4607,7 +4610,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:66:5
 
-Cannot cast `c` to `D` because: [incompatible-type]
+Cannot cast `c` to `D<number>` because: [incompatible-type]
  - Either in type argument `X` [1]: `string` [2] is incompatible with `number` [3].
  - Or `C<number>` [4] is incompatible with `D<number>` [5].
 
@@ -4704,7 +4707,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_generics.js:115:5
 
-Cannot cast `g` to `GenericDerivedImported` because in type argument `X` [1]: `number` [2] is incompatible with
+Cannot cast `g` to `GenericDerivedImported<string>` because in type argument `X` [1]: `number` [2] is incompatible with
 `string` [3]. [incompatible-type]
 
    this_generics.js:115:5

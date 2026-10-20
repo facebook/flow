@@ -1582,7 +1582,7 @@ where
                                 lower,
                                 RootMessage::RootCannotCast {
                                     lower: lower.desc.clone(),
-                                    upper: upper.desc.clone(),
+                                    upper: printed_type_desc(upper),
                                 },
                                 custom_error_message,
                             ),
@@ -5065,7 +5065,7 @@ where
                         text("Cannot cast "),
                         friendly::desc_of_reason_desc(lower.as_ref()),
                         text(" to "),
-                        friendly::desc_of_reason_desc(upper.as_ref()),
+                        desc_of_type_desc(upper),
                     ]),
                 ),
                 RootMessage::RootCannotCheckAgainst { test, discriminant } => (

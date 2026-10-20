@@ -1256,7 +1256,7 @@ pub enum RootMessage<L: Dupe> {
     RootCannotCallObjectAssign(Option<VirtualReasonDesc<L>>),
     RootCannotCast {
         lower: Option<VirtualReasonDesc<L>>,
-        upper: Option<VirtualReasonDesc<L>>,
+        upper: ErrorTypeDesc<L>,
     },
     RootCannotCheckAgainst {
         test: Option<VirtualReasonDesc<L>>,

@@ -49,7 +49,7 @@ Found 1 error
 === block 9 ===
 Error ---------------------------------------------------------------- -:2:48
 
-Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:2:48
    2| const fn3: {f: (number) => void} = {f: (x) => {x as string}}; // Error

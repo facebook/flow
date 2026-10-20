@@ -412,7 +412,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:19:1
 
-Cannot cast `n.method()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `n.method()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_poly_method.js:19:1
    19| n.method() as string; // error (number incompatible with string)
@@ -429,7 +429,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:21:1
 
-Cannot cast `s.method()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `s.method()` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    class_poly_method.js:21:1
    21| s.method() as number; // error (number incompatible with string)
@@ -1498,7 +1498,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:15:1
 
-Cannot cast `y` to `F` because in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
+Cannot cast `y` to `F<string>` because in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    function_type.js:15:1
@@ -1519,7 +1519,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:18:1
 
-Cannot cast `z.bind(...)()` to number because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `z.bind(...)()` to `number` because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_type.js:18:1
    18| z.bind(3)() as number;
@@ -1549,7 +1549,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:19:1
 
-Cannot cast `z.bind(...)()` to string because `Object` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `z.bind(...)()` to `string` because `Object` [1] is incompatible with `string` [2]. [incompatible-type]
 
    function_type.js:19:1
    19| z.bind("")() as string;
@@ -1579,7 +1579,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:20:1
 
-Cannot cast `z.bind(...)()` to string because `Object` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `z.bind(...)()` to `string` because `Object` [1] is incompatible with `string` [2]. [incompatible-type]
 
    function_type.js:20:1
    20| z.bind(3)() as string; // error: number incompatible with string
@@ -1609,7 +1609,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:21:1
 
-Cannot cast `z.bind(...)()` to number because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `z.bind(...)()` to `number` because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_type.js:21:1
    21| z.bind("")() as number; // error: number incompatible with string
@@ -1926,7 +1926,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:37:1
 
-Cannot cast `foo` to `typeof bar2` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
+Cannot cast `foo` to `() => void` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
    mixed_inference.js:37:1
@@ -1944,7 +1944,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:38:1
 
-Cannot cast `foo` to `typeof baz2` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
+Cannot cast `foo` to `() => void` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
    mixed_inference.js:38:1
@@ -1962,7 +1962,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:39:1
 
-Cannot cast `foo` to `typeof o2.m` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
+Cannot cast `foo` to `() => void` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
    mixed_inference.js:39:1
@@ -1980,7 +1980,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:40:1
 
-Cannot cast `foo` to `typeof o2.n` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
+Cannot cast `foo` to `() => void` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
    mixed_inference.js:40:1
@@ -1998,7 +1998,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:54:1
 
-Cannot cast `foo` to `typeof i.m` because in the `this` parameter: `number` [1] is incompatible with `I` [2].
+Cannot cast `foo` to `(this: I) => void` because in the `this` parameter: `number` [1] is incompatible with `I` [2].
 [incompatible-type]
 
    mixed_inference.js:54:1
@@ -2016,7 +2016,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:56:1
 
-Cannot cast `i.m` to function type because in the `this` parameter: `I` [1] is incompatible with `unknown`.
+Cannot cast `i.m` to `() => void` because in the `this` parameter: `I` [1] is incompatible with `unknown`.
 [incompatible-type]
 
    mixed_inference.js:56:1
@@ -2031,7 +2031,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:58:1
 
-Cannot cast `i.m` to function type because in the `this` parameter: `I` [1] is incompatible with `unknown` [2].
+Cannot cast `i.m` to `() => void` because in the `this` parameter: `I` [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
    mixed_inference.js:58:1
@@ -2617,7 +2617,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:53:1
 
-Cannot cast `baz.bind(...)()` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `baz.bind(...)()` to `number` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:53:1
    53| baz.bind({f : 3})() as number;
@@ -2650,7 +2650,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:1
 
-Cannot cast `baz.bind(...)()` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `baz.bind(...)()` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:54:1
    54| baz.bind({f : ""})() as string;
@@ -2683,7 +2683,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:55:1
 
-Cannot cast `baz.bind(...)()` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `baz.bind(...)()` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:55:1
    55| baz.bind({f : 3})() as string; // error : number incompatible with string
@@ -2716,7 +2716,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:1
 
-Cannot cast `baz.bind(...)()` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `baz.bind(...)()` to `number` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:56:1
    56| baz.bind({f : ""})() as number; // error : number incompatible with string
@@ -2749,7 +2749,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:60:1
 
-Cannot cast `baz2.bind(...)(...)` to number because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `baz2.bind(...)(...)` to `number` because `Object` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:60:1
    60| baz2.bind(3)(3) as number;
@@ -2779,7 +2780,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:1
 
-Cannot cast `baz2.bind(...)(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `baz2.bind(...)(...)` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    test.js:62:1
    62| (baz2 as (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") as string; // error : number incompatible with string

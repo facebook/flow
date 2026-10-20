@@ -93,7 +93,7 @@ the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, stri
 
 Error ------------------------------------------------------------------------------------------------ array_rest.js:7:1
 
-Cannot cast `a` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `a` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:7:1
    7| a as void; // error: number ~> void
@@ -110,7 +110,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ array_rest.js:8:1
 
-Cannot cast `b` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `b` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:8:1
    8| b as void; // error: string ~> void
@@ -127,7 +127,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ array_rest.js:9:1
 
-Cannot cast `c` to undefined because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `c` to `void` because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:9:1
    9| c as void; // error: boolean ~> void
@@ -144,7 +144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
-Cannot cast `d` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `d` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:10:1
    10| d as void; // error: number|string|boolean ~> void
@@ -161,7 +161,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
-Cannot cast `d` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `d` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:10:1
    10| d as void; // error: number|string|boolean ~> void
@@ -178,7 +178,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
-Cannot cast `d` to undefined because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `d` to `void` because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:10:1
    10| d as void; // error: number|string|boolean ~> void
@@ -231,7 +231,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- computed.js:2:1
 
-Cannot cast `val1` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `val1` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    computed.js:2:1
    2| val1 as void; // error: string ~> void
@@ -265,7 +265,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- computed.js:9:1
 
-Cannot cast `spread.key` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `spread.key` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    computed.js:9:1
    9| spread.key as void; // error (gasp!) in general we don't know if a computed prop should be excluded from spread
@@ -282,7 +282,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- computed.js:14:1
 
-Cannot cast `foo` to number literal `42` because `17` [1] is incompatible with `42` [2]. [incompatible-type]
+Cannot cast `foo` to `42` because `17` [1] is incompatible with `42` [2]. [incompatible-type]
 
    computed.js:14:1
    14| foo as 42; // error 17 ~> 42
@@ -299,7 +299,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- computed.js:16:1
 
-Cannot cast `foo` to string because `17` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `foo` to `string` because `17` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed.js:16:1
    16| foo as string; // error 17 ~> string
@@ -338,7 +338,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- defaults.js:9:3
 
-Cannot cast `q` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `q` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:9:3
    9|   q as void;
@@ -355,7 +355,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- defaults.js:9:3
 
-Cannot cast `q` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `q` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:9:3
    9|   q as void;
@@ -394,7 +394,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:20:3
 
-Cannot cast `q` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `q` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:20:3
    20|   q as void;
@@ -411,7 +411,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:20:3
 
-Cannot cast `q` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `q` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:20:3
    20|   q as void;
@@ -459,7 +459,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:32:3
 
-Cannot cast `o.r` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `o.r` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:32:3
    32|   o.r as void;
@@ -505,7 +505,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:47:3
 
-Cannot cast `p` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `p` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:47:3
    47|   p as void; // error: string ~> void
@@ -551,7 +551,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:57:1
 
-Cannot cast `p` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `p` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:57:1
    57| p as void; // error: string ~> void
@@ -985,7 +985,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:45:3
 
-Cannot cast `x.baz` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `x.baz` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:45:3
    45|   x.baz as string; // error, baz doesn't exist
@@ -1013,7 +1013,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:46:3
 
-Cannot cast `rest.baz` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `rest.baz` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:46:3
    46|   rest.baz as string; // error, rest is sealed
@@ -1190,7 +1190,7 @@ References:
 
 Error ------------------------------------------------------------------------------- destructuring_missing_props.js:5:1
 
-Cannot cast `foo` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `foo` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    destructuring_missing_props.js:5:1
    5| foo as number; // Error, number | string
@@ -1322,7 +1322,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:34:3
 
-Cannot cast `regularProp` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `regularProp` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    destructuring_missing_props.js:34:3
    34|   regularProp as number;
@@ -1473,7 +1473,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ number_lit.js:8:3
 
-Cannot cast `x` to empty because `"a"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x` to `empty` because `"a"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    number_lit.js:8:3
    8|   x as empty; // ERROR
@@ -1490,7 +1490,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- number_lit.js:21:3
 
-Cannot cast `rest` to empty because `{"1": "b"}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `rest` to `empty` because `{"1": "b"}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    number_lit.js:21:3
    21|   rest as empty; // ERROR
@@ -1630,7 +1630,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ string_lit.js:2:1
 
-Cannot cast `val` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot cast `val` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    string_lit.js:2:1
    2| val as void; // error: string ~> void
@@ -1647,7 +1647,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:5:3
 
-Cannot cast `a` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tuple.js:5:3
    5|   a as empty; // ERROR

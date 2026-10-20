@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
-Cannot cast `globalFunction` to number because `Function` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `globalFunction` to `number` because `Function` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:10:1
    10| globalFunction as number; // error: `Function` resolves to the global class
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Cannot cast `globalObject` to number because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `globalObject` to `number` because `Object` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:13:1
    13| globalObject as number; // error: `Object` resolves to the global class
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:1
 
-Cannot cast `signatureGlobalFunction` to number because `Function` [1] is incompatible with `number` [2].
+Cannot cast `signatureGlobalFunction` to `number` because `Function` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:15:1
@@ -52,7 +52,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
-Cannot cast `signatureGlobalObject` to number because `Object` [1] is incompatible with `number` [2].
+Cannot cast `signatureGlobalObject` to `number` because `Object` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:16:1

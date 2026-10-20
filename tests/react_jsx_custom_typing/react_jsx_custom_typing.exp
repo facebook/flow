@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:4:3
 
-Cannot cast `<Com />` to number literal `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `<Com />` to `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
 
    test.js:4:3
    4|   <Com foo="">{1}{2}</Com> as 1; // missing React, jsx still checked
@@ -25,7 +25,7 @@ Cannot resolve name `React`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
-Cannot cast `<Com />` to number literal `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `<Com />` to `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
 
    test.js:9:3
    9|   <Com foo="">{1}{2}</Com> as 1; // missing createElement, jsx still checked
@@ -72,7 +72,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:3
 
-Cannot cast `<Com />` to number literal `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot cast `<Com />` to `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
 
    test.js:14:3
    14|   <Com foo="">{1}{2}</Com> as 1; // bad createElement, jsx still checked
@@ -105,7 +105,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
-Cannot cast `<Com />` to number literal `4` because `3` [1] is incompatible with `4` [2]. [incompatible-type]
+Cannot cast `<Com />` to `4` because `3` [1] is incompatible with `4` [2]. [incompatible-type]
 
    test.js:21:3
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error

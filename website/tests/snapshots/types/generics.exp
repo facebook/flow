@@ -269,8 +269,8 @@ No errors!
 === block 30 ===
 Error ------------------------------------------------------------------------------ -:5:1
 
-Cannot cast `x` to `GenericBoxError` because in type argument `T` [1]: `string` [2] is incompatible with `number` [3].
-[incompatible-type]
+Cannot cast `x` to `GenericBoxError<number | string>` because in type argument `T` [1]: `string` [2] is incompatible
+with `number` [3]. [incompatible-type]
 
    -:5:1
    5| x as GenericBoxError<number| string>; // Error: number | string is not compatible with number.
