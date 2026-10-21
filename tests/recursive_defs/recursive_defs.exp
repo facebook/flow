@@ -72,7 +72,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- overflow_regression.js:3:19
 
-Invalid trivially recursive definition of `Rec`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    3| type Rec = null | Rec;
                         ^^^

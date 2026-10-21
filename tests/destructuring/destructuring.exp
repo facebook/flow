@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- annot_loop.js:3:10
 
-Invalid trivially recursive definition of `T`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    3| type T = T;
                ^
@@ -22,7 +22,7 @@ Invalid trivially recursive definition of `T`.  [recursive-definition]
 
 Error ---------------------------------------------------------------------------------------------- annot_loop.js:12:10
 
-Invalid trivially recursive definition of `A`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    12| type B = A;
                 ^

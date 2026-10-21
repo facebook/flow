@@ -979,7 +979,7 @@ pub mod invalid_cyclic_type_validation {
                     if !seen.contains(&root_id) {
                         seen.insert(root_id);
                         let forced_t = s.force(cx, |cx, reason| {
-                            let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(reason.to_error_reference());
+                            let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(reason.loc().dupe());
                             super::add_annot_inference_error(cx, msg);
                             flow_typing_type::type_::any_t::error(reason.dupe())
                         });

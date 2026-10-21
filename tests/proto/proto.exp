@@ -215,7 +215,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:35:34
 
-Invalid trivially recursive definition of prototype.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    35| type O_loop = { p: 0, __proto__: O_loop, ... };
                                         ^^^^^^

@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ recursive_module.js:1:9
 
-Invalid trivially recursive definition of `p`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    1| import {p} from './recursive_module';
               ^
@@ -78,12 +78,12 @@ Invalid trivially recursive definition of `p`.  [recursive-definition]
 
 Error ---------------------------------------------------------------------------------- recursive_module_cycle_A.js:0:1
 
-Invalid trivially recursive definition of exports.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
 
 Error ---------------------------------------------------------------------------------- recursive_module_cycle_B.js:0:1
 
-Invalid trivially recursive definition of exports.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
 
 Error ------------------------------------------------------------------------------------------ recursive_types.js:1:14
@@ -102,7 +102,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ recursive_types.js:1:17
 
-Invalid trivially recursive definition of `x`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    1| export const x: x = 0; // error recursive
                       ^
@@ -124,7 +124,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ recursive_types.js:3:26
 
-Invalid trivially recursive definition of property `f`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    3| export const y: typeof y.f = 0; // error recursive
                                ^
@@ -146,7 +146,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ recursive_types.js:5:24
 
-Invalid trivially recursive definition of `z`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    5| export const z: typeof z = 1; // error recursive
                              ^
@@ -154,7 +154,7 @@ Invalid trivially recursive definition of `z`.  [recursive-definition]
 
 Error ------------------------------------------------------------------------------------------ recursive_types.js:8:17
 
-Invalid trivially recursive definition of `A`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    8| export type T = T.A | T.B;
                       ^^^
@@ -162,7 +162,7 @@ Invalid trivially recursive definition of `A`.  [recursive-definition]
 
 Error ------------------------------------------------------------------------------------------ recursive_types.js:8:23
 
-Invalid trivially recursive definition of `B`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    8| export type T = T.A | T.B;
                             ^^^
@@ -170,7 +170,7 @@ Invalid trivially recursive definition of `B`.  [recursive-definition]
 
 Error ----------------------------------------------------------------------------------------- recursive_types.js:14:13
 
-Invalid trivially recursive definition of object type.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    14|   static R: { ...typeof C.R }; // error
                    ^^^^^^^^^^^^^^^^^

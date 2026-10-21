@@ -10,7 +10,6 @@ use std::rc::Rc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::mk_id;
@@ -204,10 +203,7 @@ fn error_unsupported(cx: &mut Context, target: &Type, op: &Op<Cx>) -> Type {
 
 pub(crate) fn error_recursive(cx: &mut Context, reason: &Reason) -> Type {
     let loc = reason.loc().dupe();
-    let msg = ErrorMessage::ETrivialRecursiveDefinition(ErrorReference::new(
-        loc.dupe(),
-        reason.desc(false).cloned(),
-    ));
+    let msg = ErrorMessage::ETrivialRecursiveDefinition(loc);
     flow_js_utils::add_annot_inference_error(cx, msg);
     type_::any_t::error(reason.dupe())
 }

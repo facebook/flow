@@ -711,7 +711,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- reentrant_direct.js:1:14
 
-Invalid trivially recursive definition of indexed access.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    1| type Args = [C['x'], null]; // ERROR
                    ^^^^^^

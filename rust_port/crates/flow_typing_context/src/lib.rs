@@ -3245,7 +3245,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn on_cyclic_tvar_error(&mut self, reason: Reason) -> Type {
-        let msg = ErrorMessage::ETrivialRecursiveDefinition(reason.to_error_reference());
+        let msg = ErrorMessage::ETrivialRecursiveDefinition(reason.loc().dupe());
         let error = error_of_msg(self.file().dupe(), msg);
         if self.is_verbose() {
             eprintln!("\nCyclic type: {:?}", reason);

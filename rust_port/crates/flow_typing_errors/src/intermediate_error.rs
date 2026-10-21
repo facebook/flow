@@ -8019,11 +8019,9 @@ where
                 friendly::hardcoded_string_desc_ref("reference", loc_of_aloc(ref_loc)),
                 text(" to the binding being declared."),
             ]),
-            MessageInvalidTrivialRecursiveDefinition(description) => friendly::Message(vec![
-                text("Invalid trivially recursive definition of "),
-                friendly::desc_of_reason_desc(description.as_ref()),
-                text(". "),
-            ]),
+            MessageInvalidTrivialRecursiveDefinition => {
+                friendly::Message(vec![text("Invalid trivially recursive definition of this type. ")])
+            }
             MessageInvalidTrivialRecursiveTypeParameter(name) => friendly::Message(vec![
                 text("Invalid trivially recursive definition of "),
                 code(name),

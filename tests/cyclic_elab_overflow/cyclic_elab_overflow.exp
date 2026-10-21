@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------- inline_record_export.js:6:30
 
-Invalid trivially recursive definition of property `set`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    6| export type T = typeof state.set; // ERROR: expected recursive-definition error
                                    ^^^
@@ -8,7 +8,7 @@ Invalid trivially recursive definition of property `set`.  [recursive-definition
 
 Error -------------------------------------------------------------------------------------- named_record_export.js:7:30
 
-Invalid trivially recursive definition of property `set`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    7| export type T = typeof state.set; // ERROR: expected recursive-definition error
                                    ^^^
@@ -16,7 +16,7 @@ Invalid trivially recursive definition of property `set`.  [recursive-definition
 
 Error ----------------------------------------------------------------------------------- recursive_keyof_export.js:6:12
 
-Invalid trivially recursive definition of key set.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    6| type Key = keyof typeof config; // ERROR: expected recursive-definition error
                  ^^^^^^^^^^^^^^^^^^^

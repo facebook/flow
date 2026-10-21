@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- cycle.js:0:1
 
-Invalid trivially recursive definition of exports.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
 
 Error ----------------------------------------------------------------------------------------------------- dest.js:4:17

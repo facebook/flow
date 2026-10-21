@@ -8,7 +8,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Warm up cyclic dependencies
 Error ---------------------------------------------------------------------------------------------------- mixed.js:3:15
 
-Invalid trivially recursive definition of `Bar`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    3| import type { Bar } from './types';
                     ^^^
@@ -23,7 +23,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Editing a file should cause dependents to pull in dependencies in the same cycle
 Error ---------------------------------------------------------------------------------------------------- mixed.js:3:15
 
-Invalid trivially recursive definition of `Bar`.  [recursive-definition]
+Invalid trivially recursive definition of this type.  [recursive-definition]
 
    3| import type { Bar } from './types';
                     ^^^

@@ -3841,7 +3841,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EAnnotationInference(Box<EAnnotationInferenceData<L>>),
 
-    ETrivialRecursiveDefinition(ErrorReference<L>),
+    ETrivialRecursiveDefinition(L),
 
     ETrivialRecursiveTypeParameter(Box<(L, FlowSmolStr)>),
 
@@ -6281,9 +6281,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 target_desc: target_desc.map_locs(|l: &L| f(l.dupe())),
             })),
 
-            ETrivialRecursiveDefinition(reason) => {
-                ETrivialRecursiveDefinition(map_error_ref(reason))
-            }
+            ETrivialRecursiveDefinition(loc) => ETrivialRecursiveDefinition(f(loc)),
             ETrivialRecursiveTypeParameter(box (loc, name)) => {
                 ETrivialRecursiveTypeParameter(Box::new((f(loc), name)))
             }
@@ -8827,7 +8825,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 box EUnionPartialOptimizationNonUniqueKeyData { loc, .. },
             ) => Some(loc.dupe()),
 
-            Self::ETrivialRecursiveDefinition(reason) => Some(reason.loc.dupe()),
+            Self::ETrivialRecursiveDefinition(loc) => Some(loc.dupe()),
 
             Self::ETrivialRecursiveTypeParameter(data) => Some(data.0.dupe()),
 
@@ -10508,9 +10506,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     target_desc,
                 }),
             )),
-            ErrorMessage::ETrivialRecursiveDefinition(reason) => Normal(
-                Message::MessageInvalidTrivialRecursiveDefinition(reason.desc),
-            ),
+            ErrorMessage::ETrivialRecursiveDefinition(_) => {
+                Normal(Message::MessageInvalidTrivialRecursiveDefinition)
+            }
             ErrorMessage::ETrivialRecursiveTypeParameter(box (_, name)) => {
                 Normal(Message::MessageInvalidTrivialRecursiveTypeParameter(name))
             }

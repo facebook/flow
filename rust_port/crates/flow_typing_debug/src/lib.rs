@@ -4160,11 +4160,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 target_desc,
             )
         }
-        ErrorMessage::ETrivialRecursiveDefinition(reason) => {
+        ErrorMessage::ETrivialRecursiveDefinition(loc) => {
             format!(
-                "ETrivialRecursiveDefinition ({}) ({})",
-                string_of_aloc(None, &reason.loc),
-                format_args!("{:?}", reason.desc)
+                "ETrivialRecursiveDefinition ({})",
+                string_of_aloc(None, loc),
             )
         }
         ErrorMessage::ETrivialRecursiveTypeParameter(data) => format!(

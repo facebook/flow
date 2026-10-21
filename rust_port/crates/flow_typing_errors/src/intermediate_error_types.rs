@@ -2520,7 +2520,7 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidSelfReferencingDefault(Box<MessageInvalidSelfReferencingDefaultData<L>>),
 
-    MessageInvalidTrivialRecursiveDefinition(Option<VirtualReasonDesc<L>>),
+    MessageInvalidTrivialRecursiveDefinition,
     MessageInvalidTrivialRecursiveTypeParameter(FlowSmolStr),
 
     MessageInvalidTupleRequiredAfterOptional {
