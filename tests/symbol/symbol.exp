@@ -21,56 +21,92 @@ References:
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:11:1
 
-Cannot cast `map[Symbol.toStringTag]` to `"Set"` because `"Map"` [1] is incompatible with `"Set"` [2].
+Cannot cast `map[Symbol.toStringTag]` to `"Set"` because `string` [1] is incompatible with `"Set"` [2].
 [incompatible-type]
 
    collection_to_string_tag.js:11:1
-   11| map[Symbol.toStringTag] as 'Set'; // ERROR
-       ^^^^^^^^^^^^^^^^^^^^^^^
+    11| map[Symbol.toStringTag] as 'Set'; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:81:36
-   81|     readonly [Symbol.toStringTag]: 'Map';
-                                          ^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:138:36
+   138|     readonly [Symbol.toStringTag]: string;
+                                           ^^^^^^ [1]
    collection_to_string_tag.js:11:28
-   11| map[Symbol.toStringTag] as 'Set'; // ERROR
-                                  ^^^^^ [2]
+    11| map[Symbol.toStringTag] as 'Set'; // ERROR
+                                   ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:12:1
 
-Cannot cast `roSet[Symbol.toStringTag]` to `"Map"` because `"Set"` [1] is incompatible with `"Map"` [2].
+Cannot cast `roSet[Symbol.toStringTag]` to `"Map"` because `string` [1] is incompatible with `"Map"` [2].
 [incompatible-type]
 
    collection_to_string_tag.js:12:1
-   12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
-       ^^^^^^^^^^^^^^^^^^^^^^^^^
+    12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:85:36
-   85|     readonly [Symbol.toStringTag]: 'Set';
-                                          ^^^^^ [1]
+   <BUILTINS>/misc.js:256:34
+   256|   readonly [Symbol.toStringTag]: string;
+                                         ^^^^^^ [1]
    collection_to_string_tag.js:12:30
-   12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
-                                    ^^^^^ [2]
+    12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
+                                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- collection_to_string_tag.js:20:1
+
+Cannot cast `map` to `TaggedMap` because in property `[toStringTag]`: `string` [1] is incompatible with `"Map"` [2].
+[incompatible-type]
+
+   collection_to_string_tag.js:20:1
+    20| map as TaggedMap; // ERROR: the tag is `string`
+        ^^^
+
+References:
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:138:36
+   138|     readonly [Symbol.toStringTag]: string;
+                                           ^^^^^^ [1]
+   collection_to_string_tag.js:19:54
+    19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
+                                                             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- collection_to_string_tag.js:21:1
+
+Cannot cast `roMap` to `TaggedMap` because in property `[toStringTag]`: `string` [1] is incompatible with `"Map"` [2].
+[incompatible-type]
+
+   collection_to_string_tag.js:21:1
+    21| roMap as TaggedMap; // ERROR: the tag is `string`
+        ^^^^^
+
+References:
+   <BUILTINS>/misc.js:252:34
+   252|   readonly [Symbol.toStringTag]: string;
+                                         ^^^^^^ [1]
+   collection_to_string_tag.js:19:54
+    19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
+                                                             ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:22:1
 
-Cannot cast `set` to `TaggedMap` because in property `[toStringTag]`: `"Set"` [1] is incompatible with `"Map"` [2].
+Cannot cast `set` to `TaggedMap` because in property `[toStringTag]`: `string` [1] is incompatible with `"Map"` [2].
 [incompatible-type]
 
    collection_to_string_tag.js:22:1
-   22| set as TaggedMap; // ERROR
-       ^^^
+    22| set as TaggedMap; // ERROR
+        ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:85:36
-   85|     readonly [Symbol.toStringTag]: 'Set';
-                                          ^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:146:36
+   146|     readonly [Symbol.toStringTag]: string;
+                                           ^^^^^^ [1]
    collection_to_string_tag.js:19:54
-   19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
-                                                            ^^^^^ [2]
+    19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
+                                                             ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- constructor.js:2:5
@@ -213,9 +249,9 @@ Cannot assign `Symbol.toPrimitive` to `y` because unique symbol [1] is incompati
                                         ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:63:25
-   63|   readonly toPrimitive: unique symbol;
-                               ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:69:27
+   69|     readonly toPrimitive: unique symbol;
+                                 ^^^^^^^^^^^^^ [1]
    symbol.js:46:12
    46|   const y: typeof Symbol.match = Symbol.toPrimitive; // Error
                   ^^^^^^^^^^^^^^^^^^^ [2]
@@ -418,4 +454,4 @@ References:
 
 
 
-Found 27 errors
+Found 29 errors

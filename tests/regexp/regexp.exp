@@ -30,6 +30,58 @@ References:
                    ^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- regexp.js:6:1
+
+Cannot cast `regExp[Symbol.match]` to `(str: string) => Iterator<RegExp$matchResult>` because in the `this` parameter:
+`RegExp` [1] is incompatible with `unknown`. [incompatible-type]
+
+   regexp.js:6:1
+      6| regExp[Symbol.match] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp` and it returns `RegExpMatchArray | null`
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1066:11
+   1066| interface RegExp {
+                   ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- regexp.js:6:1
+
+Cannot cast `regExp[Symbol.match]` to `(str: string) => Iterator<RegExp$matchResult>` because in the return value:
+`null` [1] is incompatible with `Iterator<RegExp$matchResult, void, void>` [2]. [incompatible-type]
+
+   regexp.js:6:1
+     6| regExp[Symbol.match] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp` and it returns `RegExpMatchArray | null`
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:190:56
+   190|     [Symbol.match](string: string): RegExpMatchArray | null;
+                                                               ^^^^ [1]
+   regexp.js:6:42
+     6| regExp[Symbol.match] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp` and it returns `RegExpMatchArray | null`
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- regexp.js:6:1
+
+Cannot cast `regExp[Symbol.match]` to `(str: string) => Iterator<RegExp$matchResult>` because in the return value:
+property `next` is missing in `RegExpMatchArray` [1] but exists in `Iterator<RegExp$matchResult, void, void>` [2].
+[incompatible-type]
+
+   regexp.js:6:1
+     6| regExp[Symbol.match] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp` and it returns `RegExpMatchArray | null`
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:190:37
+   190|     [Symbol.match](string: string): RegExpMatchArray | null;
+                                            ^^^^^^^^^^^^^^^^ [1]
+   regexp.js:6:42
+     6| regExp[Symbol.match] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp` and it returns `RegExpMatchArray | null`
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- regexp.js:13:1
 
 Cannot cast `matches` to `RegExpStringIterator<RegExpMatchArray | null>` because in type argument `T` [1]: `null` [2] is
@@ -148,4 +200,4 @@ References:
 
 
 
-Found 7 errors
+Found 10 errors

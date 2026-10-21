@@ -20,49 +20,24 @@ References:
                             ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- overload.js:7:18
+Error ------------------------------------------------------------------------------------------------- overload.js:7:21
 
-Cannot assign `"".match(...)[0]` to `x1` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
-
-   overload.js:7:18
-     7| var x1: number = "".match(0)[0];
-                         ^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es5.js:733:42
-   733| interface RegExpMatchArray extends Array<string> {
-                                                 ^^^^^^ [1]
-   overload.js:7:9
-     7| var x1: number = "".match(0)[0];
-                ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- overload.js:7:30
-
-Cannot get `"".match(...)[0]` because `null` [1] does not have properties. [incompatible-use]
-
-   overload.js:7:30
-     7| var x1: number = "".match(0)[0];
-                                     ^
-
-References:
-   <BUILTINS>/lib.es5.js:991:56
-   991|     match(regexp: string | RegExp): RegExpMatchArray | null;
-                                                               ^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- overload.js:7:27
-
-Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-type]
+Cannot call `"".match` because: [incompatible-type]
  - Either `0` [1] is incompatible with `string` [2].
  - Or `0` [1], a primitive, cannot be used as a subtype of `RegExp` [3]. You can wrap it in `new Number(...))` to turn
    it into an object and attempt to use it as a subtype of an interface.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   overload.js:7:21
+     7| var x1: number = "".match(0)[0];
+                            ^^^^^
+
+References:
    overload.js:7:27
      7| var x1: number = "".match(0)[0];
                                   ^ [1]
-
-References:
    <BUILTINS>/lib.es5.js:991:19
    991|     match(regexp: string | RegExp): RegExpMatchArray | null;
                           ^^^^^^ [2]
@@ -278,4 +253,4 @@ References:
 
 
 
-Found 14 errors
+Found 12 errors

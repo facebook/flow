@@ -105,6 +105,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.es2015.proxy.js',
   'lib.es2015.reflect.js',
   'lib.es2015.symbol.js',
+  'lib.es2015.symbol.wellknown.js',
   'lib.es2016.intl.js',
   'lib.es2017.arraybuffer.js',
   'lib.es2017.date.js',

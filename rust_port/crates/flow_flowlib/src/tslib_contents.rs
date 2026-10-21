@@ -31,6 +31,8 @@ pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.
 pub(super) const LIB_ES2015_PROXY_D_TS: &str = include_tslib!("lib.es2015.proxy.d.ts");
 pub(super) const LIB_ES2015_REFLECT_D_TS: &str = include_tslib!("lib.es2015.reflect.d.ts");
 pub(super) const LIB_ES2015_SYMBOL_D_TS: &str = include_tslib!("lib.es2015.symbol.d.ts");
+pub(super) const LIB_ES2015_SYMBOL_WELLKNOWN_D_TS: &str =
+    include_tslib!("lib.es2015.symbol.wellknown.d.ts");
 pub(super) const LIB_ES2016_INTL_D_TS: &str = include_tslib!("lib.es2016.intl.d.ts");
 pub(super) const LIB_ES2017_ARRAYBUFFER_D_TS: &str = include_tslib!("lib.es2017.arraybuffer.d.ts");
 pub(super) const LIB_ES2017_DATE_D_TS: &str = include_tslib!("lib.es2017.date.d.ts");
@@ -128,7 +130,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.es2015.symbol.d.ts", LIB_ES2015_SYMBOL_D_TS),
     (
         "lib.es2015.symbol.wellknown.d.ts",
-        include_tslib!("lib.es2015.symbol.wellknown.d.ts"),
+        LIB_ES2015_SYMBOL_WELLKNOWN_D_TS,
     ),
     (
         "lib.es2016.array.include.d.ts",

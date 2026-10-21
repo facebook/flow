@@ -3,7 +3,7 @@ var match:number = patt.test("Hello world!");
 
 declare const regExp: RegExp;
 regExp[Symbol.matchAll] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp`
-regExp[Symbol.match] as (str: string) => Iterator<RegExp$matchResult>;
+regExp[Symbol.match] as (str: string) => Iterator<RegExp$matchResult>; // error: the method's `this` is `RegExp` and it returns `RegExpMatchArray | null`
 
 var escaped: string = RegExp.escape("hello[world]");
 

@@ -26,10 +26,6 @@ flowlib_file!(LIB_ES2015_CORE_JS, "lib.es2015.core.js");
 flowlib_file!(LIB_ES2015_GENERATOR_JS, "lib.es2015.generator.js");
 flowlib_file!(LIB_ES2015_ITERABLE_JS, "lib.es2015.iterable.js");
 flowlib_file!(LIB_ES2015_PROMISE_JS, "lib.es2015.promise.js");
-flowlib_file!(
-    LIB_ES2015_SYMBOL_WELLKNOWN_JS,
-    "lib.es2015.symbol.wellknown.js"
-);
 flowlib_file!(LIB_ES2016_ARRAY_INCLUDE_JS, "lib.es2016.array.include.js");
 flowlib_file!(LIB_ES2018_ASYNCGENERATOR_JS, "lib.es2018.asyncgenerator.js");
 flowlib_file!(LIB_ES2018_ASYNCITERABLE_JS, "lib.es2018.asynciterable.js");
@@ -67,7 +63,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ),
     (
         "lib.es2015.symbol.wellknown.js",
-        LIB_ES2015_SYMBOL_WELLKNOWN_JS,
+        tslib_contents::LIB_ES2015_SYMBOL_WELLKNOWN_D_TS,
     ),
     ("lib.es2016.array.include.js", LIB_ES2016_ARRAY_INCLUDE_JS),
     ("lib.es2016.intl.js", tslib_contents::LIB_ES2016_INTL_D_TS),

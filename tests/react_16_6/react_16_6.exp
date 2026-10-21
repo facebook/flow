@@ -29,21 +29,46 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- lazy.js:9:12
+Error ----------------------------------------------------------------------------------------------------- lazy.js:9:18
 
-Cannot call `React.lazy` with function bound to `component` because in the return value: properties `catch`, `finally`,
-and `then` are missing in `{...}` [1] but exist in
-`{catch<U = empty>(this: Promise<Readonly<{default: component(...any) renders any, ...}>>, onReject: ...` [2].
-[incompatible-type]
+Cannot call `React.lazy` with function bound to `component` because in the return value: `(x: Props) => React.Node` [1]
+is incompatible with `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2]. [incompatible-type]
 
-   lazy.js:9:12
+Functions without statics are not compatible with objects.
+
+   lazy.js:9:18
      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
-                   ^^^^^^^^^^^^^^^^^^^^^^^
+                         ^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:902:24
+                               v-------
+   902|       component: () => Promise<
+   903|         Readonly<{
+   904|           default: component(...Config) renders Renders,
+   905|           ...
+   906|         }>,
+   907|       >,
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
+
+Cannot call `React.lazy` with function bound to `component` because in the return value: property `[toStringTag]` is
+missing in class `ClassComponent` [1] but exists in
+`Promise<Readonly<{default: component(...any) renders any, ...}>>` [2]. [incompatible-type]
+
+   lazy.js:10:18
+    10| React.lazy(() => ClassComponent); // Error incompatible with Promise
+                         ^^^^^^^^^^^^^^
+
+References:
+   lazy.js:7:7
+     7| class ClassComponent extends React.Component<Props> {}
+              ^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:902:24
                                v-------
    902|       component: () => Promise<
@@ -418,4 +443,4 @@ References:
 
 
 
-Found 21 errors
+Found 22 errors

@@ -3,10 +3,10 @@ declare const roMap: ReadonlyMap<string, number>;
 declare const set: Set<string>;
 declare const roSet: ReadonlySet<string>;
 
-map[Symbol.toStringTag] as 'Map'; // OK
-roMap[Symbol.toStringTag] as 'Map'; // OK
-set[Symbol.toStringTag] as 'Set'; // OK
-roSet[Symbol.toStringTag] as 'Set'; // OK
+map[Symbol.toStringTag] as string; // OK
+roMap[Symbol.toStringTag] as string; // OK
+set[Symbol.toStringTag] as string; // OK
+roSet[Symbol.toStringTag] as string; // OK
 
 map[Symbol.toStringTag] as 'Set'; // ERROR
 roSet[Symbol.toStringTag] as 'Map'; // ERROR
@@ -17,6 +17,6 @@ roMap as Readonly<Map<string, number>>; // OK
 roSet as Readonly<Set<string>>; // OK
 
 interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
-map as TaggedMap; // OK
-roMap as TaggedMap; // OK
+map as TaggedMap; // ERROR: the tag is `string`
+roMap as TaggedMap; // ERROR: the tag is `string`
 set as TaggedMap; // ERROR

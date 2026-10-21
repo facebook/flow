@@ -1,19 +1,28 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:95:1
+Error ----------------------------------------------------------------------------------------------------- test.js:3:44
 
-Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because property `[toStringTag]` is missing in `ArrayBuffer` [1]
-but exists in `SharedArrayBuffer` [2]. [incompatible-type]
+Cannot assign object literal to `structuralArrayBuffer` because property `[toStringTag]` is missing in object
+literal [1] but exists in
+`{readonly byteLength: number, get detached(): boolean, get maxByteLength(): number, get resizable():...` [2].
+[incompatible-type]
 
-   test.js:95:1
-   95| arrayBacked.buffer as SharedArrayBuffer; // ERROR
-       ^^^^^^^^^^^^^^^^^^
+   test.js:3:44
+                                                  v
+    3| const structuralArrayBuffer: ArrayBuffer = {
+    4|   byteLength: 0,
+    5|   maxByteLength: 0,
+    6|   resizable: false,
+    7|   detached: false,
+    8|   resize: () => {},
+    9|   transfer: () => new ArrayBuffer(0),
+   10|   transferToFixedLength: () => new ArrayBuffer(0),
+   11|   slice: () => new ArrayBuffer(0),
+   12| };
+       ^ [1]
 
 References:
-   test.js:93:39
-   93| declare const arrayBacked: Uint8Array<ArrayBuffer>;
-                                             ^^^^^^^^^^^ [1]
-   test.js:95:23
-   95| arrayBacked.buffer as SharedArrayBuffer; // ERROR
-                             ^^^^^^^^^^^^^^^^^ [2]
+   test.js:3:30
+    3| const structuralArrayBuffer: ArrayBuffer = {
+                                    ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:95:1
@@ -54,20 +63,20 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:95:1
 
-Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because in property `slice` > the return value: property
-`[toStringTag]` is missing in `ArrayBuffer` [1] but exists in `SharedArrayBuffer` [2]. [incompatible-type]
+Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because in property `[toStringTag]`: `"ArrayBuffer"` [1] is
+incompatible with `"SharedArrayBuffer"` [2]. [incompatible-type]
 
    test.js:95:1
-     95| arrayBacked.buffer as SharedArrayBuffer; // ERROR
-         ^^^^^^^^^^^^^^^^^^
+    95| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+        ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1401:42
-   1401|     slice(begin?: number, end?: number): ArrayBuffer;
-                                                  ^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2017.sharedmemory.js:32:42
-     32|     slice(begin?: number, end?: number): SharedArrayBuffer;
-                                                  ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:273:36
+   273|     readonly [Symbol.toStringTag]: "ArrayBuffer";
+                                           ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2017.sharedmemory.js:33:36
+    33|     readonly [Symbol.toStringTag]: "SharedArrayBuffer";
+                                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:95:1
@@ -198,6 +207,24 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:99:1
 
+Cannot cast `sharedBacked.buffer` to `ArrayBuffer` because in property `[toStringTag]`: `"SharedArrayBuffer"` [1] is
+incompatible with `"ArrayBuffer"` [2]. [incompatible-type]
+
+   test.js:99:1
+    99| sharedBacked.buffer as ArrayBuffer; // ERROR
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2017.sharedmemory.js:33:36
+    33|     readonly [Symbol.toStringTag]: "SharedArrayBuffer";
+                                           ^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:273:36
+   273|     readonly [Symbol.toStringTag]: "ArrayBuffer";
+                                           ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:99:1
+
 Cannot cast `sharedBacked.buffer` to `ArrayBuffer` because in property `slice` > the return value: property `detached`
 is missing in `SharedArrayBuffer` [1] but exists in `ArrayBuffer` [2]. [incompatible-type]
 
@@ -290,35 +317,6 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because: [incompatible-type]
  - in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is incompatible with `SharedArrayBuffer` [3]
-    - in property `slice` > the return value: property `[toStringTag]` is missing in `ArrayBuffer` [4] but exists in
-      `SharedArrayBuffer` [5]
-
-   test.js:111:1
-    111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
-         ^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es5.js:3658:26
-   3658| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
-                                  ^^^^^^^^^^^^ [1]
-   test.js:109:46
-    109| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
-                                                      ^^^^^^^^^^^ [2]
-   test.js:111:34
-    111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
-                                          ^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:1401:42
-   1401|     slice(begin?: number, end?: number): ArrayBuffer;
-                                                  ^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es2017.sharedmemory.js:32:42
-     32|     slice(begin?: number, end?: number): SharedArrayBuffer;
-                                                  ^^^^^^^^^^^^^^^^^ [5]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:111:1
-
-Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because: [incompatible-type]
- - in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is incompatible with `SharedArrayBuffer` [3]
     - in property `slice` > the return value: property `grow` is missing in `ArrayBuffer` [4] but exists in
       `SharedArrayBuffer` [5]
 
@@ -376,27 +374,6 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:111:1
 
 Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because in type argument `TArrayBuffer` [1]:
-property `[toStringTag]` is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
-
-   test.js:111:1
-    111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
-         ^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es5.js:3658:26
-   3658| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
-                                  ^^^^^^^^^^^^ [1]
-   test.js:109:46
-    109| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
-                                                      ^^^^^^^^^^^ [2]
-   test.js:111:34
-    111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
-                                          ^^^^^^^^^^^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:111:1
-
-Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because in type argument `TArrayBuffer` [1]:
 property `grow` is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer` [3]. [incompatible-type]
 
    test.js:111:1
@@ -434,6 +411,27 @@ References:
    test.js:111:34
     111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
                                           ^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:111:1
+
+Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because in type argument `TArrayBuffer` [1] >
+property `[toStringTag]`: `"ArrayBuffer"` [2] is incompatible with `"SharedArrayBuffer"` [3]. [incompatible-type]
+
+   test.js:111:1
+    111| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:3658:26
+   3658| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+                                  ^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:273:36
+    273|     readonly [Symbol.toStringTag]: "ArrayBuffer";
+                                            ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2017.sharedmemory.js:33:36
+     33|     readonly [Symbol.toStringTag]: "SharedArrayBuffer";
+                                            ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
@@ -686,6 +684,27 @@ References:
                                       ^^^^^^^^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:137:1
+
+Cannot cast `sharedFloat16` to `Float16Array<ArrayBuffer>` because in type argument `TArrayBuffer` [1] > property
+`[toStringTag]`: `"SharedArrayBuffer"` [2] is incompatible with `"ArrayBuffer"` [3]. [incompatible-type]
+
+   test.js:137:1
+   137| sharedFloat16 as Float16Array<ArrayBuffer>; // ERROR
+        ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/misc.js:229:28
+   229| interface Float16Array<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
+                                   ^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2017.sharedmemory.js:33:36
+    33|     readonly [Symbol.toStringTag]: "SharedArrayBuffer";
+                                           ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:273:36
+   273|     readonly [Symbol.toStringTag]: "ArrayBuffer";
+                                           ^^^^^^^^^^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------------------- test.js:145:14
 
 Cannot call `Float16Array.from` because: [incompatible-type]
@@ -712,4 +731,4 @@ References:
 
 
 
-Found 33 errors
+Found 34 errors
