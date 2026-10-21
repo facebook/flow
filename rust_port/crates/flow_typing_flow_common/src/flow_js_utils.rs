@@ -1643,6 +1643,7 @@ pub fn error_message_loc_of_upper<CX: ContextFamily>(u: &UseT<CX>) -> ALoc {
 }
 
 pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
+    use flow_typing_type::type_::AssignVarTarget;
     use flow_typing_type::type_::JSXCreateElementData;
     use flow_typing_type::type_::RootUseOp;
     use flow_typing_type::type_::root_of_use_op;
@@ -1664,7 +1665,12 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         | RootUseOp::RenderTypeInstantiation { render_type: op }
         | RootUseOp::ComponentRestParamCompatibility { rest_param: op } => Some(op),
         RootUseOp::JSXCreateElement(box JSXCreateElementData { op, .. }) => Some(op),
-        RootUseOp::AssignVar { var, init } => var.as_ref().or(Some(init)),
+        RootUseOp::AssignVar { var, init } => match var.as_deref() {
+            Some(AssignVarTarget::Variable(reason)) => Some(reason),
+            Some(AssignVarTarget::Annotation(TypeOrTypeDescT::Type(t))) => Some(reason_of_t(t)),
+            Some(AssignVarTarget::Annotation(TypeOrTypeDescT::TypeDesc(_))) => None,
+            None => Some(init),
+        },
         RootUseOp::Cast {
             upper: box upper, ..
         } => match upper {

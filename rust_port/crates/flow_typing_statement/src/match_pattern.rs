@@ -30,6 +30,7 @@ use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidObjectShorthandData;
 use flow_typing_errors::intermediate_error_types::MatchObjPatternKind;
 use flow_typing_flow_js::flow_js;
+use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UnsoundnessKind;
 use flow_typing_type::type_::UseOp;
@@ -209,7 +210,7 @@ fn binding<'a>(
     let current = type_env::find_write(cx, DefLocType::OrdinaryNameLoc, reason.dupe());
     let use_op = UseOp::Op(std::sync::Arc::new(
         flow_typing_type::type_::RootUseOp::AssignVar {
-            var: Some(reason.dupe()),
+            var: Some(Box::new(AssignVarTarget::Variable(reason.dupe()))),
             init: mk_expression_reason(acc),
         },
     ));

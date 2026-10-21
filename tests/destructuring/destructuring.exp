@@ -490,7 +490,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:44:8
 
-Cannot assign object literal to object type because in property `p`: `0` [1] is incompatible with `string` [2].
+Cannot assign object literal to `{p: string, ...}` because in property `p`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    defaults.js:44:8
@@ -624,7 +624,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:73:52
 
-Cannot assign object literal to object type because in property `p`: `0` [1] is incompatible with `string` [2].
+Cannot assign object literal to `{p?: string, ...}` because in property `p`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    defaults.js:73:52
@@ -639,7 +639,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:74:54
 
-Cannot assign object literal to object type because in property `p`: `0` [1] is incompatible with `string` [2].
+Cannot assign object literal to `{p: ?string, ...}` because in property `p`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    defaults.js:74:54
@@ -654,7 +654,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:75:62
 
-Cannot assign object literal to object type because in property `p`: [incompatible-type]
+Cannot assign object literal to `{p: number | string, ...}` because in property `p`: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `string` [3].
 
@@ -673,7 +673,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:78:69
 
-Cannot assign object literal to union type because: [incompatible-type]
+Cannot assign object literal to `{p: number, ...} | {p: string, ...}` because: [incompatible-type]
  - Either in property `p`: `true` [1] is incompatible with `number` [2].
  - Or in property `p`: `true` [1] is incompatible with `string` [3].
 

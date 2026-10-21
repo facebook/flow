@@ -1333,7 +1333,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- rec_decls.js:32:33
 
-Cannot assign `a` to object type because `number` [1] is incompatible with `{a: number}` [2]. [incompatible-type]
+Cannot assign `a` to `{a: number}` because `number` [1] is incompatible with `{a: number}` [2]. [incompatible-type]
 
    rec_decls.js:32:33
    32|   function g({a}: {a: number} = a) {} // error: a references the param being declared

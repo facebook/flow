@@ -30,6 +30,7 @@ use flow_parser::jsdoc;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
+use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ClassOwnProtoCheckData;
 use flow_typing_type::type_::ConformToCommonInterfaceData;
@@ -75,6 +76,7 @@ use super::error_message::util_use_op_of_msg;
 use super::flow_error::ErrorSet;
 use super::flow_error::FlowError;
 use super::intermediate_error_types::AccessChainSegment;
+use super::intermediate_error_types::AssignTargetDesc;
 use super::intermediate_error_types::ErrorMessage;
 use super::intermediate_error_types::Explanation;
 use super::intermediate_error_types::ExplanationAdditionalUnionMembersData;
@@ -1553,7 +1555,14 @@ where
                                 init,
                                 RootMessage::RootCannotAssign {
                                     init: init.desc.clone(),
-                                    target: var.as_ref().map(|v| v.desc.clone()),
+                                    target: var.as_deref().map(|target| match target {
+                                        AssignVarTarget::Variable(reason) => {
+                                            AssignTargetDesc::Variable(reason.desc.clone())
+                                        }
+                                        AssignVarTarget::Annotation(t) => {
+                                            AssignTargetDesc::Annotation(printed_type_desc(t))
+                                        }
+                                    }),
                                 },
                                 custom_error_message,
                             ),
@@ -1966,7 +1975,7 @@ where
                                     loc_reason,
                                     RootMessage::RootCannotAssign {
                                         init: value.desc.clone(),
-                                        target: Some(prop.desc.clone()),
+                                        target: Some(AssignTargetDesc::Variable(prop.desc.clone())),
                                     },
                                     custom_error_message,
                                 )
@@ -5032,7 +5041,12 @@ where
                             text("Cannot assign "),
                             friendly::desc_of_reason_desc(init.as_ref()),
                             text(" to "),
-                            friendly::desc_of_reason_desc(target.as_ref()),
+                            match target {
+                                AssignTargetDesc::Variable(desc) => {
+                                    friendly::desc_of_reason_desc(desc.as_ref())
+                                }
+                                AssignTargetDesc::Annotation(desc) => desc_of_type_desc(desc),
+                            },
                         ]),
                     ),
                 },

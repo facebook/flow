@@ -1037,6 +1037,24 @@ pub struct SwitchRefinementCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord
     pub discriminant: L,
 }
 
+/// What an `AssignVar` assigns to: a binding, or the annotation of a destructured
+/// parameter, which has no binding of its own.
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum AssignVarTarget<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    Variable(VirtualReason<L>),
+    Annotation(type_or_type_desc::TypeOrTypeDescT<L>),
+}
+
 #[derive(
     Debug,
     Clone,
@@ -1281,7 +1299,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         op: VirtualReason<L>,
     },
     AssignVar {
-        var: Option<VirtualReason<L>>,
+        var: Option<Box<AssignVarTarget<L>>>,
         init: VirtualReason<L>,
     },
     Cast {

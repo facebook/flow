@@ -1231,6 +1231,22 @@ pub enum Frame<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub enum AssignTargetDesc<L: Dupe> {
+    Variable(Option<VirtualReasonDesc<L>>),
+    Annotation(ErrorTypeDesc<L>),
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RootMessage<L: Dupe> {
     RootCannotAccessIndex {
         index: ErrorTypeDesc<L>,
@@ -1239,7 +1255,7 @@ pub enum RootMessage<L: Dupe> {
     RootCannotAddComputedProperty,
     RootCannotAssign {
         init: Option<VirtualReasonDesc<L>>,
-        target: Option<Option<VirtualReasonDesc<L>>>,
+        target: Option<AssignTargetDesc<L>>,
     },
     RootCannotCall(Option<VirtualReasonDesc<L>>),
     RootCannotCallStandalone(Option<VirtualReasonDesc<L>>),

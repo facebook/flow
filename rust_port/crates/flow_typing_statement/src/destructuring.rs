@@ -32,6 +32,7 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::UnsupportedSyntax;
 use flow_typing_flow_js::flow_js;
 use flow_typing_type::type_;
+use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::NumberLiteral;
@@ -404,7 +405,7 @@ fn identifier<'a>(
         _ => type_util::reason_of_t(&current).dupe(),
     };
     let use_op = UseOp::Op(Arc::new(RootUseOp::AssignVar {
-        var: Some(reason),
+        var: Some(Box::new(AssignVarTarget::Variable(reason))),
         init: init_reason,
     }));
     f(cx, &use_op, name_loc, name, default_val.as_ref(), current)

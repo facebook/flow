@@ -3064,10 +3064,10 @@ fn statement_<'a>(
                     let optional = id_inner.optional;
                     let t = type_::str_module_t::at(pat_loc.dupe());
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                        var: Some(mk_reason(
+                        var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                             VirtualReasonDesc::RIdentifier(name_str.dupe()),
                             pat_loc.dupe(),
-                        )),
+                        )))),
                         init: reason_of_t(&t).dupe(),
                     }));
                     type_env::set_var(cx, &use_op, name_str, &t, pat_loc.dupe())?;
@@ -3204,10 +3204,10 @@ fn statement_<'a>(
                     let name_str = &id_inner.name.name;
                     let optional = id_inner.optional;
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                        var: Some(mk_reason(
+                        var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                             VirtualReasonDesc::RIdentifier(name_str.dupe()),
                             pat_loc.dupe(),
-                        )),
+                        )))),
                         init: reason_of_t(&elem_t).dupe(),
                     }));
                     type_env::set_var(cx, &use_op, name_str, &elem_t, pat_loc.dupe())?;
@@ -3429,10 +3429,10 @@ fn statement_<'a>(
                 inner,
             )?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                var: Some(mk_reason(
+                var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                     VirtualReasonDesc::RIdentifier(name.display_smol_str()),
                     name_loc.dupe(),
-                )),
+                )))),
                 init: reason_of_t(&class_t).dupe(),
             }));
             type_env::init_implicit_let(cx, &use_op, &class_t, name_loc)?;
@@ -3446,10 +3446,10 @@ fn statement_<'a>(
             let name_loc = inner.id.loc.dupe();
             let (t, decl_ast) = declare_class(cx, loc.dupe(), inner)?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                var: Some(mk_reason(
+                var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                     VirtualReasonDesc::RIdentifier(name.dupe()),
                     loc.dupe(),
-                )),
+                )))),
                 init: reason_of_t(&t).dupe(),
             }));
             type_env::init_var(cx, &use_op, &t, name_loc)?;
@@ -3523,10 +3523,10 @@ fn statement_<'a>(
                     inner,
                 )?;
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                    var: Some(mk_reason(
+                    var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                         VirtualReasonDesc::RIdentifier(name.display_smol_str()),
                         name_loc.dupe(),
-                    )),
+                    )))),
                     init: reason_of_t(&record_t).dupe(),
                 }));
                 type_env::init_implicit_const(cx, &use_op, &record_t, name_loc)?;
@@ -3551,10 +3551,10 @@ fn statement_<'a>(
             validate_declare_component_params(cx, &inner.params);
             let (t, decl_ast) = declare_component(cx, loc.dupe(), inner)?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                var: Some(mk_reason(
+                var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                     VirtualReasonDesc::RIdentifier(name.dupe()),
                     loc.dupe(),
-                )),
+                )))),
                 init: reason_of_t(&t).dupe(),
             }));
             type_env::init_var(cx, &use_op, &t, name_loc)?;
@@ -6198,7 +6198,7 @@ fn variable<'a>(
             };
             if let Some((ref init_t, ref init_reason)) = init_opt {
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                    var: Some(id_reason.dupe()),
+                    var: Some(Box::new(type_::AssignVarTarget::Variable(id_reason.dupe()))),
                     init: init_reason.dupe(),
                 }));
                 let init_t = if init_fills_annotated_symbol {
@@ -6235,7 +6235,7 @@ fn variable<'a>(
                     )?;
                     if let Some((ref init_t, ref init_reason)) = init_opt {
                         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                            var: Some(id_reason.dupe()),
+                            var: Some(Box::new(type_::AssignVarTarget::Variable(id_reason.dupe()))),
                             init: init_reason.dupe(),
                         }));
                         flow_js::flow_non_speculating(
@@ -8112,10 +8112,10 @@ fn expression_<'a>(
                     // However, in the new env, we need to perform a bind of the class declaration type to the
                     // name to ensure that the environment knows the type of both the declaration and usages.
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                        var: Some(mk_reason(
+                        var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                             VirtualReasonDesc::RIdentifier(name.dupe()),
                             name_loc.dupe(),
-                        )),
+                        )))),
                         init: reason_of_t(&class_t).dupe(),
                     }));
                     type_env::init_implicit_let(cx, &use_op, &class_t, name_loc)?;
@@ -11067,10 +11067,10 @@ fn update<'a>(
             let name = &inner.name;
             // enforce state-based guards for binding update, e.g., const
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                var: Some(mk_reason(
+                var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                     VirtualReasonDesc::RIdentifier(name.dupe()),
                     id_loc.dupe(),
-                )),
+                )))),
                 init: reason_of_t(&result_t).dupe(),
             }));
             type_env::set_var(cx, &use_op, name, &result_t, id_loc)?;
@@ -12264,10 +12264,10 @@ fn op_assignment<'a>(
                 let id_loc = inner.name.loc.dupe();
                 let name = &inner.name;
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                    var: Some(mk_reason(
+                    var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
                         VirtualReasonDesc::RIdentifier(name.name.dupe()),
                         id_loc.dupe(),
-                    )),
+                    )))),
                     init: rhs_reason.dupe(),
                 }));
                 type_env::set_var(cx, &use_op, &name.name, result_t, id_loc)?;
@@ -21324,10 +21324,10 @@ fn enum_declaration<'a>(
         name_loc.dupe(),
     );
     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-        var: Some(mk_reason(
+        var: Some(Box::new(type_::AssignVarTarget::Variable(mk_reason(
             VirtualReasonDesc::RIdentifier(name.dupe()),
             name_loc.dupe(),
-        )),
+        )))),
         init: reason.dupe(),
     }));
     let t = if flow_common::files::has_ts_ext(cx.file()) {

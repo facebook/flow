@@ -27,6 +27,7 @@ use flow_lazy::ContextFamily;
 
 use crate::type_::ArrRestTData;
 use crate::type_::AssertionFunctionConsistencyData;
+use crate::type_::AssignVarTarget;
 use crate::type_::CallTData;
 use crate::type_::ClassImplementsCheckData;
 use crate::type_::ClassOwnProtoCheckData;
@@ -1059,7 +1060,16 @@ where
             ObjectRest { op } => ObjectRest { op: mod_reason(op) },
             ObjectChain { op } => ObjectChain { op: mod_reason(op) },
             AssignVar { var, init } => AssignVar {
-                var: var.map(mod_reason),
+                var: var.map(|box target| {
+                    Box::new(match target {
+                        AssignVarTarget::Variable(reason) => {
+                            AssignVarTarget::Variable(mod_reason(reason))
+                        }
+                        AssignVarTarget::Annotation(t) => AssignVarTarget::Annotation(
+                            type_or_type_desc::map_loc(|l: &L| f(l.dupe()), t),
+                        ),
+                    })
+                }),
                 init: mod_reason(init),
             },
             Cast {

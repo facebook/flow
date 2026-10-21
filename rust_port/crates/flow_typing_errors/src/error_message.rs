@@ -46,6 +46,7 @@ use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
+use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
@@ -6863,6 +6864,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         ) -> VirtualUseOp<L> {
             match use_op {
                 VirtualUseOp::Op(root) => match root.as_ref() {
+                    VirtualRootUseOp::AssignVar {
+                        var: Some(box AssignVarTarget::Annotation(t)),
+                        init,
+                    } => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::AssignVar {
+                        var: Some(Box::new(AssignVarTarget::Annotation(f(t.clone())))),
+                        init: init.dupe(),
+                    })),
                     VirtualRootUseOp::Cast {
                         lower,
                         upper: box upper,

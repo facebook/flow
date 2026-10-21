@@ -16,12 +16,14 @@ use flow_parser::ast;
 use flow_parser::ast::function;
 use flow_parser::ast::pattern;
 use flow_typing_context::Context;
+use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_loc_env::func_stmt_config_types::Param;
 use flow_typing_loc_env::func_stmt_config_types::Pattern;
 use flow_typing_loc_env::func_stmt_config_types::Rest;
 use flow_typing_loc_env::func_stmt_config_types::ThisParam;
 use flow_typing_type::type_;
+use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::Type;
@@ -149,11 +151,12 @@ fn destruct<'a>(
 
 fn flow_default<'a>(
     cx: &mut Context<'a>,
+    target: AssignVarTarget<ALoc>,
     annot_t: &Type,
     default_t: &Type,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let use_op = UseOp::Op(std::sync::Arc::new(type_::RootUseOp::AssignVar {
-        var: Some(type_util::reason_of_t(annot_t).dupe()),
+        var: Some(Box::new(target)),
         init: type_util::reason_of_t(default_t).dupe(),
     }));
     flow_js::flow_non_speculating(
@@ -169,6 +172,7 @@ fn flow_default<'a>(
 fn eval_default<'a>(
     cx: &mut Context<'a>,
     always_flow_default: bool,
+    target: AssignVarTarget<ALoc>,
     annot_t: &Type,
     has_anno: bool,
     default: Option<ast::expression::Expression<ALoc, ALoc>>,
@@ -178,13 +182,13 @@ fn eval_default<'a>(
             let e = statement::expression(None, None, None, cx, &e)?;
             let (loc, default_t) = e.loc().dupe();
             if has_anno {
-                flow_default(cx, annot_t, &default_t)?;
+                flow_default(cx, target, annot_t, &default_t)?;
                 let mut inner = (*e.0).clone();
                 *inner.loc_mut() = (loc, annot_t.dupe());
                 Ok(ast::expression::Expression(inner.into()))
             } else {
                 if always_flow_default {
-                    flow_default(cx, annot_t, &default_t)?;
+                    flow_default(cx, target, annot_t, &default_t)?;
                 }
                 Ok(e)
             }
@@ -210,7 +214,8 @@ pub fn eval_param<'a>(
             let name = &id.name.name;
             let reason = reason::mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), name_loc);
             let t = type_env::find_write(cx, env_api::DefLocType::OrdinaryNameLoc, reason);
-            let default = eval_default(cx, true, &t, *has_anno, default.dupe())?;
+            let target = AssignVarTarget::Variable(type_util::reason_of_t(&t).dupe());
+            let default = eval_default(cx, true, target, &t, *has_anno, default.dupe())?;
             Ok(function::Param::RegularParam {
                 loc: loc.dupe(),
                 argument: pattern::Pattern::Identifier {
@@ -226,7 +231,8 @@ pub fn eval_param<'a>(
             optional,
             comments,
         } => {
-            let default = eval_default(cx, false, t, *has_anno, default.dupe())?;
+            let target = AssignVarTarget::Annotation(flow_js_utils::type_or_type_desc_for_error(t));
+            let default = eval_default(cx, false, target, t, *has_anno, default.dupe())?;
             let mut init = destructuring::empty(None, None);
             let properties = destructuring::object_properties(
                 cx,
@@ -258,7 +264,8 @@ pub fn eval_param<'a>(
             optional,
             comments,
         } => {
-            let default = eval_default(cx, false, t, *has_anno, default.dupe())?;
+            let target = AssignVarTarget::Annotation(flow_js_utils::type_or_type_desc_for_error(t));
+            let default = eval_default(cx, false, target, t, *has_anno, default.dupe())?;
             let mut init = destructuring::empty(None, None);
             let elements = destructuring::array_elements(
                 cx,
