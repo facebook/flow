@@ -670,7 +670,7 @@ References:
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:17:10
 
-Cannot return `null` because null [1] does not render `InlineParams` [2]. [incompatible-type]
+Cannot return `null` because `null` [1] does not render `InlineParams` [2]. [incompatible-type]
 
    component_type_checking.js:17:10
    17|   return null; // ERROR
@@ -1802,7 +1802,7 @@ References:
 
 Error ----------------------------------------------------------------------- import_component_in_type_position.js:18:45
 
-Cannot assign `3` to `errRendersMFoo` because number literal `3` [1] does not render `Foo` [2]. [incompatible-type]
+Cannot assign `3` to `errRendersMFoo` because `3` [1] does not render `Foo` [2]. [incompatible-type]
 
    import_component_in_type_position.js:18:45
    18| const errRendersMFoo: renders MemoFooType = 3; // ERROR
@@ -1816,7 +1816,7 @@ References:
 
 Error ----------------------------------------------------------------------- import_component_in_type_position.js:19:49
 
-Cannot assign `3` to `errRendersMFooType` because number literal `3` [1] does not render `Foo` [2]. [incompatible-type]
+Cannot assign `3` to `errRendersMFooType` because `3` [1] does not render `Foo` [2]. [incompatible-type]
 
    import_component_in_type_position.js:19:49
    19| const errRendersMFooType: renders MemoFooType = 3; // ERROR

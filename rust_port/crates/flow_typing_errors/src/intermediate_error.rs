@@ -781,6 +781,34 @@ fn printed_type_desc<L: Dupe>(type_desc: &TypeOrTypeDescT<L>) -> ErrorTypeDesc<L
     }
 }
 
+fn loop_render_desc<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug>(
+    desc: &VirtualReasonDesc<L>,
+) -> VirtualReasonDesc<L> {
+    use VirtualReasonDesc::*;
+    match desc {
+        RRenderType(inner) | RRenderMaybeType(inner) | RRenderStarType(inner) => {
+            loop_render_desc(inner)
+        }
+        _ => desc.clone(),
+    }
+}
+
+/// What a render type renders, so that "X does not render Y" doesn't read "renders Y".
+fn rendered_type_desc<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug>(
+    desc: &ErrorTypeDesc<L>,
+) -> ErrorTypeDesc<L> {
+    match desc {
+        ErrorTypeDesc::Normalized(Elt::Type(ty)) => match ty.as_ref() {
+            Ty::Renders(inner, _) => ErrorTypeDesc::Normalized(Elt::Type(inner.dupe())),
+            _ => desc.clone(),
+        },
+        ErrorTypeDesc::ReasonDesc(reason_desc) => {
+            ErrorTypeDesc::ReasonDesc(loop_render_desc(reason_desc))
+        }
+        ErrorTypeDesc::Normalized(Elt::Decl(_)) | ErrorTypeDesc::Unknown => desc.clone(),
+    }
+}
+
 fn mk_error<L: Dupe>(
     kind: ErrorKind,
     loc: Loc,
@@ -3677,19 +3705,21 @@ where
             } else {
                 let (((lower_loc, lower_desc), (upper_loc, upper_desc)), use_op) =
                     flip_contravariant((lower_loc, lower_desc), (upper_loc, upper_desc), use_op);
-                mk_use_op_error(
-                    loc_of_aloc(&primary_loc),
-                    use_op,
-                    explanation,
-                    Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
-                        MessageIncompatibleGeneralWithPrintedTypesData {
-                            lower_loc,
-                            upper_loc,
-                            lower_desc,
-                            upper_desc,
-                        },
-                    )),
-                )
+                let data = Box::new(MessageIncompatibleGeneralWithPrintedTypesData {
+                    lower_loc,
+                    upper_loc,
+                    lower_desc,
+                    upper_desc,
+                });
+                let message = match &use_op {
+                    VirtualUseOp::Frame(frame, _)
+                        if matches!(frame.as_ref(), VirtualFrameUseOp::RendersCompatibility) =>
+                    {
+                        Message::MessageDoesNotRenderWithPrintedTypes(data)
+                    }
+                    _ => Message::MessageIncompatibleGeneralWithPrintedTypes(data),
+                };
+                mk_use_op_error(loc_of_aloc(&primary_loc), use_op, explanation, message)
             }
         }
 
@@ -10580,19 +10610,6 @@ where
             MessageDoesNotRender { lower, upper } => {
                 // We replace the desc of the reason so we can say "LHS" does not render "RHS" instead of
                 // "LHS" does not render "renders RHS"
-                fn loop_render_desc<
-                    L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug,
-                >(
-                    desc: &VirtualReasonDesc<L>,
-                ) -> VirtualReasonDesc<L> {
-                    use VirtualReasonDesc::*;
-                    match desc {
-                        RRenderType(inner) | RRenderMaybeType(inner) | RRenderStarType(inner) => {
-                            loop_render_desc(inner)
-                        }
-                        _ => desc.clone(),
-                    }
-                }
                 let lower_desc = lower.desc.as_ref().map(loop_render_desc);
                 let lower_r = lower.dupe().replace_desc(lower_desc);
                 let upper_desc = upper.desc.as_ref().map(loop_render_desc);
@@ -10603,6 +10620,18 @@ where
                     ref_(&upper_r),
                 ])
             }
+            MessageDoesNotRenderWithPrintedTypes(
+                box MessageIncompatibleGeneralWithPrintedTypesData {
+                    lower_loc,
+                    upper_loc,
+                    lower_desc,
+                    upper_desc,
+                },
+            ) => friendly::Message(vec![
+                ref_of_type_desc(lower_loc, &rendered_type_desc(lower_desc)),
+                text(" does not render "),
+                ref_of_type_desc(upper_loc, &rendered_type_desc(upper_desc)),
+            ]),
             MessageFunctionRequiresAnotherArgument { def, from } => match from {
                 None => friendly::Message(vec![ref_(def), text(" requires another argument")]),
                 Some(from) => friendly::Message(vec![

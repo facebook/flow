@@ -2320,6 +2320,8 @@ pub enum Message<L: Dupe> {
         upper: VirtualReason<L>,
     },
 
+    MessageDoesNotRenderWithPrintedTypes(Box<MessageIncompatibleGeneralWithPrintedTypesData<L>>),
+
     MessageDuplicateClassMember {
         name: FlowSmolStr,
         static_: bool,

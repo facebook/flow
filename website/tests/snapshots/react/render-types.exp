@@ -60,8 +60,8 @@ References:
 
 Error ------------------------------------------------------------------------- -:17:1
 
-Cannot cast `rendersHeaderList` to renders `Header` because `ReadonlyArray` [1] does not render `Header` [2].
-[incompatible-type]
+Cannot cast `rendersHeaderList` to renders `Header` because `ReadonlyArray<renders* Header>` [1] does not render
+`Header` [2]. [incompatible-type]
 
    -:17:1
     17| rendersHeaderList as renders Header; // ERROR
@@ -94,8 +94,8 @@ References:
 
 Error ------------------------------------------------------------------------- -:18:1
 
-Cannot cast `rendersHeaderList` to renders? `Header` because `ReadonlyArray` [1] does not render `Header` [2].
-[incompatible-type]
+Cannot cast `rendersHeaderList` to renders? `Header` because `ReadonlyArray<renders* Header>` [1] does not render
+`Header` [2]. [incompatible-type]
 
    -:18:1
     18| rendersHeaderList as renders? Header; // ERROR
