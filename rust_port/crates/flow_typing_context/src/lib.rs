@@ -55,6 +55,7 @@ use flow_common::subst_name::SubstName;
 use flow_common::type_strictness::TypeStrictnessKind;
 use flow_common::verbose::Verbose;
 use flow_data_structure_wrapper::int_map::IntHashMap;
+use flow_data_structure_wrapper::int_map::IntHashSet;
 use flow_data_structure_wrapper::multi_level_map::MultiLevelMap;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -423,6 +424,9 @@ pub struct ComponentT {
     delayed_forcing_tvars: FlowOrdSet<i32>,
     post_component_tvar_forcing_states: FlowVector<ForcingState<Cx>>,
     active_tvar_forcing_states: Vec<ForcingState<Cx>>,
+    /// Root ids of tvars whose every reachable tvar is resolved or already forced, so forcing
+    /// them again is a no-op.
+    fully_forced_tvars: IntHashSet<i32>,
     post_inference_polarity_checks: Vec<(
         BTreeMap<SubstName, type_::TypeParam>,
         flow_common::polarity::Polarity,
@@ -1036,6 +1040,7 @@ fn make_ccx() -> ComponentT {
         delayed_forcing_tvars: CACHED_ORD_SET.with(|c| c.clone()),
         post_component_tvar_forcing_states: FlowVector::new(),
         active_tvar_forcing_states: Vec::new(),
+        fully_forced_tvars: IntHashSet::default(),
         post_inference_polarity_checks: Vec::new(),
         post_inference_validation_flows: VecDeque::new(),
         post_inference_validation_callbacks: Vec::new(),
@@ -1678,6 +1683,14 @@ impl<'a> Context<'a> {
                 self.force_fully_resolved_tvar(state);
             }
         }
+    }
+
+    pub fn is_fully_forced_tvar(&self, root_id: i32) -> bool {
+        self.ccx().fully_forced_tvars.contains(&root_id)
+    }
+
+    pub fn add_fully_forced_tvars(&mut self, root_ids: impl IntoIterator<Item = i32>) {
+        self.ccx_mut().fully_forced_tvars.extend(root_ids);
     }
 
     pub fn is_active_tvar_forcing_state(&self, state: &ForcingState<Cx>) -> bool {

@@ -1605,6 +1605,14 @@ fn mk_inference_targ<'cx>(
 fn force_type_arguments(cx: &mut Context<'_>, targs: &[Targ]) {
     struct Forcer {
         seen: BTreeSet<i32>,
+        // Whether the walk skipped an unresolved tvar or a state that is being forced. Either can
+        // gain unforced lazy tvars later, so the seen tvars are not fully forced.
+        //
+        // An EvalT missing from `evaluated` does not make the walk incomplete. Annotation EvalTs
+        // of the checked file are evaluated when converted, and evaluations during a solve are
+        // rolled back, so counting it would keep walks through generic library types from ever
+        // being recorded.
+        incomplete: bool,
     }
 
     impl TypeVisitor<()> for Forcer {
@@ -1617,7 +1625,7 @@ fn force_type_arguments(cx: &mut Context<'_>, targs: &[Targ]) {
             id: u32,
         ) {
             let (root_id, constraints) = cx.find_constraints(id as i32);
-            if !self.seen.insert(root_id) {
+            if cx.is_fully_forced_tvar(root_id) || !self.seen.insert(root_id) {
                 return;
             }
             match constraints {
@@ -1628,18 +1636,22 @@ fn force_type_arguments(cx: &mut Context<'_>, targs: &[Targ]) {
                     self.type_(cx, pole, (), &t);
                 }
                 constraint::Constraints::Resolved(t) => self.type_(cx, pole, (), &t),
-                _ => {}
+                _ => self.incomplete = true,
             }
         }
     }
 
     let mut forcer = Forcer {
         seen: BTreeSet::new(),
+        incomplete: false,
     };
     for targ in targs {
         if let Targ::ExplicitArg(t) = targ {
             forcer.type_(cx, Polarity::Positive, (), t);
         }
+    }
+    if !forcer.incomplete {
+        cx.add_fully_forced_tvars(forcer.seen);
     }
 }
 
