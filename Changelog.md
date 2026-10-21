@@ -1,3 +1,50 @@
+### 0.337.0
+
+Likely to cause new Flow errors:
+* `Function.prototype.bind` is now typed with TypeScript's `CallableFunction.bind` overloads, so errors in bound arguments are reported at `bind`, and a bound function's remaining parameters are a tuple type.
+* `Function` and `Object` no longer mean `any` and no longer trigger `unclear-type` errors. They are now interpreted as the prototypes of functions and objects. Code that assumed they meant `any` may get new errors.
+* Internal type `Function$Prototype$Bind` is removed.
+* Class method `bind` now uses the declared `Function.prototype.bind` overloads. Bound methods may now report tuple arity errors when used as callbacks that ignore extra arguments or omit nullable parameters, because their inferred parameters are represented as tuple rest parameters.
+
+New Features:
+* Support [assertion functions](https://flow.org/en/docs/types/assertion-functions/). If you relied on Flow's special handling of `invariant`, give it an `asserts` signature.
+* Execute runtime Flow syntax in CommonJS and ES modules with original stack locations through `flow-node`.
+* Support assertion narrowing through `this` and `super`, including [receiver assertions](https://flow.org/en/docs/types/assertion-functions/#toc-asserting-the-receiver).
+* `Readonly` now supports `Array` and `ReadonlyArray` types.
+
+Notable bug fixes:
+* Honor opaque upper bounds in template interpolation and nullable subtyping.
+* Preserve nominal opaque inference when checking nullable targets.
+* Fixed spurious `Recursion limit exceeded` errors when checking conditions, `match` and other expressions whose type is a trivially recursive generic type alias.
+* Prevent unsound assertion narrowing when annotations refer to shadowed local declarations.
+* Qualified type references through a union of namespaces (e.g. `(cond ? A : B).T` via a local) now look up the type in each namespace instead of reporting it as missing.
+* Prevent saved-state startup and incremental match checking from crashing when a recheck is canceled.
+
+Misc:
+* Document assertion functions.
+
+Parser:
+* Add missing AST fields and node types to the Flow parser output. `implicitDeclare` is now omitted unless `true`.
+* Emit `TypeParameter.bound` as a bare type node or `null` in ESTree output. Babel output retains the `TypeAnnotation` wrapper, and the TypeScript-to-Flow API translator generates `extends` bounds.
+* ESTree enum declarations now use a unified `EnumBody` node with string-or-null `explicitType`. Babel output retains its existing enum body types.
+* Parse typed function overload signatures in TypeScript implementation files.
+* Parse destructured parameters in TypeScript function types outside declaration files.
+* Parse optional class method signatures in JavaScript and TypeScript files.
+* Parse optional TypeScript constructor parameter properties.
+* Parse namespace export aliases and ambient exported members in TypeScript definitions.
+* Fix parsing of class modifiers before synchronous generator methods.
+* Support `readonly T[]` in unlabeled tuple elements and require parentheses when optional.
+
+Library Definitions:
+* Add `Intl.Segmenter` and `Intl.supportedValuesOf`.
+* Add `Intl.NumberFormat.prototype.formatRange` and `formatRangeToParts`, and the ES2023 `NumberFormat` options; `format` accepts `bigint` and numeric strings.
+* `String.prototype.localeCompare`, `toLocaleLowerCase` and `toLocaleUpperCase` accept `Intl.LocalesArgument`; `matchAll` with a `RegExp` returns `RegExpExecArray` matches.
+* `Float16Array.prototype.toLocaleString` takes `Intl.NumberFormatOptions`.
+* Add ES2024 `ArrayBuffer` resizing, transfer, and constructor options.
+* Align `Reflect` APIs with TypeScript property, descriptor, key, and constructor definitions.
+* Reuse TypeScript's `Float16Array` declarations while preserving Flow covariance and callback compatibility.
+* Align `Proxy` APIs with TypeScript and check array elements against numeric interface indexers.
+
 ### 0.336.0
 
 Likely to cause new Flow errors:
