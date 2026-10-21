@@ -376,7 +376,7 @@ Flags: --pretty
     {"name":"AsyncDisposableStack","type":"AsyncDisposableStackConstructor"},
     {"name":"atob","type":"(encodedString: string) => string"},
     {"name":"Atomics","type":"Atomics"},
-    {"name":"BigInt","type":"typeof BigInt"},
+    {"name":"BigInt","type":"BigIntConstructor"},
     {"name":"BigInt64Array","type":"BigInt64ArrayConstructor"},
     {"name":"BigUint64Array","type":"BigUint64ArrayConstructor"},
     {"name":"Boolean","type":"typeof Boolean"},
