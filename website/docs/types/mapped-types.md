@@ -180,13 +180,15 @@ declare const mapped: MappedTuple;
 mapped[0] = true; // error: cannot-write
 ```
 
-For now, the only supported property modifier on array input is the optionality modifier `?`.
+Property modifiers apply to the elements of an array input. Variance modifiers change the variance of each tuple element, and `readonly` turns an array into a `ReadonlyArray`. Arrays cannot be made write-only.
 
 ```js flow-check
 type Tuple = [readonly a: number, b?: string];
-type Supported = {[K in keyof Tuple]?: string};
-type Unsupported1 = {readonly [K in keyof Tuple]: string}; // Error
-type Unsupported2 = {writeonly [K in keyof Tuple]: string}; // Error
+type Supported1 = {[K in keyof Tuple]?: string};
+type Supported2 = {readonly [K in keyof Tuple]: string};
+type Supported3 = {writeonly [K in keyof Tuple]: string};
+type Supported4 = {readonly [K in keyof Array<number>]: string};
+type Unsupported = {writeonly [K in keyof Array<number>]: string}; // Error
 ```
 
 ## Adoption {#toc-adoption}

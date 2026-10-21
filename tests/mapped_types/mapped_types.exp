@@ -2658,14 +2658,6 @@ Cannot assign `'str'` to `readonlyIndexer.qux` because property `qux` is not wri
                           ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:104:23
-
-Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
-
-   104|   type _Unsupported = {readonly [key in keyof Arr]: Arr[key]}; // error: unsupported variance
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:111:3
 
 Cannot cast `partial.foo` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
@@ -2874,4 +2866,4 @@ References:
 
 
 
-Found 173 errors
+Found 172 errors

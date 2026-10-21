@@ -7900,7 +7900,7 @@ where
                 "Mapped Types cannot be used when other properties or indexers are present.",
             )]),
             MessageInvalidMappedTypeWithVarianceOnArrayInput => friendly::Message(vec![text(
-                "Mapped Types do not yet support variance annotations on array inputs.",
+                "Mapped Types do not yet support write-only variance annotations on array inputs.",
             )]),
             MessageInvalidTemplateLiteralTypeComplexity => friendly::Message(vec![text(
                 "Template literal type produces a union type that is too complex to represent.",

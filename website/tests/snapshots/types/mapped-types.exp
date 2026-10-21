@@ -137,19 +137,12 @@ Cannot assign `true` to `mapped[0]` because tuple element at index `0` [1] label
 Found 3 errors
 
 === block 15 ===
-Error ------------------------------------------------------------------------- -:4:21
+Error ------------------------------------------------------------------------- -:7:20
 
-Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
+Mapped Types do not yet support write-only variance annotations on array inputs. [invalid-mapped-type]
 
-   4| type Unsupported1 = {readonly [K in keyof Tuple]: string}; // Error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Error ------------------------------------------------------------------------- -:5:21
-
-Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
-
-   5| type Unsupported2 = {writeonly [K in keyof Tuple]: string}; // Error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   7| type Unsupported = {writeonly [K in keyof Array<number>]: string}; // Error
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Found 2 errors
+Found 1 error

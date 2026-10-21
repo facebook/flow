@@ -8039,10 +8039,14 @@ fn __flow_impl<'cx>(
                     | flow_typing_type::type_::MappedTypeOptionality::KeepOptionality => arity,
                 }
             };
-            if !matches!(
-                mapped_type_variance,
-                flow_typing_type::type_::MappedTypeVariance::KeepVariance
-            ) {
+            let mapped_polarity =
+                |polarity: Polarity| slice_utils::mk_variance(*mapped_type_variance, polarity);
+            let array_polarity = match arrtype.deref() {
+                ArrType::ArrayAT(_) => Some(mapped_polarity(Polarity::Neutral)),
+                ArrType::ROArrayAT(_) => Some(mapped_polarity(Polarity::Positive)),
+                ArrType::TupleAT(_) => None,
+            };
+            if array_polarity == Some(Polarity::Negative) {
                 add_output_with_env(
                     cx, env,
                 ErrorMessage::EInvalidMappedType {
@@ -8063,6 +8067,16 @@ fn __flow_impl<'cx>(
                 }
             };
             let new_arrtype = match arrtype.deref() {
+                ArrType::ArrayAT(box ArrayATData {
+                    elem_t, react_dro, ..
+                }) if array_polarity == Some(Polarity::Positive) => {
+                    let mapped_elem_t = f(cx, elem_t, None, false)?;
+                    ArrType::ROArrayAT(Box::new(ROArrayATData {
+                        elem_t: array_elem(cx, mapped_elem_t)?,
+                        react_dro: react_dro.clone(),
+                        literal: false,
+                    }))
+                }
                 ArrType::ArrayAT(box ArrayATData {
                     elem_t,
                     tuple_view,
@@ -8140,7 +8154,7 @@ fn __flow_impl<'cx>(
                                 Ok::<TupleElement, FlowJsException>(TupleElement {
                                     name: elem.name.dupe(),
                                     t: f(cx, &elem.t, Some(i), elem.optional)?,
-                                    polarity: elem.polarity,
+                                    polarity: mapped_polarity(elem.polarity),
                                     optional: new_element_optional(elem.optional),
                                     reason: elem.reason.dupe(),
                                 })
@@ -8155,11 +8169,27 @@ fn __flow_impl<'cx>(
                                 let mapped_t = f(cx, &elem.t, None, false)?;
                                 Ok::<TupleElement, FlowJsException>(TupleElement {
                                     t: array_elem(cx, mapped_t)?,
+                                    polarity: mapped_polarity(elem.polarity),
                                     ..elem.clone()
                                 })
                             })
                             .transpose()?,
                         strictness_kind: *strictness_kind,
+                        literal: false,
+                        fresh: false,
+                    }))
+                }
+                ArrType::ROArrayAT(box ROArrayATData {
+                    elem_t: elemt,
+                    react_dro: dro,
+                    ..
+                }) if array_polarity == Some(Polarity::Neutral) => {
+                    let mapped_elem_t = f(cx, elemt, None, false)?;
+                    ArrType::ArrayAT(Box::new(ArrayATData {
+                        elem_t: array_elem(cx, mapped_elem_t)?,
+                        react_dro: dro.clone(),
+                        tuple_view: None,
+                        strictness_kind: TypeStrictnessKind::Flow,
                         literal: false,
                         fresh: false,
                     }))

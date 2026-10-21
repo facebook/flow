@@ -3010,6 +3010,20 @@ pub fn super_<'cx, A>(
     }
 }
 
+pub fn mk_variance(variance: MappedTypeVariance, prop_polarity: Polarity) -> Polarity {
+    match variance {
+        MappedTypeVariance::KeepVariance => prop_polarity,
+        MappedTypeVariance::OverrideVariance(pol) => pol,
+        MappedTypeVariance::RemoveVariance(pol) => {
+            if prop_polarity == pol {
+                Polarity::Neutral
+            } else {
+                prop_polarity
+            }
+        }
+    }
+}
+
 pub fn mk_mapped_prop_type<'cx>(
     cx: &mut Context<'cx>,
     filter_optional: &dyn Fn(&mut Context<'cx>, Type) -> Result<Type, FlowJsException>,
@@ -3202,19 +3216,6 @@ pub fn map_object<'cx>(
             key_t,
             prop_optional,
         )
-    };
-    let mk_variance = |variance: MappedTypeVariance, prop_polarity: Polarity| -> Polarity {
-        match variance {
-            MappedTypeVariance::KeepVariance => prop_polarity,
-            MappedTypeVariance::OverrideVariance(pol) => pol,
-            MappedTypeVariance::RemoveVariance(pol) => {
-                if prop_polarity == pol {
-                    Polarity::Neutral
-                } else {
-                    prop_polarity
-                }
-            }
-        }
     };
     /* Build the field for a given source key and its prop in the source object. */
     let build_source_field = |cx: &mut Context<'cx>,

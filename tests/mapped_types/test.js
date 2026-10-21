@@ -101,7 +101,7 @@ type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
   readonlyIndexer.qux as string; // OK
   readonlyIndexer.qux = 'str'; // ERROR
 
-  type _Unsupported = {readonly [key in keyof Arr]: Arr[key]}; // error: unsupported variance
+  type _ReadOnlyArr = {readonly [key in keyof Arr]: Arr[key]}; // OK
 }
 
 // Optionality
