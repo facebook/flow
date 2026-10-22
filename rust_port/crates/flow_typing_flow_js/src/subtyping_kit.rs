@@ -70,6 +70,7 @@ use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::Cont;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::DefTInner::*;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::EnumInfoInner;
@@ -114,6 +115,7 @@ use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::TypeInner::*;
 use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnifyCause;
 use flow_typing_type::type_::UnionEnum;
@@ -121,6 +123,7 @@ use flow_typing_type::type_::UnionEnumSet;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
+use flow_typing_type::type_::UseTInner::*;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualUseOp;
 use flow_typing_type::type_::any_t;
@@ -1182,10 +1185,7 @@ fn try_method_bivariant<'cx>(
         ut: &Type,
     ) -> Result<bool, FlowJsException> {
         match (lt.deref(), ut.deref()) {
-            (TypeInner::DefT(lreason_f, ld), TypeInner::DefT(ureason_f, ud))
-                if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
-                    (ld.deref(), ud.deref()) =>
-            {
+            (DefT(lreason_f, deref!(FunT(_, ft1))), DefT(ureason_f, deref!(FunT(_, ft2)))) => {
                 funt_to_funt_method_bivariant(
                     cx, env, trace, use_op, lt, ut, lreason_f, ft1, ureason_f, ft2,
                 )?;
@@ -4902,162 +4902,126 @@ pub fn rec_sub_t<'cx>(
         // can be derived as a specialization of the generic signature.
 
         // some shortcuts
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if matches!(
-                (ld.deref(), ud.deref()),
-                (DefTInner::PolyT(_), DefTInner::PolyT(_))
-            ) && {
-                if let (
-                    DefTInner::PolyT(box PolyTData { id: id1, .. }),
-                    DefTInner::PolyT(box PolyTData { id: id2, .. }),
-                ) = (ld.deref(), ud.deref())
-                {
-                    id1 == id2
-                } else {
-                    false
-                }
-            } =>
-        {
+        (
+            DefT(_, deref!(PolyT(box PolyTData { id: id1, .. }))),
+            DefT(_, deref!(PolyT(box PolyTData { id: id2, .. }))),
+        ) if id1 == id2 => {
             if cx.is_verbose() {
                 eprintln!("PolyT ~> PolyT fast path");
             }
             Ok(())
         }
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if matches!(
-                (ld.deref(), ud.deref()),
-                (DefTInner::PolyT(_), DefTInner::PolyT(_))
-            ) && {
-                if let (
-                    DefTInner::PolyT(box PolyTData {
-                        tparams: params1, ..
-                    }),
-                    DefTInner::PolyT(box PolyTData {
-                        tparams: params2, ..
-                    }),
-                ) = (ld.deref(), ud.deref())
-                {
-                    params1.len() == params2.len()
-                } else {
-                    false
-                }
-            } =>
-        {
-            if let (
-                DefTInner::PolyT(box PolyTData {
-                    tparams: params1,
-                    t_out: t1,
-                    ..
-                }),
-                DefTInner::PolyT(box PolyTData {
-                    tparams: params2,
-                    t_out: t2,
-                    ..
-                }),
-            ) = (ld.deref(), ud.deref())
-            {
-                // A description of this subtyping rule can be found in "Decidable Bounded
-                // Quantifcation" by G. Castagna B. Pierce.
-                //
-                //   G |- T1 <: S1   G, { X: S1 } |- S2 <: T2
-                //   ------------------------------------------ (All-local)
-                //   G |- forall X:S1 . S2 <: forall X:T1 . T2
-                //
-                // The code below implements this rule for the slightly more general case of
-                // subtyping between two polymorphic types:
-                //
-                // forall a1:b1  , ... ai:bi  , ..., an:bn   . t
-                // forall a1':b1', ... ai':bi', ..., an':bn' . t'
-                //
-                // 1st Premise
-                // -----------
-                // For each type parameter pair (ai:bi, ai':bi') we create the constraints:
-                //
-                // bi[ai, ..., a_(i-1)] <: bi'[ai'/ai, ..., a_(i-1)'/a_(i-1)]
-                //
-                // where ai is a GenericT
-                let (map1, generics) = flow_js_utils::mk_tparams(cx, params1);
-                let map2 = params2.iter().zip(generics).fold(
-                    flow_data_structure_wrapper::ord_map::FlowOrdMap::new(),
-                    |mut map, (param, generic)| {
-                        map.insert(param.name.dupe(), generic);
-                        map
-                    },
-                );
-                for (param1, param2) in params1.iter().zip(params2.iter()) {
-                    let bound1 = flow_typing_flow_common::type_subst::subst(
-                        cx,
-                        Some(use_op.dupe()),
-                        true,
-                        false,
-                        flow_typing_flow_common::type_subst::Purpose::Normal,
-                        &map1,
-                        param1.bound.dupe(),
-                    );
-                    let bound2 = flow_typing_flow_common::type_subst::subst(
-                        cx,
-                        Some(use_op.dupe()),
-                        true,
-                        false,
-                        flow_typing_flow_common::type_subst::Purpose::Normal,
-                        &map2,
-                        param2.bound.dupe(),
-                    );
-                    FlowJs::rec_flow_with_env(
-                        cx, env,
-                        trace,
-                        &bound2,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), bound1.dupe())),
-                    )?;
-                    if param1.is_const != param2.is_const {
-                        flow_js_utils::add_output_with_env(
-                            cx,env,
-                            ErrorMessage::ETypeParamConstIncompatibility(Box::new(
-                                ETypeParamConstIncompatibilityData {
-                                    use_op: use_op.dupe(),
-                                    lower: NamedReferenceData {
-                                        loc: param1.reason.loc().dupe(),
-                                        name: param1.name.string_of_subst_name().dupe(),
-                                    },
-                                    upper: NamedReferenceData {
-                                        loc: param2.reason.loc().dupe(),
-                                        name: param2.name.string_of_subst_name().dupe(),
-                                    },
-                                },
-                            )),
-                        )?;
-                    }
-                }
-                // 2nd Premise
-                // -----------
-                // We check t <: t' after substituting ai' for ai
-                let t1_subst = flow_typing_flow_common::type_subst::subst(
+        (
+            DefT(_, deref!(PolyT(box PolyTData {
+                tparams: params1,
+                t_out: t1,
+                ..
+            }))),
+            DefT(_, deref!(PolyT(box PolyTData {
+                tparams: params2,
+                t_out: t2,
+                ..
+            }))),
+        ) if params1.len() == params2.len() => {
+            // A description of this subtyping rule can be found in "Decidable Bounded
+            // Quantifcation" by G. Castagna B. Pierce.
+            //
+            //   G |- T1 <: S1   G, { X: S1 } |- S2 <: T2
+            //   ------------------------------------------ (All-local)
+            //   G |- forall X:S1 . S2 <: forall X:T1 . T2
+            //
+            // The code below implements this rule for the slightly more general case of
+            // subtyping between two polymorphic types:
+            //
+            // forall a1:b1  , ... ai:bi  , ..., an:bn   . t
+            // forall a1':b1', ... ai':bi', ..., an':bn' . t'
+            //
+            // 1st Premise
+            // -----------
+            // For each type parameter pair (ai:bi, ai':bi') we create the constraints:
+            //
+            // bi[ai, ..., a_(i-1)] <: bi'[ai'/ai, ..., a_(i-1)'/a_(i-1)]
+            //
+            // where ai is a GenericT
+            let (map1, generics) = flow_js_utils::mk_tparams(cx, params1);
+            let map2 = params2.iter().zip(generics).fold(
+                flow_data_structure_wrapper::ord_map::FlowOrdMap::new(),
+                |mut map, (param, generic)| {
+                    map.insert(param.name.dupe(), generic);
+                    map
+                },
+            );
+            for (param1, param2) in params1.iter().zip(params2.iter()) {
+                let bound1 = flow_typing_flow_common::type_subst::subst(
                     cx,
                     Some(use_op.dupe()),
                     true,
                     false,
                     flow_typing_flow_common::type_subst::Purpose::Normal,
                     &map1,
-                    t1.dupe(),
+                    param1.bound.dupe(),
                 );
-                let t2_subst = flow_typing_flow_common::type_subst::subst(
+                let bound2 = flow_typing_flow_common::type_subst::subst(
                     cx,
                     Some(use_op.dupe()),
                     true,
                     false,
                     flow_typing_flow_common::type_subst::Purpose::Normal,
                     &map2,
-                    t2.dupe(),
+                    param2.bound.dupe(),
                 );
-                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t1_subst, &t2_subst)?;
+                FlowJs::rec_flow_with_env(
+                    cx, env,
+                    trace,
+                    &bound2,
+                    &UseT::new(UseT(use_op.dupe(), bound1.dupe())),
+                )?;
+                if param1.is_const != param2.is_const {
+                    flow_js_utils::add_output_with_env(
+                        cx,env,
+                        ErrorMessage::ETypeParamConstIncompatibility(Box::new(
+                            ETypeParamConstIncompatibilityData {
+                                use_op: use_op.dupe(),
+                                lower: NamedReferenceData {
+                                    loc: param1.reason.loc().dupe(),
+                                    name: param1.name.string_of_subst_name().dupe(),
+                                },
+                                upper: NamedReferenceData {
+                                    loc: param2.reason.loc().dupe(),
+                                    name: param2.name.string_of_subst_name().dupe(),
+                                },
+                            },
+                        )),
+                    )?;
+                }
             }
+            // 2nd Premise
+            // -----------
+            // We check t <: t' after substituting ai' for ai
+            let t1_subst = flow_typing_flow_common::type_subst::subst(
+                cx,
+                Some(use_op.dupe()),
+                true,
+                false,
+                flow_typing_flow_common::type_subst::Purpose::Normal,
+                &map1,
+                t1.dupe(),
+            );
+            let t2_subst = flow_typing_flow_common::type_subst::subst(
+                cx,
+                Some(use_op.dupe()),
+                true,
+                false,
+                flow_typing_flow_common::type_subst::Purpose::Normal,
+                &map2,
+                t2.dupe(),
+            );
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t1_subst, &t2_subst)?;
             Ok(())
         }
         // general case
-        (_, TypeInner::DefT(_, ud))
-            if let DefTInner::PolyT(box PolyTData { t_out: t, .. }) = ud.deref() =>
-        {
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t.dupe())))
+        (_, DefT(_, deref!(PolyT(box PolyTData { t_out: t, .. })))) => {
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, t.dupe())))
         }
         // TODO: ideally we'd do the same when lower bounds flow to a
         // this-abstracted class, but fixing the class is easier; might need to

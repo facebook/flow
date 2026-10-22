@@ -40,6 +40,8 @@ use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::CondTData;
 use flow_typing_type::type_::ConditionalTData;
+use flow_typing_type::type_::DefT;
+use flow_typing_type::type_::DefTInner::*;
 use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::ElemTData;
 use flow_typing_type::type_::EvalTypeDestructorTData;
@@ -74,14 +76,18 @@ use flow_typing_type::type_::TestPropTData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TypeAppTData;
+use flow_typing_type::type_::TypeInner::*;
 use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnresolvedArgData;
+use flow_typing_type::type_::UseT;
+use flow_typing_type::type_::UseTInner::*;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::WriteElemData;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
 use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 
+use super::InstanceT;
 use super::any_helpers::*;
 use super::constraint_helpers::*;
 use super::eval_helpers::*;
@@ -552,7 +558,7 @@ fn __flow_impl<'cx>(
         return Ok(None);
     }
     if match l.deref() {
-        TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => empty_success(u),
+        DefT(_, deref!(EmptyT)) => empty_success(u),
         _ => false,
     } {
         return Ok(None);
@@ -562,31 +568,32 @@ fn __flow_impl<'cx>(
         // ********
         // * eval *
         // ********
-        (TypeInner::EvalT { id: id1, .. }, UseTInner::UseT(_, t2)) if matches!(t2.deref(), TypeInner::EvalT { id: id2, .. } if id1 == id2) => {
+        (EvalT { id: id1, .. }, UseT(_, deref!(EvalT { id: id2, .. }))) if id1 == id2 => {
             if cx.is_verbose() {
                 eprintln!("EvalT ~> EvalT fast path");
             }
         }
         (
-            TypeInner::EvalT {
+            EvalT {
                 type_: t1,
                 defer_use_t: d1,
                 ..
             },
-            UseTInner::UseT(_, t2),
-        ) if let TypeInner::EvalT {
-            type_: t2,
-            defer_use_t: d2,
-            ..
-        } = t2.deref()
-            && same_generic_indexed_access(cx, (t1, d1), (t2, d2)) =>
-        {
+            UseT(
+                _,
+                deref!(EvalT {
+                    type_: t2,
+                    defer_use_t: d2,
+                    ..
+                }),
+            ),
+        ) if same_generic_indexed_access(cx, (t1, d1), (t2, d2)) => {
             if cx.is_verbose() {
                 eprintln!("EvalT ~> EvalT same generic indexed access fast path");
             }
         }
         (
-            TypeInner::EvalT {
+            EvalT {
                 type_: t,
                 defer_use_t,
                 id,
@@ -612,13 +619,17 @@ fn __flow_impl<'cx>(
                 DepthTrace::rec_trace(trace),
             )));
         }
-        (_, UseTInner::UseT(use_op, eval_t))
-            if let TypeInner::EvalT {
-                type_: t,
-                defer_use_t,
-                id,
-            } = eval_t.deref() =>
-        {
+        (
+            _,
+            UseT(
+                use_op,
+                deref!(EvalT {
+                    type_: t,
+                    defer_use_t,
+                    id,
+                }),
+            ),
+        ) => {
             let TypeDestructorTInner(use_op_prime, reason, d) = defer_use_t.deref();
             let result = eval_helpers::mk_type_destructor(
                 cx,
@@ -634,7 +645,7 @@ fn __flow_impl<'cx>(
             // Tail call: in OCaml this is the last call in the match arm
             return Ok(Some(TailCall::RecFlow(
                 result,
-                UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+                UseT::new(ReposUseT(Box::new(ReposUseTData {
                     reason: reason.dupe(),
                     use_desc: false,
                     use_op: use_op.dupe(),

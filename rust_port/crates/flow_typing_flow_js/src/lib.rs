@@ -6,6 +6,7 @@
  */
 
 #![feature(box_patterns)]
+#![feature(deref_patterns)]
 pub mod default_resolve;
 pub mod flow_js;
 pub mod implicit_instantiation;

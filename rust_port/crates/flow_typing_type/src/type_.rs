@@ -35,6 +35,7 @@ use std::collections::VecDeque;
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::ops::Deref;
+use std::ops::DerefPure;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -401,6 +402,9 @@ impl Deref for Type {
     }
 }
 
+// SAFETY: Deref repeatedly borrows the same Rc pointee without changing the wrapper.
+unsafe impl DerefPure for Type {}
+
 impl std::fmt::Debug for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
@@ -567,6 +571,9 @@ impl Deref for DefT {
         &self.0
     }
 }
+
+// SAFETY: Deref repeatedly borrows the same Rc pointee without changing the wrapper.
+unsafe impl DerefPure for DefT {}
 
 impl DefT {
     pub fn new(inner: DefTInner) -> Self {
