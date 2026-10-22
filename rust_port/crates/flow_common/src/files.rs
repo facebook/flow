@@ -154,7 +154,7 @@ impl Default for FileOptions {
     fn default() -> Self {
         Self {
             default_lib_dir: None,
-            builtin_ts_libdef_dynamic_discovery: false,
+            builtin_ts_libdef_dynamic_discovery: true,
             ignores: Vec::new(),
             untyped: Vec::new(),
             declarations: Vec::new(),

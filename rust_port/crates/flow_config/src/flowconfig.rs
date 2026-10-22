@@ -286,7 +286,7 @@ pub mod opts {
             automatic_require_default: None,
             babel_loose_array_spread: None,
             ban_spread_key_props: None,
-            builtin_ts_libdef_dynamic_discovery: false,
+            builtin_ts_libdef_dynamic_discovery: true,
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Vec::new(),
@@ -2064,9 +2064,12 @@ pub mod opts {
                 "experimental.builtin_ts_libdef_dynamic_discovery",
                 |values, config| {
                     parse_boolean(
-                        |opts, v| {
-                            opts.builtin_ts_libdef_dynamic_discovery = v;
-                            Ok(())
+                        |_opts, v| {
+                            if v {
+                                Ok(())
+                            } else {
+                                Err("This option can only be set to `true`.".to_owned())
+                            }
                         },
                         values,
                         config,
