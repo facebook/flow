@@ -3996,13 +3996,13 @@ fn __flow_impl<'cx>(
                                     // tuples or array literals into simple arrays.
                                     let new_arrtype = match &arrtype {
                                         // These can get us into constant folding loops
-                                        ArrType::ArrayAT(box ArrayATData {
+                                        ArrayAT(box ArrayATData {
                                             elem_t,
                                             tuple_view: Some(_),
                                             react_dro,
                                             strictness_kind,
                                             ..
-                                        }) => ArrType::ArrayAT(Box::new(ArrayATData {
+                                        }) => ArrayAT(Box::new(ArrayATData {
                                             elem_t: elem_t.dupe(),
                                             tuple_view: None,
                                             react_dro: react_dro.clone(),
@@ -4010,12 +4010,12 @@ fn __flow_impl<'cx>(
                                             literal: arrtype.literal(),
                                             fresh: arrtype.fresh(),
                                         })),
-                                        ArrType::TupleAT(box TupleATData {
+                                        TupleAT(box TupleATData {
                                             elem_t,
                                             react_dro,
                                             strictness_kind,
                                             ..
-                                        }) => ArrType::ArrayAT(Box::new(ArrayATData {
+                                        }) => ArrayAT(Box::new(ArrayATData {
                                             elem_t: elem_t.dupe(),
                                             tuple_view: None,
                                             react_dro: react_dro.clone(),
@@ -4024,13 +4024,10 @@ fn __flow_impl<'cx>(
                                             fresh: arrtype.fresh(),
                                         })),
                                         // These cannot
-                                        ArrType::ArrayAT(box ArrayATData {
-                                            tuple_view: None,
-                                            ..
+                                        ArrayAT(box ArrayATData {
+                                            tuple_view: None, ..
                                         })
-                                        | ArrType::ROArrayAT(box ROArrayATData { .. }) => {
-                                            arrtype.clone()
-                                        }
+                                        | ROArrayAT(box ROArrayATData { .. }) => arrtype.clone(),
                                     };
                                     let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
                                     rrt_resolved.push_front(ResolvedParam::ResolvedSpreadArg(
@@ -4079,20 +4076,18 @@ fn __flow_impl<'cx>(
         // ********************
         // * conditional type *
         // ********************
-        (DefT(_, def_t), ConditionalT(box ConditionalTData { use_op, tout, .. }))
-            if matches!(def_t.deref(), EmptyT) =>
-        {
+        (DefT(_, deref!(EmptyT)), ConditionalT(box ConditionalTData { use_op, tout, .. })) => {
             let open_tout = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
-            DefT(reason_tapp, def_t),
+            DefT(reason_tapp, deref!(PolyT(box PolyTData { tparams, t_out, .. }))),
             ConditionalT(box ConditionalTData {
                 use_op,
                 reason: reason_op,
                 ..
             }),
-        ) if let PolyT(box PolyTData { tparams, t_out, .. }) = def_t.deref() => {
+        ) => {
             let t_ = implicit_instantiation::kit::run_monomorphize(
                 cx,
                 env,
@@ -4201,17 +4196,13 @@ fn __flow_impl<'cx>(
         // from the latter kind of flow, but it's unclear how difficult
         // it would be in practice.
         (
-            DefT(_, def_t),
+            DefT(_, deref!(SingletonStrT { .. } | SingletonNumT { .. } | SingletonBoolT { .. })),
             ReposLowerT {
                 reason,
                 use_desc,
                 use_t: u_inner,
             },
-        ) if matches!(
-            def_t.deref(),
-            SingletonStrT { .. } | SingletonNumT { .. } | SingletonBoolT { .. }
-        ) =>
-        {
+        ) => {
             let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
             rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
@@ -4228,15 +4219,16 @@ fn __flow_impl<'cx>(
 
         // A class can be viewed as a mixin by extracting its immediate properties,
         // and "erasing" its static and super
-        (DefT(class_reason, def_t), MixinT(r, collector))
-            if let ClassT(inner) = def_t.deref()
-                && let ThisInstanceT(box ThisInstanceTData {
-                    instance,
-                    is_this,
-                    subst_name,
-                    ..
-                }) = inner.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(class_reason, deref!(ClassT(deref!(ThisInstanceT(box ThisInstanceTData {
+                instance,
+                is_this,
+                subst_name,
+                ..
+            }))))),
+            MixinT(r, collector),
+        ) => {
             let inst = &instance.inst;
             let static_ = Type::new(ObjProtoT(r.dupe()));
             let super_ = Type::new(ObjProtoT(r.dupe()));
@@ -4256,24 +4248,23 @@ fn __flow_impl<'cx>(
             collector.add(new_l);
         }
 
-        (DefT(_, def_t), MixinT(r, collector))
-            if let PolyT(box PolyTData {
+        #[rustfmt::skip]
+        (
+            DefT(_, deref!(PolyT(box PolyTData {
                 kind: poly_kind,
                 tparams_loc,
                 tparams: xs,
-                t_out,
-                strictness_kind,
-                ..
-            }) = def_t.deref()
-                && let DefT(class_r, inner_def) = t_out.deref()
-                && let ClassT(inner) = inner_def.deref()
-                && let ThisInstanceT(box ThisInstanceTData {
+                t_out: deref!(DefT(class_r, deref!(ClassT(deref!(ThisInstanceT(box ThisInstanceTData {
                     instance,
                     is_this,
                     subst_name,
                     ..
-                }) = inner.deref() =>
-        {
+                })))))),
+                strictness_kind,
+                ..
+            }))),
+            MixinT(r, collector),
+        ) => {
             let inst = &instance.inst;
             let static_ = Type::new(ObjProtoT(r.dupe()));
             let super_ = Type::new(ObjProtoT(r.dupe()));
@@ -4316,8 +4307,11 @@ fn __flow_impl<'cx>(
         // arguments. Use the instantiation cache if directed to do so by the
         // operation. (SpecializeT operations are created when processing TypeAppT
         // types, so the decision to cache or not originates there.)
+        #[rustfmt::skip]
         (
-            DefT(_, def_t),
+            DefT(_, deref!(PolyT(box PolyTData {
+                tparams_loc, tparams: xs, t_out: t, id, ..
+            }))),
             SpecializeT(box SpecializeTData {
                 use_op,
                 reason: reason_op,
@@ -4325,15 +4319,7 @@ fn __flow_impl<'cx>(
                 targs: ts,
                 upper,
             }),
-        ) if let PolyT(box PolyTData {
-            kind: _,
-            tparams_loc,
-            tparams: xs,
-            t_out: t,
-            id,
-            strictness_kind: _,
-        }) = def_t.deref() =>
-        {
+        ) => {
             let ts_val = ts
                 .as_ref()
                 .map(|rc| rc.dupe())
@@ -4357,7 +4343,7 @@ fn __flow_impl<'cx>(
         }
         // empty targs specialization of non-polymorphic classes is a no-op
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ClassT(_))),
             SpecializeT(box SpecializeTData {
                 use_op: _,
                 reason: _,
@@ -4365,7 +4351,7 @@ fn __flow_impl<'cx>(
                 targs: None,
                 upper,
             }),
-        ) if matches!(def_t.deref(), ClassT(_)) => {
+        ) => {
             if let Some(upper) = upper {
                 continue_(cx, env, trace, l, upper)?;
             }
@@ -4373,7 +4359,7 @@ fn __flow_impl<'cx>(
         // Explicit type arguments on a construct-signature value specialize the
         // signature rather than the interface that contains it.
         (
-            DefT(reason_l, def_t),
+            DefT(reason_l, deref!(InstanceT(instance))),
             SpecializeT(box SpecializeTData {
                 use_op,
                 reason: reason_op,
@@ -4381,7 +4367,7 @@ fn __flow_impl<'cx>(
                 targs: Some(ts),
                 upper,
             }),
-        ) if let InstanceT(instance) = def_t.deref() => {
+        ) => {
             let concretize =
                 |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
                     helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
@@ -4487,7 +4473,7 @@ fn __flow_impl<'cx>(
         // through above. The instance it contributes to the derived class is
         // worked out by [ThisSpecializeT] below.
         (
-            DefT(reason_l, def_t),
+            DefT(reason_l, deref!(InstanceT(_))),
             SpecializeT(box SpecializeTData {
                 use_op,
                 reason: _,
@@ -4495,7 +4481,7 @@ fn __flow_impl<'cx>(
                 targs: None,
                 upper,
             }),
-        ) if matches!(def_t.deref(), InstanceT(_)) => {
+        ) => {
             let concretize =
                 |cx: &mut Context<'_>, t: &Type| -> Result<Vec<Type>, FlowJsException> {
                     helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
@@ -4537,15 +4523,16 @@ fn __flow_impl<'cx>(
             }
         }
         // this-specialize a this-abstracted class by substituting This
-        (DefT(_, def_t), ThisSpecializeT(r, this, k))
-            if let ClassT(inner) = def_t.deref()
-                && let ThisInstanceT(box ThisInstanceTData {
-                    reason: inst_r,
-                    instance: i,
-                    subst_name,
-                    ..
-                }) = inner.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(_, deref!(ClassT(deref!(ThisInstanceT(box ThisInstanceTData {
+                reason: inst_r,
+                instance: i,
+                subst_name,
+                ..
+            }))))),
+            ThisSpecializeT(r, this, k),
+        ) => {
             let def_t = this_specialize_instance(cx, l, inst_r, i, subst_name, this);
             continue_repos(cx, env, trace, r, false, &def_t, k)?;
         }
@@ -4563,7 +4550,7 @@ fn __flow_impl<'cx>(
             continue_repos(cx, env, trace, r, false, &def_t, k)?;
         }
         // this-specialization of non-this-abstracted classes is a no-op
-        (DefT(_, def_t), ThisSpecializeT(r, _this, k)) if let ClassT(i) = def_t.deref() => {
+        (DefT(_, deref!(ClassT(i))), ThisSpecializeT(r, _this, k)) => {
             // TODO: check that this is a subtype of i?
             continue_repos(cx, env, trace, r, false, i, k)?;
         }
@@ -4572,9 +4559,7 @@ fn __flow_impl<'cx>(
         // TypeScript's [resolveBaseTypesOfClass] does the same, and takes the
         // first signature. Unlike TypeScript, a value with no construct
         // signature falls back to its `prototype`; see [construct_base_instance].
-        (DefT(reason_l, def_t), ThisSpecializeT(r, this, k))
-            if matches!(def_t.deref(), InstanceT(_)) =>
-        {
+        (DefT(reason_l, deref!(InstanceT(_))), ThisSpecializeT(r, this, k)) => {
             let concretize = |cx: &mut Context<'_>, t: &Type, this_t: Option<&Type>| match this_t {
                 Some(this_t) => helpers::possible_concrete_types_for_class_extends(
                     cx,
@@ -4600,31 +4585,33 @@ fn __flow_impl<'cx>(
             continue_repos(cx, env, trace, r, false, l, k)?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(PolyT(box _))),
             ReposLowerT {
                 reason,
                 use_desc,
                 use_t: u_inner,
             },
-        ) if matches!(def_t.deref(), PolyT(box _)) => {
+        ) => {
             let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
             rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ClassT(deref!(ThisInstanceT(..))))),
             ReposLowerT {
                 reason,
                 use_desc,
                 use_t: u_inner,
             },
-        ) if matches!(def_t.deref(), ClassT(inner) if matches!(inner.deref(), ThisInstanceT(..))) =>
-        {
+        ) => {
             let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
             rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
         // Special case for `_ instanceof C` where C is polymorphic
+        #[rustfmt::skip]
         (
-            DefT(reason_tapp, def_t),
+            DefT(reason_tapp, deref!(PolyT(box PolyTData {
+                tparams_loc, tparams: ids, t_out: t, ..
+            }))),
             ConcretizeT(box ConcretizeTData {
                 reason: reason_op,
                 kind:
@@ -4633,13 +4620,7 @@ fn __flow_impl<'cx>(
                     ),
                 ..
             }),
-        ) if let PolyT(box PolyTData {
-            tparams_loc,
-            tparams: ids,
-            t_out: t,
-            ..
-        }) = def_t.deref() =>
-        {
+        ) => {
             let new_l = instantiate_poly_default_args(
                 cx,
                 env,
@@ -4654,23 +4635,23 @@ fn __flow_impl<'cx>(
             rec_flow(cx, env, trace, (&new_l, u))?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(PolyT(box _))),
             ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForPredicate(_),
                 collector,
                 ..
             }),
-        ) if matches!(def_t.deref(), PolyT(box _)) => {
+        ) => {
             collector.add(l.dupe());
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(PolyT(box _))),
             ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForDestructuring,
                 collector,
                 ..
             }),
-        ) if matches!(def_t.deref(), PolyT(box _)) => {
+        ) => {
             collector.add(l.dupe());
         }
 
@@ -4690,23 +4671,20 @@ fn __flow_impl<'cx>(
         //
         // We use the bounds to explicitly instantiate so that we don't create yet another implicit
         // instantiation here that would be un-annotatable.
+        #[rustfmt::skip]
         (
-            DefT(reason_tapp, def_t),
+            DefT(reason_tapp, deref!(PolyT(box PolyTData {
+                tparams_loc,
+                tparams: ids,
+                t_out: t @ deref!(DefT(_, deref!(ClassT(deref!(ThisInstanceT(..)))))),
+                ..
+            }))),
             CallT(box CallTData {
                 use_op,
                 reason: reason_op,
                 ..
             }),
-        ) if let PolyT(box PolyTData {
-            tparams_loc,
-            tparams: ids,
-            t_out: t,
-            ..
-        }) = def_t.deref()
-            && let DefT(_, inner_def) = t.deref()
-            && let ClassT(inner) = inner_def.deref()
-            && let ThisInstanceT(..) = inner.deref() =>
-        {
+        ) => {
             let targs: Vec<Targ> = ids
                 .iter()
                 .map(|tparam| Targ::ExplicitArg(tparam.bound.dupe()))
@@ -4733,12 +4711,12 @@ fn __flow_impl<'cx>(
         // much we can do about them here. These will be handled by the hint
         // decomposition code that has some knowledge of the call arguments.
         (
-            DefT(_, def_t),
+            DefT(_, deref!(PolyT(box _))),
             CallT(box CallTData {
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
             }),
-        ) if matches!(def_t.deref(), PolyT(box _)) => {
+        ) => {
             tout.add(l.dupe());
         }
 
@@ -4764,21 +4742,18 @@ fn __flow_impl<'cx>(
         // implementation as error positions and as caching keys. As error
         // positions we should be able to subject reasons to arbitrary tweaking,
         // without fearing regressions in termination guarantees.
+        #[rustfmt::skip]
         (
-            DefT(reason_tapp, def_t),
+            DefT(reason_tapp, deref!(PolyT(box PolyTData {
+                tparams_loc, tparams: ids, t_out: t, ..
+            }))),
             CallT(box CallTData {
                 use_op,
                 reason: reason_op,
                 call_action: box CallAction::Funcalltype(box calltype),
                 return_hint,
             }),
-        ) if let PolyT(box PolyTData {
-            tparams_loc,
-            tparams: ids,
-            t_out: t,
-            ..
-        }) = def_t.deref() =>
-        {
+        ) => {
             let lparts = (
                 reason_tapp.dupe(),
                 tparams_loc.dupe(),
@@ -4826,14 +4801,13 @@ fn __flow_impl<'cx>(
             })));
             rec_flow(cx, env, trace, (&t_, &new_u))?;
         }
-        (DefT(reason_tapp, def_t), ConstructorT(box ctor_data))
-            if let PolyT(box PolyTData {
-                tparams_loc,
-                tparams: ids,
-                t_out: t,
-                ..
-            }) = def_t.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(reason_tapp, deref!(PolyT(box PolyTData {
+                tparams_loc, tparams: ids, t_out: t, ..
+            }))),
+            ConstructorT(box ctor_data),
+        ) => {
             let lparts = (
                 reason_tapp.dupe(),
                 tparams_loc.dupe(),
@@ -4880,29 +4854,25 @@ fn __flow_impl<'cx>(
             })));
             rec_flow(cx, env, trace, (&t_, &new_u))?;
         }
+        #[rustfmt::skip]
         (
-            DefT(reason_tapp, def_t),
+            DefT(reason_tapp, deref!(PolyT(box PolyTData {
+                tparams_loc, tparams: ids, t_out: t, ..
+            }))),
             ReactKitT(box ReactKitTData {
                 use_op,
                 reason: reason_op,
-                tool,
+                tool: box react::Tool::CreateElement(box react::CreateElementData {
+                    jsx_props,
+                    return_hint,
+                    targs,
+                    tout,
+                    specialized_component,
+                    specialized_props,
+                    ..
+                }),
             }),
-        ) if let PolyT(box PolyTData {
-            tparams_loc,
-            tparams: ids,
-            t_out: t,
-            ..
-        }) = def_t.deref()
-            && let react::Tool::CreateElement(box react::CreateElementData {
-                jsx_props,
-                return_hint,
-                targs,
-                tout,
-                specialized_component,
-                specialized_props,
-                ..
-            }) = &**tool =>
-        {
+        ) => {
             let lparts = (
                 reason_tapp.dupe(),
                 tparams_loc.dupe(),
@@ -4958,45 +4928,43 @@ fn __flow_impl<'cx>(
             rec_flow(cx, env, trace, (&t_, &new_u))?;
         }
         (
-            DefT(r, def_t),
+            DefT(
+                r,
+                deref!(ObjT(deref!(ObjType {
+                    call_t: Some(id),
+                    ..
+                }))),
+            ),
             ReactKitT(box ReactKitTData {
                 use_op: _,
                 reason: _,
-                tool,
-            }),
-        ) if let ObjT(obj) = def_t.deref()
-            && obj.call_t.is_some()
-            && matches!(
-                &**tool,
-                react::Tool::CreateElement(..)
+                tool:
+                    box (react::Tool::CreateElement(..)
                     | react::Tool::GetConfig { .. }
-                    | react::Tool::ConfigCheck { .. }
-            )
-            && {
-                let id = obj.call_t.as_ref().unwrap();
-                let found = cx.find_call(id.dupe());
-                match found.deref() {
-                    DefT(_, inner_def)
-                        if matches!(inner_def.deref(), PolyT(box PolyTData { t_out, .. })
-                            if matches!(t_out.deref(), DefT(_, inner2) if matches!(inner2.deref(), FunT(_, _)))) =>
-                    {
-                        let fun_t_repos = type_util::mod_reason_of_t(&|_| r.dupe(), &found);
-                        rec_flow(cx, env, trace, (&fun_t_repos, u))?;
-                        true
-                    }
-                    _ => false,
+                    | react::Tool::ConfigCheck { .. }),
+            }),
+        ) if {
+            let found = cx.find_call(id.dupe());
+            match found.deref() {
+                #[rustfmt::skip]
+                DefT(_, deref!(PolyT(box PolyTData {
+                    t_out: deref!(DefT(_, deref!(FunT(_, _)))), ..
+                }))) => {
+                    let fun_t_repos = type_util::mod_reason_of_t(&|_| r.dupe(), &found);
+                    rec_flow(cx, env, trace, (&fun_t_repos, u))?;
+                    true
                 }
-            } => {}
+                _ => false,
+            }
+        } => {}
         (
-            DefT(reason_tapp, def_t),
+            DefT(reason_tapp, deref!(PolyT(box PolyTData { tparams, t_out, .. }))),
             ReactKitT(box ReactKitTData {
                 use_op,
                 reason: reason_op,
-                tool,
+                tool: box react::Tool::GetConfig { .. },
             }),
-        ) if let PolyT(box PolyTData { tparams, t_out, .. }) = def_t.deref()
-            && matches!(&**tool, react::Tool::GetConfig { .. }) =>
-        {
+        ) => {
             let t_ = implicit_instantiation::kit::run_monomorphize(
                 cx,
                 env,
@@ -5013,8 +4981,12 @@ fn __flow_impl<'cx>(
         // ******************************
         // * functions statics - part A *
         // ******************************
+        #[rustfmt::skip]
         (
-            DefT(l_reason, def_t),
+            DefT(reason, deref!(FunT(static_, _)))
+            | DefT(_, deref!(PolyT(box PolyTData {
+                t_out: deref!(DefT(reason, deref!(FunT(static_, _)))), ..
+            }))),
             MethodT(box MethodTData {
                 use_op,
                 reason: reason_call,
@@ -5022,20 +4994,7 @@ fn __flow_impl<'cx>(
                 propref,
                 method_action: action,
             }),
-        ) if let Some((reason, static_)) = match def_t.deref() {
-            FunT(static_, _) => Some((l_reason.dupe(), static_.dupe())),
-            PolyT(box PolyTData { t_out, .. }) => {
-                if let DefT(reason, inner) = t_out.deref()
-                    && let FunT(static_, _) = inner.deref()
-                {
-                    Some((reason.dupe(), static_.dupe()))
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        } =>
-        {
+        ) => {
             // Class methods carry `dummy_static` statics, so the lookup below
             // resolves on `any` and never reaches the `FunProtoT` arm that
             // records `Function.prototype` accesses. Record it here instead --
@@ -5101,14 +5060,13 @@ fn __flow_impl<'cx>(
                 action,
             )?;
         }
-        (DefT(reason_tapp, def_t), _)
-            if let PolyT(box PolyTData {
-                tparams_loc,
-                tparams: ids,
-                t_out: t,
-                ..
-            }) = def_t.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(reason_tapp, deref!(PolyT(box PolyTData {
+                tparams_loc, tparams: ids, t_out: t, ..
+            }))),
+            _,
+        ) => {
             let reason_op = upper_operation_reason_or(u, reason_tapp);
             let use_op = match use_op_of_use_t(u) {
                 Some(use_op) => use_op,
@@ -5167,7 +5125,13 @@ fn __flow_impl<'cx>(
                     reason_tapp,
                 )?
             } else {
-                let unify_bounds = matches!(u.deref(), MethodT(data) if matches!(data.method_action.as_ref(), MethodAction::NoMethodAction(_)));
+                let unify_bounds = matches!(
+                    u.deref(),
+                    MethodT(box MethodTData {
+                        method_action: box MethodAction::NoMethodAction(_),
+                        ..
+                    })
+                );
                 FlowJs::instantiate_poly_with_env(
                     cx,
                     env,
@@ -5182,15 +5146,16 @@ fn __flow_impl<'cx>(
             rec_flow(cx, env, trace, (&t_, u))?;
         }
         // when a this-abstracted class flows to upper bounds, fix the class
-        (DefT(class_r, def_t), _)
-            if let ClassT(inner) = def_t.deref()
-                && let ThisInstanceT(box ThisInstanceTData {
-                    reason: r,
-                    instance: i,
-                    is_this: this,
-                    subst_name,
-                }) = inner.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(class_r, deref!(ClassT(deref!(ThisInstanceT(box ThisInstanceTData {
+                reason: r,
+                instance: i,
+                is_this: this,
+                subst_name,
+            }))))),
+            _,
+        ) => {
             let reason = upper_operation_reason_or(u, r);
             let fixed =
                 flow_js_utils::fix_this_instance(cx, reason, r.dupe(), i, *this, subst_name.dupe());
@@ -5215,13 +5180,10 @@ fn __flow_impl<'cx>(
         // *****************************
         // * React Abstract Components *
         // *****************************
-        (DefT(r, def_t), _)
-            if matches!(def_t.deref(), ReactAbstractComponentT(box _))
-                && matches!(
-                    u.deref(),
-                    TestPropT(..) | GetPropT(..) | SetPropT(..) | GetElemT(..) | SetElemT(..)
-                ) =>
-        {
+        (
+            DefT(r, deref!(ReactAbstractComponentT(box _))),
+            TestPropT(..) | GetPropT(..) | SetPropT(..) | GetElemT(..) | SetElemT(..),
+        ) => {
             let statics = FlowJs::get_builtin_type_with_env(
                 cx,
                 env,
@@ -5234,14 +5196,14 @@ fn __flow_impl<'cx>(
         }
         // Components can never be called
         (
-            DefT(r, def_t),
+            DefT(r, deref!(ReactAbstractComponentT(box _))),
             CallT(box CallTData {
                 use_op,
                 reason,
                 call_action: box CallAction::Funcalltype(box calltype),
                 ..
             }),
-        ) if matches!(def_t.deref(), ReactAbstractComponentT(box _)) => {
+        ) => {
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
