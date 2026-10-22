@@ -162,9 +162,12 @@ pub fn config<'a, C: Config>(
             let empty_pmap = cx.generate_property_map(properties::PropertiesMap::new());
             let rest_param_reason = flow_typing_type::type_util::reason_of_t(&t);
             let use_op = UseOp::Op(std::sync::Arc::new(
-                RootUseOp::ComponentRestParamCompatibility {
-                    rest_param: rest_param_reason.dupe(),
-                },
+                RootUseOp::ComponentRestParamCompatibility(Box::new(
+                    ComponentRestParamCompatibilityData {
+                        rest_param_loc: rest_param_reason.loc().dupe(),
+                        rest_param: type_or_type_desc::TypeOrTypeDescT::Type(t.dupe()),
+                    },
+                )),
             ));
             // The reason doesn't matter because in our special use_op handling we do not
             // reference the object reason

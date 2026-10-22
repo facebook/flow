@@ -2408,7 +2408,7 @@ pub enum Message<L: Dupe> {
         kind: ClassKind,
     },
 
-    MessageIncompatibleComponentRestParam(VirtualReason<L>),
+    MessageIncompatibleComponentRestParam(MessageTypeReferenceData<L>),
 
     MessageIncompatibleGeneral {
         lower: VirtualReason<L>,

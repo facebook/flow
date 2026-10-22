@@ -1134,6 +1134,22 @@ pub struct IndexedTypeAccessData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct ComponentRestParamCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub rest_param_loc: L,
+    pub rest_param: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PositiveTypeGuardConsistencyData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub reason: VirtualReason<L>,
     pub return_reason: VirtualReason<L>,
@@ -1429,9 +1445,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     RenderTypeInstantiation {
         render_type: VirtualReason<L>,
     },
-    ComponentRestParamCompatibility {
-        rest_param: VirtualReason<L>,
-    },
+    ComponentRestParamCompatibility(Box<ComponentRestParamCompatibilityData<L>>),
     PositiveTypeGuardConsistency(Box<PositiveTypeGuardConsistencyData<L>>),
     AssertionFunctionConsistency(Box<AssertionFunctionConsistencyData<L>>),
     UnknownUse,

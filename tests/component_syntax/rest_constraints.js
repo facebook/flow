@@ -21,3 +21,7 @@ component DestructuredArrWithArrAnnot(...[foo, bar]: [number, number]) { // ERRO
 import * as React from 'react'
 <DestructuredArr />; // ERROR because annot still provides a valid config type
 <DestructuredArrWithArrAnnot />; // OK because previous not an object error causes config to be any
+
+type RestProps = {foo: number};
+component NullableRest(...rest: ?RestProps) { return null; } // ERROR nullable
+component OptionalNullableRest(...rest?: ?RestProps) { return null; } // ERROR optional and nullable

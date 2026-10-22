@@ -3027,7 +3027,7 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:1:21
 
-Cannot use number [1] as a component rest param. Component rest params must use an object type and cannot be optional.
+Cannot use `number` [1] as a component rest param. Component rest params must use an object type and cannot be optional.
 [incompatible-type]
 
    1| component Foo(...x: number) { return null; } // ERROR, not an object
@@ -3044,7 +3044,7 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:2:22
 
-Cannot use optional number [1] as a component rest param. Component rest params must use an object type and cannot be
+Cannot use `void | number` [1] as a component rest param. Component rest params must use an object type and cannot be
 optional. [incompatible-type]
 
    2| component Bar(...x?: number) {return null; } // ERROR optional
@@ -3053,8 +3053,8 @@ optional. [incompatible-type]
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:3:22
 
-Cannot use optional object type [1] as a component rest param. Component rest params must use an object type and cannot
-be optional. [incompatible-type]
+Cannot use `void | {foo: number}` [1] as a component rest param. Component rest params must use an object type and
+cannot be optional. [incompatible-type]
 
    3| component Baz(...x?: {foo: number}) {return null; } // ERROR optional
                            ^^^^^^^^^^^^^ [1]
@@ -3146,7 +3146,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------- rest_constraints.js:17:54
 
-Cannot use tuple type [1] as a component rest param. Component rest params must use an object type and cannot be
+Cannot use `[number, number]` [1] as a component rest param. Component rest params must use an object type and cannot be
 optional. [incompatible-type]
 
    17| component DestructuredArrWithArrAnnot(...[foo, bar]: [number, number]) { // ERROR destructure array, array not an object
@@ -3169,6 +3169,24 @@ References:
    rest_constraints.js:13:42
    13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- rest_constraints.js:26:33
+
+Cannot use `?RestProps` [1] as a component rest param. Component rest params must use an object type and cannot be
+optional. [incompatible-type]
+
+   26| component NullableRest(...rest: ?RestProps) { return null; } // ERROR nullable
+                                       ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- rest_constraints.js:27:42
+
+Cannot use `?RestProps` [1] as a component rest param. Component rest params must use an object type and cannot be
+optional. [incompatible-type]
+
+   27| component OptionalNullableRest(...rest?: ?RestProps) { return null; } // ERROR optional and nullable
+                                                ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ signature.js:9:39
@@ -3355,8 +3373,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:46:13
 
-Cannot use optional object type [1] as a component rest param. Component rest params must use an object type and cannot
-be optional. [incompatible-type]
+Cannot use `void | {foo: number}` [1] as a component rest param. Component rest params must use an object type and
+cannot be optional. [incompatible-type]
 
    46|   ...rest?: {foo: number} // ERROR, rest params can't be optional
                    ^^^^^^^^^^^^^ [1]
@@ -3506,4 +3524,4 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 
 
-Found 227 errors
+Found 229 errors

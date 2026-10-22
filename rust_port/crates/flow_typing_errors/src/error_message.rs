@@ -48,6 +48,7 @@ use flow_type_sig::signature_error::SignatureError;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
 use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::ClassExtendsCheckData;
+use flow_typing_type::type_::ComponentRestParamCompatibilityData;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::EvalMappedTypeData;
 use flow_typing_type::type_::IndexedTypeAccessData;
@@ -6885,6 +6886,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             mapped_type: f(mapped_type.clone()),
                         },
                     )))),
+                    VirtualRootUseOp::ComponentRestParamCompatibility(
+                        box ComponentRestParamCompatibilityData {
+                            rest_param_loc,
+                            rest_param,
+                        },
+                    ) => VirtualUseOp::Op(Arc::new(
+                        VirtualRootUseOp::ComponentRestParamCompatibility(Box::new(
+                            ComponentRestParamCompatibilityData {
+                                rest_param_loc: rest_param_loc.dupe(),
+                                rest_param: f(rest_param.clone()),
+                            },
+                        )),
+                    )),
                     VirtualRootUseOp::AssignVar {
                         var: Some(box AssignVarTarget::Annotation(t)),
                         init,

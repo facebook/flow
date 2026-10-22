@@ -32,6 +32,7 @@ use crate::type_::CallTData;
 use crate::type_::ClassExtendsCheckData;
 use crate::type_::ClassImplementsCheckData;
 use crate::type_::ClassOwnProtoCheckData;
+use crate::type_::ComponentRestParamCompatibilityData;
 use crate::type_::ConditionalTData;
 use crate::type_::ConformToCommonInterfaceData;
 use crate::type_::ConstrainedAssignmentData;
@@ -1281,9 +1282,13 @@ where
             RenderTypeInstantiation { render_type } => RenderTypeInstantiation {
                 render_type: mod_reason(render_type),
             },
-            ComponentRestParamCompatibility { rest_param } => ComponentRestParamCompatibility {
-                rest_param: mod_reason(rest_param),
-            },
+            ComponentRestParamCompatibility(box ComponentRestParamCompatibilityData {
+                rest_param_loc,
+                rest_param,
+            }) => ComponentRestParamCompatibility(Box::new(ComponentRestParamCompatibilityData {
+                rest_param_loc: f(rest_param_loc),
+                rest_param: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), rest_param),
+            })),
             PositiveTypeGuardConsistency(box PositiveTypeGuardConsistencyData {
                 reason,
                 return_reason,

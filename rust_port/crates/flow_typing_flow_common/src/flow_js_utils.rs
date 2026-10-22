@@ -60,6 +60,7 @@ use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::ClassExtendsCheckData;
+use flow_typing_type::type_::ComponentRestParamCompatibilityData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::ElemTData;
@@ -1690,8 +1691,7 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         | RootUseOp::InitField { op, .. }
         | RootUseOp::ReactGetIntrinsic { literal: op }
         | RootUseOp::TypeApplication { type_: op }
-        | RootUseOp::RenderTypeInstantiation { render_type: op }
-        | RootUseOp::ComponentRestParamCompatibility { rest_param: op } => Some(op),
+        | RootUseOp::RenderTypeInstantiation { render_type: op } => Some(op),
         RootUseOp::JSXCreateElement(box JSXCreateElementData { op, .. }) => Some(op),
         RootUseOp::AssignVar { var, init } => match var.as_deref() {
             Some(AssignVarTarget::Variable(reason)) => Some(reason),
@@ -1702,6 +1702,10 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         RootUseOp::Cast {
             upper: box upper, ..
         }
+        | RootUseOp::ComponentRestParamCompatibility(box ComponentRestParamCompatibilityData {
+            rest_param: upper,
+            ..
+        })
         | RootUseOp::ClassExtendsCheck(box ClassExtendsCheckData { extends: upper, .. })
         | RootUseOp::EvalMappedType(box EvalMappedTypeData {
             mapped_type: upper, ..

@@ -34,6 +34,7 @@ use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ClassOwnProtoCheckData;
+use flow_typing_type::type_::ComponentRestParamCompatibilityData;
 use flow_typing_type::type_::ConformToCommonInterfaceData;
 use flow_typing_type::type_::ConstrainedAssignmentData;
 use flow_typing_type::type_::DefTInner;
@@ -3138,12 +3139,11 @@ where
         mk_use_op_error(loc_of_aloc(&reason.loc), use_op, explanation, message)
     };
 
-    let mk_no_frame_or_explanation_error =
-        |reason: &VirtualReason<L>, message: Message<L>| -> IntermediateError<L> {
-            let loc = loc_of_aloc(&reason.loc);
-            let code = error.code_of_error();
-            mk_error(kind, loc, code, message, None, Some(vec![]), Some(vec![]))
-        };
+    let mk_no_frame_or_explanation_error = |loc: &L, message: Message<L>| -> IntermediateError<L> {
+        let loc = loc_of_aloc(loc);
+        let code = error.code_of_error();
+        mk_error(kind, loc, code, message, None, Some(vec![]), Some(vec![]))
+    };
 
     let mk_prop_missing_in_subtyping_error = |prop: Option<FlowSmolStr>,
                                               suggestion: Option<FlowSmolStr>,
@@ -3401,12 +3401,20 @@ where
                 _ => {
                     let root_use_op = root_of_use_op(&use_op);
                     match root_use_op {
-                        VirtualRootUseOp::ComponentRestParamCompatibility { rest_param } => {
-                            mk_no_frame_or_explanation_error(
+                        VirtualRootUseOp::ComponentRestParamCompatibility(
+                            box ComponentRestParamCompatibilityData {
+                                rest_param_loc,
                                 rest_param,
-                                Message::MessageIncompatibleComponentRestParam(rest_param.dupe()),
-                            )
-                        }
+                            },
+                        ) => mk_no_frame_or_explanation_error(
+                            rest_param_loc,
+                            Message::MessageIncompatibleComponentRestParam(
+                                MessageTypeReferenceData {
+                                    loc: rest_param_loc.dupe(),
+                                    desc: printed_type_desc(rest_param),
+                                },
+                            ),
+                        ),
                         _ => make_error(
                             &lower,
                             Message::MessageIncompatibleGeneral {
@@ -3481,12 +3489,20 @@ where
                 _ => {
                     let root_use_op = root_of_use_op(&use_op);
                     match root_use_op {
-                        VirtualRootUseOp::ComponentRestParamCompatibility { rest_param } => {
-                            mk_no_frame_or_explanation_error(
+                        VirtualRootUseOp::ComponentRestParamCompatibility(
+                            box ComponentRestParamCompatibilityData {
+                                rest_param_loc,
                                 rest_param,
-                                Message::MessageIncompatibleComponentRestParam(rest_param.dupe()),
-                            )
-                        }
+                            },
+                        ) => mk_no_frame_or_explanation_error(
+                            rest_param_loc,
+                            Message::MessageIncompatibleComponentRestParam(
+                                MessageTypeReferenceData {
+                                    loc: rest_param_loc.dupe(),
+                                    desc: printed_type_desc(rest_param),
+                                },
+                            ),
+                        ),
                         _ => make_error(
                             &lower,
                             Message::MessageIncompatibleGeneral {
@@ -3680,12 +3696,19 @@ where
                 explanation,
             }),
         ) => {
-            if let VirtualRootUseOp::ComponentRestParamCompatibility { rest_param } =
-                root_of_use_op(&use_op)
+            if let VirtualRootUseOp::ComponentRestParamCompatibility(
+                box ComponentRestParamCompatibilityData {
+                    rest_param_loc,
+                    rest_param,
+                },
+            ) = root_of_use_op(&use_op)
             {
                 mk_no_frame_or_explanation_error(
-                    rest_param,
-                    Message::MessageIncompatibleComponentRestParam(rest_param.dupe()),
+                    rest_param_loc,
+                    Message::MessageIncompatibleComponentRestParam(MessageTypeReferenceData {
+                        loc: rest_param_loc.dupe(),
+                        desc: printed_type_desc(rest_param),
+                    }),
                 )
             } else if let VirtualUseOp::Frame(frame, inner_use_op) = &use_op
                 && let VirtualFrameUseOp::FunMissingArg(box FunMissingArgData { def, op, .. }) =
@@ -10650,7 +10673,7 @@ where
             },
             MessageIncompatibleComponentRestParam(rest_param) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_(rest_param),
+                ref_of_type(rest_param),
                 text(
                     " as a component rest param. Component rest params must use an object type and cannot be optional",
                 ),
