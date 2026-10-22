@@ -12378,10 +12378,7 @@ pub fn apply_opt_methodcalltype(opt: OptMethodCallType, meth_tout: Tvar) -> Meth
 
 pub fn create_intersection(rep: inter_rep::InterRep) -> Type {
     use flow_common::reason::locationless_reason;
-    Type::new(TypeInner::IntersectionT(
-        locationless_reason(flow_common::reason::VirtualReasonDesc::RIntersectionType),
-        rep,
-    ))
+    Type::new(TypeInner::IntersectionT(locationless_reason(None), rep))
 }
 
 pub fn apply_opt_action<CX: ContextFamily>(

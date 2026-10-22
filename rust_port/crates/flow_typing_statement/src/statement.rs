@@ -13250,11 +13250,7 @@ pub fn jsx_mk_props<'a>(
 > {
     let is_builtin_react = matches!(cx.jsx(), flow_common::options::JsxMode::JsxReact)
         && !cx.react_custom_jsx_typing();
-    let reason_props = reason.dupe().replace_desc(if is_builtin_react {
-        VirtualReasonDesc::RReactProps
-    } else {
-        VirtualReasonDesc::RJSXElementProps(FlowSmolStr::from(name))
-    });
+    let reason_props = reason.dupe().replace_desc(VirtualReasonDesc::RReactProps);
     // Use the same reason for proto and the ObjT so we can walk the proto chain
     // and use the root proto reason to build an error.
     let proto = type_::obj_proto::make(reason_props.dupe());
@@ -13862,14 +13858,14 @@ fn non_react_jsx_desugar<'a>(
         {
             let (prop_loc, name) = (id.loc.dupe(), id.name.dupe());
             let object = &member.object;
-            let ot = jsx_pragma_expression(cx, raw_jsx_expr, object.loc().dupe(), object)?;
+            let ot = jsx_pragma_expression(cx, object.loc().dupe(), object)?;
             method_call(
                 cx, reason, use_op, false, prop_loc, jsx_expr, ot, &name, targs_opt, argts,
             )?
             .1
         }
         _ => {
-            let f = jsx_pragma_expression(cx, raw_jsx_expr, loc_element.dupe(), jsx_expr)?;
+            let f = jsx_pragma_expression(cx, loc_element.dupe(), jsx_expr)?;
             func_call(
                 cx,
                 loc_element,
@@ -13902,15 +13898,13 @@ fn non_react_jsx_desugar<'a>(
 // since the common error is that the identifier is not in scope.
 fn jsx_pragma_expression<'a>(
     cx: &mut Context<'a>,
-    raw_jsx_expr: &str,
     loc: ALoc,
     expr: &expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, CheckExprError> {
     Ok(match expr.deref() {
         expression::ExpressionInner::Identifier { inner: id, .. } => {
             let name = &id.name;
-            let desc =
-                VirtualReasonDesc::RJSXIdentifier(FlowSmolStr::from(raw_jsx_expr), name.dupe());
+            let desc = VirtualReasonDesc::RIdentifier(name.dupe());
             type_env::var_ref(
                 Some(type_env::LookupMode::ForValue),
                 cx,

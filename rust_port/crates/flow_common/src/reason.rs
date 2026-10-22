@@ -285,12 +285,10 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RUniqueSymbol,
     RExports,
     RNullOrVoid,
-    RConditionalType,
     RMatch,
     RObject,
     RObjectLit,
     RObjectType,
-    RMappedType,
     RInterfaceType,
     RArray,
     RArrayLit,
@@ -305,8 +303,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RThis,
     RThisType,
     RImplicitInstantiation,
-    RUnionType,
-    RIntersectionType,
     RKeySet,
     RConditional,
     RPrototype,
@@ -332,7 +328,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RNewFunction,
     RImportMeta,
     RAwait,
-    RCallableObjectType,
     RNoProviders,
     RReadOnlyType,
     RObjectPatternRestProp,
@@ -341,16 +336,11 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RReactChildren,
     RUninitialized,
     RPossiblyUninitialized,
-    RComponentType,
     RRendersNothing,
     RStringLit(FlowSmolStr),
-    RTemplateLiteralType,
     RNumberLit(FlowSmolStr),
     RBigIntLit(FlowSmolStr),
     RBooleanLit(bool),
-    RIndexedAccess {
-        optional: bool,
-    },
     RArrayNthElement(i32),
     RInferredUnionElemArray {
         instantiable: bool,
@@ -361,8 +351,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RFunction(ReasonDescFunction),
     RFunctionCall(Option<Arc<VirtualReasonDesc<L>>>),
     RJSXFunctionCall(FlowSmolStr),
-    RJSXIdentifier(FlowSmolStr, FlowSmolStr),
-    RJSXElementProps(FlowSmolStr),
     RUnaryOperator(FlowSmolStr, Arc<VirtualReasonDesc<L>>),
     RBinaryOperator(
         Box<(
@@ -465,7 +453,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RExports => RExports,
             RNullOrVoid => RNullOrVoid,
             RStringLit(n) => RStringLit(n.dupe()),
-            RTemplateLiteralType => RTemplateLiteralType,
             RNumberLit(s) => RNumberLit(s.dupe()),
             RBigIntLit(s) => RBigIntLit(s.dupe()),
             RBooleanLit(b) => RBooleanLit(*b),
@@ -486,14 +473,10 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RFunction(func) => RFunction(*func),
             RFunctionType => RFunctionType,
             RJSXFunctionCall(s) => RJSXFunctionCall(s.dupe()),
-            RJSXIdentifier(s1, s2) => RJSXIdentifier(s1.dupe(), s2.dupe()),
-            RJSXElementProps(s) => RJSXElementProps(s.dupe()),
             RFbt => RFbt,
             RUninitialized => RUninitialized,
             RPossiblyUninitialized => RPossiblyUninitialized,
-            RMappedType => RMappedType,
             RComponent(n) => RComponent(n.dupe()),
-            RComponentType => RComponentType,
             RInferredUnionElemArray {
                 instantiable,
                 is_empty,
@@ -506,8 +489,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RThis => RThis,
             RThisType => RThisType,
             RImplicitInstantiation => RImplicitInstantiation,
-            RUnionType => RUnionType,
-            RIntersectionType => RIntersectionType,
             RKeySet => RKeySet,
             RConditional => RConditional,
             RPrototype => RPrototype,
@@ -552,14 +533,9 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RNewFunction => RNewFunction,
             RImportMeta => RImportMeta,
             RAwait => RAwait,
-            RCallableObjectType => RCallableObjectType,
             RNoProviders => RNoProviders,
             ROpaqueType(s) => ROpaqueType(s.dupe()),
             RObjectKeyMirror => RObjectKeyMirror,
-            RIndexedAccess { optional } => RIndexedAccess {
-                optional: *optional,
-            },
-            RConditionalType => RConditionalType,
             RRendersNothing => RRendersNothing,
             RMatch => RMatch,
             RObjectPatternRestProp => RObjectPatternRestProp,
@@ -650,8 +626,8 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         match self.unwrap() {
             Some(
                 RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
-                | RTemplateLiteralType | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RFbt
-                | RTemplateString | RKeySet | RRegExp,
+                | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RFbt | RTemplateString | RKeySet
+                | RRegExp,
             ) => Scalar,
 
             Some(
@@ -1331,29 +1307,18 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // String literals
         RStringLit(name) if name.as_str().is_empty() => "empty string".to_string(),
         RStringLit(name) => format!("string literal `{}`", name.as_str()),
-        RTemplateLiteralType => "template literal type".to_string(),
 
         // Number and boolean literals
         RNumberLit(x) => format!("number literal `{}`", x),
         RBigIntLit(x) => format!("bigint literal `{}`", x),
         RBooleanLit(b) => format!("boolean literal `{}`", b),
 
-        // Indexed access and conditional
-        RIndexedAccess { optional } => {
-            if *optional {
-                "optional indexed access".to_string()
-            } else {
-                "indexed access".to_string()
-            }
-        }
-        RConditionalType => "conditional type".to_string(),
         RMatch => "match".to_string(),
 
         // Objects
         RObject => "object".to_string(),
         RObjectLit => "object literal".to_string(),
         RObjectType => "object type".to_string(),
-        RMappedType => "mapped type".to_string(),
         RInterfaceType => "interface type".to_string(),
 
         // Arrays
@@ -1387,8 +1352,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // JSX
         RJSXFunctionCall(raw_jsx) => format!("`{}(...)`", raw_jsx),
-        RJSXIdentifier(_, name) => format!("`{}`", name),
-        RJSXElementProps(_) => "props".to_string(),
         RFbt => "`<fbt/>`".to_string(),
 
         // Operators
@@ -1438,9 +1401,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RThisType => "`this` type".to_string(),
         RImplicitInstantiation => "implicit instantiation".to_string(),
 
-        // Unions and intersections
-        RUnionType => "union type".to_string(),
-        RIntersectionType => "intersection type".to_string(),
         RKeySet => "key set".to_string(),
         RConditional => "conditional".to_string(),
 
@@ -1545,7 +1505,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RNewFunction => "new Function(..)".to_string(),
         RImportMeta => "import.meta".to_string(),
         RAwait => "await".to_string(),
-        RCallableObjectType => "callable object type".to_string(),
         RNoProviders => "no providers".to_string(),
 
         // Type wrappers
@@ -1604,7 +1563,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Type guards and components
         RComponent(name) => format!("component {}", name.as_str()),
-        RComponentType => "component".to_string(),
         RPropsOfComponent(d) => format!("props of {}", string_of_desc(d)),
 
         // Renders

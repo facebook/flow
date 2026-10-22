@@ -1169,9 +1169,7 @@ fn resolve_declared_function<'cx>(
     let function_t = match (types.next(), types.next()) {
         (Some(t0), None) => t0,
         (Some(t0), Some(t1)) => Type::new(TypeInner::IntersectionT(
-            type_util::reason_of_t(&t0)
-                .dupe()
-                .replace_desc(reason::VirtualReasonDesc::RIntersectionType),
+            type_util::reason_of_t(&t0).dupe().replace_desc(None),
             type_::inter_rep::make(t0, t1, types.collect::<Vec<_>>().into()),
         )),
         (None, _) => panic!("declared function definitions should be non-empty"),

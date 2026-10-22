@@ -76,10 +76,7 @@ pub type Members = GenericT<
 
 fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
     fn create_union(rep: union_rep::UnionRep) -> Type {
-        Type::new(TypeInner::UnionT(
-            locationless_reason(VirtualReasonDesc::RUnionType),
-            rep,
-        ))
+        Type::new(TypeInner::UnionT(locationless_reason(None), rep))
     }
 
     let (t1, t2) = pair;

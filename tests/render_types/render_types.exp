@@ -1011,7 +1011,7 @@ Cannot use `ExactReactElement_DEPRECATED<React.ElementType, unknown>` [1] as the
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:62:3
 
-Cannot cast `rendersQux` to renders union type because: [incompatible-type]
+Cannot cast `rendersQux` to `renders (Baz | Foo)` because: [incompatible-type]
  - Either `Qux` [1] does not render `Baz` [2].
  - Or `Qux` [1] does not render `Foo` [2].
 
@@ -1108,7 +1108,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:88:3
 
-Cannot cast `rendersFooOrBar` to renders union type because: [incompatible-type]
+Cannot cast `rendersFooOrBar` to `renders (Baz | Foo)` because: [incompatible-type]
  - Either `Bar` [1] does not render `Baz` [2].
  - Or `Bar` [1] does not render `Foo` [2].
 
@@ -1183,8 +1183,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:101:3
 
-Cannot cast `mixedElement` to renders union type because `ExactReactElement_DEPRECATED<React.ElementType, unknown>` [1]
-does not render union type [2]. [incompatible-type]
+Cannot cast `mixedElement` to `renders (Bar | Foo)` because
+`ExactReactElement_DEPRECATED<React.ElementType, unknown>` [1] does not render `Bar | Foo` [2]. [incompatible-type]
 
    renders_to_renders.js:101:3
    101|   mixedElement as renders (
@@ -1467,7 +1467,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- union_promotion.js:6:1
 
-Cannot cast `a` to renders union type because: [incompatible-type]
+Cannot cast `a` to `renders (Bar | Foo)` because: [incompatible-type]
  - Either `Baz` [1] does not render `Bar` [2].
  - Or `Baz` [1] does not render `Foo` [2].
 

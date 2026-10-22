@@ -1283,7 +1283,7 @@ fn convert_inner<'a>(
                 t1,
                 ts.into(),
             );
-            let reason = reason::mk_annot_reason(reason::VirtualReasonDesc::RUnionType, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             let rt = Type::new(type_::TypeInner::UnionT(reason, rep));
             ast::types::Type::new(TypeInner::Union {
                 loc: (loc.dupe(), rt),
@@ -1301,8 +1301,7 @@ fn convert_inner<'a>(
             let t1 = t1_ast.loc().1.dupe();
             let (ts, ts_ast) = convert_list_inner(cx, env, &inner.types.2)?;
             let rep = type_::inter_rep::make(t0, t1, ts.into());
-            let reason =
-                reason::mk_annot_reason(reason::VirtualReasonDesc::RIntersectionType, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             let rt = Type::new(type_::TypeInner::IntersectionT(reason, rep));
             ast::types::Type::new(TypeInner::Intersection {
                 loc: (loc.dupe(), rt),
@@ -1662,7 +1661,7 @@ fn convert_inner<'a>(
             if let Some((subst_name, t)) = distributive_tparam_restore {
                 env.tparams_map.insert(subst_name, t);
             }
-            let reason = reason::mk_reason(reason::VirtualReasonDesc::RConditionalType, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let destructor =
                 type_::Destructor::ConditionalType(Box::new(DestructorConditionalTypeData {
                     distributive_tparam_name,
@@ -1767,10 +1766,7 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::IndexedAccess { loc, inner } => {
-            let reason = reason::mk_reason(
-                reason::VirtualReasonDesc::RIndexedAccess { optional: false },
-                loc.dupe(),
-            );
+            let reason = reason::mk_reason(None, loc.dupe());
             let object_ast = convert_inner(cx, env, &inner.object)?;
             let object_type = object_ast.loc().1.dupe();
             let index_ast = convert_inner(cx, env, &inner.index)?;
@@ -3208,7 +3204,7 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::Component { loc, inner } => {
-            let reason = reason::mk_reason(reason::VirtualReasonDesc::RComponentType, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let (t, tparams_ast, params_ast, renders_ast) = mk_component(
                 cx,
                 env,
@@ -3440,8 +3436,7 @@ fn convert_inner<'a>(
                         (Some(poly_nt.dupe()), Some(nt_ast))
                     }
                 };
-                let reason =
-                    reason::mk_reason(reason::VirtualReasonDesc::RMappedType, obj_loc.dupe());
+                let reason = reason::mk_reason(None, obj_loc.dupe());
                 let mapped_type_variance = {
                     use flow_parser::ast::types::object::MappedTypeVarianceOp;
                     match (variance, variance_op) {
@@ -5372,10 +5367,7 @@ fn convert_object<'a>(
                     let t0 = iter.next().unwrap();
                     let t1 = iter.next().unwrap();
                     let rest: Vec<Type> = iter.collect();
-                    let callable_reason = reason::mk_annot_reason(
-                        reason::VirtualReasonDesc::RCallableObjectType,
-                        loc.dupe(),
-                    );
+                    let callable_reason = reason::mk_annot_reason(None, loc.dupe());
                     let rep = type_::inter_rep::make(t0, t1, rest.into());
                     Type::new(type_::TypeInner::IntersectionT(callable_reason, rep))
                 }
@@ -8533,12 +8525,7 @@ fn optional_indexed_access<'a>(
     ia: &ast::types::OptionalIndexedAccess<ALoc, ALoc>,
 ) -> Result<(Type, ast::types::Type<ALoc, (ALoc, Type)>), flow_utils_concurrency::job_error::JobError>
 {
-    let reason = reason::mk_reason(
-        reason::VirtualReasonDesc::RIndexedAccess {
-            optional: ia.optional,
-        },
-        loc.dupe(),
-    );
+    let reason = reason::mk_reason(None, loc.dupe());
     let _object = &ia.indexed_access.object;
     let index = &ia.indexed_access.index;
     let comments = &ia.indexed_access.comments;

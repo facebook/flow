@@ -279,7 +279,7 @@ pub fn resolve<'cx>(
             }
         }
         TypeInner::TemplateLiteralT { quasis, types, .. } => {
-            let r = reason::mk_annot_reason(VirtualReasonDesc::RTemplateLiteralType, loc.dupe());
+            let r = reason::mk_annot_reason(None, loc.dupe());
             match kind {
                 StringMappingKind::StringMappingUppercase
                 | StringMappingKind::StringMappingLowercase => {

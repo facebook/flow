@@ -1917,7 +1917,7 @@ fn merge_annot<'cx>(
         }
         Annot::Union(inner) => {
             let AnnotUnion { loc, t0, t1, ts } = inner.as_ref();
-            let reason = reason::mk_annot_reason(RUnionType, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             let t0 = merge_impl(env, cx, file, t0, false, false);
             let t1 = merge_impl(env, cx, file, t1, false, false);
             let ts: Vec<Type> = ts
@@ -1938,7 +1938,7 @@ fn merge_annot<'cx>(
         }
         Annot::Intersection(inner) => {
             let AnnotIntersection { loc, t0, t1, ts } = inner.as_ref();
-            let reason = reason::mk_annot_reason(RIntersectionType, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             let t0 = merge_impl(env, cx, file, t0, false, false);
             let t1 = merge_impl(env, cx, file, t1, false, false);
             let ts: Vec<Type> = ts
@@ -2271,7 +2271,7 @@ fn merge_annot<'cx>(
         }
         Annot::OptionalIndexedAccessNonMaybeType(inner) => {
             let AnnotOptionalIndexedAccessNonMaybeType { loc, obj, index } = inner.as_ref();
-            let reason = reason::mk_reason(RIndexedAccess { optional: true }, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let object_type = merge_impl(env, cx, file, obj, false, false);
             let index_type = merge_impl(env, cx, file, index, false, false);
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::IndexedTypeAccess(Box::new(
@@ -2313,7 +2313,7 @@ fn merge_annot<'cx>(
                 non_maybe_result,
                 void_loc,
             } = inner.as_ref();
-            let reason = reason::mk_reason(RIndexedAccess { optional: true }, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let void_reason = reason::mk_reason(RVoid, void_loc.dupe());
             let non_maybe_result_type = merge_impl(env, cx, file, non_maybe_result, false, false);
             Type::new(type_::TypeInner::EvalT {
@@ -2527,7 +2527,7 @@ fn merge_annot<'cx>(
                 true_type,
                 false_type,
             } = inner.as_ref();
-            let reason = reason::mk_reason(RConditionalType, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let id = eval_id_of_aloc(cx, loc.dupe());
             let convert = |distributive_tparam_name: Option<SubstName>, env: &MergeEnv| {
                 let check_t = merge_impl(env, cx, file, check_type, false, false);
@@ -2686,7 +2686,7 @@ fn merge_annot<'cx>(
             )
         }
         Annot::ComponentAnnot(box (loc, def)) => {
-            let reason = reason::mk_annot_reason(RComponentType, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             merge_component(env, cx, file, reason, def, None)
         }
         Annot::ObjAnnot(inner) => {
@@ -2781,8 +2781,7 @@ fn merge_annot<'cx>(
                             let t0 = iter.next().unwrap();
                             let t1 = iter.next().unwrap();
                             let rest: Vec<Type> = iter.collect();
-                            let callable_reason =
-                                reason::mk_annot_reason(RCallableObjectType, loc.dupe());
+                            let callable_reason = reason::mk_annot_reason(None, loc.dupe());
                             Type::new(type_::TypeInner::IntersectionT(
                                 callable_reason,
                                 type_::inter_rep::make(t0, t1, rest.into()),
@@ -5605,9 +5604,7 @@ fn merge_declare_fun<'cx>(
             let t0 = iter.next().unwrap();
             let t1 = iter.next().unwrap();
             let rest: Vec<Type> = iter.collect();
-            let reason = type_util::reason_of_t(&t0)
-                .dupe()
-                .replace_desc(RIntersectionType);
+            let reason = type_util::reason_of_t(&t0).dupe().replace_desc(None);
             Type::new(type_::TypeInner::IntersectionT(
                 reason,
                 type_::inter_rep::make(t0, t1, rest.into()),

@@ -865,7 +865,7 @@ pub fn resolve<'cx>(
     cx: &mut Context<'cx>,
 ) -> Type {
     let unresolved = || {
-        let reason = reason::mk_annot_reason(VirtualReasonDesc::RTemplateLiteralType, loc.dupe());
+        let reason = reason::mk_annot_reason(None, loc.dupe());
         Type::new(TypeInner::TemplateLiteralT {
             reason,
             from_annot: true,
@@ -896,7 +896,7 @@ pub fn resolve<'cx>(
                 kind: InvalidTemplateLiteralTypeErrorKind::TooComplex,
             },
         );
-        let reason = reason::mk_annot_reason(VirtualReasonDesc::RTemplateLiteralType, loc.dupe());
+        let reason = reason::mk_annot_reason(None, loc.dupe());
         return Type::new(TypeInner::DefT(
             reason,
             DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
@@ -924,7 +924,7 @@ pub fn resolve<'cx>(
             }),
         ))
     };
-    let union_reason = reason::mk_annot_reason(VirtualReasonDesc::RTemplateLiteralType, loc.dupe());
+    let union_reason = reason::mk_annot_reason(None, loc.dupe());
     let union_aloc = cx.make_aloc_id(&loc);
     match mk_singleton_or_union(&union_reason, union_aloc, mk_str, &strings) {
         Some(t) => t,

@@ -394,9 +394,7 @@ pub mod callee_finder {
                     [] => None,
                     [t] => Some((t.dupe(), opt)),
                     [t0, t1, ..] => {
-                        let r = reason::locationless_reason(
-                            reason::VirtualReasonDesc::RIntersectionType,
-                        );
+                        let r = reason::locationless_reason(None);
                         let rest: Rc<[Type]> = ts[2..].iter().map(|t| t.dupe()).collect();
                         Some((
                             Type::new(TypeInner::IntersectionT(
