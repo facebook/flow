@@ -187,8 +187,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- field_type_conflict.js:5:11
 
-Cannot merge this interface declaration with previous declaration class interface type [1] because of conflicting
-property types because `string` [2] is incompatible with `number` [3]. [incompatible-type]
+Cannot merge this interface declaration with previous declaration class `C` [1] because of conflicting property types
+because `string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    field_type_conflict.js:5:11
    5| interface C { x: string; } // ERROR
@@ -445,8 +445,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- type_param_renaming.js:40:11
 
-Cannot merge this interface declaration with previous declaration class interface type [1] because of conflicting type
-parameter defaults because `number` [2] is incompatible with `string` [3]. [incompatible-type]
+Cannot merge this interface declaration with previous declaration class `ConflictingClassDefault` [1] because of
+conflicting type parameter defaults because `number` [2] is incompatible with `string` [3]. [incompatible-type]
 
    type_param_renaming.js:40:11
    40| interface ConflictingClassDefault<U = number> {} // ERROR

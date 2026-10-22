@@ -431,7 +431,7 @@ Found 1 error
 === block 29 ===
 Error ----------------------------------------------------------------------------- -:7:1
 
-Cannot call `hasThisParam` as a standalone function because its `this` parameter requires number [1] as the receiver.
+Cannot call `hasThisParam` as a standalone function because its `this` parameter requires `number` [1] as the receiver.
 Call it as a method, or bind it to its receiver before calling it. [incompatible-type]
 
    -:7:1

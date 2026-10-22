@@ -1288,7 +1288,7 @@ pub enum RootMessage<L: Dupe> {
     },
     RootCannotMergeDeclaration {
         conflict: MergedDeclarationConflict,
-        first_decl: VirtualReason<L>,
+        first_decl: MessageTypeReferenceData<L>,
     },
     RootCannotCreateElement(Option<VirtualReasonDesc<L>>),
     RootCannotCreateRecord(Option<VirtualReasonDesc<L>>),
@@ -2415,7 +2415,7 @@ pub enum Message<L: Dupe> {
         upper: VirtualReason<L>,
     },
 
-    MessageStandaloneCallRequiresReceiver(VirtualReason<L>),
+    MessageStandaloneCallRequiresReceiver(MessageTypeReferenceData<L>),
 
     MessageIncompatibleWithUnionRepresentative {
         union: MessageTypeReferenceData<L>,

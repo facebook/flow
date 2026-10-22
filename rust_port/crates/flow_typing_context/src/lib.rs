@@ -91,6 +91,7 @@ use flow_typing_type::type_::FixCacheMap;
 use flow_typing_type::type_::IdCacheMap;
 use flow_typing_type::type_::IndexerFallbackData;
 use flow_typing_type::type_::MergedDeclarationConflict;
+use flow_typing_type::type_::MergedDeclarationData;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::RootUseOp;
@@ -110,6 +111,8 @@ use flow_typing_type::type_::arith_kind::ArithKind;
 use flow_typing_type::type_::constraint::forcing_state::ForcingState;
 use flow_typing_type::type_::object::ResolveTool;
 use flow_typing_type::type_::object::Tool;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_utils_concurrency::check_budget::CheckBudget;
 use flow_utils_concurrency::job_error::JobError;
 use flow_utils_union_find::Node;
@@ -1844,26 +1847,34 @@ impl<'a> Context<'a> {
             .dupe();
         let fields = &self.ccx().merging_interface_field_types;
         let typeparams = &self.ccx().merging_interface_typeparams;
+        let declaration_type = |loc: &ALoc| {
+            self.environment()
+                .find_ordinary_write(loc.dupe())
+                .map(|entry| TypeOrTypeDescT::Type(entry.t.dupe()))
+                .unwrap_or(TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown))
+        };
         let walk =
-            |good_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
-             bad_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
-             conflicts: &FlowOrdMap<ALoc, Vec<ALoc>>,
+            |conflicts: &FlowOrdMap<ALoc, Vec<ALoc>>,
              acc: &mut Vec<(UseOp, FlowOrdMap<SubstName, Type>, Type, Type)>| {
                 for (good_loc, bad_locs) in conflicts.iter() {
                     let Some(good_fields) = fields.get(good_loc) else {
                         continue;
                     };
-                    let first_decl = good_reason(good_loc.dupe());
+                    let first_decl = declaration_type(good_loc);
                     for bad_loc in bad_locs {
                         let Some(bad_fields) = fields.get(bad_loc) else {
                             continue;
                         };
-                        let current_decl = bad_reason(bad_loc.dupe());
-                        let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
-                            conflict: MergedDeclarationConflict::Property,
-                            first_decl: first_decl.dupe(),
-                            current_decl,
-                        }));
+                        let current_decl =
+                            VirtualReason::new(VirtualReasonDesc::RInterfaceType, bad_loc.dupe());
+                        let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration(Box::new(
+                            MergedDeclarationData {
+                                conflict: MergedDeclarationConflict::Property,
+                                first_decl_loc: good_loc.dupe(),
+                                first_decl: first_decl.clone(),
+                                current_decl,
+                            },
+                        ))));
                         let tparam_subst_map = self.interface_tparam_subst_map(bad_loc, good_loc);
                         for (name, bad_t) in bad_fields.iter() {
                             if let Some(good_t) = good_fields.get(name) {
@@ -1910,19 +1921,17 @@ impl<'a> Context<'a> {
                                         Some(((*decl_loc).dupe(), default.dupe()));
                                 }
                                 Some((first_loc, first_default)) => {
-                                    let reason_for_loc = |loc: &ALoc| {
-                                        if loc == good_loc {
-                                            good_reason(loc.dupe())
-                                        } else {
-                                            bad_reason(loc.dupe())
-                                        }
-                                    };
-                                    let use_op =
-                                        UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
+                                    let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration(
+                                        Box::new(MergedDeclarationData {
                                             conflict: MergedDeclarationConflict::TypeParamDefault,
-                                            first_decl: reason_for_loc(first_loc),
-                                            current_decl: reason_for_loc(decl_loc),
-                                        }));
+                                            first_decl_loc: first_loc.dupe(),
+                                            first_decl: declaration_type(first_loc),
+                                            current_decl: VirtualReason::new(
+                                                VirtualReasonDesc::RInterfaceType,
+                                                (*decl_loc).dupe(),
+                                            ),
+                                        }),
+                                    )));
                                     acc.push((
                                         use_op,
                                         self.interface_tparam_subst_map(decl_loc, first_loc),
@@ -1936,23 +1945,8 @@ impl<'a> Context<'a> {
                 }
             };
         let mut acc = Vec::new();
-        walk(
-            &|loc| VirtualReason::new(VirtualReasonDesc::RInterfaceType, loc),
-            &|loc| VirtualReason::new(VirtualReasonDesc::RInterfaceType, loc),
-            &interface_conflicts,
-            &mut acc,
-        );
-        walk(
-            &|loc| {
-                VirtualReason::new(
-                    VirtualReasonDesc::RClass(Arc::new(VirtualReasonDesc::RInterfaceType)),
-                    loc,
-                )
-            },
-            &|loc| VirtualReason::new(VirtualReasonDesc::RInterfaceType, loc),
-            &dc_conflicts,
-            &mut acc,
-        );
+        walk(&interface_conflicts, &mut acc);
+        walk(&dc_conflicts, &mut acc);
         acc
     }
 

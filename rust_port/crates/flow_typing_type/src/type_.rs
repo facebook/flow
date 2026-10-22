@@ -946,7 +946,8 @@ pub struct FunCallData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
 pub struct StandaloneCallThisData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub op: VirtualReason<L>,
     pub fn_: VirtualReason<L>,
-    pub receiver: VirtualReason<L>,
+    pub receiver_loc: L,
+    pub receiver: Box<type_or_type_desc::TypeOrTypeDescT<L>>,
 }
 
 #[derive(
@@ -1352,6 +1353,24 @@ pub enum MergedDeclarationConflict {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct MergedDeclarationData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub conflict: MergedDeclarationConflict,
+    pub first_decl_loc: L,
+    pub first_decl: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub current_decl: VirtualReason<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     ObjectAddComputedProperty {
         op: VirtualReason<L>,
@@ -1385,11 +1404,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         target: VirtualReason<L>,
     },
     ConformToCommonInterface(Box<ConformToCommonInterfaceData<L>>),
-    MergedDeclaration {
-        conflict: MergedDeclarationConflict,
-        first_decl: VirtualReason<L>,
-        current_decl: VirtualReason<L>,
-    },
+    MergedDeclaration(Box<MergedDeclarationData<L>>),
     DeclareComponentRef {
         op: VirtualReason<L>,
     },
@@ -11666,7 +11681,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::ClassMethodDefinition { .. } => "ClassMethodDefinition",
         VirtualRootUseOp::Coercion { .. } => "Coercion",
         VirtualRootUseOp::ConformToCommonInterface(..) => "ConformToCommonInterface",
-        VirtualRootUseOp::MergedDeclaration { .. } => "MergedDeclaration",
+        VirtualRootUseOp::MergedDeclaration(..) => "MergedDeclaration",
         VirtualRootUseOp::DeclareComponentRef { .. } => "DeclareComponentRef",
         VirtualRootUseOp::DeleteProperty { .. } => "DeleteProperty",
         VirtualRootUseOp::DeleteVar { .. } => "DeleteVar",

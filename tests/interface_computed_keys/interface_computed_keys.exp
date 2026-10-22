@@ -51,7 +51,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- exp.js:106:11
 
-Cannot merge this interface declaration with previous declaration class interface type [1] because of conflicting
+Cannot merge this interface declaration with previous declaration class `MergedHolder` [1] because of conflicting
 property types because `number` [2] is incompatible with `string` [3]. [incompatible-type]
 
    exp.js:106:11

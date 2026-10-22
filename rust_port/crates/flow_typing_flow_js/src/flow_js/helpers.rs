@@ -1380,7 +1380,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     })
                     | VirtualRootUseOp::ClassOwnProtoCheck(..)
                     | VirtualRootUseOp::ConformToCommonInterface(..)
-                    | VirtualRootUseOp::MergedDeclaration { .. }
+                    | VirtualRootUseOp::MergedDeclaration(..)
                     | VirtualRootUseOp::DeclareComponentRef { .. }
                     | VirtualRootUseOp::GeneratorYield { .. }
                     | VirtualRootUseOp::ReactCreateElementCall(..)

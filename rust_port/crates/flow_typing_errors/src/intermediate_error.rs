@@ -50,6 +50,7 @@ use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::JSXCreateElementData;
 use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
 use flow_typing_type::type_::MergedDeclarationConflict;
+use flow_typing_type::type_::MergedDeclarationData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
 use flow_typing_type::type_::PropertyCompatibilityData;
@@ -1742,17 +1743,21 @@ where
                                 )
                             }
 
-                            VirtualRootUseOp::MergedDeclaration {
+                            VirtualRootUseOp::MergedDeclaration(box MergedDeclarationData {
                                 conflict,
+                                first_decl_loc,
                                 first_decl,
                                 current_decl,
-                            } => root(
+                            }) => root(
                                 loc,
                                 frames,
                                 current_decl,
                                 RootMessage::RootCannotMergeDeclaration {
                                     conflict: conflict.dupe(),
-                                    first_decl: first_decl.clone(),
+                                    first_decl: MessageTypeReferenceData {
+                                        loc: first_decl_loc.dupe(),
+                                        desc: printed_type_desc(first_decl),
+                                    },
                                 },
                                 custom_error_message,
                             ),
@@ -2306,7 +2311,8 @@ where
                         VirtualFrameUseOp::StandaloneCallThis(box StandaloneCallThisData {
                             op,
                             fn_,
-                            receiver,
+                            receiver_loc,
+                            receiver: box receiver,
                         }) => {
                             let (all_frames, explanations) = frames;
                             (
@@ -2315,7 +2321,10 @@ where
                                     RootMessage::RootCannotCallStandalone(fn_.desc.clone()),
                                 )),
                                 Some(Message::MessageStandaloneCallRequiresReceiver(
-                                    receiver.dupe(),
+                                    MessageTypeReferenceData {
+                                        loc: receiver_loc.dupe(),
+                                        desc: printed_type_desc(receiver),
+                                    },
                                 )),
                                 loc_of_aloc(&fn_.loc),
                                 all_frames,
@@ -5227,7 +5236,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot merge this interface declaration with previous declaration "),
-                        friendly::ref_map(&loc_of_aloc, first_decl),
+                        ref_of_type(first_decl),
                         text(match conflict {
                             MergedDeclarationConflict::Property => {
                                 " because of conflicting property types"
@@ -5627,7 +5636,7 @@ where
                 text("its "),
                 code("this"),
                 text(" parameter requires "),
-                ref_(receiver),
+                ref_of_type(receiver),
                 text(
                     " as the receiver. Call it as a method, or bind it to its receiver before calling it",
                 ),

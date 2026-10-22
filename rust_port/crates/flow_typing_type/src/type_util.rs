@@ -56,6 +56,7 @@ use crate::type_::IndexedTypeAccessData;
 use crate::type_::JSXCreateElementData;
 use crate::type_::MapTypeTData;
 use crate::type_::MappedTypeKeyCompatibilityData;
+use crate::type_::MergedDeclarationData;
 use crate::type_::MethodTData;
 use crate::type_::MixedFlavor;
 use crate::type_::OpaqueTypeCustomErrorCompatibilityData;
@@ -1127,15 +1128,17 @@ where
                 self_module_loc: f(self_module_loc),
                 originate_from_import,
             })),
-            MergedDeclaration {
+            MergedDeclaration(box MergedDeclarationData {
                 conflict,
+                first_decl_loc,
                 first_decl,
                 current_decl,
-            } => MergedDeclaration {
+            }) => MergedDeclaration(Box::new(MergedDeclarationData {
                 conflict: conflict.dupe(),
-                first_decl: mod_reason(first_decl),
+                first_decl_loc: f(first_decl_loc),
+                first_decl: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), first_decl),
                 current_decl: mod_reason(current_decl),
-            },
+            })),
             DeclareComponentRef { op } => DeclareComponentRef { op: mod_reason(op) },
             DeleteProperty { lhs, prop } => DeleteProperty {
                 lhs: mod_reason(lhs),
@@ -1353,13 +1356,17 @@ where
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
             },
-            StandaloneCallThis(box StandaloneCallThisData { op, fn_, receiver }) => {
-                StandaloneCallThis(Box::new(StandaloneCallThisData {
-                    op: mod_reason(op),
-                    fn_: mod_reason(fn_),
-                    receiver: mod_reason(receiver),
-                }))
-            }
+            StandaloneCallThis(box StandaloneCallThisData {
+                op,
+                fn_,
+                receiver_loc,
+                receiver: box receiver,
+            }) => StandaloneCallThis(Box::new(StandaloneCallThisData {
+                op: mod_reason(op),
+                fn_: mod_reason(fn_),
+                receiver_loc: f(receiver_loc),
+                receiver: Box::new(type_or_type_desc::map_loc(|l: &L| f(l.dupe()), receiver)),
+            })),
             FunMissingArg(box FunMissingArgData { n, op, def }) => {
                 FunMissingArg(Box::new(FunMissingArgData {
                     n,

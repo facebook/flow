@@ -63,8 +63,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- class_methods.js:29:17
 
-Cannot call `m` as a standalone function because its `this` parameter requires `this.m` [1] as the receiver. Call it as
-a method, or bind it to its receiver before calling it. [incompatible-type]
+Cannot call `m` as a standalone function because its `this` parameter requires `this` [1] as the receiver. Call it as a
+method, or bind it to its receiver before calling it. [incompatible-type]
 
    class_methods.js:29:17
    29|         let z = m(); // error: the preserved receiver is missing

@@ -1384,8 +1384,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- merging.js:20:11
 
-Cannot merge this interface declaration with previous declaration interface type [1] because of conflicting property
-types because `number` [2] is incompatible with `string` [3]. [incompatible-type]
+Cannot merge this interface declaration with previous declaration interface `ConflictProp` [1] because of conflicting
+property types because `number` [2] is incompatible with `string` [3]. [incompatible-type]
 
    merging.js:20:11
    20| interface ConflictProp { x: number; } // error: number ~> string
@@ -1422,8 +1422,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- merging.js:49:11
 
-Cannot merge this interface declaration with previous declaration interface type [1] because of conflicting type
-parameter defaults because `number` [2] is incompatible with `string` [3]. [incompatible-type]
+Cannot merge this interface declaration with previous declaration interface `ConflictingDefault` [1] because of
+conflicting type parameter defaults because `number` [2] is incompatible with `string` [3]. [incompatible-type]
 
    merging.js:49:11
    49| interface ConflictingDefault<U = number> { b: U; } // ERROR
@@ -1443,8 +1443,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- merging.js:54:11
 
-Cannot merge this interface declaration with previous declaration interface type [1] because of conflicting type
-parameter defaults because `number` [2] is incompatible with `string` [3]. [incompatible-type]
+Cannot merge this interface declaration with previous declaration interface `LaterDefault` [1] because of conflicting
+type parameter defaults because `number` [2] is incompatible with `string` [3]. [incompatible-type]
 
    merging.js:54:11
    54| interface LaterDefault<V = number> { c: V; } // ERROR

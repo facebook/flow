@@ -53,8 +53,10 @@ use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::EvalMappedTypeData;
 use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
+use flow_typing_type::type_::MergedDeclarationData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
+use flow_typing_type::type_::StandaloneCallThisData;
 use flow_typing_type::type_::TypeGuardIncompatibilityData;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::UnionRepresentativeData;
@@ -6899,6 +6901,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             },
                         )),
                     )),
+                    VirtualRootUseOp::MergedDeclaration(box MergedDeclarationData {
+                        conflict,
+                        first_decl_loc,
+                        first_decl,
+                        current_decl,
+                    }) => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::MergedDeclaration(
+                        Box::new(MergedDeclarationData {
+                            conflict: conflict.dupe(),
+                            first_decl_loc: first_decl_loc.dupe(),
+                            first_decl: f(first_decl.clone()),
+                            current_decl: current_decl.dupe(),
+                        }),
+                    ))),
                     VirtualRootUseOp::AssignVar {
                         var: Some(box AssignVarTarget::Annotation(t)),
                         init,
@@ -6988,6 +7003,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
                 VirtualUseOp::Frame(frame_rc, inner_op) => {
                     let frame_rc = match frame_rc.as_ref() {
+                        VirtualFrameUseOp::StandaloneCallThis(box StandaloneCallThisData {
+                            op,
+                            fn_,
+                            receiver_loc,
+                            receiver: box receiver,
+                        }) => Arc::new(VirtualFrameUseOp::StandaloneCallThis(Box::new(
+                            StandaloneCallThisData {
+                                op: op.dupe(),
+                                fn_: fn_.dupe(),
+                                receiver_loc: receiver_loc.dupe(),
+                                receiver: Box::new(f(receiver.clone())),
+                            },
+                        ))),
                         VirtualFrameUseOp::MappedTypeKeyCompatibility(
                             box MappedTypeKeyCompatibilityData {
                                 source_type_loc,

@@ -165,9 +165,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Cannot call `unboundImplicit` as a standalone function because its `this` parameter requires implicit `this` parameter
-of class `this` type [1] as the receiver. Call it as a method, or bind it to its receiver before calling it.
-[incompatible-type]
+Cannot call `unboundImplicit` as a standalone function because its `this` parameter requires `Class<StaticWithThis>` [1]
+as the receiver. Call it as a method, or bind it to its receiver before calling it. [incompatible-type]
 
    test.js:137:1
    137| unboundImplicit(); // error: the class receiver is missing

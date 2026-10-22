@@ -73,6 +73,7 @@ use flow_typing_type::type_::InstType;
 use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::MapTypeTData;
+use flow_typing_type::type_::MergedDeclarationData;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::NamedSymbol;
@@ -1718,7 +1719,9 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         RootUseOp::ClassMethodDefinition { name, .. } => Some(name),
         RootUseOp::Coercion { target, .. } => Some(target),
         RootUseOp::ConformToCommonInterface(_) => None,
-        RootUseOp::MergedDeclaration { current_decl, .. } => Some(current_decl),
+        RootUseOp::MergedDeclaration(box MergedDeclarationData { current_decl, .. }) => {
+            Some(current_decl)
+        }
         RootUseOp::DeleteProperty { prop, .. } => Some(prop),
         RootUseOp::DeleteVar { var } => Some(var),
         RootUseOp::FunCall(data) => Some(&data.op),
