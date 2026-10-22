@@ -1052,7 +1052,7 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
 ) -> (FlowOrdSet<Name>, ObjType) {
     let s = &x.static_;
     let loc = x.static_.reason.loc().dupe();
-    let this = type_util::class_type(this_or_mixed(loc, x), false, None);
+    let this = type_util::class_type(this_or_mixed(loc, x), None);
     let (inited_fields, fields, methods, call, _construct) = elements(cx, this, true, None, s);
     let props: properties::PropertiesMap = {
         let mut seen = std::collections::BTreeSet::new();
@@ -1160,7 +1160,7 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
             sig_.reason.dupe(),
         )
     };
-    let private_static_this = type_util::class_type(this_or_mixed(loc, s), false, None);
+    let private_static_this = type_util::class_type(this_or_mixed(loc, s), None);
     let own_pmap: properties::PropertiesMap = fields
         .iter()
         .map(|(name, prop)| (name.dupe(), prop.dupe()))
@@ -1365,8 +1365,7 @@ fn supertype<'a, C: ConfigTypes>(cx: &mut Context<'a>, x: &class_types::Class<C>
                     // A base that is a value with a construct signature instead
                     // hands its statics over on the instance itself, via
                     // [construct_base_instance].
-                    let static_proto =
-                        type_util::class_type(t.dupe(), false, Some(annot_loc.dupe()));
+                    let static_proto = type_util::class_type(t.dupe(), Some(annot_loc.dupe()));
                     (t, static_proto)
                 }
                 class_types::Extends::Implicit { null } => {
@@ -1514,7 +1513,7 @@ fn check_methods<'a, C: crate::func_params_intf::Config>(
                     return;
                 }
                 let self_val = if static_ {
-                    type_util::class_type(self_.dupe(), false, None)
+                    type_util::class_type(self_.dupe(), None)
                 } else {
                     self_.dupe()
                 };
@@ -1685,7 +1684,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
         &x.instance,
     );
     let static_ = {
-        let this = type_util::class_type(this_or_mixed(inst_loc, x), false, None);
+        let this = type_util::class_type(this_or_mixed(inst_loc, x), None);
         // NOTE: The own, proto maps are disjoint by construction.
         let (_, own, proto, _call, _construct) = elements(cx, this, true, None, &x.static_);
         let mut merged = own;
@@ -2606,12 +2605,11 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
                         is_this: false,
                         subst_name: this_name.dupe(),
                     }))),
-                    true,
                     None,
                 );
                 (t_inner, t_outer)
             }
-            None => (this.dupe(), type_util::class_type(this, true, None)),
+            None => (this.dupe(), type_util::class_type(this, None)),
         }
     } else {
         let t_inner = Type::new(TypeInner::ThisInstanceT(Box::new(ThisInstanceTData {
@@ -2627,7 +2625,6 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
                 is_this: false,
                 subst_name: this_name,
             }))),
-            false,
             None,
         );
         (t_inner, t_outer)
@@ -2687,10 +2684,7 @@ pub fn make_thises<'a, C: ConfigTypes>(
                         targs.clone(),
                         Some(annot_loc.dupe()),
                     );
-                    (
-                        t.dupe(),
-                        type_util::class_type(t, false, Some(annot_loc.dupe())),
-                    )
+                    (t.dupe(), type_util::class_type(t, Some(annot_loc.dupe())))
                 }
                 class_types::Extends::Implicit { null } => {
                     let t = if *null {
@@ -2704,7 +2698,7 @@ pub fn make_thises<'a, C: ConfigTypes>(
             };
             (
                 class_super.this_t.dupe(),
-                type_util::class_type(class_super.this_t.dupe(), false, None),
+                type_util::class_type(class_super.this_t.dupe(), None),
                 super_,
                 static_super,
             )

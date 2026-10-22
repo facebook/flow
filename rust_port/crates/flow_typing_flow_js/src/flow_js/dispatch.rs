@@ -6514,7 +6514,7 @@ fn __flow_impl<'cx>(
             if matches!(def_t.deref(), DefTInner::InstanceT(_))
                 && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.matches_str("constructor")) =>
         {
-            let t = type_util::class_type(l.dupe(), false, r.annot_loc().map(|a| a.dupe()));
+            let t = type_util::class_type(l.dupe(), r.annot_loc().map(|a| a.dupe()));
             rec_flow_t(
                 cx,
                 env,
@@ -6657,7 +6657,7 @@ fn __flow_impl<'cx>(
                 tvar as u32,
             )));
             let l_for_private = if pm_data.static_ {
-                type_util::class_type(l.dupe(), false, None)
+                type_util::class_type(l.dupe(), None)
             } else {
                 l.dupe()
             };

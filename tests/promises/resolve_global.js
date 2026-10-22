@@ -39,3 +39,11 @@ async function bar() {
 async function baz(): Promise<number> {
   return 0;
 }
+
+async function checkWidening() {
+  const value = await foo(true);
+  if (value !== null) {
+    value.bar as string;
+    value.bar as 'baz'; // Error: string ~> 'baz'
+  }
+}

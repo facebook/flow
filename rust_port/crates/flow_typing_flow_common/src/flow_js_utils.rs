@@ -4535,7 +4535,7 @@ pub mod import_type_t_kit {
                                         ))
                                     }
                                     InstanceKind::ClassKind | InstanceKind::RecordKind { .. } => {
-                                        type_util::class_type(tapp, false, None)
+                                        type_util::class_type(tapp, None)
                                     }
                                 };
                                 Some(type_util::poly_type_of_tparam_list(

@@ -400,7 +400,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RImportStar(FlowSmolStr),
     RDefaultImportedType(FlowSmolStr, Userland),
     RCode(FlowSmolStr),
-    RClass(Arc<VirtualReasonDesc<L>>),
     RPartialOf(Arc<VirtualReasonDesc<L>>),
     RRequiredOf(Arc<VirtualReasonDesc<L>>),
     RModule(Userland),
@@ -559,7 +558,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 d.as_ref().map(|d| Arc::new(d.map_locs(f))),
             ))),
             RTypeParam(box (s, l1, l2)) => RTypeParam(Box::new((s.clone(), f(l1), f(l2)))),
-            RClass(d) => RClass(Arc::new(d.map_locs(f))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
             RRequiredOf(d) => RRequiredOf(Arc::new(d.map_locs(f))),
             RImplicitThis(d) => RImplicitThis(Arc::new(d.map_locs(f))),
@@ -764,15 +762,6 @@ impl Reason {
             .source()
             .map(|file| file.is_lib_file())
             .unwrap_or(false)
-    }
-
-    /// Check if reason is for Promise from lib
-    pub fn is_promise(&self) -> bool {
-        self.is_lib()
-            && matches!(
-                self.desc(true),
-                Some(VirtualReasonDesc::RClass(inner)) if matches!(&**inner, VirtualReasonDesc::RType(s) if s.as_str() == "Promise")
-            )
     }
 
     /// Compare reasons with concretization
@@ -1379,13 +1368,10 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Constructors
         RConstructor => "constructor".to_string(),
-        RConstructorCall(d) => match d.as_deref() {
-            Some(RClass(inner)) => string_of_desc(inner),
-            _ => format!(
-                "new {}",
-                d.as_deref().map(string_of_desc).unwrap_or_default()
-            ),
-        },
+        RConstructorCall(d) => format!(
+            "new {}",
+            d.as_deref().map(string_of_desc).unwrap_or_default()
+        ),
 
         // Records
         RRecordType(name) => format!("record `{}`", name),
@@ -1457,7 +1443,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Type wrappers
         RReadOnlyType => "`Readonly`".to_string(),
-        RClass(d) => format!("class {}", string_of_desc(d)),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),
         RRequiredOf(d) => format!("required of {}", string_of_desc(d)),
 
@@ -1555,21 +1540,6 @@ pub fn is_lib_reason_def(r: &Reason) -> bool {
 
 pub fn is_blamable_reason(r: &Reason) -> bool {
     *r.loc() != ALoc::none() && !is_lib_reason(r)
-}
-
-pub fn is_promise_reason(r: &Reason) -> bool {
-    if !is_lib_reason(r) {
-        return false;
-    }
-    match r.desc(true) {
-        Some(VirtualReasonDesc::RClass(inner)) => {
-            matches!(
-                &**inner,
-                VirtualReasonDesc::RType(name) if name.as_str() == "Promise"
-            )
-        }
-        _ => false,
-    }
 }
 
 pub fn mk_annot_reason(desc: impl Into<Option<ReasonDesc>>, annot_loc: ALoc) -> Reason {

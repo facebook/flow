@@ -3001,10 +3001,7 @@ impl<'a> DefFinder<'a> {
 
         self.add_ordinary_binding(
             id_loc,
-            mk_reason(
-                VirtualReasonDesc::RClass(VirtualReasonDesc::RIdentifier(name.dupe()).into()),
-                loc.dupe(),
-            ),
+            mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), loc.dupe()),
             Def::DeclaredClass(Box::new(DeclaredClassDefData {
                 loc: loc.dupe(),
                 decl: decl.clone(),

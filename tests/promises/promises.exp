@@ -832,6 +832,23 @@ References:
              ^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- resolve_global.js:47:5
+
+Cannot cast `value.bar` to `"baz"` because `string` [1] is incompatible with `"baz"` [2]. [incompatible-type]
+
+   resolve_global.js:47:5
+   47|     value.bar as 'baz'; // Error: string ~> 'baz'
+           ^^^^^^^^^
+
+References:
+   resolve_global.js:16:18
+   16|     return {bar: 'baz'};
+                        ^^^^^ [1]
+   resolve_global.js:47:18
+   47|     value.bar as 'baz'; // Error: string ~> 'baz'
+                        ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- resolve_void.js:1:1
 
 Cannot cast `Promise.resolve()` to `Promise<number>` because in type argument `R` [1]: `void` [2] is incompatible with
@@ -963,4 +980,4 @@ References:
 
 
 
-Found 53 errors
+Found 54 errors

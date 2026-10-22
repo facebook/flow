@@ -117,19 +117,19 @@ fn is_builtin_promise<'cx>(cx: &mut Context<'cx>, t: &Type) -> bool {
                 if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() =>
             {
                 match t_out.deref() {
-                    TypeInner::DefT(r, inner_def_t)
-                        if let DefTInner::ClassT(_) = inner_def_t.deref() =>
+                    TypeInner::DefT(_, inner_def_t)
+                        if let DefTInner::ClassT(class_t) = inner_def_t.deref()
+                            && let TypeInner::ThisInstanceT(data) = class_t.deref() =>
                     {
-                        cx.is_lib_reason(r)
-                            && matches!(
-                                r.desc(true),
-                                Some(VirtualReasonDesc::RClass(inner))
-                                    if matches!(
-                                        &**inner,
-                                        VirtualReasonDesc::RType(name)
-                                            if name.as_str() == "Promise"
-                                    )
-                            )
+                        let inst = &data.instance.inst;
+                        inst.class_name
+                            .as_ref()
+                            .is_some_and(|name| name.as_str() == "Promise")
+                            && inst
+                                .class_id
+                                .0
+                                .source()
+                                .is_some_and(|file| cx.is_global_libdef(file))
                     }
                     _ => false,
                 }

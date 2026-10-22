@@ -4440,7 +4440,7 @@ fn merge_class_extends<'cx>(
             let t = merge_impl(env, cx, file, t, false, false);
             let t = specialize(cx, reason_op, t, AnnotationInferenceOperation::ClassExtends);
             let t = type_util::this_typeapp(t, this.dupe(), None, Some(loc.dupe()));
-            let static_proto = type_util::class_type(t.dupe(), false, None);
+            let static_proto = type_util::class_type(t.dupe(), None);
             (t, static_proto)
         }
         ClassExtends::ClassExplicitExtendsApp(box (loc, t, targs)) => {
@@ -4450,7 +4450,7 @@ fn merge_class_extends<'cx>(
                 .map(|targ| merge_impl(env, cx, file, targ, false, false))
                 .collect();
             let t = type_util::this_typeapp(t, this.dupe(), Some(targs), Some(loc.dupe()));
-            let static_proto = type_util::class_type(t.dupe(), false, None);
+            let static_proto = type_util::class_type(t.dupe(), None);
             (t, static_proto)
         }
     };
@@ -4721,7 +4721,6 @@ fn merge_this_class_t<'cx>(
                     subst_name: SubstName::name(FlowSmolStr::new_inline("this")),
                 },
             ))),
-            false,
             None,
         )
     }
@@ -4946,7 +4945,7 @@ fn merge_fun<'cx>(
                     && let Some(this) = env.tps.get(&FlowSmolStr::new_inline("this"))
                 {
                     let this = if is_static {
-                        type_util::class_type(this.dupe(), false, None)
+                        type_util::class_type(this.dupe(), None)
                     } else {
                         this.dupe()
                     };
@@ -5516,7 +5515,6 @@ fn merge_declare_class<'cx>(
                     subst_name: SubstName::name(FlowSmolStr::new_inline("this")),
                 },
             ))),
-            false,
             None,
         )
     };
@@ -5667,7 +5665,7 @@ pub fn merge_def<'cx>(
                     false,
                     targs,
                 );
-                type_util::class_type(t, false, None)
+                type_util::class_type(t, None)
             };
             merge_tparams_targs(
                 &mk_merge_env(FlowOrdMap::new()),

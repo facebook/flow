@@ -2274,17 +2274,11 @@ pub fn statics(t: &Type) -> Option<&Type> {
     }
 }
 
-pub fn class_type(t: Type, structural: bool, annot_loc: Option<ALoc>) -> Type {
+pub fn class_type(t: Type, annot_loc: Option<ALoc>) -> Type {
     use crate::type_::DefT;
     use crate::type_::DefTInner;
 
-    let reason = if structural {
-        reason_of_t(&t).dupe()
-    } else {
-        reason_of_t(&t).dupe().update_desc_new(|desc| {
-            desc.map(|desc| flow_common::reason::VirtualReasonDesc::RClass(Arc::new(desc)))
-        })
-    };
+    let reason = reason_of_t(&t).dupe();
     let reason = match annot_loc {
         Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
