@@ -3367,18 +3367,18 @@ module.exports = suite(
               activeSignature: 0,
               signatures: [
                 {
-                  label: 'foo?: string',
-                  parameters: [
-                    {
-                      label: 'foo?: string',
-                    },
-                  ],
-                },
-                {
                   label: 'foo: boolean',
                   parameters: [
                     {
                       label: 'foo: boolean',
+                    },
+                  ],
+                },
+                {
+                  label: 'foo?: string',
+                  parameters: [
+                    {
+                      label: 'foo?: string',
                     },
                   ],
                 },

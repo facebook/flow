@@ -1475,8 +1475,8 @@ elem_call.js:17:1-10: any (implicit)
 elem_call.js:17:7: "b"
 elem_call.js:17:7: "b"
 === optional_calls.js ===
-optional_calls.js:7:3: void | F
-optional_calls.js:7:3: void | F
+optional_calls.js:7:3: F | void
+optional_calls.js:7:3: F | void
 optional_calls.js:7:3-12: void
 optional_calls.js:7:3-12: void
 optional_calls.js:7:7-11: "abc"

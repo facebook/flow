@@ -54,6 +54,7 @@ use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NonstrictReturningData;
+use flow_typing_type::type_::ObjRestGuardKey;
 use flow_typing_type::type_::OptionalIndexedAccessTData;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PrivateMethodTData;
@@ -6719,7 +6720,13 @@ fn __flow_impl<'cx>(
             let props_tmap = o.props_tmap.dupe();
             let obj_kind = &o.flags.obj_kind;
             let reachable_targs = &o.reachable_targs;
-            const_fold_expansion::guard(cx, *id, (reason_obj.dupe(), 0), |cx, count| {
+            let guard_key = ObjRestGuardKey {
+                reason: reason_obj.dupe(),
+                props: cx.find_props(props_tmap.dupe()),
+                reachable_targs: reachable_targs.dupe(),
+                obj_kind: obj_kind.clone(),
+            };
+            const_fold_expansion::guard_obj_rest(cx, *id, guard_key, |cx, count| {
                 match count {
                     0 => {
                         let xs_smol: Vec<flow_data_structure_wrapper::smol_str::FlowSmolStr> =

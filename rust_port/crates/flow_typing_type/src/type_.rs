@@ -10844,7 +10844,21 @@ pub type FixCacheMap = MultiLevelMap<(bool, Type), Type>;
 
 pub type ThisSpecializeCacheMap = MultiLevelMap<(Type, Type), Type>;
 
-pub type ConstFoldMap = MultiLevelMap<(i32, Reason, i32), i32>;
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ObjRestGuardKey {
+    pub reason: Reason,
+    pub props: properties::PropertiesMap,
+    pub reachable_targs: Rc<[(Type, Polarity)]>,
+    pub obj_kind: ObjKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ConstFoldKey {
+    Reason(Reason),
+    ObjRest(Box<ObjRestGuardKey>),
+}
+
+pub type ConstFoldMap = MultiLevelMap<(i32, ConstFoldKey, i32), i32>;
 
 pub fn open_tvar(tvar: &Type) -> &Tvar {
     match &**tvar {

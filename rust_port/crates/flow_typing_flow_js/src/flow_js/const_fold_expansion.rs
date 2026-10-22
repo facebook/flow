@@ -17,6 +17,8 @@
 //! to stop doing constant folding.
 use flow_common::reason::Reason;
 use flow_typing_context::Context;
+use flow_typing_type::type_::ConstFoldKey;
+use flow_typing_type::type_::ObjRestGuardKey;
 
 pub(crate) fn guard<'cx, T, F>(
     cx: &mut Context<'cx>,
@@ -27,7 +29,30 @@ pub(crate) fn guard<'cx, T, F>(
 where
     F: FnOnce(&mut Context<'cx>, i32) -> T,
 {
-    let key = (id, reason_with_pos.0, reason_with_pos.1);
+    let key = (
+        id,
+        ConstFoldKey::Reason(reason_with_pos.0),
+        reason_with_pos.1,
+    );
+    with_count(cx, key, f)
+}
+
+pub(crate) fn guard_obj_rest<'cx, T, F>(
+    cx: &mut Context<'cx>,
+    id: i32,
+    key: ObjRestGuardKey,
+    f: F,
+) -> T
+where
+    F: FnOnce(&mut Context<'cx>, i32) -> T,
+{
+    with_count(cx, (id, ConstFoldKey::ObjRest(Box::new(key)), 0), f)
+}
+
+fn with_count<'cx, T, F>(cx: &mut Context<'cx>, key: (i32, ConstFoldKey, i32), f: F) -> T
+where
+    F: FnOnce(&mut Context<'cx>, i32) -> T,
+{
     let count = cx.const_fold_cache().get(&key).copied().unwrap_or(0);
     cx.const_fold_cache_mut().insert(key, count + 1);
     f(cx, count)

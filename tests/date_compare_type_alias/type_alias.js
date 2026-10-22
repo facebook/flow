@@ -1,7 +1,5 @@
 // Test that Date comparison works when the Date is narrowed from
-// a nullable type after reassignment. The reason description gets
-// wrapped (e.g., in RUnionBranching), and name_of_instance_reason
-// must unwrap it to recognize "Date" for the comparison check.
+// a nullable type after reassignment.
 
 const NOW = new Date();
 const TODAY = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());

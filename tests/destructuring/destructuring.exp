@@ -1547,6 +1547,57 @@ References:
                      ^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- object_rest.js:37:15
+
+Cannot cast `rest.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   object_rest.js:37:15
+   37|     case 'a': rest.a as string; break; // error: number
+                     ^^^^^^
+
+References:
+   object_rest.js:19:29
+   19|   | Readonly<{kind: 'a', a: number}>
+                                   ^^^^^^ [1]
+   object_rest.js:37:25
+   37|     case 'a': rest.a as string; break; // error: number
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- object_rest.js:38:15
+
+Cannot cast `rest.b` to `boolean` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+
+   object_rest.js:38:15
+   38|     case 'b': rest.b as boolean; break; // error: string
+                     ^^^^^^
+
+References:
+   object_rest.js:20:29
+   20|   | Readonly<{kind: 'b', b: string}>
+                                   ^^^^^^ [1]
+   object_rest.js:38:25
+   38|     case 'b': rest.b as boolean; break; // error: string
+                               ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- object_rest.js:39:15
+
+Cannot cast `rest.c` to `number` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   object_rest.js:39:15
+   39|     case 'c': rest.c as number; break; // error: boolean
+                     ^^^^^^
+
+References:
+   object_rest.js:21:29
+   21|   | Readonly<{kind: 'c', c: boolean}>;
+                                   ^^^^^^^ [1]
+   object_rest.js:39:25
+   39|     case 'c': rest.c as number; break; // error: boolean
+                               ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- poly_concretize.js:64:11
 
 Cannot assign `item` to destructuring because: [incompatible-type]
@@ -1705,4 +1756,4 @@ References:
 
 
 
-Found 116 errors
+Found 119 errors

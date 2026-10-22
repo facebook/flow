@@ -420,7 +420,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
         from_component_syntax: bool,
     },
     RPossiblyMissingPropFromObj(Name, Arc<VirtualReasonDesc<L>>),
-    RUnionBranching(Arc<VirtualReasonDesc<L>>, i32),
     RComponent(FlowSmolStr),
     RRenderType(Arc<VirtualReasonDesc<L>>),
     RRenderMaybeType(Arc<VirtualReasonDesc<L>>),
@@ -588,7 +587,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RPossiblyMissingPropFromObj(n, d) => {
                 RPossiblyMissingPropFromObj(n.dupe(), Arc::new(d.map_locs(f)))
             }
-            RUnionBranching(d, i) => RUnionBranching(Arc::new(d.map_locs(f)), *i),
             RRenderType(d) => RRenderType(Arc::new(d.map_locs(f))),
             RRenderMaybeType(d) => RRenderMaybeType(Arc::new(d.map_locs(f))),
             RRenderStarType(d) => RRenderStarType(Arc::new(d.map_locs(f))),
@@ -605,11 +603,10 @@ impl<A: Dupe> VirtualReasonDesc<A> {
 }
 
 impl<L: Dupe> VirtualReasonDesc<L> {
-    /// Unwrap type aliases and union branching
+    /// Unwrap type aliases
     pub fn unwrap(&self) -> Option<&VirtualReasonDesc<L>> {
         match self {
             VirtualReasonDesc::RTypeAlias(box (_, _, inner)) => inner.as_deref()?.unwrap(),
-            VirtualReasonDesc::RUnionBranching(inner, _) => inner.unwrap(),
             _ => Some(self),
         }
     }
@@ -1550,7 +1547,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
                 string_of_desc(desc)
             )
         }
-        RUnionBranching(desc, _) => string_of_desc(desc),
 
         // Uninitialized
         RUninitialized => "uninitialized variable".to_string(),

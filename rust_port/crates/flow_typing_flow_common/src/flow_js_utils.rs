@@ -2487,22 +2487,9 @@ where
     F: Fn(&mut Context<'cx>, &DepthTrace, (&Type, &UseT<CX>)) -> Result<T, E>,
     J: Fn(T, T) -> T,
 {
-    use flow_common::reason::VirtualReasonDesc;
-    use flow_typing_type::type_util::mod_reason_of_t;
-
-    // This is required so that our caches don't treat different branches of unions as the same type
-    let union_reason = |i: usize, r: Reason| -> Reason {
-        let desc = r
-            .desc(true)
-            .cloned()
-            .map(|desc| VirtualReasonDesc::RUnionBranching(Arc::new(desc), i as i32));
-        r.replace_desc(desc)
-    };
-
     let mut acc = init;
-    for (i, b) in rep.members_iter().enumerate() {
-        let modified_b = mod_reason_of_t(&|r| union_reason(i, r), b);
-        let r = f(cx, trace, utils_js::mk_tuple_swapped(u, &modified_b))?;
+    for b in rep.members_iter() {
+        let r = f(cx, trace, utils_js::mk_tuple_swapped(u, b))?;
         acc = join(acc, r);
     }
     Ok(acc)

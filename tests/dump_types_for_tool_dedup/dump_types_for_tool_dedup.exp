@@ -1350,46 +1350,25 @@
     "0":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:2:24-30: string"},
     "1":{"def":{"kind":"NumGeneral"},"kind":"Def","reason":"exp.js:1: `Foo`"},
     "10":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:3:24: undefined"},
-    "100":{
-      "kind":"Union",
-      "members":[
-        {"$ref":43},
-        {"$ref":44},
-        {"$ref":94},
-        {"$ref":95},
-        {"$ref":96},
-        {"$ref":97},
-        {"$ref":98},
-        {"$ref":99}
-      ]
-    },
-    "101":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
-    "102":{
+    "100":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
+    "101":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
+    "102":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:8:48-56: undefined"},
+    "103":{
       "def":{"kind":"Void"},
       "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
-    "103":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
+      "reason":"test.js:8:60-62: null or undefined"
     },
     "104":{
       "def":{"kind":"Void"},
       "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
+      "reason":"test.js:8:60-62: null or undefined"
     },
     "105":{"kind":"Any"},
     "106":{"kind":"Any"},
     "107":{
       "kind":"Union",
       "members":[
-        {"$ref":43},
-        {"$ref":44},
+        {"$ref":100},
         {"$ref":101},
         {"$ref":102},
         {"$ref":103},
@@ -1398,41 +1377,61 @@
         {"$ref":106}
       ]
     },
-    "108":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "109":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "11":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:4:1-6: undefined"},
-    "110":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:8:48-56: undefined"},
-    "111":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
-    },
-    "112":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
-    },
-    "113":{"kind":"Any"},
-    "114":{"kind":"Any"},
-    "115":{
+    "108":{
       "kind":"Union",
       "members":[
-        {"$ref":108},
-        {"$ref":109},
+        {"$ref":100},
+        {"$ref":101},
+        {"$ref":102},
+        {"$ref":103},
+        {"$ref":104},
+        {"$ref":105},
+        {"$ref":106}
+      ]
+    },
+    "109":{"def":{"kind":"BoolGeneral"},"kind":"Def","reason":"test.js:8:33-44: boolean"},
+    "11":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:4:1-6: undefined"},
+    "110":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:33-35: string"},
+    "111":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:33-35: string"},
+    "112":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:8:33-35: null or undefined"
+    },
+    "113":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:8:33-35: null or undefined"
+    },
+    "114":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:8:33-35: null or undefined"
+    },
+    "115":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:8:33-35: null or undefined"
+    },
+    "116":{"kind":"Any"},
+    "117":{"kind":"Any"},
+    "118":{
+      "kind":"Union",
+      "members":[
         {"$ref":110},
         {"$ref":111},
         {"$ref":112},
         {"$ref":113},
-        {"$ref":114}
+        {"$ref":114},
+        {"$ref":115},
+        {"$ref":116},
+        {"$ref":117}
       ]
     },
-    "116":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "117":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "118":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:8:48-56: undefined"},
     "119":{
-      "def":{"kind":"Void"},
+      "def":{"kind":"Null"},
       "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
+      "reason":"test.js:7:49-55: null or undefined"
     },
     "12":{
       "def":{
@@ -1453,39 +1452,68 @@
     "120":{
       "def":{"kind":"Void"},
       "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
+      "reason":"test.js:7:49-55: null or undefined"
     },
-    "121":{"kind":"Any"},
-    "122":{"kind":"Any"},
+    "121":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
+    "122":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
     "123":{
       "kind":"Union",
       "members":[
-        {"$ref":116},
-        {"$ref":117},
-        {"$ref":118},
+        {"$ref":43},
+        {"$ref":44},
         {"$ref":119},
         {"$ref":120},
         {"$ref":121},
-        {"$ref":122}
+        {"$ref":122},
+        {"$ref":49},
+        {"$ref":50}
       ]
     },
-    "124":{"def":{"kind":"BoolGeneral"},"kind":"Def","reason":"test.js:8:33-44: boolean"},
-    "125":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:33-35: string"},
-    "126":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:33-35: string"},
-    "127":{
+    "124":{
       "def":{"kind":"Null"},
       "kind":"Def",
       "reason":"test.js:8:33-35: null or undefined"
     },
-    "128":{
+    "125":{
       "def":{"kind":"Void"},
       "kind":"Def",
       "reason":"test.js:8:33-35: null or undefined"
     },
-    "129":{
+    "126":{
       "def":{"kind":"Null"},
       "kind":"Def",
       "reason":"test.js:8:33-35: null or undefined"
+    },
+    "127":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:8:33-35: null or undefined"
+    },
+    "128":{
+      "kind":"Union",
+      "members":[
+        {"$ref":110},
+        {"$ref":111},
+        {"$ref":124},
+        {"$ref":125},
+        {"$ref":126},
+        {"$ref":127},
+        {"$ref":116},
+        {"$ref":117}
+      ]
+    },
+    "129":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:7:49-55: null or undefined"
     },
     "13":{
       "def":{"from_annot":false,"kind":"SingletonNum","number":0,"string":"0"},
@@ -1495,103 +1523,107 @@
     "130":{
       "def":{"kind":"Void"},
       "kind":"Def",
-      "reason":"test.js:8:33-35: null or undefined"
+      "reason":"test.js:7:49-55: null or undefined"
     },
-    "131":{"kind":"Any"},
-    "132":{"kind":"Any"},
+    "131":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
+    "132":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
     "133":{
-      "kind":"Union",
-      "members":[
-        {"$ref":125},
-        {"$ref":126},
-        {"$ref":127},
-        {"$ref":128},
-        {"$ref":129},
-        {"$ref":130},
-        {"$ref":131},
-        {"$ref":132}
-      ]
-    },
-    "134":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
-    "135":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
-    "136":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "137":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "138":{"kind":"Any"},
-    "139":{"kind":"Any"},
-    "14":{"kind":"FunProto"},
-    "140":{
       "kind":"Union",
       "members":[
         {"$ref":43},
         {"$ref":44},
-        {"$ref":134},
-        {"$ref":135},
-        {"$ref":136},
-        {"$ref":137},
-        {"$ref":138},
-        {"$ref":139}
+        {"$ref":129},
+        {"$ref":130},
+        {"$ref":131},
+        {"$ref":132},
+        {"$ref":49},
+        {"$ref":50}
       ]
     },
-    "141":{
+    "134":{"def":{"kind":"Null"},"kind":"Def","reason":"test.js:8:41-44: null"},
+    "135":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:8:48-56: undefined"},
+    "136":{
+      "kind":"Union",
+      "members":[{"$ref":100},{"$ref":101},{"$ref":103},{"$ref":104},{"$ref":105},{"$ref":106}]
+    },
+    "137":{
       "def":{"kind":"Null"},
       "kind":"Def",
-      "reason":"test.js:8:33-35: null or undefined"
+      "reason":"test.js:7:49-55: null or undefined"
     },
-    "142":{
+    "138":{
       "def":{"kind":"Void"},
       "kind":"Def",
-      "reason":"test.js:8:33-35: null or undefined"
+      "reason":"test.js:7:49-55: null or undefined"
+    },
+    "139":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
+    "14":{"kind":"FunProto"},
+    "140":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
+    "141":{
+      "kind":"Union",
+      "members":[
+        {"$ref":43},
+        {"$ref":44},
+        {"$ref":137},
+        {"$ref":138},
+        {"$ref":139},
+        {"$ref":140},
+        {"$ref":49},
+        {"$ref":50}
+      ]
+    },
+    "142":{
+      "kind":"Union",
+      "members":[{"$ref":100},{"$ref":101},{"$ref":103},{"$ref":104},{"$ref":105},{"$ref":106}]
     },
     "143":{
       "def":{"kind":"Null"},
       "kind":"Def",
-      "reason":"test.js:8:33-35: null or undefined"
+      "reason":"test.js:7:49-55: null or undefined"
     },
     "144":{
       "def":{"kind":"Void"},
       "kind":"Def",
-      "reason":"test.js:8:33-35: null or undefined"
+      "reason":"test.js:7:49-55: null or undefined"
     },
-    "145":{"kind":"Any"},
-    "146":{"kind":"Any"},
+    "145":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
+    "146":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
     "147":{
       "kind":"Union",
       "members":[
-        {"$ref":125},
-        {"$ref":126},
-        {"$ref":141},
-        {"$ref":142},
+        {"$ref":43},
+        {"$ref":44},
         {"$ref":143},
         {"$ref":144},
         {"$ref":145},
-        {"$ref":146}
+        {"$ref":146},
+        {"$ref":49},
+        {"$ref":50}
       ]
-    },
-    "148":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
-    "149":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
     },
     "15":{
       "def":{
@@ -1606,74 +1638,7 @@
       "kind":"Def",
       "reason":"test.js:7:1-78: function"
     },
-    "150":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "151":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "152":{"kind":"Any"},
-    "153":{"kind":"Any"},
-    "154":{
-      "kind":"Union",
-      "members":[
-        {"$ref":43},
-        {"$ref":44},
-        {"$ref":148},
-        {"$ref":149},
-        {"$ref":150},
-        {"$ref":151},
-        {"$ref":152},
-        {"$ref":153}
-      ]
-    },
-    "155":{"def":{"kind":"Null"},"kind":"Def","reason":"test.js:8:41-44: null"},
-    "156":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:8:48-56: undefined"},
-    "157":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "158":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "159":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
-    },
     "16":{"kind":"FunProto"},
-    "160":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
-    },
-    "161":{"kind":"Any"},
-    "162":{"kind":"Any"},
-    "163":{
-      "kind":"Union",
-      "members":[{"$ref":157},{"$ref":158},{"$ref":159},{"$ref":160},{"$ref":161},{"$ref":162}]
-    },
-    "164":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
-    "165":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
-    "166":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "167":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "168":{"kind":"Any"},
-    "169":{"kind":"Any"},
     "17":{
       "def":{
         "kind":"Obj",
@@ -1687,73 +1652,7 @@
       "kind":"Def",
       "reason":"test.js:7:36-77"
     },
-    "170":{
-      "kind":"Union",
-      "members":[
-        {"$ref":43},
-        {"$ref":44},
-        {"$ref":164},
-        {"$ref":165},
-        {"$ref":166},
-        {"$ref":167},
-        {"$ref":168},
-        {"$ref":169}
-      ]
-    },
-    "171":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "172":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "173":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
-    },
-    "174":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
-    },
-    "175":{"kind":"Any"},
-    "176":{"kind":"Any"},
-    "177":{
-      "kind":"Union",
-      "members":[{"$ref":171},{"$ref":172},{"$ref":173},{"$ref":174},{"$ref":175},{"$ref":176}]
-    },
-    "178":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
-    "179":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
-    },
     "18":{"kind":"Any"},
-    "180":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "181":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "182":{"kind":"Any"},
-    "183":{"kind":"Any"},
-    "184":{
-      "kind":"Union",
-      "members":[
-        {"$ref":43},
-        {"$ref":44},
-        {"$ref":178},
-        {"$ref":179},
-        {"$ref":180},
-        {"$ref":181},
-        {"$ref":182},
-        {"$ref":183}
-      ]
-    },
     "19":{"kind":"Any"},
     "2":{
       "def":{"kind":"Type","type":{"$ref":1},"type_kind":"TypeAliasKind"},
@@ -1981,9 +1880,7 @@
       "kind":"Def",
       "reason":"test.js:7:59-65: null or undefined"
     },
-    "72":{"kind":"Any"},
-    "73":{"kind":"Any"},
-    "74":{
+    "72":{
       "kind":"Union",
       "members":[
         {"$ref":35},
@@ -1992,19 +1889,29 @@
         {"$ref":69},
         {"$ref":70},
         {"$ref":71},
-        {"$ref":72},
-        {"$ref":73}
+        {"$ref":18},
+        {"$ref":19}
       ]
     },
-    "75":{"$ref":74},
-    "76":{
+    "73":{"$ref":72},
+    "74":{
       "def":{"kind":"Mixed"},
       "kind":"Def",
       "reason":"test.js:8:24-62: bound `this` in method"
     },
-    "77":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "78":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
-    "79":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:8:48-56: undefined"},
+    "75":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
+    "76":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:8:60-62: string"},
+    "77":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:8:48-56: undefined"},
+    "78":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:8:60-62: null or undefined"
+    },
+    "79":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:8:60-62: null or undefined"
+    },
     "8":{
       "def":{
         "funtype":{
@@ -2021,39 +1928,29 @@
       "kind":"Def",
       "reason":"test.js:3:1-23: function"
     },
-    "80":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
-    },
-    "81":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:8:60-62: null or undefined"
-    },
-    "82":{"kind":"Any"},
-    "83":{"kind":"Any"},
-    "84":{
+    "80":{"kind":"Any"},
+    "81":{"kind":"Any"},
+    "82":{
       "kind":"Union",
       "members":[
+        {"$ref":75},
+        {"$ref":76},
         {"$ref":77},
         {"$ref":78},
         {"$ref":79},
         {"$ref":80},
-        {"$ref":81},
-        {"$ref":82},
-        {"$ref":83}
+        {"$ref":81}
       ]
     },
-    "85":{"$ref":84},
-    "86":{
+    "83":{"$ref":82},
+    "84":{
       "def":{
         "funtype":{
           "effect":{"kind":"ArbitraryEffect"},
-          "params":[{"name":"val","type":{"$ref":75}}],
+          "params":[{"name":"val","type":{"$ref":73}}],
           "rest_param":null,
-          "return_t":{"$ref":85},
-          "this_t":{"status":{"kind":"This_Function"},"type":{"$ref":76}},
+          "return_t":{"$ref":83},
+          "this_t":{"status":{"kind":"This_Function"},"type":{"$ref":74}},
           "type_guard":null
         },
         "kind":"Fun",
@@ -2062,64 +1959,106 @@
       "kind":"Def",
       "reason":"test.js:8:24-62: function"
     },
-    "87":{
+    "85":{
       "def":{"kind":"Null"},
       "kind":"Def",
       "reason":"test.js:7:49-55: null or undefined"
+    },
+    "86":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:7:49-55: null or undefined"
+    },
+    "87":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
     },
     "88":{
       "def":{"kind":"Void"},
       "kind":"Def",
-      "reason":"test.js:7:49-55: null or undefined"
+      "reason":"test.js:7:59-65: null or undefined"
     },
     "89":{
-      "def":{"kind":"Null"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "9":{"def":{"kind":"NumGeneral"},"kind":"Def","reason":"test.js:3:17-22: number"},
-    "90":{
-      "def":{"kind":"Void"},
-      "kind":"Def",
-      "reason":"test.js:7:59-65: null or undefined"
-    },
-    "91":{"kind":"Any"},
-    "92":{"kind":"Any"},
-    "93":{
       "kind":"Union",
       "members":[
         {"$ref":43},
         {"$ref":44},
+        {"$ref":85},
+        {"$ref":86},
         {"$ref":87},
         {"$ref":88},
-        {"$ref":89},
-        {"$ref":90},
-        {"$ref":91},
-        {"$ref":92}
+        {"$ref":49},
+        {"$ref":50}
       ]
     },
-    "94":{
+    "9":{"def":{"kind":"NumGeneral"},"kind":"Def","reason":"test.js:3:17-22: number"},
+    "90":{
       "def":{"kind":"Null"},
       "kind":"Def",
       "reason":"test.js:7:49-55: null or undefined"
     },
-    "95":{
+    "91":{
       "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:7:49-55: null or undefined"
+    },
+    "92":{
+      "def":{"kind":"Null"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
+    "93":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:7:59-65: null or undefined"
+    },
+    "94":{
+      "kind":"Union",
+      "members":[
+        {"$ref":43},
+        {"$ref":44},
+        {"$ref":90},
+        {"$ref":91},
+        {"$ref":92},
+        {"$ref":93},
+        {"$ref":49},
+        {"$ref":50}
+      ]
+    },
+    "95":{
+      "def":{"kind":"Null"},
       "kind":"Def",
       "reason":"test.js:7:49-55: null or undefined"
     },
     "96":{
+      "def":{"kind":"Void"},
+      "kind":"Def",
+      "reason":"test.js:7:49-55: null or undefined"
+    },
+    "97":{
       "def":{"kind":"Null"},
       "kind":"Def",
       "reason":"test.js:7:59-65: null or undefined"
     },
-    "97":{
+    "98":{
       "def":{"kind":"Void"},
       "kind":"Def",
       "reason":"test.js:7:59-65: null or undefined"
     },
-    "98":{"kind":"Any"},
-    "99":{"kind":"Any"}
+    "99":{
+      "kind":"Union",
+      "members":[
+        {"$ref":43},
+        {"$ref":44},
+        {"$ref":95},
+        {"$ref":96},
+        {"$ref":97},
+        {"$ref":98},
+        {"$ref":49},
+        {"$ref":50}
+      ]
+    }
   },
   "types":[
     {
@@ -2540,7 +2479,7 @@
       "path":"test.js",
       "reasons":[],
       "start":24,
-      "type":"{\"expression_type\":{\"$ref\":86}}"
+      "type":"{\"expression_type\":{\"$ref\":84}}"
     },
     {
       "end":27,
@@ -2555,7 +2494,7 @@
       "path":"test.js",
       "reasons":[],
       "start":25,
-      "type":"{\"expression_type\":{\"$ref\":93}}"
+      "type":"{\"expression_type\":{\"$ref\":89}}"
     },
     {
       "end":27,
@@ -2570,7 +2509,7 @@
       "path":"test.js",
       "reasons":[],
       "start":25,
-      "type":"{\"expression_type\":{\"$ref\":100}}"
+      "type":"{\"expression_type\":{\"$ref\":94}}"
     },
     {
       "end":27,
@@ -2585,7 +2524,7 @@
       "path":"test.js",
       "reasons":[],
       "start":28,
-      "type":"{\"expression_type\":{\"$ref\":107}}"
+      "type":"{\"expression_type\":{\"$ref\":99}}"
     },
     {
       "end":28,
@@ -2600,7 +2539,7 @@
       "path":"test.js",
       "reasons":[],
       "start":29,
-      "type":"{\"expression_type\":{\"$ref\":115}}"
+      "type":"{\"expression_type\":{\"$ref\":107}}"
     },
     {
       "end":35,
@@ -2615,7 +2554,7 @@
       "path":"test.js",
       "reasons":[],
       "start":33,
-      "type":"{\"expression_type\":{\"$ref\":133},\"provider_type\":{\"$ref\":140}}"
+      "type":"{\"expression_type\":{\"$ref\":118},\"provider_type\":{\"$ref\":123}}"
     },
     {
       "end":35,
@@ -2630,7 +2569,7 @@
       "path":"test.js",
       "reasons":[],
       "start":33,
-      "type":"{\"expression_type\":{\"$ref\":147},\"provider_type\":{\"$ref\":154}}"
+      "type":"{\"expression_type\":{\"$ref\":128},\"provider_type\":{\"$ref\":133}}"
     },
     {
       "end":44,
@@ -2645,7 +2584,7 @@
       "path":"test.js",
       "reasons":[],
       "start":33,
-      "type":"{\"expression_type\":{\"$ref\":124}}"
+      "type":"{\"expression_type\":{\"$ref\":109}}"
     },
     {
       "end":62,
@@ -2660,7 +2599,7 @@
       "path":"test.js",
       "reasons":[],
       "start":33,
-      "type":"{\"expression_type\":{\"$ref\":123}}"
+      "type":"{\"expression_type\":{\"$ref\":108}}"
     },
     {
       "end":44,
@@ -2675,7 +2614,7 @@
       "path":"test.js",
       "reasons":[],
       "start":41,
-      "type":"{\"expression_type\":{\"$ref\":155}}"
+      "type":"{\"expression_type\":{\"$ref\":134}}"
     },
     {
       "end":56,
@@ -2690,7 +2629,7 @@
       "path":"test.js",
       "reasons":[],
       "start":48,
-      "type":"{\"expression_type\":{\"$ref\":156}}"
+      "type":"{\"expression_type\":{\"$ref\":135}}"
     },
     {
       "end":56,
@@ -2705,7 +2644,7 @@
       "path":"test.js",
       "reasons":[],
       "start":48,
-      "type":"{\"expression_type\":{\"$ref\":156}}"
+      "type":"{\"expression_type\":{\"$ref\":135}}"
     },
     {
       "end":62,
@@ -2720,7 +2659,7 @@
       "path":"test.js",
       "reasons":[],
       "start":60,
-      "type":"{\"expression_type\":{\"$ref\":163},\"provider_type\":{\"$ref\":170}}"
+      "type":"{\"expression_type\":{\"$ref\":136},\"provider_type\":{\"$ref\":141}}"
     },
     {
       "end":62,
@@ -2735,7 +2674,7 @@
       "path":"test.js",
       "reasons":[],
       "start":60,
-      "type":"{\"expression_type\":{\"$ref\":177},\"provider_type\":{\"$ref\":184}}"
+      "type":"{\"expression_type\":{\"$ref\":142},\"provider_type\":{\"$ref\":147}}"
     }
   ]
 }

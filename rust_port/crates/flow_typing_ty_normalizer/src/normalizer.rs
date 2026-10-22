@@ -1140,28 +1140,18 @@ mod reason_utils {
         env: &mut Env<'_, 'cx>,
         reason: &Reason,
     ) -> Result<Option<ALocSymbol>, Error> {
-        fn loop_<'cx>(
-            env: &mut Env<'_, 'cx>,
-            reason: &Reason,
-            desc: Option<&ReasonDesc<ALoc>>,
-        ) -> Result<Option<ALocSymbol>, Error> {
-            match desc {
-                Some(ReasonDesc::REnum { name: Some(name) }) => {
-                    Ok(Some(symbol_from_reason(env, reason, name.dupe())?))
-                }
-                Some(ReasonDesc::RTypeAlias(box (name, Some(loc), _))) => {
-                    Ok(Some(symbol_from_loc(env, loc.dupe(), name.dupe())?))
-                }
-                Some(ReasonDesc::RType(name)) => {
-                    Ok(Some(symbol_from_reason(env, reason, name.dupe())?))
-                }
-                Some(ReasonDesc::RUnionBranching(inner_desc, _)) => {
-                    loop_(env, reason, Some(inner_desc))
-                }
-                _ => Ok(None),
+        match reason.desc(false) {
+            Some(ReasonDesc::REnum { name: Some(name) }) => {
+                Ok(Some(symbol_from_reason(env, reason, name.dupe())?))
             }
+            Some(ReasonDesc::RTypeAlias(box (name, Some(loc), _))) => {
+                Ok(Some(symbol_from_loc(env, loc.dupe(), name.dupe())?))
+            }
+            Some(ReasonDesc::RType(name)) => {
+                Ok(Some(symbol_from_reason(env, reason, name.dupe())?))
+            }
+            _ => Ok(None),
         }
-        loop_(env, reason, reason.desc(false))
     }
 
     pub(super) fn local_type_alias_symbol<'cx>(
@@ -1182,56 +1172,36 @@ mod reason_utils {
         env: &mut Env<'_, 'cx>,
         reason: &Reason,
     ) -> Result<ALocSymbol, Error> {
-        fn loop_<'cx>(
-            env: &mut Env<'_, 'cx>,
-            reason: &Reason,
-            desc: Option<&ReasonDesc<ALoc>>,
-        ) -> Result<ALocSymbol, Error> {
-            match desc {
-                Some(
-                    ReasonDesc::RNamedImportedType(_, name)
-                    | ReasonDesc::RDefaultImportedType(name, _)
-                    | ReasonDesc::RImportStarType(name)
-                    | ReasonDesc::RImportStarTypeOf(name)
-                    | ReasonDesc::RImportStar(name),
-                ) => symbol_from_reason(env, reason, name.dupe()),
-                Some(ReasonDesc::RType(name)) => symbol_from_reason(env, reason, name.dupe()),
-                Some(ReasonDesc::RUnionBranching(inner_desc, _)) => {
-                    loop_(env, reason, Some(inner_desc))
-                }
-                _ => Err(terr(
-                    ErrorKind::BadTypeAlias,
-                    Some("could not extract imported type alias name from reason"),
-                    None,
-                )),
-            }
+        match reason.desc(false) {
+            Some(
+                ReasonDesc::RNamedImportedType(_, name)
+                | ReasonDesc::RDefaultImportedType(name, _)
+                | ReasonDesc::RImportStarType(name)
+                | ReasonDesc::RImportStarTypeOf(name)
+                | ReasonDesc::RImportStar(name),
+            ) => symbol_from_reason(env, reason, name.dupe()),
+            Some(ReasonDesc::RType(name)) => symbol_from_reason(env, reason, name.dupe()),
+            _ => Err(terr(
+                ErrorKind::BadTypeAlias,
+                Some("could not extract imported type alias name from reason"),
+                None,
+            )),
         }
-        loop_(env, reason, reason.desc(false))
     }
 
     pub fn opaque_type_alias_symbol<'cx>(
         env: &mut Env<'_, 'cx>,
         reason: &Reason,
     ) -> Result<ALocSymbol, Error> {
-        fn loop_<'cx>(
-            env: &mut Env<'_, 'cx>,
-            reason: &Reason,
-            desc: Option<&ReasonDesc<ALoc>>,
-        ) -> Result<ALocSymbol, Error> {
-            match desc {
-                Some(ReasonDesc::ROpaqueType(name)) => symbol_from_reason(env, reason, name.dupe()),
-                Some(ReasonDesc::RType(name)) => symbol_from_reason(env, reason, name.dupe()),
-                Some(ReasonDesc::RUnionBranching(inner_desc, _)) => {
-                    loop_(env, reason, Some(inner_desc))
-                }
-                _ => Err(terr(
-                    ErrorKind::BadTypeAlias,
-                    Some("could not extract opaque name from reason"),
-                    None,
-                )),
-            }
+        match reason.desc(false) {
+            Some(ReasonDesc::ROpaqueType(name)) => symbol_from_reason(env, reason, name.dupe()),
+            Some(ReasonDesc::RType(name)) => symbol_from_reason(env, reason, name.dupe()),
+            _ => Err(terr(
+                ErrorKind::BadTypeAlias,
+                Some("could not extract opaque name from reason"),
+                None,
+            )),
         }
-        loop_(env, reason, reason.desc(false))
     }
 
     pub fn instance_symbol<'cx>(

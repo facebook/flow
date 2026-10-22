@@ -824,8 +824,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:11:25
 
-Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because `{...}` [1] is incompatible with `Type` [2].
-[incompatible-type]
+Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because `BadType` [1] is incompatible with
+`Type` [2]. [incompatible-type]
 
    cond_prop.js:11:25
    11|   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
@@ -13474,7 +13474,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:40:7
 
-Cannot get `x.raw` because property `raw` is missing in `{kind: "Fruit", taste: "Good", ...}` [1]. [prop-missing]
+Cannot get `x.raw` because property `raw` is missing in `Orange` [1]. [prop-missing]
 
    tagged_union.js:40:7
    40|     x.raw as 'Yes' | 'No'; // 2 errors:
@@ -13550,7 +13550,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:72:21
 
-Cannot get `x.A` because property `A` is missing in `{C: number, kind: 3, ...}` [1]. [prop-missing]
+Cannot get `x.A` because property `A` is missing in `C` [1]. [prop-missing]
 
    tagged_union.js:72:21
    72|   default: return x.A; // error, x: C and property A not found in type C
