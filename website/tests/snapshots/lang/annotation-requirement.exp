@@ -125,9 +125,9 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                        ^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:91:9
-   91|     new<T>(iterable?: ?Iterable<T>): Set<T>;
-               ^ [1]
+   <BUILTINS>/lib.es2015.collection.js:78:10
+   78|     new <T>(iterable?: ?Iterable<T>): Set<T>;
+                ^ [1]
    -:2:13
     2| const set = new Set(); // Error
                    ^^^^^^^^^ [2]

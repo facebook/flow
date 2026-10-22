@@ -14,7 +14,7 @@ Flags: --pretty
     },
     {
       "name":"forEach",
-      "type":"<This>(this: Map<string, number>, callbackfn: (this: This, value: number, index: string, map: Map<string, number>) => unknown, thisArg: This) => void"
+      "type":"<This>(this: Map<string, number>, callbackfn: (this: This, value: number, key: string, map: Map<string, number>) => unknown, thisArg: This) => void"
     },
     {
       "name":"get",
