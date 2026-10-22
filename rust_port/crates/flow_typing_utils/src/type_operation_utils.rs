@@ -2176,6 +2176,35 @@ fn perform_type_cast_with_env<'cx>(
                 Ok(())
             }
         }
+        // A value of `E & ...` is a value of `E`, so it casts as `E` when `E` can.
+        TypeInner::IntersectionT(_, rep) => {
+            for member in rep.members_iter() {
+                let member = FlowJs::singleton_concrete_type_for_type_cast(
+                    cx,
+                    env,
+                    reason_of_t(member),
+                    member,
+                )?;
+                if let TypeInner::DefT(_, def_t) = member.deref()
+                    && let DefTInner::EnumValueT(enum_info) = def_t.deref()
+                {
+                    let representation_t = match EnumInfo::deref(enum_info) {
+                        EnumInfoInner::ConcreteEnum(concrete) => &concrete.representation_t,
+                        EnumInfoInner::AbstractEnum { representation_t } => representation_t,
+                    };
+                    if type_util::quick_subtype(None::<&mut fn(&Type)>, representation_t, cast_to_t)
+                        || type_util::quick_subtype(
+                            None::<&mut fn(&Type)>,
+                            representation_t,
+                            &resolved_cast_to,
+                        )
+                    {
+                        return flow(cx, representation_t);
+                    }
+                }
+            }
+            flow(cx, l)
+        }
 
         _ => {
             let resolved = FlowJs::singleton_concrete_type_for_inspection_with_env(
