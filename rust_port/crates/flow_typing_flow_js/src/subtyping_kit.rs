@@ -4467,9 +4467,8 @@ pub fn rec_sub_t<'cx>(
         //
         // Note: should be able to do this with LookupT rather than
         // slices, but that approach behaves in nonobvious ways. TODO why?
-        (IntersectionT(_, _), DefT(r, ud))
-            if let ObjT(obj) = ud.deref()
-                && cx.find_props(obj.props_tmap.dupe()).len() > 1
+        (IntersectionT(_, _), DefT(r, deref!(ObjT(obj))))
+            if cx.find_props(obj.props_tmap.dupe()).len() > 1
                 && obj.flags.obj_kind != ObjKind::Exact =>
         {
             if cx.is_verbose() {
@@ -4529,9 +4528,7 @@ pub fn rec_sub_t<'cx>(
 
         // Subtyping arm bodies live in template_literal_type; patterns and
         // guards stay here so dispatch order remains visible.
-        (DefT(_, ld), TemplateLiteralT { quasis, types, .. })
-            if let SingletonStrT { value, .. } = ld.deref() =>
-        {
+        (DefT(_, deref!(SingletonStrT { value, .. })), TemplateLiteralT { quasis, types, .. }) => {
             template_literal_type::subtype_str_lit_into_template(
                 Some(&|cx, env: &FlowJsEnv, r, t| FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)),
                 cx,
@@ -4607,9 +4604,7 @@ pub fn rec_sub_t<'cx>(
         //    concretization yields nothing useful, fall back to the canonical-form
         //    check: the only way a string can satisfy `Kind<arg>` for opaque `arg`
         //    is to (a) already be in canonical form for `kind` and (b) flow to `arg`.
-        (DefT(_, ld), StringMappingT { reason, kind, arg })
-            if let SingletonStrT { value, .. } = ld.deref() =>
-        {
+        (DefT(_, deref!(SingletonStrT { value, .. })), StringMappingT { reason, kind, arg }) => {
             flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let arg_loc = reason.loc().dupe();
             let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
@@ -4840,15 +4835,13 @@ pub fn rec_sub_t<'cx>(
         // TODO: ideally we'd do the same when lower bounds flow to a
         // this-abstracted class, but fixing the class is easier; might need to
         // revisit
-        (_, DefT(class_r, ud))
-            if let ClassT(this_inst_t) = ud.deref()
-                && let ThisInstanceT(box ThisInstanceTData {
-                    reason: inst_r,
-                    instance: i,
-                    is_this: this,
-                    subst_name: this_name,
-                }) = this_inst_t.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            _,
+            DefT(class_r, deref!(ClassT(deref!(ThisInstanceT(box ThisInstanceTData {
+                reason: inst_r, instance: i, is_this: this, subst_name: this_name,
+            }))))),
+        ) => {
             let reason = type_util::reason_of_t(l);
             let fixed = flow_js_utils::fix_this_instance(
                 cx,
@@ -4891,14 +4884,13 @@ pub fn rec_sub_t<'cx>(
         // but allow use of polymorphically-typed values - for example, in class
         // extends clauses and at function call sites - without explicit type
         // arguments, since typically they're easily inferred from context.
-        (DefT(reason_tapp, ld), _)
-            if let PolyT(box PolyTData {
-                tparams_loc,
-                tparams: ids,
-                t_out: t,
-                ..
-            }) = ld.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(reason_tapp, deref!(PolyT(box PolyTData {
+                tparams_loc, tparams: ids, t_out: t, ..
+            }))),
+            _,
+        ) => {
             let reason_op = type_util::reason_of_t(u);
             let ids = Vec1::try_from_vec(ids.to_vec()).unwrap();
             // Outside implicit instantiation nothing expects unresolved tvars, so the
@@ -4937,15 +4929,13 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t_, u)
         }
         // when a this-abstracted class flows to upper bounds, fix the class
-        (DefT(class_r, ld), _)
-            if let ClassT(this_inst_t) = ld.deref()
-                && let ThisInstanceT(box ThisInstanceTData {
-                    reason: inst_r,
-                    instance: i,
-                    is_this: this,
-                    subst_name: this_name,
-                }) = this_inst_t.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(class_r, deref!(ClassT(deref!(ThisInstanceT(box ThisInstanceTData {
+                reason: inst_r, instance: i, is_this: this, subst_name: this_name,
+            }))))),
+            _,
+        ) => {
             let reason = type_util::reason_of_t(u);
             let fixed = flow_js_utils::fix_this_instance(
                 cx,
@@ -5016,14 +5006,13 @@ pub fn rec_sub_t<'cx>(
         //
 
         // Class component ~> AbstractComponent
-        (DefT(reasonl, ld), DefT(_, ud))
-            if let ClassT(this) = ld.deref()
-                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
-                    config,
-                    renders,
-                    component_kind: ComponentKind::Structural,
-                }) = ud.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(reasonl, deref!(ClassT(this))),
+            DefT(_, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
+                config, renders, component_kind: ComponentKind::Structural,
+            }))),
+        ) => {
             // Contravariant config check
             FlowJs::react_get_config(
                 cx, env,
@@ -5041,14 +5030,13 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
         // Function Component ~> AbstractComponent
-        (DefT(reasonl, ld), DefT(_reasonu, ud))
-            if let FunT(_, ft) = ld.deref()
-                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
-                    config,
-                    renders,
-                    component_kind: ComponentKind::Structural,
-                }) = ud.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(reasonl, deref!(FunT(_, ft))),
+            DefT(_, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
+                config, renders, component_kind: ComponentKind::Structural,
+            }))),
+        ) => {
             // Function components will not always have an annotation, so the config may
             // never resolve. To determine config compatibility, we instead
             // call createElement on the function with the given component to determine
@@ -5075,15 +5063,13 @@ pub fn rec_sub_t<'cx>(
         }
 
         // Object Component ~> AbstractComponent
-        (DefT(reasonl, ld), DefT(reasonu, ud))
-            if let ObjT(obj) = ld.deref()
-                && let Some(call_t) = &obj.call_t
-                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
-                    config,
-                    renders,
-                    component_kind: ComponentKind::Structural,
-                }) = ud.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(reasonl, deref!(ObjT(deref!(ObjType { call_t: Some(call_t), .. })))),
+            DefT(reasonu, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
+                config, renders, component_kind: ComponentKind::Structural,
+            }))),
+        ) => {
             FlowJs::rec_flow_with_env(
                 cx, env,
                 trace,
@@ -5123,18 +5109,19 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &call_t, &fun_t)
         }
         // AbstractComponent ~> AbstractComponent
-        (DefT(reasonl, ld), DefT(_reasonu, ud))
-            if let ReactAbstractComponentT(box ReactAbstractComponentTData {
+        #[rustfmt::skip]
+        (
+            DefT(reasonl, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config: configl,
                 renders: rendersl,
                 component_kind,
-            }) = ld.deref()
-                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
+            }))),
+            DefT(_, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config: configu,
                     renders: rendersu,
                     component_kind: ComponentKind::Structural,
-                }) = ud.deref() =>
-        {
+            }))),
+        ) => {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), configu, configl)?;
             let rendersl = match component_kind {
                 ComponentKind::Nominal(renders_id, renders_name, _) => {
@@ -5161,20 +5148,21 @@ pub fn rec_sub_t<'cx>(
             );
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &rendersl, rendersu)
         }
-        (DefT(_reasonl, ld), DefT(_reasonu, ud))
-            if let ReactAbstractComponentT(box ReactAbstractComponentTData {
+        #[rustfmt::skip]
+        (
+            DefT(_, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
                 component_kind: ComponentKind::Nominal(idl, name_l, _),
                 config: configl,
                 renders: rendersl,
                 ..
-            }) = ld.deref()
-                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
+            }))),
+            DefT(_, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
                     component_kind: ComponentKind::Nominal(idu, name_u, _),
                     config: configu,
                     renders: rendersu,
                     ..
-                }) = ud.deref()
-                && (idl == idu
+            }))),
+        ) if (idl == idu
                     || type_util::nominal_id_have_same_logical_module(
                         &cx.file_options(),
                         cx.projects_options(),
@@ -5189,25 +5177,20 @@ pub fn rec_sub_t<'cx>(
             );
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, rendersl, rendersu)
         }
-        (DefT(reasonl, ld), DefT(reasonu, ud))
-            if let RendersT(r1) = ld.deref()
-                && let RendersT(r2) = ud.deref() =>
-        {
+        (DefT(reasonl, deref!(RendersT(r1))), DefT(reasonu, deref!(RendersT(r2)))) => {
             renders_kit::rec_renders_to_renders(cx, env, trace, use_op, (reasonl, r1), (reasonu, r2))
         }
-        (_, DefT(renders_r, ud))
-            if let RendersT(upper_renders) = ud.deref() =>
-        {
+        (_, DefT(renders_r, deref!(RendersT(upper_renders)))) => {
             renders_kit::non_renders_to_renders(cx, env, trace, use_op, l, renders_r, upper_renders)
         }
         // Exiting the renders world
-        (DefT(r, ld), _)
-            if matches!(
-                ld.deref(),
-                RendersT(renders)
-                    if matches!(renders.deref(), CanonicalRendersForm::IntrinsicRenders(_) | CanonicalRendersForm::NominalRenders { .. })
-            ) =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(r, deref!(RendersT(deref!(
+                CanonicalRendersForm::IntrinsicRenders(_) | CanonicalRendersForm::NominalRenders { .. }
+            )))),
+            _,
+        ) => {
             let mixed_element = FlowJs::get_builtin_react_type_with_env(
                 cx, env,
                 None,
@@ -5217,25 +5200,20 @@ pub fn rec_sub_t<'cx>(
             )?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &mixed_element, u)
         }
-        (DefT(r, ld), _)
-            if let RendersT(renders) = ld.deref()
-                && let CanonicalRendersForm::StructuralRenders {
-                    renders_structural_type: t,
-                    ..
-                } = renders.deref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(r, deref!(RendersT(deref!(CanonicalRendersForm::StructuralRenders {
+                renders_structural_type: t, ..
+            })))),
+            _,
+        ) => {
             let u_prime = UseT::new(ExitRendersT {
                 renders_reason: r.dupe(),
                 u: Box::new(UseT::new(UseT(use_op, u.dupe()))),
             });
             FlowJs::rec_flow_with_env(cx, env, trace, t, &u_prime)
         }
-        (DefT(r, ld), _)
-            if matches!(
-                ld.deref(),
-                RendersT(renders) if matches!(renders.deref(), CanonicalRendersForm::DefaultRenders)
-            ) =>
-        {
+        (DefT(r, deref!(RendersT(deref!(CanonicalRendersForm::DefaultRenders)))), _) => {
             let u_prime = UseT::new(ExitRendersT {
                 renders_reason: r.dupe(),
                 u: Box::new(UseT::new(UseT(use_op, u.dupe()))),
@@ -5248,10 +5226,7 @@ pub fn rec_sub_t<'cx>(
         // ***********************************************
 
         // FunT ~> FunT
-        (DefT(lreason, ld), DefT(ureason, ud))
-            if let (FunT(_, ft1), FunT(_, ft2)) =
-                (ld.deref(), ud.deref()) =>
-        {
+        (DefT(lreason, deref!(FunT(_, ft1))), DefT(ureason, deref!(FunT(_, ft2)))) => {
             funt_to_funt_check(
                 cx, env,
                 trace,
@@ -5278,10 +5253,7 @@ pub fn rec_sub_t<'cx>(
         (_, NamespaceT(ns)) => FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &ns.values_type),
 
         // ObjT -> ObjT
-        (DefT(lreason, ld), DefT(ureason, ud))
-            if let ObjT(l_obj) = ld.deref()
-                && let ObjT(u_obj) = ud.deref() =>
-        {
+        (DefT(lreason, deref!(ObjT(l_obj))), DefT(ureason, deref!(ObjT(u_obj)))) => {
             let u_deft = u;
             type_inference_hooks_js::dispatch_obj_to_obj_hook(l, u_deft);
             let print_fast_path = cx.is_verbose();
@@ -5297,19 +5269,15 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (DefT(_, ld), NullProtoT(_))
-            if matches!(ld.deref(), ObjT(_)) =>
-        {
+        (DefT(_, deref!(ObjT(_))), NullProtoT(_)) => {
             Ok(())
         }
         // InstanceT -> ObjT
-        (DefT(lreason, ld), DefT(ureason, ud))
-            if let InstanceT(inst) = ld.deref()
-                && matches!(
+        (DefT(lreason, deref!(InstanceT(inst))), DefT(ureason, deref!(ObjT(obj))))
+            if matches!(
                     inst.inst.inst_kind,
                     InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }
                 )
-                && let ObjT(obj) = ud.deref()
                 && obj.flags.obj_kind == ObjKind::Exact
                 && !inst
                     .inst
@@ -5333,10 +5301,7 @@ pub fn rec_sub_t<'cx>(
             )?;
             Ok(())
         }
-        (DefT(lreason, ld), DefT(ureason, ud))
-            if let InstanceT(inst_t) = ld.deref()
-                && let ObjT(u_obj) = ud.deref() =>
-        {
+        (DefT(lreason, deref!(InstanceT(inst_t))), DefT(ureason, deref!(ObjT(u_obj)))) => {
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             let lown = inst.own_props.dupe();
@@ -5473,8 +5438,9 @@ pub fn rec_sub_t<'cx>(
                         None => {
                             let optional = matches!(
                                 up.deref(),
-                                PropertyInner::Field(fd)
-                                    if matches!(fd.type_.deref(), OptionalT { .. })
+                                PropertyInner::Field(box FieldData {
+                                    type_: deref!(OptionalT { .. }), ..
+                                })
                             );
                             if !optional && strictness_kind.is_typescript_loose() {
                                 missing_props.push((propref.clone(), up.dupe()));
@@ -5577,13 +5543,11 @@ pub fn rec_sub_t<'cx>(
         }
         // If passing in an object literal where a record is expected,
         // provide an additional explanation.
-        (DefT(lreason, ld), DefT(_, ud))
-            if matches!(ld.deref(), ObjT(_))
-                && matches!(
+        (DefT(lreason, deref!(ObjT(_))), DefT(_, deref!(InstanceT(inst))))
+            if matches!(
                     lreason.desc(true),
                     Some(VirtualReasonDesc::RObjectLit)
                 )
-                && let InstanceT(inst) = ud.deref()
                 && matches!(inst.inst.inst_kind, InstanceKind::RecordKind { .. })
                 && let Some(record_name) = &inst.inst.class_name =>
         {
@@ -5606,9 +5570,8 @@ pub fn rec_sub_t<'cx>(
         // For some object `x` and constructor `C`, if `x instanceof C`, then the
         // object is a subtype. We use `ExtendsUseT` to walk the proto chain of the
         // object, in case it includes a nominal type.
-        (DefT(_, ld), DefT(_, ud))
-            if let InstanceT(inst) = ud.deref()
-                && (matches!(ld.deref(), ObjT(_))
+        (DefT(_, ld @ deref!(ObjT(_) | ClassT(_))), DefT(_, deref!(InstanceT(inst))))
+            if (matches!(ld.deref(), ObjT(_))
                     || (matches!(ld.deref(), ClassT(_))
                         && matches!(inst.inst.inst_kind, InstanceKind::ClassKind))) =>
         {
@@ -5623,20 +5586,13 @@ pub fn rec_sub_t<'cx>(
         // ****************************************
         // You can cast an object to a function
         // ****************************************
-        (DefT(reason, ld), DefT(reason_op, ud))
-            if matches!(ld.deref(), ObjT(_) | InstanceT(_))
-                && matches!(ud.deref(), FunT(_, _)) =>
-        {
+        (DefT(reason, deref!(ObjT(_) | InstanceT(_))), DefT(reason_op, deref!(FunT(_, _)))) => {
             let fun_t = match l.deref() {
-                DefT(_, ld2)
-                    if let ObjT(obj) = ld2.deref()
-                        && let Some(call_t) = &obj.call_t =>
-                {
+                DefT(_, deref!(ObjT(deref!(ObjType { call_t: Some(call_t), .. })))) => {
                     cx.find_call(*call_t)
                 }
-                DefT(_, ld2)
-                    if let InstanceT(inst) = ld2.deref()
-                        && let Some(call_t) = &inst.inst.inst_call_t =>
+                DefT(_, deref!(InstanceT(inst)))
+                    if let Some(call_t) = &inst.inst.inst_call_t =>
                 {
                     cx.find_call(*call_t)
                 }
