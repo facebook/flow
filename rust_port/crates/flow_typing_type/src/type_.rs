@@ -1445,6 +1445,9 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     TypeApplication {
         type_: VirtualReason<L>,
     },
+    MakeReadOnly {
+        loc: Box<L>,
+    },
     SetProperty(Box<SetPropertyData<L>>),
     UpdateProperty {
         lhs: VirtualReason<L>,
@@ -11700,6 +11703,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::RecordCreate(..) => "RecordCreate",
         VirtualRootUseOp::Speculation { .. } => "Speculation",
         VirtualRootUseOp::TypeApplication { .. } => "TypeApplication",
+        VirtualRootUseOp::MakeReadOnly { .. } => "MakeReadOnly",
         VirtualRootUseOp::SetProperty(..) => "SetProperty",
         VirtualRootUseOp::UpdateProperty { .. } => "UpdateProperty",
         VirtualRootUseOp::RefinementCheck { .. } => "RefinementCheck",

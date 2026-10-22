@@ -183,7 +183,7 @@ Cannot assign `"b"` to `x[0]` because read-only arrays cannot be written to. [ca
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:2:29
 
-Cannot instantiate `Readonly` because `string` [1] is not an object, array, or tuple. [not-an-object]
+Cannot make this type read-only because `string` [1] is not an object, array, or tuple. [not-an-object]
 
    2|   declare const x: Readonly<string>; // ERROR
                                   ^^^^^^ [1]
@@ -191,7 +191,7 @@ Cannot instantiate `Readonly` because `string` [1] is not an object, array, or t
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:5:29
 
-Cannot instantiate `Readonly` because `boolean` [1] is not an object, array, or tuple. [not-an-object]
+Cannot make this type read-only because `boolean` [1] is not an object, array, or tuple. [not-an-object]
 
    5|   declare const x: Readonly<boolean>; // ERROR
                                   ^^^^^^^ [1]
@@ -199,7 +199,7 @@ Cannot instantiate `Readonly` because `boolean` [1] is not an object, array, or 
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:8:29
 
-Cannot instantiate `Readonly` because `() => void` [1] is not an object, array, or tuple. [not-an-object]
+Cannot make this type read-only because `() => void` [1] is not an object, array, or tuple. [not-an-object]
 
    8|   declare const x: Readonly<() => void>; // ERROR
                                   ^^^^^^^^^^ [1]
@@ -207,7 +207,7 @@ Cannot instantiate `Readonly` because `() => void` [1] is not an object, array, 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:12:29
 
-Cannot instantiate `Readonly` because `number` [1] is not an object, array, or tuple. [not-an-object]
+Cannot make this type read-only because `number` [1] is not an object, array, or tuple. [not-an-object]
 
    12|   declare const x: Readonly<Primitive>; // ERROR
                                    ^^^^^^^^^ [1]
@@ -215,7 +215,7 @@ Cannot instantiate `Readonly` because `number` [1] is not an object, array, or t
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:12:29
 
-Cannot instantiate `Readonly` because `string` [1] is not an object, array, or tuple. [not-an-object]
+Cannot make this type read-only because `string` [1] is not an object, array, or tuple. [not-an-object]
 
    12|   declare const x: Readonly<Primitive>; // ERROR
                                    ^^^^^^^^^ [1]
@@ -445,7 +445,7 @@ Cannot assign `42` to `writeOnlyObj.p` because property `p` is not writable. [ca
 
 Error ---------------------------------------------------------------------------------------------------- test.js:97:29
 
-Cannot instantiate `Readonly` because `number` [1] is not an object, array, or tuple. [not-an-object]
+Cannot make this type read-only because `number` [1] is not an object, array, or tuple. [not-an-object]
 
    97| type readOnlyNum = Readonly<number>;
                                    ^^^^^^ [1]

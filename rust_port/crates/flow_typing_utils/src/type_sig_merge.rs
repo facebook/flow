@@ -2382,8 +2382,8 @@ fn merge_annot<'cx>(
         }
         Annot::ReadOnly(box (loc, t)) => {
             let reason = reason::mk_reason(RReadOnlyType, loc.dupe());
-            let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
-                type_: reason.dupe(),
+            let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::MakeReadOnly {
+                loc: Box::new(loc.dupe()),
             }));
             let t = merge_impl(env, cx, file, t, false, false);
             let id = eval_id_of_aloc(cx, loc.dupe());

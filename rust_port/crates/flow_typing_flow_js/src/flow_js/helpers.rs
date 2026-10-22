@@ -1368,6 +1368,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     | VirtualRootUseOp::ObjectRest { .. }
                     | VirtualRootUseOp::ObjectChain { .. }
                     | VirtualRootUseOp::TypeApplication { .. }
+                    | VirtualRootUseOp::MakeReadOnly { .. }
                     | VirtualRootUseOp::Speculation(..)
                     | VirtualRootUseOp::InitField { .. } => true,
                     VirtualRootUseOp::Cast { .. }
@@ -1394,7 +1395,8 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     | VirtualRootUseOp::UnknownUse => false,
                 },
                 VirtualFrameUseOp::UnifyFlip if !should_replace => match root_of_op2 {
-                    VirtualRootUseOp::TypeApplication { .. } => true,
+                    VirtualRootUseOp::TypeApplication { .. }
+                    | VirtualRootUseOp::MakeReadOnly { .. } => true,
                     _ => should_replace,
                 },
                 _ => should_replace,

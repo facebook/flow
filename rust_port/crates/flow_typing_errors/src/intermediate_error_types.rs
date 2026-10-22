@@ -1324,6 +1324,7 @@ pub enum RootMessage<L: Dupe> {
     RootCannotInstantiateEval(MessageTypeReferenceData<L>),
     RootCannotInstantiateRenderType,
     RootCannotInstantiateTypeApp(Option<VirtualReasonDesc<L>>),
+    RootCannotMakeReadOnly,
     RootCannotReturn(Option<VirtualReasonDesc<L>>),
     RootCannotReturnFromAssertionFunction {
         implicit_return: bool,

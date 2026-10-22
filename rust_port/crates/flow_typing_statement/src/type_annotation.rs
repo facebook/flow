@@ -1379,8 +1379,8 @@ fn convert_inner<'a>(
                 let arg_t = argument_ast.loc().1.dupe();
                 let reason =
                     reason::mk_reason(reason::VirtualReasonDesc::RReadOnlyType, loc.dupe());
-                let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
-                    type_: reason.dupe(),
+                let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::MakeReadOnly {
+                    loc: Box::new(loc.dupe()),
                 }));
                 let t = match FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                     cx,
@@ -2479,7 +2479,9 @@ fn convert_inner<'a>(
                             let result_t =
                                 FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                                     cx,
-                                    use_op(&reason),
+                                    type_::UseOp::Op(Arc::new(type_::RootUseOp::MakeReadOnly {
+                                        loc: Box::new(loc.dupe()),
+                                    })),
                                     &reason,
                                     &tp,
                                     &type_::Destructor::ReadOnlyType,
@@ -2511,7 +2513,9 @@ fn convert_inner<'a>(
                             let result_t =
                                 FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                                     cx,
-                                    use_op(&reason),
+                                    type_::UseOp::Op(Arc::new(type_::RootUseOp::MakeReadOnly {
+                                        loc: Box::new(loc.dupe()),
+                                    })),
                                     &reason,
                                     &tp,
                                     &type_::Destructor::ReactDRO(Box::new(type_::ReactDro(
@@ -2838,7 +2842,9 @@ fn convert_inner<'a>(
                             let result_t =
                                 FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                                     cx,
-                                    use_op(&reason),
+                                    type_::UseOp::Op(Arc::new(type_::RootUseOp::MakeReadOnly {
+                                        loc: Box::new(loc.dupe()),
+                                    })),
                                     &reason,
                                     &tp,
                                     &type_::Destructor::ReadOnlyType,

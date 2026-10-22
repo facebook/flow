@@ -1989,6 +1989,16 @@ where
                                 custom_error_message,
                             ),
 
+                            VirtualRootUseOp::MakeReadOnly {
+                                loc: box readonly_loc,
+                            } => root_at_loc(
+                                loc,
+                                frames,
+                                loc_of_aloc(readonly_loc),
+                                RootMessage::RootCannotMakeReadOnly,
+                                custom_error_message,
+                            ),
+
                             VirtualRootUseOp::SetProperty(box SetPropertyData {
                                 prop,
                                 value,
@@ -5363,6 +5373,10 @@ where
                         text("Cannot instantiate "),
                         friendly::desc_of_reason_desc(type_.as_ref()),
                     ]),
+                ),
+                RootMessage::RootCannotMakeReadOnly => (
+                    RootKind::OperationRoot,
+                    friendly::Message(vec![text("Cannot make this type read-only")]),
                 ),
                 RootMessage::RootCannotInstantiateRenderType => (
                     RootKind::ShortExplanationRoot,

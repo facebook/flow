@@ -1243,6 +1243,9 @@ where
             TypeApplication { type_ } => TypeApplication {
                 type_: mod_reason(type_),
             },
+            MakeReadOnly { loc: box loc } => MakeReadOnly {
+                loc: Box::new(f(loc)),
+            },
             SetProperty(box SetPropertyData { lhs, prop, value }) => {
                 SetProperty(Box::new(SetPropertyData {
                     lhs: mod_reason(lhs),
