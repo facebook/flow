@@ -5222,23 +5222,23 @@ fn __flow_impl<'cx>(
 
         // FunT ~> CallT
         (
-            DefT(_, def_t),
+            DefT(_, deref!(FunT(_, _))),
             CallT(box CallTData {
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
             }),
-        ) if matches!(def_t.deref(), FunT(_, _)) => {
+        ) => {
             tout.add(l.dupe());
         }
         (
-            DefT(reason_fundef, def_t),
+            DefT(reason_fundef, deref!(FunT(_, funtype))),
             CallT(box CallTData {
                 use_op,
                 reason: reason_callsite,
                 call_action: box CallAction::Funcalltype(box calltype),
                 return_hint: _,
             }),
-        ) if let FunT(_, funtype) = def_t.deref() => {
+        ) => {
             let return_t = match &funtype.effect_ {
                 ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot => {
                     if cx.react_rule_enabled(
@@ -5418,16 +5418,21 @@ fn __flow_impl<'cx>(
         // * You can cast an object to a function *
         // ****************************************
         (
-            DefT(reason, def_t),
+            DefT(reason, def_t @ deref!(ObjT(_) | InstanceT(_))),
             CallT(box CallTData {
                 use_op,
                 reason: reason_op,
                 ..
             }),
-        ) if matches!(def_t.deref(), ObjT(_) | InstanceT(_)) => {
+        ) => {
             let prop_name = Some(Name::new(FlowSmolStr::new_inline("$call")));
             let fun_t = match def_t.deref() {
-                ObjT(obj) if let Some(id) = obj.call_t.as_ref() => cx.find_call(*id),
+                ObjT(
+                    deref!(ObjType {
+                        call_t: Some(id),
+                        ..
+                    }),
+                ) => cx.find_call(*id),
                 InstanceT(inst_t) if let Some(id) = inst_t.inst.inst_call_t.as_ref() => {
                     cx.find_call(*id)
                 }
@@ -5468,7 +5473,7 @@ fn __flow_impl<'cx>(
             let any = any_t::why(*src, reason_op.dupe());
             u_inner.add(any);
         }
-        (DefT(_, def_t), ObjTestProtoT(reason_op, u_inner)) if matches!(def_t.deref(), NullT) => {
+        (DefT(_, deref!(NullT)), ObjTestProtoT(reason_op, u_inner)) => {
             let null_proto = Type::new(NullProtoT(
                 reason_op.dupe().replace_desc(VirtualReasonDesc::RNull),
             ));
@@ -5503,19 +5508,17 @@ fn __flow_impl<'cx>(
         // **************************************************
         // * instances of classes follow declared hierarchy *
         // **************************************************
+        #[rustfmt::skip]
         (
-            DefT(reason, def_t),
+            DefT(reason, deref!(InstanceT(inst_t))),
             ExtendsUseT(box ExtendsUseTData {
                 use_op,
                 reason: reason_op,
                 targs: try_ts_on_failure,
                 true_t: ext_l,
-                false_t: ext_u,
+                false_t: ext_u @ deref!(DefT(reason_u, deref!(InstanceT(inst_super_t)))),
             }),
-        ) if let InstanceT(inst_t) = def_t.deref()
-            && let DefT(reason_u, inner_def_u) = ext_u.deref()
-            && let InstanceT(inst_super_t) = inner_def_u.deref() =>
-        {
+        ) => {
             let super_ = &inst_t.super_;
             let implements = &inst_t.implements;
             let inst = &inst_t.inst;
@@ -5661,7 +5664,7 @@ fn __flow_impl<'cx>(
         // *********************************************************
         // * class types derive instance types (with constructors) *
         // *********************************************************
-        (DefT(reason, def_t), ConstructorT(box ctor_data)) if let ClassT(this) = def_t.deref() => {
+        (DefT(reason, deref!(ClassT(this))), ConstructorT(box ctor_data)) => {
             let use_op = &ctor_data.use_op;
             let reason_op = &ctor_data.reason;
             let targs = &ctor_data.targs;
@@ -5792,9 +5795,7 @@ fn __flow_impl<'cx>(
         // sig is the [inst_construct_t] slot plus anything inherited via
         // [extends]; [collect_construct_ts] collects both in
         // derived-first order.
-        (DefT(_, def_t), ConstructorT(box ctor_data))
-            if let InstanceT(instance_t) = def_t.deref() =>
-        {
+        (DefT(_, deref!(InstanceT(instance_t))), ConstructorT(box ctor_data)) => {
             let inst_abstract = instance_t.inst.inst_abstract;
             let use_op = &ctor_data.use_op;
             let reason_op = &ctor_data.reason;
@@ -5904,9 +5905,15 @@ fn __flow_impl<'cx>(
             let any = any_t::why(src, type_util::reason_of_propref(propref).dupe());
             prop_t.add(any);
         }
-        (AnyT(_, src), PrivateMethodT(box pm_data))
-            if let MethodAction::NoMethodAction(prop_t) = pm_data.method_action.as_ref() =>
-        {
+        (
+            AnyT(_, src),
+            PrivateMethodT(
+                box pm_data @ PrivateMethodTData {
+                    method_action: box MethodAction::NoMethodAction(prop_t),
+                    ..
+                },
+            ),
+        ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, pm_data.prop_reason.dupe());
             prop_t.add(any);
@@ -5949,13 +5956,20 @@ fn __flow_impl<'cx>(
             let open_tout = Type::new(OpenT(methodcalltype.meth_tout.dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&any, &open_tout))?;
         }
-        (AnyT(_, src), PrivateMethodT(box pm_data))
-            if let MethodAction::CallM(box CallMData {
-                methodcalltype,
-                specialized_callee,
-                ..
-            }) = pm_data.method_action.as_ref() =>
-        {
+        (
+            AnyT(_, src),
+            PrivateMethodT(
+                box pm_data @ PrivateMethodTData {
+                    method_action:
+                        box MethodAction::CallM(box CallMData {
+                            methodcalltype,
+                            specialized_callee,
+                            ..
+                        }),
+                    ..
+                },
+            ),
+        ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, pm_data.reason.dupe());
             call_args_iter(
@@ -6002,9 +6016,15 @@ fn __flow_impl<'cx>(
                 chain,
             )?;
         }
-        (AnyT(_, src), PrivateMethodT(box pm_data))
-            if let chain @ MethodAction::ChainM(..) = pm_data.method_action.as_ref() =>
-        {
+        (
+            AnyT(_, src),
+            PrivateMethodT(
+                box pm_data @ PrivateMethodTData {
+                    method_action: box chain @ MethodAction::ChainM(..),
+                    ..
+                },
+            ),
+        ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, pm_data.reason.dupe());
             apply_method_action(
@@ -6021,9 +6041,7 @@ fn __flow_impl<'cx>(
         // *************************
         // * statics can be read   *
         // *************************
-        (DefT(_, def_t), GetStaticsT(reason_op, collector))
-            if let InstanceT(inst_t) = def_t.deref() =>
-        {
+        (DefT(_, deref!(InstanceT(inst_t))), GetStaticsT(reason_op, collector)) => {
             let static_ = helpers::reposition_reason(
                 cx,
                 env,
@@ -6064,7 +6082,7 @@ fn __flow_impl<'cx>(
         // TODO: Fix GetProtoT for InstanceT (and ClassT).
         // The __proto__ object of an instance is an ObjT having the properties in
         // insttype.methods_tmap, not the super instance.
-        (DefT(_, def_t), GetProtoT(reason_op, t)) if let InstanceT(inst_t) = def_t.deref() => {
+        (DefT(_, deref!(InstanceT(inst_t))), GetProtoT(reason_op, t)) => {
             let super_ = &inst_t.super_;
             let proto = helpers::reposition(
                 cx,
@@ -6081,7 +6099,7 @@ fn __flow_impl<'cx>(
                 t.add(proto);
             }
         }
-        (DefT(_, def_t), GetProtoT(reason_op, t)) if let ObjT(obj) = def_t.deref() => {
+        (DefT(_, deref!(ObjT(obj))), GetProtoT(reason_op, t)) => {
             let proto_t = &obj.proto_t;
             let proto = helpers::reposition(
                 cx,
@@ -6116,7 +6134,7 @@ fn __flow_impl<'cx>(
         // * instances of classes may have their fields looked up *
         // ********************************************************
         (
-            DefT(_, def_t),
+            DefT(_, deref!(InstanceT(inst_t))),
             LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: kind,
@@ -6128,7 +6146,7 @@ fn __flow_impl<'cx>(
                 method_accessible,
                 ignore_dicts,
             }),
-        ) if let InstanceT(inst_t) = def_t.deref() => {
+        ) => {
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             let use_op = use_op_of_lookup_action(action);
@@ -6226,12 +6244,10 @@ fn __flow_impl<'cx>(
         // ********************************
         // * ... and their fields written *
         // ********************************
-        (DefT(_, def_t), SetPropT(use_op, _, propref, _, _, _, _))
-            if let InstanceT(inst_t) = def_t.deref()
-                && inst_t.inst.inst_react_dro.is_some()
+        (DefT(_, deref!(InstanceT(inst_t))), SetPropT(use_op, _, propref, _, _, _, _))
+            if let Some(ReactDro(dro_loc, dro_type)) = inst_t.inst.inst_react_dro.as_ref()
                 && !flow_js_utils::is_exception_to_react_dro(propref) =>
         {
-            let ReactDro(dro_loc, dro_type) = inst_t.inst.inst_react_dro.as_ref().unwrap();
             let reason_prop = type_util::reason_of_propref(propref);
             let prop_name = name_of_propref(propref);
             let use_op = UseOp::Frame(
@@ -6251,9 +6267,10 @@ fn __flow_impl<'cx>(
                 })),
             )?;
         }
-        (DefT(_, def_t), SetPropT(use_op, reason_op, propref, mode, write_ctx, tin, prop_tout))
-            if matches!(def_t.deref(), InstanceT(_)) =>
-        {
+        (
+            DefT(_, deref!(InstanceT(_))),
+            SetPropT(use_op, reason_op, propref, mode, write_ctx, tin, prop_tout),
+        ) => {
             let lookup_action = LookupAction::WriteProp(Box::new(WritePropData {
                 use_op: use_op.dupe(),
                 obj_t: l.dupe(),
@@ -6291,8 +6308,8 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (DefT(reason_c, def_t), SetPrivatePropT(box spp_data))
-            if matches!(def_t.deref(), InstanceT(_)) && spp_data.class_bindings.is_empty() =>
+        (DefT(reason_c, deref!(InstanceT(_))), SetPrivatePropT(box spp_data))
+            if spp_data.class_bindings.is_empty() =>
         {
             add_output_with_env(
                 cx,
@@ -6305,9 +6322,8 @@ fn __flow_impl<'cx>(
                 })),
             )?;
         }
-        (DefT(reason_c, def_t), SetPrivatePropT(box spp_data))
-            if let InstanceT(inst_t) = def_t.deref()
-                && !spp_data.class_bindings.is_empty() =>
+        (DefT(reason_c, deref!(InstanceT(inst_t))), SetPrivatePropT(box spp_data))
+            if !spp_data.class_bindings.is_empty() =>
         {
             let inst = &inst_t.inst;
             let scope = &spp_data.class_bindings[0];
@@ -6389,10 +6405,15 @@ fn __flow_impl<'cx>(
         // *****************************
         // * ... and their fields read *
         // *****************************
-        (DefT(r, def_t), GetPropT(box data))
-            if matches!(def_t.deref(), InstanceT(_))
-                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.matches_str("constructor")) =>
-        {
+        (
+            DefT(r, deref!(InstanceT(_))),
+            GetPropT(
+                box data @ GetPropTData {
+                    propref: box PropRef::Named { name, .. },
+                    ..
+                },
+            ),
+        ) if name.matches_str("constructor") => {
             let t = type_util::class_type(l.dupe(), r.annot_loc().map(|a| a.dupe()));
             rec_flow_t(
                 cx,
@@ -6402,7 +6423,7 @@ fn __flow_impl<'cx>(
                 (&t, &Type::new(OpenT((*data.tout).dupe()))),
             )?;
         }
-        (DefT(_, def_t), GetPropT(box data)) if let InstanceT(inst_t) = def_t.deref() => {
+        (DefT(_, deref!(InstanceT(inst_t))), GetPropT(box data)) => {
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             let method_accessible = data.from_annot;
@@ -6436,9 +6457,7 @@ fn __flow_impl<'cx>(
                 &data.reason,
             )?(cx, (*data.tout).dupe())?;
         }
-        (DefT(reason_c, def_t), GetPrivatePropT(box gpp_data))
-            if let InstanceT(inst_t) = def_t.deref() =>
-        {
+        (DefT(reason_c, deref!(InstanceT(inst_t))), GetPrivatePropT(box gpp_data)) => {
             let inst = &inst_t.inst;
             get_private_prop(
                 cx,
@@ -6460,7 +6479,7 @@ fn __flow_impl<'cx>(
         // * ... and their methods called *
         // ********************************
         (
-            DefT(_, def_t),
+            DefT(_, deref!(InstanceT(inst_t))),
             MethodT(box MethodTData {
                 use_op,
                 reason: reason_call,
@@ -6468,7 +6487,7 @@ fn __flow_impl<'cx>(
                 propref,
                 method_action: action,
             }),
-        ) if let InstanceT(inst_t) = def_t.deref() => {
+        ) => {
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             let funt = flow_typing_tvar::mk_no_wrap_where(
@@ -6524,9 +6543,7 @@ fn __flow_impl<'cx>(
                 action,
             )?;
         }
-        (DefT(reason_c, def_t), PrivateMethodT(box pm_data))
-            if let InstanceT(inst_t) = def_t.deref() =>
-        {
+        (DefT(reason_c, deref!(InstanceT(inst_t))), PrivateMethodT(box pm_data)) => {
             let inst = &inst_t.inst;
             let tvar = flow_typing_tvar::mk_no_wrap(cx, &pm_data.prop_reason);
             let funt = Type::new(OpenT(Tvar::new(pm_data.prop_reason.dupe(), tvar as u32)));
@@ -6588,9 +6605,7 @@ fn __flow_impl<'cx>(
         // *************************
         // * objects can be copied *
         // *************************
-        (DefT(reason_obj, def_t), ObjRestT(reason_op, xs, t, id, literal))
-            if let ObjT(o) = def_t.deref() =>
-        {
+        (DefT(reason_obj, deref!(ObjT(o))), ObjRestT(reason_op, xs, t, id, literal)) => {
             let props_tmap = o.props_tmap.dupe();
             let obj_kind = &o.flags.obj_kind;
             let reachable_targs = &o.reachable_targs;
@@ -6623,9 +6638,7 @@ fn __flow_impl<'cx>(
                 Ok::<(), FlowJsException>(())
             })?;
         }
-        (DefT(reason, def_t), ObjRestT(reason_op, xs, t, _, literal))
-            if let InstanceT(inst_t) = def_t.deref() =>
-        {
+        (DefT(reason, deref!(InstanceT(inst_t))), ObjRestT(reason_op, xs, t, _, literal)) => {
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             // Spread fields from super into an object
@@ -6729,9 +6742,7 @@ fn __flow_impl<'cx>(
             );
             rec_flow_t(cx, env, trace, unknown_use(), (&obj, t))?;
         }
-        (DefT(_, def_t), ObjRestT(reason, _, t, _, literal))
-            if matches!(def_t.deref(), NullT | VoidT) =>
-        {
+        (DefT(_, deref!(NullT | VoidT)), ObjRestT(reason, _, t, _, literal)) => {
             let o = obj_type::mk(ObjKind::Exact, cx, reason.dupe(), *literal);
             rec_flow_t(cx, env, trace, unknown_use(), (&o, t))?;
         }
@@ -6739,7 +6750,7 @@ fn __flow_impl<'cx>(
         // * objects may have their fields looked up *
         // *******************************************
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ObjT(o))),
             LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind,
@@ -6751,7 +6762,7 @@ fn __flow_impl<'cx>(
                 method_accessible,
                 ignore_dicts,
             }),
-        ) if let ObjT(o) = def_t.deref() => {
+        ) => {
             let mut missing = vec![];
             for (propref, up) in lookup_targets(propref, action) {
                 match flow_js_utils::get_prop_t_kit::get_obj_prop::<FlowJs>(
@@ -6873,9 +6884,8 @@ fn __flow_impl<'cx>(
         // ********************************
 
         // o.x = ... has the additional effect of o[_] = ...
-        (DefT(_, def_t), SetPropT(use_op, _, propref, _, _, _, _))
-            if let ObjT(o) = def_t.deref()
-                && flow_js_utils::obj_is_readonlyish(o)
+        (DefT(_, deref!(ObjT(o))), SetPropT(use_op, _, propref, _, _, _, _))
+            if flow_js_utils::obj_is_readonlyish(o)
                 && !flow_js_utils::is_exception_to_react_dro(propref) =>
         {
             let reason_prop = type_util::reason_of_propref(propref);
@@ -6900,9 +6910,10 @@ fn __flow_impl<'cx>(
                 })),
             )?;
         }
-        (DefT(reason_obj, def_t), SetPropT(use_op, reason_op, propref, mode, _, tin, prop_t))
-            if let ObjT(o) = def_t.deref() =>
-        {
+        (
+            DefT(reason_obj, deref!(ObjT(o))),
+            SetPropT(use_op, reason_op, propref, mode, _, tin, prop_t),
+        ) => {
             write_obj_prop(
                 cx, env, trace, use_op, mode, o, propref, reason_obj, reason_op, tin, prop_t,
             )?;
@@ -6934,10 +6945,15 @@ fn __flow_impl<'cx>(
         // *****************************
         // * ... and their fields read *
         // *****************************
-        (DefT(_, def_t), GetPropT(box data))
-            if matches!(def_t.deref(), ObjT(_))
-                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.matches_str("constructor")) =>
-        {
+        (
+            DefT(_, deref!(ObjT(_))),
+            GetPropT(
+                box data @ GetPropTData {
+                    propref: box PropRef::Named { name, .. },
+                    ..
+                },
+            ),
+        ) if name.matches_str("constructor") => {
             rec_flow_t(
                 cx,
                 env,
@@ -6949,7 +6965,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (DefT(reason_obj, def_t), GetPropT(box data)) if let ObjT(o) = def_t.deref() => {
+        (DefT(reason_obj, deref!(ObjT(o))), GetPropT(box data)) => {
             let lookup_info = data.id.map(|id| {
                 (
                     id,
@@ -7006,21 +7022,19 @@ fn __flow_impl<'cx>(
         // * ... and their methods called *
         // ********************************
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ObjT(_))),
             MethodT(box MethodTData {
                 use_op: _,
                 reason: reason_call,
                 prop_reason: _,
-                propref,
+                propref: box PropRef::Named { name, .. },
                 method_action: action,
             }),
-        ) if matches!(def_t.deref(), ObjT(_))
-            && matches!(&**propref, PropRef::Named { name, .. } if name.matches_str("constructor")) =>
-        {
+        ) if name.matches_str("constructor") => {
             add_specialized_callee_method_action(env, &any_t::untyped(reason_call.dupe()), action)?;
         }
         (
-            DefT(reason_obj, def_t),
+            DefT(reason_obj, deref!(ObjT(o))),
             MethodT(box MethodTData {
                 use_op,
                 reason: reason_call,
@@ -7028,7 +7042,7 @@ fn __flow_impl<'cx>(
                 propref,
                 method_action: action,
             }),
-        ) if let ObjT(o) = def_t.deref() => {
+        ) => {
             let t = flow_typing_tvar::mk_no_wrap_where(
                 cx,
                 reason_lookup.dupe(),
@@ -7064,7 +7078,7 @@ fn __flow_impl<'cx>(
         // * strings may have their characters read *
         // ******************************************
         (
-            DefT(reason_s, def_t),
+            DefT(reason_s, deref!(StrGeneralT(_) | SingletonStrT { .. })),
             GetElemT(box GetElemTData {
                 use_op,
                 reason: reason_op,
@@ -7072,7 +7086,7 @@ fn __flow_impl<'cx>(
                 tout,
                 ..
             }),
-        ) if matches!(def_t.deref(), StrGeneralT(_) | SingletonStrT { .. }) => {
+        ) => {
             rec_flow(
                 cx,
                 env,
