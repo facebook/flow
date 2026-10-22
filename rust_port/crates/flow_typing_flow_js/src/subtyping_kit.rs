@@ -69,7 +69,6 @@ use flow_typing_type::type_::CanonicalRendersForm;
 use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::Cont;
 use flow_typing_type::type_::DefT;
-use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DefTInner::*;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::DictType;
@@ -114,7 +113,6 @@ use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
-use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeInner::*;
 use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnifyCause;
@@ -122,7 +120,6 @@ use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::UnionEnumSet;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
-use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::UseTInner::*;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualUseOp;
@@ -157,10 +154,10 @@ use crate::type_inference_hooks_js;
 
 fn has_syntactic_nullish_member(t: &Type) -> bool {
     match t.deref() {
-        TypeInner::MaybeT(_, _) | TypeInner::OptionalT { .. } => true,
-        TypeInner::UnionT(_, rep) => rep.members_iter().any(has_syntactic_nullish_member),
-        TypeInner::DefT(_, def_t) => {
-            matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT)
+        MaybeT(_, _) | OptionalT { .. } => true,
+        UnionT(_, rep) => rep.members_iter().any(has_syntactic_nullish_member),
+        DefT(_, def_t) => {
+            matches!(def_t.deref(), NullT | VoidT)
         }
         _ => false,
     }
@@ -282,9 +279,9 @@ fn add_output_prop_polarity_mismatch<'cx>(
 
 pub(crate) fn property_is_missing_from_lookup_terminal(terminal: &Type, name: &Name) -> bool {
     match terminal.deref() {
-        TypeInner::ObjProtoT(_) => !flow_js_utils::is_object_prototype_method(name),
-        TypeInner::FunProtoT(_) => !flow_js_utils::is_function_prototype(name),
-        TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::NullT),
+        ObjProtoT(_) => !flow_js_utils::is_object_prototype_method(name),
+        FunProtoT(_) => !flow_js_utils::is_function_prototype(name),
+        DefT(_, def_t) => matches!(def_t.deref(), NullT),
         _ => false,
     }
 }
@@ -324,12 +321,12 @@ fn try_property_method_bivariant<'cx>(
 ) -> Result<bool, FlowJsException> {
     fn is_method(t: &Type) -> bool {
         match t.deref() {
-            TypeInner::DefT(_, d) => match d.deref() {
-                DefTInner::FunT(_, ft) => ft.this_t.1 == ThisStatus::ThisMethod,
-                DefTInner::PolyT(poly) => is_method(&poly.t_out),
+            DefT(_, d) => match d.deref() {
+                FunT(_, ft) => ft.this_t.1 == ThisStatus::ThisMethod,
+                PolyT(poly) => is_method(&poly.t_out),
                 _ => false,
             },
-            TypeInner::IntersectionT(_, rep) => rep.members_iter().all(is_method),
+            IntersectionT(_, rep) => rep.members_iter().all(is_method),
             _ => false,
         }
     }
@@ -340,7 +337,7 @@ fn try_property_method_bivariant<'cx>(
     };
     let ut = cx.find_resolved(ut).unwrap_or_else(|| ut.dupe());
     let (ut, upper_optional) = match ut.deref() {
-        TypeInner::OptionalT { type_, .. } => (
+        OptionalT { type_, .. } => (
             cx.find_resolved(type_).unwrap_or_else(|| type_.dupe()),
             true,
         ),
@@ -356,7 +353,7 @@ fn try_property_method_bivariant<'cx>(
     };
     let lt = cx.find_resolved(lt).unwrap_or_else(|| lt.dupe());
     let lt = match lt.deref() {
-        TypeInner::OptionalT { type_, .. } if upper_optional => {
+        OptionalT { type_, .. } if upper_optional => {
             cx.find_resolved(type_).unwrap_or_else(|| type_.dupe())
         }
         _ => lt,
@@ -412,13 +409,7 @@ fn rec_flow_p_inner<'cx>(
             // TS treats read-write-on-both-sides property type mismatch in
             // extends/implements/instantiation contexts as covariant, not invariant.
             // Match that by skipping unification and doing a covariant subtype check.
-            FlowJs::flow_opt_with_env(
-                cx,
-                env,
-                trace,
-                lt,
-                &UseT::new(UseTInner::UseT(use_op, ut.dupe())),
-            )?;
+            FlowJs::flow_opt_with_env(cx, env, trace, lt, &UseT::new(UseT(use_op, ut.dupe())))?;
             Ok(vec![])
         }
         (
@@ -461,7 +452,7 @@ fn rec_flow_p_inner<'cx>(
                         env,
                         trace,
                         &lt,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                        &UseT::new(UseT(use_op.dupe(), ut)),
                     )?;
                     vec![]
                 }
@@ -480,7 +471,7 @@ fn rec_flow_p_inner<'cx>(
                         env,
                         trace,
                         &ut,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), lt)),
+                        &UseT::new(UseT(use_op.dupe(), lt)),
                     )?;
                     vec![]
                 }
@@ -636,7 +627,7 @@ fn funt_to_funt_check_this_contravariant<'cx>(
                 env,
                 trace,
                 this_param2,
-                &UseT::new(UseTInner::UseT(use_op, this_param1.dupe())),
+                &UseT::new(UseT(use_op, this_param1.dupe())),
             )?;
         }
     }
@@ -794,7 +785,7 @@ fn funt_to_funt_check<'cx>(
             env,
             trace,
             &ft1.return_t,
-            &UseT::new(UseTInner::UseT(ret_use_op, ft2.return_t.dupe())),
+            &UseT::new(UseT(ret_use_op, ft2.return_t.dupe())),
         )?;
     }
     match (&ft1.type_guard, &ft2.type_guard) {
@@ -907,9 +898,8 @@ fn bivariant_param_flow<'cx>(
         match (cx.find_resolved(lower), cx.find_resolved(upper)) {
             (Some(lower_resolved), Some(upper_resolved)) => {
                 match (lower_resolved.deref(), upper_resolved.deref()) {
-                    (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-                        if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
-                            (ld.deref(), ud.deref()) =>
+                    (DefT(lreason, ld), DefT(ureason, ud))
+                        if let (FunT(_, ft1), FunT(_, ft2)) = (ld.deref(), ud.deref()) =>
                     {
                         funt_to_funt_check(
                             cx,
@@ -935,7 +925,7 @@ fn bivariant_param_flow<'cx>(
                         env,
                         trace,
                         lower,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), upper.dupe())),
+                        &UseT::new(UseT(use_op.dupe(), upper.dupe())),
                     ),
                 }
             }
@@ -944,7 +934,7 @@ fn bivariant_param_flow<'cx>(
                 env,
                 trace,
                 lower,
-                &UseT::new(UseTInner::UseT(use_op.dupe(), upper.dupe())),
+                &UseT::new(UseT(use_op.dupe(), upper.dupe())),
             ),
         }
     }
@@ -1074,14 +1064,13 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                             ))),
                             Arc::new(use_op.dupe()),
                         );
-                        let void =
-                            Type::new(TypeInner::DefT(ureason.dupe(), DefT::new(DefTInner::VoidT)));
+                        let void = Type::new(DefT(ureason.dupe(), DefT::new(VoidT)));
                         FlowJs::rec_flow_with_env(
                             cx,
                             env,
                             trace,
                             &void,
-                            &UseT::new(UseTInner::UseT(inner_use_op, t1.dupe())),
+                            &UseT::new(UseT(inner_use_op, t1.dupe())),
                         )?;
                         n += 1;
                         params1 = rest1;
@@ -1191,21 +1180,21 @@ fn try_method_bivariant<'cx>(
                 )?;
                 Ok(true)
             }
-            (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+            (DefT(_, ld), DefT(_, ud))
                 if let (
-                    DefTInner::PolyT(box PolyTData {
+                    PolyT(box PolyTData {
                         tparams: ps1,
                         t_out: inner1,
                         ..
                     }),
-                    DefTInner::PolyT(box PolyTData {
+                    PolyT(box PolyTData {
                         tparams: ps2,
                         t_out: inner2,
                         ..
                     }),
                 ) = (ld.deref(), ud.deref())
-                    && matches!(inner1.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
-                    && matches!(inner2.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
+                    && matches!(inner1.deref(), DefT(_, d) if matches!(d.deref(), FunT(_, _)))
+                    && matches!(inner2.deref(), DefT(_, d) if matches!(d.deref(), FunT(_, _)))
                     && ps1.len() == ps2.len() =>
             {
                 let (map1, generics) = flow_js_utils::mk_tparams(cx, ps1);
@@ -1240,7 +1229,7 @@ fn try_method_bivariant<'cx>(
                         env,
                         trace,
                         &bound2,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), bound1.dupe())),
+                        &UseT::new(UseT(use_op.dupe(), bound1.dupe())),
                     )?;
                     if p1.is_const != p2.is_const {
                         flow_js_utils::add_output_with_env(
@@ -1287,9 +1276,8 @@ fn try_method_bivariant<'cx>(
                     inner2.dupe(),
                 );
                 match (inner1_subst.deref(), inner2_subst.deref()) {
-                    (TypeInner::DefT(lreason_f, ld), TypeInner::DefT(ureason_f, ud))
-                        if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
-                            (ld.deref(), ud.deref()) =>
+                    (DefT(lreason_f, ld), DefT(ureason_f, ud))
+                        if let (FunT(_, ft1), FunT(_, ft2)) = (ld.deref(), ud.deref()) =>
                     {
                         funt_to_funt_method_bivariant(
                             cx,
@@ -1325,35 +1313,32 @@ fn try_method_bivariant<'cx>(
 
     fn can_try_method_bivariant(lt: &Type, ut: &Type) -> bool {
         match (lt.deref(), ut.deref()) {
-            (_, TypeInner::IntersectionT(_, rep)) => rep
+            (_, IntersectionT(_, rep)) => rep
                 .members_iter()
                 .all(|ut| can_try_method_bivariant(lt, ut)),
-            (TypeInner::IntersectionT(_, rep), _) => rep
+            (IntersectionT(_, rep), _) => rep
                 .members_iter()
                 .any(|lt| can_try_method_bivariant(lt, ut)),
-            (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-                if matches!(
-                    (ld.deref(), ud.deref()),
-                    (DefTInner::FunT(_, _), DefTInner::FunT(_, _))
-                ) =>
+            (DefT(_, ld), DefT(_, ud))
+                if matches!((ld.deref(), ud.deref()), (FunT(_, _), FunT(_, _))) =>
             {
                 true
             }
-            (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+            (DefT(_, ld), DefT(_, ud))
                 if let (
-                    DefTInner::PolyT(box PolyTData {
+                    PolyT(box PolyTData {
                         tparams: ps1,
                         t_out: inner1,
                         ..
                     }),
-                    DefTInner::PolyT(box PolyTData {
+                    PolyT(box PolyTData {
                         tparams: ps2,
                         t_out: inner2,
                         ..
                     }),
                 ) = (ld.deref(), ud.deref())
-                    && matches!(inner1.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
-                    && matches!(inner2.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
+                    && matches!(inner1.deref(), DefT(_, d) if matches!(d.deref(), FunT(_, _)))
+                    && matches!(inner2.deref(), DefT(_, d) if matches!(d.deref(), FunT(_, _)))
                     && ps1.len() == ps2.len() =>
             {
                 true
@@ -1371,13 +1356,13 @@ fn try_method_bivariant<'cx>(
         ut: &Type,
     ) -> Result<(), FlowJsException> {
         match (lt.deref(), ut.deref()) {
-            (_, TypeInner::IntersectionT(_, rep)) => {
+            (_, IntersectionT(_, rep)) => {
                 for ut in rep.members_iter() {
                     apply_method_bivariant(cx, env, trace, use_op.dupe(), lt, ut)?;
                 }
                 Ok(())
             }
-            (TypeInner::IntersectionT(_, rep), _) => {
+            (IntersectionT(_, rep), _) => {
                 let mut cases: Vec<
                     Box<dyn FnOnce(&mut Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>>,
                 > = vec![];
@@ -1392,7 +1377,7 @@ fn try_method_bivariant<'cx>(
                         apply_method_bivariant(cx, env, trace, use_op, &lt, &ut)
                     }));
                 }
-                let use_t = UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()));
+                let use_t = UseT::new(UseT(use_op.dupe(), ut.dupe()));
                 speculation_kit::try_custom(
                     cx,
                     env,
@@ -1438,7 +1423,7 @@ fn recover_missing_props<'cx>(
                     env,
                     Some(trace),
                     &any,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                    &UseT::new(UseT(use_op.dupe(), ut)),
                 )?;
             }
             PropertyType::OrdinaryField {
@@ -1463,7 +1448,7 @@ fn recover_missing_props<'cx>(
                         env,
                         Some(trace),
                         &any,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                        &UseT::new(UseT(use_op.dupe(), ut)),
                     )?;
                 }
                 if let Some(ut) = property::write_t_of_property_type(&up_pt, None) {
@@ -1472,7 +1457,7 @@ fn recover_missing_props<'cx>(
                         env,
                         Some(trace),
                         &ut,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), any.dupe())),
+                        &UseT::new(UseT(use_op.dupe(), any.dupe())),
                     )?;
                 }
             }
@@ -1584,86 +1569,86 @@ impl PropsToIndexerContext<'_> {
             dict_polarity,
             ..
         } = upper_dict;
-        let flow_prop_to_indexer =
-            |cx: &mut Context<'cx>, lp: &Property, name: &Name| -> Result<(), FlowJsException> {
-                let use_op = VirtualUseOp::Frame(
-                    Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
-                        PropertyCompatibilityData {
-                            prop: Some(name.dupe()),
-                            lower: lreason.dupe(),
-                            upper: ureason.dupe(),
-                        },
-                    ))),
-                    Arc::new(use_op.dupe()),
-                );
-                let lp_type = match lp.deref() {
-                    PropertyInner::Field(fd)
-                        if let TypeInner::OptionalT { type_: lt, .. } = fd.type_.deref() =>
-                    {
-                        PropertyType::OrdinaryField {
-                            type_: lt.dupe(),
-                            polarity: fd.polarity,
-                        }
+        let flow_prop_to_indexer = |cx: &mut Context<'cx>,
+                                    lp: &Property,
+                                    name: &Name|
+         -> Result<(), FlowJsException> {
+            let use_op = VirtualUseOp::Frame(
+                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                    PropertyCompatibilityData {
+                        prop: Some(name.dupe()),
+                        lower: lreason.dupe(),
+                        upper: ureason.dupe(),
+                    },
+                ))),
+                Arc::new(use_op.dupe()),
+            );
+            let lp_type = match lp.deref() {
+                PropertyInner::Field(fd) if let OptionalT { type_: lt, .. } = fd.type_.deref() => {
+                    PropertyType::OrdinaryField {
+                        type_: lt.dupe(),
+                        polarity: fd.polarity,
                     }
-                    _ => property_type_for_subtyping(lp, strictness_kind),
-                };
-                let up_type = PropertyType::OrdinaryField {
-                    type_: value.dupe(),
-                    polarity: *dict_polarity,
-                };
-                if lit {
-                    match (
-                        property::read_t_of_property_type(&lp_type),
-                        property::read_t_of_property_type(&up_type),
-                    ) {
-                        (Some(lt), Some(ut)) => {
-                            FlowJs::rec_flow_with_env(
-                                cx,
-                                env,
-                                trace,
-                                &lt,
-                                &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
-                            )?;
-                        }
-                        _ => {}
-                    }
-                } else {
-                    let propref = type_util::mk_named_prop(
-                        lreason
-                            .dupe()
-                            .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
-                        false,
-                        name.dupe(),
-                    );
-                    let lower_upper_subtyping_obj_ts = self
-                        .lower_upper_subtyping_obj_ts
-                        .as_ref()
-                        .map(|(lower, upper)| (lower, upper));
-                    let errs = rec_flow_p_inner(
-                        cx,
-                        env,
-                        Some(trace),
-                        use_op.dupe(),
-                        None,
-                        lower_upper_subtyping_obj_ts,
-                        strictness_kind,
-                        true,
-                        &propref,
-                        &lp_type,
-                        &up_type,
-                    )?;
-                    add_output_prop_polarity_mismatch(
-                        cx,
-                        env,
-                        use_op,
-                        PropPolarityMismatchObject::Type(&self.lower),
-                        PropPolarityMismatchObject::Type(&self.upper),
-                        errs,
-                        strictness_kind,
-                    )?;
                 }
-                Ok(())
+                _ => property_type_for_subtyping(lp, strictness_kind),
             };
+            let up_type = PropertyType::OrdinaryField {
+                type_: value.dupe(),
+                polarity: *dict_polarity,
+            };
+            if lit {
+                match (
+                    property::read_t_of_property_type(&lp_type),
+                    property::read_t_of_property_type(&up_type),
+                ) {
+                    (Some(lt), Some(ut)) => {
+                        FlowJs::rec_flow_with_env(
+                            cx,
+                            env,
+                            trace,
+                            &lt,
+                            &UseT::new(UseT(use_op.dupe(), ut)),
+                        )?;
+                    }
+                    _ => {}
+                }
+            } else {
+                let propref = type_util::mk_named_prop(
+                    lreason
+                        .dupe()
+                        .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
+                    false,
+                    name.dupe(),
+                );
+                let lower_upper_subtyping_obj_ts = self
+                    .lower_upper_subtyping_obj_ts
+                    .as_ref()
+                    .map(|(lower, upper)| (lower, upper));
+                let errs = rec_flow_p_inner(
+                    cx,
+                    env,
+                    Some(trace),
+                    use_op.dupe(),
+                    None,
+                    lower_upper_subtyping_obj_ts,
+                    strictness_kind,
+                    true,
+                    &propref,
+                    &lp_type,
+                    &up_type,
+                )?;
+                add_output_prop_polarity_mismatch(
+                    cx,
+                    env,
+                    use_op,
+                    PropPolarityMismatchObject::Type(&self.lower),
+                    PropPolarityMismatchObject::Type(&self.upper),
+                    errs,
+                    strictness_kind,
+                )?;
+            }
+            Ok(())
+        };
         if !env.in_implicit_instantiation() {
             for (name, lp) in lower_props.iter() {
                 if upper_props.iter().any(|props| props.contains_key(name)) {
@@ -1719,7 +1704,7 @@ impl PropsToIndexerContext<'_> {
                 env,
                 trace,
                 &keys,
-                &UseT::new(UseTInner::UseT(
+                &UseT::new(UseT(
                     VirtualUseOp::Frame(
                         Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
                             lower: lreason.dupe(),
@@ -1798,14 +1783,8 @@ fn flow_obj_to_obj<'cx>(
             if lit {
                 FlowJs::rec_flow_t_with_env(cx, env, trace, use_op_k.dupe(), lk, uk)?;
             } else {
-                let l_t = Type::new(TypeInner::DefT(
-                    lreason.dupe(),
-                    DefT::new(DefTInner::ObjT(l_obj.dupe())),
-                ));
-                let u_t = Type::new(TypeInner::DefT(
-                    ureason.dupe(),
-                    DefT::new(DefTInner::ObjT(u_obj.dupe())),
-                ));
+                let l_t = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
+                let u_t = Type::new(DefT(ureason.dupe(), DefT::new(ObjT(u_obj.dupe()))));
                 // Don't report polarity errors when checking the indexer key. We would
                 // report these errors again a second time when checking values.
                 let errs = rec_flow_p_inner(
@@ -1850,14 +1829,8 @@ fn flow_obj_to_obj<'cx>(
             if lit {
                 FlowJs::rec_flow_t_with_env(cx, env, trace, use_op_v, lv, uv)?;
             } else {
-                let l_t = Type::new(TypeInner::DefT(
-                    lreason.dupe(),
-                    DefT::new(DefTInner::ObjT(l_obj.dupe())),
-                ));
-                let u_t = Type::new(TypeInner::DefT(
-                    ureason.dupe(),
-                    DefT::new(DefTInner::ObjT(u_obj.dupe())),
-                ));
+                let l_t = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
+                let u_t = Type::new(DefT(ureason.dupe(), DefT::new(ObjT(u_obj.dupe()))));
                 let errs = rec_flow_p_inner(
                     cx,
                     env,
@@ -1898,10 +1871,7 @@ fn flow_obj_to_obj<'cx>(
     if rflags.obj_kind == ObjKind::Exact && !u_obj.literal && !strictness_kind.is_typescript_loose()
     {
         if !obj_type::is_exact(&lflags.obj_kind) {
-            let l_t = Type::new(TypeInner::DefT(
-                lreason.dupe(),
-                DefT::new(DefTInner::ObjT(l_obj.dupe())),
-            ));
+            let l_t = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
             flow_js_utils::exact_obj_error(cx, env, &lflags.obj_kind, use_op.dupe(), u, &l_t)?;
         }
         let missing_props: Vec<Name> = cx
@@ -1918,14 +1888,8 @@ fn flow_obj_to_obj<'cx>(
             .into_iter()
             .collect();
         if let Ok(missing_props) = Vec1::try_from_vec(missing_props) {
-            let l_t = Type::new(TypeInner::DefT(
-                lreason.dupe(),
-                DefT::new(DefTInner::ObjT(l_obj.dupe())),
-            ));
-            let u_t = Type::new(TypeInner::DefT(
-                ureason.dupe(),
-                DefT::new(DefTInner::ObjT(u_obj.dupe())),
-            ));
+            let l_t = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
+            let u_t = Type::new(DefT(ureason.dupe(), DefT::new(ObjT(u_obj.dupe()))));
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
@@ -1982,7 +1946,7 @@ fn flow_obj_to_obj<'cx>(
                         env,
                         trace,
                         &cx.find_call(*lcall_id),
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), cx.find_call(*ucall_id))),
+                        &UseT::new(UseT(use_op.dupe(), cx.find_call(*ucall_id))),
                     )?;
                 }
                 None => {
@@ -2069,7 +2033,7 @@ fn flow_obj_to_obj<'cx>(
                                         env,
                                         trace,
                                         &lt,
-                                        &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
+                                        &UseT::new(UseT(mk_use_op(), ut)),
                                     )?;
                                 }
                                 _ => {}
@@ -2109,7 +2073,7 @@ fn flow_obj_to_obj<'cx>(
                                         env,
                                         trace,
                                         lt,
-                                        &UseT::new(UseTInner::UseT(mk_use_op(), ut.dupe())),
+                                        &UseT::new(UseT(mk_use_op(), ut.dupe())),
                                     )?;
                                     vec![]
                                 }
@@ -2152,13 +2116,13 @@ fn flow_obj_to_obj<'cx>(
                                     vec![]
                                 }
                                 (lp_type, up_type) => {
-                                    let l_t = Type::new(TypeInner::DefT(
+                                    let l_t = Type::new(DefT(
                                         lreason.dupe(),
-                                        DefT::new(DefTInner::ObjT(l_obj.dupe())),
+                                        DefT::new(ObjT(l_obj.dupe())),
                                     ));
-                                    let u_t = Type::new(TypeInner::DefT(
+                                    let u_t = Type::new(DefT(
                                         ureason.dupe(),
-                                        DefT::new(DefTInner::ObjT(u_obj.dupe())),
+                                        DefT::new(ObjT(u_obj.dupe())),
                                     ));
                                     rec_flow_p_inner(
                                         cx,
@@ -2192,7 +2156,7 @@ fn flow_obj_to_obj<'cx>(
                     };
                     let up_for_idx = match up.deref() {
                         PropertyInner::Field(fd)
-                            if let TypeInner::OptionalT { type_: ut, .. } = fd.type_.deref() =>
+                            if let OptionalT { type_: ut, .. } = fd.type_.deref() =>
                         {
                             PropertyType::OrdinaryField {
                                 type_: ut.dupe(),
@@ -2216,20 +2180,16 @@ fn flow_obj_to_obj<'cx>(
                                             env,
                                             trace,
                                             &lt,
-                                            &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
+                                            &UseT::new(UseT(mk_use_op(), ut)),
                                         )?;
                                     }
                                     _ => {}
                                 }
                             } else {
-                                let l_t = Type::new(TypeInner::DefT(
-                                    lreason.dupe(),
-                                    DefT::new(DefTInner::ObjT(l_obj.dupe())),
-                                ));
-                                let u_t = Type::new(TypeInner::DefT(
-                                    ureason.dupe(),
-                                    DefT::new(DefTInner::ObjT(u_obj.dupe())),
-                                ));
+                                let l_t =
+                                    Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
+                                let u_t =
+                                    Type::new(DefT(ureason.dupe(), DefT::new(ObjT(u_obj.dupe()))));
                                 let additional = rec_flow_p_inner(
                                     cx,
                                     env,
@@ -2249,7 +2209,7 @@ fn flow_obj_to_obj<'cx>(
                         };
                     match up.deref() {
                         PropertyInner::Field(fd)
-                            if matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
+                            if matches!(fd.type_.deref(), OptionalT { .. })
                                 && (lit || fd.polarity == Polarity::Positive)
                                 && !env.in_implicit_instantiation() =>
                         {
@@ -2288,7 +2248,7 @@ fn flow_obj_to_obj<'cx>(
                                 env,
                                 trace,
                                 &key_type,
-                                &UseT::new(UseTInner::UseT(
+                                &UseT::new(UseT(
                                     VirtualUseOp::Frame(
                                         Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
                                             lower: lreason.dupe(),
@@ -2307,10 +2267,10 @@ fn flow_obj_to_obj<'cx>(
                     // property doesn't exist in inflowing type
                     match up.deref() {
                         PropertyInner::Field(fd)
-                            if matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) && lit => {}
+                            if matches!(fd.type_.deref(), OptionalT { .. }) && lit => {}
                         PropertyInner::Field(fd)
                             if fd.polarity == Polarity::Positive
-                                && matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
+                                && matches!(fd.type_.deref(), OptionalT { .. })
                                 && obj_type::is_exact(&lflags.obj_kind) =>
                         {
                             let propref = mk_propref();
@@ -2319,7 +2279,7 @@ fn flow_obj_to_obj<'cx>(
                                 env,
                                 trace,
                                 lproto,
-                                &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
+                                &UseT::new(LookupT(Box::new(LookupTData {
                                     reason: ureason.dupe(),
                                     lookup_kind: Box::new(LookupKind::NonstrictReturning(
                                         Box::new(NonstrictReturningData(None, None)),
@@ -2359,7 +2319,7 @@ fn flow_obj_to_obj<'cx>(
                                     env,
                                     trace,
                                     lproto,
-                                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
+                                    &UseT::new(LookupT(Box::new(LookupTData {
                                         reason: ureason.dupe(),
                                         lookup_kind: Box::new(lookup_kind),
                                         indexer_fallback: None,
@@ -2419,15 +2379,15 @@ fn flow_obj_to_obj<'cx>(
                     lower_obj_loc: lreason.def_loc().dupe(),
                     upper_obj_loc: ureason.def_loc().dupe(),
                     lower_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(
-                        Type::new(TypeInner::DefT(
+                        Type::new(DefT(
                             lreason.dupe(),
-                            DefT::new(DefTInner::ObjT(l_obj.dupe())),
+                            DefT::new(ObjT(l_obj.dupe())),
                         )),
                     ),
                     upper_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(
-                        Type::new(TypeInner::DefT(
+                        Type::new(DefT(
                             ureason.dupe(),
-                            DefT::new(DefTInner::ObjT(u_obj.dupe())),
+                            DefT::new(ObjT(u_obj.dupe())),
                         )),
                     ),
                     upper_object_loc: ureason.annot_loc().unwrap_or(ureason.def_loc()).dupe(),
@@ -2461,16 +2421,10 @@ fn flow_obj_to_obj<'cx>(
             )?;
         }
         properties => {
-            let t1 = Type::new(TypeInner::DefT(
-                lreason.dupe(),
-                DefT::new(DefTInner::ObjT(l_obj.dupe())),
-            ));
-            let t2 = Type::new(TypeInner::DefT(
-                ureason.dupe(),
-                DefT::new(DefTInner::ObjT(u_obj.dupe())),
-            ));
+            let t1 = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
+            let t2 = Type::new(DefT(ureason.dupe(), DefT::new(ObjT(u_obj.dupe()))));
             let lower_loc = match t1.deref() {
-                TypeInner::OpenT(tvar) => {
+                OpenT(tvar) => {
                     match flow_js_utils::merge_tvar_opt(
                         cx,
                         false,
@@ -2527,7 +2481,7 @@ fn flow_obj_to_obj<'cx>(
                 match up.deref() {
                     PropertyInner::Field(fd)
                         if fd.polarity == Polarity::Neutral
-                            && matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) =>
+                            && matches!(fd.type_.deref(), OptionalT { .. }) =>
                     {
                         rhs_neutral_optional.push(name);
                         ups_to_flow_any.push(up);
@@ -2554,14 +2508,8 @@ fn flow_obj_to_obj<'cx>(
     }
     if !strictness_kind.is_typescript_loose() {
         if let Ok(props) = Vec1::try_from_vec(rhs_neutral_optional) {
-            let t1 = Type::new(TypeInner::DefT(
-                lreason.dupe(),
-                DefT::new(DefTInner::ObjT(l_obj.dupe())),
-            ));
-            let t2 = Type::new(TypeInner::DefT(
-                ureason.dupe(),
-                DefT::new(DefTInner::ObjT(u_obj.dupe())),
-            ));
+            let t1 = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
+            let t2 = Type::new(DefT(ureason.dupe(), DefT::new(ObjT(u_obj.dupe()))));
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
@@ -2605,14 +2553,8 @@ fn flow_obj_to_obj<'cx>(
     match &udict {
         None => {}
         Some(ud) => {
-            let lower = Type::new(TypeInner::DefT(
-                lreason.dupe(),
-                DefT::new(DefTInner::ObjT(l_obj.dupe())),
-            ));
-            let upper = Type::new(TypeInner::DefT(
-                ureason.dupe(),
-                DefT::new(DefTInner::ObjT(u_obj.dupe())),
-            ));
+            let lower = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
+            let upper = Type::new(DefT(ureason.dupe(), DefT::new(ObjT(u_obj.dupe()))));
             let lower_props = cx.find_props(lflds.dupe());
             let upper_props = cx.find_props(uflds.dupe());
             PropsToIndexerContext {
@@ -2636,10 +2578,7 @@ fn flow_obj_to_obj<'cx>(
                         }),
                         lreason.loc().dupe(),
                     );
-                    let mixed = Type::new(TypeInner::DefT(
-                        r,
-                        DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
-                    ));
+                    let mixed = Type::new(DefT(r, DefT::new(MixedT(MixedFlavor::MixedEverything))));
                     FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &mixed, &ud.value)?;
                 }
                 _ => {}
@@ -2666,7 +2605,7 @@ fn flow_obj_to_obj<'cx>(
                     );
                     let call_t = cx.find_call(*lcall_id);
                     let lp_t = match call_t.deref() {
-                        TypeInner::OptionalT { type_: t, .. } => t.dupe(),
+                        OptionalT { type_: t, .. } => t.dupe(),
                         _ => call_t.dupe(),
                     };
                     let lp_type = PropertyType::OrdinaryField {
@@ -2688,7 +2627,7 @@ fn flow_obj_to_obj<'cx>(
                                     env,
                                     trace,
                                     &lt,
-                                    &UseT::new(UseTInner::UseT(use_op, ut)),
+                                    &UseT::new(UseT(use_op, ut)),
                                 )?;
                             }
                             _ => {}
@@ -2698,14 +2637,8 @@ fn flow_obj_to_obj<'cx>(
                             .dupe()
                             .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
                         let propref = type_util::mk_named_prop(reason_prop, false, name);
-                        let l_t = Type::new(TypeInner::DefT(
-                            lreason.dupe(),
-                            DefT::new(DefTInner::ObjT(l_obj.dupe())),
-                        ));
-                        let u_t = Type::new(TypeInner::DefT(
-                            ureason.dupe(),
-                            DefT::new(DefTInner::ObjT(u_obj.dupe())),
-                        ));
+                        let l_t = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
+                        let u_t = Type::new(DefT(ureason.dupe(), DefT::new(ObjT(u_obj.dupe()))));
                         let errs = rec_flow_p_inner(
                             cx,
                             env,
@@ -2735,16 +2668,13 @@ fn flow_obj_to_obj<'cx>(
         }
     }
 
-    let l_t = Type::new(TypeInner::DefT(
-        lreason.dupe(),
-        DefT::new(DefTInner::ObjT(l_obj.dupe())),
-    ));
+    let l_t = Type::new(DefT(lreason.dupe(), DefT::new(ObjT(l_obj.dupe()))));
     FlowJs::rec_flow_with_env(
         cx,
         env,
         trace,
         uproto,
-        &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+        &UseT::new(ReposUseT(Box::new(ReposUseTData {
             reason: ureason.dupe(),
             use_desc: false,
             use_op,
@@ -2771,13 +2701,7 @@ fn flow_to_mutable_child<'cx>(
     t2: &Type,
 ) -> Result<(), FlowJsException> {
     if fresh {
-        FlowJs::rec_flow_with_env(
-            cx,
-            env,
-            trace,
-            t1,
-            &UseT::new(UseTInner::UseT(use_op, t2.dupe())),
-        )?;
+        FlowJs::rec_flow_with_env(cx, env, trace, t1, &UseT::new(UseT(use_op, t2.dupe())))?;
     } else {
         FlowJs::rec_unify_with_env(cx, env, trace, use_op, unify_cause, None, t1, t2)?;
     }
@@ -2979,13 +2903,7 @@ pub fn union_to_union<'cx>(
             }
         }
         flow_js_utils::UnionOptimizationGuardResult::Maybe => {
-            flow_all_in_union(
-                cx,
-                env,
-                &trace,
-                rep,
-                &UseT::new(UseTInner::UseT(use_op, u.dupe())),
-            )?;
+            flow_all_in_union(cx, env, &trace, rep, &UseT::new(UseT(use_op, u.dupe())))?;
         }
         flow_js_utils::UnionOptimizationGuardResult::False { diff } => {
             if cx.is_verbose() {
@@ -3030,18 +2948,18 @@ pub fn rec_sub_t<'cx>(
     match (l.deref(), u.deref()) {
         // The sink component of an annotation constrains values flowing
         // into the annotated site.
-        (_, TypeInner::AnnotT(r, t, use_desc)) => FlowJs::rec_flow_with_env(
+        (_, AnnotT(r, t, use_desc)) => FlowJs::rec_flow_with_env(
             cx, env,
             trace,
             t,
-            &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+            &UseT::new(ReposUseT(Box::new(ReposUseTData {
                 reason: r.dupe(),
                 use_desc: *use_desc,
                 use_op,
                 type_: l.dupe(),
             }))),
         ),
-        (TypeInner::AnnotT(r, t, use_desc), _) => {
+        (AnnotT(r, t, use_desc), _) => {
             let t = FlowJs::reposition_reason(cx, env, Some(trace), r, Some(*use_desc), t)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
@@ -3049,54 +2967,54 @@ pub fn rec_sub_t<'cx>(
         // *******************************
         // * common implicit conversions *
         // *******************************
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+        (DefT(_, ld), DefT(_, ud))
             if matches!(
                 ld.deref(),
-                DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
-            ) && matches!(ud.deref(), DefTInner::NumGeneralT(_)) =>
+                NumGeneralT(_) | SingletonNumT { .. }
+            ) && matches!(ud.deref(), NumGeneralT(_)) =>
         {
             Ok(())
         }
-        (TypeInner::DefT(r, ld), TypeInner::MaybeT(_, tout))
-            if matches!(ld.deref(), DefTInner::NullT | DefTInner::VoidT) =>
+        (DefT(r, ld), MaybeT(_, tout))
+            if matches!(ld.deref(), NullT | VoidT) =>
         {
-            let empty = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::EmptyT)));
+            let empty = Type::new(DefT(r.dupe(), DefT::new(EmptyT)));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &empty, tout)
         }
-        (TypeInner::DefT(r, ld), TypeInner::MaybeT(_, tout))
-            if matches!(ld.deref(), DefTInner::MixedT(MixedFlavor::MixedEverything)) =>
+        (DefT(r, ld), MaybeT(_, tout))
+            if matches!(ld.deref(), MixedT(MixedFlavor::MixedEverything)) =>
         {
-            let mixed = Type::new(TypeInner::DefT(
+            let mixed = Type::new(DefT(
                 r.dupe(),
-                DefT::new(DefTInner::MixedT(MixedFlavor::MixedNonMaybe)),
+                DefT::new(MixedT(MixedFlavor::MixedNonMaybe)),
             ));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &mixed, tout)
         }
-        (TypeInner::MaybeT(r, t), TypeInner::MaybeT(_, _)) => {
+        (MaybeT(r, t), MaybeT(_, _)) => {
             let t = type_util::push_type_alias_reason(r, t.dupe());
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
-        (TypeInner::MaybeT(reason, t), _) => {
+        (MaybeT(reason, t), _) => {
             let reason = reason.dupe().replace_desc(VirtualReasonDesc::RNullOrVoid);
             let t = type_util::push_type_alias_reason(&reason, t.dupe());
-            let null = Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::NullT)));
-            let void = Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::VoidT)));
+            let null = Type::new(DefT(reason.dupe(), DefT::new(NullT)));
+            let void = Type::new(DefT(reason.dupe(), DefT::new(VoidT)));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &null, u)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &void, u)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
-        (TypeInner::DefT(r, ld), TypeInner::OptionalT { type_: tout, .. })
-            if matches!(ld.deref(), DefTInner::VoidT) =>
+        (DefT(r, ld), OptionalT { type_: tout, .. })
+            if matches!(ld.deref(), VoidT) =>
         {
-            let empty = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::EmptyT)));
+            let empty = Type::new(DefT(r.dupe(), DefT::new(EmptyT)));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &empty, tout)
         }
-        (TypeInner::OptionalT { type_: t, .. }, TypeInner::OptionalT { .. })
-        | (TypeInner::OptionalT { type_: t, .. }, TypeInner::MaybeT(_, _)) => {
+        (OptionalT { type_: t, .. }, OptionalT { .. })
+        | (OptionalT { type_: t, .. }, MaybeT(_, _)) => {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t, u)
         }
         (
-            TypeInner::OptionalT {
+            OptionalT {
                 reason,
                 type_: t,
                 use_desc,
@@ -3108,7 +3026,7 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t, u)
         }
         (
-            TypeInner::ThisTypeAppT(box ThisTypeAppTData {
+            ThisTypeAppT(box ThisTypeAppTData {
                 reason,
                 type_: c,
                 this_t,
@@ -3125,13 +3043,13 @@ pub fn rec_sub_t<'cx>(
                 c,
                 targs.dupe(),
                 this_t,
-                &Cont::Upper(Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe())))),
+                &Cont::Upper(Box::new(UseT::new(UseT(use_op, u.dupe())))),
             )?;
             Ok(())
         }
         (
             _,
-            TypeInner::ThisTypeAppT(box ThisTypeAppTData {
+            ThisTypeAppT(box ThisTypeAppTData {
                 reason,
                 type_: c,
                 this_t,
@@ -3168,7 +3086,7 @@ pub fn rec_sub_t<'cx>(
         // An orthogonal benefit is that for large unions or intersections, checking
         // inclusion is significantly faster that splitting for proving simple
         // inequalities (O(n) instead of O(n^2) for n cases).
-        (TypeInner::IntersectionT(_, rep), _)
+        (IntersectionT(_, rep), _)
             if rep
                 .members_iter()
                 .any(|member| flow_typing_flow_common::concrete_type_eq::eq_with_env(cx,env,  member, u)) =>
@@ -3192,7 +3110,7 @@ pub fn rec_sub_t<'cx>(
         // The next step happens back in flow_js.rs, at the cases for a
         // ConcretizeTypeAppsT use type.
         (
-            TypeInner::TypeAppT(box TypeAppTData {
+            TypeAppT(box TypeAppTData {
                 reason: r1,
                 use_op: op1,
                 type_: c1,
@@ -3200,7 +3118,7 @@ pub fn rec_sub_t<'cx>(
                 from_value: fv1,
                 use_desc: _,
             }),
-            TypeInner::TypeAppT(box TypeAppTData {
+            TypeAppT(box TypeAppTData {
                 reason: r2,
                 use_op: op2,
                 type_: c2,
@@ -3227,7 +3145,7 @@ pub fn rec_sub_t<'cx>(
                     &env,
                     trace,
                     c2,
-                    &UseT::new(UseTInner::ConcretizeTypeAppsT(
+                    &UseT::new(ConcretizeTypeAppsT(
                         use_op.dupe(),
                         Box::new((ts2.dupe(), *fv2, op2.dupe(), r2.dupe())),
                         Box::new((c1.dupe(), ts1.dupe(), *fv1, op1.dupe(), r1.dupe())),
@@ -3238,7 +3156,7 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
         (
-            TypeInner::TypeAppT(box TypeAppTData {
+            TypeAppT(box TypeAppTData {
                 reason: reason_tapp,
                 use_op: use_op_tapp,
                 type_,
@@ -3280,7 +3198,7 @@ pub fn rec_sub_t<'cx>(
         }
         (
             _,
-            TypeInner::TypeAppT(box TypeAppTData {
+            TypeAppT(box TypeAppTData {
                 reason: reason_tapp,
                 use_op: use_op_tapp,
                 type_,
@@ -3317,7 +3235,7 @@ pub fn rec_sub_t<'cx>(
                     cx, env,
                     trace,
                     &t,
-                    &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+                    &UseT::new(ReposUseT(Box::new(ReposUseTData {
                         reason: reason_tapp.dupe(),
                         use_desc: *type_app_use_desc,
                         use_op,
@@ -3335,11 +3253,11 @@ pub fn rec_sub_t<'cx>(
         // If the ids are equal, we use flow_type_args to make sure that the type arguments of each
         // are compatible with each other. If there are no type args, this doesn't do anything
         (
-            TypeInner::NominalT {
+            NominalT {
                 reason: lreason,
                 nominal_type: lnom,
             },
-            TypeInner::NominalT {
+            NominalT {
                 reason: ureason,
                 nominal_type: unom,
             },
@@ -3390,11 +3308,11 @@ pub fn rec_sub_t<'cx>(
         // If the opaque type are from the same logical module, we need to do some structural validation
         // in additional to type_args check.
         (
-            TypeInner::NominalT {
+            NominalT {
                 reason: lreason,
                 nominal_type: lnom,
             },
-            TypeInner::NominalT {
+            NominalT {
                 reason: ureason,
                 nominal_type: unom,
             },
@@ -3419,15 +3337,15 @@ pub fn rec_sub_t<'cx>(
             // Check super
             if type_util::is_in_common_interface_conformance_check(&use_op) {
                 let lower_1 = lnom.lower_t.as_ref().duped().unwrap_or_else(|| {
-                    Type::new(TypeInner::DefT(
+                    Type::new(DefT(
                         lreason.dupe(),
-                        DefT::new(DefTInner::EmptyT),
+                        DefT::new(EmptyT),
                     ))
                 });
                 let lower_2 = unom.lower_t.as_ref().duped().unwrap_or_else(|| {
-                    Type::new(TypeInner::DefT(
+                    Type::new(DefT(
                         ureason.dupe(),
-                        DefT::new(DefTInner::EmptyT),
+                        DefT::new(EmptyT),
                     ))
                 });
                 let lower_1_reason = type_util::reason_of_t(&lower_1).dupe();
@@ -3447,15 +3365,15 @@ pub fn rec_sub_t<'cx>(
                     &lower_2,
                 )?;
                 let upper_1 = lnom.upper_t.as_ref().duped().unwrap_or_else(|| {
-                    Type::new(TypeInner::DefT(
+                    Type::new(DefT(
                         lreason.dupe(),
-                        DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
+                        DefT::new(MixedT(MixedFlavor::MixedEverything)),
                     ))
                 });
                 let upper_2 = unom.upper_t.as_ref().duped().unwrap_or_else(|| {
-                    Type::new(TypeInner::DefT(
+                    Type::new(DefT(
                         ureason.dupe(),
-                        DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
+                        DefT::new(MixedT(MixedFlavor::MixedEverything)),
                     ))
                 });
                 FlowJs::rec_unify_with_env(
@@ -3489,7 +3407,7 @@ pub fn rec_sub_t<'cx>(
         // If the type is still in the same file it was defined, we allow it to
         // expose its underlying type information
         (
-            TypeInner::NominalT {
+            NominalT {
                 nominal_type: lnom, ..
             },
             _,
@@ -3523,7 +3441,7 @@ pub fn rec_sub_t<'cx>(
         // we expose the underlying type information
         (
             _,
-            TypeInner::NominalT {
+            NominalT {
                 nominal_type: unom, ..
             },
         ) if matches!(
@@ -3554,7 +3472,7 @@ pub fn rec_sub_t<'cx>(
         }
         // Opaque type for custom error types are always fully transparent
         (
-            TypeInner::NominalT {
+            NominalT {
                 nominal_type: lnom, ..
             },
             _,
@@ -3565,7 +3483,7 @@ pub fn rec_sub_t<'cx>(
         }
         (
             _,
-            TypeInner::NominalT {
+            NominalT {
                 reason: ru,
                 nominal_type: unom,
             },
@@ -3605,10 +3523,10 @@ pub fn rec_sub_t<'cx>(
         // o as {[number]: boolean}: // OK
         // o as {[string]: boolean}: // OK
         // ```
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
+        (DefT(rl, ld), DefT(ru, ud))
             if let (
-                DefTInner::NumericStrKeyT(actual_lit),
-                DefTInner::SingletonNumT {
+                NumericStrKeyT(actual_lit),
+                SingletonNumT {
                     value: expected_lit,
                     ..
                 },
@@ -3626,10 +3544,10 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
+        (DefT(rl, ld), DefT(ru, ud))
             if let (
-                DefTInner::NumericStrKeyT(actual_lit),
-                DefTInner::SingletonStrT {
+                NumericStrKeyT(actual_lit),
+                SingletonStrT {
                     value: expected, ..
                 },
             ) = (ld.deref(), ud.deref()) =>
@@ -3646,10 +3564,10 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (_, TypeInner::DefT(r, ud)) if let DefTInner::NumericStrKeyT(num_lit) = ud.deref() => {
-            let u_new = Type::new(TypeInner::DefT(
+        (_, DefT(r, ud)) if let NumericStrKeyT(num_lit) = ud.deref() => {
+            let u_new = Type::new(DefT(
                 r.dupe(),
-                DefT::new(DefTInner::SingletonStrT {
+                DefT::new(SingletonStrT {
                     value: num_lit.1.dupe(),
                     from_annot: false,
                 }),
@@ -3680,10 +3598,10 @@ pub fn rec_sub_t<'cx>(
         // would preclude other strings to be stored in that location. Thus, by
         // necessity we allow all string types to flow to SingletonStrT (whereas only
         // exactly matching string literal types may flow to SingletonStrT).
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
+        (DefT(rl, ld), DefT(ru, ud))
             if let (
-                DefTInner::SingletonStrT { value: actual, .. },
-                DefTInner::SingletonStrT {
+                SingletonStrT { value: actual, .. },
+                SingletonStrT {
                     value: expected, ..
                 },
             ) = (ld.deref(), ud.deref()) =>
@@ -3704,9 +3622,9 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
-            if matches!(ld.deref(), DefTInner::StrGeneralT(_))
-                && matches!(ud.deref(), DefTInner::SingletonStrT { .. }) =>
+        (DefT(rl, ld), DefT(ru, ud))
+            if matches!(ld.deref(), StrGeneralT(_))
+                && matches!(ud.deref(), SingletonStrT { .. }) =>
         {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
@@ -3720,10 +3638,10 @@ pub fn rec_sub_t<'cx>(
             )?;
             Ok(())
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
+        (DefT(rl, ld), DefT(ru, ud))
             if let (
-                DefTInner::SingletonNumT { value: actual, .. },
-                DefTInner::SingletonNumT {
+                SingletonNumT { value: actual, .. },
+                SingletonNumT {
                     value: expected, ..
                 },
             ) = (ld.deref(), ud.deref()) =>
@@ -3744,9 +3662,9 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
-            if matches!(ld.deref(), DefTInner::NumGeneralT(_))
-                && matches!(ud.deref(), DefTInner::SingletonNumT { .. }) =>
+        (DefT(rl, ld), DefT(ru, ud))
+            if matches!(ld.deref(), NumGeneralT(_))
+                && matches!(ud.deref(), SingletonNumT { .. }) =>
         {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
@@ -3760,10 +3678,10 @@ pub fn rec_sub_t<'cx>(
             )?;
             Ok(())
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
+        (DefT(rl, ld), DefT(ru, ud))
             if let (
-                DefTInner::SingletonBoolT { value: actual, .. },
-                DefTInner::SingletonBoolT {
+                SingletonBoolT { value: actual, .. },
+                SingletonBoolT {
                     value: expected, ..
                 },
             ) = (ld.deref(), ud.deref()) =>
@@ -3782,9 +3700,9 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
-            if matches!(ld.deref(), DefTInner::BoolGeneralT)
-                && matches!(ud.deref(), DefTInner::SingletonBoolT { .. }) =>
+        (DefT(rl, ld), DefT(ru, ud))
+            if matches!(ld.deref(), BoolGeneralT)
+                && matches!(ud.deref(), SingletonBoolT { .. }) =>
         {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
@@ -3797,10 +3715,10 @@ pub fn rec_sub_t<'cx>(
                 })),
             )
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
+        (DefT(rl, ld), DefT(ru, ud))
             if let (
-                DefTInner::SingletonBigIntT { value: actual, .. },
-                DefTInner::SingletonBigIntT {
+                SingletonBigIntT { value: actual, .. },
+                SingletonBigIntT {
                     value: expected, ..
                 },
             ) = (ld.deref(), ud.deref()) =>
@@ -3819,9 +3737,9 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
-            if matches!(ld.deref(), DefTInner::BigIntGeneralT(_))
-                && matches!(ud.deref(), DefTInner::SingletonBigIntT { .. }) =>
+        (DefT(rl, ld), DefT(ru, ud))
+            if matches!(ld.deref(), BigIntGeneralT(_))
+                && matches!(ud.deref(), SingletonBigIntT { .. }) =>
         {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
@@ -3838,16 +3756,16 @@ pub fn rec_sub_t<'cx>(
         // **********************************
         // * unique symbol ~> unique symbol *
         // **********************************
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if let (DefTInner::UniqueSymbolT(data1), DefTInner::UniqueSymbolT(data2)) =
+        (DefT(_, ld), DefT(_, ud))
+            if let (UniqueSymbolT(data1), UniqueSymbolT(data2)) =
                 (ld.deref(), ud.deref())
                 && data1.symbol == data2.symbol =>
         {
             Ok(())
         }
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
-            if matches!(ld.deref(), DefTInner::UniqueSymbolT(_))
-                && matches!(ud.deref(), DefTInner::UniqueSymbolT(_)) =>
+        (DefT(rl, ld), DefT(ru, ud))
+            if matches!(ld.deref(), UniqueSymbolT(_))
+                && matches!(ud.deref(), UniqueSymbolT(_)) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -3855,9 +3773,9 @@ pub fn rec_sub_t<'cx>(
             )
         }
         // symbol ~> unique symbol: ERROR
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
-            if matches!(ld.deref(), DefTInner::SymbolT)
-                && matches!(ud.deref(), DefTInner::UniqueSymbolT(_)) =>
+        (DefT(rl, ld), DefT(ru, ud))
+            if matches!(ld.deref(), SymbolT)
+                && matches!(ud.deref(), UniqueSymbolT(_)) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -3867,15 +3785,15 @@ pub fn rec_sub_t<'cx>(
         // ****************************************************
         // keys
         // ****************************************************
-        (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
-            if let DefTInner::SingletonStrT { value: x, .. } = ld.deref() =>
+        (DefT(reason_s, ld), KeysT(reason_op, o))
+            if let SingletonStrT { value: x, .. } = ld.deref() =>
         {
             flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(x.dupe()))));
             // check that o has key x
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
                 type_: l.dupe(),
@@ -3884,28 +3802,28 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
                 }),
             )
         }
-        (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
-            if matches!(ld.deref(), DefTInner::UniqueSymbolT(_) | DefTInner::SymbolT) =>
+        (DefT(reason_s, ld), KeysT(reason_op, o))
+            if matches!(ld.deref(), UniqueSymbolT(_) | SymbolT) =>
         {
             // A `unique symbol` names one property, so `HasOwnPropT` can find it
             // by nominal identity. A general `symbol` names none, so it holds
             // only where an indexer accepts a symbol key.
             let desc = match ld.deref() {
-                DefTInner::UniqueSymbolT(data) => {
+                UniqueSymbolT(data) => {
                     VirtualReasonDesc::RProperty(Some(Name::symbol(data.symbol.dupe())))
                 }
                 _ => VirtualReasonDesc::RProperty(None),
             };
             let reason_next = reason_s.dupe().replace_desc_new(desc);
             // check that o has the symbol key
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
                 type_: l.dupe(),
@@ -3914,7 +3832,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
@@ -3922,21 +3840,21 @@ pub fn rec_sub_t<'cx>(
             )
         }
         (
-            TypeInner::GenericT(box GenericTData {
+            GenericT(box GenericTData {
                 reason: reason_s,
                 bound,
                 ..
             }),
-            TypeInner::KeysT(reason_op, o),
-        ) if let TypeInner::DefT(_, bd) = bound.deref()
-            && let DefTInner::SingletonStrT { value: x, .. } = bd.deref() =>
+            KeysT(reason_op, o),
+        ) if let DefT(_, bd) = bound.deref()
+            && let SingletonStrT { value: x, .. } = bd.deref() =>
         {
             flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(x.dupe()))));
             // check that o has key x
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
                 type_: l.dupe(),
@@ -3945,18 +3863,18 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
                 }),
             )
         }
-        (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
-            if matches!(ld.deref(), DefTInner::StrGeneralT(_)) =>
+        (DefT(reason_s, ld), KeysT(reason_op, o))
+            if matches!(ld.deref(), StrGeneralT(_)) =>
         {
             let reason_next = reason_s.dupe().replace_desc_new(None);
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
                 type_: l.dupe(),
@@ -3965,7 +3883,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
@@ -3973,19 +3891,19 @@ pub fn rec_sub_t<'cx>(
             )
         }
         (
-            TypeInner::GenericT(box GenericTData {
+            GenericT(box GenericTData {
                 reason: reason_s,
                 bound,
                 ..
             }),
-            TypeInner::KeysT(reason_op, o),
+            KeysT(reason_op, o),
         ) if matches!(
             bound.deref(),
-            TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::StrGeneralT(_))
+            DefT(_, d) if matches!(d.deref(), StrGeneralT(_))
         ) =>
         {
             let reason_next = reason_s.dupe().replace_desc_new(None);
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
                 type_: l.dupe(),
@@ -3994,29 +3912,29 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
                 }),
             )
         }
-        (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
-            if let DefTInner::NumericStrKeyT(num_lit) = ld.deref() =>
+        (DefT(reason_s, ld), KeysT(reason_op, o))
+            if let NumericStrKeyT(num_lit) = ld.deref() =>
         {
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(
                     num_lit.1.as_str(),
                 ))));
-            let l_new = Type::new(TypeInner::DefT(
+            let l_new = Type::new(DefT(
                 reason_s.dupe(),
-                DefT::new(DefTInner::SingletonStrT {
+                DefT::new(SingletonStrT {
                     value: num_lit.1.dupe(),
                     from_annot: false,
                 }),
             ));
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
                 type_: l_new,
@@ -4025,7 +3943,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
@@ -4033,28 +3951,28 @@ pub fn rec_sub_t<'cx>(
             )
         }
         (
-            TypeInner::GenericT(box GenericTData {
+            GenericT(box GenericTData {
                 reason: reason_s,
                 bound,
                 ..
             }),
-            TypeInner::KeysT(reason_op, o),
-        ) if let TypeInner::DefT(_, bd) = bound.deref()
-            && let DefTInner::NumericStrKeyT(num_lit) = bd.deref() =>
+            KeysT(reason_op, o),
+        ) if let DefT(_, bd) = bound.deref()
+            && let NumericStrKeyT(num_lit) = bd.deref() =>
         {
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(
                     num_lit.1.as_str(),
                 ))));
-            let l_new = Type::new(TypeInner::DefT(
+            let l_new = Type::new(DefT(
                 reason_s.dupe(),
-                DefT::new(DefTInner::SingletonStrT {
+                DefT::new(SingletonStrT {
                     value: num_lit.1.dupe(),
                     from_annot: false,
                 }),
             ));
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
                 type_: l_new,
@@ -4063,7 +3981,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
@@ -4071,21 +3989,21 @@ pub fn rec_sub_t<'cx>(
             )
         }
         (
-            TypeInner::TemplateLiteralT {
+            TemplateLiteralT {
                 reason: reason_s,
                 from_annot,
                 quasis,
                 types,
             },
-            TypeInner::KeysT(reason_op, o),
+            KeysT(reason_op, o),
         ) => {
-            let l_new = Type::new(TypeInner::TemplateLiteralT {
+            let l_new = Type::new(TemplateLiteralT {
                 reason: reason_s.dupe(),
                 from_annot: *from_annot,
                 quasis: quasis.to_vec(),
                 types: types.to_vec(),
             });
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_s.dupe(),
                 type_: l_new,
@@ -4094,7 +4012,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
@@ -4102,26 +4020,26 @@ pub fn rec_sub_t<'cx>(
             )
         }
         (
-            TypeInner::GenericT(box GenericTData {
+            GenericT(box GenericTData {
                 reason: reason_s,
                 bound,
                 ..
             }),
-            TypeInner::KeysT(reason_op, o),
-        ) if let TypeInner::TemplateLiteralT {
+            KeysT(reason_op, o),
+        ) if let TemplateLiteralT {
             from_annot,
             quasis,
             types,
             ..
         } = bound.deref() =>
         {
-            let l_new = Type::new(TypeInner::TemplateLiteralT {
+            let l_new = Type::new(TemplateLiteralT {
                 reason: reason_s.dupe(),
                 from_annot: *from_annot,
                 quasis: quasis.to_vec(),
                 types: types.to_vec(),
             });
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_s.dupe(),
                 type_: l_new,
@@ -4130,27 +4048,27 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
                 }),
             )
         }
-        (TypeInner::KeysT(_, o1), TypeInner::KeysT(_, o2))
+        (KeysT(_, o1), KeysT(_, o2))
             if flow_js_utils::is_same_non_generic_instance_annot(cx, o1, o2) =>
         {
             Ok(())
         }
-        (TypeInner::KeysT(reason1, o1), _) => {
+        (KeysT(reason1, o1), _) => {
             // flow all keys of o1 to u
             FlowJs::rec_flow_with_env(
                 cx, env,
                 trace,
                 o1,
-                &UseT::new(UseTInner::GetKeysT {
+                &UseT::new(GetKeysT {
                     reason: reason1.dupe(),
-                    t_out: Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
+                    t_out: Box::new(UseT::new(UseT(use_op, u.dupe()))),
                     include_symbols: true,
                 }),
             )
@@ -4159,7 +4077,7 @@ pub fn rec_sub_t<'cx>(
         // ********************************************
         // Using predicate functions as regular ones
         // ********************************************
-        (TypeInner::UnionT(reason, rep), _)
+        (UnionT(reason, rep), _)
             if rep.members_iter().any(flow_js_utils::is_union_resolvable) =>
         {
             flow_js_utils::iter_resolve_union(
@@ -4168,19 +4086,19 @@ pub fn rec_sub_t<'cx>(
                 &trace,
                 reason.dupe(),
                 rep,
-                UseT::new(UseTInner::UseT(use_op, u.dupe())),
+                UseT::new(UseT(use_op, u.dupe())),
             )
         }
-        (TypeInner::UnionT(_, rep), TypeInner::UnionT(_, _)) => {
+        (UnionT(_, rep), UnionT(_, _)) => {
             union_to_union(cx, env, trace, use_op, l, rep, u)
         }
         (
-            TypeInner::NominalT {
+            NominalT {
                 nominal_type: lnom, ..
             },
-            TypeInner::UnionT(_, _),
+            UnionT(_, _),
         ) if lnom.upper_t.as_ref().is_some_and(|upper| {
-            matches!(upper.deref(), TypeInner::UnionT(_, _))
+            matches!(upper.deref(), UnionT(_, _))
                 && matches!(
                     flow_js_utils::union_optimization_guard(
                         cx,
@@ -4198,9 +4116,9 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
         // Optimization to treat maybe and optional types as special unions for subset comparision
-        (TypeInner::UnionT(reason, rep), TypeInner::MaybeT(r, maybe)) => {
-            let void = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::VoidT)));
-            let null = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::NullT)));
+        (UnionT(reason, rep), MaybeT(r, maybe)) => {
+            let void = Type::new(DefT(r.dupe(), DefT::new(VoidT)));
+            let null = Type::new(DefT(r.dupe(), DefT::new(NullT)));
             let maybe = type_util::push_type_alias_reason(r, maybe.dupe());
             // if the union doesn't contain void or null,
             // then everything in it must be upper-bounded by maybe
@@ -4255,13 +4173,13 @@ pub fn rec_sub_t<'cx>(
                     cx, env,
                     &trace,
                     rep,
-                    &UseT::new(UseTInner::UseT(use_op, u.dupe())),
+                    &UseT::new(UseT(use_op, u.dupe())),
                 ),
             }
         }
         (
-            TypeInner::UnionT(reason, rep),
-            TypeInner::OptionalT {
+            UnionT(reason, rep),
+            OptionalT {
                 reason: r,
                 type_: opt,
                 use_desc: opt_use_desc,
@@ -4289,11 +4207,11 @@ pub fn rec_sub_t<'cx>(
                     cx, env,
                     &trace,
                     rep,
-                    &UseT::new(UseTInner::UseT(use_op, u.dupe())),
+                    &UseT::new(UseT(use_op, u.dupe())),
                 ),
             }
         }
-        (TypeInner::UnionT(_, _), TypeInner::IntersectionT(_, rep)) => {
+        (UnionT(_, _), IntersectionT(_, rep)) => {
             if cx.is_verbose() {
                 eprintln!("UnionT ~> IntersectionT slow case");
             }
@@ -4302,16 +4220,16 @@ pub fn rec_sub_t<'cx>(
                     cx, env,
                     trace,
                     l,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), t.dupe())),
+                    &UseT::new(UseT(use_op.dupe(), t.dupe())),
                 )?;
             }
             Ok(())
         }
-        (TypeInner::UnionT(_, rep), _) => {
+        (UnionT(_, rep), _) => {
             if cx.is_verbose() {
                 match u.deref() {
-                    TypeInner::UnionT(..) => eprintln!("UnionT ~> UnionT slow case"),
-                    TypeInner::IntersectionT(..) => {
+                    UnionT(..) => eprintln!("UnionT ~> UnionT slow case"),
+                    IntersectionT(..) => {
                         eprintln!("UnionT ~> IntersectionT slow case")
                     }
                     _ => {}
@@ -4332,7 +4250,7 @@ pub fn rec_sub_t<'cx>(
                                 cx, env,
                                 trace,
                                 representative.dupe(),
-                                UseT::new(UseTInner::UseT(use_op.dupe(), u.dupe())),
+                                UseT::new(UseT(use_op.dupe(), u.dupe())),
                             ) {
                                 Err(FlowJsException::SpeculationSingletonError) => {
                                     let use_op = flow_js_utils::union_representative_use_op(
@@ -4345,7 +4263,7 @@ pub fn rec_sub_t<'cx>(
                                         cx, env,
                                         trace,
                                         &representative,
-                                        &UseT::new(UseTInner::UseT(use_op, u.dupe())),
+                                        &UseT::new(UseT(use_op, u.dupe())),
                                     )?;
                                 }
                                 Ok(()) => {
@@ -4368,7 +4286,7 @@ pub fn rec_sub_t<'cx>(
                                                     cx, env,
                                                     &trace,
                                                     rep,
-                                                    &UseT::new(UseTInner::UseT(
+                                                    &UseT::new(UseT(
                                                         use_op.dupe(),
                                                         u.dupe(),
                                                     )),
@@ -4377,22 +4295,22 @@ pub fn rec_sub_t<'cx>(
                                             Ok(())
                                         };
                                     match u.deref() {
-                                        TypeInner::DefT(_, ud)
-                                            if let DefTInner::SingletonStrT {
+                                        DefT(_, ud)
+                                            if let SingletonStrT {
                                                 value: x, ..
                                             } = ud.deref() =>
                                         {
                                             singleton_check(cx, UnionEnum::Str(x.dupe()))?;
                                         }
-                                        TypeInner::DefT(_, ud)
-                                            if let DefTInner::SingletonBoolT {
+                                        DefT(_, ud)
+                                            if let SingletonBoolT {
                                                 value: x, ..
                                             } = ud.deref() =>
                                         {
                                             singleton_check(cx, UnionEnum::Bool(*x))?;
                                         }
-                                        TypeInner::DefT(_, ud)
-                                            if let DefTInner::SingletonNumT {
+                                        DefT(_, ud)
+                                            if let SingletonNumT {
                                                 value: x, ..
                                             } = ud.deref() =>
                                         {
@@ -4403,7 +4321,7 @@ pub fn rec_sub_t<'cx>(
                                                 cx, env,
                                                 &trace,
                                                 rep,
-                                                &UseT::new(UseTInner::UseT(use_op, u.dupe())),
+                                                &UseT::new(UseT(use_op, u.dupe())),
                                             )?;
                                         }
                                     }
@@ -4418,13 +4336,13 @@ pub fn rec_sub_t<'cx>(
                     cx, env,
                     &trace,
                     rep,
-                    &UseT::new(UseTInner::UseT(use_op, u.dupe())),
+                    &UseT::new(UseT(use_op, u.dupe())),
                 ),
             }
         }
-        (_, TypeInner::IntersectionT(_, rep)) => {
+        (_, IntersectionT(_, rep)) => {
             if cx.is_verbose() {
-                if let TypeInner::UnionT(..) = l.deref() {
+                if let UnionT(..) = l.deref() {
                     eprintln!("IntersectionT ~> UnionT slow case");
                 }
             }
@@ -4433,15 +4351,15 @@ pub fn rec_sub_t<'cx>(
                     cx, env,
                     trace,
                     l,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), t.dupe())),
+                    &UseT::new(UseT(use_op.dupe(), t.dupe())),
                 )?;
             }
             Ok(())
         }
         // String enum sets can be handled in logarithmic time by just
         // checking for membership in the set.
-        (TypeInner::DefT(reason_l, ld), TypeInner::UnionT(reason_u, rep))
-            if let DefTInner::SingletonStrT { value: x, .. } = ld.deref()
+        (DefT(reason_l, ld), UnionT(reason_u, rep))
+            if let SingletonStrT { value: x, .. } = ld.deref()
                 && {
                     if let Some(enums) = rep.check_enum() {
                         if !enums.contains(&UnionEnum::Str(x.dupe())) {
@@ -4464,7 +4382,7 @@ pub fn rec_sub_t<'cx>(
             flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             Ok(())
         }
-        (_, TypeInner::UnionT(_, rep))
+        (_, UnionT(_, rep))
             if {
                 let ts: Vec<Type> = type_mapper::union_flatten(cx, rep.members_iter().duped());
                 ts.iter().any(|t| {
@@ -4478,8 +4396,8 @@ pub fn rec_sub_t<'cx>(
         {
             Ok(())
         }
-        (TypeInner::DefT(renders_r, ld), TypeInner::UnionT(r, rep))
-            if matches!(ld.deref(), DefTInner::RendersT(_)) =>
+        (DefT(renders_r, ld), UnionT(r, rep))
+            if matches!(ld.deref(), RendersT(_)) =>
         {
             // This is a tricky case because there are multiple ways that it could pass. Either
             //  the union contains a supertype of the LHS, or the Union itself is a super type of
@@ -4529,11 +4447,11 @@ pub fn rec_sub_t<'cx>(
         // The following case distributes the opaque constructor over a union/maybe/optional
         // type in the super type position of the opaque type.
         (
-            TypeInner::NominalT {
+            NominalT {
                 reason: lreason,
                 nominal_type: lnom,
             },
-            TypeInner::UnionT(r, rep),
+            UnionT(r, rep),
         ) if lnom.upper_t.is_some() => {
             let upper_t = lnom.upper_t.as_ref().unwrap();
             let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
@@ -4548,7 +4466,7 @@ pub fn rec_sub_t<'cx>(
                 }
                 [lt1, lt2, lts @ ..] => {
                     let make_opaque = |t: Type| -> Type {
-                        Type::new(TypeInner::NominalT {
+                        Type::new(NominalT {
                             reason: lreason.dupe(),
                             nominal_type: Rc::new(NominalType::new(NominalTypeInner {
                                 nominal_id: lnom.nominal_id.clone(),
@@ -4568,19 +4486,19 @@ pub fn rec_sub_t<'cx>(
                         make_opaque(lt2.dupe()),
                         members,
                     );
-                    let union_t = Type::new(TypeInner::UnionT(lreason.dupe(), union_of_opaques));
+                    let union_t = Type::new(UnionT(lreason.dupe(), union_of_opaques));
                     FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &union_t, u)
                 }
             }
         }
-        (TypeInner::TemplateLiteralT { quasis, types, .. }, TypeInner::UnionT(_, _))
+        (TemplateLiteralT { quasis, types, .. }, UnionT(_, _))
             if template_literal_type::try_resolve_to_strings(quasis, types, true).is_some() =>
         {
             template_literal_type::subtype_template_into_union(
                 cx, env, trace, use_op, l, u, quasis, types,
             )
         }
-        (_, TypeInner::UnionT(r, rep)) => {
+        (_, UnionT(r, rep)) => {
             // Try the branches of the union in turn, with the goal of selecting the
             // correct branch. This process is reused for intersections as well. See
             // comments on try_union and try_intersection.
@@ -4596,11 +4514,11 @@ pub fn rec_sub_t<'cx>(
         // handling runs. Preserve explicit nullish upper bounds against the original
         // nullable target while retaining the stripped-target path as a fallback.
         (
-            TypeInner::NominalT {
+            NominalT {
                 reason: opaque_t_reason,
                 nominal_type: lnom,
             },
-            TypeInner::MaybeT(r2, t2),
+            MaybeT(r2, t2),
         ) if let Some(upper_t) = &lnom.upper_t
             && has_syntactic_nullish_member(upper_t) =>
         {
@@ -4615,16 +4533,16 @@ pub fn rec_sub_t<'cx>(
             }
             .flow(cx, env)
         }
-        (_, TypeInner::MaybeT(r2, t2)) => {
+        (_, MaybeT(r2, t2)) => {
             let t2 = type_util::push_type_alias_reason(r2, t2.dupe());
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t2)))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, t2)))
         }
         (
-            TypeInner::NominalT {
+            NominalT {
                 reason: opaque_t_reason,
                 nominal_type: lnom,
             },
-            TypeInner::OptionalT { type_: t2, .. },
+            OptionalT { type_: t2, .. },
         ) if let Some(upper_t) = &lnom.upper_t
             && has_syntactic_nullish_member(upper_t) =>
         {
@@ -4640,8 +4558,8 @@ pub fn rec_sub_t<'cx>(
             }
             .flow(cx, env)
         }
-        (_, TypeInner::OptionalT { type_: t2, .. }) => {
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t2.dupe())))
+        (_, OptionalT { type_: t2, .. }) => {
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, t2.dupe())))
         }
         // object types: an intersection may satisfy an object UB without
         // any particular member of the intersection doing so completely.
@@ -4653,8 +4571,8 @@ pub fn rec_sub_t<'cx>(
         //
         // Note: should be able to do this with LookupT rather than
         // slices, but that approach behaves in nonobvious ways. TODO why?
-        (TypeInner::IntersectionT(_, _), TypeInner::DefT(r, ud))
-            if let DefTInner::ObjT(obj) = ud.deref()
+        (IntersectionT(_, _), DefT(r, ud))
+            if let ObjT(obj) = ud.deref()
                 && cx.find_props(obj.props_tmap.dupe()).len() > 1
                 && obj.flags.obj_kind != ObjKind::Exact =>
         {
@@ -4680,11 +4598,11 @@ pub fn rec_sub_t<'cx>(
                     cx, env,
                     trace,
                     l,
-                    &UseT::new(UseTInner::UseT(
+                    &UseT::new(UseT(
                         use_op.dupe(),
-                        Type::new(TypeInner::DefT(
+                        Type::new(DefT(
                             r.dupe(),
-                            DefT::new(DefTInner::ObjT(Rc::new(new_obj))),
+                            DefT::new(ObjT(Rc::new(new_obj))),
                         )),
                     )),
                 )?;
@@ -4693,7 +4611,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 l,
-                &UseT::new(UseTInner::UseT(use_op, obj.proto_t.dupe())),
+                &UseT::new(UseT(use_op, obj.proto_t.dupe())),
             )
         }
 
@@ -4701,22 +4619,22 @@ pub fn rec_sub_t<'cx>(
         // in turn, with the goal of selecting the correct branch. This process is
         // reused for unions as well. See comments on try_union and
         // try_intersection.)
-        (TypeInner::IntersectionT(_, rep), _) => speculation_kit::try_intersection(
+        (IntersectionT(_, rep), _) => speculation_kit::try_intersection(
             cx, env,
             trace,
-            UseT::new(UseTInner::UseT(use_op, u.dupe())),
+            UseT::new(UseT(use_op, u.dupe())),
             l.dupe(),
             rep,
         ),
-        (TypeInner::NullProtoT(reason), _) => {
-            let null = Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::NullT)));
+        (NullProtoT(reason), _) => {
+            let null = Type::new(DefT(reason.dupe(), DefT::new(NullT)));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &null, u)
         }
 
         // Subtyping arm bodies live in template_literal_type; patterns and
         // guards stay here so dispatch order remains visible.
-        (TypeInner::DefT(_, ld), TypeInner::TemplateLiteralT { quasis, types, .. })
-            if let DefTInner::SingletonStrT { value, .. } = ld.deref() =>
+        (DefT(_, ld), TemplateLiteralT { quasis, types, .. })
+            if let SingletonStrT { value, .. } = ld.deref() =>
         {
             template_literal_type::subtype_str_lit_into_template(
                 Some(&|cx, env: &FlowJsEnv, r, t| FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)),
@@ -4736,13 +4654,13 @@ pub fn rec_sub_t<'cx>(
         // extension / suffix-extension / wide-string. Falls through to
         // subtype_template_to_other when none apply.
         (
-            TypeInner::TemplateLiteralT {
+            TemplateLiteralT {
                 reason: l_reason,
                 from_annot: l_from_annot,
                 quasis: lq,
                 types: lt,
             },
-            TypeInner::TemplateLiteralT {
+            TemplateLiteralT {
                 quasis: rq,
                 types: rt,
                 ..
@@ -4773,7 +4691,7 @@ pub fn rec_sub_t<'cx>(
             }
         },
         (
-            TypeInner::TemplateLiteralT {
+            TemplateLiteralT {
                 reason,
                 quasis,
                 types,
@@ -4793,8 +4711,8 @@ pub fn rec_sub_t<'cx>(
         //    concretization yields nothing useful, fall back to the canonical-form
         //    check: the only way a string can satisfy `Kind<arg>` for opaque `arg`
         //    is to (a) already be in canonical form for `kind` and (b) flow to `arg`.
-        (TypeInner::DefT(_, ld), TypeInner::StringMappingT { reason, kind, arg })
-            if let DefTInner::SingletonStrT { value, .. } = ld.deref() =>
+        (DefT(_, ld), StringMappingT { reason, kind, arg })
+            if let SingletonStrT { value, .. } = ld.deref() =>
         {
             flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let arg_loc = reason.loc().dupe();
@@ -4809,7 +4727,7 @@ pub fn rec_sub_t<'cx>(
                 [t] => Some(t.dupe()),
                 [t0, t1, rest @ ..] => {
                     let rest_rc: Rc<[Type]> = rest.iter().cloned().collect();
-                    Some(Type::new(TypeInner::UnionT(
+                    Some(Type::new(UnionT(
                         type_util::reason_of_t(arg).dupe(),
                         union_rep::make(
                             Some(cx.make_aloc_id(&arg_loc)),
@@ -4861,10 +4779,10 @@ pub fn rec_sub_t<'cx>(
         // StringMappingT on the left: every string the deferred form could produce
         //    is a string, so flow `string` outward. The post-inference `arg <: string`
         //    check on the original annotation guarantees this is safe.
-        (TypeInner::StringMappingT { reason, .. }, _) => {
-            let str_t = Type::new(TypeInner::DefT(
+        (StringMappingT { reason, .. }, _) => {
+            let str_t = Type::new(DefT(
                 reason.dupe(),
-                DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
+                DefT::new(StrGeneralT(Literal::AnyLiteral)),
             ));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &str_t, u)
         }
@@ -5026,9 +4944,9 @@ pub fn rec_sub_t<'cx>(
         // TODO: ideally we'd do the same when lower bounds flow to a
         // this-abstracted class, but fixing the class is easier; might need to
         // revisit
-        (_, TypeInner::DefT(class_r, ud))
-            if let DefTInner::ClassT(this_inst_t) = ud.deref()
-                && let TypeInner::ThisInstanceT(box ThisInstanceTData {
+        (_, DefT(class_r, ud))
+            if let ClassT(this_inst_t) = ud.deref()
+                && let ThisInstanceT(box ThisInstanceTData {
                     reason: inst_r,
                     instance: i,
                     is_this: this,
@@ -5044,15 +4962,15 @@ pub fn rec_sub_t<'cx>(
                 *this,
                 this_name.dupe(),
             );
-            let class_t = Type::new(TypeInner::DefT(
+            let class_t = Type::new(DefT(
                 class_r.dupe(),
-                DefT::new(DefTInner::ClassT(fixed)),
+                DefT::new(ClassT(fixed)),
             ));
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, class_t)))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, class_t)))
         }
         (
             _,
-            TypeInner::ThisInstanceT(box ThisInstanceTData {
+            ThisInstanceT(box ThisInstanceTData {
                 reason: r,
                 instance: i,
                 is_this: this,
@@ -5068,7 +4986,7 @@ pub fn rec_sub_t<'cx>(
                 *this,
                 this_name.dupe(),
             );
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, fixed)))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, fixed)))
         }
         // This rule is hit when a polymorphic type appears outside a
         // type application expression - i.e. not followed by a type argument list
@@ -5077,8 +4995,8 @@ pub fn rec_sub_t<'cx>(
         // but allow use of polymorphically-typed values - for example, in class
         // extends clauses and at function call sites - without explicit type
         // arguments, since typically they're easily inferred from context.
-        (TypeInner::DefT(reason_tapp, ld), _)
-            if let DefTInner::PolyT(box PolyTData {
+        (DefT(reason_tapp, ld), _)
+            if let PolyT(box PolyTData {
                 tparams_loc,
                 tparams: ids,
                 t_out: t,
@@ -5123,9 +5041,9 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t_, u)
         }
         // when a this-abstracted class flows to upper bounds, fix the class
-        (TypeInner::DefT(class_r, ld), _)
-            if let DefTInner::ClassT(this_inst_t) = ld.deref()
-                && let TypeInner::ThisInstanceT(box ThisInstanceTData {
+        (DefT(class_r, ld), _)
+            if let ClassT(this_inst_t) = ld.deref()
+                && let ThisInstanceT(box ThisInstanceTData {
                     reason: inst_r,
                     instance: i,
                     is_this: this,
@@ -5141,14 +5059,14 @@ pub fn rec_sub_t<'cx>(
                 *this,
                 this_name.dupe(),
             );
-            let class_t = Type::new(TypeInner::DefT(
+            let class_t = Type::new(DefT(
                 class_r.dupe(),
-                DefT::new(DefTInner::ClassT(fixed)),
+                DefT::new(ClassT(fixed)),
             ));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &class_t, u)
         }
         (
-            TypeInner::ThisInstanceT(box ThisInstanceTData {
+            ThisInstanceT(box ThisInstanceTData {
                 reason: r,
                 instance: i,
                 is_this: this,
@@ -5202,9 +5120,9 @@ pub fn rec_sub_t<'cx>(
         //
 
         // Class component ~> AbstractComponent
-        (TypeInner::DefT(reasonl, ld), TypeInner::DefT(_, ud))
-            if let DefTInner::ClassT(this) = ld.deref()
-                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+        (DefT(reasonl, ld), DefT(_, ud))
+            if let ClassT(this) = ld.deref()
+                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config,
                     renders,
                     component_kind: ComponentKind::Structural,
@@ -5227,9 +5145,9 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
         // Function Component ~> AbstractComponent
-        (TypeInner::DefT(reasonl, ld), TypeInner::DefT(_reasonu, ud))
-            if let DefTInner::FunT(_, ft) = ld.deref()
-                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+        (DefT(reasonl, ld), DefT(_reasonu, ud))
+            if let FunT(_, ft) = ld.deref()
+                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config,
                     renders,
                     component_kind: ComponentKind::Structural,
@@ -5248,7 +5166,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 l,
-                &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                &UseT::new(ReactKitT(Box::new(ReactKitTData {
                     use_op: use_op.dupe(),
                     reason: reasonl.dupe(),
                     tool: Box::new(react::Tool::<Cx>::ConfigCheck {
@@ -5261,10 +5179,10 @@ pub fn rec_sub_t<'cx>(
         }
 
         // Object Component ~> AbstractComponent
-        (TypeInner::DefT(reasonl, ld), TypeInner::DefT(reasonu, ud))
-            if let DefTInner::ObjT(obj) = ld.deref()
+        (DefT(reasonl, ld), DefT(reasonu, ud))
+            if let ObjT(obj) = ld.deref()
                 && let Some(call_t) = &obj.call_t
-                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config,
                     renders,
                     component_kind: ComponentKind::Structural,
@@ -5274,7 +5192,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 l,
-                &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                &UseT::new(ReactKitT(Box::new(ReactKitTData {
                     use_op: use_op.dupe(),
                     reason: reasonl.dupe(),
                     tool: Box::new(react::Tool::<Cx>::ConfigCheck {
@@ -5302,20 +5220,20 @@ pub fn rec_sub_t<'cx>(
             );
             let mixed = mixed_t::why(reasonu.dupe());
             let call_t = cx.find_call(*call_t);
-            let fun_t = Type::new(TypeInner::DefT(
+            let fun_t = Type::new(DefT(
                 reasonu.dupe(),
-                DefT::new(DefTInner::FunT(mixed, Rc::new(funtype))),
+                DefT::new(FunT(mixed, Rc::new(funtype))),
             ));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &call_t, &fun_t)
         }
         // AbstractComponent ~> AbstractComponent
-        (TypeInner::DefT(reasonl, ld), TypeInner::DefT(_reasonu, ud))
-            if let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+        (DefT(reasonl, ld), DefT(_reasonu, ud))
+            if let ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config: configl,
                 renders: rendersl,
                 component_kind,
             }) = ld.deref()
-                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config: configu,
                     renders: rendersu,
                     component_kind: ComponentKind::Structural,
@@ -5328,9 +5246,9 @@ pub fn rec_sub_t<'cx>(
                         name_opt: Some(Name::new(renders_name.dupe())),
                         from_component_syntax: true,
                     });
-                    Type::new(TypeInner::DefT(
+                    Type::new(DefT(
                         reason,
-                        DefT::new(DefTInner::RendersT(Rc::new(
+                        DefT::new(RendersT(Rc::new(
                             CanonicalRendersForm::NominalRenders {
                                 renders_id: renders_id.dupe(),
                                 renders_name: renders_name.dupe(),
@@ -5347,14 +5265,14 @@ pub fn rec_sub_t<'cx>(
             );
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &rendersl, rendersu)
         }
-        (TypeInner::DefT(_reasonl, ld), TypeInner::DefT(_reasonu, ud))
-            if let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+        (DefT(_reasonl, ld), DefT(_reasonu, ud))
+            if let ReactAbstractComponentT(box ReactAbstractComponentTData {
                 component_kind: ComponentKind::Nominal(idl, name_l, _),
                 config: configl,
                 renders: rendersl,
                 ..
             }) = ld.deref()
-                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+                && let ReactAbstractComponentT(box ReactAbstractComponentTData {
                     component_kind: ComponentKind::Nominal(idu, name_u, _),
                     config: configu,
                     renders: rendersu,
@@ -5375,22 +5293,22 @@ pub fn rec_sub_t<'cx>(
             );
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, rendersl, rendersu)
         }
-        (TypeInner::DefT(reasonl, ld), TypeInner::DefT(reasonu, ud))
-            if let DefTInner::RendersT(r1) = ld.deref()
-                && let DefTInner::RendersT(r2) = ud.deref() =>
+        (DefT(reasonl, ld), DefT(reasonu, ud))
+            if let RendersT(r1) = ld.deref()
+                && let RendersT(r2) = ud.deref() =>
         {
             renders_kit::rec_renders_to_renders(cx, env, trace, use_op, (reasonl, r1), (reasonu, r2))
         }
-        (_, TypeInner::DefT(renders_r, ud))
-            if let DefTInner::RendersT(upper_renders) = ud.deref() =>
+        (_, DefT(renders_r, ud))
+            if let RendersT(upper_renders) = ud.deref() =>
         {
             renders_kit::non_renders_to_renders(cx, env, trace, use_op, l, renders_r, upper_renders)
         }
         // Exiting the renders world
-        (TypeInner::DefT(r, ld), _)
+        (DefT(r, ld), _)
             if matches!(
                 ld.deref(),
-                DefTInner::RendersT(renders)
+                RendersT(renders)
                     if matches!(renders.deref(), CanonicalRendersForm::IntrinsicRenders(_) | CanonicalRendersForm::NominalRenders { .. })
             ) =>
         {
@@ -5403,28 +5321,28 @@ pub fn rec_sub_t<'cx>(
             )?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &mixed_element, u)
         }
-        (TypeInner::DefT(r, ld), _)
-            if let DefTInner::RendersT(renders) = ld.deref()
+        (DefT(r, ld), _)
+            if let RendersT(renders) = ld.deref()
                 && let CanonicalRendersForm::StructuralRenders {
                     renders_structural_type: t,
                     ..
                 } = renders.deref() =>
         {
-            let u_prime = UseT::new(UseTInner::ExitRendersT {
+            let u_prime = UseT::new(ExitRendersT {
                 renders_reason: r.dupe(),
-                u: Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
+                u: Box::new(UseT::new(UseT(use_op, u.dupe()))),
             });
             FlowJs::rec_flow_with_env(cx, env, trace, t, &u_prime)
         }
-        (TypeInner::DefT(r, ld), _)
+        (DefT(r, ld), _)
             if matches!(
                 ld.deref(),
-                DefTInner::RendersT(renders) if matches!(renders.deref(), CanonicalRendersForm::DefaultRenders)
+                RendersT(renders) if matches!(renders.deref(), CanonicalRendersForm::DefaultRenders)
             ) =>
         {
-            let u_prime = UseT::new(UseTInner::ExitRendersT {
+            let u_prime = UseT::new(ExitRendersT {
                 renders_reason: r.dupe(),
-                u: Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
+                u: Box::new(UseT::new(UseT(use_op, u.dupe()))),
             });
             FlowJs::rec_flow_with_env(cx, env, trace, l, &u_prime)
         }
@@ -5434,8 +5352,8 @@ pub fn rec_sub_t<'cx>(
         // ***********************************************
 
         // FunT ~> FunT
-        (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-            if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
+        (DefT(lreason, ld), DefT(ureason, ud))
+            if let (FunT(_, ft1), FunT(_, ft2)) =
                 (ld.deref(), ud.deref()) =>
         {
             funt_to_funt_check(
@@ -5460,13 +5378,13 @@ pub fn rec_sub_t<'cx>(
         }
 
         // unwrap namespace type into object type, drop all information about types in the namespace
-        (TypeInner::NamespaceT(ns), _) => FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &ns.values_type, u),
-        (_, TypeInner::NamespaceT(ns)) => FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &ns.values_type),
+        (NamespaceT(ns), _) => FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &ns.values_type, u),
+        (_, NamespaceT(ns)) => FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &ns.values_type),
 
         // ObjT -> ObjT
-        (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-            if let DefTInner::ObjT(l_obj) = ld.deref()
-                && let DefTInner::ObjT(u_obj) = ud.deref() =>
+        (DefT(lreason, ld), DefT(ureason, ud))
+            if let ObjT(l_obj) = ld.deref()
+                && let ObjT(u_obj) = ud.deref() =>
         {
             let u_deft = u;
             type_inference_hooks_js::dispatch_obj_to_obj_hook(l, u_deft);
@@ -5483,19 +5401,19 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (TypeInner::DefT(_, ld), TypeInner::NullProtoT(_))
-            if matches!(ld.deref(), DefTInner::ObjT(_)) =>
+        (DefT(_, ld), NullProtoT(_))
+            if matches!(ld.deref(), ObjT(_)) =>
         {
             Ok(())
         }
         // InstanceT -> ObjT
-        (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-            if let DefTInner::InstanceT(inst) = ld.deref()
+        (DefT(lreason, ld), DefT(ureason, ud))
+            if let InstanceT(inst) = ld.deref()
                 && matches!(
                     inst.inst.inst_kind,
                     InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }
                 )
-                && let DefTInner::ObjT(obj) = ud.deref()
+                && let ObjT(obj) = ud.deref()
                 && obj.flags.obj_kind == ObjKind::Exact
                 && !inst
                     .inst
@@ -5519,9 +5437,9 @@ pub fn rec_sub_t<'cx>(
             )?;
             Ok(())
         }
-        (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-            if let DefTInner::InstanceT(inst_t) = ld.deref()
-                && let DefTInner::ObjT(u_obj) = ud.deref() =>
+        (DefT(lreason, ld), DefT(ureason, ud))
+            if let InstanceT(inst_t) = ld.deref()
+                && let ObjT(u_obj) = ud.deref() =>
         {
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
@@ -5578,7 +5496,7 @@ pub fn rec_sub_t<'cx>(
                             cx, env,
                             trace,
                             &cx.find_call(lcall),
-                            &UseT::new(UseTInner::UseT(use_op.dupe(), cx.find_call(ucall))),
+                            &UseT::new(UseT(use_op.dupe(), cx.find_call(ucall))),
                         )?;
                     }
                     None => {
@@ -5660,7 +5578,7 @@ pub fn rec_sub_t<'cx>(
                             let optional = matches!(
                                 up.deref(),
                                 PropertyInner::Field(fd)
-                                    if matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
+                                    if matches!(fd.type_.deref(), OptionalT { .. })
                             );
                             if !optional && strictness_kind.is_typescript_loose() {
                                 missing_props.push((propref.clone(), up.dupe()));
@@ -5677,10 +5595,10 @@ pub fn rec_sub_t<'cx>(
                                 cx, env,
                                 trace,
                                 super_,
-                                &UseT::new(UseTInner::ReposLowerT {
+                                &UseT::new(ReposLowerT {
                                     reason: lreason.dupe(),
                                     use_desc: false,
-                                    use_t: Box::new(UseT::new(UseTInner::LookupT(Box::new(
+                                    use_t: Box::new(UseT::new(LookupT(Box::new(
                                         LookupTData {
                                             reason: ureason.dupe(),
                                             lookup_kind: Box::new(lookup_kind),
@@ -5721,10 +5639,10 @@ pub fn rec_sub_t<'cx>(
                     cx, env,
                     trace,
                     super_,
-                    &UseT::new(UseTInner::ReposLowerT {
+                    &UseT::new(ReposLowerT {
                         reason: lreason.dupe(),
                         use_desc: false,
-                        use_t: Box::new(UseT::new(UseTInner::LookupT(Box::new(LookupTData {
+                        use_t: Box::new(UseT::new(LookupT(Box::new(LookupTData {
                             reason: ureason.dupe(),
                             lookup_kind: Box::new(LookupKind::Strict(l.dupe())),
                             indexer_fallback: None,
@@ -5758,18 +5676,18 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 l,
-                &UseT::new(UseTInner::UseT(use_op, uproto.dupe())),
+                &UseT::new(UseT(use_op, uproto.dupe())),
             )
         }
         // If passing in an object literal where a record is expected,
         // provide an additional explanation.
-        (TypeInner::DefT(lreason, ld), TypeInner::DefT(_, ud))
-            if matches!(ld.deref(), DefTInner::ObjT(_))
+        (DefT(lreason, ld), DefT(_, ud))
+            if matches!(ld.deref(), ObjT(_))
                 && matches!(
                     lreason.desc(true),
                     Some(VirtualReasonDesc::RObjectLit)
                 )
-                && let DefTInner::InstanceT(inst) = ud.deref()
+                && let InstanceT(inst) = ud.deref()
                 && matches!(inst.inst.inst_kind, InstanceKind::RecordKind { .. })
                 && let Some(record_name) = &inst.inst.class_name =>
         {
@@ -5792,10 +5710,10 @@ pub fn rec_sub_t<'cx>(
         // For some object `x` and constructor `C`, if `x instanceof C`, then the
         // object is a subtype. We use `ExtendsUseT` to walk the proto chain of the
         // object, in case it includes a nominal type.
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if let DefTInner::InstanceT(inst) = ud.deref()
-                && (matches!(ld.deref(), DefTInner::ObjT(_))
-                    || (matches!(ld.deref(), DefTInner::ClassT(_))
+        (DefT(_, ld), DefT(_, ud))
+            if let InstanceT(inst) = ud.deref()
+                && (matches!(ld.deref(), ObjT(_))
+                    || (matches!(ld.deref(), ClassT(_))
                         && matches!(inst.inst.inst_kind, InstanceKind::ClassKind))) =>
         {
             FlowJs::rec_flow_with_env(
@@ -5809,19 +5727,19 @@ pub fn rec_sub_t<'cx>(
         // ****************************************
         // You can cast an object to a function
         // ****************************************
-        (TypeInner::DefT(reason, ld), TypeInner::DefT(reason_op, ud))
-            if matches!(ld.deref(), DefTInner::ObjT(_) | DefTInner::InstanceT(_))
-                && matches!(ud.deref(), DefTInner::FunT(_, _)) =>
+        (DefT(reason, ld), DefT(reason_op, ud))
+            if matches!(ld.deref(), ObjT(_) | InstanceT(_))
+                && matches!(ud.deref(), FunT(_, _)) =>
         {
             let fun_t = match l.deref() {
-                TypeInner::DefT(_, ld2)
-                    if let DefTInner::ObjT(obj) = ld2.deref()
+                DefT(_, ld2)
+                    if let ObjT(obj) = ld2.deref()
                         && let Some(call_t) = &obj.call_t =>
                 {
                     cx.find_call(*call_t)
                 }
-                TypeInner::DefT(_, ld2)
-                    if let DefTInner::InstanceT(inst) = ld2.deref()
+                DefT(_, ld2)
+                    if let InstanceT(inst) = ld2.deref()
                         && let Some(call_t) = &inst.inst.inst_call_t =>
                 {
                     cx.find_call(*call_t)
@@ -5849,9 +5767,9 @@ pub fn rec_sub_t<'cx>(
         // ********************************************
         // array types deconstruct into their parts
         // ********************************************
-        (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
-            if let DefTInner::ArrT(arr1) = ld.deref()
-                && let DefTInner::ArrT(arr2) = ud.deref()
+        (DefT(r1, ld), DefT(r2, ud))
+            if let ArrT(arr1) = ld.deref()
+                && let ArrT(arr2) = ud.deref()
                 && let (
                     ArrType::ArrayAT(box ArrayATData {
                         elem_t: t1,
@@ -5903,9 +5821,9 @@ pub fn rec_sub_t<'cx>(
             )
         }
         // Tuples can flow to tuples with the same arity
-        (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
-            if let DefTInner::ArrT(arr1) = ld.deref()
-                && let DefTInner::ArrT(arr2) = ud.deref()
+        (DefT(r1, ld), DefT(r2, ud))
+            if let ArrT(arr1) = ld.deref()
+                && let ArrT(arr2) = ud.deref()
                 && let (
                     ArrType::TupleAT(box TupleATData {
                         elements: elements1,
@@ -6003,7 +5921,7 @@ pub fn rec_sub_t<'cx>(
                     let t2_inner = if !optional1 {
                         if let (
                             true,
-                            TypeInner::OptionalT {
+                            OptionalT {
                                 type_: inner_t2, ..
                             },
                         ) = (optional2, t2.deref())
@@ -6119,9 +6037,9 @@ pub fn rec_sub_t<'cx>(
         }
 
         // TypeScript treats mutable arrays covariantly, including tuples used as arrays.
-        (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
-            if let DefTInner::ArrT(arr1) = ld.deref()
-                && let DefTInner::ArrT(arr2) = ud.deref()
+        (DefT(r1, ld), DefT(r2, ud))
+            if let ArrT(arr1) = ld.deref()
+                && let ArrT(arr2) = ud.deref()
                 && let ArrType::TupleAT(box TupleATData {
                     elem_t: t1,
                     strictness_kind: strictness_kind1,
@@ -6147,15 +6065,15 @@ pub fn rec_sub_t<'cx>(
         }
 
         // Arrays with known elements can flow to tuples
-        (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
-            if let DefTInner::ArrT(arr1) = ld.deref()
+        (DefT(r1, ld), DefT(r2, ud))
+            if let ArrT(arr1) = ld.deref()
                 && let ArrType::ArrayAT(box ArrayATData {
                     elem_t: t1,
                     tuple_view,
                     react_dro,
                     ..
                 }) = arr1.as_ref()
-                && let DefTInner::ArrT(arr2) = ud.deref()
+                && let ArrT(arr2) = ud.deref()
                 && let ArrType::TupleAT(box TupleATData {
                     strictness_kind, ..
                 }) = arr2.as_ref() =>
@@ -6174,9 +6092,9 @@ pub fn rec_sub_t<'cx>(
                     )?;
                 }
                 Some(tv) => {
-                    let tuple_t = Type::new(TypeInner::DefT(
+                    let tuple_t = Type::new(DefT(
                         r1.dupe(),
-                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                        DefT::new(ArrT(Rc::new(ArrType::TupleAT(Box::new(
                             TupleATData {
                                 elem_t: t1.dupe(),
                                 elements: tv.elements.dupe(),
@@ -6197,9 +6115,9 @@ pub fn rec_sub_t<'cx>(
         }
 
         // Read only arrays are the super type of all tuples and arrays
-        (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
-            if let DefTInner::ArrT(arr1) = ld.deref()
-                && let DefTInner::ArrT(arr2) = ud.deref()
+        (DefT(r1, ld), DefT(r2, ud))
+            if let ArrT(arr1) = ld.deref()
+                && let ArrT(arr2) = ud.deref()
                 && let ArrType::ROArrayAT(box ROArrayATData { elem_t: t2, .. }) = arr2.as_ref() =>
         {
             let t1 = match arr1.as_ref() {
@@ -6218,20 +6136,20 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 t1,
-                &UseT::new(UseTInner::UseT(use_op, t2.dupe())),
+                &UseT::new(UseT(use_op, t2.dupe())),
             )
         }
-        (TypeInner::DefT(_, ld), TypeInner::DefT(r2, ud))
-            if matches!(ld.deref(), DefTInner::InstanceT(_))
-                && let DefTInner::ArrT(arr2) = ud.deref()
+        (DefT(_, ld), DefT(r2, ud))
+            if matches!(ld.deref(), InstanceT(_))
+                && let ArrT(arr2) = ud.deref()
                 && let ArrType::ArrayAT(box ArrayATData { elem_t, .. }) = arr2.as_ref() =>
         {
             let arrt = FlowJs::get_builtin_typeapp_with_env(cx, env, r2, None, "Array", vec![elem_t.dupe()]);
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, arrt)))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, arrt)))
         }
-        (TypeInner::DefT(_, ld), TypeInner::DefT(r2, ud))
-            if matches!(ld.deref(), DefTInner::InstanceT(_))
-                && let DefTInner::ArrT(arr2) = ud.deref()
+        (DefT(_, ld), DefT(r2, ud))
+            if matches!(ld.deref(), InstanceT(_))
+                && let ArrT(arr2) = ud.deref()
                 && let ArrType::ROArrayAT(box ROArrayATData { elem_t: elemt, .. }) = arr2.as_ref() =>
         {
             let arrt = FlowJs::get_builtin_typeapp_with_env(
@@ -6242,15 +6160,15 @@ pub fn rec_sub_t<'cx>(
                 "ReadonlyArray",
                 vec![elemt.dupe()],
             );
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, arrt)))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, arrt)))
         }
 
         // **************************************************
         // instances of classes follow declared hierarchy
         // **************************************************
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if matches!(ld.deref(), DefTInner::InstanceT(_))
-                && matches!(ud.deref(), DefTInner::InstanceT(_)) =>
+        (DefT(_, ld), DefT(_, ud))
+            if matches!(ld.deref(), InstanceT(_))
+                && matches!(ud.deref(), InstanceT(_)) =>
         {
             FlowJs::rec_flow_with_env(
                 cx, env,
@@ -6263,8 +6181,8 @@ pub fn rec_sub_t<'cx>(
         // ********************************************************
         // runtime types derive static types through annotation
         // ********************************************************
-        (TypeInner::DefT(rl, ld), TypeInner::DefT(_, ud))
-            if let (DefTInner::ClassT(l_inner), DefTInner::ClassT(u_inner)) =
+        (DefT(rl, ld), DefT(_, ud))
+            if let (ClassT(l_inner), ClassT(u_inner)) =
                 (ld.deref(), ud.deref()) =>
         {
             let repositioned = FlowJs::reposition_with_env(
@@ -6279,14 +6197,14 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 &repositioned,
-                &UseT::new(UseTInner::UseT(use_op, u_inner.dupe())),
+                &UseT::new(UseT(use_op, u_inner.dupe())),
             )
         }
 
-        (TypeInner::DefT(reason_l, ld), TypeInner::DefT(reason_u, ud))
-            if let DefTInner::InstanceT(instance) = ld.deref()
+        (DefT(reason_l, ld), DefT(reason_u, ud))
+            if let InstanceT(instance) = ld.deref()
                 && matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. })
-                && let DefTInner::ClassT(class_instance) = ud.deref() =>
+                && let ClassT(class_instance) = ud.deref() =>
         {
             let concretize = |cx: &mut Context<'_>, t: &Type| {
                 FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, type_util::reason_of_t(t), t)
@@ -6313,9 +6231,9 @@ pub fn rec_sub_t<'cx>(
                         None,
                         class_instance.dupe(),
                     );
-                    let target = Type::new(TypeInner::DefT(
+                    let target = Type::new(DefT(
                         reason_u.dupe(),
-                        DefT::new(DefTInner::FunT(
+                        DefT::new(FunT(
                             mixed_t::why(reason_u.dupe()),
                             Rc::new(target),
                         )),
@@ -6344,13 +6262,13 @@ pub fn rec_sub_t<'cx>(
         // ***********************************************
         // You can use a function as a callable object
         // ***********************************************
-        (TypeInner::DefT(_, ld), TypeInner::DefT(reason, ud))
-            if matches!(ld.deref(), DefTInner::FunT(_, _))
-                && let DefTInner::ObjT(o) = ud.deref()
+        (DefT(_, ld), DefT(reason, ud))
+            if matches!(ld.deref(), FunT(_, _))
+                && let ObjT(o) = ud.deref()
                 && let Some(call_t) = &o.call_t =>
         {
             let t = cx.find_call(*call_t);
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op.dupe(), t)))?;
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op.dupe(), t)))?;
             let new_obj = ObjType {
                 flags: o.flags.clone(),
                 props_tmap: o.props_tmap.dupe(),
@@ -6360,20 +6278,20 @@ pub fn rec_sub_t<'cx>(
                 strictness_kind: o.strictness_kind,
                 literal: o.literal,
             };
-            let obj_t = Type::new(TypeInner::DefT(
+            let obj_t = Type::new(DefT(
                 reason.dupe(),
-                DefT::new(DefTInner::ObjT(Rc::new(new_obj))),
+                DefT::new(ObjT(Rc::new(new_obj))),
             ));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &obj_t)
         }
 
-        (TypeInner::DefT(_, ld), TypeInner::DefT(reason, ud))
-            if matches!(ld.deref(), DefTInner::FunT(_, _))
-                && let DefTInner::InstanceT(inst_t) = ud.deref()
+        (DefT(_, ld), DefT(reason, ud))
+            if matches!(ld.deref(), FunT(_, _))
+                && let InstanceT(inst_t) = ud.deref()
                 && let Some(call_t) = &inst_t.inst.inst_call_t =>
         {
             let t = cx.find_call(*call_t);
-            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op.dupe(), t)))?;
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op.dupe(), t)))?;
             let inst_type = {
                 let mut new_inst_inner: InstTypeInner = inst_t.inst.deref().clone();
                 new_inst_inner.inst_call_t = None;
@@ -6383,9 +6301,9 @@ pub fn rec_sub_t<'cx>(
                     super_: inst_t.super_.dupe(),
                     implements: inst_t.implements.clone(),
                 });
-                Type::new(TypeInner::DefT(
+                Type::new(DefT(
                     reason.dupe(),
-                    DefT::new(DefTInner::InstanceT(Rc::new(new_instance_t))),
+                    DefT::new(InstanceT(Rc::new(new_instance_t))),
                 ))
             };
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &inst_type)
@@ -6400,9 +6318,9 @@ pub fn rec_sub_t<'cx>(
         // Now that call properties are stored separately, it is particularly
         // egregious to emit this constraint. This only serves to maintain buggy
         // behavior, which should be fixed, and this code removed.
-        (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-            if let DefTInner::FunT(_, fun) = ld.deref()
-                && let DefTInner::ObjT(obj) = ud.deref()
+        (DefT(lreason, ld), DefT(ureason, ud))
+            if let FunT(_, fun) = ld.deref()
+                && let ObjT(obj) = ud.deref()
                 && matches!(obj.flags.obj_kind, ObjKind::Exact | ObjKind::Indexed(_))
                 && (!fun
                     .strictness_kind
@@ -6478,8 +6396,8 @@ pub fn rec_sub_t<'cx>(
         // the union type contains both a function type and a object type as
         // members, clearly intending for function types to match the former
         // instead of the latter.
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if let (DefTInner::FunT(statics, _), DefTInner::ObjT(obj)) =
+        (DefT(_, ld), DefT(_, ud))
+            if let (FunT(statics, _), ObjT(obj)) =
                 (ld.deref(), ud.deref()) =>
         {
             if !flow_js_utils::quick_error_fun_as_obj(
@@ -6496,8 +6414,8 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
         // TODO: similar concern as above
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if let (DefTInner::FunT(statics, _), DefTInner::InstanceT(inst_t)) =
+        (DefT(_, ld), DefT(_, ud))
+            if let (FunT(statics, _), InstanceT(inst_t)) =
                 (ld.deref(), ud.deref())
                 && matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
@@ -6517,9 +6435,9 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
 
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if let DefTInner::FunT(statics, _) = ld.deref()
-                && matches!(ud.deref(), DefTInner::InstanceT(_)) =>
+        (DefT(_, ld), DefT(_, ud))
+            if let FunT(statics, _) = ld.deref()
+                && matches!(ud.deref(), InstanceT(_)) =>
         {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, statics, u)
         }
@@ -6527,64 +6445,64 @@ pub fn rec_sub_t<'cx>(
         // ***************************************************
         // classes and arrays can implement some interface
         // ***************************************************
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if matches!(ld.deref(), DefTInner::ClassT(_) | DefTInner::ArrT(_))
-                && matches!(ud.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
+        (DefT(_, ld), DefT(_, ud))
+            if matches!(ld.deref(), ClassT(_) | ArrT(_))
+                && matches!(ud.deref(), InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
         {
             FlowJs::rec_flow_with_env(
                 cx, env,
                 trace,
                 u,
-                &UseT::new(UseTInner::ImplementsT(use_op, l.dupe())),
+                &UseT::new(ImplementsT(use_op, l.dupe())),
             )
         }
-        (TypeInner::DefT(reason, ld), TypeInner::DefT(_, ud))
+        (DefT(reason, ld), DefT(_, ud))
             if matches!(
                 ld.deref(),
-                DefTInner::BoolGeneralT
-                    | DefTInner::SingletonBoolT { .. }
-                    | DefTInner::NumGeneralT(_)
-                    | DefTInner::SingletonNumT { .. }
-                    | DefTInner::StrGeneralT(_)
-                    | DefTInner::SingletonStrT { .. }
-                    | DefTInner::BigIntGeneralT(_)
-                    | DefTInner::SingletonBigIntT { .. }
-                    | DefTInner::SymbolT
-                    | DefTInner::UniqueSymbolT(_)
+                BoolGeneralT
+                    | SingletonBoolT { .. }
+                    | NumGeneralT(_)
+                    | SingletonNumT { .. }
+                    | StrGeneralT(_)
+                    | SingletonStrT { .. }
+                    | BigIntGeneralT(_)
+                    | SingletonBigIntT { .. }
+                    | SymbolT
+                    | UniqueSymbolT(_)
             ) && (matches!(
                 ud.deref(),
-                DefTInner::InstanceT(inst)
+                InstanceT(inst)
                     if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { reject_primitives: false, .. })
                         && inst.inst.strictness_kind.is_typescript_loose()
-            ) || matches!(ud.deref(), DefTInner::ObjT(obj) if obj.strictness_kind.is_typescript_loose())) =>
+            ) || matches!(ud.deref(), ObjT(obj) if obj.strictness_kind.is_typescript_loose())) =>
         {
             let builtin_name = match l.deref() {
-                TypeInner::DefT(_, ld)
+                DefT(_, ld)
                     if matches!(
                         ld.deref(),
-                        DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. }
+                        BoolGeneralT | SingletonBoolT { .. }
                     ) =>
                 {
                     "Boolean"
                 }
-                TypeInner::DefT(_, ld)
+                DefT(_, ld)
                     if matches!(
                         ld.deref(),
-                        DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
+                        NumGeneralT(_) | SingletonNumT { .. }
                     ) =>
                 {
                     "Number"
                 }
-                TypeInner::DefT(_, ld)
+                DefT(_, ld)
                     if matches!(
                         ld.deref(),
-                        DefTInner::BigIntGeneralT(_) | DefTInner::SingletonBigIntT { .. }
+                        BigIntGeneralT(_) | SingletonBigIntT { .. }
                     ) =>
                 {
                     "BigInt"
                 }
-                TypeInner::DefT(_, ld)
-                    if matches!(ld.deref(), DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)) =>
+                DefT(_, ld)
+                    if matches!(ld.deref(), SymbolT | UniqueSymbolT(_)) =>
                 {
                     "Symbol"
                 }
@@ -6593,11 +6511,11 @@ pub fn rec_sub_t<'cx>(
             let builtin = FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, None, builtin_name)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &builtin, u)
         }
-        (TypeInner::DefT(reason, ld), TypeInner::DefT(interface_reason, ud))
+        (DefT(reason, ld), DefT(interface_reason, ud))
             if matches!(
                 ld.deref(),
-                DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. }
-            ) && matches!(ud.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
+                BoolGeneralT | SingletonBoolT { .. }
+            ) && matches!(ud.deref(), InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -6612,11 +6530,11 @@ pub fn rec_sub_t<'cx>(
                 })),
             )
         }
-        (TypeInner::DefT(reason, ld), TypeInner::DefT(interface_reason, ud))
+        (DefT(reason, ld), DefT(interface_reason, ud))
             if matches!(
                 ld.deref(),
-                DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
-            ) && matches!(ud.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
+                NumGeneralT(_) | SingletonNumT { .. }
+            ) && matches!(ud.deref(), InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -6631,11 +6549,11 @@ pub fn rec_sub_t<'cx>(
                 })),
             )
         }
-        (TypeInner::DefT(reason, ld), TypeInner::DefT(interface_reason, ud))
+        (DefT(reason, ld), DefT(interface_reason, ud))
             if matches!(
                 ld.deref(),
-                DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
-            ) && matches!(ud.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
+                StrGeneralT(_) | SingletonStrT { .. }
+            ) && matches!(ud.deref(), InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -6658,11 +6576,11 @@ pub fn rec_sub_t<'cx>(
         // When both bounds are available, we need to do a speculative check, since only one of them
         // needs to pass.
         (
-            TypeInner::NominalT {
+            NominalT {
                 reason: opaque_l_reason,
                 nominal_type: lnom,
             },
-            TypeInner::NominalT {
+            NominalT {
                 reason: opaque_u_reason,
                 nominal_type: unom,
             },
@@ -6705,7 +6623,7 @@ pub fn rec_sub_t<'cx>(
         }
         // Opaque types may be treated as their upper bound when they are a lower bound for a use
         (
-            TypeInner::NominalT {
+            NominalT {
                 reason: opaque_t_reason,
                 nominal_type: lnom,
             },
@@ -6724,12 +6642,12 @@ pub fn rec_sub_t<'cx>(
         // `upper_t` and the upper bound has a `lower_t`.
         // We need to do the same for GenericT.
         (
-            TypeInner::GenericT(box GenericTData {
+            GenericT(box GenericTData {
                 reason,
                 bound: lower_upper,
                 ..
             }),
-            TypeInner::NominalT {
+            NominalT {
                 reason: opaque_u_reason,
                 nominal_type: unom,
             },
@@ -6775,7 +6693,7 @@ pub fn rec_sub_t<'cx>(
         // Opaque types may be treated as their lower bound when they are a upper bound for a use
         (
             _,
-            TypeInner::NominalT {
+            NominalT {
                 reason: opaque_t_reason,
                 nominal_type: unom,
             },
@@ -6792,17 +6710,17 @@ pub fn rec_sub_t<'cx>(
         // *********************
         // functions statics
         // *********************
-        (TypeInner::DefT(reason, ld), TypeInner::AnyT(_, _))
-            if let DefTInner::FunT(static_, _) = ld.deref() =>
+        (DefT(reason, ld), AnyT(_, _))
+            if let FunT(static_, _) = ld.deref() =>
         {
             FlowJs::rec_flow_with_env(
                 cx, env,
                 trace,
                 static_,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason.dupe(),
                     use_desc: false,
-                    use_t: Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
+                    use_t: Box::new(UseT::new(UseT(use_op, u.dupe()))),
                 }),
             )
         }
@@ -6810,17 +6728,17 @@ pub fn rec_sub_t<'cx>(
         // *****************
         // class statics
         // *****************
-        (TypeInner::DefT(reason, ld), _)
-            if let DefTInner::ClassT(instance) = ld.deref()
+        (DefT(reason, ld), _)
+            if let ClassT(instance) = ld.deref()
                 && (matches!(
                     u.deref(),
-                    TypeInner::DefT(_, ud) if matches!(ud.deref(), DefTInner::ObjT(_))
-                ) || matches!(u.deref(), TypeInner::AnyT(_, _))) =>
+                    DefT(_, ud) if matches!(ud.deref(), ObjT(_))
+                ) || matches!(u.deref(), AnyT(_, _))) =>
         {
             let collector = TypeCollector::create();
             FlowJs::rec_flow_with_env(
                 cx, env, trace, instance,
-                &UseT::new(UseTInner::GetStaticsT(reason.dupe(), collector.dupe())),
+                &UseT::new(GetStaticsT(reason.dupe(), collector.dupe())),
             )?;
             for static_ in collector.collect_to_vec() {
                 FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &static_, u)?;
@@ -6850,14 +6768,14 @@ pub fn rec_sub_t<'cx>(
         // The same issue is also true for constructors, which are similarly
         // excluded from subclass compatibility checks, but are allowed on ClassT
         // types.
-        (TypeInner::DefT(reason, ld), TypeInner::DefT(_, ud))
-            if let DefTInner::ClassT(instance) = ld.deref()
-                && matches!(ud.deref(), DefTInner::FunT(_, _)) =>
+        (DefT(reason, ld), DefT(_, ud))
+            if let ClassT(instance) = ld.deref()
+                && matches!(ud.deref(), FunT(_, _)) =>
         {
             let collector = TypeCollector::create();
             FlowJs::rec_flow_with_env(
                 cx, env, trace, instance,
-                &UseT::new(UseTInner::GetStaticsT(reason.dupe(), collector.dupe())),
+                &UseT::new(GetStaticsT(reason.dupe(), collector.dupe())),
             )?;
             for static_ in collector.collect_to_vec() {
                 FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &static_, u)?;
@@ -6868,10 +6786,10 @@ pub fn rec_sub_t<'cx>(
         // *********
         // Enums
         // *********
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+        (DefT(_, ld), DefT(_, ud))
             if matches!((ld.deref(), ud.deref()), (
-                DefTInner::EnumObjectT { enum_info: ei1, .. },
-                DefTInner::EnumObjectT { enum_info: ei2, .. },
+                EnumObjectT { enum_info: ei1, .. },
+                EnumObjectT { enum_info: ei2, .. },
             ) if matches!((ei1.deref().deref(), ei2.deref().deref()), (
                 EnumInfoInner::ConcreteEnum(c1),
                 EnumInfoInner::ConcreteEnum(c2),
@@ -6879,10 +6797,10 @@ pub fn rec_sub_t<'cx>(
         {
             Ok(())
         }
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+        (DefT(_, ld), DefT(_, ud))
             if matches!((ld.deref(), ud.deref()), (
-                DefTInner::EnumValueT(ei1),
-                DefTInner::EnumValueT(ei2),
+                EnumValueT(ei1),
+                EnumValueT(ei2),
             ) if matches!((ei1.deref().deref(), ei2.deref().deref()), (
                 EnumInfoInner::ConcreteEnum(c1),
                 EnumInfoInner::ConcreteEnum(c2),
@@ -6890,19 +6808,19 @@ pub fn rec_sub_t<'cx>(
         {
             Ok(())
         }
-        (TypeInner::DefT(enum_reason_l, ld), TypeInner::DefT(enum_reason_u, ud))
+        (DefT(enum_reason_l, ld), DefT(enum_reason_u, ud))
             if let Some((c1, c2)) = {
                 match (ld.deref(), ud.deref()) {
                     (
-                        DefTInner::EnumObjectT { enum_info: ei1, .. },
-                        DefTInner::EnumObjectT { enum_info: ei2, .. },
+                        EnumObjectT { enum_info: ei1, .. },
+                        EnumObjectT { enum_info: ei2, .. },
                     ) => match (ei1.deref().deref(), ei2.deref().deref()) {
                         (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) => {
                             Some((c1, c2))
                         }
                         _ => None,
                     },
-                    (DefTInner::EnumValueT(ei1), DefTInner::EnumValueT(ei2)) => {
+                    (EnumValueT(ei1), EnumValueT(ei2)) => {
                         match (ei1.deref().deref(), ei2.deref().deref()) {
                             (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) => {
                                 Some((c1, c2))
@@ -6924,15 +6842,15 @@ pub fn rec_sub_t<'cx>(
             if type_util::is_in_common_interface_conformance_check(&use_op) {
                 let repr_pair = match (ld.deref(), ud.deref()) {
                     (
-                        DefTInner::EnumObjectT { enum_info: ei1, .. },
-                        DefTInner::EnumObjectT { enum_info: ei2, .. },
+                        EnumObjectT { enum_info: ei1, .. },
+                        EnumObjectT { enum_info: ei2, .. },
                     ) => match (ei1.deref().deref(), ei2.deref().deref()) {
                         (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) => {
                             Some((&c1.representation_t, &c2.representation_t))
                         }
                         _ => None,
                     },
-                    (DefTInner::EnumValueT(ei1), DefTInner::EnumValueT(ei2)) => {
+                    (EnumValueT(ei1), EnumValueT(ei2)) => {
                         match (ei1.deref().deref(), ei2.deref().deref()) {
                             (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) => {
                                 Some((&c1.representation_t, &c2.representation_t))
@@ -6956,20 +6874,20 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
 
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+        (DefT(_, ld), DefT(_, ud))
             if let (
-                DefTInner::EnumObjectT {
+                EnumObjectT {
                     enum_value_t: ev1, ..
                 },
-                DefTInner::EnumObjectT {
+                EnumObjectT {
                     enum_value_t: ev2, ..
                 },
             ) = (ld.deref(), ud.deref()) =>
         {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, ev1, ev2)
         }
-        (TypeInner::DefT(enum_reason_l, ld), TypeInner::DefT(enum_reason_u, ud))
-            if let (DefTInner::EnumValueT(ei_l), DefTInner::EnumValueT(ei_u)) =
+        (DefT(enum_reason_l, ld), DefT(enum_reason_u, ud))
+            if let (EnumValueT(ei_l), EnumValueT(ei_u)) =
                 (ld.deref(), ud.deref())
                 && let EnumInfoInner::AbstractEnum {
                     representation_t: repr_u,
@@ -6988,8 +6906,8 @@ pub fn rec_sub_t<'cx>(
             );
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, repr_l, repr_u)
         }
-        (TypeInner::DefT(enum_reason, ld), _)
-            if let DefTInner::EnumValueT(ei) = ld.deref()
+        (DefT(enum_reason, ld), _)
+            if let EnumValueT(ei) = ld.deref()
                 && let repr = match ei.deref().deref() {
                     EnumInfoInner::ConcreteEnum(c) => &c.representation_t,
                     EnumInfoInner::AbstractEnum { representation_t } => representation_t,
@@ -6997,39 +6915,39 @@ pub fn rec_sub_t<'cx>(
                 && type_util::quick_subtype(None::<&mut fn(&Type)>, repr, u) =>
         {
             let representation_type = match repr.deref() {
-                TypeInner::DefT(_, d)
+                DefT(_, d)
                     if matches!(
                         d.deref(),
-                        DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. }
+                        BoolGeneralT | SingletonBoolT { .. }
                     ) =>
                 {
                     Some(FlowSmolStr::new_inline("boolean"))
                 }
-                TypeInner::DefT(_, d)
+                DefT(_, d)
                     if matches!(
                         d.deref(),
-                        DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
+                        NumGeneralT(_) | SingletonNumT { .. }
                     ) =>
                 {
                     Some(FlowSmolStr::new_inline("number"))
                 }
-                TypeInner::DefT(_, d)
+                DefT(_, d)
                     if matches!(
                         d.deref(),
-                        DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
+                        StrGeneralT(_) | SingletonStrT { .. }
                     ) =>
                 {
                     Some(FlowSmolStr::new_inline("string"))
                 }
-                TypeInner::DefT(_, d)
-                    if matches!(d.deref(), DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)) =>
+                DefT(_, d)
+                    if matches!(d.deref(), SymbolT | UniqueSymbolT(_)) =>
                 {
                     Some(FlowSmolStr::new_inline("symbol"))
                 }
-                TypeInner::DefT(_, d)
+                DefT(_, d)
                     if matches!(
                         d.deref(),
-                        DefTInner::BigIntGeneralT(_) | DefTInner::SingletonBigIntT { .. }
+                        BigIntGeneralT(_) | SingletonBigIntT { .. }
                     ) =>
                 {
                     Some(FlowSmolStr::new_inline("bigint"))
@@ -7087,14 +7005,14 @@ pub fn rec_sub_t<'cx>(
         }
 
         (
-            TypeInner::GenericT(box GenericTData {
+            GenericT(box GenericTData {
                 bound: bound1,
                 id: id1,
                 reason: reason1,
                 name: name1,
                 no_infer: no_infer1,
             }),
-            TypeInner::GenericT(box GenericTData {
+            GenericT(box GenericTData {
                 bound: bound2,
                 id: id2,
                 reason: reason2,
@@ -7122,7 +7040,7 @@ pub fn rec_sub_t<'cx>(
                     FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t1, &t2)
                 }
                 GenericSatResult::Lower(id) => {
-                    let new_l = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                    let new_l = Type::new(GenericT(Box::new(GenericTData {
                         reason: reason1.dupe(),
                         name: name1.dupe(),
                         bound: bound1.dupe(),
@@ -7134,7 +7052,7 @@ pub fn rec_sub_t<'cx>(
                 }
                 GenericSatResult::Upper(id) => {
                     let t1 = FlowJs::reposition_reason(cx, env, Some(trace), reason1, None, bound1)?;
-                    let new_u = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                    let new_u = Type::new(GenericT(Box::new(GenericTData {
                         reason: reason2.dupe(),
                         name: name2.dupe(),
                         bound: bound2.dupe(),
@@ -7146,43 +7064,43 @@ pub fn rec_sub_t<'cx>(
             }
         }
 
-        (TypeInner::GenericT(box GenericTData { reason, bound, .. }), _) => {
+        (GenericT(box GenericTData { reason, bound, .. }), _) => {
             let t = FlowJs::reposition_reason(cx, env, Some(trace), reason, None, bound)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
-        (TypeInner::ImplicitInstantiationTvar(data), _) => {
+        (ImplicitInstantiationTvar(data), _) => {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &env.frozen_tvar_bound(data), u)
         }
-        (_, TypeInner::GenericT(box GenericTData { reason, .. })) => {
-            let bot = Type::new(TypeInner::DefT(
+        (_, GenericT(box GenericTData { reason, .. })) => {
+            let bot = Type::new(DefT(
                 reason.dupe().replace_desc(None),
-                DefT::new(DefTInner::EmptyT),
+                DefT::new(EmptyT),
             ));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &bot)
         }
-        (TypeInner::ObjProtoT(reason), _) => {
+        (ObjProtoT(reason), _) => {
             let obj_proto =
                 FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Object")?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &obj_proto, u)
         }
-        (_, TypeInner::ObjProtoT(reason)) => {
+        (_, ObjProtoT(reason)) => {
             let obj_proto =
                 FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Object")?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &obj_proto)
         }
-        (TypeInner::FunProtoT(reason), _) => {
+        (FunProtoT(reason), _) => {
             let fun_proto =
                 FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Function")?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &fun_proto, u)
         }
-        (_, TypeInner::FunProtoT(reason)) => {
+        (_, FunProtoT(reason)) => {
             let fun_proto =
                 FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Function")?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &fun_proto)
         }
-        (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-            if matches!(ld.deref(), DefTInner::MixedT(MixedFlavor::MixedFunction))
-                && matches!(ud.deref(), DefTInner::FunT(_, _)) =>
+        (DefT(lreason, ld), DefT(ureason, ud))
+            if matches!(ld.deref(), MixedT(MixedFlavor::MixedFunction))
+                && matches!(ud.deref(), FunT(_, _)) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -7199,7 +7117,7 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &any, u)
         }
         (
-            TypeInner::NominalT {
+            NominalT {
                 reason,
                 nominal_type: lnom,
             },
@@ -7224,8 +7142,8 @@ pub fn rec_sub_t<'cx>(
         // falls out of this: `any` has every prop.
         // NOTE: this has to stay below the union, intersection and generic
         // rules, which own their lower bound whatever the upper bound is.
-        (_, TypeInner::KeysT(reason_op, o)) => {
-            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+        (_, KeysT(reason_op, o)) => {
+            let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op,
                 reason: type_util::reason_of_t(l).dupe(),
                 type_: l.dupe(),
@@ -7234,7 +7152,7 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 o,
-                &UseT::new(UseTInner::ReposLowerT {
+                &UseT::new(ReposLowerT {
                     reason: reason_op.dupe(),
                     use_desc: false,
                     use_t: Box::new(u_use),
