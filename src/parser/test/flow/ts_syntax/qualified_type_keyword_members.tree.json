@@ -1,0 +1,6351 @@
+{
+  "body": [
+    {
+      "declaration": {
+        "body": {
+          "explicitType": null,
+          "hasUnknownMembers": false,
+          "loc": {
+            "end": {
+              "column": 1,
+              "line": 7
+            },
+            "source": null,
+            "start": {
+              "column": 22,
+              "line": 2
+            }
+          },
+          "members": [
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 9,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 3
+                  }
+                },
+                "name": "literal",
+                "optional": false,
+                "range": [
+                  101,
+                  108
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 9,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 3
+                }
+              },
+              "range": [
+                101,
+                108
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 17,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 11,
+                    "line": 3
+                  }
+                },
+                "name": "number",
+                "optional": false,
+                "range": [
+                  110,
+                  116
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 17,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 3
+                }
+              },
+              "range": [
+                110,
+                116
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 25,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 19,
+                    "line": 3
+                  }
+                },
+                "name": "string",
+                "optional": false,
+                "range": [
+                  118,
+                  124
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 25,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 19,
+                  "line": 3
+                }
+              },
+              "range": [
+                118,
+                124
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 34,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 27,
+                    "line": 3
+                  }
+                },
+                "name": "boolean",
+                "optional": false,
+                "range": [
+                  126,
+                  133
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 34,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 27,
+                  "line": 3
+                }
+              },
+              "range": [
+                126,
+                133
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 39,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 36,
+                    "line": 3
+                  }
+                },
+                "name": "any",
+                "optional": false,
+                "range": [
+                  135,
+                  138
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 39,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 36,
+                  "line": 3
+                }
+              },
+              "range": [
+                135,
+                138
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 47,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 41,
+                    "line": 3
+                  }
+                },
+                "name": "bigint",
+                "optional": false,
+                "range": [
+                  140,
+                  146
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 47,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 41,
+                  "line": 3
+                }
+              },
+              "range": [
+                140,
+                146
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 55,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 49,
+                    "line": 3
+                  }
+                },
+                "name": "symbol",
+                "optional": false,
+                "range": [
+                  148,
+                  154
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 55,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 49,
+                  "line": 3
+                }
+              },
+              "range": [
+                148,
+                154
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 61,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 57,
+                    "line": 3
+                  }
+                },
+                "name": "null",
+                "optional": false,
+                "range": [
+                  156,
+                  160
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 61,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 57,
+                  "line": 3
+                }
+              },
+              "range": [
+                156,
+                160
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 67,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 63,
+                    "line": 3
+                  }
+                },
+                "name": "void",
+                "optional": false,
+                "range": [
+                  162,
+                  166
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 67,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 63,
+                  "line": 3
+                }
+              },
+              "range": [
+                162,
+                166
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 11,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 4
+                  }
+                },
+                "name": "undefined",
+                "optional": false,
+                "range": [
+                  170,
+                  179
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 11,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 4
+                }
+              },
+              "range": [
+                170,
+                179
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 18,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 13,
+                    "line": 4
+                  }
+                },
+                "name": "never",
+                "optional": false,
+                "range": [
+                  181,
+                  186
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 18,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 13,
+                  "line": 4
+                }
+              },
+              "range": [
+                181,
+                186
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 27,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 20,
+                    "line": 4
+                  }
+                },
+                "name": "unknown",
+                "optional": false,
+                "range": [
+                  188,
+                  195
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 20,
+                  "line": 4
+                }
+              },
+              "range": [
+                188,
+                195
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 34,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 29,
+                    "line": 4
+                  }
+                },
+                "name": "keyof",
+                "optional": false,
+                "range": [
+                  197,
+                  202
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 34,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 29,
+                  "line": 4
+                }
+              },
+              "range": [
+                197,
+                202
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 42,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 36,
+                    "line": 4
+                  }
+                },
+                "name": "typeof",
+                "optional": false,
+                "range": [
+                  204,
+                  210
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 42,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 36,
+                  "line": 4
+                }
+              },
+              "range": [
+                204,
+                210
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 49,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 44,
+                    "line": 4
+                  }
+                },
+                "name": "mixed",
+                "optional": false,
+                "range": [
+                  212,
+                  217
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 49,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 44,
+                  "line": 4
+                }
+              },
+              "range": [
+                212,
+                217
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 56,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 51,
+                    "line": 4
+                  }
+                },
+                "name": "empty",
+                "optional": false,
+                "range": [
+                  219,
+                  224
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 56,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 51,
+                  "line": 4
+                }
+              },
+              "range": [
+                219,
+                224
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 62,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 58,
+                    "line": 4
+                  }
+                },
+                "name": "bool",
+                "optional": false,
+                "range": [
+                  226,
+                  230
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 62,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 58,
+                  "line": 4
+                }
+              },
+              "range": [
+                226,
+                230
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 6,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 5
+                  }
+                },
+                "name": "true",
+                "optional": false,
+                "range": [
+                  234,
+                  238
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 6,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 5
+                }
+              },
+              "range": [
+                234,
+                238
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 13,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 8,
+                    "line": 5
+                  }
+                },
+                "name": "false",
+                "optional": false,
+                "range": [
+                  240,
+                  245
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 13,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 8,
+                  "line": 5
+                }
+              },
+              "range": [
+                240,
+                245
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 20,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 15,
+                    "line": 5
+                  }
+                },
+                "name": "class",
+                "optional": false,
+                "range": [
+                  247,
+                  252
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 20,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 15,
+                  "line": 5
+                }
+              },
+              "range": [
+                247,
+                252
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 29,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 22,
+                    "line": 5
+                  }
+                },
+                "name": "default",
+                "optional": false,
+                "range": [
+                  254,
+                  261
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 29,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 22,
+                  "line": 5
+                }
+              },
+              "range": [
+                254,
+                261
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 9,
+                    "line": 6
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 6
+                  }
+                },
+                "name": "asserts",
+                "optional": false,
+                "range": [
+                  265,
+                  272
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 9,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 6
+                }
+              },
+              "range": [
+                265,
+                272
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 18,
+                    "line": 6
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 11,
+                    "line": 6
+                  }
+                },
+                "name": "implies",
+                "optional": false,
+                "range": [
+                  274,
+                  281
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 18,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 6
+                }
+              },
+              "range": [
+                274,
+                281
+              ],
+              "type": "EnumDefaultedMember"
+            },
+            {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 22,
+                    "line": 6
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 20,
+                    "line": 6
+                  }
+                },
+                "name": "is",
+                "optional": false,
+                "range": [
+                  283,
+                  285
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 22,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 20,
+                  "line": 6
+                }
+              },
+              "range": [
+                283,
+                285
+              ],
+              "type": "EnumDefaultedMember"
+            }
+          ],
+          "range": [
+            97,
+            288
+          ],
+          "type": "EnumBody"
+        },
+        "id": {
+          "loc": {
+            "end": {
+              "column": 21,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 20,
+              "line": 2
+            }
+          },
+          "name": "E",
+          "optional": false,
+          "range": [
+            95,
+            96
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 7
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 2
+          }
+        },
+        "range": [
+          90,
+          288
+        ],
+        "type": "DeclareEnum"
+      },
+      "default": false,
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 7
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        75,
+        288
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 53,
+              "line": 8
+            },
+            "source": null,
+            "start": {
+              "column": 42,
+              "line": 8
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 48,
+                    "line": 8
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 44,
+                    "line": 8
+                  }
+                },
+                "name": "type",
+                "optional": false,
+                "range": [
+                  339,
+                  343
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 51,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 44,
+                  "line": 8
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                339,
+                346
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 51,
+                      "line": 8
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 50,
+                      "line": 8
+                    }
+                  },
+                  "name": "T",
+                  "optional": false,
+                  "range": [
+                    345,
+                    346
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 51,
+                    "line": 8
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 50,
+                    "line": 8
+                  }
+                },
+                "range": [
+                  345,
+                  346
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            337,
+            348
+          ],
+          "trailingComments": [
+            {
+              "loc": {
+                "end": {
+                  "column": 59,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 54,
+                  "line": 8
+                }
+              },
+              "range": [
+                349,
+                354
+              ],
+              "type": "Line",
+              "value": " OK"
+            }
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 28,
+              "line": 8
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 8
+            }
+          },
+          "name": "BaseElement",
+          "optional": false,
+          "range": [
+            312,
+            323
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 53,
+            "line": 8
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 8
+          }
+        },
+        "range": [
+          302,
+          348
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": {
+          "loc": {
+            "end": {
+              "column": 41,
+              "line": 8
+            },
+            "source": null,
+            "start": {
+              "column": 28,
+              "line": 8
+            }
+          },
+          "params": [
+            {
+              "bound": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 40,
+                      "line": 8
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 39,
+                      "line": 8
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    334,
+                    335
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 40,
+                    "line": 8
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 39,
+                    "line": 8
+                  }
+                },
+                "range": [
+                  334,
+                  335
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "const": false,
+              "default": null,
+              "loc": {
+                "end": {
+                  "column": 40,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 29,
+                  "line": 8
+                }
+              },
+              "name": "T",
+              "range": [
+                324,
+                335
+              ],
+              "type": "TypeParameter",
+              "usesExtendsBound": true,
+              "variance": null
+            }
+          ],
+          "range": [
+            323,
+            336
+          ],
+          "type": "TypeParameterDeclaration"
+        }
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 53,
+          "line": 8
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 8
+        }
+      },
+      "range": [
+        295,
+        348
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 25,
+              "line": 11
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 11
+            }
+          },
+          "name": "NumberElement",
+          "optional": false,
+          "range": [
+            425,
+            438
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 50,
+            "line": 11
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 11
+          }
+        },
+        "range": [
+          420,
+          463
+        ],
+        "right": {
+          "id": {
+            "loc": {
+              "end": {
+                "column": 39,
+                "line": 11
+              },
+              "source": null,
+              "start": {
+                "column": 28,
+                "line": 11
+              }
+            },
+            "name": "BaseElement",
+            "optional": false,
+            "range": [
+              441,
+              452
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 49,
+              "line": 11
+            },
+            "source": null,
+            "start": {
+              "column": 28,
+              "line": 11
+            }
+          },
+          "range": [
+            441,
+            462
+          ],
+          "type": "GenericTypeAnnotation",
+          "typeParameters": {
+            "loc": {
+              "end": {
+                "column": 49,
+                "line": 11
+              },
+              "source": null,
+              "start": {
+                "column": 39,
+                "line": 11
+              }
+            },
+            "params": [
+              {
+                "id": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 48,
+                        "line": 11
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 42,
+                        "line": 11
+                      }
+                    },
+                    "name": "number",
+                    "optional": false,
+                    "range": [
+                      455,
+                      461
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 48,
+                      "line": 11
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 40,
+                      "line": 11
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 41,
+                        "line": 11
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 40,
+                        "line": 11
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      453,
+                      454
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "range": [
+                    453,
+                    461
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "loc": {
+                  "end": {
+                    "column": 48,
+                    "line": 11
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 40,
+                    "line": 11
+                  }
+                },
+                "range": [
+                  453,
+                  461
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              }
+            ],
+            "range": [
+              452,
+              462
+            ],
+            "type": "TypeParameterInstantiation"
+          }
+        },
+        "type": "TypeAlias",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 50,
+          "line": 11
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 11
+        }
+      },
+      "range": [
+        413,
+        463
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 26,
+              "line": 14
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 14
+            }
+          },
+          "name": "KeywordMembers",
+          "optional": false,
+          "range": [
+            559,
+            573
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 53,
+            "line": 18
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 14
+          }
+        },
+        "range": [
+          554,
+          834
+        ],
+        "right": {
+          "loc": {
+            "end": {
+              "column": 52,
+              "line": 18
+            },
+            "source": null,
+            "start": {
+              "column": 2,
+              "line": 15
+            }
+          },
+          "range": [
+            578,
+            833
+          ],
+          "type": "UnionTypeAnnotation",
+          "types": [
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 11,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 4,
+                      "line": 15
+                    }
+                  },
+                  "name": "literal",
+                  "optional": false,
+                  "range": [
+                    580,
+                    587
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 11,
+                    "line": 15
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 15
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 3,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 15
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    578,
+                    579
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  578,
+                  587
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 11,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 15
+                }
+              },
+              "range": [
+                578,
+                587
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 22,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 16,
+                      "line": 15
+                    }
+                  },
+                  "name": "number",
+                  "optional": false,
+                  "range": [
+                    592,
+                    598
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 22,
+                    "line": 15
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 14,
+                    "line": 15
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 15,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 14,
+                      "line": 15
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    590,
+                    591
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  590,
+                  598
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 22,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 14,
+                  "line": 15
+                }
+              },
+              "range": [
+                590,
+                598
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 33,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 27,
+                      "line": 15
+                    }
+                  },
+                  "name": "string",
+                  "optional": false,
+                  "range": [
+                    603,
+                    609
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 33,
+                    "line": 15
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 25,
+                    "line": 15
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 26,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 25,
+                      "line": 15
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    601,
+                    602
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  601,
+                  609
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 25,
+                  "line": 15
+                }
+              },
+              "range": [
+                601,
+                609
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 45,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 38,
+                      "line": 15
+                    }
+                  },
+                  "name": "boolean",
+                  "optional": false,
+                  "range": [
+                    614,
+                    621
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 45,
+                    "line": 15
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 36,
+                    "line": 15
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 37,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 36,
+                      "line": 15
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    612,
+                    613
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  612,
+                  621
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 45,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 36,
+                  "line": 15
+                }
+              },
+              "range": [
+                612,
+                621
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 53,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 50,
+                      "line": 15
+                    }
+                  },
+                  "name": "any",
+                  "optional": false,
+                  "range": [
+                    626,
+                    629
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 53,
+                    "line": 15
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 48,
+                    "line": 15
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 49,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 48,
+                      "line": 15
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    624,
+                    625
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  624,
+                  629
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 53,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 48,
+                  "line": 15
+                }
+              },
+              "range": [
+                624,
+                629
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 64,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 58,
+                      "line": 15
+                    }
+                  },
+                  "name": "bigint",
+                  "optional": false,
+                  "range": [
+                    634,
+                    640
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 64,
+                    "line": 15
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 56,
+                    "line": 15
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 57,
+                      "line": 15
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 56,
+                      "line": 15
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    632,
+                    633
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  632,
+                  640
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 64,
+                  "line": 15
+                },
+                "source": null,
+                "start": {
+                  "column": 56,
+                  "line": 15
+                }
+              },
+              "range": [
+                632,
+                640
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 10,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 4,
+                      "line": 16
+                    }
+                  },
+                  "name": "symbol",
+                  "optional": false,
+                  "range": [
+                    647,
+                    653
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 10,
+                    "line": 16
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 16
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 3,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 16
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    645,
+                    646
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  645,
+                  653
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 10,
+                  "line": 16
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 16
+                }
+              },
+              "range": [
+                645,
+                653
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 19,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 15,
+                      "line": 16
+                    }
+                  },
+                  "name": "null",
+                  "optional": false,
+                  "range": [
+                    658,
+                    662
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 19,
+                    "line": 16
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 13,
+                    "line": 16
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 14,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 13,
+                      "line": 16
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    656,
+                    657
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  656,
+                  662
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 19,
+                  "line": 16
+                },
+                "source": null,
+                "start": {
+                  "column": 13,
+                  "line": 16
+                }
+              },
+              "range": [
+                656,
+                662
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 28,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 24,
+                      "line": 16
+                    }
+                  },
+                  "name": "void",
+                  "optional": false,
+                  "range": [
+                    667,
+                    671
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 28,
+                    "line": 16
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 22,
+                    "line": 16
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 23,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 22,
+                      "line": 16
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    665,
+                    666
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  665,
+                  671
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 28,
+                  "line": 16
+                },
+                "source": null,
+                "start": {
+                  "column": 22,
+                  "line": 16
+                }
+              },
+              "range": [
+                665,
+                671
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 42,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 33,
+                      "line": 16
+                    }
+                  },
+                  "name": "undefined",
+                  "optional": false,
+                  "range": [
+                    676,
+                    685
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 42,
+                    "line": 16
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 31,
+                    "line": 16
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 32,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 31,
+                      "line": 16
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    674,
+                    675
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  674,
+                  685
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 42,
+                  "line": 16
+                },
+                "source": null,
+                "start": {
+                  "column": 31,
+                  "line": 16
+                }
+              },
+              "range": [
+                674,
+                685
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 52,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 16
+                    }
+                  },
+                  "name": "never",
+                  "optional": false,
+                  "range": [
+                    690,
+                    695
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 52,
+                    "line": 16
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 45,
+                    "line": 16
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 45,
+                      "line": 16
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    688,
+                    689
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  688,
+                  695
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 52,
+                  "line": 16
+                },
+                "source": null,
+                "start": {
+                  "column": 45,
+                  "line": 16
+                }
+              },
+              "range": [
+                688,
+                695
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 64,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 57,
+                      "line": 16
+                    }
+                  },
+                  "name": "unknown",
+                  "optional": false,
+                  "range": [
+                    700,
+                    707
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 64,
+                    "line": 16
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 55,
+                    "line": 16
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 56,
+                      "line": 16
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 55,
+                      "line": 16
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    698,
+                    699
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  698,
+                  707
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 64,
+                  "line": 16
+                },
+                "source": null,
+                "start": {
+                  "column": 55,
+                  "line": 16
+                }
+              },
+              "range": [
+                698,
+                707
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 9,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 4,
+                      "line": 17
+                    }
+                  },
+                  "name": "keyof",
+                  "optional": false,
+                  "range": [
+                    714,
+                    719
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 9,
+                    "line": 17
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 17
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 3,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 17
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    712,
+                    713
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  712,
+                  719
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 9,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 17
+                }
+              },
+              "range": [
+                712,
+                719
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 20,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 14,
+                      "line": 17
+                    }
+                  },
+                  "name": "typeof",
+                  "optional": false,
+                  "range": [
+                    724,
+                    730
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 20,
+                    "line": 17
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 12,
+                    "line": 17
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 13,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 12,
+                      "line": 17
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    722,
+                    723
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  722,
+                  730
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 20,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 12,
+                  "line": 17
+                }
+              },
+              "range": [
+                722,
+                730
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 30,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 25,
+                      "line": 17
+                    }
+                  },
+                  "name": "mixed",
+                  "optional": false,
+                  "range": [
+                    735,
+                    740
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 30,
+                    "line": 17
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 23,
+                    "line": 17
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 24,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 23,
+                      "line": 17
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    733,
+                    734
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  733,
+                  740
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 30,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 17
+                }
+              },
+              "range": [
+                733,
+                740
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 40,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 35,
+                      "line": 17
+                    }
+                  },
+                  "name": "empty",
+                  "optional": false,
+                  "range": [
+                    745,
+                    750
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 40,
+                    "line": 17
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 33,
+                    "line": 17
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 34,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 33,
+                      "line": 17
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    743,
+                    744
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  743,
+                  750
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 40,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 33,
+                  "line": 17
+                }
+              },
+              "range": [
+                743,
+                750
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 49,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 45,
+                      "line": 17
+                    }
+                  },
+                  "name": "bool",
+                  "optional": false,
+                  "range": [
+                    755,
+                    759
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 49,
+                    "line": 17
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 43,
+                    "line": 17
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 44,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 43,
+                      "line": 17
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    753,
+                    754
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  753,
+                  759
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 49,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 43,
+                  "line": 17
+                }
+              },
+              "range": [
+                753,
+                759
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 58,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 54,
+                      "line": 17
+                    }
+                  },
+                  "name": "true",
+                  "optional": false,
+                  "range": [
+                    764,
+                    768
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 58,
+                    "line": 17
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 52,
+                    "line": 17
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 53,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 52,
+                      "line": 17
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    762,
+                    763
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  762,
+                  768
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 58,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 52,
+                  "line": 17
+                }
+              },
+              "range": [
+                762,
+                768
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 68,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 63,
+                      "line": 17
+                    }
+                  },
+                  "name": "false",
+                  "optional": false,
+                  "range": [
+                    773,
+                    778
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 68,
+                    "line": 17
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 61,
+                    "line": 17
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 62,
+                      "line": 17
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 61,
+                      "line": 17
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    771,
+                    772
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  771,
+                  778
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 68,
+                  "line": 17
+                },
+                "source": null,
+                "start": {
+                  "column": 61,
+                  "line": 17
+                }
+              },
+              "range": [
+                771,
+                778
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 9,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 4,
+                      "line": 18
+                    }
+                  },
+                  "name": "class",
+                  "optional": false,
+                  "range": [
+                    785,
+                    790
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 9,
+                    "line": 18
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 18
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 3,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 18
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    783,
+                    784
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  783,
+                  790
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 9,
+                  "line": 18
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 18
+                }
+              },
+              "range": [
+                783,
+                790
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 21,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 14,
+                      "line": 18
+                    }
+                  },
+                  "name": "default",
+                  "optional": false,
+                  "range": [
+                    795,
+                    802
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 21,
+                    "line": 18
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 12,
+                    "line": 18
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 13,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 12,
+                      "line": 18
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    793,
+                    794
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  793,
+                  802
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 21,
+                  "line": 18
+                },
+                "source": null,
+                "start": {
+                  "column": 12,
+                  "line": 18
+                }
+              },
+              "range": [
+                793,
+                802
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 33,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 26,
+                      "line": 18
+                    }
+                  },
+                  "name": "asserts",
+                  "optional": false,
+                  "range": [
+                    807,
+                    814
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 33,
+                    "line": 18
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 24,
+                    "line": 18
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 25,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 24,
+                      "line": 18
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    805,
+                    806
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  805,
+                  814
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 18
+                },
+                "source": null,
+                "start": {
+                  "column": 24,
+                  "line": 18
+                }
+              },
+              "range": [
+                805,
+                814
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 45,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 38,
+                      "line": 18
+                    }
+                  },
+                  "name": "implies",
+                  "optional": false,
+                  "range": [
+                    819,
+                    826
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 45,
+                    "line": 18
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 36,
+                    "line": 18
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 37,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 36,
+                      "line": 18
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    817,
+                    818
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  817,
+                  826
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 45,
+                  "line": 18
+                },
+                "source": null,
+                "start": {
+                  "column": 36,
+                  "line": 18
+                }
+              },
+              "range": [
+                817,
+                826
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 52,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 50,
+                      "line": 18
+                    }
+                  },
+                  "name": "is",
+                  "optional": false,
+                  "range": [
+                    831,
+                    833
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 52,
+                    "line": 18
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 48,
+                    "line": 18
+                  }
+                },
+                "qualification": {
+                  "loc": {
+                    "end": {
+                      "column": 49,
+                      "line": 18
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 48,
+                      "line": 18
+                    }
+                  },
+                  "name": "E",
+                  "optional": false,
+                  "range": [
+                    829,
+                    830
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "range": [
+                  829,
+                  833
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 52,
+                  "line": 18
+                },
+                "source": null,
+                "start": {
+                  "column": 48,
+                  "line": 18
+                }
+              },
+              "range": [
+                829,
+                833
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            }
+          ]
+        },
+        "type": "TypeAlias",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 53,
+          "line": 18
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 14
+        }
+      },
+      "range": [
+        547,
+        834
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 34,
+              "line": 21
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 21
+            }
+          },
+          "name": "ImportedKeywordMembers",
+          "optional": false,
+          "range": [
+            932,
+            954
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 50,
+            "line": 39
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 21
+          }
+        },
+        "range": [
+          927,
+          1955
+        ],
+        "right": {
+          "loc": {
+            "end": {
+              "column": 49,
+              "line": 39
+            },
+            "source": null,
+            "start": {
+              "column": 2,
+              "line": 22
+            }
+          },
+          "range": [
+            959,
+            1954
+          ],
+          "type": "UnionTypeAnnotation",
+          "types": [
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 53,
+                      "line": 22
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 22
+                    }
+                  },
+                  "name": "number",
+                  "optional": false,
+                  "range": [
+                    1004,
+                    1010
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 53,
+                    "line": 22
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 22
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 22
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 22
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1002,
+                      1003
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 22
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 22
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 22
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 22
+                      }
+                    },
+                    "range": [
+                      959,
+                      1001
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 22
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 22
+                        }
+                      },
+                      "range": [
+                        966,
+                        1000
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    959,
+                    1003
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  959,
+                  1010
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 53,
+                  "line": 22
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 22
+                }
+              },
+              "range": [
+                959,
+                1010
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 53,
+                      "line": 23
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 23
+                    }
+                  },
+                  "name": "string",
+                  "optional": false,
+                  "range": [
+                    1060,
+                    1066
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 53,
+                    "line": 23
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 23
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 23
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 23
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1058,
+                      1059
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 23
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 23
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 23
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 23
+                      }
+                    },
+                    "range": [
+                      1015,
+                      1057
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 23
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 23
+                        }
+                      },
+                      "range": [
+                        1022,
+                        1056
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1015,
+                    1059
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1015,
+                  1066
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 53,
+                  "line": 23
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 23
+                }
+              },
+              "range": [
+                1015,
+                1066
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 54,
+                      "line": 24
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 24
+                    }
+                  },
+                  "name": "boolean",
+                  "optional": false,
+                  "range": [
+                    1116,
+                    1123
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 54,
+                    "line": 24
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 24
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 24
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 24
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1114,
+                      1115
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 24
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 24
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 24
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 24
+                      }
+                    },
+                    "range": [
+                      1071,
+                      1113
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 24
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 24
+                        }
+                      },
+                      "range": [
+                        1078,
+                        1112
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1071,
+                    1115
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1071,
+                  1123
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 54,
+                  "line": 24
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 24
+                }
+              },
+              "range": [
+                1071,
+                1123
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 50,
+                      "line": 25
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 25
+                    }
+                  },
+                  "name": "any",
+                  "optional": false,
+                  "range": [
+                    1173,
+                    1176
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 50,
+                    "line": 25
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 25
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 25
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 25
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1171,
+                      1172
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 25
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 25
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 25
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 25
+                      }
+                    },
+                    "range": [
+                      1128,
+                      1170
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 25
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 25
+                        }
+                      },
+                      "range": [
+                        1135,
+                        1169
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1128,
+                    1172
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1128,
+                  1176
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 50,
+                  "line": 25
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 25
+                }
+              },
+              "range": [
+                1128,
+                1176
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 53,
+                      "line": 26
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 26
+                    }
+                  },
+                  "name": "bigint",
+                  "optional": false,
+                  "range": [
+                    1226,
+                    1232
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 53,
+                    "line": 26
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 26
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 26
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 26
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1224,
+                      1225
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 26
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 26
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 26
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 26
+                      }
+                    },
+                    "range": [
+                      1181,
+                      1223
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 26
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 26
+                        }
+                      },
+                      "range": [
+                        1188,
+                        1222
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1181,
+                    1225
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1181,
+                  1232
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 53,
+                  "line": 26
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 26
+                }
+              },
+              "range": [
+                1181,
+                1232
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 53,
+                      "line": 27
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 27
+                    }
+                  },
+                  "name": "symbol",
+                  "optional": false,
+                  "range": [
+                    1282,
+                    1288
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 53,
+                    "line": 27
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 27
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 27
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 27
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1280,
+                      1281
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 27
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 27
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 27
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 27
+                      }
+                    },
+                    "range": [
+                      1237,
+                      1279
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 27
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 27
+                        }
+                      },
+                      "range": [
+                        1244,
+                        1278
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1237,
+                    1281
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1237,
+                  1288
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 53,
+                  "line": 27
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 27
+                }
+              },
+              "range": [
+                1237,
+                1288
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 51,
+                      "line": 28
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 28
+                    }
+                  },
+                  "name": "null",
+                  "optional": false,
+                  "range": [
+                    1338,
+                    1342
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 51,
+                    "line": 28
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 28
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 28
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 28
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1336,
+                      1337
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 28
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 28
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 28
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 28
+                      }
+                    },
+                    "range": [
+                      1293,
+                      1335
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 28
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 28
+                        }
+                      },
+                      "range": [
+                        1300,
+                        1334
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1293,
+                    1337
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1293,
+                  1342
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 51,
+                  "line": 28
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 28
+                }
+              },
+              "range": [
+                1293,
+                1342
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 51,
+                      "line": 29
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 29
+                    }
+                  },
+                  "name": "void",
+                  "optional": false,
+                  "range": [
+                    1392,
+                    1396
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 51,
+                    "line": 29
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 29
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 29
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 29
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1390,
+                      1391
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 29
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 29
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 29
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 29
+                      }
+                    },
+                    "range": [
+                      1347,
+                      1389
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 29
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 29
+                        }
+                      },
+                      "range": [
+                        1354,
+                        1388
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1347,
+                    1391
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1347,
+                  1396
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 51,
+                  "line": 29
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 29
+                }
+              },
+              "range": [
+                1347,
+                1396
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 56,
+                      "line": 30
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 30
+                    }
+                  },
+                  "name": "undefined",
+                  "optional": false,
+                  "range": [
+                    1446,
+                    1455
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 56,
+                    "line": 30
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 30
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 30
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 30
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1444,
+                      1445
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 30
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 30
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 30
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 30
+                      }
+                    },
+                    "range": [
+                      1401,
+                      1443
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 30
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 30
+                        }
+                      },
+                      "range": [
+                        1408,
+                        1442
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1401,
+                    1445
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1401,
+                  1455
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 56,
+                  "line": 30
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 30
+                }
+              },
+              "range": [
+                1401,
+                1455
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 52,
+                      "line": 31
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 31
+                    }
+                  },
+                  "name": "never",
+                  "optional": false,
+                  "range": [
+                    1505,
+                    1510
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 52,
+                    "line": 31
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 31
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 31
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 31
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1503,
+                      1504
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 31
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 31
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 31
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 31
+                      }
+                    },
+                    "range": [
+                      1460,
+                      1502
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 31
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 31
+                        }
+                      },
+                      "range": [
+                        1467,
+                        1501
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1460,
+                    1504
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1460,
+                  1510
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 52,
+                  "line": 31
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 31
+                }
+              },
+              "range": [
+                1460,
+                1510
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 54,
+                      "line": 32
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 32
+                    }
+                  },
+                  "name": "unknown",
+                  "optional": false,
+                  "range": [
+                    1560,
+                    1567
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 54,
+                    "line": 32
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 32
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 32
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 32
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1558,
+                      1559
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 32
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 32
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 32
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 32
+                      }
+                    },
+                    "range": [
+                      1515,
+                      1557
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 32
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 32
+                        }
+                      },
+                      "range": [
+                        1522,
+                        1556
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1515,
+                    1559
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1515,
+                  1567
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 54,
+                  "line": 32
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 32
+                }
+              },
+              "range": [
+                1515,
+                1567
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 52,
+                      "line": 33
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 33
+                    }
+                  },
+                  "name": "keyof",
+                  "optional": false,
+                  "range": [
+                    1617,
+                    1622
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 52,
+                    "line": 33
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 33
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 33
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 33
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1615,
+                      1616
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 33
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 33
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 33
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 33
+                      }
+                    },
+                    "range": [
+                      1572,
+                      1614
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 33
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 33
+                        }
+                      },
+                      "range": [
+                        1579,
+                        1613
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1572,
+                    1616
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1572,
+                  1622
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 52,
+                  "line": 33
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 33
+                }
+              },
+              "range": [
+                1572,
+                1622
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 53,
+                      "line": 34
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 34
+                    }
+                  },
+                  "name": "typeof",
+                  "optional": false,
+                  "range": [
+                    1672,
+                    1678
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 53,
+                    "line": 34
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 34
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 34
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 34
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1670,
+                      1671
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 34
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 34
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 34
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 34
+                      }
+                    },
+                    "range": [
+                      1627,
+                      1669
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 34
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 34
+                        }
+                      },
+                      "range": [
+                        1634,
+                        1668
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1627,
+                    1671
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1627,
+                  1678
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 53,
+                  "line": 34
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 34
+                }
+              },
+              "range": [
+                1627,
+                1678
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 52,
+                      "line": 35
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 35
+                    }
+                  },
+                  "name": "mixed",
+                  "optional": false,
+                  "range": [
+                    1728,
+                    1733
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 52,
+                    "line": 35
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 35
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 35
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 35
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1726,
+                      1727
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 35
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 35
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 35
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 35
+                      }
+                    },
+                    "range": [
+                      1683,
+                      1725
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 35
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 35
+                        }
+                      },
+                      "range": [
+                        1690,
+                        1724
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1683,
+                    1727
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1683,
+                  1733
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 52,
+                  "line": 35
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 35
+                }
+              },
+              "range": [
+                1683,
+                1733
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 52,
+                      "line": 36
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 36
+                    }
+                  },
+                  "name": "empty",
+                  "optional": false,
+                  "range": [
+                    1783,
+                    1788
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 52,
+                    "line": 36
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 36
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 36
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 36
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1781,
+                      1782
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 36
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 36
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 36
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 36
+                      }
+                    },
+                    "range": [
+                      1738,
+                      1780
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 36
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 36
+                        }
+                      },
+                      "range": [
+                        1745,
+                        1779
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1738,
+                    1782
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1738,
+                  1788
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 52,
+                  "line": 36
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 36
+                }
+              },
+              "range": [
+                1738,
+                1788
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 54,
+                      "line": 37
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 37
+                    }
+                  },
+                  "name": "asserts",
+                  "optional": false,
+                  "range": [
+                    1838,
+                    1845
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 54,
+                    "line": 37
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 37
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 37
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 37
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1836,
+                      1837
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 37
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 37
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 37
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 37
+                      }
+                    },
+                    "range": [
+                      1793,
+                      1835
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 37
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 37
+                        }
+                      },
+                      "range": [
+                        1800,
+                        1834
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1793,
+                    1837
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1793,
+                  1845
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 54,
+                  "line": 37
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 37
+                }
+              },
+              "range": [
+                1793,
+                1845
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 54,
+                      "line": 38
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 38
+                    }
+                  },
+                  "name": "implies",
+                  "optional": false,
+                  "range": [
+                    1895,
+                    1902
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 54,
+                    "line": 38
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 38
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 38
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 38
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1893,
+                      1894
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 38
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 38
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 38
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 38
+                      }
+                    },
+                    "range": [
+                      1850,
+                      1892
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 38
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 38
+                        }
+                      },
+                      "range": [
+                        1857,
+                        1891
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1850,
+                    1894
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1850,
+                  1902
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 54,
+                  "line": 38
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 38
+                }
+              },
+              "range": [
+                1850,
+                1902
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            {
+              "id": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 49,
+                      "line": 39
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 47,
+                      "line": 39
+                    }
+                  },
+                  "name": "is",
+                  "optional": false,
+                  "range": [
+                    1952,
+                    1954
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 49,
+                    "line": 39
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 2,
+                    "line": 39
+                  }
+                },
+                "qualification": {
+                  "id": {
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 39
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 45,
+                        "line": 39
+                      }
+                    },
+                    "name": "E",
+                    "optional": false,
+                    "range": [
+                      1950,
+                      1951
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "loc": {
+                    "end": {
+                      "column": 46,
+                      "line": 39
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 2,
+                      "line": 39
+                    }
+                  },
+                  "qualification": {
+                    "loc": {
+                      "end": {
+                        "column": 44,
+                        "line": 39
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 2,
+                        "line": 39
+                      }
+                    },
+                    "range": [
+                      1907,
+                      1949
+                    ],
+                    "source": {
+                      "loc": {
+                        "end": {
+                          "column": 43,
+                          "line": 39
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 9,
+                          "line": 39
+                        }
+                      },
+                      "range": [
+                        1914,
+                        1948
+                      ],
+                      "raw": "'./qualified_type_keyword_members'",
+                      "type": "Literal",
+                      "value": "./qualified_type_keyword_members"
+                    },
+                    "type": "ImportType"
+                  },
+                  "range": [
+                    1907,
+                    1951
+                  ],
+                  "type": "QualifiedTypeIdentifier"
+                },
+                "range": [
+                  1907,
+                  1954
+                ],
+                "type": "QualifiedTypeIdentifier"
+              },
+              "loc": {
+                "end": {
+                  "column": 49,
+                  "line": 39
+                },
+                "source": null,
+                "start": {
+                  "column": 2,
+                  "line": 39
+                }
+              },
+              "range": [
+                1907,
+                1954
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            }
+          ]
+        },
+        "type": "TypeAlias",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 50,
+          "line": 39
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 21
+        }
+      },
+      "range": [
+        920,
+        1955
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 31,
+              "line": 42
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 42
+            }
+          },
+          "name": "TypeofKeywordMember",
+          "optional": false,
+          "range": [
+            2029,
+            2048
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 50,
+            "line": 42
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 42
+          }
+        },
+        "range": [
+          2024,
+          2067
+        ],
+        "right": {
+          "argument": {
+            "id": {
+              "loc": {
+                "end": {
+                  "column": 49,
+                  "line": 42
+                },
+                "source": null,
+                "start": {
+                  "column": 43,
+                  "line": 42
+                }
+              },
+              "name": "number",
+              "optional": false,
+              "range": [
+                2060,
+                2066
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 49,
+                "line": 42
+              },
+              "source": null,
+              "start": {
+                "column": 41,
+                "line": 42
+              }
+            },
+            "qualification": {
+              "loc": {
+                "end": {
+                  "column": 42,
+                  "line": 42
+                },
+                "source": null,
+                "start": {
+                  "column": 41,
+                  "line": 42
+                }
+              },
+              "name": "E",
+              "optional": false,
+              "range": [
+                2058,
+                2059
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "range": [
+              2058,
+              2066
+            ],
+            "type": "QualifiedTypeofIdentifier"
+          },
+          "loc": {
+            "end": {
+              "column": 49,
+              "line": 42
+            },
+            "source": null,
+            "start": {
+              "column": 34,
+              "line": 42
+            }
+          },
+          "range": [
+            2051,
+            2066
+          ],
+          "type": "TypeofTypeAnnotation"
+        },
+        "type": "TypeAlias",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 50,
+          "line": 42
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 42
+        }
+      },
+      "range": [
+        2017,
+        2067
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 74,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        74
+      ],
+      "type": "Line",
+      "value": " Enum members can use ordinary names, reserved words, and type keywords."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 7,
+          "line": 7
+        },
+        "source": null,
+        "start": {
+          "column": 2,
+          "line": 7
+        }
+      },
+      "range": [
+        289,
+        294
+      ],
+      "type": "Line",
+      "value": " OK"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 59,
+          "line": 8
+        },
+        "source": null,
+        "start": {
+          "column": 54,
+          "line": 8
+        }
+      },
+      "range": [
+        349,
+        354
+      ],
+      "type": "Line",
+      "value": " OK"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 56,
+          "line": 10
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 10
+        }
+      },
+      "range": [
+        356,
+        412
+      ],
+      "type": "Line",
+      "value": " Keyword members can appear in generic type arguments."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 56,
+          "line": 11
+        },
+        "source": null,
+        "start": {
+          "column": 51,
+          "line": 11
+        }
+      },
+      "range": [
+        464,
+        469
+      ],
+      "type": "Line",
+      "value": " OK"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 75,
+          "line": 13
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 13
+        }
+      },
+      "range": [
+        471,
+        546
+      ],
+      "type": "Line",
+      "value": " Qualified type names accept reserved words and contextual type keywords."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 59,
+          "line": 18
+        },
+        "source": null,
+        "start": {
+          "column": 54,
+          "line": 18
+        }
+      },
+      "range": [
+        835,
+        840
+      ],
+      "type": "Line",
+      "value": " OK"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 77,
+          "line": 20
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 20
+        }
+      },
+      "range": [
+        842,
+        919
+      ],
+      "type": "Line",
+      "value": " The same identifier names are accepted after an import type qualification."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 56,
+          "line": 39
+        },
+        "source": null,
+        "start": {
+          "column": 51,
+          "line": 39
+        }
+      },
+      "range": [
+        1956,
+        1961
+      ],
+      "type": "Line",
+      "value": " OK"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 53,
+          "line": 41
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 41
+        }
+      },
+      "range": [
+        1963,
+        2016
+      ],
+      "type": "Line",
+      "value": " Typeof qualifications also accept keyword members."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 56,
+          "line": 42
+        },
+        "source": null,
+        "start": {
+          "column": 51,
+          "line": 42
+        }
+      },
+      "range": [
+        2068,
+        2073
+      ],
+      "type": "Line",
+      "value": " OK"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 50,
+      "line": 42
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 2
+    }
+  },
+  "range": [
+    75,
+    2067
+  ],
+  "type": "Program"
+}

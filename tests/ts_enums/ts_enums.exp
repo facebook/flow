@@ -247,6 +247,41 @@ References:
                ^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- member_type.ts:22:65
+
+Cannot assign object literal to `wrongNumberElement` because in property `type`: `2` [1] is incompatible with `1` [2].
+[incompatible-type]
+
+   member_type.ts:22:65
+   22| const wrongNumberElement: BaseElement<Keyword.number> = { type: Keyword.string }; // ERROR
+                                                                       ^^^^^^^^^^^^^^
+
+References:
+   member_type.ts:16:3
+   16|   string = 2,
+         ^^^^^^^^^^ [1]
+   member_type.ts:22:39
+   22| const wrongNumberElement: BaseElement<Keyword.number> = { type: Keyword.string }; // ERROR
+                                             ^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- member_type.ts:26:41
+
+Cannot assign `Keyword.number` to `wrongClassMember` because `1` [1] is incompatible with `3` [2]. [incompatible-type]
+
+   member_type.ts:26:41
+   26| const wrongClassMember: Keyword.class = Keyword.number; // ERROR
+                                               ^^^^^^^^^^^^^^
+
+References:
+   member_type.ts:15:3
+   15|   number = 1,
+         ^^^^^^^^^^ [1]
+   member_type.ts:26:25
+   26| const wrongClassMember: Keyword.class = Keyword.number; // ERROR
+                               ^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- numeric.ts:21:18
 
 Cannot assign `99` to `c` because `99` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -342,4 +377,4 @@ References:
 
 
 
-Found 22 errors
+Found 24 errors

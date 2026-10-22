@@ -21,8 +21,8 @@ use crate::parser_env::*;
 use crate::token::BoolOrBoolean;
 use crate::token::TokenKind;
 
-fn identifier_name_raw<'a>(env: &mut ParserEnv<'a>) -> Result<FlowSmolStr, Rollback> {
-    let name = match peek::token(env) {
+pub(super) fn identifier_name_for_token(token: &TokenKind) -> Option<FlowSmolStr> {
+    Some(match token {
         /* obviously, Identifier is a valid IdentifierName */
         TokenKind::TIdentifier { value, .. } => value.dupe(),
         /* keywords are also IdentifierNames */
@@ -105,7 +105,14 @@ fn identifier_name_raw<'a>(env: &mut ParserEnv<'a>) -> Result<FlowSmolStr, Rollb
         TokenKind::TOf => FlowSmolStr::new_inline("of"),
         TokenKind::TAsync => FlowSmolStr::new_inline("async"),
         /* punctuators, types, literals, etc are not identifiers */
-        _ => {
+        _ => return None,
+    })
+}
+
+fn identifier_name_raw<'a>(env: &mut ParserEnv<'a>) -> Result<FlowSmolStr, Rollback> {
+    let name = match identifier_name_for_token(peek::token(env)) {
+        Some(name) => name,
+        None => {
             env.error_unexpected(Some("an identifier".to_owned()))?;
             FlowSmolStr::new_inline("")
         }

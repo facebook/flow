@@ -1214,6 +1214,7 @@ pub(crate) fn token_is_variance(token: &TokenKind) -> bool {
 /// Answer questions about what comes next
 pub(crate) mod peek {
     use super::*;
+    use crate::parser_common::identifier_name_for_token;
     use crate::token::TokenKind;
 
     pub(crate) fn token<'a>(env: &'a mut ParserEnv) -> &'a TokenKind {
@@ -2010,24 +2011,18 @@ pub(crate) mod peek {
         is_identifier(env) || is_type_identifier(env)
     }
 
-    fn lookahead1_kind_is_identifier_name(lex_mode: LexMode, token_kind: &TokenKind) -> bool {
-        token_kind_is_identifier(token_kind)
-            || token_is_type_identifier_under_lex_mode(lex_mode, token_kind)
+    fn lookahead1_kind_is_identifier_name(token_kind: &TokenKind) -> bool {
+        identifier_name_for_token(token_kind).is_some()
     }
 
-    fn lookahead1_kind_is_object_key(
-        lex_mode: LexMode,
-        token_kind: &TokenKind,
-        is_class: bool,
-    ) -> bool {
+    fn lookahead1_kind_is_object_key(token_kind: &TokenKind, is_class: bool) -> bool {
         match token_kind {
             TokenKind::TString { .. }
             | TokenKind::TNumber { .. }
             | TokenKind::TBigint { .. }
             | TokenKind::TLbracket => true,
             TokenKind::TPound if is_class => true,
-            t if token_is_reserved(t) => true,
-            t => lookahead1_kind_is_identifier_name(lex_mode, t),
+            t => lookahead1_kind_is_identifier_name(t),
         }
     }
 
@@ -2043,10 +2038,7 @@ pub(crate) mod peek {
     }
 
     pub(crate) fn current_token_is_followed_by_identifier_name(env: &mut ParserEnv) -> bool {
-        let lex_mode = env.lex_mode();
-        lexer_lookahead1_matches(env, |token| {
-            lookahead1_kind_is_identifier_name(lex_mode, token)
-        })
+        lexer_lookahead1_matches(env, lookahead1_kind_is_identifier_name)
     }
 
     #[expect(dead_code)]
@@ -2066,16 +2058,12 @@ pub(crate) mod peek {
         env: &mut ParserEnv,
         is_class: bool,
     ) -> bool {
-        let lex_mode = env.lex_mode();
-        lexer_lookahead1_matches(env, |token| {
-            lookahead1_kind_is_object_key(lex_mode, token, is_class)
-        })
+        lexer_lookahead1_matches(env, |token| lookahead1_kind_is_object_key(token, is_class))
     }
 
     pub(crate) fn class_member_continuation_allows_modifier(env: &mut ParserEnv) -> bool {
-        let lex_mode = env.lex_mode();
         lexer_lookahead1_matches(env, |token| {
-            token == &TokenKind::TMult || lookahead1_kind_is_object_key(lex_mode, token, true)
+            token == &TokenKind::TMult || lookahead1_kind_is_object_key(token, true)
         })
     }
 
