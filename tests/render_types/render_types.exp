@@ -59,7 +59,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:7:2
 
-Cannot cast `<Foo />` to renders `Bar` because `Foo` element [1] does not render `Bar` [2]. [incompatible-type]
+Cannot cast `<Foo />` to `renders Bar` because `Foo` element [1] does not render `Bar` [2]. [incompatible-type]
 
    import.js:7:2
    7| <Foo /> as renders Bar; // ERROR
@@ -73,7 +73,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:8:2
 
-Cannot cast `<Bar />` to renders `Foo` because `Bar` element [1] does not render `Foo` [2]. [incompatible-type]
+Cannot cast `<Bar />` to `renders Foo` because `Bar` element [1] does not render `Foo` [2]. [incompatible-type]
 
    import.js:8:2
    8| <Bar /> as renders Foo; // ERROR
@@ -87,7 +87,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:10:2
 
-Cannot cast `<MaybeFoo />` to renders `Foo` because a value that renders nothing [1] does not render `Foo` [2].
+Cannot cast `<MaybeFoo />` to `renders Foo` because a value that renders nothing [1] does not render `Foo` [2].
 [incompatible-type]
 
    import.js:10:2
@@ -102,7 +102,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:14:2
 
-Cannot cast `<StarFoo />` to renders `Foo` because `ReadonlyArray<renders* Foo>` [1] does not render `Foo` [2].
+Cannot cast `<StarFoo />` to `renders Foo` because `ReadonlyArray<renders* Foo>` [1] does not render `Foo` [2].
 [incompatible-type]
 
    import.js:14:2
@@ -120,7 +120,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:14:2
 
-Cannot cast `<StarFoo />` to renders `Foo` because a value that renders nothing [1] does not render `Foo` [2].
+Cannot cast `<StarFoo />` to `renders Foo` because a value that renders nothing [1] does not render `Foo` [2].
 [incompatible-type]
 
    import.js:14:2
@@ -135,7 +135,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:15:2
 
-Cannot cast `<StarFoo />` to renders? `Foo` because `ReadonlyArray<renders* Foo>` [1] does not render `Foo` [2].
+Cannot cast `<StarFoo />` to `renders? Foo` because `ReadonlyArray<renders* Foo>` [1] does not render `Foo` [2].
 [incompatible-type]
 
    import.js:15:2
@@ -303,7 +303,7 @@ References:
 
 Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:7:1
 
-Cannot cast `y` to renders `Bar` because `{readonly type: typeof Bar}` [1] does not render `Bar` [2].
+Cannot cast `y` to `renders Bar` because `{readonly type: typeof Bar}` [1] does not render `Bar` [2].
 [incompatible-type]
 
    no_spoofing_element_types.js:7:1
@@ -354,7 +354,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- poly_component_type.js:8:1
 
-Cannot cast `el` to renders `NotAButton` because `Button` element [1] does not render `NotAButton` [2].
+Cannot cast `el` to `renders NotAButton` because `Button` element [1] does not render `NotAButton` [2].
 [incompatible-type]
 
    poly_component_type.js:8:1
@@ -369,7 +369,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- poly_component_type.js:15:9
 
-Cannot cast `<Poly2 />` to renders? `NotAButton` because `Button` element [1] does not render `NotAButton` [2].
+Cannot cast `<Poly2 />` to `renders? NotAButton` because `Button` element [1] does not render `NotAButton` [2].
 [incompatible-type]
 
    poly_component_type.js:15:9
@@ -384,7 +384,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- poly_component_type.js:17:9
 
-Cannot cast `<Poly2 />` to renders* `NotAButton` because `Button` element [1] does not render `NotAButton` [2].
+Cannot cast `<Poly2 />` to `renders* NotAButton` because `Button` element [1] does not render `NotAButton` [2].
 [incompatible-type]
 
    poly_component_type.js:17:9
@@ -510,7 +510,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- renders_maybe.js:10:36
 
-Cannot use renders? `MenuItem` [1] as the type argument of renders type. [invalid-render]
+Cannot use `renders? MenuItem` [1] as the type argument of renders type. [invalid-render]
 
    10| component MaybeMenuItem() renders (renders? MenuItem) { // type checks, but invalid-render
                                           ^^^^^^^^^^^^^^^^^ [1]
@@ -527,7 +527,7 @@ renders. If you want to express the idea of rendering zero or one item, please u
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:23:3
 
-Cannot cast `<Bar />` to renders? `MenuItem` because `Bar` element [1] does not render `MenuItem` [2].
+Cannot cast `<Bar />` to `renders? MenuItem` because `Bar` element [1] does not render `MenuItem` [2].
 [incompatible-type]
 
    renders_maybe.js:23:3
@@ -542,7 +542,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:30:1
 
-Cannot cast `Bad` to renders? `MenuItem` because `Bar` [1] does not render `MenuItem` [2]. [incompatible-type]
+Cannot cast `Bad` to `renders? MenuItem` because `React.Node` [1] does not render `MenuItem` [2]. [incompatible-type]
 
    renders_maybe.js:30:1
    30| Bad as renders? MenuItem; // ERROR
@@ -570,7 +570,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- renders_maybe.js:33:29
 
-Cannot use renders? `MenuItem` [1] as the type argument of renders type. [invalid-render]
+Cannot use `renders? MenuItem` [1] as the type argument of renders type. [invalid-render]
 
    renders_maybe.js:33:29
    33| rendersMenuItem as renders (true | renders? MenuItem); // type checks, but invalid-render
@@ -584,7 +584,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:36:1
 
-Cannot cast `rendersMaybeMenuItem` to renders `MenuItem` because a value that renders nothing [1] does not render
+Cannot cast `rendersMaybeMenuItem` to `renders MenuItem` because a value that renders nothing [1] does not render
 `MenuItem` [2]. [incompatible-type]
 
    renders_maybe.js:36:1
@@ -602,7 +602,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:39:1
 
-Cannot cast `rendersMaybeUnion` to renders `MenuItem` because a value that renders nothing [1] does not render
+Cannot cast `rendersMaybeUnion` to `renders MenuItem` because a value that renders nothing [1] does not render
 `MenuItem` [2]. [incompatible-type]
 
    renders_maybe.js:39:1
@@ -620,7 +620,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_maybe.js:39:1
 
-Cannot cast `rendersMaybeUnion` to renders `MenuItem` because `Bar` [1] does not render `MenuItem` [2].
+Cannot cast `rendersMaybeUnion` to `renders MenuItem` because `React.Node` [1] does not render `MenuItem` [2].
 [incompatible-type]
 
    renders_maybe.js:39:1
@@ -679,7 +679,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- renders_star.js:9:1
 
-Cannot cast `true` to renders* `MenuItem` because `true` [1] does not render `MenuItem` [2]. [incompatible-type]
+Cannot cast `true` to `renders* MenuItem` because `true` [1] does not render `MenuItem` [2]. [incompatible-type]
 
    renders_star.js:9:1
    9| true as renders* MenuItem; // ERROR
@@ -736,7 +736,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- renders_star.js:31:35
 
-Cannot cast array literal to renders* `MenuItem` because `Bad` element [1] does not render `MenuItem` [2].
+Cannot cast array literal to `renders* MenuItem` because `Bad` element [1] does not render `MenuItem` [2].
 [incompatible-type]
 
    renders_star.js:31:35
@@ -914,8 +914,8 @@ Cannot use `string` [1] as the type argument of renders type. [invalid-render]
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:38:3
 
 Cannot cast `rendersFooOrBar` to `renders Foo | renders Bar` because: [incompatible-type]
- - Either `Bar` [1] does not render `Foo` [2].
- - Or `Foo` [1] does not render `Bar` [3].
+ - Either `React.Node` [1] does not render `Foo` [2].
+ - Or `React.Node` [1] does not render `Bar` [3].
 
    renders_to_renders.js:38:3
    38|   rendersFooOrBar as typeof rendersFooOrRendersBar; // ERROR
@@ -932,7 +932,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:44:3
 
-Cannot cast `rendersFoo` to renders `Bar` because `Foo` [1] does not render `Bar` [2]. [incompatible-type]
+Cannot cast `rendersFoo` to `renders Bar` because `React.Node` [1] does not render `Bar` [2]. [incompatible-type]
 
    renders_to_renders.js:44:3
    44|   rendersFoo as renders Bar; // ERROR
@@ -946,7 +946,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:45:3
 
-Cannot cast `rendersFoo` to renders `Bar` because `Foo` [1] does not render `Bar` [2]. [incompatible-type]
+Cannot cast `rendersFoo` to `renders Bar` because `React.Node` [1] does not render `Bar` [2]. [incompatible-type]
 
    renders_to_renders.js:45:3
    45|   rendersFoo as renders Bar; // ERROR
@@ -960,7 +960,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:47:26
 
-Cannot use renders `Bar` [1] as the type argument of renders type. [invalid-render]
+Cannot use `renders Bar` [1] as the type argument of renders type. [invalid-render]
 
    47|   rendersFoo as renders (renders Bar); // invalid-renders turns RHS any
                                 ^^^^^^^^^^^ [1]
@@ -968,7 +968,7 @@ Cannot use renders `Bar` [1] as the type argument of renders type. [invalid-rend
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:48:26
 
-Cannot use renders `Bar` [1] as the type argument of renders type. [invalid-render]
+Cannot use `renders Bar` [1] as the type argument of renders type. [invalid-render]
 
    48|   rendersFoo as renders (renders Bar); // invalid-renders turns RHS any
                                 ^^^^^^^^^^^ [1]
@@ -976,7 +976,7 @@ Cannot use renders `Bar` [1] as the type argument of renders type. [invalid-rend
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:49:25
 
-Cannot use renders `Foo` [1] as the type argument of renders type. [invalid-render]
+Cannot use `renders Foo` [1] as the type argument of renders type. [invalid-render]
 
    49|   rendersBaz as renders typeof rendersFoo; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^ [1]
@@ -1012,8 +1012,8 @@ Cannot use `ExactReactElement_DEPRECATED<React.ElementType, unknown>` [1] as the
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:62:3
 
 Cannot cast `rendersQux` to `renders (Baz | Foo)` because: [incompatible-type]
- - Either `Qux` [1] does not render `Baz` [2].
- - Or `Qux` [1] does not render `Foo` [2].
+ - Either `React.Node` [1] does not render `Baz` [2].
+ - Or `React.Node` [1] does not render `Foo` [2].
 
    renders_to_renders.js:62:3
    62|   rendersQux as renders (Foo | Baz); // ERROR
@@ -1094,7 +1094,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:78:3
 
-Cannot cast `rendersBazOrBaz` to renders `Bar` because `Baz` [1] does not render `Bar` [2]. [incompatible-type]
+Cannot cast `rendersBazOrBaz` to `renders Bar` because `React.Node` [1] does not render `Bar` [2]. [incompatible-type]
 
    renders_to_renders.js:78:3
    78|   rendersBazOrBaz as renders Bar; // ERROR
@@ -1109,8 +1109,8 @@ References:
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:88:3
 
 Cannot cast `rendersFooOrBar` to `renders (Baz | Foo)` because: [incompatible-type]
- - Either `Bar` [1] does not render `Baz` [2].
- - Or `Bar` [1] does not render `Foo` [2].
+ - Either `React.Node` [1] does not render `Baz` [2].
+ - Or `React.Node` [1] does not render `Foo` [2].
 
    renders_to_renders.js:88:3
    88|   rendersFooOrBar as renders (
@@ -1137,7 +1137,7 @@ renders. If you want to express the idea of rendering zero or one item, please u
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:97:3
 
-Cannot cast `Foo` to renders `Foo` because component Foo [1] does not render `Foo` [2]. [incompatible-type]
+Cannot cast `Foo` to `renders Foo` because component Foo [1] does not render `Foo` [2]. [incompatible-type]
 
    renders_to_renders.js:97:3
    97|   Foo as renders Foo; // ERROR
@@ -1407,8 +1407,7 @@ Cannot use `"div"` [1] as the type argument of renders type. [invalid-render]
 
 Error ------------------------------------------------------------------------------------------------------- svg.js:9:1
 
-Cannot cast `<div />` to renders string literal `svg` because React element [1] does not render string literal
-`svg` [2]. [incompatible-type]
+Cannot cast `<div />` to `renders "svg"` because React element [1] does not render `"svg"` [2]. [incompatible-type]
 
    svg.js:9:1
    9| <div /> as renders 'svg'; // error
@@ -1422,8 +1421,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ svg.js:10:1
 
-Cannot cast `<div />` to renders? string literal `svg` because React element [1] does not render string literal
-`svg` [2]. [incompatible-type]
+Cannot cast `<div />` to `renders? "svg"` because React element [1] does not render `"svg"` [2]. [incompatible-type]
 
    svg.js:10:1
    10| <div /> as renders? 'svg'; // error
@@ -1437,8 +1435,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ svg.js:11:1
 
-Cannot cast `<div />` to renders* string literal `svg` because React element [1] does not render string literal
-`svg` [2]. [incompatible-type]
+Cannot cast `<div />` to `renders* "svg"` because React element [1] does not render `"svg"` [2]. [incompatible-type]
 
    svg.js:11:1
    11| <div /> as renders* 'svg'; // error
@@ -1452,8 +1449,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ svg.js:22:2
 
-Cannot cast `<Bar />` to renders string literal `svg` because `Bar` element [1] does not render `"svg"` [2].
-[incompatible-type]
+Cannot cast `<Bar />` to `renders "svg"` because `Bar` element [1] does not render `"svg"` [2]. [incompatible-type]
 
    svg.js:22:2
    22| <Bar /> as renders 'svg'; // error
@@ -1468,8 +1464,8 @@ References:
 Error ------------------------------------------------------------------------------------------- union_promotion.js:6:1
 
 Cannot cast `a` to `renders (Bar | Foo)` because: [incompatible-type]
- - Either `Baz` [1] does not render `Bar` [2].
- - Or `Baz` [1] does not render `Foo` [2].
+ - Either `React.Node` [1] does not render `Bar` [2].
+ - Or `React.Node` [1] does not render `Foo` [2].
 
    union_promotion.js:6:1
    6| a as renders (Foo | Bar); // ERROR

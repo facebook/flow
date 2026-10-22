@@ -125,9 +125,7 @@ pub fn insert_render_type_at_loc<'a, 'cx>(
         None => Ok(None),
         Some(ts) => {
             let reason = reason::mk_reason(
-                VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(
-                    "React.Node".into(),
-                ))),
+                VirtualReasonDesc::RType("React.Node".into()),
                 ALoc::of_loc(missing_renders_loc.dupe()),
             );
             let t =

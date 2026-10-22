@@ -2628,13 +2628,8 @@ fn merge_annot<'cx>(
             let mut renders_env = env.dupe();
             renders_env.in_renders_arg = true;
             let t = merge_impl(&renders_env, cx, file, arg, false, false);
-            let reason = reason::mk_annot_reason(
-                type_util::reason_of_t(&t)
-                    .desc(true)
-                    .cloned()
-                    .map(|desc| RRenderType(Arc::new(desc))),
-                loc.dupe(),
-            );
+            let reason =
+                reason::mk_annot_reason(type_util::reason_of_t(&t).desc(true).cloned(), loc.dupe());
             match type_util::mk_possibly_generic_render_type(*variant, reason.dupe(), t.dupe()) {
                 Some(t) => t,
                 None => {
@@ -2654,10 +2649,7 @@ fn merge_annot<'cx>(
             }
         }
         Annot::ComponentMissingRenders(box loc) => {
-            let reason = reason::mk_annot_reason(
-                RRenderType(Arc::new(RType("React.Node".into()))),
-                loc.dupe(),
-            );
+            let reason = reason::mk_annot_reason(RType("React.Node".into()), loc.dupe());
             Type::new(type_::TypeInner::DefT(
                 reason,
                 type_::DefT::new(type_::DefTInner::RendersT(Rc::new(

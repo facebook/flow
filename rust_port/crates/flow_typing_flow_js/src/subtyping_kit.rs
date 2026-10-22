@@ -5360,15 +5360,10 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), configu, configl)?;
             let rendersl = match component_kind {
                 ComponentKind::Nominal(renders_id, renders_name, _) => {
-                    let reason =
-                        reasonl
-                            .dupe()
-                            .replace_desc(VirtualReasonDesc::RRenderType(Arc::new(
-                                VirtualReasonDesc::RReactElement {
-                                    name_opt: Some(Name::new(renders_name.dupe())),
-                                    from_component_syntax: true,
-                                },
-                            )));
+                    let reason = reasonl.dupe().replace_desc(VirtualReasonDesc::RReactElement {
+                        name_opt: Some(Name::new(renders_name.dupe())),
+                        from_component_syntax: true,
+                    });
                     Type::new(TypeInner::DefT(
                         reason,
                         DefT::new(DefTInner::RendersT(Rc::new(

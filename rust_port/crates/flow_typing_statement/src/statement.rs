@@ -19780,9 +19780,7 @@ pub fn mk_component_sig<'a>(
         }
         ast::types::ComponentRendersAnnotation::MissingRenders(loc) => {
             let reason = mk_annot_reason(
-                VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(
-                    FlowSmolStr::new("React.Node"),
-                ))),
+                VirtualReasonDesc::RType(FlowSmolStr::new("React.Node")),
                 loc.dupe(),
             );
             let renders_t = Type::new(TypeInner::DefT(

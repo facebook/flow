@@ -415,9 +415,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     },
     RPossiblyMissingPropFromObj(Name, Arc<VirtualReasonDesc<L>>),
     RComponent(FlowSmolStr),
-    RRenderType(Arc<VirtualReasonDesc<L>>),
-    RRenderMaybeType(Arc<VirtualReasonDesc<L>>),
-    RRenderStarType(Arc<VirtualReasonDesc<L>>),
 }
 
 impl<A: Dupe> VirtualReasonDesc<A> {
@@ -575,9 +572,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RPossiblyMissingPropFromObj(n, d) => {
                 RPossiblyMissingPropFromObj(n.dupe(), Arc::new(d.map_locs(f)))
             }
-            RRenderType(d) => RRenderType(Arc::new(d.map_locs(f))),
-            RRenderMaybeType(d) => RRenderMaybeType(Arc::new(d.map_locs(f))),
-            RRenderStarType(d) => RRenderStarType(Arc::new(d.map_locs(f))),
             REnumMember {
                 enum_desc,
                 member_name,
@@ -649,10 +643,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
                 | RTupleUnknownElementFromInexact
                 | RUnknownUnspecifiedProperty(_)
                 | RReactElement { .. }
-                | RRendersNothing
-                | RRenderType(_)
-                | RRenderMaybeType(_)
-                | RRenderStarType(_),
+                | RRendersNothing,
             ) => true,
             _ => false,
         }
@@ -1520,9 +1511,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RComponent(name) => format!("component {}", name.as_str()),
 
         // Renders
-        RRenderType(d) => format!("renders {}", string_of_desc(d)),
-        RRenderMaybeType(d) => format!("renders? {}", string_of_desc(d)),
-        RRenderStarType(d) => format!("renders* {}", string_of_desc(d)),
         RRendersNothing => "a value that renders nothing".to_string(),
     }
 }

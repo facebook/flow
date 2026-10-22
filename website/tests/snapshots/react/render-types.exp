@@ -43,7 +43,7 @@ No errors!
 === block 10 ===
 Error ------------------------------------------------------------------------- -:16:1
 
-Cannot cast `rendersMaybeHeader` to renders `Header` because a value that renders nothing [1] does not render
+Cannot cast `rendersMaybeHeader` to `renders Header` because a value that renders nothing [1] does not render
 `Header` [2]. [incompatible-type]
 
    -:16:1
@@ -60,7 +60,7 @@ References:
 
 Error ------------------------------------------------------------------------- -:17:1
 
-Cannot cast `rendersHeaderList` to renders `Header` because `ReadonlyArray<renders* Header>` [1] does not render
+Cannot cast `rendersHeaderList` to `renders Header` because `ReadonlyArray<renders* Header>` [1] does not render
 `Header` [2]. [incompatible-type]
 
    -:17:1
@@ -77,7 +77,7 @@ References:
 
 Error ------------------------------------------------------------------------- -:17:1
 
-Cannot cast `rendersHeaderList` to renders `Header` because a value that renders nothing [1] does not render
+Cannot cast `rendersHeaderList` to `renders Header` because a value that renders nothing [1] does not render
 `Header` [2]. [incompatible-type]
 
    -:17:1
@@ -94,7 +94,7 @@ References:
 
 Error ------------------------------------------------------------------------- -:18:1
 
-Cannot cast `rendersHeaderList` to renders? `Header` because `ReadonlyArray<renders* Header>` [1] does not render
+Cannot cast `rendersHeaderList` to `renders? Header` because `ReadonlyArray<renders* Header>` [1] does not render
 `Header` [2]. [incompatible-type]
 
    -:18:1

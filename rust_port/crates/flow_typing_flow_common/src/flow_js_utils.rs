@@ -9317,7 +9317,6 @@ where
 pub mod render_types {
     use std::ops::Deref;
     use std::rc::Rc;
-    use std::sync::Arc;
 
     use dupe::Dupe;
     use flow_aloc::ALoc;
@@ -9584,9 +9583,7 @@ pub mod render_types {
                     ..
                 }) => {
                     let reason = mk_reason(
-                        VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(
-                            renders_name.dupe(),
-                        ))),
+                        VirtualReasonDesc::RType(renders_name.dupe()),
                         normalization_cx.result_reason.loc().dupe(),
                     );
                     let new_t = Type::new(TypeInner::DefT(

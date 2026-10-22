@@ -784,18 +784,6 @@ fn printed_type_desc<L: Dupe>(type_desc: &TypeOrTypeDescT<L>) -> ErrorTypeDesc<L
     }
 }
 
-fn loop_render_desc<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug>(
-    desc: &VirtualReasonDesc<L>,
-) -> VirtualReasonDesc<L> {
-    use VirtualReasonDesc::*;
-    match desc {
-        RRenderType(inner) | RRenderMaybeType(inner) | RRenderStarType(inner) => {
-            loop_render_desc(inner)
-        }
-        _ => desc.clone(),
-    }
-}
-
 /// What a render type renders, so that "X does not render Y" doesn't read "renders Y".
 fn rendered_type_desc<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug>(
     desc: &ErrorTypeDesc<L>,
@@ -805,10 +793,9 @@ fn rendered_type_desc<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std:
             Ty::Renders(inner, _) => ErrorTypeDesc::Normalized(Elt::Type(inner.dupe())),
             _ => desc.clone(),
         },
-        ErrorTypeDesc::ReasonDesc(reason_desc) => {
-            ErrorTypeDesc::ReasonDesc(loop_render_desc(reason_desc))
-        }
-        ErrorTypeDesc::Normalized(Elt::Decl(_)) | ErrorTypeDesc::Unknown => desc.clone(),
+        ErrorTypeDesc::ReasonDesc(_)
+        | ErrorTypeDesc::Normalized(Elt::Decl(_))
+        | ErrorTypeDesc::Unknown => desc.clone(),
     }
 }
 
@@ -10639,17 +10626,7 @@ where
             }
             MessageParseError(parse_error) => friendly::message_of_string(&parse_error.to_string()),
             MessageDoesNotRender { lower, upper } => {
-                // We replace the desc of the reason so we can say "LHS" does not render "RHS" instead of
-                // "LHS" does not render "renders RHS"
-                let lower_desc = lower.desc.as_ref().map(loop_render_desc);
-                let lower_r = lower.dupe().replace_desc(lower_desc);
-                let upper_desc = upper.desc.as_ref().map(loop_render_desc);
-                let upper_r = upper.dupe().replace_desc(upper_desc);
-                friendly::Message(vec![
-                    ref_(&lower_r),
-                    text(" does not render "),
-                    ref_(&upper_r),
-                ])
+                friendly::Message(vec![ref_(lower), text(" does not render "), ref_(upper)])
             }
             MessageDoesNotRenderWithPrintedTypes(
                 box MessageIncompatibleGeneralWithPrintedTypesData {

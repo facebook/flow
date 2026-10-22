@@ -513,8 +513,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- component.ios.js:5:45
 
-Cannot conform to common interface module because in property `DifferentRenders`: `Acid` [1] does not render `Base` [2].
-[incompatible-type]
+Cannot conform to common interface module because in property `DifferentRenders`: `React.Node` [1] does not render
+`Base` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 

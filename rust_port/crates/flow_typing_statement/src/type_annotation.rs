@@ -4216,13 +4216,7 @@ fn convert_render_type_inner<'a>(
     env.in_renders_arg = old_in_renders_arg;
     let (_, t) = t_ast.loc();
     let t = t.dupe();
-    let arg_desc = type_util::reason_of_t(&t).desc(true).cloned().map(Arc::new);
-    let reason_desc = arg_desc.map(|arg_desc| match renders.variant {
-        ast::types::RendersVariant::Normal => reason::VirtualReasonDesc::RRenderType(arg_desc),
-        ast::types::RendersVariant::Maybe => reason::VirtualReasonDesc::RRenderMaybeType(arg_desc),
-        ast::types::RendersVariant::Star => reason::VirtualReasonDesc::RRenderStarType(arg_desc),
-    });
-    let reason = reason::mk_reason(reason_desc.clone(), loc.dupe());
+    let reason = reason::mk_reason(type_util::reason_of_t(&t).desc(true).cloned(), loc.dupe());
     Ok(
         match type_util::mk_possibly_generic_render_type(
             renders.variant.clone(),
@@ -4252,7 +4246,6 @@ fn convert_render_type_inner<'a>(
                 )
             }
             None => {
-                let reason = reason::mk_reason(reason_desc, loc.dupe());
                 let renders_variant = match renders.variant {
                     ast::types::RendersVariant::Normal => type_::RendersVariant::RendersNormal,
                     ast::types::RendersVariant::Maybe => type_::RendersVariant::RendersMaybe,
@@ -8744,9 +8737,7 @@ fn mk_component<'a>(
         }
         ast::types::ComponentRendersAnnotation::MissingRenders(loc) => {
             let reason = reason::mk_annot_reason(
-                reason::VirtualReasonDesc::RRenderType(Arc::new(reason::VirtualReasonDesc::RType(
-                    FlowSmolStr::new("React.Node"),
-                ))),
+                reason::VirtualReasonDesc::RType(FlowSmolStr::new("React.Node")),
                 loc.dupe(),
             );
             let renders_t = Type::new(type_::TypeInner::DefT(
@@ -9268,9 +9259,7 @@ pub fn mk_declare_component_sig<'a>(
         }
         ast::types::ComponentRendersAnnotation::MissingRenders(r_loc) => {
             let r = reason::mk_annot_reason(
-                reason::VirtualReasonDesc::RRenderType(Arc::new(reason::VirtualReasonDesc::RType(
-                    FlowSmolStr::new("React.Node"),
-                ))),
+                reason::VirtualReasonDesc::RType(FlowSmolStr::new("React.Node")),
                 r_loc.dupe(),
             );
             let renders_t = Type::new(type_::TypeInner::DefT(
