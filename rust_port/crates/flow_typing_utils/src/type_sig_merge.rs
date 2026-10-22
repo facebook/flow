@@ -30,7 +30,6 @@ use flow_common::reason::Reason;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_parser::ast_utils;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
@@ -423,19 +422,7 @@ fn eval_arith<'cx>(
     rhs_t: Type,
     op: flow_parser::ast::expression::BinaryOperator,
 ) -> Type {
-    use flow_common::reason::VirtualReasonDesc::*;
-    let desc = type_util::reason_of_t(&lhs_t)
-        .desc(true)
-        .cloned()
-        .zip(type_util::reason_of_t(&rhs_t).desc(true).cloned())
-        .map(|(lhs_desc, rhs_desc)| {
-            RBinaryOperator(Box::new((
-                ast_utils::string_of_binary_operator(op).into(),
-                Arc::new(lhs_desc),
-                Arc::new(rhs_desc),
-            )))
-        });
-    let reason = reason::mk_reason(desc, loc);
+    let reason = reason::mk_reason(None, loc);
     let kind = type_::arith_kind::ArithKind::of_binary_operator(op);
     annotation_inference::arith(cx, reason, lhs_t, rhs_t, kind)
 }
@@ -446,7 +433,6 @@ fn eval_unary<'cx>(
     t: Type,
     op: flow_parser::ast::expression::UnaryOperator,
 ) -> Type {
-    use flow_common::reason::VirtualReasonDesc::*;
     use flow_parser::ast::expression::UnaryOperator;
     match op {
         UnaryOperator::Minus => {
@@ -462,12 +448,7 @@ fn eval_unary<'cx>(
             annotation_inference::unary_arith(cx, reason, t, type_::UnaryArithKind::BitNot)
         }
         UnaryOperator::Not => {
-            let reason = reason::mk_reason(
-                type_util::desc_of_t(&t)
-                    .cloned()
-                    .map(|desc| RUnaryOperator("not".into(), Arc::new(desc))),
-                loc,
-            );
+            let reason = reason::mk_reason(None, loc);
             annotation_inference::unary_not(cx, reason, t)
         }
         UnaryOperator::Typeof => type_::str_module_t::at(loc),

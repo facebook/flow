@@ -348,21 +348,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RTupleElement,
     RTupleOutOfBoundsAccess(i32),
     RFunction(ReasonDescFunction),
-    RUnaryOperator(FlowSmolStr, Arc<VirtualReasonDesc<L>>),
-    RBinaryOperator(
-        Box<(
-            FlowSmolStr,
-            Arc<VirtualReasonDesc<L>>,
-            Arc<VirtualReasonDesc<L>>,
-        )>,
-    ),
-    RLogical(
-        Box<(
-            FlowSmolStr,
-            Arc<VirtualReasonDesc<L>>,
-            Arc<VirtualReasonDesc<L>>,
-        )>,
-    ),
     REnum {
         name: Option<FlowSmolStr>,
     },
@@ -530,17 +515,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
 
             // Recursive variants
             RUnknownUnspecifiedProperty(d) => RUnknownUnspecifiedProperty(Arc::new(d.map_locs(f))),
-            RUnaryOperator(s, d) => RUnaryOperator(s.dupe(), Arc::new(d.map_locs(f))),
-            RBinaryOperator(box (s, d1, d2)) => RBinaryOperator(Box::new((
-                s.dupe(),
-                Arc::new(d1.map_locs(f)),
-                Arc::new(d2.map_locs(f)),
-            ))),
-            RLogical(box (s, d1, d2)) => RLogical(Box::new((
-                s.dupe(),
-                Arc::new(d1.map_locs(f)),
-                Arc::new(d2.map_locs(f)),
-            ))),
             RTypeAlias(box (s, loc_opt, d)) => RTypeAlias(Box::new((
                 s.dupe(),
                 loc_opt.as_ref().map(f),
@@ -1289,25 +1263,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // JSX
         RFbt => "`<fbt/>`".to_string(),
-
-        // Operators
-        RUnaryOperator(operator, value) => format!("{} {}", operator, string_of_desc(value)),
-        RBinaryOperator(box (operator, left, right)) => {
-            format!(
-                "{} {} {}",
-                string_of_desc(left),
-                operator,
-                string_of_desc(right)
-            )
-        }
-        RLogical(box (operator, left, right)) => {
-            format!(
-                "{} {} {}",
-                string_of_desc(left),
-                operator,
-                string_of_desc(right)
-            )
-        }
 
         // Template strings and enums
         RTemplateString => "template string".to_string(),

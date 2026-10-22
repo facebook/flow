@@ -10833,12 +10833,7 @@ fn unary<'a>(
             let tout = if encl_ctx.is_conditional_test_context() {
                 type_::bool_module_t::at(loc.dupe())
             } else {
-                let reason = mk_reason(
-                    desc_of_t(&arg)
-                        .cloned()
-                        .map(|desc| RUnaryOperator(FlowSmolStr::from("not"), Arc::new(desc))),
-                    loc.dupe(),
-                );
+                let reason = mk_reason(None, loc.dupe());
                 type_operation_utils::operators::unary_not(cx, &reason, &arg)?
             };
             (
@@ -11374,18 +11369,7 @@ fn binary<'a>(
                 &expr.right,
             )?;
             let t2 = right_ast.loc().1.dupe();
-            let desc = reason_of_t(&t1)
-                .desc(true)
-                .cloned()
-                .zip(reason_of_t(&t2).desc(true).cloned())
-                .map(|(desc1, desc2)| {
-                    RBinaryOperator(Box::new((
-                        FlowSmolStr::from("arithmetic operation"),
-                        Arc::new(desc1),
-                        Arc::new(desc2),
-                    )))
-                });
-            let reason = mk_reason(desc, loc.dupe());
+            let reason = mk_reason(None, loc.dupe());
             let arith_kind = type_::arith_kind::ArithKind::of_binary_operator(expr.operator);
             let tout = type_operation_utils::operators::arith(cx, &reason, &arith_kind, &t1, &t2)?;
             (
@@ -11457,19 +11441,7 @@ fn logical<'a>(
             } else {
                 t2_raw
             };
-            let reason = mk_reason(
-                desc_of_t(&t1)
-                    .cloned()
-                    .zip(desc_of_t(&t2).cloned())
-                    .map(|(desc1, desc2)| {
-                        RLogical(Box::new((
-                            FlowSmolStr::from("||"),
-                            Arc::new(desc1),
-                            Arc::new(desc2),
-                        )))
-                    }),
-                loc.dupe(),
-            );
+            let reason = mk_reason(None, loc.dupe());
             let tout = type_operation_utils::operators::logical_or(cx, &reason, &t1, &t2)?;
             (
                 tout,
@@ -11508,19 +11480,7 @@ fn logical<'a>(
             } else {
                 t2_raw
             };
-            let reason = mk_reason(
-                desc_of_t(&t1)
-                    .cloned()
-                    .zip(desc_of_t(&t2).cloned())
-                    .map(|(desc1, desc2)| {
-                        RLogical(Box::new((
-                            FlowSmolStr::from("&&"),
-                            Arc::new(desc1),
-                            Arc::new(desc2),
-                        )))
-                    }),
-                loc.dupe(),
-            );
+            let reason = mk_reason(None, loc.dupe());
             let tout = type_operation_utils::operators::logical_and(cx, &reason, &t1, &t2)?;
             (
                 tout,
@@ -11559,19 +11519,7 @@ fn logical<'a>(
             } else {
                 t2_raw
             };
-            let reason = mk_reason(
-                desc_of_t(&t1)
-                    .cloned()
-                    .zip(desc_of_t(&t2).cloned())
-                    .map(|(desc1, desc2)| {
-                        RLogical(Box::new((
-                            FlowSmolStr::from("??"),
-                            Arc::new(desc1),
-                            Arc::new(desc2),
-                        )))
-                    }),
-                loc.dupe(),
-            );
+            let reason = mk_reason(None, loc.dupe());
             let tout =
                 type_operation_utils::operators::logical_nullish_coalesce(cx, &reason, &t1, &t2)?;
             (
