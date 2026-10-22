@@ -2182,7 +2182,9 @@ fn declare_module(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>,
                 statement::declare_module::Id::Identifier(id)
             }
         };
-        if peek::token(env) != &TokenKind::TLcurly && peek::is_implicit_semicolon(env) {
+        if peek::token(env) == &TokenKind::TSemicolon
+            || (peek::token(env) != &TokenKind::TLcurly && peek::is_implicit_semicolon(env))
+        {
             // Shorthand ambient module: `declare module 'name'` — desugar to empty body.
             let trailing = match semicolon(env, None, false)? {
                 SemicolonType::Explicit(trailing) => trailing,

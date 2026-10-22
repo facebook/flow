@@ -1270,6 +1270,65 @@ References:
                 ^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------- shorthand_ambient_module_usage.js:3:10
+
+Cannot import `value` because there is no `value` export in `shorthand-explicit`. Did you mean
+`import value from "..."`? [missing-export]
+
+   3| import { value as explicitValue } from 'shorthand-explicit'; // ERROR
+               ^^^^^
+
+
+Error --------------------------------------------------------------------------- shorthand_ambient_module_usage.js:4:10
+
+Cannot import `value` because there is no `value` export in `shorthand-implicit`. Did you mean
+`import value from "..."`? [missing-export]
+
+   4| import { value as implicitValue } from 'shorthand-implicit'; // ERROR
+               ^^^^^
+
+
+Error --------------------------------------------------------------------------- shorthand_ambient_module_usage.js:5:10
+
+Cannot import `value` because there is no `value` export in `shorthand-empty-body`. Did you mean
+`import value from "..."`? [missing-export]
+
+   5| import { value as emptyBodyValue } from 'shorthand-empty-body'; // ERROR
+               ^^^^^
+
+
+Error ---------------------------------------------------------------------------- shorthand_ambient_module_usage.js:8:1
+
+Cannot cast `Explicit` to `number` because `{}` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   shorthand_ambient_module_usage.js:8:1
+   8| Explicit as number; // ERROR
+      ^^^^^^^^
+
+References:
+   shorthand_ambient_module.d.ts:1:16
+   1| declare module 'shorthand-explicit';
+                     ^^^^^^^^^^^^^^^^^^^^ [1]
+   shorthand_ambient_module_usage.js:8:13
+   8| Explicit as number; // ERROR
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------- shorthand_ambient_module_usage.js:9:19
+
+Cannot get `explicitNamespace.value` because property `value` is missing in `{readonly default: {}}` [1].
+[missing-export]
+
+   shorthand_ambient_module_usage.js:9:19
+   9| explicitNamespace.value; // ERROR
+                        ^^^^^
+
+References:
+   shorthand_ambient_module.d.ts:1:16
+   1| declare module 'shorthand-explicit';
+                     ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------- ts_interop_arrays_usage.js:12:20
 
 Cannot call `acceptsFlowStrings` with `flowTuple` bound to `values` because `[string, string]` [1] is incompatible with
@@ -1678,4 +1737,4 @@ References:
 
 
 
-Found 109 errors
+Found 114 errors
