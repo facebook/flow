@@ -47,8 +47,11 @@ use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
 use flow_typing_type::type_::AssignVarTarget;
+use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::DroType;
+use flow_typing_type::type_::EvalMappedTypeData;
 use flow_typing_type::type_::IndexedTypeAccessData;
+use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
 use flow_typing_type::type_::TypeGuardIncompatibilityData;
@@ -6862,6 +6865,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         ) -> VirtualUseOp<L> {
             match use_op {
                 VirtualUseOp::Op(root) => match root.as_ref() {
+                    VirtualRootUseOp::ClassExtendsCheck(box ClassExtendsCheckData {
+                        def,
+                        extends_loc,
+                        extends,
+                    }) => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ClassExtendsCheck(
+                        Box::new(ClassExtendsCheckData {
+                            def: def.dupe(),
+                            extends_loc: extends_loc.dupe(),
+                            extends: f(extends.clone()),
+                        }),
+                    ))),
+                    VirtualRootUseOp::EvalMappedType(box EvalMappedTypeData {
+                        mapped_type_loc,
+                        mapped_type,
+                    }) => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::EvalMappedType(Box::new(
+                        EvalMappedTypeData {
+                            mapped_type_loc: mapped_type_loc.dupe(),
+                            mapped_type: f(mapped_type.clone()),
+                        },
+                    )))),
                     VirtualRootUseOp::AssignVar {
                         var: Some(box AssignVarTarget::Annotation(t)),
                         init,
@@ -6951,6 +6974,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
                 VirtualUseOp::Frame(frame_rc, inner_op) => {
                     let frame_rc = match frame_rc.as_ref() {
+                        VirtualFrameUseOp::MappedTypeKeyCompatibility(
+                            box MappedTypeKeyCompatibilityData {
+                                source_type_loc,
+                                source_type,
+                                mapped_type_loc,
+                                mapped_type,
+                            },
+                        ) => Arc::new(VirtualFrameUseOp::MappedTypeKeyCompatibility(Box::new(
+                            MappedTypeKeyCompatibilityData {
+                                source_type_loc: source_type_loc.dupe(),
+                                source_type: f(source_type.clone()),
+                                mapped_type_loc: mapped_type_loc.dupe(),
+                                mapped_type: f(mapped_type.clone()),
+                            },
+                        ))),
                         VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
                             box OpaqueTypeCustomErrorCompatibilityData {
                                 lower,
@@ -12478,7 +12516,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             use flow_common_errors::error_codes::ErrorCode::*;
             match root {
                 VirtualRootUseOp::Cast { .. }
-                | VirtualRootUseOp::ClassExtendsCheck { .. }
+                | VirtualRootUseOp::ClassExtendsCheck(..)
                 | VirtualRootUseOp::FunCall(..)
                 | VirtualRootUseOp::FunCallMethod(..)
                 | VirtualRootUseOp::FunReturnStatement { .. }

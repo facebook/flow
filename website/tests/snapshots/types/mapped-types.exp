@@ -7,8 +7,9 @@ No errors!
 === block 3 ===
 Error ------------------------------------------------------------------------- -:2:28
 
-Cannot instantiate mapped type [1] because boolean [2] is incompatible with `string | number | symbol`, so it cannot be
-used to generate keys for mapped type [1]. [incompatible-type]
+Cannot instantiate `{[key in boolean]: number}` [1] because `boolean` [2] is incompatible with
+`string | number | symbol`, so it cannot be used to generate keys for `{[key in boolean]: number}` [1].
+[incompatible-type]
 
    -:2:28
    2| type MappedType = {[key in boolean]: number}; // ERROR!

@@ -355,7 +355,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ default_import.js:26:12
 
-Cannot extend `CDefaultV` [1] with `BadCloneSub` because in property `clone` > the return value: `CDefault` [2] is
+Cannot extend `CDefault` [1] with `BadCloneSub` because in property `clone` > the return value: `CDefault` [2] is
 incompatible with `empty` [3]. [incompatible-type]
 
    default_import.js:26:12
@@ -428,7 +428,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:14:10
 
-Cannot extend `A3` [1] with `B3` because in property `foo` > the return value: `B3<X>` [2] is incompatible with
+Cannot extend `A3<X>` [1] with `B3` because in property `foo` > the return value: `B3<X>` [2] is incompatible with
 `empty` [3]. [incompatible-type]
 
    import.js:14:10

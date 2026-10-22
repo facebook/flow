@@ -53,9 +53,18 @@ use flow_typing_flow_js::template_literal_type;
 use flow_typing_loc_env::func_class_sig_types;
 use flow_typing_loc_env::func_class_sig_types::class::ClassLikeBindingKind;
 use flow_typing_type::type_;
+use flow_typing_type::type_::EvalMappedTypeData;
+use flow_typing_type::type_::RootUseOp;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
+use flow_typing_type::type_::TypeDestructorT;
+use flow_typing_type::type_::TypeDestructorTInner;
+use flow_typing_type::type_::TypeInner as FlowTypeInner;
 use flow_typing_type::type_::TypeParam;
+use flow_typing_type::type_::UseOp;
+use flow_typing_type::type_::eval::Id as EvalId;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
+use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
 use flow_typing_utils::type_env;
 use flow_typing_utils::typed_ast_utils;
@@ -65,6 +74,29 @@ use crate::class_sig;
 type FuncTypeParam = (Type, ast::types::function::Param<ALoc, (ALoc, Type)>);
 type FuncTypeRest = (Type, ast::types::function::RestParam<ALoc, (ALoc, Type)>);
 type FuncTypeThisParam = (Type, ast::types::function::ThisParam<ALoc, (ALoc, Type)>);
+
+fn mapped_type_use_op(
+    reason: &Reason,
+    source: &Type,
+    destructor: &type_::Destructor,
+    eval_id: EvalId,
+) -> UseOp {
+    let mapped_type = Type::new(FlowTypeInner::EvalT {
+        type_: source.dupe(),
+        defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+            unknown_use(),
+            reason.dupe(),
+            Rc::new(destructor.clone()),
+        )),
+        id: eval_id,
+    });
+    UseOp::Op(Arc::new(RootUseOp::EvalMappedType(Box::new(
+        EvalMappedTypeData {
+            mapped_type_loc: reason.loc.dupe(),
+            mapped_type: TypeOrTypeDescT::Type(mapped_type),
+        },
+    ))))
+}
 
 fn try_map_vec<T, U, E>(items: &[T], mut f: impl FnMut(&T) -> Result<U, E>) -> Result<Vec<U>, E> {
     let mut result = Vec::with_capacity(items.len());
@@ -2393,31 +2425,28 @@ fn convert_inner<'a>(
                                 reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline("Omit")),
                                 loc.dupe(),
                             );
-                            let mapped_use_op =
-                                type_::UseOp::Op(Arc::new(type_::RootUseOp::EvalMappedType {
-                                    mapped_type: reason.dupe(),
+                            let destructor =
+                                type_::Destructor::MappedType(Box::new(DestructorMappedTypeData {
+                                    homomorphic: type_::MappedTypeHomomorphicFlag::Unspecialized,
+                                    property_type: type_::mixed_t::make(reason.dupe()),
+                                    name_type: None,
+                                    mapped_type_flags: type_::MappedTypeFlags {
+                                        optional: type_::MappedTypeOptionality::KeepOptionality,
+                                        variance: type_::MappedTypeVariance::KeepVariance,
+                                    },
+                                    distributive_tparam_name: None,
                                 }));
+                            let eval_id = EvalId::generate_id();
+                            let mapped_use_op =
+                                mapped_type_use_op(&reason, &t2, &destructor, eval_id.dupe());
                             let t2_mapped =
                                 FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                                     cx,
                                     mapped_use_op,
                                     &reason,
                                     &t2,
-                                    &type_::Destructor::MappedType(Box::new(
-                                        DestructorMappedTypeData {
-                                            homomorphic:
-                                                type_::MappedTypeHomomorphicFlag::Unspecialized,
-                                            property_type: type_::mixed_t::make(reason.dupe()),
-                                            name_type: None,
-                                            mapped_type_flags: type_::MappedTypeFlags {
-                                                optional:
-                                                    type_::MappedTypeOptionality::KeepOptionality,
-                                                variance: type_::MappedTypeVariance::KeepVariance,
-                                            },
-                                            distributive_tparam_name: None,
-                                        },
-                                    )),
-                                    type_::eval::Id::generate_id(),
+                                    &destructor,
+                                    eval_id,
                                 )
                                 .expect("mk_type_destructor should not fail");
                             let result_t =
@@ -3413,10 +3442,6 @@ fn convert_inner<'a>(
                 };
                 let reason =
                     reason::mk_reason(reason::VirtualReasonDesc::RMappedType, obj_loc.dupe());
-                let use_op =
-                    type_::VirtualUseOp::Op(Arc::new(type_::VirtualRootUseOp::EvalMappedType {
-                        mapped_type: reason.dupe(),
-                    }));
                 let mapped_type_variance = {
                     use flow_parser::ast::types::object::MappedTypeVarianceOp;
                     match (variance, variance_op) {
@@ -3460,12 +3485,8 @@ fn convert_inner<'a>(
                         }
                     }
                 };
-                let eval_t = FlowJs::mk_possibly_evaluated_destructor_for_annotations(
-                    cx,
-                    use_op,
-                    &reason,
-                    &source_type_t,
-                    &type_::Destructor::MappedType(Box::new(DestructorMappedTypeData {
+                let destructor =
+                    type_::Destructor::MappedType(Box::new(DestructorMappedTypeData {
                         homomorphic,
                         property_type: poly_prop_type.dupe(),
                         name_type: poly_name_type,
@@ -3474,8 +3495,17 @@ fn convert_inner<'a>(
                             variance: mapped_type_variance,
                         },
                         distributive_tparam_name,
-                    })),
-                    type_::eval::Id::generate_id(),
+                    }));
+                let eval_id = EvalId::generate_id();
+                let use_op =
+                    mapped_type_use_op(&reason, &source_type_t, &destructor, eval_id.dupe());
+                let eval_t = FlowJs::mk_possibly_evaluated_destructor_for_annotations(
+                    cx,
+                    use_op,
+                    &reason,
+                    &source_type_t,
+                    &destructor,
+                    eval_id,
                 )
                 .expect("mk_type_destructor not in speculation");
                 let prop_ast =

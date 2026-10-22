@@ -42,8 +42,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
-Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter: property `y_` is
-missing in `{readonly y?: number, ...}` [2] but exists in `{y_: string, ...}` [3]. [incompatible-type]
+Cannot extend `Component<Props, State>` [1] with `Foo` because in property `setState` > the first parameter: property
+`y_` is missing in `{readonly y?: number, ...}` [2] but exists in `{y_: string, ...}` [3]. [incompatible-type]
 
    classes.js:23:3
    23|   setState(o: { y_: string, ... }): void { }
@@ -63,7 +63,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter:
+Cannot extend `Component<Props, State>` [1] with `Foo` because in property `setState` > the first parameter:
 `{y_: string, ...}` [2] is incompatible with `null` [3]. [incompatible-type]
 
    classes.js:23:15
@@ -81,7 +81,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter:
+Cannot extend `Component<Props, State>` [1] with `Foo` because in property `setState` > the first parameter:
 `{y_: string, ...}` [2] is incompatible with `void` [3]. [incompatible-type]
 
    classes.js:23:15
@@ -99,7 +99,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter:
+Cannot extend `Component<Props, State>` [1] with `Foo` because in property `setState` > the first parameter:
 `{y_: string, ...}` [2] is incompatible with `(State, Props) => ?Readonly<Partial<State>>` [3]. [incompatible-type]
 
 Functions without statics are not compatible with objects.

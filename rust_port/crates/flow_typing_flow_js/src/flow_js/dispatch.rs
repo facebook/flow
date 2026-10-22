@@ -35,6 +35,7 @@ use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::CondTData;
@@ -3524,14 +3525,18 @@ fn __flow_impl<'cx>(
             for t in rep.members_iter() {
                 let u_inner = match use_op {
                     VirtualUseOp::Op(root)
-                        if let VirtualRootUseOp::ClassExtendsCheck { def, extends: _ } =
-                            root.deref() =>
+                        if let VirtualRootUseOp::ClassExtendsCheck(box ClassExtendsCheckData {
+                            def,
+                            ..
+                        }) = root.deref() =>
                     {
-                        let new_use_op =
-                            VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ClassExtendsCheck {
+                        let new_use_op = VirtualUseOp::Op(Arc::new(
+                            VirtualRootUseOp::ClassExtendsCheck(Box::new(ClassExtendsCheckData {
                                 def: def.dupe(),
-                                extends: reason_of_t(t).dupe(),
-                            }));
+                                extends_loc: type_util::loc_of_t(t).dupe(),
+                                extends: TypeOrTypeDescT::Type(t.dupe()),
+                            })),
+                        ));
                         UseT::new(UseTInner::SuperT(Box::new(SuperTData {
                             use_op: new_use_op,
                             reason: reason.dupe(),

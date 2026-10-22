@@ -29,6 +29,7 @@ use crate::type_::ArrRestTData;
 use crate::type_::AssertionFunctionConsistencyData;
 use crate::type_::AssignVarTarget;
 use crate::type_::CallTData;
+use crate::type_::ClassExtendsCheckData;
 use crate::type_::ClassImplementsCheckData;
 use crate::type_::ClassOwnProtoCheckData;
 use crate::type_::ConditionalTData;
@@ -36,6 +37,7 @@ use crate::type_::ConformToCommonInterfaceData;
 use crate::type_::ConstrainedAssignmentData;
 use crate::type_::ConstructorTData;
 use crate::type_::ElemTData;
+use crate::type_::EvalMappedTypeData;
 use crate::type_::ExtendsUseTData;
 use crate::type_::FunCallData;
 use crate::type_::FunCallMethodData;
@@ -52,6 +54,7 @@ use crate::type_::ImplicitInstantiationTvarData;
 use crate::type_::IndexedTypeAccessData;
 use crate::type_::JSXCreateElementData;
 use crate::type_::MapTypeTData;
+use crate::type_::MappedTypeKeyCompatibilityData;
 use crate::type_::MethodTData;
 use crate::type_::MixedFlavor;
 use crate::type_::OpaqueTypeCustomErrorCompatibilityData;
@@ -1079,10 +1082,15 @@ where
                 lower: mod_reason(lower),
                 upper: Box::new(type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper)),
             },
-            ClassExtendsCheck { def, extends } => ClassExtendsCheck {
+            ClassExtendsCheck(box ClassExtendsCheckData {
+                def,
+                extends_loc,
+                extends,
+            }) => ClassExtendsCheck(Box::new(ClassExtendsCheckData {
                 def: mod_reason(def),
-                extends: mod_reason(extends),
-            },
+                extends_loc: f(extends_loc),
+                extends: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), extends),
+            })),
             ClassMethodDefinition { def, name } => ClassMethodDefinition {
                 def: mod_reason(def),
                 name: mod_reason(name),
@@ -1252,9 +1260,13 @@ where
                     discriminant: f(discriminant),
                 }))
             }
-            EvalMappedType { mapped_type } => EvalMappedType {
-                mapped_type: mod_reason(mapped_type),
-            },
+            EvalMappedType(box EvalMappedTypeData {
+                mapped_type_loc,
+                mapped_type,
+            }) => EvalMappedType(Box::new(EvalMappedTypeData {
+                mapped_type_loc: f(mapped_type_loc),
+                mapped_type: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), mapped_type),
+            })),
             TypeGuardIncompatibility(box TypeGuardIncompatibilityData {
                 guard_type_loc,
                 guard_type_reference_loc,
@@ -1403,13 +1415,17 @@ where
                     custom_error_loc: f(custom_error_loc),
                 },
             )),
-            MappedTypeKeyCompatibility {
+            MappedTypeKeyCompatibility(box MappedTypeKeyCompatibilityData {
+                source_type_loc,
                 source_type,
+                mapped_type_loc,
                 mapped_type,
-            } => MappedTypeKeyCompatibility {
-                source_type: mod_reason(source_type),
-                mapped_type: mod_reason(mapped_type),
-            },
+            }) => MappedTypeKeyCompatibility(Box::new(MappedTypeKeyCompatibilityData {
+                source_type_loc: f(source_type_loc),
+                source_type: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), source_type),
+                mapped_type_loc: f(mapped_type_loc),
+                mapped_type: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), mapped_type),
+            })),
             PropertyCompatibility(box PropertyCompatibilityData { prop, lower, upper }) => {
                 PropertyCompatibility(Box::new(PropertyCompatibilityData {
                     prop,

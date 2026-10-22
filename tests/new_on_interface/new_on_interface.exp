@@ -149,7 +149,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- extends_ctor.js:71:15
 
-Cannot extend `NotDerived` [1] with `plain` because `Plain` [2] is not inheritable. [incompatible-use]
+Cannot extend this type [1] with `plain` because `Plain` [2] is not inheritable. [incompatible-use]
 
    extends_ctor.js:71:15
    71| declare const plain: Plain;

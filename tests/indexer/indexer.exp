@@ -155,8 +155,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Cannot extend `C` [1] with `D` because in property `x` > the indexer property's key: property `qux` is missing in
-`{bar: string, foo: number, ...}` [2]. [prop-missing]
+Cannot extend `C<{bar: string, foo: number, ...}>` [1] with `D` because in property `x` > the indexer property's key:
+property `qux` is missing in `{bar: string, foo: number, ...}` [2]. [prop-missing]
 
    test.js:19:1
        v---------------------------------------------------
@@ -176,8 +176,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:6
 
-Cannot extend `C` [1] with `D` because in property `x`: an index signature declaring the expected key / value type is
-missing in `{foo: number, qux: boolean, ...}` [2] but exists in
+Cannot extend `C<{bar: string, foo: number, ...}>` [1] with `D` because in property `x`: an index signature declaring
+the expected key / value type is missing in `{foo: number, qux: boolean, ...}` [2] but exists in
 `{[key: keyof {bar: string, foo: number, ...}]: any}` [3]. [incompatible-type]
 
 This property is invariantly typed. See

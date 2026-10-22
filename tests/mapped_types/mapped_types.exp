@@ -1937,8 +1937,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- non_homomorphic.js:28:27
 
-Cannot instantiate mapped type [1] because boolean [2] is incompatible with `string | number | symbol`, so it cannot be
-used to generate keys for mapped type [1]. [incompatible-type]
+Cannot instantiate `{[key in boolean]: number}` [1] because `boolean` [2] is incompatible with
+`string | number | symbol`, so it cannot be used to generate keys for `{[key in boolean]: number}` [1].
+[incompatible-type]
 
    non_homomorphic.js:28:27
    28|   type BadKeys = {[key in boolean]: number}; // ERROR!
@@ -2255,8 +2256,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- reasons.js:10:26
 
-Cannot instantiate mapped type [1] because in type argument `T`: `"bar"` [2] is incompatible with `"foo"` [3].
-[incompatible-type]
+Cannot instantiate `{[key in keyof FooBarObj]: TakesFoo<key>}` [1] because in type argument `T`: `"bar"` [2] is
+incompatible with `"foo"` [3]. [incompatible-type]
 
    reasons.js:10:26
    10|   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR
@@ -2760,8 +2761,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:138:35
 
-Cannot instantiate `UnconstrainedKey` because boolean [1] is incompatible with `string | number | symbol`, so it cannot
-be used to generate keys for `UnconstrainedKey` [2]. [incompatible-type]
+Cannot instantiate `UnconstrainedKey` because `boolean` [1] is incompatible with `string | number | symbol`, so it
+cannot be used to generate keys for this type [2]. [incompatible-type]
 
    test.js:138:35
    138|   type BadKeys = UnconstrainedKey<boolean>; // ERROR HERE, NOT LINE ABOVE

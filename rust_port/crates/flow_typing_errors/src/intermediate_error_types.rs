@@ -1308,7 +1308,7 @@ pub enum RootMessage<L: Dupe> {
         fn_: Option<VirtualReasonDesc<L>>,
     },
     RootCannotExtendClass {
-        extends: VirtualReason<L>,
+        extends: MessageTypeReferenceData<L>,
         def: Option<VirtualReasonDesc<L>>,
     },
     RootCannotGetProp(Option<VirtualReasonDesc<L>>),
@@ -1321,7 +1321,7 @@ pub enum RootMessage<L: Dupe> {
         field: Option<VirtualReasonDesc<L>>,
         body: Option<VirtualReasonDesc<L>>,
     },
-    RootCannotInstantiateEval(VirtualReason<L>),
+    RootCannotInstantiateEval(MessageTypeReferenceData<L>),
     RootCannotInstantiateRenderType,
     RootCannotInstantiateTypeApp(Option<VirtualReasonDesc<L>>),
     RootCannotReturn(Option<VirtualReasonDesc<L>>),
@@ -2432,8 +2432,8 @@ pub enum Message<L: Dupe> {
     ),
 
     MessageIncompatibleMappedTypeKey {
-        source_type: VirtualReason<L>,
-        mapped_type: VirtualReason<L>,
+        source_type: MessageTypeReferenceData<L>,
+        mapped_type: MessageTypeReferenceData<L>,
     },
 
     MessageIncompatibleNonLiteralArrayToTuple {

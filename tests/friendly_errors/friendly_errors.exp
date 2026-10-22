@@ -18,7 +18,7 @@ References:
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:19:6
 
-Cannot extend `B` [1] with `D` because in property `p`: `string` [2] is incompatible with `number` [3].
+Cannot extend `B<empty>` [1] with `D` because in property `p`: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    class-extends-and-implements.js:19:6
@@ -90,7 +90,7 @@ References:
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:51:6
 
-Cannot extend `J` [1] with `L` because in property `p`: `string` [2] is incompatible with `number` [3].
+Cannot extend `J<empty>` [1] with `L` because in property `p`: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    class-extends-and-implements.js:51:6
@@ -144,7 +144,7 @@ References:
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:76:7
 
-Cannot extend `N1` [1] with `P` because in property `p1`: `string` [2] is incompatible with `number` [3].
+Cannot extend `N1<empty>` [1] with `P` because in property `p1`: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    class-extends-and-implements.js:76:7
@@ -162,7 +162,7 @@ References:
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:77:7
 
-Cannot extend `N2` [1] with `P` because in property `p2`: `string` [2] is incompatible with `number` [3].
+Cannot extend `N2<empty>` [1] with `P` because in property `p2`: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    class-extends-and-implements.js:77:7

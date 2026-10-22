@@ -31,12 +31,14 @@ use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
 use flow_typing_type::type_::AssignVarTarget;
+use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ClassOwnProtoCheckData;
 use flow_typing_type::type_::ConformToCommonInterfaceData;
 use flow_typing_type::type_::ConstrainedAssignmentData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DroType;
+use flow_typing_type::type_::EvalMappedTypeData;
 use flow_typing_type::type_::FunCallData;
 use flow_typing_type::type_::FunCallMethodData;
 use flow_typing_type::type_::FunImplicitReturnData;
@@ -45,6 +47,7 @@ use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
 use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::JSXCreateElementData;
+use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
 use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
@@ -514,7 +517,7 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         | OpaqueTypeCustomErrorCompatibility(..)
         | UnifyFlip
         | ConstrainedAssignment(..)
-        | MappedTypeKeyCompatibility { .. }
+        | MappedTypeKeyCompatibility(..)
         | TypeGuardCompatibility
         | RendersCompatibility
         | ReactDeepReadOnly(..)
@@ -1239,7 +1242,7 @@ where
                             VirtualUseOp::Op(root) => match root.as_ref() {
                                 VirtualRootUseOp::AssignVar { var: Some(_), .. }
                                 | VirtualRootUseOp::Cast { .. }
-                                | VirtualRootUseOp::ClassExtendsCheck { .. }
+                                | VirtualRootUseOp::ClassExtendsCheck(..)
                                 | VirtualRootUseOp::ClassImplementsCheck(..) => None,
                                 _ => Some(pair.dupe()),
                             },
@@ -1254,7 +1257,7 @@ where
                 |loc: Loc, reason: &VirtualReason<L>, use_op: &VirtualUseOp<L>| -> Loc {
                     match use_op {
                         VirtualUseOp::Op(root) => match root.as_ref() {
-                            VirtualRootUseOp::ClassExtendsCheck { .. }
+                            VirtualRootUseOp::ClassExtendsCheck(..)
                             | VirtualRootUseOp::ClassImplementsCheck(..) => loc,
                             _ => loc_of_aloc(&reason.loc),
                         },
@@ -1626,12 +1629,19 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::ClassExtendsCheck { extends, def } => root(
+                            VirtualRootUseOp::ClassExtendsCheck(box ClassExtendsCheckData {
+                                extends_loc,
+                                extends,
+                                def,
+                            }) => root(
                                 loc,
                                 frames,
                                 def,
                                 RootMessage::RootCannotExtendClass {
-                                    extends: extends.dupe(),
+                                    extends: MessageTypeReferenceData {
+                                        loc: extends_loc.dupe(),
+                                        desc: printed_type_desc(extends),
+                                    },
                                     def: def.desc.clone(),
                                 },
                                 custom_error_message,
@@ -2063,11 +2073,17 @@ where
                                 )
                             }
 
-                            VirtualRootUseOp::EvalMappedType { mapped_type } => root(
+                            VirtualRootUseOp::EvalMappedType(box EvalMappedTypeData {
+                                mapped_type_loc,
+                                mapped_type,
+                            }) => root_at_loc(
                                 loc,
                                 frames,
-                                mapped_type,
-                                RootMessage::RootCannotInstantiateEval(mapped_type.dupe()),
+                                loc_of_aloc(mapped_type_loc),
+                                RootMessage::RootCannotInstantiateEval(MessageTypeReferenceData {
+                                    loc: mapped_type_loc.dupe(),
+                                    desc: printed_type_desc(mapped_type),
+                                }),
                                 custom_error_message,
                             ),
 
@@ -2402,7 +2418,7 @@ where
                         | VirtualFrameUseOp::ImplicitTypeParam
                         | VirtualFrameUseOp::ReactConfigCheck
                         | VirtualFrameUseOp::ReactGetConfig { .. }
-                        | VirtualFrameUseOp::MappedTypeKeyCompatibility { .. }
+                        | VirtualFrameUseOp::MappedTypeKeyCompatibility(..)
                         | VirtualFrameUseOp::TupleAssignment
                         | VirtualFrameUseOp::RendersCompatibility => loop_impl(
                             loc,
@@ -3292,18 +3308,28 @@ where
         use super::flow_error::error_of_msg;
 
         if let VirtualUseOp::Frame(frame, inner_use_op) = &use_op {
-            if let VirtualFrameUseOp::MappedTypeKeyCompatibility {
-                source_type,
-                mapped_type,
-            } = frame.as_ref()
+            if let VirtualFrameUseOp::MappedTypeKeyCompatibility(
+                box MappedTypeKeyCompatibilityData {
+                    source_type_loc,
+                    source_type,
+                    mapped_type_loc,
+                    mapped_type,
+                },
+            ) = frame.as_ref()
             {
                 return mk_use_op_error(
-                    loc_of_aloc(&source_type.loc),
+                    loc_of_aloc(source_type_loc),
                     inner_use_op.as_ref().clone(),
                     None,
                     Message::MessageIncompatibleMappedTypeKey {
-                        source_type: source_type.dupe(),
-                        mapped_type: mapped_type.dupe(),
+                        source_type: MessageTypeReferenceData {
+                            loc: source_type_loc.dupe(),
+                            desc: printed_type_desc(source_type),
+                        },
+                        mapped_type: MessageTypeReferenceData {
+                            loc: mapped_type_loc.dupe(),
+                            desc: printed_type_desc(mapped_type),
+                        },
                     },
                 );
             }
@@ -4141,6 +4167,13 @@ where
             }
             ErrorTypeDesc::Unknown => friendly::hardcoded_string_desc_ref("`?`", loc_of_aloc(loc)),
         }
+    };
+
+    let ref_of_type = |type_: &MessageTypeReferenceData<L>| match &type_.desc {
+        ErrorTypeDesc::Unknown | ErrorTypeDesc::ReasonDesc(_) => {
+            friendly::hardcoded_string_desc_ref("this type", loc_of_aloc(&type_.loc))
+        }
+        desc => ref_of_type_desc(&type_.loc, desc),
     };
 
     let desc_of_type_desc = |type_desc: &ErrorTypeDesc<L>| match type_desc {
@@ -5264,7 +5297,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot extend "),
-                        ref_(extends),
+                        ref_of_type(extends),
                         text(" with "),
                         friendly::desc_of_reason_desc(def.as_ref()),
                     ]),
@@ -5303,7 +5336,7 @@ where
                 ),
                 RootMessage::RootCannotInstantiateEval(type_) => (
                     RootKind::OperationRoot,
-                    friendly::Message(vec![text("Cannot instantiate "), ref_(type_)]),
+                    friendly::Message(vec![text("Cannot instantiate "), ref_of_type(type_)]),
                 ),
                 RootMessage::RootCannotInstantiateTypeApp(type_) => (
                     RootKind::OperationRoot,
@@ -7572,11 +7605,11 @@ where
                 source_type,
                 mapped_type,
             } => friendly::Message(vec![
-                ref_(source_type),
+                ref_of_type(source_type),
                 text(" is incompatible with "),
                 code("string | number | symbol"),
                 text(", so it cannot be used to generate keys for "),
-                ref_(mapped_type),
+                ref_of_type(mapped_type),
             ]),
             MessageIncompatibleTupleArity(box MessageIncompatibleTupleArityData {
                 lower,

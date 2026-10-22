@@ -46,6 +46,8 @@ use flow_typing_loc_env::func_class_sig_types;
 use flow_typing_loc_env::func_class_sig_types::ConfigTypes;
 use flow_typing_loc_env::func_class_sig_types::class as class_types;
 use flow_typing_type::type_::ThisInstanceTData;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::*;
 use flow_typing_type::type_util;
 use flow_typing_utils::abnormal::CheckExprError;
@@ -1341,10 +1343,13 @@ fn supertype<'a, C: ConfigTypes>(cx: &mut Context<'a>, x: &class_types::Class<C>
                 class_types::Extends::Explicit((annot_loc, c, targs)) => {
                     // Eagerly specialize when there are no targs
                     let c = if targs.is_none() {
-                        let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck {
-                            def: type_util::reason_of_t(c).dupe(),
-                            extends: x.instance.reason.dupe(),
-                        }));
+                        let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck(Box::new(
+                            ClassExtendsCheckData {
+                                def: type_util::reason_of_t(c).dupe(),
+                                extends_loc: x.instance.reason.loc.dupe(),
+                                extends: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown),
+                            },
+                        ))));
                         specialize(cx, use_op, targs.clone(), c.dupe())
                     } else {
                         c.dupe()
@@ -1731,10 +1736,13 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
         }
     }
     let (super_, _) = supertype(cx, x);
-    let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck {
-        def: def_reason,
-        extends: type_util::reason_of_t(&super_).dupe(),
-    }));
+    let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck(Box::new(
+        ClassExtendsCheckData {
+            def: def_reason,
+            extends_loc: type_util::loc_of_t(&super_).dupe(),
+            extends: TypeOrTypeDescT::Type(super_.dupe()),
+        },
+    ))));
     let mut own_name_map: FlowOrdMap<Name, Property> = FlowOrdMap::new();
     for (k, v) in &own {
         own_name_map.insert(k.dupe(), v.dupe());
@@ -2683,10 +2691,13 @@ pub fn make_thises<'a, C: ConfigTypes>(
                     // code is not instantiated. However, the type normalizer
                     // expects a PolyT here.
                     let c = if targs.is_none() {
-                        let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck {
-                            def: type_util::reason_of_t(c).dupe(),
-                            extends: x.instance.reason.dupe(),
-                        }));
+                        let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck(Box::new(
+                            ClassExtendsCheckData {
+                                def: type_util::reason_of_t(c).dupe(),
+                                extends_loc: x.instance.reason.loc.dupe(),
+                                extends: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown),
+                            },
+                        ))));
                         specialize(cx, use_op, targs.clone(), c.dupe())
                     } else {
                         c.dupe()

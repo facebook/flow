@@ -26,8 +26,10 @@ use flow_typing_type::type_::CondTData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::DictType;
+use flow_typing_type::type_::EvalMappedTypeData;
 use flow_typing_type::type_::Flags;
 use flow_typing_type::type_::MappedTypeFlags;
+use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::Tvar;
@@ -39,6 +41,7 @@ use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::VirtualFrameUseOp;
+use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_::VirtualUseOp;
 use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_::num_module_t;
@@ -47,9 +50,12 @@ use flow_typing_type::type_::object::ObjectToolObjectMapData;
 use flow_typing_type::type_::object::ObjectToolReactConfigData;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::property;
+use flow_typing_type::type_::root_of_use_op;
 use flow_typing_type::type_::str_module_t;
 use flow_typing_type::type_::symbol_t;
 use flow_typing_type::type_::type_collector::TypeCollector;
+use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
@@ -95,11 +101,21 @@ fn partition_keys_and_indexer<'cx>(
             vec![symbol_t].into(),
         ),
     ));
+    let mapped_type = match root_of_use_op(&use_op) {
+        VirtualRootUseOp::EvalMappedType(box EvalMappedTypeData { mapped_type, .. }) => {
+            mapped_type.clone()
+        }
+        _ => TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown),
+    };
     let compatibility_use_op = VirtualUseOp::Frame(
-        Arc::new(VirtualFrameUseOp::MappedTypeKeyCompatibility {
-            source_type: type_util::reason_of_t(keys).dupe(),
-            mapped_type: reason.dupe(),
-        }),
+        Arc::new(VirtualFrameUseOp::MappedTypeKeyCompatibility(Box::new(
+            MappedTypeKeyCompatibilityData {
+                source_type_loc: type_util::loc_of_t(keys).dupe(),
+                source_type: TypeOrTypeDescT::Type(keys.dupe()),
+                mapped_type_loc: reason.loc.dupe(),
+                mapped_type,
+            },
+        ))),
         Arc::new(use_op.dupe()),
     );
     // All keys must be a subtype of string | number | symbol

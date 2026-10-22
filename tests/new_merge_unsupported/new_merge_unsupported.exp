@@ -546,7 +546,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:38
 
-Cannot extend `x1` [1] with `T` because `{f?: number, g: number}` [2] is not inheritable. [incompatible-use]
+Cannot extend this type [1] with `T` because `{f?: number, g: number}` [2] is not inheritable. [incompatible-use]
 
    ops_on_react_config.js:10:38
    10| export class x1 extends (0 as any as T) {}
@@ -663,7 +663,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:30:14
 
-Cannot extend statics of `T` [1] with `c7` because `{f?: number, g: number}` [1] is not inheritable. [incompatible-use]
+Cannot extend `Class<T>` [1] with `c7` because `{f?: number, g: number}` [1] is not inheritable. [incompatible-use]
 
    ops_on_react_config.js:30:14
    30| export class c7 extends (0 as any as Class<T>) {}

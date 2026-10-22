@@ -59,9 +59,11 @@ use flow_typing_errors::intermediate_error_types::ValueAsTypeReference;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::CallElemTData;
+use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::ElemTData;
+use flow_typing_type::type_::EvalMappedTypeData;
 use flow_typing_type::type_::ExportKind;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::GetElemTData;
@@ -1530,7 +1532,7 @@ pub fn error_message_kind_of_upper<CX: ContextFamily>(
             if matches!(
                 use_op,
                 flow_typing_type::type_::VirtualUseOp::Op(inner)
-                    if matches!(inner.as_ref(), flow_typing_type::type_::VirtualRootUseOp::ClassExtendsCheck { .. })
+                    if matches!(inner.as_ref(), flow_typing_type::type_::VirtualRootUseOp::ClassExtendsCheck(..))
             ) {
                 UpperKind::IncompatibleSuperT
             } else {
@@ -1661,7 +1663,6 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         | RootUseOp::InitField { op, .. }
         | RootUseOp::ReactGetIntrinsic { literal: op }
         | RootUseOp::TypeApplication { type_: op }
-        | RootUseOp::EvalMappedType { mapped_type: op }
         | RootUseOp::RenderTypeInstantiation { render_type: op }
         | RootUseOp::ComponentRestParamCompatibility { rest_param: op } => Some(op),
         RootUseOp::JSXCreateElement(box JSXCreateElementData { op, .. }) => Some(op),
@@ -1673,11 +1674,14 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         },
         RootUseOp::Cast {
             upper: box upper, ..
-        } => match upper {
+        }
+        | RootUseOp::ClassExtendsCheck(box ClassExtendsCheckData { extends: upper, .. })
+        | RootUseOp::EvalMappedType(box EvalMappedTypeData {
+            mapped_type: upper, ..
+        }) => match upper {
             TypeOrTypeDescT::Type(t) => Some(reason_of_t(t)),
             TypeOrTypeDescT::TypeDesc(_) => None,
         },
-        RootUseOp::ClassExtendsCheck { extends, .. } => Some(extends),
         RootUseOp::ClassImplementsCheck(data) => Some(&data.implements),
         RootUseOp::ClassOwnProtoCheck(_) => None,
         RootUseOp::ClassMethodDefinition { name, .. } => Some(name),

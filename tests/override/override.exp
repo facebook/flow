@@ -226,7 +226,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- polarity_mismatch.js:21:7
 
-Cannot extend `Generic` [1] with `FromGeneric` because property `p` is read-only in `FromGeneric` [2] but writable in
+Cannot extend `Generic<T>` [1] with `FromGeneric` because property `p` is read-only in `FromGeneric` [2] but writable in
 `Generic<T>` [1]. [incompatible-variance]
 
    polarity_mismatch.js:21:7

@@ -1359,7 +1359,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     | VirtualRootUseOp::GetProperty(..)
                     | VirtualRootUseOp::IndexedTypeAccess(..)
                     | VirtualRootUseOp::InferBoundCompatibilityCheck { .. }
-                    | VirtualRootUseOp::EvalMappedType { .. }
+                    | VirtualRootUseOp::EvalMappedType(..)
                     | VirtualRootUseOp::SetProperty(..)
                     | VirtualRootUseOp::UpdateProperty { .. }
                     | VirtualRootUseOp::JSXCreateElement(..)
@@ -1373,7 +1373,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     VirtualRootUseOp::Cast { .. }
                     | VirtualRootUseOp::RefinementCheck { .. }
                     | VirtualRootUseOp::SwitchRefinementCheck(..)
-                    | VirtualRootUseOp::ClassExtendsCheck { .. }
+                    | VirtualRootUseOp::ClassExtendsCheck(..)
                     | VirtualRootUseOp::ClassMethodDefinition { .. }
                     | VirtualRootUseOp::ClassImplementsCheck(box ClassImplementsCheckData {
                         ..

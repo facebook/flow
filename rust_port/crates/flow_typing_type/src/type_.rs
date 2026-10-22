@@ -1066,6 +1066,57 @@ pub enum AssignVarTarget<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct ClassExtendsCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub def: VirtualReason<L>,
+    pub extends_loc: L,
+    pub extends: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EvalMappedTypeData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub mapped_type_loc: L,
+    pub mapped_type: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct MappedTypeKeyCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub source_type_loc: L,
+    pub source_type: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub mapped_type_loc: L,
+    pub mapped_type: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct IndexedTypeAccessData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub index_loc: L,
     pub object: type_or_type_desc::TypeOrTypeDescT<L>,
@@ -1306,10 +1357,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         lower: VirtualReason<L>,
         upper: Box<type_or_type_desc::TypeOrTypeDescT<L>>,
     },
-    ClassExtendsCheck {
-        def: VirtualReason<L>,
-        extends: VirtualReason<L>,
-    },
+    ClassExtendsCheck(Box<ClassExtendsCheckData<L>>),
     ClassImplementsCheck(Box<ClassImplementsCheckData<L>>),
     ClassOwnProtoCheck(Box<ClassOwnProtoCheckData<L>>),
     ClassMethodDefinition {
@@ -1376,9 +1424,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         discriminant: VirtualReason<L>,
     },
     SwitchRefinementCheck(Box<SwitchRefinementCheckData<L>>),
-    EvalMappedType {
-        mapped_type: VirtualReason<L>,
-    },
+    EvalMappedType(Box<EvalMappedTypeData<L>>),
     TypeGuardIncompatibility(Box<TypeGuardIncompatibilityData<L>>),
     RenderTypeInstantiation {
         render_type: VirtualReason<L>,
@@ -1438,10 +1484,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         upper: VirtualReason<L>,
     },
     OpaqueTypeCustomErrorCompatibility(Box<OpaqueTypeCustomErrorCompatibilityData<L>>),
-    MappedTypeKeyCompatibility {
-        source_type: VirtualReason<L>,
-        mapped_type: VirtualReason<L>,
-    },
+    MappedTypeKeyCompatibility(Box<MappedTypeKeyCompatibilityData<L>>),
     PropertyCompatibility(Box<PropertyCompatibilityData<L>>),
     ReactConfigCheck,
     ReactGetConfig {
@@ -11575,7 +11618,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::ObjectChain { .. } => "ObjectChain",
         VirtualRootUseOp::AssignVar { .. } => "AssignVar",
         VirtualRootUseOp::Cast { .. } => "Cast",
-        VirtualRootUseOp::ClassExtendsCheck { .. } => "ClassExtendsCheck",
+        VirtualRootUseOp::ClassExtendsCheck(..) => "ClassExtendsCheck",
         VirtualRootUseOp::ClassImplementsCheck(..) => "ClassImplementsCheck",
         VirtualRootUseOp::ClassOwnProtoCheck(..) => "ClassOwnProtoCheck",
         VirtualRootUseOp::ClassMethodDefinition { .. } => "ClassMethodDefinition",
@@ -11604,7 +11647,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::UpdateProperty { .. } => "UpdateProperty",
         VirtualRootUseOp::RefinementCheck { .. } => "RefinementCheck",
         VirtualRootUseOp::SwitchRefinementCheck(..) => "SwitchRefinementCheck",
-        VirtualRootUseOp::EvalMappedType { .. } => "EvalMappedType",
+        VirtualRootUseOp::EvalMappedType(..) => "EvalMappedType",
         VirtualRootUseOp::TypeGuardIncompatibility(..) => "TypeGuardIncompatibility",
         VirtualRootUseOp::RenderTypeInstantiation { .. } => "RenderTypeInstantiation",
         VirtualRootUseOp::ComponentRestParamCompatibility { .. } => {
@@ -11640,7 +11683,7 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(..) => {
             "OpaqueTypeCustomErrorCompatibility"
         }
-        VirtualFrameUseOp::MappedTypeKeyCompatibility { .. } => "MappedTypeKeyCompatibility",
+        VirtualFrameUseOp::MappedTypeKeyCompatibility(..) => "MappedTypeKeyCompatibility",
         VirtualFrameUseOp::PropertyCompatibility(..) => "PropertyCompatibility",
         VirtualFrameUseOp::ReactConfigCheck => "ReactConfigCheck",
         VirtualFrameUseOp::ReactGetConfig { .. } => "ReactGetConfig",

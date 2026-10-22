@@ -32,7 +32,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- no_prototype_fallback.js:14:13
 
-Cannot extend `AnyPrototypeSubclass` [1] with `AnyPrototype` because `AnyPrototypeConstructor` [2] is not inheritable.
+Cannot extend this type [1] with `AnyPrototype` because `AnyPrototypeConstructor` [2] is not inheritable.
 [incompatible-use]
 
    no_prototype_fallback.js:14:13

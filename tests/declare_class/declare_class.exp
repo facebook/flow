@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- lib/test.js:9:10
 
-Cannot extend `_module.C` [1] with `D` because in property `foo` > the return value: `string` [2] is incompatible with
+Cannot extend `Class<_C>` [1] with `D` because in property `foo` > the return value: `string` [2] is incompatible with
 `number` [3]. [incompatible-type]
 
    lib/test.js:9:10

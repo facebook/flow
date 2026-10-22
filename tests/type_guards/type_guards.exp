@@ -4643,7 +4643,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:85:5
 
-Cannot extend `C` [1] with `Bad` because in property `isD` > the type predicate: `D<X>` [2] is incompatible with
+Cannot extend `C<X>` [1] with `Bad` because in property `isD` > the type predicate: `D<X>` [2] is incompatible with
 `E<X>` [3]. [incompatible-type]
 
    this_generics.js:85:5
@@ -4667,7 +4667,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:91:5
 
-Cannot extend `C` [1] with `Implies` because in property `isD` > the type predicate: `D<X>` [2] is incompatible with
+Cannot extend `C<X>` [1] with `Implies` because in property `isD` > the type predicate: `D<X>` [2] is incompatible with
 `E<X>` [3]. [incompatible-type]
 
    this_generics.js:91:5
@@ -4691,7 +4691,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_generics.js:91:12
 
-Cannot extend `C` [1] with `Implies` because in property `isD`: one-sided type guard [2] is incompatible with default
+Cannot extend `C<X>` [1] with `Implies` because in property `isD`: one-sided type guard [2] is incompatible with default
 type guard [3]. [function-predicate]
 
    this_generics.js:91:12

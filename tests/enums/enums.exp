@@ -5072,7 +5072,7 @@ Cannot create exact type from enum `E` [1]. [invalid-exact]
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:28:25
 
-Cannot instantiate mapped type [1] because enum `E` [2] is not an object. [not-an-object]
+Cannot instantiate `{[K in keyof typeof E]: E[K]}` [1] because enum `E` [2] is not an object. [not-an-object]
 
    utility-types.js:28:25
    28| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object

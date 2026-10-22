@@ -358,7 +358,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
 `() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
 
    finally.js:18:22
@@ -376,7 +376,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
 `() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
 
    finally.js:18:22
@@ -394,7 +394,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
 `() => unknown` [2] is incompatible with `null` [3]. [incompatible-type]
 
    finally.js:18:22
@@ -412,7 +412,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
 `() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
 
    finally.js:18:22
@@ -430,7 +430,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
 `() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
 
    finally.js:18:22
@@ -448,7 +448,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend `Promise` [1] with `NarrowFinally` because in property `finally` > the first parameter:
+Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
 `() => unknown` [2] is incompatible with `null` [3]. [incompatible-type]
 
    finally.js:18:22
