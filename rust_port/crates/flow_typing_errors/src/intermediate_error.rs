@@ -8291,6 +8291,11 @@ where
                 friendly::desc_of_reason_desc(d.as_ref()),
                 text("."),
             ]),
+            MessageMissingThisAnnotation => friendly::Message(vec![
+                text("Missing an annotation on "),
+                code("this"),
+                text("."),
+            ]),
             MessageMissingAnnotationDueToContextualTypingFailure(d) => friendly::Message(vec![
                 text("An annotation on "),
                 friendly::desc_of_reason_desc(d.as_ref()),

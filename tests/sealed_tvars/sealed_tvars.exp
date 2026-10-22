@@ -352,7 +352,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- regression_tests.js:100:23
 
-Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+Missing an annotation on `this`. [missing-this-annot]
 
    100|   let foo3 = function () { this; }; // error: missing annot on this
                               ^^
@@ -487,7 +487,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- this.js:3:11
 
-Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+Missing an annotation on `this`. [missing-this-annot]
 
    3| function f() {
                 ^^
@@ -495,7 +495,7 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 Error ----------------------------------------------------------------------------------------------------- this.js:9:18
 
-Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+Missing an annotation on `this`. [missing-this-annot]
 
    9|   foo = function (): void {
                        ^^
@@ -503,7 +503,7 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 Error ---------------------------------------------------------------------------------------------------- this.js:13:32
 
-Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+Missing an annotation on `this`. [missing-this-annot]
 
    13|   foo_a: () => void = function (): void {
                                       ^^

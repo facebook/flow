@@ -2975,6 +2975,9 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 reason.desc
             )
         }
+        ErrorMessage::EMissingThisAnnotation(loc) => {
+            format!("EMissingThisAnnotation ({})", string_of_aloc(None, loc))
+        }
         ErrorMessage::EBindingError(box (_binding_error, loc, x, entry_loc)) => {
             format!(
                 "EBindingError(Box::new((_, {}, {}, {})))",

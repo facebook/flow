@@ -2578,6 +2578,7 @@ pub enum Message<L: Dupe> {
     MessageLowerDoesNotHavePropertiesWithPrintedType(Box<MessageTypeReferenceData<L>>),
 
     MessageMissingAnnotation(Option<VirtualReasonDesc<L>>),
+    MessageMissingThisAnnotation,
     MessageMissingAnnotationDueToContextualTypingFailure(Option<VirtualReasonDesc<L>>),
     MessageMissingAnnotationForGenericFunction(Option<VirtualReasonDesc<L>>),
 

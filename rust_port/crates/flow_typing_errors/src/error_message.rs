@@ -3655,6 +3655,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         from_generic_function: bool,
     },
 
+    EMissingThisAnnotation(L),
+
     EBindingError(Box<(BindingError, L, Name, L)>),
 
     ERecursionLimit(L),
@@ -5521,6 +5523,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 hint_available,
                 from_generic_function,
             },
+
+            EMissingThisAnnotation(loc) => EMissingThisAnnotation(f(loc)),
 
             EBindingError(box (b, loc, s, scope)) => {
                 EBindingError(Box::new((b, f(loc), s, f(scope))))
@@ -8640,6 +8644,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::EMissingLocalAnnotation { reason, .. } => Some(reason.loc.dupe()),
 
+            Self::EMissingThisAnnotation(loc) => Some(loc.dupe()),
+
             Self::ESketchyNumberLint(_, value) => Some(value.loc.dupe()),
 
             Self::EInvalidExtends(box (loc, _)) => Some(loc.dupe()),
@@ -11569,6 +11575,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageUnsupportedSyntax(unsupported_syntax))
             }
 
+            ErrorMessage::EMissingThisAnnotation(_) => {
+                Normal(Message::MessageMissingThisAnnotation)
+            }
+
             ErrorMessage::EMissingLocalAnnotation {
                 reason,
                 hint_available,
@@ -12904,12 +12914,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
             ErrorMessage::EInvalidExtends { .. } => Some(InvalidExtends),
             ErrorMessage::ELintSetting { .. } => Some(LintSetting),
-            ErrorMessage::EMissingLocalAnnotation { reason, .. } => match &reason.desc {
-                Some(flow_common::reason::VirtualReasonDesc::RImplicitThis(_)) => {
-                    Some(MissingThisAnnot)
-                }
-                _ => Some(MissingLocalAnnot),
-            },
+            ErrorMessage::EMissingLocalAnnotation { .. } => Some(MissingLocalAnnot),
+            ErrorMessage::EMissingThisAnnotation(_) => Some(MissingThisAnnot),
             ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData { .. }) => Some(MissingTypeArg),
             ErrorMessage::EMixedImportAndRequire { .. } => Some(MixedImportAndRequire),
             ErrorMessage::EUnsupportedVarianceAnnotation { .. } => {

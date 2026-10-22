@@ -163,7 +163,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:88:31
 
-Missing an annotation on implicit `this` parameter of function. [missing-this-annot]
+Missing an annotation on `this`. [missing-this-annot]
 
    88|   prop: () => void = function () { // error: missing-this-annot
                                      ^^

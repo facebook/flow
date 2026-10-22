@@ -2715,11 +2715,7 @@ pub fn default_this_type<'cx>(
         add_output_with_env(
             cx,
             env,
-            ErrorMessage::EMissingLocalAnnotation {
-                reason: reason.to_error_reference(),
-                hint_available: false,
-                from_generic_function: false,
-            },
+            ErrorMessage::EMissingThisAnnotation(params.loc.dupe()),
         )?;
         Ok(any_t::error_of_kind(
             AnyErrorKind::MissingAnnotation,
