@@ -85,9 +85,7 @@ pub fn empty<C: ConfigTypes>(
     };
     let constructor = Vec::new();
     let static_ = {
-        let reason = reason
-            .dupe()
-            .update_desc(|desc| desc.map(|desc| VirtualReasonDesc::RStatics(Arc::new(desc))));
+        let reason = reason.dupe().replace_desc(None);
         empty_sig(reason)
     };
     let instance = empty_sig(reason);
@@ -1997,20 +1995,6 @@ fn super_has_real_extends<'cx>(cx: &mut Context<'cx>, t: &Type) -> bool {
     concretes.iter().any(check)
 }
 
-// Best-effort extraction of a class name from an inst's reason — used
-// to populate [base_class_name] in override error messages. Falls back
-// to [None] if the reason isn't a recognized class-named shape.
-fn class_name_of_inst_reason(r: &Reason) -> Option<FlowSmolStr> {
-    match &r.desc {
-        Some(VirtualReasonDesc::RType(n)) => Some(n.dupe()),
-        Some(VirtualReasonDesc::RStatics(inner)) => match inner.as_ref() {
-            VirtualReasonDesc::RType(n) => Some(n.dupe()),
-            _ => None,
-        },
-        _ => None,
-    }
-}
-
 // Per-side inherited-walk state. [locs] / [owners] are populated for
 // both sides; [name_abstract] is meaningful only on the instance side
 // (the static side leaves it empty since [abstract_members] is
@@ -2066,90 +2050,89 @@ fn collect_inherited_members_both_sides<'cx>(
             s.name_abstract.insert(name.dupe(), is_abstract);
         }
     };
-    let process_inst =
-        |cx: &mut Context<'cx>, instance_t: &InstanceT, inst_reason: &Reason| -> bool {
-            let inst = &instance_t.inst;
-            if seen.borrow().contains(&inst.own_props) {
-                false
-            } else {
-                seen.borrow_mut().insert(inst.own_props.dupe());
-                let inst_name = class_name_of_inst_reason(inst_reason);
-                if *first_inst.borrow() {
-                    *immediate_super_name.borrow_mut() = inst_name.clone();
-                    *first_inst.borrow_mut() = false;
+    let process_inst = |cx: &mut Context<'cx>, instance_t: &InstanceT| -> bool {
+        let inst = &instance_t.inst;
+        if seen.borrow().contains(&inst.own_props) {
+            false
+        } else {
+            seen.borrow_mut().insert(inst.own_props.dupe());
+            let inst_name = inst.class_name.dupe();
+            if *first_inst.borrow() {
+                *immediate_super_name.borrow_mut() = inst_name.clone();
+                *first_inst.borrow_mut() = false;
+            }
+            let own_props = cx.find_props(inst.own_props.dupe());
+            let proto_props = cx.find_props(inst.proto_props.dupe());
+            let visit_instance = |props: &properties::PropertiesMap| {
+                for (name, p) in props.iter() {
+                    let is_abstract = inst.inst_abstract_props.contains(name);
+                    add_member(
+                        &instance_state,
+                        &inst_name,
+                        is_abstract,
+                        name,
+                        property::first_loc(p),
+                    );
                 }
-                let own_props = cx.find_props(inst.own_props.dupe());
-                let proto_props = cx.find_props(inst.proto_props.dupe());
-                let visit_instance = |props: &properties::PropertiesMap| {
-                    for (name, p) in props.iter() {
-                        let is_abstract = inst.inst_abstract_props.contains(name);
-                        add_member(
-                            &instance_state,
-                            &inst_name,
-                            is_abstract,
-                            name,
-                            property::first_loc(p),
-                        );
-                    }
-                };
-                visit_instance(&own_props);
-                visit_instance(&proto_props);
-                fn visit_static_concrete<'cx>(
-                    cx: &mut Context<'cx>,
-                    static_state: &RefCell<InheritedSideState>,
-                    add_member: &dyn Fn(
-                        &RefCell<InheritedSideState>,
-                        &Option<FlowSmolStr>,
-                        bool,
-                        &Name,
-                        Option<ALoc>,
-                    ),
-                    inst_name: &Option<FlowSmolStr>,
-                    t: &Type,
-                ) {
-                    match t.deref() {
-                        TypeInner::DefT(_, def_t) => match def_t.deref() {
-                            DefTInner::ObjT(obj) => {
-                                let static_props = cx.find_props(obj.props_tmap.dupe());
-                                for (name, p) in static_props.iter() {
-                                    // Static members can't be abstract in our model.
-                                    add_member(
-                                        static_state,
-                                        inst_name,
-                                        false,
-                                        name,
-                                        property::first_loc(p),
-                                    );
-                                }
-                            }
-                            _ => {}
-                        },
-                        TypeInner::IntersectionT(_, rep) => {
-                            for m in rep.members_iter() {
-                                visit_static_concrete(cx, static_state, add_member, inst_name, m);
+            };
+            visit_instance(&own_props);
+            visit_instance(&proto_props);
+            fn visit_static_concrete<'cx>(
+                cx: &mut Context<'cx>,
+                static_state: &RefCell<InheritedSideState>,
+                add_member: &dyn Fn(
+                    &RefCell<InheritedSideState>,
+                    &Option<FlowSmolStr>,
+                    bool,
+                    &Name,
+                    Option<ALoc>,
+                ),
+                inst_name: &Option<FlowSmolStr>,
+                t: &Type,
+            ) {
+                match t.deref() {
+                    TypeInner::DefT(_, def_t) => match def_t.deref() {
+                        DefTInner::ObjT(obj) => {
+                            let static_props = cx.find_props(obj.props_tmap.dupe());
+                            for (name, p) in static_props.iter() {
+                                // Static members can't be abstract in our model.
+                                add_member(
+                                    static_state,
+                                    inst_name,
+                                    false,
+                                    name,
+                                    property::first_loc(p),
+                                );
                             }
                         }
                         _ => {}
+                    },
+                    TypeInner::IntersectionT(_, rep) => {
+                        for m in rep.members_iter() {
+                            visit_static_concrete(cx, static_state, add_member, inst_name, m);
+                        }
                     }
+                    _ => {}
                 }
-                let static_concretes = cx
-                    .with_suppressed_errors(|cx| {
-                        FlowJs::possible_concrete_types_for_inspection(
-                            cx,
-                            type_util::reason_of_t(&instance_t.static_),
-                            &instance_t.static_,
-                        )
-                    })
-                    .unwrap_or_default();
-                for c in &static_concretes {
-                    visit_static_concrete(cx, &static_state, &add_member, &inst_name, c);
-                }
-                true
             }
-        };
+            let static_concretes = cx
+                .with_suppressed_errors(|cx| {
+                    FlowJs::possible_concrete_types_for_inspection(
+                        cx,
+                        type_util::reason_of_t(&instance_t.static_),
+                        &instance_t.static_,
+                    )
+                })
+                .unwrap_or_default();
+            for c in &static_concretes {
+                visit_static_concrete(cx, &static_state, &add_member, &inst_name, c);
+            }
+            true
+        }
+    };
     fn walk<'cx>(
         cx: &mut Context<'cx>,
-        process_inst: &dyn Fn(&mut Context<'cx>, &InstanceT, &Reason) -> bool,
+        process_inst: &dyn Fn(&mut Context<'cx>, &InstanceT) -> bool,
         t: &Type,
     ) -> Result<(), FlowJsException> {
         let concretes = cx.with_suppressed_errors(|cx| {
@@ -2162,22 +2145,18 @@ fn collect_inherited_members_both_sides<'cx>(
     }
     fn walk_one<'cx>(
         cx: &mut Context<'cx>,
-        process_inst: &dyn Fn(&mut Context<'cx>, &InstanceT, &Reason) -> bool,
+        process_inst: &dyn Fn(&mut Context<'cx>, &InstanceT) -> bool,
         t: &Type,
     ) -> Result<(), FlowJsException> {
         match t.deref() {
             TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
-                let r = type_util::reason_of_t(t);
-                if process_inst(cx, instance, r) {
+                if process_inst(cx, instance) {
                     walk(cx, process_inst, &instance.super_)?;
                 }
             }
             TypeInner::DefT(_, def_t) => match def_t.deref() {
-                DefTInner::InstanceT(inst_t) => {
-                    let r = type_util::reason_of_t(t);
-                    if process_inst(cx, inst_t, r) {
-                        walk(cx, process_inst, &inst_t.super_)?;
-                    }
+                DefTInner::InstanceT(inst_t) if process_inst(cx, inst_t) => {
+                    walk(cx, process_inst, &inst_t.super_)?;
                 }
                 _ => {}
             },
@@ -2190,7 +2169,7 @@ fn collect_inherited_members_both_sides<'cx>(
         }
         Ok(())
     }
-    let pi: &dyn Fn(&mut Context<'cx>, &InstanceT, &Reason) -> bool = &process_inst;
+    let pi: &dyn Fn(&mut Context<'cx>, &InstanceT) -> bool = &process_inst;
     let walk_result = walk(cx, pi, super_);
     match walk_result {
         Ok(()) => {}

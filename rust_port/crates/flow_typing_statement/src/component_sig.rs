@@ -10,7 +10,6 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast_visitor;
@@ -252,9 +251,7 @@ pub fn component_type<'a, C: crate::component_params_intf::Config>(
     renders_t: Type,
     id_opt: Option<(&ALoc, &FlowSmolStr)>,
 ) -> Result<Type, JobError> {
-    let config_reason = reason
-        .dupe()
-        .update_desc(|desc| desc.map(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc))));
+    let config_reason = reason.dupe().replace_desc(None);
     let config = component_params::config::<C>(cx, in_annotation, &config_reason, params, rest)?;
     let component_kind = match id_opt {
         None => type_::ComponentKind::Structural,

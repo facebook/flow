@@ -2618,8 +2618,7 @@ fn merge_annot<'cx>(
         }
         Annot::ClassT(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
-            let desc = type_util::desc_of_t(&t).cloned();
-            let reason = reason::mk_reason(desc.map(|desc| RStatics(Arc::new(desc))), loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             Type::new(type_::TypeInner::DefT(
                 reason,
                 type_::DefT::new(type_::DefTInner::ClassT(t)),
@@ -4182,9 +4181,7 @@ fn merge_interface<'cx>(
         strictness_kind: _,
     } = def;
     let static_ = {
-        let static_reason = reason
-            .dupe()
-            .update_desc(|d| d.map(|d| RStatics(Arc::new(d))));
+        let static_reason = reason.dupe().replace_desc(None);
         // interfaces don't have a name field, or even statics
         let mut props_map = BTreeMap::new();
         add_name_field(reason.dupe(), &mut props_map);
@@ -4557,7 +4554,6 @@ fn merge_this_class_t<'cx>(
     inst_kind: type_::InstanceKind,
 ) -> impl FnOnce(&mut Context<'cx>, &MergeEnv, Vec<(SubstName, Reason, Type, Polarity)>, Type) -> Type
 {
-    use flow_common::reason::VirtualReasonDesc::*;
     use flow_common::subst_name::SubstName;
 
     let ClassSig {
@@ -4601,9 +4597,7 @@ fn merge_this_class_t<'cx>(
         let mut env = env.dupe();
         env.tps.insert(FlowSmolStr::new_inline("this"), this.dupe());
         let static_ = {
-            let static_reason = reason
-                .dupe()
-                .update_desc(|d| d.map(|d| RStatics(Arc::new(d))));
+            let static_reason = reason.dupe().replace_desc(None);
             let mut props_map: BTreeMap<Name, type_::Property> = static_props
                 .iter()
                 .map(|(k, prop)| {
@@ -4852,8 +4846,7 @@ fn merge_fun_statics<'cx>(
             (Name::new(key.dupe()), prop)
         })
         .collect();
-    let reason =
-        reason.update_desc(|d| d.map(|d| reason::VirtualReasonDesc::RStatics(Arc::new(d))));
+    let reason = reason.replace_desc(None);
     obj_type::mk_with_proto(
         cx,
         reason.dupe(),
@@ -5044,7 +5037,6 @@ fn merge_component<'cx>(
     def: &ComponentSig<ALoc, Pack::Packed<ALoc>>,
     id_opt: Option<(ALoc, &FlowSmolStr)>,
 ) -> Type {
-    use flow_common::reason::VirtualReasonDesc::*;
     let reason2 = reason.dupe();
     let t = |cx: &mut Context<'cx>,
              env: &MergeEnv,
@@ -5067,13 +5059,7 @@ fn merge_component<'cx>(
                 )
             })
             .collect();
-        let config_reason = reason::mk_reason(
-            reason2
-                .desc(true)
-                .cloned()
-                .map(|desc| RPropsOfComponent(Arc::new(desc))),
-            def.params_loc.dupe(),
-        );
+        let config_reason = reason::mk_reason(None, def.params_loc.dupe());
         let rest_t = match &def.rest_param {
             None => obj_type::mk_with_proto(
                 cx,
@@ -5331,9 +5317,7 @@ fn merge_declare_class<'cx>(
         let mut env = env.dupe();
         env.tps.insert(FlowSmolStr::new_inline("this"), this.dupe());
         let static_ = {
-            let static_reason = reason_c
-                .dupe()
-                .update_desc(|d| d.map(|d| RStatics(Arc::new(d))));
+            let static_reason = reason_c.dupe().replace_desc(None);
             let mut props_map: BTreeMap<Name, type_::Property> = BTreeMap::new();
             let mut prop_locs: BTreeMap<Name, ALoc> = BTreeMap::new();
             for (k, prop) in static_props {

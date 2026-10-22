@@ -578,7 +578,7 @@
             }
           },
           "kind":"Def",
-          "reason":"test.js:7:36-77: statics of function type"
+          "reason":"test.js:7:36-77"
         }
       },
       "kind":"Def",
@@ -659,7 +659,7 @@
             }
           },
           "kind":"Def",
-          "reason":"test.js:7:36-77: statics of function type"
+          "reason":"test.js:7:36-77"
         }
       },
       "kind":"Def",
@@ -1685,7 +1685,7 @@
         }
       },
       "kind":"Def",
-      "reason":"test.js:7:36-77: statics of function type"
+      "reason":"test.js:7:36-77"
     },
     "170":{
       "kind":"Union",
@@ -1818,7 +1818,7 @@
         }
       },
       "kind":"Def",
-      "reason":"test.js:7:36-77: statics of function type"
+      "reason":"test.js:7:36-77"
     },
     "33":{"kind":"Any"},
     "34":{"kind":"Any"},

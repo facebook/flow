@@ -2745,12 +2745,7 @@ fn convert_inner<'a>(
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
-                            let reason = reason::mk_reason(
-                                type_util::desc_of_t(&tp).cloned().map(|desc| {
-                                    reason::VirtualReasonDesc::RStatics(Arc::new(desc))
-                                }),
-                                loc.dupe(),
-                            );
+                            let reason = reason::mk_reason(None, loc.dupe());
                             Ok(reconstruct_ast(
                                 Type::new(type_::TypeInner::DefT(
                                     reason,
@@ -3139,9 +3134,7 @@ fn convert_inner<'a>(
                 &inner.return_,
             )?;
             env.tparams_map = saved_tparams_map;
-            let statics_reason = reason
-                .dupe()
-                .update_desc(|d| d.map(|d| reason::VirtualReasonDesc::RStatics(Arc::new(d))));
+            let statics_reason = reason.dupe().replace_desc(None);
             let fun_proto_t = Type::new(type_::TypeInner::FunProtoT(statics_reason.dupe()));
             let statics_t = flow_typing_flow_common::obj_type::mk_with_proto(
                 cx,

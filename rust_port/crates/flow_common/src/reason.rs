@@ -409,7 +409,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RRestArrayLit(Option<Arc<VirtualReasonDesc<L>>>),
     RTypeApp(Arc<VirtualReasonDesc<L>>),
     RClass(Arc<VirtualReasonDesc<L>>),
-    RStatics(Arc<VirtualReasonDesc<L>>),
     RRefined(Arc<VirtualReasonDesc<L>>),
     RPartialOf(Arc<VirtualReasonDesc<L>>),
     RRequiredOf(Arc<VirtualReasonDesc<L>>),
@@ -423,7 +422,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RPossiblyMissingPropFromObj(Name, Arc<VirtualReasonDesc<L>>),
     RUnionBranching(Arc<VirtualReasonDesc<L>>, i32),
     RComponent(FlowSmolStr),
-    RPropsOfComponent(Arc<VirtualReasonDesc<L>>),
     RRenderType(Arc<VirtualReasonDesc<L>>),
     RRenderMaybeType(Arc<VirtualReasonDesc<L>>),
     RRenderStarType(Arc<VirtualReasonDesc<L>>),
@@ -583,7 +581,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RRestArrayLit(d) => RRestArrayLit(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RTypeApp(d) => RTypeApp(Arc::new(d.map_locs(f))),
             RClass(d) => RClass(Arc::new(d.map_locs(f))),
-            RStatics(d) => RStatics(Arc::new(d.map_locs(f))),
             RRefined(d) => RRefined(Arc::new(d.map_locs(f))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
             RRequiredOf(d) => RRequiredOf(Arc::new(d.map_locs(f))),
@@ -592,7 +589,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 RPossiblyMissingPropFromObj(n.dupe(), Arc::new(d.map_locs(f)))
             }
             RUnionBranching(d, i) => RUnionBranching(Arc::new(d.map_locs(f)), *i),
-            RPropsOfComponent(d) => RPropsOfComponent(Arc::new(d.map_locs(f))),
             RRenderType(d) => RRenderType(Arc::new(d.map_locs(f))),
             RRenderMaybeType(d) => RRenderMaybeType(Arc::new(d.map_locs(f))),
             RRenderStarType(d) => RRenderStarType(Arc::new(d.map_locs(f))),
@@ -1528,7 +1524,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RRestArrayLit(_) => "rest array".to_string(),
         RTypeApp(d) => string_of_desc(d),
         RClass(d) => format!("class {}", string_of_desc(d)),
-        RStatics(d) => format!("statics of {}", string_of_desc(d)),
         RRefined(d) => format!("refined {}", string_of_desc(d)),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),
         RRequiredOf(d) => format!("required of {}", string_of_desc(d)),
@@ -1563,7 +1558,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Type guards and components
         RComponent(name) => format!("component {}", name.as_str()),
-        RPropsOfComponent(d) => format!("props of {}", string_of_desc(d)),
 
         // Renders
         RRenderType(d) => format!("renders {}", string_of_desc(d)),

@@ -12058,9 +12058,7 @@ perhaps the data types can be refactored to make them more specialized. */
 want to encourage this pattern, but we also don't want to block uses of this
 pattern. Thus, we compromise by not tracking the property types. */
 pub fn dummy_static(reason: Reason) -> Type {
-    let r = reason.update_desc(|desc| {
-        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RStatics(Arc::new(desc)))
-    });
+    let r = reason.replace_desc(None);
     unsoundness::dummy_static_any(r)
 }
 
