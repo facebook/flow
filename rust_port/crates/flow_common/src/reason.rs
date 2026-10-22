@@ -404,7 +404,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RMaybe(Arc<VirtualReasonDesc<L>>),
     RRestArrayLit(Option<Arc<VirtualReasonDesc<L>>>),
     RClass(Arc<VirtualReasonDesc<L>>),
-    RRefined(Arc<VirtualReasonDesc<L>>),
     RPartialOf(Arc<VirtualReasonDesc<L>>),
     RRequiredOf(Arc<VirtualReasonDesc<L>>),
     RModule(Userland),
@@ -570,7 +569,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RMaybe(d) => RMaybe(Arc::new(d.map_locs(f))),
             RRestArrayLit(d) => RRestArrayLit(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RClass(d) => RClass(Arc::new(d.map_locs(f))),
-            RRefined(d) => RRefined(Arc::new(d.map_locs(f))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
             RRequiredOf(d) => RRequiredOf(Arc::new(d.map_locs(f))),
             RImplicitThis(d) => RImplicitThis(Arc::new(d.map_locs(f))),
@@ -1488,7 +1486,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         }
         RRestArrayLit(_) => "rest array".to_string(),
         RClass(d) => format!("class {}", string_of_desc(d)),
-        RRefined(d) => format!("refined {}", string_of_desc(d)),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),
         RRequiredOf(d) => format!("required of {}", string_of_desc(d)),
 

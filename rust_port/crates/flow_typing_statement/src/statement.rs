@@ -1425,7 +1425,11 @@ fn identifier_<'a>(
         // We want to make sure that the reason description for the type we return
         // is always `RIdentifier(name)`.
         Ok(match desc {
-            Some(VirtualReasonDesc::RIdentifier(name_prime)) if *name == *name_prime => t,
+            Some(VirtualReasonDesc::RIdentifier(name_prime))
+                if *name == *name_prime && !cx.refined_locations().contains_key(&loc) =>
+            {
+                t
+            }
             _ if matches!(t.deref(), TypeInner::OpenT(_)) => mod_reason_of_t(
                 &|r| r.replace_desc_new(VirtualReasonDesc::RIdentifier(name.dupe())),
                 &t,

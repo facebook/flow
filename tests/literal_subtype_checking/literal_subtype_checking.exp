@@ -465,8 +465,8 @@ happens, you can cast one side to the union of both types to pass the flow check
                              ^^^^^^^
 
 References:
-   test.js:40:23
-   40| if (true && (false || x === 'bar')) {} // Error
+   test.js:42:23
+   42| if (true && (false || x === 1)) {} // Error
                              ^ [1]
    test.js:42:29
    42| if (true && (false || x === 1)) {} // Error

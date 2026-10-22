@@ -1274,13 +1274,7 @@ fn refine<'cx>(
                 actually_refined_refining_locs,
             } = res;
             let predicate = predicate_of_refinement(cx, kind)?;
-            let refined_reason = mk_reason(
-                reason
-                    .desc(true)
-                    .cloned()
-                    .map(|desc| VirtualReasonDesc::RRefined(Arc::new(desc))),
-                loc,
-            );
+            let refined_reason = mk_reason(reason.desc(true).cloned(), loc);
             let (t, actually_refined_refining_locs_prime) = match predicate {
                 None => (t, None),
                 Some(predicate) => {
