@@ -691,9 +691,9 @@ Cannot cast `refuse_return_result.value` to `string` because `void` [1] is incom
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:28:22
-   28|     readonly value?: Return,
-                            ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:25:35
+   25| type IteratorResult<out Yield,out Return> =
+                                         ^^^^^^ [1]
    return.js:20:33
    20|   refuse_return_result.value as string; // error: number | void ~> string
                                        ^^^^^^ [2]

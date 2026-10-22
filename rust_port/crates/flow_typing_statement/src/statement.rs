@@ -16110,16 +16110,7 @@ pub fn mk_class_sig<'a>(
                                                     id_loc.dupe(),
                                                 );
                                                 Type::new(TypeInner::OptionalT {
-                                                    reason: mk_reason(
-                                                        field_reason.desc(true).cloned().map(
-                                                            |desc| {
-                                                                VirtualReasonDesc::ROptional(
-                                                                    Arc::new(desc),
-                                                                )
-                                                            },
-                                                        ),
-                                                        id_loc.dupe(),
-                                                    ),
+                                                    reason: field_reason,
                                                     type_: field_t,
                                                     use_desc: false,
                                                 })
@@ -18919,12 +18910,7 @@ pub fn mk_record_sig<'a>(
                                                 key_loc.dupe(),
                                             );
                                             Type::new(TypeInner::OptionalT {
-                                                reason: mk_reason(
-                                                    field_reason.desc(true).cloned().map(|desc| {
-                                                        VirtualReasonDesc::ROptional(Arc::new(desc))
-                                                    }),
-                                                    key_loc.dupe(),
-                                                ),
+                                                reason: field_reason,
                                                 type_: annot_t,
                                                 use_desc: false,
                                             })

@@ -2174,9 +2174,7 @@ pub fn mk_named_prop(
 }
 
 pub fn optional(t: Type, annot_loc: Option<ALoc>, use_desc: bool) -> Type {
-    let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
-        desc.map(|desc| flow_common::reason::VirtualReasonDesc::ROptional(Arc::new(desc)))
-    });
+    let reason = reason_of_t(&t).dupe();
     let reason = match annot_loc {
         Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
@@ -2189,9 +2187,7 @@ pub fn optional(t: Type, annot_loc: Option<ALoc>, use_desc: bool) -> Type {
 }
 
 pub fn maybe(t: Type) -> Type {
-    let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
-        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RMaybe(Arc::new(desc)))
-    });
+    let reason = reason_of_t(&t).dupe();
     Type::new(TypeInner::MaybeT(reason, t))
 }
 

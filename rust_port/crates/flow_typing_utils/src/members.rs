@@ -10,7 +10,6 @@
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::rc::Rc;
-use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
@@ -550,29 +549,17 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
         }
         (TypeInner::MaybeT(_, inner1), TypeInner::MaybeT(_, inner2)) => {
             let merged = merge_type(cx, (inner1.dupe(), inner2.dupe()));
-            let reason = locationless_reason(
-                desc_of_t(&merged)
-                    .cloned()
-                    .map(|desc| VirtualReasonDesc::RMaybe(Arc::new(desc))),
-            );
+            let reason = locationless_reason(desc_of_t(&merged).cloned());
             Type::new(TypeInner::MaybeT(reason, merged))
         }
         (TypeInner::MaybeT(_, inner1), _) => {
             let merged = merge_type(cx, (inner1.dupe(), t2));
-            let reason = locationless_reason(
-                desc_of_t(&merged)
-                    .cloned()
-                    .map(|desc| VirtualReasonDesc::RMaybe(Arc::new(desc))),
-            );
+            let reason = locationless_reason(desc_of_t(&merged).cloned());
             Type::new(TypeInner::MaybeT(reason, merged))
         }
         (_, TypeInner::MaybeT(_, inner2)) => {
             let merged = merge_type(cx, (t1, inner2.dupe()));
-            let reason = locationless_reason(
-                desc_of_t(&merged)
-                    .cloned()
-                    .map(|desc| VirtualReasonDesc::RMaybe(Arc::new(desc))),
-            );
+            let reason = locationless_reason(desc_of_t(&merged).cloned());
             Type::new(TypeInner::MaybeT(reason, merged))
         }
         (TypeInner::UnionT(_, rep1), TypeInner::UnionT(_, rep2)) => {

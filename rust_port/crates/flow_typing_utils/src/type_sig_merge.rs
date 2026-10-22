@@ -578,15 +578,12 @@ fn add_record_constructor<'cx>(
                         .is_some_and(|s| defaulted_props.contains(s))
                     {
                         let r = type_util::reason_of_t(&fd.type_).dupe();
-                        let optional_reason = r.dupe().update_desc_new(|desc| {
-                            desc.map(|desc| reason::VirtualReasonDesc::ROptional(Arc::new(desc)))
-                        });
                         type_::Property::new(type_::PropertyInner::Field(Box::new(
                             type_::FieldData {
                                 preferred_def_locs: fd.preferred_def_locs.clone(),
                                 key_loc: fd.key_loc.dupe(),
                                 type_: Type::new(type_::TypeInner::OptionalT {
-                                    reason: optional_reason,
+                                    reason: r,
                                     type_: fd.type_.dupe(),
                                     use_desc: false,
                                 }),
@@ -1911,8 +1908,7 @@ fn merge_annot<'cx>(
         Annot::Maybe(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let desc = type_util::desc_of_t(&t).cloned();
-            let reason =
-                reason::mk_annot_reason(desc.map(|desc| RMaybe(Arc::new(desc))), loc.dupe());
+            let reason = reason::mk_annot_reason(desc, loc.dupe());
             Type::new(type_::TypeInner::MaybeT(reason, t))
         }
         Annot::Union(inner) => {

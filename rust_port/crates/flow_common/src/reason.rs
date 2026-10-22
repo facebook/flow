@@ -400,8 +400,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RImportStar(FlowSmolStr),
     RDefaultImportedType(FlowSmolStr, Userland),
     RCode(FlowSmolStr),
-    ROptional(Arc<VirtualReasonDesc<L>>),
-    RMaybe(Arc<VirtualReasonDesc<L>>),
     RRestArrayLit(Option<Arc<VirtualReasonDesc<L>>>),
     RClass(Arc<VirtualReasonDesc<L>>),
     RPartialOf(Arc<VirtualReasonDesc<L>>),
@@ -562,8 +560,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 d.as_ref().map(|d| Arc::new(d.map_locs(f))),
             ))),
             RTypeParam(box (s, l1, l2)) => RTypeParam(Box::new((s.clone(), f(l1), f(l2)))),
-            ROptional(d) => ROptional(Arc::new(d.map_locs(f))),
-            RMaybe(d) => RMaybe(Arc::new(d.map_locs(f))),
             RRestArrayLit(d) => RRestArrayLit(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RClass(d) => RClass(Arc::new(d.map_locs(f))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
@@ -1464,17 +1460,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Type wrappers
         RReadOnlyType => "`Readonly`".to_string(),
-        ROptional(d) => format!("optional {}", string_of_desc(d)),
-        RMaybe(d) => {
-            // OCaml has a loop to unwrap nested RMaybe
-            fn unwrap_maybe<L: Dupe>(desc: &VirtualReasonDesc<L>) -> &VirtualReasonDesc<L> {
-                match desc {
-                    VirtualReasonDesc::RMaybe(inner) => unwrap_maybe(inner),
-                    _ => desc,
-                }
-            }
-            format!("nullable {}", string_of_desc(unwrap_maybe(d)))
-        }
         RRestArrayLit(_) => "rest array".to_string(),
         RClass(d) => format!("class {}", string_of_desc(d)),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),

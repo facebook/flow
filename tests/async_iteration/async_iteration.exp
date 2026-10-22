@@ -134,9 +134,9 @@ Cannot cast `result.value` to `string` because `void` [1] is incompatible with `
            ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:28:22
-   28|     readonly value?: Return,
-                            ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:25:35
+   25| type IteratorResult<out Yield,out Return> =
+                                         ^^^^^^ [1]
    return.js:20:21
    20|     result.value as string; // error: number | void ~> string
                            ^^^^^^ [2]

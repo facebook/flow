@@ -1254,12 +1254,8 @@ fn convert_inner<'a>(
         TypeInner::Nullable { loc, inner } => {
             let t_ast = convert_inner(cx, env, &inner.argument)?;
             let inner_t = t_ast.loc().1.dupe();
-            let reason = reason::mk_annot_reason(
-                type_util::desc_of_t(&inner_t)
-                    .cloned()
-                    .map(|desc| reason::VirtualReasonDesc::RMaybe(Arc::new(desc))),
-                loc.dupe(),
-            );
+            let reason =
+                reason::mk_annot_reason(type_util::desc_of_t(&inner_t).cloned(), loc.dupe());
             let rt = Type::new(type_::TypeInner::MaybeT(reason, inner_t));
             ast::types::Type::new(TypeInner::Nullable {
                 loc: (loc.dupe(), rt),
