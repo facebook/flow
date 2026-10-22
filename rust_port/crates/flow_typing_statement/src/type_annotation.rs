@@ -2618,9 +2618,7 @@ fn convert_inner<'a>(
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
-                            let desc = type_util::desc_of_t(&tp)
-                                .cloned()
-                                .map(|desc| reason::VirtualReasonDesc::RExactType(Arc::new(desc)));
+                            let desc = type_util::desc_of_t(&tp).cloned();
                             let reason = reason::mk_annot_reason(desc, loc.dupe());
                             let tp = type_util::push_type_alias_reason(&reason, tp);
                             let result_t =
@@ -4526,12 +4524,7 @@ fn convert_object<'a>(
             proto.dupe(),
         );
         if exact {
-            let reason_op = reason::mk_annot_reason(
-                reason::VirtualReasonDesc::RExactType(Arc::new(
-                    reason::VirtualReasonDesc::RObjectType,
-                )),
-                loc,
-            );
+            let reason_op = reason::mk_annot_reason(reason::VirtualReasonDesc::RObjectType, loc);
             type_util::make_exact_object(reason_obj, Rc::new(obj_t), &reason_op)
         } else {
             Type::new(type_::TypeInner::DefT(

@@ -119,8 +119,8 @@ Error --------------------------------------------------------------------------
 
 Cannot yield `xs` because: [incompatible-type]
  - array type [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Next` [3]: `void` [4] is incompatible with
-      `string` [5]
+    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+       - in the return value > type argument `Next` [5]: `void` [6] is incompatible with `string` [7]
 
    class.js:72:12
    72|     yield *xs;
@@ -133,15 +133,21 @@ References:
    <BUILTINS>/lib.es2015.iterable.js:63:11
    63| interface Iterable<out Yield,out Return=void,in Next=void> {
                  ^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:89:19
+   89|     @@iterator(): ArrayIterator<T>;
+                         ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:64:19
+   64|     @@iterator(): Iterator<Yield,Return,Next>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/lib.es2015.iterable.js:41:49
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                                                       ^^^^ [3]
+                                                       ^^^^ [5]
    <BUILTINS>/lib.esnext.iterator.js:23:60
    23| interface IteratorObject<out Yield,out Return=void,in Next=void> {
-                                                                  ^^^^ [4]
+                                                                  ^^^^ [6]
    class.js:71:71
    71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                                                             ^^^^^^ [5]
+                                                                             ^^^^^^ [7]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:40

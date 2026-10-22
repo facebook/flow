@@ -1180,9 +1180,7 @@ fn detect_unused_promises<'cx>(cx: &mut Context<'cx>) -> Result<(), JobError> {
 
 fn enforce_optimize<'cx>(cx: &mut Context<'cx>, loc: &ALoc, t: &Type) -> Result<(), JobError> {
     let reason = flow_common::reason::mk_reason(
-        VirtualReasonDesc::RTypeApp(Arc::new(VirtualReasonDesc::RType(FlowSmolStr::new_inline(
-            "$Flow$EnforceOptimized",
-        )))),
+        VirtualReasonDesc::RType(FlowSmolStr::new_inline("$Flow$EnforceOptimized")),
         loc.dupe(),
     );
     let internal_t = Type::new(TypeInner::NominalT {

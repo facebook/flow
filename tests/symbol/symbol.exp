@@ -1,22 +1,29 @@
 Error ------------------------------------------------------------------------------------------ class_iterator.js:39:31
 
-Cannot assign `new BadIterable()` to `bad` because in property `@@iterator` > the return value > type argument
-`Yield` [1]: `string` [2] is incompatible with `number` [3]. [incompatible-type]
+Cannot assign `new BadIterable()` to `bad` because: [incompatible-type]
+ - in property `@@iterator`: `IteratorObject` [1] is incompatible with `Iterator` [2]
+    - in the return value > type argument `Yield` [3]: `string` [4] is incompatible with `number` [5]
 
    class_iterator.js:39:31
    39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
                                      ^^^^^^^^^^^^^^^^^
 
 References:
+   class_iterator.js:35:25
+   35|   *[Symbol.iterator](): IteratorObject<string> {
+                               ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:64:19
+   64|     @@iterator(): Iterator<Yield,Return,Next>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [1]
+                              ^^^^^ [3]
    class_iterator.js:35:40
    35|   *[Symbol.iterator](): IteratorObject<string> {
-                                              ^^^^^^ [2]
+                                              ^^^^^^ [4]
    class_iterator.js:39:21
    39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
-                           ^^^^^^ [3]
+                           ^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:11:1
@@ -331,23 +338,30 @@ References:
 
 Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:18:1
 
-Cannot cast `bad` to `Iterable<number>` because in property `@@iterator` > the return value > type argument `Yield` [1]:
-`string` [2] is incompatible with `number` [3]. [incompatible-type]
+Cannot cast `bad` to `Iterable<number>` because: [incompatible-type]
+ - in property `@@iterator`: `Iterator` [1] is incompatible with `Iterator` [2]
+    - in the return value > type argument `Yield` [3]: `string` [4] is incompatible with `number` [5]
 
    type_well_known_symbol.js:18:1
    18| bad as Iterable<number>; // ERROR
        ^^^
 
 References:
+   type_well_known_symbol.js:16:35
+   16| type Bad = { [Symbol.iterator](): Iterator<string> };
+                                         ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:64:19
+   64|     @@iterator(): Iterator<Yield,Return,Next>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [1]
+                              ^^^^^ [3]
    type_well_known_symbol.js:16:44
    16| type Bad = { [Symbol.iterator](): Iterator<string> };
-                                                  ^^^^^^ [2]
+                                                  ^^^^^^ [4]
    type_well_known_symbol.js:18:17
    18| bad as Iterable<number>; // ERROR
-                       ^^^^^^ [3]
+                       ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:31:1

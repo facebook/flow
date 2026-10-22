@@ -42,8 +42,9 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3]: `"foo"` [4] is incompatible with
-      `Readonly<[key: any, value: any]>` [5]
+    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+       - in the return value > type argument `Yield` [5]: `"foo"` [6] is incompatible with
+         `Readonly<[key: any, value: any]>` [7]
 
    map.js:28:21
    28|     let x = new Map(['foo', 123]); // error
@@ -53,23 +54,30 @@ References:
    <BUILTINS>/lib.es2015.collection.js:38:28
    38|     new <K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:89:19
+   89|     @@iterator(): ArrayIterator<T>;
+                         ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:64:19
+   64|     @@iterator(): Iterator<Yield,Return,Next>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [3]
+                              ^^^^^ [5]
    map.js:28:22
    28|     let x = new Map(['foo', 123]); // error
-                            ^^^^^ [4]
+                            ^^^^^ [6]
    <BUILTINS>/lib.es2015.collection.js:38:37
    38|     new <K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:28:21
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3]: `123` [4] is incompatible with
-      `Readonly<[key: any, value: any]>` [5]
+    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+       - in the return value > type argument `Yield` [5]: `123` [6] is incompatible with
+         `Readonly<[key: any, value: any]>` [7]
 
    map.js:28:21
    28|     let x = new Map(['foo', 123]); // error
@@ -79,23 +87,29 @@ References:
    <BUILTINS>/lib.es2015.collection.js:38:28
    38|     new <K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:89:19
+   89|     @@iterator(): ArrayIterator<T>;
+                         ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:64:19
+   64|     @@iterator(): Iterator<Yield,Return,Next>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [3]
+                              ^^^^^ [5]
    map.js:28:29
    28|     let x = new Map(['foo', 123]); // error
-                                   ^^^ [4]
+                                   ^^^ [6]
    <BUILTINS>/lib.es2015.collection.js:38:37
    38|     new <K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:29:42
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3] > index `0`: `"foo"` [4] is incompatible
-      with `number` [5]
+    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+       - in the return value > type argument `Yield` [5] > index `0`: `"foo"` [6] is incompatible with `number` [7]
 
    map.js:29:42
    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -105,23 +119,29 @@ References:
    <BUILTINS>/lib.es2015.collection.js:38:28
    38|     new <K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:89:19
+   89|     @@iterator(): ArrayIterator<T>;
+                         ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:64:19
+   64|     @@iterator(): Iterator<Yield,Return,Next>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [3]
+                              ^^^^^ [5]
    map.js:29:44
    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                  ^^^^^ [4]
+                                                  ^^^^^ [6]
    map.js:29:16
    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                      ^^^^^^ [5]
+                      ^^^^^^ [7]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:29:42
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3] > index `1`: `123` [4] is incompatible
-      with `string` [5]
+    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+       - in the return value > type argument `Yield` [5] > index `1`: `123` [6] is incompatible with `string` [7]
 
    map.js:29:42
    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -131,15 +151,21 @@ References:
    <BUILTINS>/lib.es2015.collection.js:38:28
    38|     new <K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:89:19
+   89|     @@iterator(): ArrayIterator<T>;
+                         ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:64:19
+   64|     @@iterator(): Iterator<Yield,Return,Next>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [3]
+                              ^^^^^ [5]
    map.js:29:51
    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                         ^^^ [4]
+                                                         ^^^ [6]
    map.js:29:24
    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                              ^^^^^^ [5]
+                              ^^^^^^ [7]
 
 
 Error ------------------------------------------------------------------------------------------------------ map.js:34:5

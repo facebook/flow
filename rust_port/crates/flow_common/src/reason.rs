@@ -402,12 +402,9 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RImportStar(FlowSmolStr),
     RDefaultImportedType(FlowSmolStr, Userland),
     RCode(FlowSmolStr),
-    RPolyType(Arc<VirtualReasonDesc<L>>),
-    RExactType(Arc<VirtualReasonDesc<L>>),
     ROptional(Arc<VirtualReasonDesc<L>>),
     RMaybe(Arc<VirtualReasonDesc<L>>),
     RRestArrayLit(Option<Arc<VirtualReasonDesc<L>>>),
-    RTypeApp(Arc<VirtualReasonDesc<L>>),
     RClass(Arc<VirtualReasonDesc<L>>),
     RRefined(Arc<VirtualReasonDesc<L>>),
     RPartialOf(Arc<VirtualReasonDesc<L>>),
@@ -573,12 +570,9 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RTypeParam(box (s, l1, l2)) => RTypeParam(Box::new((s.clone(), f(l1), f(l2)))),
             RTypeParamBound(d) => RTypeParamBound(Arc::new(d.map_locs(f))),
             RTypeParamDefault(d) => RTypeParamDefault(Arc::new(d.map_locs(f))),
-            RPolyType(d) => RPolyType(Arc::new(d.map_locs(f))),
-            RExactType(d) => RExactType(Arc::new(d.map_locs(f))),
             ROptional(d) => ROptional(Arc::new(d.map_locs(f))),
             RMaybe(d) => RMaybe(Arc::new(d.map_locs(f))),
             RRestArrayLit(d) => RRestArrayLit(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
-            RTypeApp(d) => RTypeApp(Arc::new(d.map_locs(f))),
             RClass(d) => RClass(Arc::new(d.map_locs(f))),
             RRefined(d) => RRefined(Arc::new(d.map_locs(f))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
@@ -666,7 +660,6 @@ impl<L: Dupe> VirtualReasonDesc<L> {
                 | RRenderMaybeType(_)
                 | RRenderStarType(_),
             ) => true,
-            Some(RTypeApp(inner)) => inner.is_explanatory(),
             _ => false,
         }
     }
@@ -1409,10 +1402,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Constructors
         RConstructor => "constructor".to_string(),
         RConstructorCall(d) => match d.as_deref() {
-            Some(poly @ RPolyType(inner)) => match &**inner {
-                RClass(innermost) => string_of_desc(innermost),
-                _ => string_of_desc(poly),
-            },
             Some(RClass(inner)) => string_of_desc(inner),
             _ => format!(
                 "new {}",
@@ -1501,11 +1490,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RNoProviders => "no providers".to_string(),
 
         // Type wrappers
-        RPolyType(d) => match &**d {
-            RClass(inner) => string_of_desc(inner),
-            _ => string_of_desc(d),
-        },
-        RExactType(d) => string_of_desc(d),
         RReadOnlyType => "`Readonly`".to_string(),
         ROptional(d) => format!("optional {}", string_of_desc(d)),
         RMaybe(d) => {
@@ -1519,7 +1503,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
             format!("nullable {}", string_of_desc(unwrap_maybe(d)))
         }
         RRestArrayLit(_) => "rest array".to_string(),
-        RTypeApp(d) => string_of_desc(d),
         RClass(d) => format!("class {}", string_of_desc(d)),
         RRefined(d) => format!("refined {}", string_of_desc(d)),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),

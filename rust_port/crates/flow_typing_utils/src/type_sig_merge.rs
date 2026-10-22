@@ -2470,8 +2470,7 @@ fn merge_annot<'cx>(
         Annot::Exact(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let desc = type_util::desc_of_t(&t).cloned();
-            let reason =
-                reason::mk_annot_reason(desc.map(|desc| RExactType(Arc::new(desc))), loc.dupe());
+            let reason = reason::mk_annot_reason(desc, loc.dupe());
             let t = type_util::push_type_alias_reason(&reason, t);
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
@@ -2741,8 +2740,7 @@ fn merge_annot<'cx>(
                     false,
                 );
                 if obj_kind == type_::ObjKind::Exact {
-                    let reason_op =
-                        reason::mk_annot_reason(RExactType(Arc::new(RObjectType)), loc.dupe());
+                    let reason_op = reason::mk_annot_reason(RObjectType, loc.dupe());
                     type_util::make_exact_object(reason.dupe(), Rc::new(obj_type), &reason_op)
                 } else {
                     Type::new(type_::TypeInner::DefT(
@@ -3872,11 +3870,9 @@ fn merge_tparams_targs<'cx>(
     tparams: &TParams<ALoc, Pack::Packed<ALoc>>,
     strictness_kind: type_::TypeStrictnessKind,
 ) -> Type {
-    use flow_common::reason::VirtualReasonDesc::*;
     match tparams {
         TParams::Mono => t(cx, env, Vec::new()),
         TParams::Poly(poly) => {
-            let poly_reason = reason.update_desc(|d| d.map(|d| RPolyType(Arc::new(d))));
             let mut current_env = env.dupe();
             for tp in poly.tparams.iter() {
                 current_env.tps.remove(&tp.name);
@@ -3905,7 +3901,7 @@ fn merge_tparams_targs<'cx>(
             let t_out = t(cx, &current_env, tparam_tuples);
             let id = cx.make_source_poly_id(true, &poly.loc);
             Type::new(type_::TypeInner::DefT(
-                poly_reason,
+                reason,
                 type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
                     kind: PolyTKind::Regular,
                     tparams_loc: poly.loc.dupe(),

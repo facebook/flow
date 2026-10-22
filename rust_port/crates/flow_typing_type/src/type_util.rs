@@ -2306,9 +2306,7 @@ pub fn poly_type(
     use crate::type_::DefT;
     use crate::type_::DefTInner;
 
-    let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
-        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RPolyType(Arc::new(desc)))
-    });
+    let reason = reason_of_t(&t).dupe();
     let annot_loc = reason.loc().dupe();
     let reason = reason.annotate(annot_loc);
     Type::new(TypeInner::DefT(
@@ -2361,11 +2359,7 @@ pub fn typeapp_with_use_op(
     t: Type,
     targs: Vec<Type>,
 ) -> Type {
-    let reason = reason.replace_desc(
-        desc_of_t(&t)
-            .cloned()
-            .map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc))),
-    );
+    let reason = reason.replace_desc(desc_of_t(&t).cloned());
     Type::new(TypeInner::TypeAppT(Box::new(TypeAppTData {
         reason,
         use_op,
@@ -2398,9 +2392,7 @@ pub fn typeapp_annot(
 ) -> Type {
     use flow_common::reason::mk_annot_reason;
 
-    let desc = desc_of_t(&t)
-        .cloned()
-        .map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc)));
+    let desc = desc_of_t(&t).cloned();
     let reason = mk_annot_reason(desc, loc);
     let use_op = UseOp::Op(Arc::new(RootUseOp::TypeApplication {
         type_: reason.dupe(),
@@ -2416,9 +2408,7 @@ pub fn typeapp_annot(
 }
 
 pub fn implicit_typeapp(t: Type, targs: Vec<Type>, annot_loc: Option<ALoc>) -> Type {
-    let reason = reason_of_t(&t).dupe().update_desc_new(|desc| {
-        desc.map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc)))
-    });
+    let reason = reason_of_t(&t).dupe();
     let reason = match annot_loc {
         Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
@@ -2442,12 +2432,7 @@ pub fn this_typeapp(
     targs: Option<Vec<Type>>,
     annot_loc: Option<ALoc>,
 ) -> Type {
-    let reason = match &targs {
-        Some(_) => reason_of_t(&t).dupe().update_desc_new(|desc| {
-            desc.map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc)))
-        }),
-        None => reason_of_t(&t).dupe(),
-    };
+    let reason = reason_of_t(&t).dupe();
     let reason = match annot_loc {
         Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
@@ -2473,9 +2458,7 @@ pub fn typeof_annotation(reason: Reason, t: Type, targs: Option<Vec<Type>>) -> T
     match targs {
         None => t_annot,
         Some(targs) => {
-            let desc = desc_for_tapp
-                .map(|desc| flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc)));
-            let reason_tapp = mk_annot_reason(desc, annot_loc.dupe());
+            let reason_tapp = mk_annot_reason(desc_for_tapp, annot_loc.dupe());
             let use_op = UseOp::Op(Arc::new(RootUseOp::TypeApplication { type_: reason_tapp }));
             typeapp_with_use_op(true, false, reason, use_op, t_annot, targs)
         }
