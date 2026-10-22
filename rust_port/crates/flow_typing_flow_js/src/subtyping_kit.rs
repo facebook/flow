@@ -73,6 +73,7 @@ use flow_typing_type::type_::DefTInner::*;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::EnumInfoInner;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::GenericTData;
@@ -156,9 +157,7 @@ fn has_syntactic_nullish_member(t: &Type) -> bool {
     match t.deref() {
         MaybeT(_, _) | OptionalT { .. } => true,
         UnionT(_, rep) => rep.members_iter().any(has_syntactic_nullish_member),
-        DefT(_, def_t) => {
-            matches!(def_t.deref(), NullT | VoidT)
-        }
+        DefT(_, deref!(NullT | VoidT)) => true,
         _ => false,
     }
 }
@@ -281,7 +280,7 @@ pub(crate) fn property_is_missing_from_lookup_terminal(terminal: &Type, name: &N
     match terminal.deref() {
         ObjProtoT(_) => !flow_js_utils::is_object_prototype_method(name),
         FunProtoT(_) => !flow_js_utils::is_function_prototype(name),
-        DefT(_, def_t) => matches!(def_t.deref(), NullT),
+        DefT(_, deref!(NullT)) => true,
         _ => false,
     }
 }
@@ -321,11 +320,8 @@ fn try_property_method_bivariant<'cx>(
 ) -> Result<bool, FlowJsException> {
     fn is_method(t: &Type) -> bool {
         match t.deref() {
-            DefT(_, d) => match d.deref() {
-                FunT(_, ft) => ft.this_t.1 == ThisStatus::ThisMethod,
-                PolyT(poly) => is_method(&poly.t_out),
-                _ => false,
-            },
+            DefT(_, deref!(FunT(_, ft))) => ft.this_t.1 == ThisStatus::ThisMethod,
+            DefT(_, deref!(PolyT(poly))) => is_method(&poly.t_out),
             IntersectionT(_, rep) => rep.members_iter().all(is_method),
             _ => false,
         }
@@ -658,22 +654,20 @@ fn funt_to_funt_check<'cx>(
     check_this: &dyn Fn(&mut Context<'cx>, &UseOp) -> Result<(), FlowJsException>,
     check_params: &dyn Fn(&mut Context<'cx>, &UseOp) -> Result<(), FlowJsException>,
 ) -> Result<(), FlowJsException> {
-    let inner_use_op = if let VirtualUseOp::Frame(ref frame, ref inner) = use_op {
-        if let VirtualFrameUseOp::PropertyCompatibility(box PropertyCompatibilityData {
-            prop: Some(name),
-            ..
-        }) = frame.deref()
-        {
-            // The $call PropertyCompatibility is redundant when we have a
-            // FunCompatibility use_op.
-            if name.matches_str("$call") {
-                inner.deref().dupe()
-            } else {
-                use_op
-            }
-        } else {
-            use_op
-        }
+    let inner_use_op = if let VirtualUseOp::Frame(
+        deref!(
+            VirtualFrameUseOp::PropertyCompatibility(box PropertyCompatibilityData {
+                prop: Some(name),
+                ..
+            })
+        ),
+        inner,
+    ) = &use_op
+        && name.matches_str("$call")
+    {
+        // The $call PropertyCompatibility is redundant when we have a
+        // FunCompatibility use_op.
+        inner.deref().dupe()
     } else {
         use_op
     };
@@ -898,9 +892,7 @@ fn bivariant_param_flow<'cx>(
         match (cx.find_resolved(lower), cx.find_resolved(upper)) {
             (Some(lower_resolved), Some(upper_resolved)) => {
                 match (lower_resolved.deref(), upper_resolved.deref()) {
-                    (DefT(lreason, ld), DefT(ureason, ud))
-                        if let (FunT(_, ft1), FunT(_, ft2)) = (ld.deref(), ud.deref()) =>
-                    {
+                    (DefT(lreason, deref!(FunT(_, ft1))), DefT(ureason, deref!(FunT(_, ft2)))) => {
                         funt_to_funt_check(
                             cx,
                             env,
@@ -1180,23 +1172,19 @@ fn try_method_bivariant<'cx>(
                 )?;
                 Ok(true)
             }
-            (DefT(_, ld), DefT(_, ud))
-                if let (
-                    PolyT(box PolyTData {
+            #[rustfmt::skip]
+            (
+                DefT(_, deref!(PolyT(box PolyTData {
                         tparams: ps1,
-                        t_out: inner1,
+                        t_out: inner1 @ deref!(DefT(_, deref!(FunT(_, _)))),
                         ..
-                    }),
-                    PolyT(box PolyTData {
+                }))),
+                DefT(_, deref!(PolyT(box PolyTData {
                         tparams: ps2,
-                        t_out: inner2,
+                        t_out: inner2 @ deref!(DefT(_, deref!(FunT(_, _)))),
                         ..
-                    }),
-                ) = (ld.deref(), ud.deref())
-                    && matches!(inner1.deref(), DefT(_, d) if matches!(d.deref(), FunT(_, _)))
-                    && matches!(inner2.deref(), DefT(_, d) if matches!(d.deref(), FunT(_, _)))
-                    && ps1.len() == ps2.len() =>
-            {
+                }))),
+            ) if ps1.len() == ps2.len() => {
                 let (map1, generics) = flow_js_utils::mk_tparams(cx, ps1);
                 let map2 = ps2.iter().zip(generics).fold(
                     flow_data_structure_wrapper::ord_map::FlowOrdMap::new(),
@@ -1276,9 +1264,7 @@ fn try_method_bivariant<'cx>(
                     inner2.dupe(),
                 );
                 match (inner1_subst.deref(), inner2_subst.deref()) {
-                    (DefT(lreason_f, ld), DefT(ureason_f, ud))
-                        if let (FunT(_, ft1), FunT(_, ft2)) = (ld.deref(), ud.deref()) =>
-                    {
+                    (DefT(lreason_f, deref!(FunT(_, ft1))), DefT(ureason_f, deref!(FunT(_, ft2)))) => {
                         funt_to_funt_method_bivariant(
                             cx,
                             env,
@@ -1319,30 +1305,22 @@ fn try_method_bivariant<'cx>(
             (IntersectionT(_, rep), _) => rep
                 .members_iter()
                 .any(|lt| can_try_method_bivariant(lt, ut)),
-            (DefT(_, ld), DefT(_, ud))
-                if matches!((ld.deref(), ud.deref()), (FunT(_, _), FunT(_, _))) =>
-            {
-                true
-            }
-            (DefT(_, ld), DefT(_, ud))
-                if let (
-                    PolyT(box PolyTData {
+            (DefT(_, deref!(FunT(_, _))), DefT(_, deref!(FunT(_, _)))) => true,
+            #[rustfmt::skip]
+            (
+                DefT(_, deref!(PolyT(box PolyTData {
                         tparams: ps1,
-                        t_out: inner1,
+                        t_out: deref!(DefT(_, deref!(FunT(_, _)))),
                         ..
-                    }),
-                    PolyT(box PolyTData {
+                }))),
+                DefT(_, deref!(PolyT(box PolyTData {
                         tparams: ps2,
-                        t_out: inner2,
+                        t_out: deref!(DefT(_, deref!(FunT(_, _)))),
                         ..
-                    }),
-                ) = (ld.deref(), ud.deref())
-                    && matches!(inner1.deref(), DefT(_, d) if matches!(d.deref(), FunT(_, _)))
-                    && matches!(inner2.deref(), DefT(_, d) if matches!(d.deref(), FunT(_, _)))
-                    && ps1.len() == ps2.len() =>
-            {
+                }))),
+            ) if ps1.len() == ps2.len() => {
                 true
-            }
+            },
             _ => false,
         }
     }
@@ -1569,86 +1547,86 @@ impl PropsToIndexerContext<'_> {
             dict_polarity,
             ..
         } = upper_dict;
-        let flow_prop_to_indexer = |cx: &mut Context<'cx>,
-                                    lp: &Property,
-                                    name: &Name|
-         -> Result<(), FlowJsException> {
-            let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
-                    PropertyCompatibilityData {
-                        prop: Some(name.dupe()),
-                        lower: lreason.dupe(),
-                        upper: ureason.dupe(),
-                    },
-                ))),
-                Arc::new(use_op.dupe()),
-            );
-            let lp_type = match lp.deref() {
-                PropertyInner::Field(fd) if let OptionalT { type_: lt, .. } = fd.type_.deref() => {
-                    PropertyType::OrdinaryField {
-                        type_: lt.dupe(),
-                        polarity: fd.polarity,
-                    }
-                }
-                _ => property_type_for_subtyping(lp, strictness_kind),
-            };
-            let up_type = PropertyType::OrdinaryField {
-                type_: value.dupe(),
-                polarity: *dict_polarity,
-            };
-            if lit {
-                match (
-                    property::read_t_of_property_type(&lp_type),
-                    property::read_t_of_property_type(&up_type),
-                ) {
-                    (Some(lt), Some(ut)) => {
-                        FlowJs::rec_flow_with_env(
-                            cx,
-                            env,
-                            trace,
-                            &lt,
-                            &UseT::new(UseT(use_op.dupe(), ut)),
-                        )?;
-                    }
-                    _ => {}
-                }
-            } else {
-                let propref = type_util::mk_named_prop(
-                    lreason
-                        .dupe()
-                        .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
-                    false,
-                    name.dupe(),
+        let flow_prop_to_indexer =
+            |cx: &mut Context<'cx>, lp: &Property, name: &Name| -> Result<(), FlowJsException> {
+                let use_op = VirtualUseOp::Frame(
+                    Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                        PropertyCompatibilityData {
+                            prop: Some(name.dupe()),
+                            lower: lreason.dupe(),
+                            upper: ureason.dupe(),
+                        },
+                    ))),
+                    Arc::new(use_op.dupe()),
                 );
-                let lower_upper_subtyping_obj_ts = self
-                    .lower_upper_subtyping_obj_ts
-                    .as_ref()
-                    .map(|(lower, upper)| (lower, upper));
-                let errs = rec_flow_p_inner(
-                    cx,
-                    env,
-                    Some(trace),
-                    use_op.dupe(),
-                    None,
-                    lower_upper_subtyping_obj_ts,
-                    strictness_kind,
-                    true,
-                    &propref,
-                    &lp_type,
-                    &up_type,
-                )?;
-                add_output_prop_polarity_mismatch(
-                    cx,
-                    env,
-                    use_op,
-                    PropPolarityMismatchObject::Type(&self.lower),
-                    PropPolarityMismatchObject::Type(&self.upper),
-                    errs,
-                    strictness_kind,
-                )?;
-            }
-            Ok(())
-        };
+                let lp_type = match lp.deref() {
+                    PropertyInner::Field(box FieldData {
+                        type_: deref!(OptionalT { type_: lt, .. }),
+                        polarity,
+                        ..
+                    }) => PropertyType::OrdinaryField {
+                        type_: lt.dupe(),
+                        polarity: *polarity,
+                    },
+                    _ => property_type_for_subtyping(lp, strictness_kind),
+                };
+                let up_type = PropertyType::OrdinaryField {
+                    type_: value.dupe(),
+                    polarity: *dict_polarity,
+                };
+                if lit {
+                    match (
+                        property::read_t_of_property_type(&lp_type),
+                        property::read_t_of_property_type(&up_type),
+                    ) {
+                        (Some(lt), Some(ut)) => {
+                            FlowJs::rec_flow_with_env(
+                                cx,
+                                env,
+                                trace,
+                                &lt,
+                                &UseT::new(UseT(use_op.dupe(), ut)),
+                            )?;
+                        }
+                        _ => {}
+                    }
+                } else {
+                    let propref = type_util::mk_named_prop(
+                        lreason
+                            .dupe()
+                            .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
+                        false,
+                        name.dupe(),
+                    );
+                    let lower_upper_subtyping_obj_ts = self
+                        .lower_upper_subtyping_obj_ts
+                        .as_ref()
+                        .map(|(lower, upper)| (lower, upper));
+                    let errs = rec_flow_p_inner(
+                        cx,
+                        env,
+                        Some(trace),
+                        use_op.dupe(),
+                        None,
+                        lower_upper_subtyping_obj_ts,
+                        strictness_kind,
+                        true,
+                        &propref,
+                        &lp_type,
+                        &up_type,
+                    )?;
+                    add_output_prop_polarity_mismatch(
+                        cx,
+                        env,
+                        use_op,
+                        PropPolarityMismatchObject::Type(&self.lower),
+                        PropPolarityMismatchObject::Type(&self.upper),
+                        errs,
+                        strictness_kind,
+                    )?;
+                }
+                Ok(())
+            };
         if !env.in_implicit_instantiation() {
             for (name, lp) in lower_props.iter() {
                 if upper_props.iter().any(|props| props.contains_key(name)) {
@@ -2155,14 +2133,14 @@ fn flow_obj_to_obj<'cx>(
                         polarity: *dict_polarity,
                     };
                     let up_for_idx = match up.deref() {
-                        PropertyInner::Field(fd)
-                            if let OptionalT { type_: ut, .. } = fd.type_.deref() =>
-                        {
-                            PropertyType::OrdinaryField {
-                                type_: ut.dupe(),
-                                polarity: fd.polarity,
-                            }
-                        }
+                        PropertyInner::Field(box FieldData {
+                            type_: deref!(OptionalT { type_: ut, .. }),
+                            polarity,
+                            ..
+                        }) => PropertyType::OrdinaryField {
+                            type_: ut.dupe(),
+                            polarity: *polarity,
+                        },
                         _ => property::property_type(up),
                     };
                     let subtype_against_indexer =
