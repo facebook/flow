@@ -32,6 +32,7 @@ use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_implicit_instantiation_check::MethodOptionalChain;
 use flow_typing_implicit_instantiation_check::Operation;
 use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::ArrType::*;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
@@ -138,8 +139,7 @@ fn upper_operation_reason_or<CX: ContextFamily>(u: &UseT<CX>, fallback: &Reason)
 
 fn is_extends_use_t_root(t: &TypeInner) -> bool {
     match t {
-        ObjProtoT(_) | FunProtoT(_) => true,
-        DefT(_, def_t) => matches!(def_t.deref(), NullT),
+        ObjProtoT(_) | FunProtoT(_) | DefT(_, deref!(NullT)) => true,
         _ => false,
     }
 }
@@ -273,7 +273,7 @@ fn strict_computed_lookup_failed<'cx>(
                 ErrorMessage::EInternal(Box::new((loc.dupe(), InternalError::PropRefComputedOpen))),
             )?;
         }
-        DefT(_, inner_def) if matches!(inner_def.deref(), SingletonStrT { .. }) => {
+        DefT(_, deref!(SingletonStrT { .. })) => {
             let loc = loc_of_t(elem_t);
             flow_js_utils::add_output_with_env(
                 cx,
@@ -503,10 +503,10 @@ fn __flow_impl<'cx>(
     // Fast path: if l is pointer-equal to the Type inside UseT<Cx>, it's trivially l <: l.
     // This must come after ground_subtype_use_t, which has a side effect of recording
     // singleton literal checks needed by implicit instantiation.
-    if let UseT(_, t) = u.deref() {
-        if l.ptr_eq(t) {
-            return Ok(None);
-        }
+    if let UseT(_, t) = u.deref()
+        && l.ptr_eq(t)
+    {
+        return Ok(None);
     }
     if flow_typing_flow_common::flow_cache::flow_constraint::get(cx, l, u) {
         print_types_if_verbose(cx, &trace, Some("(cached)"), l, u);
@@ -545,7 +545,7 @@ fn __flow_impl<'cx>(
         return Ok(None);
     }
     if match u.deref() {
-        UseT(use_op, any) if matches!(any.deref(), AnyT(_, _)) => {
+        UseT(use_op, any @ deref!(AnyT(_, _))) => {
             any_propagated_use(cx, env, trace, use_op, any, l)?
         }
         _ => false,
@@ -856,9 +856,7 @@ fn __flow_impl<'cx>(
                 helpers::reposition(cx, env, Some(trace), loc, desc, annot_loc, t.dupe())?;
             rec_flow(cx, env, trace, (&repos_t, u))?;
         }
-        (DefT(reason, def_t), ConvertEmptyPropsToMixedT(_, collector))
-            if matches!(def_t.deref(), EmptyT) =>
-        {
+        (DefT(reason, deref!(EmptyT)), ConvertEmptyPropsToMixedT(_, collector)) => {
             collector.add(mixed_t::make(reason.dupe()));
         }
         (_, ConvertEmptyPropsToMixedT(_, collector)) => {
@@ -968,20 +966,20 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            DefT(r, def_t),
+            DefT(
+                r,
+                deref!(RendersT(deref!(CanonicalRendersForm::StructuralRenders {
+                    renders_variant,
+                    renders_structural_type: deref!(UnionT(_, rep)),
+                }))),
+            ),
             ReposUseT(box ReposUseTData {
                 reason,
                 use_desc,
                 use_op,
                 type_: l_inner,
             }),
-        ) if let RendersT(renders_form) = def_t.deref()
-            && let CanonicalRendersForm::StructuralRenders {
-                renders_variant,
-                renders_structural_type,
-            } = renders_form.as_ref()
-            && let UnionT(_, rep) = renders_structural_type.deref() =>
-        {
+        ) => {
             let rep = {
                 let in_implicit = env.in_implicit_instantiation();
                 rep.ident_map(false, |t| annot(in_implicit, *use_desc, t))
@@ -1061,11 +1059,11 @@ fn __flow_impl<'cx>(
         // * optional indexed access *
         // ***************************
         (
-            DefT(r, def_t),
+            DefT(r, deref!(EmptyT | VoidT | NullT)),
             OptionalIndexedAccessT(box OptionalIndexedAccessTData {
                 use_op, tout_tvar, ..
             }),
-        ) if matches!(def_t.deref(), EmptyT | VoidT | NullT) => {
+        ) => {
             rec_flow_t(
                 cx,
                 env,
@@ -1372,7 +1370,7 @@ fn __flow_impl<'cx>(
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&dro_inter, &tout_t))?;
         }
-        (DefT(r, def_t), DeepReadOnlyT(tout, dro)) if let ObjT(o) = def_t.deref() => {
+        (DefT(r, deref!(ObjT(o))), DeepReadOnlyT(tout, dro)) => {
             let ReactDro(dro_loc, dro_type) = dro;
             let new_flags = Flags {
                 react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
@@ -1386,23 +1384,25 @@ fn __flow_impl<'cx>(
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
-        (DefT(r, def_t), DeepReadOnlyT(tout, dro))
-            if let ArrT(arr) = def_t.deref()
-                && let ArrType::TupleAT(box TupleATData {
-                    elem_t,
-                    elements,
-                    arity,
-                    inexact,
-                    rest,
-                    react_dro: _,
-                    strictness_kind,
-                    ..
-                }) = arr.as_ref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(r, deref!(ArrT(deref!(TupleAT(box TupleATData {
+                elem_t,
+                elements,
+                arity,
+                inexact,
+                rest,
+                strictness_kind,
+                literal,
+                fresh,
+                ..
+            }))))),
+            DeepReadOnlyT(tout, dro),
+        ) => {
             let ReactDro(dro_loc, dro_type) = dro;
             let new_l = Type::new(DefT(
                 r.dupe(),
-                DefT::new(ArrT(Rc::new(ArrType::TupleAT(Box::new(TupleATData {
+                DefT::new(ArrT(Rc::new(TupleAT(Box::new(TupleATData {
                     react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
                     elem_t: elem_t.dupe(),
                     elements: elements.dupe(),
@@ -1410,57 +1410,64 @@ fn __flow_impl<'cx>(
                     inexact: *inexact,
                     rest: rest.dupe(),
                     strictness_kind: *strictness_kind,
-                    literal: arr.literal(),
-                    fresh: arr.fresh(),
+                    literal: *literal,
+                    fresh: *fresh,
                 }))))),
             ));
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
-        (DefT(r, def_t), DeepReadOnlyT(tout, dro))
-            if let ArrT(arr) = def_t.deref()
-                && let ArrType::ArrayAT(box ArrayATData {
-                    elem_t,
-                    tuple_view,
-                    react_dro: _,
-                    strictness_kind,
-                    ..
-                }) = arr.as_ref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(r, deref!(ArrT(deref!(ArrayAT(box ArrayATData {
+                elem_t,
+                tuple_view,
+                strictness_kind,
+                literal,
+                fresh,
+                ..
+            }))))),
+            DeepReadOnlyT(tout, dro),
+        ) => {
             let ReactDro(dro_loc, dro_type) = dro;
             let new_l = Type::new(DefT(
                 r.dupe(),
-                DefT::new(ArrT(Rc::new(ArrType::ArrayAT(Box::new(ArrayATData {
+                DefT::new(ArrT(Rc::new(ArrayAT(Box::new(ArrayATData {
                     react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
                     elem_t: elem_t.dupe(),
                     tuple_view: tuple_view.clone(),
                     strictness_kind: *strictness_kind,
-                    literal: arr.literal(),
-                    fresh: arr.fresh(),
+                    literal: *literal,
+                    fresh: *fresh,
                 }))))),
             ));
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
-        (DefT(r, def_t), DeepReadOnlyT(tout, dro))
-            if let ArrT(arr) = def_t.deref()
-                && let ArrType::ROArrayAT(box ROArrayATData { elem_t: t, .. }) = arr.as_ref() =>
-        {
+        (
+            DefT(
+                r,
+                deref!(ArrT(deref!(
+                    ROArrayAT(box ROArrayATData {
+                        elem_t: t, literal, ..
+                    })
+                ))),
+            ),
+            DeepReadOnlyT(tout, dro),
+        ) => {
             let ReactDro(dro_loc, dro_type) = dro;
             let new_l = Type::new(DefT(
                 r.dupe(),
-                DefT::new(ArrT(Rc::new(ArrType::ROArrayAT(Box::new(ROArrayATData {
+                DefT::new(ArrT(Rc::new(ROArrayAT(Box::new(ROArrayATData {
                     elem_t: t.dupe(),
                     react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
-                    literal: arr.literal(),
+                    literal: *literal,
                 }))))),
             ));
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
-        (DefT(r, def_t), DeepReadOnlyT(tout, react_dro))
-            if let InstanceT(instance) = def_t.deref() =>
-        {
+        (DefT(r, deref!(InstanceT(instance))), DeepReadOnlyT(tout, react_dro)) => {
             let new_inst = InstType::new(InstTypeInner {
                 inst_react_dro: Some(react_dro.clone()),
                 ..instance.inst.deref().clone()
@@ -1473,9 +1480,8 @@ fn __flow_impl<'cx>(
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
-        (DefT(r, def_t), HooklikeT(tout))
-            if let FunT(s, funtype) = def_t.deref()
-                && funtype.effect_ == ReactEffectType::ArbitraryEffect =>
+        (DefT(r, deref!(FunT(s, funtype))), HooklikeT(tout))
+            if funtype.effect_ == ReactEffectType::ArbitraryEffect =>
         {
             let new_funtype = FunType {
                 effect_: ReactEffectType::AnyEffect,
@@ -1488,19 +1494,22 @@ fn __flow_impl<'cx>(
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
-        (DefT(rp, def_t), HooklikeT(tout))
-            if let PolyT(box PolyTData {
-                kind: poly_kind,
-                tparams_loc,
-                tparams,
-                t_out,
-                id,
-                strictness_kind,
-            }) = def_t.deref()
-                && let DefT(r, inner_def) = t_out.deref()
-                && let FunT(s, funtype) = inner_def.deref()
-                && funtype.effect_ == ReactEffectType::ArbitraryEffect =>
-        {
+        (
+            DefT(
+                rp,
+                deref!(
+                    PolyT(box PolyTData {
+                        kind: poly_kind,
+                        tparams_loc,
+                        tparams,
+                        t_out: deref!(DefT(r, deref!(FunT(s, funtype)))),
+                        id,
+                        strictness_kind,
+                    })
+                ),
+            ),
+            HooklikeT(tout),
+        ) if funtype.effect_ == ReactEffectType::ArbitraryEffect => {
             let new_funtype = FunType {
                 effect_: ReactEffectType::AnyEffect,
                 ..(**funtype).clone()
@@ -1523,15 +1532,24 @@ fn __flow_impl<'cx>(
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
-        (DefT(r, def_t), HooklikeT(tout))
-            if let ObjT(obj) = def_t.deref()
-                && let Some(id) = &obj.call_t =>
-        {
+        (
+            DefT(
+                r,
+                deref!(
+                    ObjT(
+                        obj @ deref!(ObjType {
+                            call_t: Some(id),
+                            ..
+                        }),
+                    )
+                ),
+            ),
+            HooklikeT(tout),
+        ) => {
             let call_t = cx.find_call(*id);
             let t = match call_t.deref() {
-                DefT(rf, inner_def)
-                    if let FunT(s, funtype) = inner_def.deref()
-                        && funtype.effect_ == ReactEffectType::ArbitraryEffect =>
+                DefT(rf, deref!(FunT(s, funtype)))
+                    if funtype.effect_ == ReactEffectType::ArbitraryEffect =>
                 {
                     let call = Type::new(DefT(
                         rf.dupe(),
@@ -1552,19 +1570,19 @@ fn __flow_impl<'cx>(
                         }))),
                     ))
                 }
-                DefT(rp, inner_def)
-                    if let PolyT(box PolyTData {
-                        kind: poly_kind,
-                        tparams_loc,
-                        tparams,
-                        t_out,
-                        id: poly_id,
-                        strictness_kind,
-                    }) = inner_def.deref()
-                        && let DefT(rf, fun_def) = t_out.deref()
-                        && let FunT(s, funtype) = fun_def.deref()
-                        && funtype.effect_ == ReactEffectType::ArbitraryEffect =>
-                {
+                DefT(
+                    rp,
+                    deref!(
+                        PolyT(box PolyTData {
+                            kind: poly_kind,
+                            tparams_loc,
+                            tparams,
+                            t_out: deref!(DefT(rf, deref!(FunT(s, funtype)))),
+                            id: poly_id,
+                            strictness_kind,
+                        })
+                    ),
+                ) if funtype.effect_ == ReactEffectType::ArbitraryEffect => {
                     let new_funtype = FunType {
                         effect_: ReactEffectType::AnyEffect,
                         ..(**funtype).clone()
@@ -1609,7 +1627,7 @@ fn __flow_impl<'cx>(
             rec_flow_t(cx, env, trace, unknown_use(), (l, &tout_t))?;
         }
         (
-            DefT(r, def_t),
+            DefT(r, deref!(InstanceT(instance))),
             GetKeysT { .. }
             | GetValuesT { .. }
             | GetDictValuesT { .. }
@@ -1628,8 +1646,7 @@ fn __flow_impl<'cx>(
             | SetElemT(..)
             | GetElemT(..)
             | CallElemT(..),
-        ) if let InstanceT(instance) = def_t.deref()
-            && let inst = &instance.inst
+        ) if let inst = &instance.inst
             && let Some(ReactDro(dro_loc, dro_type)) = inst.inst_react_dro.as_ref()
             && inst.type_args.len() == 2
             && flow_js_utils::is_builtin_class_id("Map", inst.class_id.dupe(), cx) =>
@@ -1661,10 +1678,12 @@ fn __flow_impl<'cx>(
                         })),
                     )?;
                 }
-                GetPropT(box data)
-                    if let PropRef::Named { name, .. } = data.propref.as_ref()
-                        && matches!(name.as_str_opt(), Some("clear" | "delete" | "set")) =>
-                {
+                GetPropT(
+                    box data @ GetPropTData {
+                        propref: box PropRef::Named { name, .. },
+                        ..
+                    },
+                ) if matches!(name.as_str_opt(), Some("clear" | "delete" | "set")) => {
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
@@ -1721,7 +1740,7 @@ fn __flow_impl<'cx>(
             }
         }
         (
-            DefT(r, def_t),
+            DefT(r, deref!(InstanceT(instance))),
             GetKeysT { .. }
             | GetValuesT { .. }
             | GetDictValuesT { .. }
@@ -1740,8 +1759,7 @@ fn __flow_impl<'cx>(
             | SetElemT(..)
             | GetElemT(..)
             | CallElemT(..),
-        ) if let InstanceT(instance) = def_t.deref()
-            && let inst = &instance.inst
+        ) if let inst = &instance.inst
             && let Some(ReactDro(dro_loc, dro_type)) = inst.inst_react_dro.as_ref()
             && inst.type_args.len() == 1
             && flow_js_utils::is_builtin_class_id("Set", inst.class_id.dupe(), cx) =>
@@ -1771,10 +1789,12 @@ fn __flow_impl<'cx>(
                         })),
                     )?;
                 }
-                GetPropT(box data)
-                    if let PropRef::Named { name, .. } = data.propref.as_ref()
-                        && matches!(name.as_str_opt(), Some("add" | "clear" | "delete")) =>
-                {
+                GetPropT(
+                    box data @ GetPropTData {
+                        propref: box PropRef::Named { name, .. },
+                        ..
+                    },
+                ) if matches!(name.as_str_opt(), Some("add" | "clear" | "delete")) => {
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
@@ -1823,13 +1843,11 @@ fn __flow_impl<'cx>(
         // ***************
 
         // The type maybe(T) is the same as null | undefined | UseT<Cx>
-        (DefT(r, def_t), FilterMaybeT(use_op, tout)) if matches!(def_t.deref(), NullT | VoidT) => {
+        (DefT(r, deref!(NullT | VoidT)), FilterMaybeT(use_op, tout)) => {
             let empty = empty_t::why(r.dupe());
             rec_flow_t(cx, env, trace, use_op.dupe(), (&empty, tout))?;
         }
-        (DefT(r, def_t), FilterMaybeT(use_op, tout))
-            if matches!(def_t.deref(), MixedT(MixedFlavor::MixedEverything)) =>
-        {
+        (DefT(r, deref!(MixedT(MixedFlavor::MixedEverything))), FilterMaybeT(use_op, tout)) => {
             let mixed = Type::new(DefT(
                 r.dupe(),
                 DefT::new(MixedT(MixedFlavor::MixedNonMaybe)),
@@ -1840,7 +1858,7 @@ fn __flow_impl<'cx>(
         | (MaybeT(_, tout), FilterMaybeT(_, _)) => {
             rec_flow(cx, env, trace, (tout, u))?;
         }
-        (DefT(_, def_t), FilterMaybeT(use_op, tout)) if matches!(def_t.deref(), EmptyT) => {
+        (DefT(_, deref!(EmptyT)), FilterMaybeT(use_op, tout)) => {
             rec_flow_t(cx, env, trace, use_op.dupe(), (l, tout))?;
         }
         (
@@ -1899,7 +1917,7 @@ fn __flow_impl<'cx>(
         // ******************
 
         // The type optional(T) is the same as undefined | UseT<Cx>
-        (DefT(r, def_t), FilterOptionalT(use_op, tout)) if matches!(def_t.deref(), VoidT) => {
+        (DefT(r, deref!(VoidT)), FilterOptionalT(use_op, tout)) => {
             let empty = empty_t::why(r.dupe());
             rec_flow_t(cx, env, trace, use_op.dupe(), (&empty, tout))?;
         }
@@ -2079,9 +2097,9 @@ fn __flow_impl<'cx>(
         // If the upper bound's c is not a PolyT then we will fall down to an
         // incompatible use error.
         (
-            DefT(_, def_t),
+            DefT(_, deref!(PolyT(_))),
             ConcretizeTypeAppsT(use_op, box (ts2, fv2, op2, r2), box (c1, ts1, fv1, op1, r1), true),
-        ) if matches!(def_t.deref(), PolyT(box _)) => {
+        ) => {
             let c2 = l.dupe();
             rec_flow(
                 cx,
@@ -2111,26 +2129,41 @@ fn __flow_impl<'cx>(
         // The upper bound's c should always be a PolyT here since we could not have
         // made it here if it was not given the logic of our earlier case.
         (
-            DefT(_, def_t),
-            ConcretizeTypeAppsT(use_op, box (ts1, fv1, _, r1), box (c2, ts2, fv2, _, r2), false),
-        ) if let PolyT(box PolyTData {
-            kind: _,
-            tparams_loc,
-            tparams,
-            id: id1,
-            t_out,
-            strictness_kind: lower_strictness_kind,
-        }) = def_t.deref()
-            && let DefT(_, c2_def) = c2.deref()
-            && let PolyT(box PolyTData {
-                kind: _,
-                tparams_loc: _,
-                tparams: _,
-                id: id2,
-                t_out: _,
-                strictness_kind: upper_strictness_kind,
-            }) = c2_def.deref()
-            && id1 == id2
+            DefT(
+                _,
+                deref!(
+                    PolyT(box PolyTData {
+                        tparams_loc,
+                        tparams,
+                        id: id1,
+                        t_out,
+                        strictness_kind: lower_strictness_kind,
+                        ..
+                    })
+                ),
+            ),
+            ConcretizeTypeAppsT(
+                use_op,
+                box (ts1, fv1, _, r1),
+                box (
+                    deref!(DefT(
+                        _,
+                        deref!(
+                            PolyT(box PolyTData {
+                                id: id2,
+                                strictness_kind: upper_strictness_kind,
+                                ..
+                            })
+                        )
+                    )),
+                    ts2,
+                    fv2,
+                    _,
+                    r2,
+                ),
+                false,
+            ),
+        ) if id1 == id2
             && ts1.len() == ts2.len()
             && !flow_js_utils::wraps_utility_type(cx, t_out)
             && fv1 == fv2 =>
@@ -2156,31 +2189,42 @@ fn __flow_impl<'cx>(
         // This is the case which implements the expansion for our
         // TypeAppT ~> TypeAppT when the two PolyTs are unequal.
         (
-            DefT(_, def_t),
+            DefT(
+                _,
+                deref!(
+                    PolyT(box PolyTData {
+                        tparams_loc: tparams_loc1,
+                        tparams: xs1,
+                        t_out: t1,
+                        id: id1,
+                        ..
+                    })
+                ),
+            ),
             ConcretizeTypeAppsT(
                 use_op,
                 box (ts1, fv1, op1, r1),
-                box (c2, ts2, fv2, op2, r2),
+                box (
+                    deref!(DefT(
+                        _,
+                        deref!(
+                            PolyT(box PolyTData {
+                                tparams_loc: tparams_loc2,
+                                tparams: xs2,
+                                t_out: t2,
+                                id: id2,
+                                ..
+                            })
+                        )
+                    )),
+                    ts2,
+                    fv2,
+                    op2,
+                    r2,
+                ),
                 false,
             ),
-        ) if let PolyT(box PolyTData {
-            kind: _,
-            tparams_loc: tparams_loc1,
-            tparams: xs1,
-            t_out: t1,
-            id: id1,
-            strictness_kind: _,
-        }) = def_t.deref()
-            && let DefT(_, c2_def) = c2.deref()
-            && let PolyT(box PolyTData {
-                kind: _,
-                tparams_loc: tparams_loc2,
-                tparams: xs2,
-                t_out: t2,
-                id: id2,
-                strictness_kind: _,
-            }) = c2_def.deref() =>
-        {
+        ) => {
             let (op1_eff, op2_eff) = match root_of_use_op(use_op) {
                 RootUseOp::UnknownUse => (op1.dupe(), op2.dupe()),
                 _ => (use_op.dupe(), use_op.dupe()),
@@ -2286,12 +2330,15 @@ fn __flow_impl<'cx>(
         }
 
         // unwrap namespace type into object type, drop all information about types in the namespace
-        (NamespaceT(ns), GetPropT(box data))
-            if let UseOp::Op(root_op) = &data.use_op
-                && let VirtualRootUseOp::GetProperty(prop_reason) = root_op.deref()
-                && ns.namespace_symbol.kind()
-                    == flow_common::flow_symbol::SymbolKind::SymbolModule =>
-        {
+        (
+            NamespaceT(ns),
+            GetPropT(
+                box data @ GetPropTData {
+                    use_op: UseOp::Op(deref!(VirtualRootUseOp::GetProperty(prop_reason))),
+                    ..
+                },
+            ),
+        ) if ns.namespace_symbol.kind() == flow_common::flow_symbol::SymbolKind::SymbolModule => {
             let new_u = UseT::new(GetPropT(Box::new(GetPropTData {
                 use_op: UseOp::Op(Arc::new(VirtualRootUseOp::GetExport(prop_reason.dupe()))),
                 reason: data.reason.dupe(),
@@ -2329,23 +2376,24 @@ fn __flow_impl<'cx>(
         // * transform values to type references *
         // ***************************************
         (
-            DefT(reason_tapp, def_t),
+            DefT(
+                reason_tapp,
+                deref!(
+                    PolyT(box PolyTData {
+                        tparams_loc,
+                        tparams: ids,
+                        t_out,
+                        id,
+                        ..
+                    })
+                ),
+            ),
             ValueToTypeReferenceT(box ValueToTypeReferenceTData {
                 use_op,
                 reason: reason_op,
                 ..
             }),
-        ) if let PolyT(box PolyTData {
-            kind: _,
-            tparams_loc,
-            tparams: ids,
-            t_out,
-            id,
-            strictness_kind: _,
-        }) = def_t.deref()
-            && !ids.is_empty()
-            && ids.iter().all(|tp| tp.default.is_some()) =>
-        {
+        ) if !ids.is_empty() && ids.iter().all(|tp| tp.default.is_some()) => {
             // Treat missing type args the same as empty type args (Foo = Foo<>) when all
             // parameters have defaults. Otherwise, fall through to EMissingTypeArgs.
             let t = FlowJs::mk_typeapp_of_poly_with_env(
