@@ -2718,6 +2718,7 @@ pub fn normalize_jsx_children_prop(
     use crate::type_::DefTInner as D;
     use crate::type_::TupleElement;
     use crate::type_::TupleView;
+    use crate::type_::TupleViewKind;
     use crate::type_::TypeInner;
 
     match jsx_children.len() {
@@ -2749,6 +2750,7 @@ pub fn normalize_jsx_children_prop(
                     ArrayATData {
                         elem_t: union_of_ts(r, jsx_children, None),
                         tuple_view: Some(TupleView {
+                            kind: TupleViewKind::ArrayLiteral,
                             elements: elements.into(),
                             arity: (arity, arity),
                             inexact: false,

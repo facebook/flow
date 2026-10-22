@@ -7277,7 +7277,11 @@ fn expression_<'a>(
                                 literal,
                                 fresh: literal,
                                 id: mk_id() as i32,
-                                as_const,
+                                kind: if as_const {
+                                    ArrayLiteralKind::Const
+                                } else {
+                                    ArrayLiteralKind::Mutable
+                                },
                                 elem_t,
                                 tout: tout.dupe(),
                             };

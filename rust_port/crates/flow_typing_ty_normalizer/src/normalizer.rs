@@ -1475,7 +1475,7 @@ mod type_converter {
                         obj_ty::<I>(env, state, reason, o, false, ty::PropSource::Other, None)?;
                     Ok(Arc::new(ty::Ty::Obj(Box::new(obj))))
                 }
-                DefTInner::ArrT(a) => arr_ty::<I>(env, state, reason, a),
+                DefTInner::ArrT(a) => arr_ty::<I>(env, state, a),
                 DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) => {
                     poly_ty::<I>(env, state, t_out, tparams)
                 }
@@ -2055,36 +2055,32 @@ mod type_converter {
     fn arr_ty<'cx, I: NormalizerInput>(
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        reason: &Reason,
         arr: &flow_typing_type::type_::ArrType,
     ) -> Result<ALocTy, Error> {
-        use flow_common::reason::VirtualReasonDesc;
         use flow_typing_type::type_::ArrType;
         use flow_typing_type::type_::ArrayATData;
         use flow_typing_type::type_::TupleATData;
-        let desc = reason.desc(true);
-        match (arr, desc) {
-            (
-                ArrType::ArrayAT(box ArrayATData {
-                    tuple_view: Some(_),
-                    ..
-                }),
-                Some(VirtualReasonDesc::RRestArrayLit(_)),
-            )
-            | (ArrType::TupleAT(box TupleATData { .. }), _) => {
-                let (elements, inexact, rest) = match arr {
-                    ArrType::ArrayAT(box ArrayATData {
-                        tuple_view: Some(tv),
-                        ..
-                    }) => (&tv.elements, tv.inexact, tv.rest.as_ref()),
-                    ArrType::TupleAT(box TupleATData {
+        use flow_typing_type::type_::TupleView;
+        use flow_typing_type::type_::TupleViewKind;
+        match arr {
+            ArrType::ArrayAT(box ArrayATData {
+                tuple_view:
+                    Some(TupleView {
+                        kind: TupleViewKind::RestArguments,
                         elements,
                         inexact,
                         rest,
                         ..
-                    }) => (elements, *inexact, rest.as_ref()),
-                    _ => unreachable!(),
-                };
+                    }),
+                ..
+            })
+            | ArrType::TupleAT(box TupleATData {
+                elements,
+                inexact,
+                rest,
+                ..
+            }) => {
+                let rest = rest.as_ref();
                 // Heuristic to use $ReadOnly<> instead of repeating the polarity symbol
                 // and a made up label in each element.
                 let readonly = elements
@@ -2122,7 +2118,7 @@ mod type_converter {
                 }
                 let tup = ty::Ty::Tup {
                     elements: ty_elements.into(),
-                    inexact,
+                    inexact: *inexact,
                 };
                 if readonly {
                     Ok(Arc::new(ty::Ty::Utility(ty::Utility::ReadOnly(Arc::new(
@@ -2132,14 +2128,14 @@ mod type_converter {
                     Ok(Arc::new(tup))
                 }
             }
-            (ArrType::ArrayAT(box ArrayATData { elem_t, .. }), _) => {
+            ArrType::ArrayAT(box ArrayATData { elem_t, .. }) => {
                 let arr_elt_t = type__::<I>(env, state, None, elem_t)?;
                 Ok(Arc::new(ty::Ty::Arr(ty::ArrT {
                     arr_readonly: false,
                     arr_elt_t,
                 })))
             }
-            (ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }), _) => {
+            ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) => {
                 let arr_elt_t = type__::<I>(env, state, None, elem_t)?;
                 Ok(Arc::new(ty::Ty::Arr(ty::ArrT {
                     arr_readonly: true,
@@ -3351,7 +3347,7 @@ mod type_converter {
                         optional: elem.optional,
                     });
                 }
-                ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(r, arr, _)) => match arr
+                ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(_, arr, _)) => match arr
                 {
                     ArrType::TupleAT(box TupleATData { elements, rest, .. }) => {
                         for elem in elements.iter() {
@@ -3375,7 +3371,7 @@ mod type_converter {
                         }
                     }
                     _ => {
-                        let t = arr_ty::<I>(env, state, r, arr)?;
+                        let t = arr_ty::<I>(env, state, arr)?;
                         head.push(ty::TupleElement::TupleSpread { name: None, t });
                     }
                 },

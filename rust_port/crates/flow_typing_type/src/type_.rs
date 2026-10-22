@@ -5143,8 +5143,22 @@ pub enum DroType {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ReactDro(pub ALoc, pub DroType);
 
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TupleViewKind {
+    ArrayLiteral,
+    RestArguments,
+}
+
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ArrayLiteralKind {
+    Mutable,
+    Const,
+    RestArguments,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TupleView {
+    pub kind: TupleViewKind,
     pub elements: Rc<[TupleElement]>,
     pub arity: (i32, i32),
     pub inexact: bool,
@@ -6330,7 +6344,7 @@ pub enum SpreadResolve {
     /// Once we've finished resolving spreads, try to construct an array with known element types
     ResolveSpreadsToArrayLiteral {
         id: i32,
-        as_const: bool,
+        kind: ArrayLiteralKind,
         literal: bool,
         fresh: bool,
         elem_t: Type,
@@ -6352,7 +6366,7 @@ pub enum SpreadResolve {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SpreadArrayResolveTo {
     ResolveToArrayLiteral {
-        as_const: bool,
+        kind: ArrayLiteralKind,
         literal: bool,
         fresh: bool,
     },
@@ -12628,6 +12642,7 @@ pub enum AnnotatedOrInferred {
 
 pub fn empty_tuple_view() -> TupleView {
     TupleView {
+        kind: TupleViewKind::ArrayLiteral,
         elements: Rc::from([]),
         arity: (0, 0),
         inexact: false,

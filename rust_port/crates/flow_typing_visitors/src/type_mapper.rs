@@ -1834,6 +1834,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             let tuple_view_prime = option_utils::ident_map(
                 |tv: &TupleView| {
                     let TupleView {
+                        kind,
                         elements,
                         arity,
                         inexact,
@@ -1850,6 +1851,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                         rest.clone(),
                     );
                     TupleView {
+                        kind: *kind,
                         elements: elements_prime,
                         arity: *arity,
                         inexact: *inexact,

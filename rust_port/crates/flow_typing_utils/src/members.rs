@@ -44,6 +44,7 @@ use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TupleView;
+use flow_typing_type::type_::TupleViewKind;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
@@ -314,6 +315,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                             elem_t: et1,
                             tuple_view:
                                 Some(TupleView {
+                                    kind: kind1,
                                     elements: elements1,
                                     arity: arity1,
                                     inexact: inexact1,
@@ -327,6 +329,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                             elem_t: et2,
                             tuple_view:
                                 Some(TupleView {
+                                    kind: kind2,
                                     elements: elements2,
                                     arity: arity2,
                                     inexact: inexact2,
@@ -369,6 +372,11 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                                 ArrayATData {
                                     elem_t: merge_type(cx, (et1.dupe(), et2.dupe())),
                                     tuple_view: Some(TupleView {
+                                        kind: if kind1 == kind2 {
+                                            *kind1
+                                        } else {
+                                            TupleViewKind::ArrayLiteral
+                                        },
                                         elements: elements.into(),
                                         arity: *arity1,
                                         inexact: *inexact1,

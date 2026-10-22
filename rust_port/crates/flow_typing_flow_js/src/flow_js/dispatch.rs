@@ -7716,6 +7716,7 @@ fn __flow_impl<'cx>(
                     let tuple_view = match &tuple_view.rest {
                         Some(_) if elements.is_empty() => None,
                         _ => Some(TupleView {
+                            kind: tuple_view.kind,
                             elements: elements.into(),
                             arity,
                             inexact: tuple_view.inexact,
@@ -8149,6 +8150,7 @@ fn __flow_impl<'cx>(
                                 })
                                 .transpose()?;
                             Some(TupleView {
+                                kind: tv.kind,
                                 elements,
                                 arity: new_arity(tv.arity),
                                 inexact: tv.inexact,

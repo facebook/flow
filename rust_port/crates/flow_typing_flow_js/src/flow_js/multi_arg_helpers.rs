@@ -13,6 +13,7 @@ use flow_typing_errors::intermediate_error_types::FunctionReferenceData;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::ArrayLiteralKind;
 use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::GenericTData;
@@ -20,6 +21,7 @@ use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ResolveSpreadTData;
 use flow_typing_type::type_::ResolvedArgData;
 use flow_typing_type::type_::ResolvedSpreadArgData;
+use flow_typing_type::type_::TupleViewKind;
 use flow_typing_type::type_::UnresolvedArgData;
 
 use super::helpers::*;
@@ -340,16 +342,9 @@ fn multiflow_args<'cx>(
                         | VirtualReasonDesc::RFunctionType
                 )
             );
-            let arg_array_reason = reason_op
-                .dupe()
-                .replace_desc(VirtualReasonDesc::RRestArrayLit(
-                    reason_op.desc(true).cloned().map(Arc::new),
-                ));
             {
-                let arg_array_reason2 = arg_array_reason.dupe();
                 let use_op = use_op.dupe();
-                flow_typing_tvar::mk_where(cx, arg_array_reason.dupe(), |cx, tout| {
-                    let reason_op = &arg_array_reason2;
+                flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout| {
                     let instantiable = flow_common::reason::is_instantiable_reason(rest_reason);
                     let element_reason =
                         reason_op
@@ -362,8 +357,8 @@ fn multiflow_args<'cx>(
                     let resolve_to = SpreadResolve::ResolveSpreadsToArrayLiteral {
                         literal: true,
                         fresh,
+                        kind: ArrayLiteralKind::RestArguments,
                         id: flow_common::reason::mk_id() as i32,
-                        as_const: false,
                         elem_t,
                         tout: tout.dupe(),
                     };
@@ -793,11 +788,13 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             None => {
                 let (elems, spread_after_opt, inexact_spread) =
                     flatten_spread_args(cx, env, resolved)?;
-                let as_const = match resolve_to {
-                    SpreadArrayResolveTo::ResolveToArrayLiteral { as_const, .. } => as_const,
-                    SpreadArrayResolveTo::ResolveToTupleType { .. }
-                    | SpreadArrayResolveTo::ResolveToArray { .. } => false,
-                };
+                let as_const = matches!(
+                    resolve_to,
+                    SpreadArrayResolveTo::ResolveToArrayLiteral {
+                        kind: ArrayLiteralKind::Const,
+                        ..
+                    }
+                );
                 let mut rest = None;
                 let tuple_elements: Option<Vec<TupleElement>> = match resolve_to {
                     SpreadArrayResolveTo::ResolveToArrayLiteral { .. }
@@ -846,7 +843,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         resolve_to,
                                         SpreadArrayResolveTo::ResolveToTupleType { .. }
                                             | SpreadArrayResolveTo::ResolveToArrayLiteral {
-                                                as_const: false,
+                                                kind: ArrayLiteralKind::Mutable
+                                                    | ArrayLiteralKind::RestArguments,
                                                 ..
                                             }
                                     ) =>
@@ -1096,7 +1094,9 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     }
                     (
                         SpreadArrayResolveTo::ResolveToArrayLiteral {
-                            as_const: false, ..
+                            kind:
+                                kind @ (ArrayLiteralKind::Mutable | ArrayLiteralKind::RestArguments),
+                            ..
                         },
                         Some(elements),
                         _,
@@ -1111,6 +1111,11 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                             let tuple_view = match &rest {
                                 Some(_) if elements.is_empty() || inexact_spread => None,
                                 _ => Some(TupleView {
+                                    kind: if kind == ArrayLiteralKind::RestArguments {
+                                        TupleViewKind::RestArguments
+                                    } else {
+                                        TupleViewKind::ArrayLiteral
+                                    },
                                     elements: elements.clone().into(),
                                     arity,
                                     inexact: inexact_spread,
@@ -1150,7 +1155,10 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         create_tuple_type(cx, inexact, elements.clone())?
                     }
                     (
-                        SpreadArrayResolveTo::ResolveToArrayLiteral { as_const: true, .. },
+                        SpreadArrayResolveTo::ResolveToArrayLiteral {
+                            kind: ArrayLiteralKind::Const,
+                            ..
+                        },
                         Some(elements),
                         _,
                     ) => create_tuple_type(cx, false, elements.clone())?,
@@ -1274,6 +1282,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         arity: _,
                                         inexact,
                                         rest: None,
+                                        ..
                                     }),
                                 ..
                             }),
@@ -1507,7 +1516,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         ),
         SpreadResolve::ResolveSpreadsToArrayLiteral {
             id: _,
-            as_const,
+            kind,
             literal,
             fresh,
             elem_t,
@@ -1519,7 +1528,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             trace,
             reason_op,
             SpreadArrayResolveTo::ResolveToArrayLiteral {
-                as_const,
+                kind,
                 literal,
                 fresh,
             },
