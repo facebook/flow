@@ -7117,7 +7117,7 @@ fn __flow_impl<'cx>(
         // * objects/arrays may have their properties/elements written and read *
         // **********************************************************************
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ObjT(_) | ArrT(_) | InstanceT(_))),
             SetElemT(box SetElemTData {
                 use_op,
                 reason,
@@ -7126,7 +7126,7 @@ fn __flow_impl<'cx>(
                 tin,
                 tout,
             }),
-        ) if matches!(def_t.deref(), ObjT(_) | ArrT(_) | InstanceT(_)) => {
+        ) => {
             let action = ElemAction::WriteElem(Box::new(WriteElemData {
                 tin: tin.dupe(),
                 tout: tout.as_ref().map(|t| t.dupe()),
@@ -7179,7 +7179,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ObjT(_) | ArrT(_) | InstanceT(_))),
             GetElemT(box GetElemTData {
                 use_op,
                 reason,
@@ -7190,7 +7190,7 @@ fn __flow_impl<'cx>(
                 key_t,
                 tout,
             }),
-        ) if matches!(def_t.deref(), ObjT(_) | ArrT(_) | InstanceT(_)) => {
+        ) => {
             let action = ElemAction::ReadElem(Box::new(ReadElemData {
                 id: *id,
                 from_annot: *from_annot,
@@ -7249,7 +7249,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ObjT(_) | ArrT(_) | InstanceT(_))),
             CallElemT(box CallElemTData {
                 use_op,
                 reason: reason_call,
@@ -7257,7 +7257,7 @@ fn __flow_impl<'cx>(
                 key_t: key,
                 method_action: action,
             }),
-        ) if matches!(def_t.deref(), ObjT(_) | ArrT(_) | InstanceT(_)) => {
+        ) => {
             let action = ElemAction::CallElem(reason_call.dupe(), action.clone());
             rec_flow(
                 cx,
@@ -7303,10 +7303,10 @@ fn __flow_impl<'cx>(
         // If we are accessing `Iterable<T>` with a number, and have `access_iterables = true`,
         // then output `T`.
         (
-            DefT(_, def_t_l),
+            DefT(_, deref!(NumGeneralT(_) | SingletonNumT { .. })),
             ElemT(box ElemTData {
                 use_op,
-                obj,
+                obj: deref!(DefT(_, deref!(InstanceT(inst)))),
                 action:
                     box ElemAction::ReadElem(box ReadElemData {
                         access_iterables: true,
@@ -7315,10 +7315,7 @@ fn __flow_impl<'cx>(
                     }),
                 ..
             }),
-        ) if matches!(def_t_l.deref(), NumGeneralT(_) | SingletonNumT { .. })
-            && let DefT(_, obj_def) = obj.deref()
-            && let InstanceT(inst) = obj_def.deref()
-            && !inst.inst.type_args.is_empty()
+        ) if !inst.inst.type_args.is_empty()
             && flow_js_utils::is_builtin_iterable_class_id(inst.inst.class_id.clone(), cx) =>
         {
             let (_, _, t, _) = &inst.inst.type_args[0];
@@ -7335,11 +7332,10 @@ fn __flow_impl<'cx>(
             ElemT(box ElemTData {
                 use_op,
                 reason,
-                obj,
+                obj: obj @ deref!(DefT(_, deref!(ObjT(_) | InstanceT(_)))),
                 action,
             }),
-        ) if matches!(obj.deref(), DefT(_, def_t) if matches!(def_t.deref(), ObjT(_) | InstanceT(_))) =>
-        {
+        ) => {
             let propref = flow_js_utils::propref_for_elem_t_with_env(cx, env, l);
             elem_action_on_obj(cx, env, trace, use_op, propref, obj, reason, action)?;
         }
@@ -7348,10 +7344,10 @@ fn __flow_impl<'cx>(
             ElemT(box ElemTData {
                 use_op,
                 reason,
-                obj,
+                obj: obj @ deref!(AnyT(_, src)),
                 action,
             }),
-        ) if let AnyT(_, src) = obj.deref() => {
+        ) => {
             let value = any_t::why(*src, reason.dupe());
             perform_elem_action(
                 cx,
@@ -7373,29 +7369,27 @@ fn __flow_impl<'cx>(
             ElemT(box ElemTData {
                 use_op,
                 reason: reason_op,
-                obj,
+                obj: obj @ deref!(DefT(_, deref!(ArrT(arrtype)))),
                 action,
             }),
-        ) if let DefT(_reason_tup, obj_def_t) = obj.deref()
-            && let ArrT(arrtype) = obj_def_t.deref() =>
-        {
+        ) => {
             let react_dro = match (action, arrtype.as_ref()) {
                 (
                     box ElemAction::WriteElem(..),
-                    ArrType::ROArrayAT(box ROArrayATData { .. })
-                    | ArrType::TupleAT(box TupleATData {
+                    ROArrayAT(box ROArrayATData { .. })
+                    | TupleAT(box TupleATData {
                         react_dro: Some(_), ..
                     })
-                    | ArrType::ArrayAT(box ArrayATData {
+                    | ArrayAT(box ArrayATData {
                         react_dro: Some(_), ..
                     }),
                 ) => {
                     let use_op_for_err = match arrtype.as_ref() {
-                        ArrType::TupleAT(box TupleATData {
+                        TupleAT(box TupleATData {
                             react_dro: Some(dro),
                             ..
                         })
-                        | ArrType::ArrayAT(box ArrayATData {
+                        | ArrayAT(box ArrayATData {
                             react_dro: Some(dro),
                             ..
                         }) => UseOp::Frame(
@@ -7416,9 +7410,9 @@ fn __flow_impl<'cx>(
                 }
                 (
                     box ElemAction::ReadElem(..),
-                    ArrType::ROArrayAT(box ROArrayATData { react_dro, .. })
-                    | ArrType::TupleAT(box TupleATData { react_dro, .. })
-                    | ArrType::ArrayAT(box ArrayATData { react_dro, .. }),
+                    ROArrayAT(box ROArrayATData { react_dro, .. })
+                    | TupleAT(box TupleATData { react_dro, .. })
+                    | ArrayAT(box ArrayATData { react_dro, .. }),
                 ) => react_dro.clone(),
                 _ => None,
             };
@@ -7444,13 +7438,10 @@ fn __flow_impl<'cx>(
             ElemT(box ElemTData {
                 use_op,
                 reason,
-                obj,
+                obj: obj @ deref!(DefT(reason_tup, deref!(ArrT(arrtype)))),
                 action,
             }),
-        ) if flow_js_utils::is_array_index_key(def_t_l.deref())
-            && let DefT(reason_tup, obj_def_t) = obj.deref()
-            && let ArrT(arrtype) = obj_def_t.deref() =>
-        {
+        ) if flow_js_utils::is_array_index_key(def_t_l.deref()) => {
             // An int-like string key indexes the array just like the equivalent
             // numeric key: `arr['0']` reads the element type, and `tup['2']`
             // resolves the third element or reports out-of-bounds. So convert it
@@ -7498,19 +7489,23 @@ fn __flow_impl<'cx>(
             ElemT(box ElemTData {
                 use_op,
                 reason,
-                obj,
+                obj: obj @ deref!(DefT(_, deref!(ArrT(_)))),
                 action,
             }),
-        ) if matches!(obj.deref(), DefT(_, def_t) if matches!(def_t.deref(), ArrT(_)))
-            && let propref @ PropRef::Named { .. } =
-                flow_js_utils::propref_for_elem_t_with_env(cx, env, l) =>
+        ) if let propref @ PropRef::Named { .. } =
+            flow_js_utils::propref_for_elem_t_with_env(cx, env, l) =>
         {
             elem_action_on_obj(cx, env, trace, use_op, propref, obj, reason, action)?;
         }
-        (DefT(_, def_t), GetPropT(box data))
-            if matches!(def_t.deref(), ArrT(_))
-                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.matches_str("constructor")) =>
-        {
+        (
+            DefT(_, deref!(ArrT(_))),
+            GetPropT(
+                box data @ GetPropTData {
+                    propref: box PropRef::Named { name, .. },
+                    ..
+                },
+            ),
+        ) if name.matches_str("constructor") => {
             rec_flow_t(
                 cx,
                 env,
@@ -7522,29 +7517,25 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (DefT(_, def_t), SetPropT(_, _, propref, _, _, _, _))
-            if matches!(def_t.deref(), ArrT(_))
-                && matches!(&**propref, PropRef::Named { name, .. } if name.matches_str("constructor")) =>
-            {}
+        (DefT(_, deref!(ArrT(_))), SetPropT(_, _, box PropRef::Named { name, .. }, _, _, _, _))
+            if name.matches_str("constructor") => {}
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ArrT(_))),
             MethodT(box MethodTData {
                 use_op: _,
                 reason: reason_call,
                 prop_reason: _,
-                propref,
+                propref: box PropRef::Named { name, .. },
                 method_action: action,
             }),
-        ) if matches!(def_t.deref(), ArrT(_))
-            && matches!(&**propref, PropRef::Named { name, .. } if name.matches_str("constructor")) =>
-        {
+        ) if name.matches_str("constructor") => {
             add_specialized_callee_method_action(env, &any_t::untyped(reason_call.dupe()), action)?;
         }
         // **************************************************
         // * array pattern can consume the rest of an array *
         // **************************************************
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ArrT(arrtype))),
             ArrRestT(box ArrRestTData {
                 literal,
                 use_op: _,
@@ -7553,14 +7544,14 @@ fn __flow_impl<'cx>(
                 tout,
                 ..
             }),
-        ) if let ArrT(arrtype) = def_t.deref() => {
+        ) => {
             let i = *i as usize;
             let arrtype = match arrtype.deref() {
-                ArrType::ArrayAT(box ArrayATData {
+                ArrayAT(box ArrayATData {
                     tuple_view: None, ..
                 })
-                | ArrType::ROArrayAT(box ROArrayATData { .. }) => arrtype.deref().clone(),
-                ArrType::ArrayAT(box ArrayATData {
+                | ROArrayAT(box ROArrayATData { .. }) => arrtype.deref().clone(),
+                ArrayAT(box ArrayATData {
                     elem_t,
                     tuple_view: Some(tuple_view),
                     react_dro,
@@ -7584,7 +7575,7 @@ fn __flow_impl<'cx>(
                             rest: tuple_view.rest.dupe(),
                         }),
                     };
-                    ArrType::ArrayAT(Box::new(ArrayATData {
+                    ArrayAT(Box::new(ArrayATData {
                         elem_t: elem_t.dupe(),
                         tuple_view,
                         react_dro: react_dro.clone(),
@@ -7593,7 +7584,7 @@ fn __flow_impl<'cx>(
                         fresh: false,
                     }))
                 }
-                ArrType::TupleAT(box TupleATData {
+                TupleAT(box TupleATData {
                     elem_t,
                     elements,
                     arity: (num_req, num_total),
@@ -7620,7 +7611,7 @@ fn __flow_impl<'cx>(
                     };
                     match rest {
                         // A tuple with only a rest element is an array.
-                        Some(_) if elements.is_empty() => ArrType::ArrayAT(Box::new(ArrayATData {
+                        Some(_) if elements.is_empty() => ArrayAT(Box::new(ArrayATData {
                             elem_t,
                             tuple_view: None,
                             react_dro: react_dro.clone(),
@@ -7628,7 +7619,7 @@ fn __flow_impl<'cx>(
                             literal: *literal,
                             fresh: false,
                         })),
-                        _ => ArrType::TupleAT(Box::new(TupleATData {
+                        _ => TupleAT(Box::new(TupleATData {
                             elem_t,
                             elements: elements.to_vec().into(),
                             arity: (
@@ -7691,14 +7682,14 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(ObjT(o))),
             MapTypeT(box MapTypeTData {
                 use_op: _,
                 reason: reason_op,
                 type_map: TypeMap::ObjectKeyMirror,
                 tout,
             }),
-        ) if let ObjT(o) = def_t.deref() => {
+        ) => {
             let mirrored = flow_js_utils::obj_key_mirror(cx, env, o, reason_op);
             rec_flow_t(cx, env, trace, unknown_use(), (&mirrored, tout))?;
         }
@@ -7707,35 +7698,37 @@ fn __flow_impl<'cx>(
         // * object kit *
         // **************
         // Reject name remapping (`as`) on array/tuple sources for v1
-        (l_inner, ObjKitT(_use_op, reason_op, resolve_tool, tool, tout))
-            if let object::ResolveTool::Resolve(object::Resolve::Next) = &**resolve_tool
-                && let object::Tool::ObjectMap(box ObjectToolObjectMapData {
-                    name_type: Some(_),
-                    ..
-                }) = &**tool
-                && let OpenT(tout_tvar) = tout.deref()
-                && {
-                    match l_inner {
-                        DefT(_, def_t) => matches!(def_t.deref(), ArrT(_)),
-                        GenericT(box GenericTData { reason, bound, .. }) => {
-                            let roarray_bound = Type::new(DefT(
+        (
+            l_inner,
+            ObjKitT(
+                _use_op,
+                reason_op,
+                box object::ResolveTool::Resolve(object::Resolve::Next),
+                box object::Tool::ObjectMap(box ObjectToolObjectMapData {
+                    name_type: Some(_), ..
+                }),
+                deref!(OpenT(tout_tvar)),
+            ),
+        ) if {
+            match l_inner {
+                DefT(_, deref!(ArrT(_))) => true,
+                GenericT(box GenericTData { reason, bound, .. }) => {
+                    let roarray_bound = Type::new(DefT(
+                        reason.dupe(),
+                        DefT::new(ArrT(Rc::new(ROArrayAT(Box::new(ROArrayATData {
+                            elem_t: Type::new(DefT(
                                 reason.dupe(),
-                                DefT::new(ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
-                                    ROArrayATData {
-                                        elem_t: Type::new(DefT(
-                                            reason.dupe(),
-                                            DefT::new(MixedT(MixedFlavor::MixedEverything)),
-                                        )),
-                                        react_dro: None,
-                                        literal: false,
-                                    },
-                                ))))),
-                            ));
-                            speculative_subtyping_succeeds(cx, env, bound, &roarray_bound)?
-                        }
-                        _ => false,
-                    }
-                } =>
+                                DefT::new(MixedT(MixedFlavor::MixedEverything)),
+                            )),
+                            react_dro: None,
+                            literal: false,
+                        }))))),
+                    ));
+                    speculative_subtyping_succeeds(cx, env, bound, &roarray_bound)?
+                }
+                _ => false,
+            }
+        } =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -7765,28 +7758,32 @@ fn __flow_impl<'cx>(
                 id,
                 name,
             }),
-            ObjKitT(use_op, reason_op, resolve_tool, tool, tout),
-        ) if let object::ResolveTool::Resolve(object::Resolve::Next) = &**resolve_tool
-            && let object::Tool::ObjectMap(box ObjectToolObjectMapData {
-                prop_type,
-                name_type: None,
-                mapped_type_flags,
-                selected_keys_opt: None,
-            }) = &**tool
-            && {
-                let roarray_bound = Type::new(DefT(
-                    reason.dupe(),
-                    DefT::new(ArrT(Rc::new(ArrType::ROArrayAT(Box::new(ROArrayATData {
-                        elem_t: Type::new(DefT(
-                            reason.dupe(),
-                            DefT::new(MixedT(MixedFlavor::MixedEverything)),
-                        )),
-                        react_dro: None,
-                        literal: false,
-                    }))))),
-                ));
-                speculative_subtyping_succeeds(cx, env, bound, &roarray_bound)?
-            } =>
+            ObjKitT(
+                use_op,
+                reason_op,
+                box object::ResolveTool::Resolve(object::Resolve::Next),
+                box object::Tool::ObjectMap(box ObjectToolObjectMapData {
+                    prop_type,
+                    name_type: None,
+                    mapped_type_flags,
+                    selected_keys_opt: None,
+                }),
+                tout,
+            ),
+        ) if {
+            let roarray_bound = Type::new(DefT(
+                reason.dupe(),
+                DefT::new(ArrT(Rc::new(ROArrayAT(Box::new(ROArrayATData {
+                    elem_t: Type::new(DefT(
+                        reason.dupe(),
+                        DefT::new(MixedT(MixedFlavor::MixedEverything)),
+                    )),
+                    react_dro: None,
+                    literal: false,
+                }))))),
+            ));
+            speculative_subtyping_succeeds(cx, env, bound, &roarray_bound)?
+        } =>
         {
             let (t_generic_id, t) = {
                 fn loop_generic(
@@ -7851,17 +7848,21 @@ fn __flow_impl<'cx>(
             };
             rec_flow_t(cx, env, trace, unknown_use(), (&mapped_generic_t, tout))?;
         }
-        (DefT(_, def_t), ObjKitT(use_op, reason_op, resolve_tool, tool, tout))
-            if let ArrT(arrtype) = def_t.deref()
-                && let object::ResolveTool::Resolve(object::Resolve::Next) = &**resolve_tool
-                && let object::Tool::ObjectMap(box ObjectToolObjectMapData {
+        (
+            DefT(_, deref!(ArrT(arrtype))),
+            ObjKitT(
+                use_op,
+                reason_op,
+                box object::ResolveTool::Resolve(object::Resolve::Next),
+                box object::Tool::ObjectMap(box ObjectToolObjectMapData {
                     prop_type: property_type,
                     name_type: None,
                     mapped_type_flags,
                     selected_keys_opt: None,
-                }) = &**tool
-                && let OpenT(tout_tvar) = tout.deref() =>
-        {
+                }),
+                deref!(OpenT(tout_tvar)),
+            ),
+        ) => {
             let mapped_type_variance = &mapped_type_flags.variance;
             let mapped_type_optionality = &mapped_type_flags.optional;
             let filter_optional_t = |cx: &mut Context<'cx>,
@@ -7925,9 +7926,9 @@ fn __flow_impl<'cx>(
             let mapped_polarity =
                 |polarity: Polarity| slice_utils::mk_variance(*mapped_type_variance, polarity);
             let array_polarity = match arrtype.deref() {
-                ArrType::ArrayAT(_) => Some(mapped_polarity(Polarity::Neutral)),
-                ArrType::ROArrayAT(_) => Some(mapped_polarity(Polarity::Positive)),
-                ArrType::TupleAT(_) => None,
+                ArrayAT(_) => Some(mapped_polarity(Polarity::Neutral)),
+                ROArrayAT(_) => Some(mapped_polarity(Polarity::Positive)),
+                TupleAT(_) => None,
             };
             if array_polarity == Some(Polarity::Negative) {
                 add_output_with_env(
@@ -7950,17 +7951,17 @@ fn __flow_impl<'cx>(
                 }
             };
             let new_arrtype = match arrtype.deref() {
-                ArrType::ArrayAT(box ArrayATData {
+                ArrayAT(box ArrayATData {
                     elem_t, react_dro, ..
                 }) if array_polarity == Some(Polarity::Positive) => {
                     let mapped_elem_t = f(cx, elem_t, None, false)?;
-                    ArrType::ROArrayAT(Box::new(ROArrayATData {
+                    ROArrayAT(Box::new(ROArrayATData {
                         elem_t: array_elem(cx, mapped_elem_t)?,
                         react_dro: react_dro.clone(),
                         literal: false,
                     }))
                 }
-                ArrType::ArrayAT(box ArrayATData {
+                ArrayAT(box ArrayATData {
                     elem_t,
                     tuple_view,
                     react_dro,
@@ -8008,7 +8009,7 @@ fn __flow_impl<'cx>(
                             })
                         }
                     };
-                    ArrType::ArrayAT(Box::new(ArrayATData {
+                    ArrayAT(Box::new(ArrayATData {
                         elem_t: array_elem(cx, mapped_elem_t)?,
                         react_dro: react_dro.clone(),
                         tuple_view: mapped_tuple_view,
@@ -8017,7 +8018,7 @@ fn __flow_impl<'cx>(
                         fresh: false,
                     }))
                 }
-                ArrType::TupleAT(box TupleATData {
+                TupleAT(box TupleATData {
                     elem_t,
                     elements,
                     arity,
@@ -8028,7 +8029,7 @@ fn __flow_impl<'cx>(
                     ..
                 }) => {
                     let mapped_elem_t = f(cx, elem_t, None, false)?;
-                    ArrType::TupleAT(Box::new(TupleATData {
+                    TupleAT(Box::new(TupleATData {
                         elem_t: array_elem(cx, mapped_elem_t)?,
                         react_dro: react_dro.clone(),
                         elements: elements
@@ -8063,13 +8064,13 @@ fn __flow_impl<'cx>(
                         fresh: false,
                     }))
                 }
-                ArrType::ROArrayAT(box ROArrayATData {
+                ROArrayAT(box ROArrayATData {
                     elem_t: elemt,
                     react_dro: dro,
                     ..
                 }) if array_polarity == Some(Polarity::Neutral) => {
                     let mapped_elem_t = f(cx, elemt, None, false)?;
-                    ArrType::ArrayAT(Box::new(ArrayATData {
+                    ArrayAT(Box::new(ArrayATData {
                         elem_t: array_elem(cx, mapped_elem_t)?,
                         react_dro: dro.clone(),
                         tuple_view: None,
@@ -8078,13 +8079,13 @@ fn __flow_impl<'cx>(
                         fresh: false,
                     }))
                 }
-                ArrType::ROArrayAT(box ROArrayATData {
+                ROArrayAT(box ROArrayATData {
                     elem_t: elemt,
                     react_dro: dro,
                     ..
                 }) => {
                     let mapped_elem_t = f(cx, elemt, None, false)?;
-                    ArrType::ROArrayAT(Box::new(ROArrayATData {
+                    ROArrayAT(Box::new(ROArrayATData {
                         elem_t: array_elem(cx, mapped_elem_t)?,
                         react_dro: dro.clone(),
                         literal: false,
