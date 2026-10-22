@@ -5216,7 +5216,19 @@ mod expand_members {
         let construct_t = cx.find_call(instance.inst.inst_construct_t?);
         let construct_t = cx.find_resolved(&construct_t)?;
         let construct_t = match construct_t.deref() {
-            TypeInner::IntersectionT(_, rep) => cx.find_resolved(rep.members_iter().next()?)?,
+            TypeInner::IntersectionT(_, rep) => {
+                let construct_ts = rep
+                    .members_iter()
+                    .map(|t| cx.find_resolved(t))
+                    .collect::<Option<Vec<_>>>()?;
+                flow_typing_flow_common::flow_js_utils::construct_ts_for_targs(
+                    &construct_ts,
+                    targs.map_or(0, |targs| targs.len()),
+                )
+                .into_iter()
+                .chain(construct_ts.first().map(|t| t.dupe()))
+                .next()?
+            }
             _ => construct_t,
         };
         let fun_t = match construct_t.deref() {

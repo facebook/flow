@@ -605,6 +605,33 @@ pub fn construct_base_instance<'cx>(
     ))))
 }
 
+// The overloads among construct sigs that `n` type arguments can specialize:
+// the ones whose type parameters accept that many, the way TypeScript picks the
+// base constructors of `extends Base<...>`.
+pub fn construct_ts_for_targs(ts: &[Type], n: usize) -> Vec<Type> {
+    ts.iter()
+        .flat_map(|t| match t.deref() {
+            TypeInner::IntersectionT(_, rep) => rep.members_iter().duped().collect::<Vec<_>>(),
+            _ => vec![t.dupe()],
+        })
+        .filter(|t| match t.deref() {
+            TypeInner::DefT(_, def_t) => match def_t.deref() {
+                DefTInner::PolyT(poly) => {
+                    let required = poly
+                        .tparams
+                        .iter()
+                        .filter(|tp| tp.default.is_none())
+                        .count();
+                    (required..=poly.tparams.len()).contains(&n)
+                }
+                DefTInner::FunT(..) => n == 0,
+                _ => false,
+            },
+            _ => false,
+        })
+        .collect()
+}
+
 // Combine a list of construct sigs into the canonical overload form: a single
 // funtype if there's only one, an [IntersectionT] of funtypes for two or more.
 // This is the same shape [class_sig.rs] and [type_sig_merge.rs] produce for

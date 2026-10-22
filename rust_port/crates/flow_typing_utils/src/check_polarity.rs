@@ -214,8 +214,13 @@ fn check_polarity_impl<'cx>(
                                 };
                                 let construct_ts =
                                     flow_js_utils::collect_construct_ts(&concretize, cx, l)?;
-                                if let Some(construct_t) =
-                                    flow_js_utils::combine_construct_ts(construct_ts)
+                                if let Some(construct_t) = flow_js_utils::construct_ts_for_targs(
+                                    &construct_ts,
+                                    targs.len(),
+                                )
+                                .into_iter()
+                                .next()
+                                .or_else(|| flow_js_utils::combine_construct_ts(construct_ts))
                                     && let TypeInner::DefT(_, construct_def) = construct_t.deref()
                                     && let DefTInner::PolyT(box PolyTData { tparams: tps, .. }) =
                                         construct_def.deref()

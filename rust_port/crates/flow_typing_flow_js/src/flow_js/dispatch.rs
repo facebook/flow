@@ -4439,32 +4439,52 @@ fn __flow_impl<'cx>(
                     helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
                 };
             let construct_ts = flow_js_utils::collect_construct_ts(&concretize, cx, l)?;
-            let construct_t = flow_js_utils::combine_construct_ts(construct_ts);
-            match construct_t {
-                Some(construct_t) => {
+            // Each overload that accepts the type arguments is specialized on its own,
+            // and checking the arguments without a result only needs the first. Without
+            // one, the combined signature is, so that specializing it reports the
+            // mismatch.
+            let accepting_ts = flow_js_utils::construct_ts_for_targs(&construct_ts, ts.len());
+            let construct_ts: Vec<Type> = if accepting_ts.is_empty() {
+                flow_js_utils::combine_construct_ts(construct_ts)
+                    .into_iter()
+                    .collect()
+            } else {
+                accepting_ts
+            };
+            match construct_ts.as_slice() {
+                [construct_t, ..] => {
                     if let Some(upper) = upper {
-                        let collector = type_collector::TypeCollector::create();
-                        rec_flow(
-                            cx,
-                            env,
-                            trace,
-                            (
-                                &construct_t,
-                                &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
-                                    use_op: use_op.dupe(),
-                                    reason: reason_op.dupe(),
-                                    reason2: reason_tapp.dupe(),
-                                    targs: Some(ts.dupe()),
-                                    upper: Some(Box::new(Cont::Collect(collector.dupe()))),
-                                }))),
-                            ),
-                        )?;
-                        let specialized_construct =
-                            collector.union_opt(reason_tapp.dupe()).unwrap_or_else(|| {
-                                crate::tvar_resolver::default_no_lowers(reason_tapp)
-                            });
+                        let specialized_ts = construct_ts
+                            .iter()
+                            .map(|construct_t| {
+                                let collector = type_collector::TypeCollector::create();
+                                rec_flow(
+                                    cx,
+                                    env,
+                                    trace,
+                                    (
+                                        construct_t,
+                                        &UseT::new(UseTInner::SpecializeT(Box::new(
+                                            SpecializeTData {
+                                                use_op: use_op.dupe(),
+                                                reason: reason_op.dupe(),
+                                                reason2: reason_tapp.dupe(),
+                                                targs: Some(ts.dupe()),
+                                                upper: Some(Box::new(Cont::Collect(
+                                                    collector.dupe(),
+                                                ))),
+                                            },
+                                        ))),
+                                    ),
+                                )?;
+                                Ok(collector.union_opt(reason_tapp.dupe()).unwrap_or_else(|| {
+                                    crate::tvar_resolver::default_no_lowers(reason_tapp)
+                                }))
+                            })
+                            .collect::<Result<Vec<_>, FlowJsException>>()?;
                         let inst = InstType::new(InstTypeInner {
-                            inst_construct_t: Some(cx.make_call_prop(specialized_construct)),
+                            inst_construct_t: flow_js_utils::combine_construct_ts(specialized_ts)
+                                .map(|t| cx.make_call_prop(t)),
                             ..(*instance.inst).clone()
                         });
                         let specialized_interface = Type::new(TypeInner::DefT(
@@ -4485,7 +4505,7 @@ fn __flow_impl<'cx>(
                             env,
                             trace,
                             (
-                                &construct_t,
+                                construct_t,
                                 &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
                                     use_op: use_op.dupe(),
                                     reason: reason_op.dupe(),
@@ -4497,7 +4517,7 @@ fn __flow_impl<'cx>(
                         )?;
                     }
                 }
-                _ => {
+                [] => {
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
