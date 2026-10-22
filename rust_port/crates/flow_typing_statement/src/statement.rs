@@ -7484,12 +7484,7 @@ fn expression_<'a>(
                         name,
                         callee_loc.dupe(),
                     )?;
-                    let reason_call = mk_reason(
-                        VirtualReasonDesc::RConstructorCall(
-                            desc_of_t(&id_t).cloned().map(Arc::new),
-                        ),
-                        loc.dupe(),
-                    );
+                    let reason_call = mk_reason(None, loc.dupe());
                     let use_op =
                         UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
                             op: reason.dupe(),
@@ -7551,10 +7546,7 @@ fn expression_<'a>(
                 }
                 None => (vec![], vec![], None),
             };
-            let reason = mk_reason(
-                VirtualReasonDesc::RConstructorCall(desc_of_t(&class_).cloned().map(Arc::new)),
-                loc.dupe(),
-            );
+            let reason = mk_reason(None, loc.dupe());
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
                 op: mk_expression_reason(e),
                 fn_: mk_expression_reason(&inner.callee),
@@ -7943,10 +7935,7 @@ fn expression_<'a>(
             let tag_ast = expression(None, None, None, cx, &inner.tag)?;
             let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
             let t = tag_ast.loc().1.dupe();
-            let reason = mk_reason(
-                RFunctionCall(desc_of_t(&t).cloned().map(Arc::new)),
-                loc.dupe(),
-            );
+            let reason = mk_reason(None, loc.dupe());
             let reason_array = mk_reason(VirtualReasonDesc::RArray, reason.loc().dupe());
             let ret_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
             let ret_tvar = Tvar::new(reason.dupe(), ret_id as u32);
@@ -9148,12 +9137,7 @@ pub fn optional_chain<'a>(
                 } = inner.callee.deref() =>
             {
                 let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
-                let reason = mk_reason(
-                    VirtualReasonDesc::RFunctionCall(Some(
-                        VirtualReasonDesc::RCode(FlowSmolStr::new_inline("super")).into(),
-                    )),
-                    loc.dupe(),
-                );
+                let reason = mk_reason(None, loc.dupe());
                 let super_t = super_(cx, super_loc.dupe())?;
                 let (argts, arguments_ast) = arg_list(cx, &inner.arguments)?;
                 let super_reason = reason_of_t(&super_t).dupe();
@@ -10642,12 +10626,7 @@ pub fn optional_chain<'a>(
             };
             let get_reason: Box<dyn Fn(&Type) -> Reason + '_> = {
                 let loc = loc.dupe();
-                Box::new(move |lhs_t: &Type| {
-                    mk_reason(
-                        RFunctionCall(desc_of_t(lhs_t).cloned().map(Arc::new)),
-                        loc.dupe(),
-                    )
-                })
+                Box::new(move |_lhs_t: &Type| mk_reason(None, loc.dupe()))
             };
             let get_result: Box<
                 dyn Fn(&mut Context<'a>, &Vec<CallArg>, Reason, &Type) -> Result<Type, JobError>,
@@ -13851,10 +13830,7 @@ fn non_react_jsx_desugar<'a>(
     attributes: &[ast::jsx::OpeningAttribute<ALoc, ALoc>],
     children: Vec<type_::UnresolvedParam>,
 ) -> Result<(Type, Option<Type>, Option<Type>), CheckExprError> {
-    let reason = mk_reason(
-        VirtualReasonDesc::RJSXFunctionCall(FlowSmolStr::from(raw_jsx_expr)),
-        loc_element.dupe(),
-    );
+    let reason = mk_reason(None, loc_element.dupe());
     // A JSX element with no attributes should pass in null as the second arg
     let props = if attributes.is_empty() {
         type_::null::at(loc_opening.dupe())

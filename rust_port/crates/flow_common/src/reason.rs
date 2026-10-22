@@ -348,8 +348,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RTupleElement,
     RTupleOutOfBoundsAccess(i32),
     RFunction(ReasonDescFunction),
-    RFunctionCall(Option<Arc<VirtualReasonDesc<L>>>),
-    RJSXFunctionCall(FlowSmolStr),
     RUnaryOperator(FlowSmolStr, Arc<VirtualReasonDesc<L>>),
     RBinaryOperator(
         Box<(
@@ -373,7 +371,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
         member_name: FlowSmolStr,
     },
     REnumUnknownMembers(Arc<VirtualReasonDesc<L>>),
-    RConstructorCall(Option<Arc<VirtualReasonDesc<L>>>),
     RRecordType(FlowSmolStr),
     RType(FlowSmolStr),
     RTypeAlias(Box<(FlowSmolStr, Option<L>, Option<Arc<VirtualReasonDesc<L>>>)>),
@@ -454,7 +451,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RTupleUnknownElementFromInexact => RTupleUnknownElementFromInexact,
             RFunction(func) => RFunction(*func),
             RFunctionType => RFunctionType,
-            RJSXFunctionCall(s) => RJSXFunctionCall(s.dupe()),
             RFbt => RFbt,
             RUninitialized => RUninitialized,
             RPossiblyUninitialized => RPossiblyUninitialized,
@@ -535,7 +531,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RReactChildren => RReactChildren,
 
             // Recursive variants
-            RFunctionCall(d) => RFunctionCall(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RUnknownUnspecifiedProperty(d) => RUnknownUnspecifiedProperty(Arc::new(d.map_locs(f))),
             RUnaryOperator(s, d) => RUnaryOperator(s.dupe(), Arc::new(d.map_locs(f))),
             RBinaryOperator(box (s, d1, d2)) => RBinaryOperator(Box::new((
@@ -548,7 +543,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 Arc::new(d1.map_locs(f)),
                 Arc::new(d2.map_locs(f)),
             ))),
-            RConstructorCall(d) => RConstructorCall(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
             RTypeAlias(box (s, loc_opt, d)) => RTypeAlias(Box::new((
                 s.dupe(),
                 loc_opt.as_ref().map(f),
@@ -1294,13 +1288,8 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Functions
         RFunction(func) => format!("{}function", func.prefix()),
         RFunctionType => "function type".to_string(),
-        RFunctionCall(d) => format!(
-            "call of {}",
-            d.as_deref().map(string_of_desc).unwrap_or_default()
-        ),
 
         // JSX
-        RJSXFunctionCall(raw_jsx) => format!("`{}(...)`", raw_jsx),
         RFbt => "`<fbt/>`".to_string(),
 
         // Operators
@@ -1364,10 +1353,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Constructors
         RConstructor => "constructor".to_string(),
-        RConstructorCall(d) => format!(
-            "new {}",
-            d.as_deref().map(string_of_desc).unwrap_or_default()
-        ),
 
         // Records
         RRecordType(name) => format!("record `{}`", name),

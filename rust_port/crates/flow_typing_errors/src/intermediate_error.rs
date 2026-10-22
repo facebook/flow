@@ -70,6 +70,7 @@ use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_::VirtualUseOp;
 use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_::fold_virtual_use_op;
+use flow_typing_type::type_::implicit_instantiation_reference_kind;
 use flow_typing_type::type_::root_of_use_op;
 use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
@@ -3386,6 +3387,39 @@ where
         }
     };
 
+    let missing_argument_message =
+        |def: &VirtualReason<L>, op: &VirtualReason<L>, inner_use_op: &VirtualUseOp<L>| {
+            if let VirtualUseOp::Op(inner_root) = inner_use_op
+                && matches!(
+                    inner_root.as_ref(),
+                    VirtualRootUseOp::FunCall(..) | VirtualRootUseOp::FunCallMethod(..)
+                )
+            {
+                let def = def.dupe().update_desc(|desc| match desc {
+                    Some(VirtualReasonDesc::RFunctionType) => {
+                        Some(VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal))
+                    }
+                    _ => desc,
+                });
+                Message::MessageFunctionRequiresAnotherArgument { def, from: None }
+            } else if op.desc(false).is_none()
+                && let Some(kind) = implicit_instantiation_reference_kind(inner_use_op)
+            {
+                Message::MessageFunctionRequiresAnotherArgumentFromCall {
+                    def: def.dupe(),
+                    call: ImplicitInstantiationReferenceData {
+                        loc: op.loc().dupe(),
+                        kind: kind.dupe(),
+                    },
+                }
+            } else {
+                Message::MessageFunctionRequiresAnotherArgument {
+                    def: def.dupe(),
+                    from: Some(op.dupe()),
+                }
+            }
+        };
+
     // An error between two incompatible types. A "lower" type and an "upper" type.
     let mk_incompatible_error = |additional_explanation: Option<Explanation<L>>,
                                  lower: VirtualReason<L>,
@@ -3447,30 +3481,7 @@ where
 
             VirtualUseOp::Frame(frame, inner_use_op) => match frame.as_ref() {
                 VirtualFrameUseOp::FunMissingArg(box FunMissingArgData { def, op, .. }) => {
-                    let message = match inner_use_op.as_ref() {
-                        VirtualUseOp::Op(inner_root) => match inner_root.as_ref() {
-                            VirtualRootUseOp::FunCall(..) | VirtualRootUseOp::FunCallMethod(..) => {
-                                let new_def = def.dupe().update_desc(|desc| match desc {
-                                    Some(VirtualReasonDesc::RFunctionType) => Some(
-                                        VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal),
-                                    ),
-                                    _ => desc,
-                                });
-                                Message::MessageFunctionRequiresAnotherArgument {
-                                    def: new_def,
-                                    from: None,
-                                }
-                            }
-                            _ => Message::MessageFunctionRequiresAnotherArgument {
-                                def: def.dupe(),
-                                from: Some(op.dupe()),
-                            },
-                        },
-                        _ => Message::MessageFunctionRequiresAnotherArgument {
-                            def: def.dupe(),
-                            from: Some(op.dupe()),
-                        },
-                    };
+                    let message = missing_argument_message(def, op, inner_use_op);
                     mk_use_op_error_reason(
                         op,
                         use_op.clone(),
@@ -3733,29 +3744,7 @@ where
                 && let VirtualFrameUseOp::FunMissingArg(box FunMissingArgData { def, op, .. }) =
                     frame.as_ref()
             {
-                let message = match inner_use_op.as_ref() {
-                    VirtualUseOp::Op(inner_root)
-                        if matches!(
-                            inner_root.as_ref(),
-                            VirtualRootUseOp::FunCall(..) | VirtualRootUseOp::FunCallMethod(..)
-                        ) =>
-                    {
-                        let new_def = def.dupe().update_desc(|desc| match desc {
-                            Some(VirtualReasonDesc::RFunctionType) => {
-                                Some(VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal))
-                            }
-                            _ => desc,
-                        });
-                        Message::MessageFunctionRequiresAnotherArgument {
-                            def: new_def,
-                            from: None,
-                        }
-                    }
-                    _ => Message::MessageFunctionRequiresAnotherArgument {
-                        def: def.dupe(),
-                        from: Some(op.dupe()),
-                    },
-                };
+                let message = missing_argument_message(def, op, inner_use_op);
                 mk_use_op_error_reason(op, use_op.clone(), explanation, message)
             } else {
                 let (((lower_loc, lower_desc), (upper_loc, upper_desc)), use_op) =
@@ -10699,6 +10688,13 @@ where
                     ref_(from),
                 ]),
             },
+            MessageFunctionRequiresAnotherArgumentFromCall { def, call } => {
+                friendly::Message(vec![
+                    ref_(def),
+                    text(" requires another argument from "),
+                    render_implicit_instantiation_reference(call),
+                ])
+            }
             MessageIncompatibleComponentRestParam(rest_param) => friendly::Message(vec![
                 text("Cannot use "),
                 ref_of_type(rest_param),

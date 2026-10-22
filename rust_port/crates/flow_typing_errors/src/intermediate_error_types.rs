@@ -2397,6 +2397,11 @@ pub enum Message<L: Dupe> {
         from: Option<VirtualReason<L>>,
     },
 
+    MessageFunctionRequiresAnotherArgumentFromCall {
+        def: VirtualReason<L>,
+        call: ImplicitInstantiationReferenceData<L>,
+    },
+
     MessageImportTypeAsTypeof(FlowSmolStr),
     MessageImportTypeAsValue(FlowSmolStr),
     MessageImportValueAsType(FlowSmolStr),

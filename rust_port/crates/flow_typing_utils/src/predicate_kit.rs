@@ -9,7 +9,6 @@ use std::cell::Cell;
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::Rc;
-use std::sync::Arc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
@@ -72,7 +71,6 @@ use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::QuickMemResult;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
-use flow_typing_type::type_util::desc_of_t;
 use flow_typing_type::type_util::loc_of_t;
 use flow_typing_type::type_util::reason_of_t;
 use flow_utils_concurrency::job_error::JobError;
@@ -735,10 +733,7 @@ fn predicate_no_concretization<'cx>(
                     let use_op = pred_funcall_info.0.dupe();
                     let targs = &pred_funcall_info.3;
                     let argts = &pred_funcall_info.4;
-                    let reason = mk_reason(
-                        VirtualReasonDesc::RFunctionCall(desc_of_t(fun_t).cloned().map(Arc::new)),
-                        loc,
-                    );
+                    let reason = mk_reason(None, loc);
                     call_latent_param_pred(
                         cx,
                         env,
@@ -760,10 +755,7 @@ fn predicate_no_concretization<'cx>(
                     let use_op = pred_funcall_info.0.dupe();
                     let targs = &pred_funcall_info.3;
                     let argts = &pred_funcall_info.4;
-                    let reason = mk_reason(
-                        VirtualReasonDesc::RFunctionCall(desc_of_t(fun_t).cloned().map(Arc::new)),
-                        loc,
-                    );
+                    let reason = mk_reason(None, loc);
                     call_latent_this_pred(
                         cx,
                         env,
@@ -940,10 +932,7 @@ fn predicate_no_concretization<'cx>(
             let use_op = pred_funcall_info.0.dupe();
             let targs = &pred_funcall_info.3;
             let argts = &pred_funcall_info.4;
-            let reason = mk_reason(
-                VirtualReasonDesc::RFunctionCall(desc_of_t(fun_t).cloned().map(Arc::new)),
-                loc,
-            );
+            let reason = mk_reason(None, loc);
             call_latent_param_pred(
                 cx,
                 env,
@@ -965,10 +954,7 @@ fn predicate_no_concretization<'cx>(
             let use_op = pred_funcall_info.0.dupe();
             let targs = &pred_funcall_info.3;
             let argts = &pred_funcall_info.4;
-            let reason = mk_reason(
-                VirtualReasonDesc::RFunctionCall(desc_of_t(fun_t).cloned().map(Arc::new)),
-                loc,
-            );
+            let reason = mk_reason(None, loc);
             call_latent_this_pred(
                 cx,
                 env,
