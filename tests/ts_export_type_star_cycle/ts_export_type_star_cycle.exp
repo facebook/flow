@@ -1,0 +1,105 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:7:10
+
+Cannot import the type `Helper` as a value. Use `import type` instead. [import-type-as-value]
+
+   7| import { Helper as HelperValue } from './interface_a'; // ERROR
+               ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:15
+
+Cannot import `fn` because there is no `fn` export in `./interface_a`. [missing-export]
+
+   8| import type { fn } from './interface_a'; // ERROR
+                    ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
+
+Cannot cast `alias` to `string` because `W` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:13:1
+   13| alias as string; // ERROR
+       ^^^^^
+
+References:
+   test.js:11:22
+   11| declare const alias: L;
+                            ^ [1]
+   test.js:13:10
+   13| alias as string; // ERROR
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
+
+Cannot cast `reexportedAlias` to `string` because `W` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:18:1
+   18| reexportedAlias as string; // ERROR
+       ^^^^^^^^^^^^^^^
+
+References:
+   test.js:16:32
+   16| declare const reexportedAlias: ReexportedL;
+                                      ^^^^^^^^^^^ [1]
+   test.js:18:20
+   18| reexportedAlias as string; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:1
+
+Cannot cast `options.weekStartsOn` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   test.js:23:1
+   23| options.weekStartsOn as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   interface_a.d.ts:3:17
+    3|   weekStartsOn: number;
+                       ^^^^^^ [1]
+   test.js:23:25
+   23| options.weekStartsOn as string; // ERROR
+                               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:1
+
+Cannot cast `reexportedOptions.weekStartsOn` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   test.js:28:1
+   28| reexportedOptions.weekStartsOn as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   interface_a.d.ts:3:17
+    3|   weekStartsOn: number;
+                       ^^^^^^ [1]
+   test.js:28:35
+   28| reexportedOptions.weekStartsOn as string; // ERROR
+                                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:1
+
+Cannot cast `helper.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:33:1
+   33| helper.value as string; // ERROR
+       ^^^^^^^^^^^^
+
+References:
+   interface_b.d.ts:4:10
+    4|   value: number;
+                ^^^^^^ [1]
+   test.js:33:17
+   33| helper.value as string; // ERROR
+                       ^^^^^^ [2]
+
+
+
+Found 7 errors

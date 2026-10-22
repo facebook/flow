@@ -5904,11 +5904,14 @@ pub mod copy_type_exports_t_kit {
     use dupe::Dupe;
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
+    use flow_typing_type::type_::ExportKind;
     use flow_typing_type::type_::ModuleType;
     use flow_typing_type::type_::NamedSymbol;
     use flow_typing_type::type_::Type;
+    use flow_typing_type::type_::exports;
     use flow_utils_concurrency::job_error::JobError;
 
+    use super::export_named_t_kit;
     use super::export_type_t_kit;
 
     pub fn mod_module_t<'cx, F>(
@@ -5945,7 +5948,14 @@ pub mod copy_type_exports_t_kit {
         };
 
         export_all(cx, source_exports.value_exports_tmap)?;
-        export_all(cx, source_exports.type_exports_tmap)?;
+        let type_exports = cx.find_exports(source_exports.type_exports_tmap);
+        export_named_t_kit::mod_module_t(
+            cx,
+            exports::T::new(),
+            type_exports,
+            ExportKind::ReExport,
+            target_module_type,
+        );
         Ok(())
     }
 }
