@@ -2706,9 +2706,7 @@ pub fn default_this_type<'cx>(
     let params = &func.params;
     let body = &func.body;
     let reason = Reason::new(
-        VirtualReasonDesc::RImplicitThis(Arc::new(VirtualReasonDesc::RFunction(
-            ReasonDescFunction::RNormal,
-        ))),
+        VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal),
         params.loc.dupe(),
     );
     if this_finder::missing_this_annotation(needs_this_param, body, params) {

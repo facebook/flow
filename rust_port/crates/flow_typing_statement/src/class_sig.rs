@@ -822,21 +822,11 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     Option<Type>,
     Option<Type>,
 ) {
-    let receiver_this = || {
-        type_util::mod_reason_of_t(
-            &|r: Reason| {
-                r.update_desc(|desc| {
-                    desc.map(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc)))
-                })
-            },
-            &this,
-        )
-    };
     let this_default = |x: &func_class_sig_types::func::Func<C>, uses_this: bool| -> Type {
         if static_ && !uses_this {
-            implicit_mixed_this(x.reason.dupe())
+            mixed_t::make(x.reason.dupe())
         } else {
-            receiver_this()
+            this.dupe()
         }
     };
     // If this is an overloaded method, create an intersection, attributed
@@ -882,7 +872,7 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     }
     let private_this_default = |fi: &class_types::FuncInfo<C>| -> Type {
         if static_ && fi.uses_this {
-            receiver_this()
+            this.dupe()
         } else {
             any_t::make(
                 AnySource::Unsound(UnsoundnessKind::BoundFunctionThis),

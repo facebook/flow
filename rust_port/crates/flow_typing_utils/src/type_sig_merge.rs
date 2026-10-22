@@ -530,7 +530,7 @@ fn add_default_constructor<T>(
             let return_t = type_::void::why(reason.dupe());
             let statics = type_::dummy_static(reason.dupe());
             let funtype = type_::mk_boundfunctiontype(
-                type_::implicit_mixed_this(reason.dupe()),
+                type_::mixed_t::make(reason.dupe()),
                 None,
                 vec![],
                 None,
@@ -611,7 +611,7 @@ fn add_record_constructor<'cx>(
         false,
     );
     let funtype = type_::mk_boundfunctiontype(
-        type_::implicit_mixed_this(reason.dupe()),
+        type_::mixed_t::make(reason.dupe()),
         None,
         vec![param],
         None,
@@ -4916,7 +4916,6 @@ fn merge_fun<'cx>(
     is_optional_method: bool,
     literal: bool,
 ) -> Type {
-    use flow_common::reason::VirtualReasonDesc::*;
     use flow_type_sig::type_sig;
 
     let statics = statics.dupe();
@@ -4944,19 +4943,13 @@ fn merge_fun<'cx>(
                     && (!is_static || uses_this)
                     && let Some(this) = env.tps.get(&FlowSmolStr::new_inline("this"))
                 {
-                    let this = if is_static {
+                    if is_static {
                         type_util::class_type(this.dupe(), None)
                     } else {
                         this.dupe()
-                    };
-                    type_util::mod_reason_of_t(
-                        &|r: Reason| {
-                            r.update_desc(|desc| desc.map(|desc| RImplicitThis(Arc::new(desc))))
-                        },
-                        &this,
-                    )
+                    }
                 } else {
-                    type_::implicit_mixed_this(reason2.dupe())
+                    type_::mixed_t::make(reason2.dupe())
                 }
             }
             Some(t) => merge_impl(env, cx, file, t, false, false),

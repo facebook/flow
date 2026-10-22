@@ -7347,7 +7347,7 @@ pub mod properties {
                     let mut new_ft = (**ft).clone();
                     new_ft.this_t = (
                         if use_mixed_this {
-                            implicit_mixed_this(r.dupe())
+                            mixed_t::make(r.dupe())
                         } else {
                             new_ft.this_t.0.dupe()
                         },
@@ -12135,12 +12135,6 @@ pub fn bound_function_dummy_this(loc: ALoc) -> Type {
 pub fn dummy_this(loc: ALoc) -> Type {
     use flow_common::reason::mk_reason;
     let r = mk_reason(VirtualReasonDesc::RDummyThis, loc);
-    mixed_t::make(r)
-}
-
-pub fn implicit_mixed_this(reason: Reason) -> Type {
-    let r = reason
-        .update_desc(|desc| desc.map(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc))));
     mixed_t::make(r)
 }
 

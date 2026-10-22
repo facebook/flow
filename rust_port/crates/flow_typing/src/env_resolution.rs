@@ -3302,11 +3302,7 @@ fn init_type_param<'cx>(
     }
 
     fn mk_synthetic_this<'cx>(cx: &mut Context<'cx>, reason: Reason) -> (type_::TypeParam, Type) {
-        flow_typing_statement::class_sig::mk_this(
-            type_::implicit_mixed_this(reason.dupe()),
-            cx,
-            reason,
-        )
+        flow_typing_statement::class_sig::mk_this(type_::mixed_t::make(reason.dupe()), cx, reason)
     }
     let tparam_entry = match graph.get_ordinary(&def_loc) {
         Some((

@@ -14,11 +14,7 @@
           "return_t":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:3:24: undefined"},
           "this_t":{
             "status":{"kind":"This_Function"},
-            "type":{
-              "def":{"kind":"Mixed"},
-              "kind":"Def",
-              "reason":"test.js:3:13-23: implicit `this` parameter of function"
-            }
+            "type":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:3:13-23: function"}
           },
           "type_guard":null
         },
@@ -54,11 +50,7 @@
           "return_t":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:3:24: undefined"},
           "this_t":{
             "status":{"kind":"This_Function"},
-            "type":{
-              "def":{"kind":"Mixed"},
-              "kind":"Def",
-              "reason":"test.js:3:13-23: implicit `this` parameter of function"
-            }
+            "type":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:3:13-23: function"}
           },
           "type_guard":null
         },
@@ -89,11 +81,7 @@
           "return_t":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:7:79: undefined"},
           "this_t":{
             "status":{"kind":"This_Function"},
-            "type":{
-              "def":{"kind":"Mixed"},
-              "kind":"Def",
-              "reason":"test.js:7:32-78: implicit `this` parameter of function"
-            }
+            "type":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:7:32-78: function"}
           },
           "type_guard":null
         },
@@ -593,11 +581,7 @@
           "return_t":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:7:79: undefined"},
           "this_t":{
             "status":{"kind":"This_Function"},
-            "type":{
-              "def":{"kind":"Mixed"},
-              "kind":"Def",
-              "reason":"test.js:7:32-78: implicit `this` parameter of function"
-            }
+            "type":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:7:32-78: function"}
           },
           "type_guard":null
         },
@@ -1682,11 +1666,7 @@
       "kind":"Def",
       "reason":"test.js:7:36-77: function type"
     },
-    "28":{
-      "def":{"kind":"Mixed"},
-      "kind":"Def",
-      "reason":"test.js:7:32-78: implicit `this` parameter of function"
-    },
+    "28":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:7:32-78: function"},
     "29":{"def":{"kind":"Void"},"kind":"Def","reason":"test.js:7:79: undefined"},
     "3":{"kind":"FunProto"},
     "30":{
@@ -1819,11 +1799,7 @@
       "kind":"Def",
       "reason":"test.js:7:59-65: null or undefined"
     },
-    "6":{
-      "def":{"kind":"Mixed"},
-      "kind":"Def",
-      "reason":"test.js:3:13-23: implicit `this` parameter of function"
-    },
+    "6":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:3:13-23: function"},
     "60":{"kind":"Union","members":[{"$ref":44},{"$ref":58},{"$ref":59}]},
     "61":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:7:60-65: string"},
     "62":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:7:71-77: `unknown`"},

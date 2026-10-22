@@ -17720,7 +17720,7 @@ pub fn mk_class_sig<'a>(
                                         let func_t = crate::func_sig::methodtype(
                                             cx,
                                             None,
-                                            type_::implicit_mixed_this(func_sig.reason.dupe()),
+                                            mixed_t::make(func_sig.reason.dupe()),
                                             &func_sig,
                                         );
                                         let optional_t = flow_typing_type::type_util::optional(
@@ -18104,7 +18104,7 @@ pub fn mk_class_sig<'a>(
                                         let func_t = crate::func_sig::methodtype(
                                             cx,
                                             None,
-                                            type_::implicit_mixed_this(func_sig.reason.dupe()),
+                                            mixed_t::make(func_sig.reason.dupe()),
                                             &func_sig,
                                         );
                                         class_sig::add_method(

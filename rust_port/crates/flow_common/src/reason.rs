@@ -376,7 +376,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     REnumUnknownMembers(Arc<VirtualReasonDesc<L>>),
     RConstructorCall(Option<Arc<VirtualReasonDesc<L>>>),
     RRecordType(FlowSmolStr),
-    RImplicitThis(Arc<VirtualReasonDesc<L>>),
     RType(FlowSmolStr),
     RTypeAlias(Box<(FlowSmolStr, Option<L>, Option<Arc<VirtualReasonDesc<L>>>)>),
     ROpaqueType(FlowSmolStr),
@@ -560,7 +559,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RTypeParam(box (s, l1, l2)) => RTypeParam(Box::new((s.clone(), f(l1), f(l2)))),
             RPartialOf(d) => RPartialOf(Arc::new(d.map_locs(f))),
             RRequiredOf(d) => RRequiredOf(Arc::new(d.map_locs(f))),
-            RImplicitThis(d) => RImplicitThis(Arc::new(d.map_locs(f))),
             RPossiblyMissingPropFromObj(n, d) => {
                 RPossiblyMissingPropFromObj(n.dupe(), Arc::new(d.map_locs(f)))
             }
@@ -1381,7 +1379,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RRegExp => "regexp".to_string(),
         RDummyPrototype => "empty prototype object".to_string(),
         RDummyThis => "bound `this` in method".to_string(),
-        RImplicitThis(desc) => format!("implicit `this` parameter of {}", string_of_desc(desc)),
         RObjectKeyMirror => "`$KeyMirror`".to_string(),
 
         // Type aliases and params

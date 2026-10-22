@@ -2568,12 +2568,12 @@ pub fn annotated_or_inferred_of_option(
 
 pub fn subtype_this_of_function(funtype: &crate::type_::FunType) -> Type {
     use crate::type_::ThisStatus;
-    use crate::type_::implicit_mixed_this;
+    use crate::type_::mixed_t;
 
     let (this, subtyping) = &funtype.this_t;
     match subtyping {
         ThisStatus::ThisFunction => this.dupe(),
-        ThisStatus::ThisMethod => implicit_mixed_this(reason_of_t(this).dupe()),
+        ThisStatus::ThisMethod => mixed_t::make(reason_of_t(this).dupe()),
     }
 }
 

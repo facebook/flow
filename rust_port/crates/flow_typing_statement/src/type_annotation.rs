@@ -6853,7 +6853,7 @@ fn mk_inline_interface_type<'a>(
     let id = cx.make_aloc_id(loc);
     let (extends_types, extends_binding_kinds): (Vec<_>, Vec<_>) = extends.into_iter().unzip();
     let (this_tparam, this) =
-        class_sig::mk_this(type_::implicit_mixed_this(reason.dupe()), cx, reason.dupe());
+        class_sig::mk_this(type_::mixed_t::make(reason.dupe()), cx, reason.dupe());
     env.tparams_map.insert(
         SubstName::name(FlowSmolStr::new_inline("this")),
         this.dupe(),
@@ -7703,7 +7703,7 @@ fn add_interface_properties<'a>(
                                                     cx,
                                                     this_write_loc,
                                                     if optional_method {
-                                                        type_::implicit_mixed_this(
+                                                        type_::mixed_t::make(
                                                             type_util::reason_of_t(&this).dupe(),
                                                         )
                                                     } else {
@@ -8061,7 +8061,7 @@ fn add_interface_properties<'a>(
                                             cx,
                                             this_write_loc,
                                             if optional_method {
-                                                type_::implicit_mixed_this(
+                                                type_::mixed_t::make(
                                                     type_util::reason_of_t(&this).dupe(),
                                                 )
                                             } else {
@@ -8826,7 +8826,7 @@ pub fn mk_interface_sig<'a>(
         extends_ast.push(ext_ast);
     }
     let (this_tparam, this_t) =
-        class_sig::mk_this(type_::implicit_mixed_this(reason.dupe()), cx, reason.dupe());
+        class_sig::mk_this(type_::mixed_t::make(reason.dupe()), cx, reason.dupe());
     env.tparams_map.insert(
         SubstName::name(FlowSmolStr::new_inline("this")),
         this_t.dupe(),
@@ -9544,7 +9544,7 @@ pub fn mk_declare_class_sig<'a>(
         };
         let mut env_with_this = env.clone();
         env_with_this.tparams_map = tparams_map_with_this;
-        let this_type = type_::implicit_mixed_this(type_util::reason_of_t(&this_t).dupe());
+        let this_type = type_::mixed_t::make(type_util::reason_of_t(&this_t).dupe());
         let (ref body_loc, ref body) = decl.body;
         let (updated_sig, properties_typed) = add_interface_properties(
             cx,
