@@ -9040,10 +9040,7 @@ pub fn optional_chain<'a>(
                 let ploc = id.loc.dupe();
                 let name = &id.name;
                 let member_comments = &member.comments;
-                let reason = mk_reason(
-                    VirtualReasonDesc::RMethodCall(Some(name.dupe())),
-                    loc.dupe(),
-                );
+                let reason = mk_reason(None, loc.dupe());
                 let name = Name::new(name.dupe());
                 let reason_lookup = mk_reason(RProperty(Some(name.dupe())), callee_loc.dupe());
                 let reason_prop = mk_reason(RProperty(Some(name.dupe())), ploc.dupe());
@@ -10148,7 +10145,7 @@ pub fn optional_chain<'a>(
                             panic!("unexpected property expression")
                         }
                     };
-                    let reason_call = mk_reason(RMethodCall(Some(name_str.dupe())), loc.dupe());
+                    let reason_call = mk_reason(None, loc.dupe());
                     let prop_name = Name::new(name_str.dupe());
                     let reason_prop = mk_reason(RProperty(Some(prop_name.dupe())), prop_loc.dupe());
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
@@ -10402,7 +10399,7 @@ pub fn optional_chain<'a>(
                     )
                 }
                 expression::member::Property::PropertyExpression(prop_expr) => {
-                    let reason_call = mk_reason(RMethodCall(None), loc.dupe());
+                    let reason_call = mk_reason(None, loc.dupe());
                     let reason_lookup = mk_reason(RProperty(None), lookup_loc.dupe());
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
                         FunCallMethodData {
@@ -14972,7 +14969,7 @@ fn static_method_call_object<'a>(
                 .into(),
             });
             let arg_t = obj_t_inner;
-            let method_reason = mk_reason(RMethodCall(Some(m.dupe())), loc.dupe());
+            let method_reason = mk_reason(None, loc.dupe());
             let method_targts = typed_targs.as_ref().map(|(targts, _)| targts.clone());
             let (_, result_t) = method_call(
                 cx,
@@ -15035,7 +15032,7 @@ fn static_method_call_object<'a>(
         _ => {
             let (targts, targ_asts) = convert_call_targs_opt(cx, targs)?;
             let (argts, arg_asts) = arg_list(cx, args)?;
-            let method_reason = mk_reason(RMethodCall(Some(m.dupe())), loc.dupe());
+            let method_reason = mk_reason(None, loc.dupe());
             let default_use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
                 FunCallMethodData {
                     op: method_reason.dupe(),
