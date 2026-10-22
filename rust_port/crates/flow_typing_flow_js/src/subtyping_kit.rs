@@ -3501,15 +3501,10 @@ pub fn rec_sub_t<'cx>(
         // o as {[number]: boolean}: // OK
         // o as {[string]: boolean}: // OK
         // ```
-        (DefT(rl, ld), DefT(ru, ud))
-            if let (
-                NumericStrKeyT(actual_lit),
-                SingletonNumT {
-                    value: expected_lit,
-                    ..
-                },
-            ) = (ld.deref(), ud.deref()) =>
-        {
+        (
+            DefT(rl, deref!(NumericStrKeyT(actual_lit))),
+            DefT(ru, deref!(SingletonNumT { value: expected_lit, .. })),
+        ) => {
             if actual_lit.0 != expected_lit.0 {
                 flow_js_utils::add_output_with_env(
                     cx,env,
@@ -3522,14 +3517,10 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if let (
-                NumericStrKeyT(actual_lit),
-                SingletonStrT {
-                    value: expected, ..
-                },
-            ) = (ld.deref(), ud.deref()) =>
-        {
+        (
+            DefT(rl, deref!(NumericStrKeyT(actual_lit))),
+            DefT(ru, deref!(SingletonStrT { value: expected, .. })),
+        ) => {
             if actual_lit.1 != *expected {
                 flow_js_utils::add_output_with_env(
                     cx,env,
@@ -3542,7 +3533,7 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (_, DefT(r, ud)) if let NumericStrKeyT(num_lit) = ud.deref() => {
+        (_, DefT(r, deref!(NumericStrKeyT(num_lit)))) => {
             let u_new = Type::new(DefT(
                 r.dupe(),
                 DefT::new(SingletonStrT {
@@ -3576,14 +3567,10 @@ pub fn rec_sub_t<'cx>(
         // would preclude other strings to be stored in that location. Thus, by
         // necessity we allow all string types to flow to SingletonStrT (whereas only
         // exactly matching string literal types may flow to SingletonStrT).
-        (DefT(rl, ld), DefT(ru, ud))
-            if let (
-                SingletonStrT { value: actual, .. },
-                SingletonStrT {
-                    value: expected, ..
-                },
-            ) = (ld.deref(), ud.deref()) =>
-        {
+        (
+            DefT(rl, deref!(SingletonStrT { value: actual, .. })),
+            DefT(ru, deref!(SingletonStrT { value: expected, .. })),
+        ) => {
             if expected == actual {
                 flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             } else {
@@ -3600,10 +3587,7 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if matches!(ld.deref(), StrGeneralT(_))
-                && matches!(ud.deref(), SingletonStrT { .. }) =>
-        {
+        (DefT(rl, deref!(StrGeneralT(_))), DefT(ru, deref!(SingletonStrT { .. }))) => {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
             flow_js_utils::add_output_with_env(
@@ -3616,14 +3600,10 @@ pub fn rec_sub_t<'cx>(
             )?;
             Ok(())
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if let (
-                SingletonNumT { value: actual, .. },
-                SingletonNumT {
-                    value: expected, ..
-                },
-            ) = (ld.deref(), ud.deref()) =>
-        {
+        (
+            DefT(rl, deref!(SingletonNumT { value: actual, .. })),
+            DefT(ru, deref!(SingletonNumT { value: expected, .. })),
+        ) => {
             if expected.0 == actual.0 {
                 flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             } else {
@@ -3640,10 +3620,7 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if matches!(ld.deref(), NumGeneralT(_))
-                && matches!(ud.deref(), SingletonNumT { .. }) =>
-        {
+        (DefT(rl, deref!(NumGeneralT(_))), DefT(ru, deref!(SingletonNumT { .. }))) => {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
             flow_js_utils::add_output_with_env(
@@ -3656,14 +3633,10 @@ pub fn rec_sub_t<'cx>(
             )?;
             Ok(())
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if let (
-                SingletonBoolT { value: actual, .. },
-                SingletonBoolT {
-                    value: expected, ..
-                },
-            ) = (ld.deref(), ud.deref()) =>
-        {
+        (
+            DefT(rl, deref!(SingletonBoolT { value: actual, .. })),
+            DefT(ru, deref!(SingletonBoolT { value: expected, .. })),
+        ) => {
             if expected != actual {
                 // TODO: ordered_reasons should not be necessary
                 let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
@@ -3678,10 +3651,7 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if matches!(ld.deref(), BoolGeneralT)
-                && matches!(ud.deref(), SingletonBoolT { .. }) =>
-        {
+        (DefT(rl, deref!(BoolGeneralT)), DefT(ru, deref!(SingletonBoolT { .. }))) => {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
             flow_js_utils::add_output_with_env(
@@ -3693,14 +3663,10 @@ pub fn rec_sub_t<'cx>(
                 })),
             )
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if let (
-                SingletonBigIntT { value: actual, .. },
-                SingletonBigIntT {
-                    value: expected, ..
-                },
-            ) = (ld.deref(), ud.deref()) =>
-        {
+        (
+            DefT(rl, deref!(SingletonBigIntT { value: actual, .. })),
+            DefT(ru, deref!(SingletonBigIntT { value: expected, .. })),
+        ) => {
             if expected.0 != actual.0 {
                 // TODO: ordered_reasons should not be necessary
                 let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
@@ -3715,10 +3681,7 @@ pub fn rec_sub_t<'cx>(
             }
             Ok(())
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if matches!(ld.deref(), BigIntGeneralT(_))
-                && matches!(ud.deref(), SingletonBigIntT { .. }) =>
-        {
+        (DefT(rl, deref!(BigIntGeneralT(_))), DefT(ru, deref!(SingletonBigIntT { .. }))) => {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
             flow_js_utils::add_output_with_env(
@@ -3734,27 +3697,19 @@ pub fn rec_sub_t<'cx>(
         // **********************************
         // * unique symbol ~> unique symbol *
         // **********************************
-        (DefT(_, ld), DefT(_, ud))
-            if let (UniqueSymbolT(data1), UniqueSymbolT(data2)) =
-                (ld.deref(), ud.deref())
-                && data1.symbol == data2.symbol =>
+        (DefT(_, deref!(UniqueSymbolT(data1))), DefT(_, deref!(UniqueSymbolT(data2))))
+            if data1.symbol == data2.symbol =>
         {
             Ok(())
         }
-        (DefT(rl, ld), DefT(ru, ud))
-            if matches!(ld.deref(), UniqueSymbolT(_))
-                && matches!(ud.deref(), UniqueSymbolT(_)) =>
-        {
+        (DefT(_, deref!(UniqueSymbolT(_))), DefT(_, deref!(UniqueSymbolT(_)))) => {
             flow_js_utils::add_output_with_env(
                 cx,env,
                 flow_js_utils::incompatible_types_error(l, u, use_op, None),
             )
         }
         // symbol ~> unique symbol: ERROR
-        (DefT(rl, ld), DefT(ru, ud))
-            if matches!(ld.deref(), SymbolT)
-                && matches!(ud.deref(), UniqueSymbolT(_)) =>
-        {
+        (DefT(_, deref!(SymbolT)), DefT(_, deref!(UniqueSymbolT(_)))) => {
             flow_js_utils::add_output_with_env(
                 cx,env,
                 flow_js_utils::incompatible_types_error(l, u, use_op, None),
@@ -3763,9 +3718,7 @@ pub fn rec_sub_t<'cx>(
         // ****************************************************
         // keys
         // ****************************************************
-        (DefT(reason_s, ld), KeysT(reason_op, o))
-            if let SingletonStrT { value: x, .. } = ld.deref() =>
-        {
+        (DefT(reason_s, deref!(SingletonStrT { value: x, .. })), KeysT(reason_op, o)) => {
             flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let reason_next = reason_s
                 .dupe()
@@ -3787,9 +3740,7 @@ pub fn rec_sub_t<'cx>(
                 }),
             )
         }
-        (DefT(reason_s, ld), KeysT(reason_op, o))
-            if matches!(ld.deref(), UniqueSymbolT(_) | SymbolT) =>
-        {
+        (DefT(reason_s, ld @ deref!(UniqueSymbolT(_) | SymbolT)), KeysT(reason_op, o)) => {
             // A `unique symbol` names one property, so `HasOwnPropT` can find it
             // by nominal identity. A general `symbol` names none, so it holds
             // only where an indexer accepts a symbol key.
@@ -3820,13 +3771,11 @@ pub fn rec_sub_t<'cx>(
         (
             GenericT(box GenericTData {
                 reason: reason_s,
-                bound,
+                bound: deref!(DefT(_, deref!(SingletonStrT { value: x, .. }))),
                 ..
             }),
             KeysT(reason_op, o),
-        ) if let DefT(_, bd) = bound.deref()
-            && let SingletonStrT { value: x, .. } = bd.deref() =>
-        {
+        ) => {
             flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let reason_next = reason_s
                 .dupe()
@@ -3848,9 +3797,7 @@ pub fn rec_sub_t<'cx>(
                 }),
             )
         }
-        (DefT(reason_s, ld), KeysT(reason_op, o))
-            if matches!(ld.deref(), StrGeneralT(_)) =>
-        {
+        (DefT(reason_s, deref!(StrGeneralT(_))), KeysT(reason_op, o)) => {
             let reason_next = reason_s.dupe().replace_desc_new(None);
             let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
@@ -3871,15 +3818,11 @@ pub fn rec_sub_t<'cx>(
         (
             GenericT(box GenericTData {
                 reason: reason_s,
-                bound,
+                bound: deref!(DefT(_, deref!(StrGeneralT(_)))),
                 ..
             }),
             KeysT(reason_op, o),
-        ) if matches!(
-            bound.deref(),
-            DefT(_, d) if matches!(d.deref(), StrGeneralT(_))
-        ) =>
-        {
+        ) => {
             let reason_next = reason_s.dupe().replace_desc_new(None);
             let u_use = UseT::new(HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
@@ -3897,9 +3840,7 @@ pub fn rec_sub_t<'cx>(
                 }),
             )
         }
-        (DefT(reason_s, ld), KeysT(reason_op, o))
-            if let NumericStrKeyT(num_lit) = ld.deref() =>
-        {
+        (DefT(reason_s, deref!(NumericStrKeyT(num_lit))), KeysT(reason_op, o)) => {
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(
@@ -3931,13 +3872,11 @@ pub fn rec_sub_t<'cx>(
         (
             GenericT(box GenericTData {
                 reason: reason_s,
-                bound,
+                bound: deref!(DefT(_, deref!(NumericStrKeyT(num_lit)))),
                 ..
             }),
             KeysT(reason_op, o),
-        ) if let DefT(_, bd) = bound.deref()
-            && let NumericStrKeyT(num_lit) = bd.deref() =>
-        {
+        ) => {
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(
@@ -4000,17 +3939,11 @@ pub fn rec_sub_t<'cx>(
         (
             GenericT(box GenericTData {
                 reason: reason_s,
-                bound,
+                bound: deref!(TemplateLiteralT { from_annot, quasis, types, .. }),
                 ..
             }),
             KeysT(reason_op, o),
-        ) if let TemplateLiteralT {
-            from_annot,
-            quasis,
-            types,
-            ..
-        } = bound.deref() =>
-        {
+        ) => {
             let l_new = Type::new(TemplateLiteralT {
                 reason: reason_s.dupe(),
                 from_annot: *from_annot,
@@ -4273,25 +4206,13 @@ pub fn rec_sub_t<'cx>(
                                             Ok(())
                                         };
                                     match u.deref() {
-                                        DefT(_, ud)
-                                            if let SingletonStrT {
-                                                value: x, ..
-                                            } = ud.deref() =>
-                                        {
+                                        DefT(_, deref!(SingletonStrT { value: x, .. })) => {
                                             singleton_check(cx, UnionEnum::Str(x.dupe()))?;
                                         }
-                                        DefT(_, ud)
-                                            if let SingletonBoolT {
-                                                value: x, ..
-                                            } = ud.deref() =>
-                                        {
+                                        DefT(_, deref!(SingletonBoolT { value: x, .. })) => {
                                             singleton_check(cx, UnionEnum::Bool(*x))?;
                                         }
-                                        DefT(_, ud)
-                                            if let SingletonNumT {
-                                                value: x, ..
-                                            } = ud.deref() =>
-                                        {
+                                        DefT(_, deref!(SingletonNumT { value: x, .. })) => {
                                             singleton_check(cx, UnionEnum::Num(x.dupe()))?;
                                         }
                                         _ => {
@@ -4336,9 +4257,8 @@ pub fn rec_sub_t<'cx>(
         }
         // String enum sets can be handled in logarithmic time by just
         // checking for membership in the set.
-        (DefT(reason_l, ld), UnionT(reason_u, rep))
-            if let SingletonStrT { value: x, .. } = ld.deref()
-                && {
+        (DefT(_reason_l, deref!(SingletonStrT { value: x, .. })), UnionT(_reason_u, rep))
+            if {
                     if let Some(enums) = rep.check_enum() {
                         if !enums.contains(&UnionEnum::Str(x.dupe())) {
                             flow_js_utils::add_output_with_env(
@@ -4374,9 +4294,7 @@ pub fn rec_sub_t<'cx>(
         {
             Ok(())
         }
-        (DefT(renders_r, ld), UnionT(r, rep))
-            if matches!(ld.deref(), RendersT(_)) =>
-        {
+        (DefT(renders_r, deref!(RendersT(_))), UnionT(r, rep)) => {
             // This is a tricky case because there are multiple ways that it could pass. Either
             //  the union contains a supertype of the LHS, or the Union itself is a super type of
             //  React.Node, in which case we can pass without splitting the union. Crucially, if the
