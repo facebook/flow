@@ -1,0 +1,908 @@
+Error -------------------------------------------------------------------------------------------- collisions.d.ts:14:18
+
+Cannot declare `sameName` [1] because the name is already bound. [name-already-bound]
+
+   collisions.d.ts:14:18
+   14| declare function sameName(s: string): number; // ERROR: name already bound
+                        ^^^^^^^^
+
+References:
+   collisions.d.ts:10:19
+   10| declare namespace sameName {
+                         ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:16:10
+
+Cannot call `API.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:16:10
+   16| API.call(1); // ERROR
+                ^ [1]
+
+References:
+   standalone.d.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:17:1
+
+Cannot cast `API.call(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:17:1
+   17| API.call('x') satisfies string; // ERROR
+       ^^^^^^^^^^^^^
+
+References:
+   standalone.d.ts:8:46
+    8| declare const implementation: (s: string) => number;
+                                                    ^^^^^^ [1]
+   consumer.ts:17:25
+   17| API.call('x') satisfies string; // ERROR
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:19:1
+
+Cannot cast `API.mixedCall(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:19:1
+   19| API.mixedCall('x') satisfies string; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   standalone.d.ts:8:46
+    8| declare const implementation: (s: string) => number;
+                                                    ^^^^^^ [1]
+   consumer.ts:19:30
+   19| API.mixedCall('x') satisfies string; // ERROR
+                                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:25:27
+
+Cannot assign `'x'` to `badItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   consumer.ts:25:27
+   25| const badItem: API.Item = 'x'; // ERROR
+                                 ^^^ [1]
+
+References:
+   consumer.ts:25:16
+   25| const badItem: API.Item = 'x'; // ERROR
+                      ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:26:39
+
+Cannot assign `'x'` to `badInlineItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   consumer.ts:26:39
+   26| const badInlineItem: API.InlineItem = 'x'; // ERROR
+                                             ^^^ [1]
+
+References:
+   consumer.ts:26:22
+   26| const badInlineItem: API.InlineItem = 'x'; // ERROR
+                            ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:27:37
+
+Cannot assign `'x'` to `badPlainItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   consumer.ts:27:37
+   27| const badPlainItem: API.PlainItem = 'x'; // ERROR
+                                           ^^^ [1]
+
+References:
+   consumer.ts:27:21
+   27| const badPlainItem: API.PlainItem = 'x'; // ERROR
+                           ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:28:5
+
+Cannot get `API.Item` because property `Item` is missing in
+`{readonly Member: typeof Member, readonly call: (s: string) => number, readonly helper: (s: string) ...` [1].
+[prop-missing]
+
+   consumer.ts:28:5
+   28| API.Item; // ERROR
+           ^^^^
+
+References:
+   standalone.d.ts:11:19
+   11| declare namespace API {
+                         ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:29:5
+
+Cannot get `API.InlineItem` because property `InlineItem` is missing in
+`{readonly Member: typeof Member, readonly call: (s: string) => number, readonly helper: (s: string) ...` [1].
+[prop-missing]
+
+   consumer.ts:29:5
+   29| API.InlineItem; // ERROR
+           ^^^^^^^^^^
+
+References:
+   standalone.d.ts:11:19
+   11| declare namespace API {
+                         ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:33:1
+
+Cannot cast `API.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:33:1
+   33| API.value satisfies string; // ERROR
+       ^^^^^^^^^
+
+References:
+   standalone.d.ts:16:23
+   16|   export const value: number;
+                             ^^^^^^ [1]
+   consumer.ts:33:21
+   33| API.value satisfies string; // ERROR
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:37:12
+
+Cannot call `API.helper` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:37:12
+   37| API.helper(1); // ERROR
+                  ^ [1]
+
+References:
+   standalone.d.ts:24:29
+   24|   export function helper(s: string): number;
+                                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:42:15
+
+Cannot call `member.method` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:42:15
+   42| member.method(1); // ERROR
+                     ^ [1]
+
+References:
+   standalone.d.ts:21:15
+   21|     method(s: string): number;
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:43:1
+
+Cannot cast `member.field` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:43:1
+   43| member.field satisfies string; // ERROR
+       ^^^^^^^^^^^^
+
+References:
+   standalone.d.ts:20:21
+   20|     readonly field: number;
+                           ^^^^^^ [1]
+   consumer.ts:43:24
+   43| member.field satisfies string; // ERROR
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:49:33
+
+Cannot assign `1` to `badTypeItem` because `1` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   consumer.ts:49:33
+   49| const badTypeItem: Types.Item = 1; // ERROR
+                                       ^ [1]
+
+References:
+   consumer.ts:49:20
+   49| const badTypeItem: Types.Item = 1; // ERROR
+                          ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:50:45
+
+Cannot assign `1` to `badTypeInlineItem` because `1` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   consumer.ts:50:45
+   50| const badTypeInlineItem: Types.InlineItem = 1; // ERROR
+                                                   ^ [1]
+
+References:
+   consumer.ts:50:26
+   50| const badTypeInlineItem: Types.InlineItem = 1; // ERROR
+                                ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:51:1
+
+Cannot use type `Types` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   consumer.ts:51:1
+   51| Types; // ERROR
+       ^^^^^
+
+References:
+   consumer.ts:8:15
+    8| import { API, Types, Shadow } from './standalone';
+                     ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:52:23
+
+Cannot use type `Types` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   consumer.ts:52:23
+   52| const typeNamespace = Types; // ERROR
+                             ^^^^^
+
+References:
+   consumer.ts:8:15
+    8| import { API, Types, Shadow } from './standalone';
+                     ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:56:36
+
+Cannot assign `1` to `badShadowItem` because `1` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   consumer.ts:56:36
+   56| const badShadowItem: Shadow.Item = 1; // ERROR
+                                          ^ [1]
+
+References:
+   consumer.ts:56:22
+   56| const badShadowItem: Shadow.Item = 1; // ERROR
+                            ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:58:44
+
+Cannot assign `'x'` to `badForwardItem` because `"x"` [1] is incompatible with `Later` [2]. [incompatible-type]
+
+   consumer.ts:58:44
+   58| const badForwardItem: Shadow.ForwardItem = 'x'; // ERROR
+                                                  ^^^ [1]
+
+References:
+   consumer.ts:58:23
+   58| const badForwardItem: Shadow.ForwardItem = 'x'; // ERROR
+                             ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:60:60
+
+Cannot assign `'x'` to `badImplicitForwardItem` because `"x"` [1] is incompatible with `Later` [2]. [incompatible-type]
+
+   consumer.ts:60:60
+   60| const badImplicitForwardItem: Shadow.ImplicitForwardItem = 'x'; // ERROR
+                                                                  ^^^ [1]
+
+References:
+   consumer.ts:60:31
+   60| const badImplicitForwardItem: Shadow.ImplicitForwardItem = 'x'; // ERROR
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:62:20
+
+Cannot call `Shadow.forwardCall` with `1` bound to `s` because `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   consumer.ts:62:20
+   62| Shadow.forwardCall(1); // ERROR
+                          ^ [1]
+
+References:
+   standalone.d.ts:40:33
+   40|   declare const laterValue: (s: string) => number;
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:63:8
+
+Cannot get `Shadow.Local` because property `Local` is missing in
+`{readonly forwardCall: (s: string) => number, readonly laterValue: (s: string) => number}` [1]. [prop-missing]
+
+   consumer.ts:63:8
+   63| Shadow.Local; // ERROR
+              ^^^^^
+
+References:
+   standalone.d.ts:35:26
+   35| export declare namespace Shadow {
+                                ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:68:18
+
+Cannot call `FunctionAPI.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   consumer.ts:68:18
+   68| FunctionAPI.call(1); // ERROR
+                        ^ [1]
+
+References:
+   merged.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:70:43
+
+Cannot assign `'x'` to `badFunctionItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   consumer.ts:70:43
+   70| const badFunctionItem: FunctionAPI.Item = 'x'; // ERROR
+                                                 ^^^ [1]
+
+References:
+   consumer.ts:70:24
+   70| const badFunctionItem: FunctionAPI.Item = 'x'; // ERROR
+                              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:78:17
+
+Cannot call `ValuesOnly.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   consumer.ts:78:17
+   78| ValuesOnly.call(1); // ERROR
+                       ^ [1]
+
+References:
+   merged.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:83:15
+
+Cannot call `ClassAPI.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:83:15
+   83| ClassAPI.call(1); // ERROR
+                     ^ [1]
+
+References:
+   merged.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:86:1
+
+Cannot cast `ClassAPI.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:86:1
+   86| ClassAPI.value satisfies string; // ERROR
+       ^^^^^^^^^^^^^^
+
+References:
+   merged.ts:66:23
+   66|   export const value: number;
+                             ^^^^^^ [1]
+   consumer.ts:86:26
+   86| ClassAPI.value satisfies string; // ERROR
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:88:37
+
+Cannot assign `'x'` to `badClassItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   consumer.ts:88:37
+   88| const badClassItem: ClassAPI.Item = 'x'; // ERROR
+                                           ^^^ [1]
+
+References:
+   consumer.ts:88:21
+   88| const badClassItem: ClassAPI.Item = 'x'; // ERROR
+                           ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.ts:92:1
+
+Cannot cast `(new RuntimeAPI(...)).field` to `number` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   consumer.ts:92:1
+   92| new RuntimeAPI('x').field satisfies number; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consumer.ts:92:16
+   92| new RuntimeAPI('x').field satisfies number; // ERROR
+                      ^^^ [1]
+   consumer.ts:92:37
+   92| new RuntimeAPI('x').field satisfies number; // ERROR
+                                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:114:1
+
+Cannot cast `value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:114:1
+   114| value satisfies string; // ERROR
+        ^^^^^
+
+References:
+   cjs.d.ts:11:23
+    11|   export const value: number;
+                              ^^^^^^ [1]
+   consumer.ts:114:17
+   114| value satisfies string; // ERROR
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.ts:119:6
+
+Cannot call `call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.ts:119:6
+   119| call(1); // ERROR
+             ^ [1]
+
+References:
+   cjs_function.d.ts:8:35
+     8| declare const implementation: (s: string) => number;
+                                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.ts:17:22
+
+Cannot resolve name `Item`. [cannot-resolve-name]
+
+   17|   type Unqualified = Item; // ERROR
+                            ^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- local.ts:22:10
+
+Cannot call `API.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.ts:22:10
+   22| API.call(1); // ERROR
+                ^ [1]
+
+References:
+   local.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.ts:23:1
+
+Cannot cast `API.call(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.ts:23:1
+   23| API.call('x') satisfies string; // ERROR
+       ^^^^^^^^^^^^^
+
+References:
+   local.ts:8:46
+    8| declare const implementation: (s: string) => number;
+                                                    ^^^^^^ [1]
+   local.ts:23:25
+   23| API.call('x') satisfies string; // ERROR
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.ts:25:12
+
+Cannot call `API.helper` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.ts:25:12
+   25| API.helper(1); // ERROR
+                  ^ [1]
+
+References:
+   local.ts:16:29
+   16|   export function helper(s: string): number;
+                                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.ts:29:27
+
+Cannot assign `'x'` to `badItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   local.ts:29:27
+   29| const badItem: API.Item = 'x'; // ERROR
+                                 ^^^ [1]
+
+References:
+   local.ts:29:16
+   29| const badItem: API.Item = 'x'; // ERROR
+                      ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.ts:30:5
+
+Cannot get `API.Item` because property `Item` is missing in
+`{readonly Member: typeof Member, readonly call: (s: string) => number, readonly helper: (s: string) ...` [1].
+[prop-missing]
+
+   local.ts:30:5
+   30| API.Item; // ERROR
+           ^^^^
+
+References:
+   local.ts:12:19
+   12| declare namespace API {
+                         ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.ts:34:1
+
+Cannot cast `API.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.ts:34:1
+   34| API.value satisfies string; // ERROR
+       ^^^^^^^^^
+
+References:
+   local.ts:14:23
+   14|   export const value: number;
+                             ^^^^^^ [1]
+   local.ts:34:21
+   34| API.value satisfies string; // ERROR
+                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.ts:36:1
+
+Cannot cast `(new API.Member()).field` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   local.ts:36:1
+   36| new API.Member().field satisfies string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   local.ts:15:32
+   15|   export class Member { field: number; }
+                                      ^^^^^^ [1]
+   local.ts:36:34
+   36| new API.Member().field satisfies string; // ERROR
+                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.ts:40:12
+
+Cannot resolve name `unknownValue`. [cannot-resolve-name]
+
+   40|   export { unknownValue as call, type UnknownType as Item }; // ERROR
+                  ^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- local.ts:40:39
+
+Cannot resolve name `UnknownType`. [cannot-resolve-name]
+
+   40|   export { unknownValue as call, type UnknownType as Item }; // ERROR
+                                             ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- local.ts:45:3
+
+Cannot use variable declaration statements with in `declare namespace`. The statement will be ignored.
+[unsupported-syntax]
+
+   45|   export const initialized: number = 1; // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- local.ts:46:3
+
+Cannot use function declaration statements with in `declare namespace`. The statement will be ignored.
+[unsupported-syntax]
+
+   46|   export function implemented(): number { return 1; } // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- local.ts:55:36
+
+Cannot assign `1` to `badTypeItem` because `1` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   local.ts:55:36
+   55| const badTypeItem: TypeOnly.Item = 1; // ERROR
+                                          ^ [1]
+
+References:
+   local.ts:55:20
+   55| const badTypeItem: TypeOnly.Item = 1; // ERROR
+                          ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.ts:56:1
+
+Cannot use type-only namespace `TypeOnly` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
+[type-as-value]
+
+   local.ts:56:1
+   56| TypeOnly; // ERROR
+       ^^^^^^^^
+
+References:
+   local.ts:50:19
+   50| declare namespace TypeOnly {
+                         ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- merged.ts:23:5
+
+Cannot call `API` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   merged.ts:23:5
+   23| API(1); // ERROR
+           ^ [1]
+
+References:
+   merged.ts:13:25
+   13| declare function API(s: string): number;
+                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:25:10
+
+Cannot call `API.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   merged.ts:25:10
+   25| API.call(1); // ERROR
+                ^ [1]
+
+References:
+   merged.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- merged.ts:26:1
+
+Cannot cast `API.call(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   merged.ts:26:1
+   26| API.call('x') satisfies string; // ERROR
+       ^^^^^^^^^^^^^
+
+References:
+   merged.ts:8:46
+    8| declare const implementation: (s: string) => number;
+                                                    ^^^^^^ [1]
+   merged.ts:26:25
+   26| API.call('x') satisfies string; // ERROR
+                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:28:12
+
+Cannot call `API.helper` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   merged.ts:28:12
+   28| API.helper(1); // ERROR
+                  ^ [1]
+
+References:
+   merged.ts:20:29
+   20|   export function helper(s: string): number;
+                                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:33:27
+
+Cannot assign `'x'` to `badItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   merged.ts:33:27
+   33| const badItem: API.Item = 'x'; // ERROR
+                                 ^^^ [1]
+
+References:
+   merged.ts:33:16
+   33| const badItem: API.Item = 'x'; // ERROR
+                      ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:34:39
+
+Cannot assign `'x'` to `badInlineItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   merged.ts:34:39
+   34| const badInlineItem: API.InlineItem = 'x'; // ERROR
+                                             ^^^ [1]
+
+References:
+   merged.ts:34:22
+   34| const badInlineItem: API.InlineItem = 'x'; // ERROR
+                            ^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- merged.ts:35:5
+
+Cannot get `API.Item` because property `Item` is missing in
+`{Member: typeof Original, Nested: typeof Nested, readonly call: (s: string) => number, helper: (s: s...` [1].
+[prop-missing]
+
+   merged.ts:35:5
+   35| API.Item; // ERROR
+           ^^^^
+
+References:
+   merged.ts:13:21
+   13| declare function API(s: string): number;
+                           ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- merged.ts:39:1
+
+Cannot cast `API.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   merged.ts:39:1
+   39| API.value satisfies string; // ERROR
+       ^^^^^^^^^
+
+References:
+   merged.ts:18:23
+   18|   export const value: number;
+                             ^^^^^^ [1]
+   merged.ts:39:21
+   39| API.value satisfies string; // ERROR
+                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:51:36
+
+Cannot assign `'x'` to `badBeforeItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   merged.ts:51:36
+   51| const badBeforeItem: Before.Item = 'x'; // ERROR
+                                          ^^^ [1]
+
+References:
+   merged.ts:51:22
+   51| const badBeforeItem: Before.Item = 'x'; // ERROR
+                            ^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:58:17
+
+Cannot call `ValuesOnly.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   merged.ts:58:17
+   58| ValuesOnly.call(1); // ERROR
+                       ^ [1]
+
+References:
+   merged.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:70:37
+
+Cannot assign `'x'` to `badClassItem` because `"x"` [1] is incompatible with `Local` [2]. [incompatible-type]
+
+   merged.ts:70:37
+   70| const badClassItem: ClassAPI.Item = 'x'; // ERROR
+                                           ^^^ [1]
+
+References:
+   merged.ts:70:21
+   70| const badClassItem: ClassAPI.Item = 'x'; // ERROR
+                           ^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:71:10
+
+Cannot get `ClassAPI.Item` because property `Item` is missing in
+`{Member: typeof Original, readonly call: (s: string) => number, name: string, readonly value: number...` [1].
+[prop-missing]
+
+   merged.ts:71:10
+   71| ClassAPI.Item; // ERROR
+                ^^^^
+
+References:
+   merged.ts:61:15
+   61| declare class ClassAPI { field: number; }
+                     ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- merged.ts:76:1
+
+Cannot cast `(new ClassAPI()).field` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   merged.ts:76:1
+   76| new ClassAPI().field satisfies string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   merged.ts:61:33
+   61| declare class ClassAPI { field: number; }
+                                       ^^^^^^ [1]
+   merged.ts:76:32
+   76| new ClassAPI().field satisfies string; // ERROR
+                                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:78:15
+
+Cannot call `ClassAPI.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   merged.ts:78:15
+   78| ClassAPI.call(1); // ERROR
+                     ^ [1]
+
+References:
+   merged.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- merged.ts:80:1
+
+Cannot cast `ClassAPI.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   merged.ts:80:1
+   80| ClassAPI.value satisfies string; // ERROR
+       ^^^^^^^^^^^^^^
+
+References:
+   merged.ts:66:23
+   66|   export const value: number;
+                             ^^^^^^ [1]
+   merged.ts:80:26
+   80| ClassAPI.value satisfies string; // ERROR
+                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- merged.ts:93:1
+
+Cannot cast `(new RuntimeAPI(...)).field` to `number` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   merged.ts:93:1
+   93| new RuntimeAPI('x').field satisfies number; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   merged.ts:93:16
+   93| new RuntimeAPI('x').field satisfies number; // ERROR
+                      ^^^ [1]
+   merged.ts:93:37
+   93| new RuntimeAPI('x').field satisfies number; // ERROR
+                                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- merged.ts:96:17
+
+Cannot call `RuntimeAPI.call` with `1` bound to `s` because `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   merged.ts:96:17
+   96| RuntimeAPI.call(1); // ERROR
+                       ^ [1]
+
+References:
+   merged.ts:8:35
+    8| declare const implementation: (s: string) => number;
+                                         ^^^^^^ [2]
+
+
+
+Found 62 errors

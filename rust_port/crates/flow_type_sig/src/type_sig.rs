@@ -1348,7 +1348,7 @@ pub struct DefFunBinding<Loc, T> {
     pub generator: bool,
     pub fn_loc: Loc,
     pub def: FunSig<Loc, T>,
-    pub statics: BTreeMap<FlowSmolStr, (Loc, T)>,
+    pub statics: BTreeMap<FlowSmolStr, (Loc, T, Polarity)>,
     pub namespace_types: BTreeMap<FlowSmolStr, (Loc, T)>,
 }
 
@@ -1358,7 +1358,7 @@ pub struct DefDeclareFun<Loc, T> {
     pub name: FlowSmolStr,
     pub fn_loc: Loc,
     pub def: FunSig<Loc, T>,
-    pub statics: BTreeMap<FlowSmolStr, (Loc, T)>,
+    pub statics: BTreeMap<FlowSmolStr, (Loc, T, Polarity)>,
     pub namespace_types: BTreeMap<FlowSmolStr, (Loc, T)>,
     pub tail: Vec<(Loc, Loc, FunSig<Loc, T>)>,
 }
@@ -1545,7 +1545,7 @@ impl<Loc: Clone, T> Def<Loc, T> {
                 f_loc(cx, &inner.id_loc);
                 f_loc(cx, &inner.fn_loc);
                 inner.def.iter(cx, f_loc, f_t);
-                for (loc, t) in inner.statics.values() {
+                for (loc, t, _) in inner.statics.values() {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
@@ -1558,7 +1558,7 @@ impl<Loc: Clone, T> Def<Loc, T> {
                 f_loc(cx, &inner.id_loc);
                 f_loc(cx, &inner.fn_loc);
                 inner.def.iter(cx, f_loc, f_t);
-                for (loc, t) in inner.statics.values() {
+                for (loc, t, _) in inner.statics.values() {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
@@ -1689,7 +1689,9 @@ impl<Loc: Clone, T> Def<Loc, T> {
                 statics: inner
                     .statics
                     .iter()
-                    .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
+                    .map(|(k, (loc, t, polarity))| {
+                        (k.dupe(), (f_loc(cx, loc), f_t(cx, t), *polarity))
+                    })
                     .collect(),
                 namespace_types: inner
                     .namespace_types
@@ -1705,7 +1707,9 @@ impl<Loc: Clone, T> Def<Loc, T> {
                 statics: inner
                     .statics
                     .iter()
-                    .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
+                    .map(|(k, (loc, t, polarity))| {
+                        (k.dupe(), (f_loc(cx, loc), f_t(cx, t), *polarity))
+                    })
                     .collect(),
                 namespace_types: inner
                     .namespace_types

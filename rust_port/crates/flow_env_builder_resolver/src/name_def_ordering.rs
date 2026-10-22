@@ -3535,7 +3535,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             class_loc: _,
             this_super_write_locs: _,
             kind: _,
-            namespace_types,
+            namespace_members,
         }) => {
             let state = depends_of_class::<Cx, Fl>(
                 cx,
@@ -3558,7 +3558,11 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 false,
                 state,
                 |visitor| {
-                    for env_key in namespace_types.values() {
+                    for env_key in namespace_members
+                        .types
+                        .values()
+                        .chain(namespace_members.values.values())
+                    {
                         visitor.add(id_loc.dupe(), env_key.dupe());
                     }
                 },
@@ -3582,7 +3586,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
         Def::DeclaredClass(box DeclaredClassDefData {
             loc: _,
             decl,
-            namespace_types,
+            namespace_members,
         }) => {
             let state = depends_of_declared_class::<Cx, Fl>(
                 cx,
@@ -3605,7 +3609,11 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 false,
                 state,
                 |visitor| {
-                    for env_key in namespace_types.values() {
+                    for env_key in namespace_members
+                        .types
+                        .values()
+                        .chain(namespace_members.values.values())
+                    {
                         visitor.add(id_loc.dupe(), env_key.dupe());
                     }
                 },

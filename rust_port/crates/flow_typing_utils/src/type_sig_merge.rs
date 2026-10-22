@@ -2668,7 +2668,8 @@ fn merge_annot<'cx>(
         }
         Annot::FunAnnot(box (loc, def)) | Annot::MethodAnnot(box (loc, _, def)) => {
             let reason = reason::mk_annot_reason(RFunctionType, loc.dupe());
-            let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new(), false);
+            let statics =
+                merge_fun_statics(env, cx, file, reason.dupe(), std::iter::empty(), false);
             merge_fun(
                 env,
                 cx,
@@ -3111,7 +3112,16 @@ fn merge_value<'cx>(
                 statics,
             } = inner.as_ref();
             let reason = reason::func_reason(*async_, *generator, loc.dupe());
-            let statics_t = merge_fun_statics(env, cx, file, reason.dupe(), statics, true);
+            let statics_t = merge_fun_statics(
+                env,
+                cx,
+                file,
+                reason.dupe(),
+                statics
+                    .iter()
+                    .map(|(key, (loc, t))| (key, loc, t, Polarity::Neutral)),
+                true,
+            );
             merge_fun(
                 env,
                 cx,
@@ -3672,7 +3682,7 @@ fn merge_obj_value_prop<'cx>(
                  }: &ObjValueMethodData<ALoc, Pack::Packed<ALoc>>| {
                     let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
                     let statics =
-                        merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new(), true);
+                        merge_fun_statics(env, cx, file, reason.dupe(), std::iter::empty(), true);
                     merge_fun(
                         env,
                         cx,
@@ -3768,7 +3778,8 @@ fn merge_obj_annot_prop<'cx>(
             def,
         }) => {
             let reason = reason::mk_annot_reason(RFunctionType, fn_loc.dupe());
-            let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new(), false);
+            let statics =
+                merge_fun_statics(env, cx, file, reason.dupe(), std::iter::empty(), false);
             let type_ = merge_fun(
                 env,
                 cx,
@@ -4824,24 +4835,31 @@ fn merge_record<'cx>(
     merge_tparams_targs(env, cx, file, reason, t, tparams, def.strictness_kind)
 }
 
-fn merge_fun_statics<'cx>(
+fn merge_fun_statics<'cx, 'sig>(
     env: &MergeEnv,
     cx: &mut Context<'cx>,
     file: &SigFile,
     reason: Reason,
-    statics: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
+    statics: impl IntoIterator<
+        Item = (
+            &'sig FlowSmolStr,
+            &'sig ALoc,
+            &'sig Pack::Packed<ALoc>,
+            Polarity,
+        ),
+    >,
     literal: bool,
 ) -> Type {
     let props: type_::properties::PropertiesMap = statics
-        .iter()
-        .map(|(key, (id_loc, t))| {
+        .into_iter()
+        .map(|(key, id_loc, t, polarity)| {
             let t = merge_impl(env, cx, file, t, false, false);
             let prop =
                 type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
                     preferred_def_locs: None,
                     key_loc: Some(id_loc.dupe()),
                     type_: t,
-                    polarity: Polarity::Neutral,
+                    polarity,
                 })));
             (Name::new(key.dupe()), prop)
         })
@@ -5555,12 +5573,21 @@ fn merge_declare_fun<'cx>(
     name: &FlowSmolStr,
     id_loc: ALoc,
     defs: &Vec1<(ALoc, ALoc, FunSig<ALoc, Pack::Packed<ALoc>>)>,
-    statics: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
+    statics: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>, Polarity)>,
     namespace_types: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     let env = mk_merge_env(FlowOrdMap::new());
-    let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), statics, false);
+    let statics_t = merge_fun_statics(
+        &env,
+        cx,
+        file,
+        reason.dupe(),
+        statics
+            .iter()
+            .map(|(key, (loc, t, polarity))| (key, loc, t, *polarity)),
+        false,
+    );
     let ts: Vec<Type> = defs
         .iter()
         .map(|(_, fn_loc, def)| {
@@ -5720,7 +5747,17 @@ pub fn merge_def<'cx>(
         }
         Def::FunBinding(inner) => {
             let env = mk_merge_env(FlowOrdMap::new());
-            let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), &inner.statics, true);
+            let statics_t = merge_fun_statics(
+                &env,
+                cx,
+                file,
+                reason.dupe(),
+                inner
+                    .statics
+                    .iter()
+                    .map(|(key, (loc, t, polarity))| (key, loc, t, *polarity)),
+                true,
+            );
             let function_t = merge_fun(
                 &env,
                 cx,

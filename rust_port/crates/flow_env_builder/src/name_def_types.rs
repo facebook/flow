@@ -335,6 +335,12 @@ pub struct ComponentDefData {
     pub component: ast::statement::ComponentDeclaration<ALoc, ALoc>,
 }
 
+#[derive(Clone, Default)]
+pub struct ClassNamespaceMembers {
+    pub values: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    pub types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+}
+
 #[derive(Clone)]
 pub struct ClassDefData {
     pub class_: ast::class::Class<ALoc, ALoc>,
@@ -342,14 +348,14 @@ pub struct ClassDefData {
     /// A set of this and super write locations that can be resolved by resolving the class.
     pub this_super_write_locs: EnvSet<ALoc>,
     pub kind: ClassKind,
-    pub namespace_types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    pub namespace_members: ClassNamespaceMembers,
 }
 
 #[derive(Clone)]
 pub struct DeclaredClassDefData {
     pub loc: ALoc,
     pub decl: ast::statement::DeclareClass<ALoc, ALoc>,
-    pub namespace_types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    pub namespace_members: ClassNamespaceMembers,
 }
 
 #[derive(Clone)]

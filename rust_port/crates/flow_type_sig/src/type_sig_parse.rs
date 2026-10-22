@@ -16,6 +16,7 @@
 // This lazy walk is an optimization, to avoid walking parts of the AST which
 // are not reachable from the exports of a module.
 
+use std::cell::Cell;
 use std::cell::OnceCell;
 use std::cell::RefCell;
 use std::cell::UnsafeCell;
@@ -183,9 +184,10 @@ mod tparam_stack {
 // The Err constructor encodes some failure in the parsing phase. These failures
 // are detected while visiting the AST, and thus are encoded directly in the
 // signature. The compaction step is responsible for collating these errors.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub(super) enum ValRefLookup {
     ValueRefLookup,
+    NamespaceValueRefLookup(Cell<Polarity>),
     TypeRefLookup,
     TypeofRefLookup,
 }
@@ -342,6 +344,7 @@ pub(super) enum LocalBinding<'arena, 'ast> {
         def: Lazy<'arena, 'ast, Parsed<'arena, 'ast>>,
     },
     LetConstBinding {
+        is_const: bool,
         id_loc: LocNode<'arena>,
         name: FlowSmolStr,
         def: Lazy<'arena, 'ast, Parsed<'arena, 'ast>>,
@@ -371,12 +374,14 @@ pub(super) enum LocalBinding<'arena, 'ast> {
         id_loc: LocNode<'arena>,
         name: FlowSmolStr,
         def: Lazy<'arena, 'ast, ClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        namespace_values: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
         namespace_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
     },
     DeclareClassBinding {
         id_loc: LocNode<'arena>,
         name: FlowSmolStr,
         def: Lazy<'arena, 'ast, DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        namespace_values: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
         namespace_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
     },
     RecordBinding {
@@ -810,6 +815,22 @@ fn val_ref<'arena, 'ast>(
     }
 }
 
+fn namespace_value_ref<'arena, 'ast>(
+    scope: ScopeId,
+    ref_loc: LocNode<'arena>,
+    name: FlowSmolStr,
+) -> Parsed<'arena, 'ast> {
+    Parsed::ValRef {
+        lookup: ValRefLookup::NamespaceValueRefLookup(Cell::new(Polarity::Neutral)),
+        ref_: Ref {
+            ref_loc,
+            name,
+            scope,
+            resolved: OnceCell::new(),
+        },
+    }
+}
+
 fn typeof_ref<'arena, 'ast>(
     scope: ScopeId,
     ref_loc: LocNode<'arena>,
@@ -1007,6 +1028,8 @@ pub(crate) mod scope {
             name: FlowSmolStr,
             values: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             types: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
+            exported_values: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+            exported_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
             parent: ScopeId,
         },
         Module {
@@ -1204,6 +1227,8 @@ pub(crate) mod scope {
             parent,
             values: BTreeMap::new(),
             types: BTreeMap::new(),
+            exported_values: BTreeMap::new(),
+            exported_types: BTreeMap::new(),
         })
     }
 
@@ -1310,9 +1335,12 @@ pub(crate) mod scope {
     ) -> LocalBinding<'arena, 'ast> {
         match kind {
             ast::VariableKind::Var => LocalBinding::VarBinding { id_loc, name, def },
-            ast::VariableKind::Let | ast::VariableKind::Const => {
-                LocalBinding::LetConstBinding { id_loc, name, def }
-            }
+            ast::VariableKind::Let | ast::VariableKind::Const => LocalBinding::LetConstBinding {
+                is_const: kind == ast::VariableKind::Const,
+                id_loc,
+                name,
+                def,
+            },
         }
     }
 
@@ -1950,6 +1978,51 @@ pub(crate) mod scope {
         }
     }
 
+    fn push_value_def_with_namespace<'arena, 'ast>(
+        scopes: &mut Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        id: ScopeId,
+        mut def: LocalBinding<'arena, 'ast>,
+    ) -> LocalDefNode<'arena, 'ast> {
+        let (name, namespace_types) = match &mut def {
+            LocalBinding::ClassBinding {
+                name,
+                namespace_types,
+                ..
+            }
+            | LocalBinding::DeclareClassBinding {
+                name,
+                namespace_types,
+                ..
+            }
+            | LocalBinding::FunBinding {
+                name,
+                namespace_types,
+                ..
+            }
+            | LocalBinding::DeclareFunBinding {
+                name,
+                namespace_types,
+                ..
+            } => (name, namespace_types),
+            _ => return tbls.push_local_def(def),
+        };
+        if let Some(BindingNode::LocalBinding(node)) = lookup_type_in_scope(scopes, id, name) {
+            let types = match node.0.data_mut().deref_mut() {
+                LocalBinding::NamespaceBinding { values, types, .. } if values.is_empty() => {
+                    Some(std::mem::take(types))
+                }
+                _ => None,
+            };
+            if let Some(types) = types {
+                namespace_types.extend(types);
+                *node.0.data_mut() = def;
+                return node;
+            }
+        }
+        tbls.push_local_def(def)
+    }
+
     fn bind_local<'arena, 'ast>(
         type_only: bool,
         id: ScopeId,
@@ -1971,7 +2044,7 @@ pub(crate) mod scope {
             |scopes, tbls, existing_binding| match existing_binding {
                 Some(b) => (b, false),
                 None => {
-                    let node = tbls.push_local_def(def);
+                    let node = push_value_def_with_namespace(scopes, tbls, id, def);
                     k(scopes, &name, node.dupe());
                     (BindingNode::LocalBinding(node), true)
                 }
@@ -3318,15 +3391,21 @@ pub(crate) mod scope {
                 _ => None,
             };
         if let Some(class_node) = merged_class_node {
-            let (dc_id_loc, dc_name, dc_namespace_types) = {
+            let (dc_id_loc, dc_name, dc_namespace_values, dc_namespace_types) = {
                 let data = class_node.0.data();
                 match &*data {
                     LocalBinding::DeclareClassBinding {
                         id_loc,
                         name,
+                        namespace_values,
                         namespace_types,
                         ..
-                    } => (id_loc.dupe(), name.dupe(), namespace_types.clone()),
+                    } => (
+                        id_loc.dupe(),
+                        name.dupe(),
+                        namespace_values.clone(),
+                        namespace_types.clone(),
+                    ),
                     _ => unreachable!(),
                 }
             };
@@ -3340,6 +3419,7 @@ pub(crate) mod scope {
                         def: tbls.lazy(Box::new(|_, _, _| {
                             unreachable!("placeholder during interface merge")
                         })),
+                        namespace_values: dc_namespace_values.clone(),
                         namespace_types: dc_namespace_types.clone(),
                     },
                 );
@@ -3390,6 +3470,7 @@ pub(crate) mod scope {
                     id_loc: dc_id_loc,
                     name: dc_name,
                     def: merged_def,
+                    namespace_values: dc_namespace_values,
                     namespace_types: dc_namespace_types,
                 };
             }
@@ -3542,6 +3623,7 @@ pub(crate) mod scope {
                 id_loc,
                 name: name.clone(),
                 def,
+                namespace_values: BTreeMap::new(),
                 namespace_types: BTreeMap::new(),
             },
             k,
@@ -3683,6 +3765,7 @@ pub(crate) mod scope {
                         id_loc,
                         name: name.clone(),
                         def: merged_def,
+                        namespace_values: BTreeMap::new(),
                         namespace_types: BTreeMap::new(),
                     };
                     let node = match prior_interface_node {
@@ -3695,7 +3778,7 @@ pub(crate) mod scope {
                             }
                             type_node
                         }
-                        None => tbls.push_local_def(dc_local),
+                        None => push_value_def_with_namespace(scopes, tbls, id, dc_local),
                     };
                     k(scopes, &name, node.dupe());
                     (BindingNode::LocalBinding(node), true)
@@ -3817,7 +3900,7 @@ pub(crate) mod scope {
                         statics,
                         namespace_types,
                     };
-                    let node = tbls.push_local_def(def);
+                    let node = push_value_def_with_namespace(scopes, tbls, id, def);
                     k(scopes, &name, node.dupe());
                     (BindingNode::LocalBinding(node), true)
                 }
@@ -3867,7 +3950,7 @@ pub(crate) mod scope {
                         statics,
                         namespace_types,
                     };
-                    let node = tbls.push_local_def(def);
+                    let node = push_value_def_with_namespace(scopes, tbls, id, def);
                     k(scopes, &name, node.dupe());
                     (BindingNode::LocalBinding(node), true)
                 }
@@ -3987,6 +4070,7 @@ pub(crate) mod scope {
             name.clone(),
             id_loc.dupe(),
             LocalBinding::LetConstBinding {
+                is_const: true,
                 id_loc,
                 name: name.clone(),
                 def,
@@ -4216,6 +4300,32 @@ pub(crate) mod scope {
         local: &ast::Identifier<Loc, Loc>,
         exported: Option<&ast::Identifier<Loc, Loc>>,
     ) {
+        if let Scope::DeclareNamespace {
+            exported_values,
+            exported_types,
+            ..
+        } = scopes.get_mut(id)
+        {
+            let local_loc = tbls.push_loc(local.loc.dupe());
+            let exported = exported.unwrap_or(local);
+            let loc = tbls.push_loc(exported.loc.dupe());
+            let type_only = kind == ast::statement::ExportKind::ExportType;
+            let member = (
+                loc.dupe(),
+                if type_only {
+                    val_ref(true, id, local_loc, local.name.dupe())
+                } else {
+                    namespace_value_ref(id, local_loc, local.name.dupe())
+                },
+            );
+            let exports = if type_only {
+                exported_types
+            } else {
+                exported_values
+            };
+            exports.insert(exported.name.dupe(), member);
+            return;
+        }
         let (ref_loc, name, exported_name) = match exported {
             None => (
                 local.loc.dupe(),
@@ -4500,7 +4610,9 @@ pub(crate) mod scope {
                                 }
                             }
                             Parsed::ValRef {
-                                lookup: ValRefLookup::ValueRefLookup,
+                                lookup:
+                                    ValRefLookup::ValueRefLookup
+                                    | ValRefLookup::NamespaceValueRefLookup(_),
                                 ref_:
                                     Ref {
                                         ref_loc: _,
@@ -4721,7 +4833,7 @@ pub(crate) mod scope {
                             name.clone(),
                             (
                                 id_loc.dupe(),
-                                val_ref(false, scope, id_loc.dupe(), name.clone()),
+                                namespace_value_ref(scope, id_loc.dupe(), name.clone()),
                             ),
                         )),
                         LocalBinding::DeclareFunBinding { defs, .. } => {
@@ -4730,7 +4842,7 @@ pub(crate) mod scope {
                                 name.clone(),
                                 (
                                     id_loc.dupe(),
-                                    val_ref(false, scope, id_loc.dupe(), name.clone()),
+                                    namespace_value_ref(scope, id_loc.dupe(), name.clone()),
                                 ),
                             ))
                         }
@@ -4790,7 +4902,9 @@ pub(crate) mod scope {
                         (true, ValRefLookup::TypeRefLookup)
                             | (
                                 false,
-                                ValRefLookup::ValueRefLookup | ValRefLookup::TypeofRefLookup,
+                                ValRefLookup::ValueRefLookup
+                                    | ValRefLookup::NamespaceValueRefLookup(_)
+                                    | ValRefLookup::TypeofRefLookup,
                             )
                     ) =>
             {
@@ -4953,15 +5067,21 @@ pub(crate) mod scope {
         existing_entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
         entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
     ) -> bool {
-        let (dc_id_loc, dc_name, dc_namespace_types) = {
+        let (dc_id_loc, dc_name, dc_namespace_values, dc_namespace_types) = {
             let data = class_node.0.data();
             match &*data {
                 LocalBinding::DeclareClassBinding {
                     id_loc,
                     name,
+                    namespace_values,
                     namespace_types,
                     ..
-                } => (id_loc.dupe(), name.dupe(), namespace_types.clone()),
+                } => (
+                    id_loc.dupe(),
+                    name.dupe(),
+                    namespace_values.clone(),
+                    namespace_types.clone(),
+                ),
                 _ => return false,
             }
         };
@@ -4983,6 +5103,7 @@ pub(crate) mod scope {
                     def: Lazy::new(Box::new(|_, _, _| {
                         unreachable!("placeholder during namespace declare-class merge")
                     })),
+                    namespace_values: dc_namespace_values.clone(),
                     namespace_types: dc_namespace_types.clone(),
                 },
             );
@@ -5073,6 +5194,7 @@ pub(crate) mod scope {
                 id_loc: dc_id_loc,
                 name: dc_name,
                 def: merged_def,
+                namespace_values: dc_namespace_values,
                 namespace_types: dc_namespace_types,
             };
         }
@@ -5437,6 +5559,16 @@ pub(crate) mod scope {
                 statics: existing_values,
                 namespace_types: existing_types,
                 ..
+            }
+            | LocalBinding::ClassBinding {
+                namespace_values: existing_values,
+                namespace_types: existing_types,
+                ..
+            }
+            | LocalBinding::DeclareClassBinding {
+                namespace_values: existing_values,
+                namespace_types: existing_types,
+                ..
             } => {
                 merge_namespace_entries(
                     scopes,
@@ -5448,26 +5580,50 @@ pub(crate) mod scope {
                 );
                 true
             }
-            LocalBinding::ClassBinding {
-                namespace_types: existing_types,
-                ..
-            }
-            | LocalBinding::DeclareClassBinding {
-                namespace_types: existing_types,
-                ..
-            } => {
-                let mut dummy_values = BTreeMap::new();
-                merge_namespace_entries(
-                    scopes,
-                    tbls,
-                    &mut dummy_values,
-                    existing_types,
-                    ns_values,
-                    ns_types,
-                );
-                true
-            }
             _ => false,
+        }
+    }
+
+    pub(super) fn resolve_declare_namespace_exports(
+        opts: &TypeSigOptions,
+        scopes: &mut Scopes<'_, '_>,
+        id: ScopeId,
+    ) {
+        if !opts.is_ts_file {
+            return;
+        }
+        let exports = match scopes.get_mut(id) {
+            Scope::DeclareNamespace {
+                exported_values, ..
+            } => std::mem::take(exported_values),
+            _ => return,
+        };
+        for (name, (loc, mut value)) in exports {
+            let type_only = if let Parsed::ValRef { lookup, ref_ } = &mut value {
+                if lookup_value(scopes, id, &ref_.name).is_none()
+                    && lookup_type(scopes, id, &ref_.name).is_some()
+                {
+                    *lookup = ValRefLookup::TypeRefLookup;
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+            if let Scope::DeclareNamespace {
+                exported_values,
+                exported_types,
+                ..
+            } = scopes.get_mut(id)
+            {
+                let members = if type_only {
+                    exported_types
+                } else {
+                    exported_values
+                };
+                members.insert(name, (loc, value));
+            }
         }
     }
 
@@ -5483,11 +5639,15 @@ pub(crate) mod scope {
             Scope::DeclareNamespace {
                 values,
                 types,
+                exported_values,
+                exported_types,
                 parent,
                 ..
             } => {
-                let (ns_values, ns_types) =
+                let (mut ns_values, mut ns_types) =
                     namespace_binding_of_values_and_types(id, values, types);
+                ns_values.extend(exported_values.clone());
+                ns_types.extend(exported_types.clone());
                 (ns_values, ns_types, *parent)
             }
             _ => panic!("The scope must be DeclareNamespace"),
@@ -5600,11 +5760,15 @@ pub(crate) mod scope {
             Scope::DeclareNamespace {
                 values,
                 types,
+                exported_values,
+                exported_types,
                 parent,
                 ..
             } => {
-                let (ns_values, ns_types) =
+                let (mut ns_values, mut ns_types) =
                     namespace_binding_of_values_and_types(id, values, types);
+                ns_values.extend(exported_values.clone());
+                ns_types.extend(exported_types.clone());
                 let parent = *parent;
                 let parent = binding_scope(scopes, parent);
                 let (parent_values, parent_types) = match scopes.get_mut(parent) {
@@ -13515,6 +13679,7 @@ fn namespace_decl<'arena: 'ast, 'ast, F>(
             }) {
                 visit_statement(opts, scope, scopes, tbls, s);
             }
+            scope::resolve_declare_namespace_exports(opts, scopes, scope);
             scope::finalize_declare_namespace_exn(scope, scopes, tbls, is_type_only, id_loc, name);
         }
     }
@@ -13932,6 +14097,12 @@ fn declare_export_decl<'arena: 'ast, 'ast>(
                 ast::statement::declare_namespace::Id::Local(id) => {
                     let id_loc = tbls.push_loc(id.loc.dupe());
                     let name = id.name.dupe();
+                    let is_type_only = ns
+                        .body
+                        .1
+                        .body
+                        .iter()
+                        .all(ast_utils::is_type_only_declaration_statement);
                     let stmts = ns.body.1.body.iter().filter(|stmt| {
                         ast_utils::acceptable_statement_in_declaration_context(
                             ast_utils::DeclarationContext::DeclareNamespace,
@@ -13943,11 +14114,12 @@ fn declare_export_decl<'arena: 'ast, 'ast>(
                     for s in stmts {
                         statement(opts, ns_scope, scopes, tbls, s);
                     }
+                    scope::resolve_declare_namespace_exports(opts, scopes, ns_scope);
                     scope::finalize_declare_namespace_exported_exn(
                         ns_scope,
                         scopes,
                         tbls,
-                        false,
+                        is_type_only,
                         id_loc,
                         name,
                         |scopes, name, binding| {

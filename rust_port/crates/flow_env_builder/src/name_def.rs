@@ -43,11 +43,14 @@ use crate::assertion_call_target::AssertionTarget;
 use crate::assertion_call_target::bare_asserted_argument;
 use crate::env_api::AutocompleteHooks;
 use crate::env_api::DefLocType;
+use crate::env_api::EnvInfo;
 use crate::env_api::EnvInvariant;
 use crate::env_api::EnvInvariantFailure;
 use crate::env_api::EnvKey;
 use crate::env_api::EnvMap;
 use crate::env_api::EnvSet;
+use crate::env_api::ValKind;
+use crate::env_api::has_assigning_write;
 use crate::name_def_types::*;
 use crate::nonvoid_return;
 use crate::provider_api;
@@ -1482,6 +1485,7 @@ fn add_namespace_member(
 
 fn collect_declared_namespace_members(
     statements: &[ast::statement::Statement<ALoc, ALoc>],
+    env_info: &EnvInfo<ALoc>,
 ) -> (StaticsMap, NamespaceTypesMap) {
     use ast::pattern::Pattern;
     use ast::statement::StatementInner;
@@ -1493,6 +1497,7 @@ fn collect_declared_namespace_members(
         stmt: &ast::statement::StatementInner<ALoc, ALoc>,
         values: &mut StaticsMap,
         types: &mut NamespaceTypesMap,
+        env_info: &EnvInfo<ALoc>,
     ) {
         match stmt {
             StatementInner::DeclareNamespace { inner, .. } => {
@@ -1557,7 +1562,81 @@ fn collect_declared_namespace_members(
             // unwrapped form for merging purposes. Common in .d.ts files.
             StatementInner::ExportNamedDeclaration { inner, .. } => {
                 if let Some(decl) = &inner.declaration {
-                    collect_one(decl.deref(), values, types);
+                    collect_one(decl.deref(), values, types, env_info);
+                }
+                if inner.source.is_none()
+                    && let Some(
+                        ast::statement::export_named_declaration::Specifier::ExportSpecifiers(
+                            specifiers,
+                        ),
+                    ) = &inner.specifiers
+                {
+                    for specifier in specifiers {
+                        let Some(read) = env_info.env_values.get(&specifier.local.loc) else {
+                            continue;
+                        };
+                        let Some(def_loc) = &read.def_loc else {
+                            continue;
+                        };
+                        let key = EnvKey::ordinary(def_loc.dupe());
+                        if !has_assigning_write(key.dupe(), &env_info.env_entries) {
+                            continue;
+                        }
+                        let kind = flow_parser::ast_utils::effective_export_kind(
+                            inner.export_kind,
+                            specifier.export_kind,
+                        );
+                        let type_only = kind == ast::statement::ExportKind::ExportType
+                            || matches!(read.val_kind, ValKind::Type { .. });
+                        let exported = specifier.exported.as_ref().unwrap_or(&specifier.local);
+                        let members = if type_only { &mut *types } else { &mut *values };
+                        members.entry(exported.name.dupe()).or_insert(key);
+                    }
+                }
+            }
+            StatementInner::DeclareExportDeclaration { inner, .. } => {
+                use ast::statement::declare_export_declaration::Declaration;
+                match &inner.declaration {
+                    Some(Declaration::Variable { declaration, .. }) => {
+                        for decl in declaration.declarations.iter() {
+                            if let Pattern::Identifier { inner: pat_id, .. } = &decl.id {
+                                add_namespace_member(values, &pat_id.name.name, &pat_id.name.loc);
+                            }
+                        }
+                    }
+                    Some(Declaration::Function { declaration, .. }) => {
+                        if let Some(id) = &declaration.id {
+                            add_namespace_member(values, &id.name, &id.loc);
+                        }
+                    }
+                    Some(Declaration::Class { declaration, .. }) => {
+                        add_namespace_member(values, &declaration.id.name, &declaration.id.loc);
+                        types.insert(
+                            declaration.id.name.dupe(),
+                            EnvKey::ordinary(declaration.id.loc.dupe()),
+                        );
+                    }
+                    Some(Declaration::NamedType { declaration, .. }) => {
+                        add_namespace_member(types, &declaration.id.name, &declaration.id.loc)
+                    }
+                    Some(Declaration::NamedOpaqueType { declaration, .. }) => {
+                        add_namespace_member(types, &declaration.id.name, &declaration.id.loc)
+                    }
+                    Some(Declaration::Interface { declaration, .. }) => {
+                        add_namespace_member(types, &declaration.id.name, &declaration.id.loc)
+                    }
+                    Some(Declaration::Component { declaration, .. }) => {
+                        add_namespace_member(values, &declaration.id.name, &declaration.id.loc)
+                    }
+                    Some(Declaration::Enum { declaration, .. }) => {
+                        add_namespace_member(values, &declaration.id.name, &declaration.id.loc)
+                    }
+                    Some(Declaration::Namespace { declaration, .. }) => {
+                        if let ast::statement::declare_namespace::Id::Local(id) = &declaration.id {
+                            add_namespace_member(values, &id.name, &id.loc);
+                        }
+                    }
+                    Some(Declaration::DefaultType { .. }) | None => {}
                 }
             }
             _ => {}
@@ -1565,7 +1644,7 @@ fn collect_declared_namespace_members(
     }
 
     for stmt in statements {
-        collect_one(stmt.deref(), &mut values, &mut types);
+        collect_one(stmt.deref(), &mut values, &mut types, env_info);
     }
 
     (values, types)
@@ -1640,7 +1719,7 @@ struct DefFinder<'a> {
     autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
     react_jsx: bool,
     assertion_calls: BTreeMap<ALoc, AssertionInfo>,
-    env_info: &'a crate::env_api::EnvInfo<ALoc>,
+    env_info: &'a EnvInfo<ALoc>,
 
     // Accumulator (the result being built)
     env_map: EnvEntriesMap,
@@ -1657,7 +1736,7 @@ impl<'a> DefFinder<'a> {
         autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
         react_jsx: bool,
         assertion_calls: BTreeMap<ALoc, AssertionInfo>,
-        env_info: &'a crate::env_api::EnvInfo<ALoc>,
+        env_info: &'a EnvInfo<ALoc>,
         toplevel_scope: ScopeKind,
     ) -> Self {
         Self {
@@ -1742,7 +1821,7 @@ impl<'a> DefFinder<'a> {
     }
 
     fn add_binding(&mut self, kind_and_loc: EnvKey<ALoc>, reason: VirtualReason<ALoc>, src: Def) {
-        if crate::env_api::has_assigning_write(kind_and_loc.dupe(), &self.env_info.env_entries) {
+        if has_assigning_write(kind_and_loc.dupe(), &self.env_info.env_entries) {
             self.force_add_binding(kind_and_loc, reason, src);
         }
     }
@@ -1754,7 +1833,7 @@ impl<'a> DefFinder<'a> {
         definition_kind: DefinitionReferenceKind,
         src: Def,
     ) {
-        if crate::env_api::has_assigning_write(kind_and_loc.dupe(), &self.env_info.env_entries) {
+        if has_assigning_write(kind_and_loc.dupe(), &self.env_info.env_entries) {
             self.force_add_binding_with_kind(kind_and_loc, reason, definition_kind, src);
         }
     }
@@ -2790,7 +2869,7 @@ impl<'a> DefFinder<'a> {
     fn class_internal(
         &mut self,
         kind: ClassKind,
-        namespace_types: &NamespaceTypesMap,
+        namespace_members: &ClassNamespaceMembers,
         loc: ALoc,
         expr: &ast::class::Class<ALoc, ALoc>,
     ) -> Result<(), EnvInvariant<ALoc>> {
@@ -2884,7 +2963,7 @@ impl<'a> DefFinder<'a> {
                             class_: expr.clone(),
                             this_super_write_locs,
                             kind,
-                            namespace_types: namespace_types.clone(),
+                            namespace_members: namespace_members.clone(),
                         })),
                     );
                 }
@@ -2901,7 +2980,7 @@ impl<'a> DefFinder<'a> {
                             class_: expr.clone(),
                             this_super_write_locs,
                             kind,
-                            namespace_types: namespace_types.clone(),
+                            namespace_members: namespace_members.clone(),
                         })),
                     );
                 }
@@ -2913,7 +2992,7 @@ impl<'a> DefFinder<'a> {
 
     fn visit_declare_class(
         &mut self,
-        namespace_types: &NamespaceTypesMap,
+        namespace_members: &ClassNamespaceMembers,
         loc: ALoc,
         decl: &ast::statement::DeclareClass<ALoc, ALoc>,
     ) -> Result<(), EnvInvariant<ALoc>> {
@@ -2929,7 +3008,7 @@ impl<'a> DefFinder<'a> {
             Def::DeclaredClass(Box::new(DeclaredClassDefData {
                 loc: loc.dupe(),
                 decl: decl.clone(),
-                namespace_types: namespace_types.clone(),
+                namespace_members: namespace_members.clone(),
             })),
         );
         ast_visitor::declare_class_default(self, &loc, decl)?;
@@ -4987,7 +5066,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                     };
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
-                    if crate::env_api::has_assigning_write(
+                    if has_assigning_write(
                         EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
                         &self.env_info.env_entries,
                     ) {
@@ -5035,7 +5114,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                             };
                             let id_loc = id.loc.dupe();
                             let name = &id.name;
-                            if crate::env_api::has_assigning_write(
+                            if has_assigning_write(
                                 EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
                                 &self.env_info.env_entries,
                             ) {
@@ -5087,7 +5166,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                             };
                             let id_loc = id.loc.dupe();
                             let name = &id.name;
-                            if crate::env_api::has_assigning_write(
+                            if has_assigning_write(
                                 EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
                                 &self.env_info.env_entries,
                             ) {
@@ -5116,7 +5195,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                     };
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
-                    if crate::env_api::has_assigning_write(
+                    if has_assigning_write(
                         EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
                         &self.env_info.env_entries,
                     ) {
@@ -5317,7 +5396,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                             .get(&id.name)
                             .and_then(|function_state| function_state.merge_candidate_loc.as_ref())
                             .is_some_and(|function_loc| function_loc < &id.loc);
-                        let has_namespace_value_write = crate::env_api::has_assigning_write(
+                        let has_namespace_value_write = has_assigning_write(
                             EnvKey::ordinary(id.loc.dupe()),
                             &self.env_info.env_entries,
                         );
@@ -5325,7 +5404,10 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                             && (is_type_only_ns || (function_first && !has_namespace_value_write));
                         if should_merge {
                             let (namespace_values, namespace_types) =
-                                collect_declared_namespace_members(&inner.body.1.body);
+                                collect_declared_namespace_members(
+                                    &inner.body.1.body,
+                                    self.env_info,
+                                );
                             // Initialize a fresh function_state if the namespace appears
                             // before its sibling function/class — the sibling's arm will
                             // add its deferred_visit (and set merge_candidate_loc) later.
@@ -5347,7 +5429,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                                 if let std::collections::btree_map::Entry::Vacant(entry) =
                                     function_state.namespace_types.entry(member_name)
                                 {
-                                    if crate::env_api::has_assigning_write(
+                                    if has_assigning_write(
                                         env_key.dupe(),
                                         &self.env_info.env_entries,
                                     ) {
@@ -5413,7 +5495,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                     let id_loc = var_id.loc.dupe();
                     let name = &var_id.name;
 
-                    if crate::env_api::has_assigning_write(
+                    if has_assigning_write(
                         EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc),
                         &self.env_info.env_entries,
                     ) {
@@ -5503,7 +5585,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                             let id_loc = var_id.loc.dupe();
                             let name = &var_id.name;
 
-                            if crate::env_api::has_assigning_write(
+                            if has_assigning_write(
                                 EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc),
                                 &self.env_info.env_entries,
                             ) {
@@ -5566,14 +5648,29 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                         )?;
                     }
                     DeferredVisit::ClassDecl { loc, class_, kind } => {
-                        self.class_internal(kind, &namespace_types, loc, &class_)?;
+                        self.class_internal(
+                            kind,
+                            &ClassNamespaceMembers {
+                                values: statics.clone(),
+                                types: namespace_types.clone(),
+                            },
+                            loc,
+                            &class_,
+                        )?;
                     }
                     DeferredVisit::DeclareClassDecl { loc, decl } => {
-                        self.visit_declare_class(&namespace_types, loc.dupe(), &decl)?;
+                        self.visit_declare_class(
+                            &ClassNamespaceMembers {
+                                values: statics.clone(),
+                                types: namespace_types.clone(),
+                            },
+                            loc.dupe(),
+                            &decl,
+                        )?;
                     }
                 }
             }
-            if namespace_types.is_empty() {
+            if namespace_types.is_empty() && statics.is_empty() {
                 for (loc, decl) in declarations.iter() {
                     self.declare_function(loc, decl)?;
                 }
@@ -5945,7 +6042,12 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
         loc: &ALoc,
         cls: &ast::class::Class<ALoc, ALoc>,
     ) -> Result<(), EnvInvariant<ALoc>> {
-        self.class_internal(ClassKind::Class, &BTreeMap::new(), loc.dupe(), cls)?;
+        self.class_internal(
+            ClassKind::Class,
+            &ClassNamespaceMembers::default(),
+            loc.dupe(),
+            cls,
+        )?;
         Ok(())
     }
 
@@ -6079,7 +6181,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
         loc: &ALoc,
         decl: &ast::statement::DeclareClass<ALoc, ALoc>,
     ) -> Result<(), EnvInvariant<ALoc>> {
-        self.visit_declare_class(&BTreeMap::new(), loc.dupe(), decl)?;
+        self.visit_declare_class(&ClassNamespaceMembers::default(), loc.dupe(), decl)?;
         Ok(())
     }
 
@@ -7172,7 +7274,7 @@ pub fn find_defs(
     autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
     react_jsx: bool,
     assertion_calls: BTreeMap<ALoc, AssertionInfo>,
-    env_info: &crate::env_api::EnvInfo<ALoc>,
+    env_info: &EnvInfo<ALoc>,
     toplevel_scope_kind: ScopeKind,
     ast: &ast::Program<ALoc, ALoc>,
 ) -> Result<(EnvEntriesMap, HintMap), EnvInvariant<ALoc>> {

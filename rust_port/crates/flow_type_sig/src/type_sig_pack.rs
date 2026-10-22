@@ -662,7 +662,9 @@ pub(crate) fn pack_parsed<'arena, 'ast>(
         }
         parse::Parsed::ValRef { lookup, ref_ } => {
             let type_ref = match lookup {
-                parse::ValRefLookup::ValueRefLookup | parse::ValRefLookup::TypeofRefLookup => false,
+                parse::ValRefLookup::ValueRefLookup
+                | parse::ValRefLookup::NamespaceValueRefLookup(_)
+                | parse::ValRefLookup::TypeofRefLookup => false,
                 parse::ValRefLookup::TypeRefLookup => true,
             };
             Packed::Ref(pack_ref(type_ref, ref_))
@@ -766,6 +768,16 @@ fn pack_ref(type_ref: bool, ref_: &parse::Ref<'_, '_>) -> PackedRef<Index<Loc>> 
     }
 }
 
+fn namespace_member_polarity(parsed: &parse::Parsed<'_, '_>) -> Polarity {
+    match parsed {
+        parse::Parsed::ValRef {
+            lookup: parse::ValRefLookup::NamespaceValueRefLookup(polarity),
+            ..
+        } => polarity.get(),
+        _ => Polarity::Neutral,
+    }
+}
+
 pub(crate) fn pack_local_binding<'arena, 'ast>(
     cx: &mut Cx,
     binding: &parse::LocalBinding<'arena, 'ast>,
@@ -787,7 +799,9 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 def,
             }))
         }
-        parse::LocalBinding::LetConstBinding { id_loc, name, def } => {
+        parse::LocalBinding::LetConstBinding {
+            id_loc, name, def, ..
+        } => {
             let id_loc = pack_loc(id_loc);
             let def = {
                 let parsed = def.as_already_forced();
@@ -869,13 +883,23 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
             id_loc,
             name,
             def,
+            namespace_values,
             namespace_types,
         } => {
             let id_loc = pack_loc(id_loc);
-            let def = {
+            let mut def = {
                 let parsed = def.as_already_forced();
                 pack_class(cx, parsed)
             };
+            for (name, (loc, value)) in namespace_values {
+                def.static_props.entry(name.dupe()).or_insert_with(|| {
+                    ObjValueProp::ObjValueField(Box::new((
+                        pack_loc(loc),
+                        pack_parsed(cx, value),
+                        namespace_member_polarity(value),
+                    )))
+                });
+            }
             let namespace_types = namespace_types
                 .iter()
                 .map(|(k, (id_loc, t))| {
@@ -895,13 +919,23 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
             id_loc,
             name,
             def,
+            namespace_values,
             namespace_types,
         } => {
             let id_loc = pack_loc(id_loc);
-            let def = {
+            let mut def = {
                 let parsed = def.as_already_forced();
                 pack_declare_class(cx, parsed)
             };
+            for (name, (loc, value)) in namespace_values {
+                def.static_props.entry(name.dupe()).or_insert_with(|| {
+                    InterfaceProp::InterfaceField(Box::new((
+                        Some(pack_loc(loc)),
+                        pack_parsed(cx, value),
+                        namespace_member_polarity(value),
+                    )))
+                });
+            }
             let namespace_types = namespace_types
                 .iter()
                 .map(|(k, (id_loc, t))| {
@@ -962,9 +996,10 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
             let statics = statics
                 .iter()
                 .map(|(k, (id_loc, t))| {
+                    let polarity = namespace_member_polarity(t);
                     let id_loc = pack_loc(id_loc);
                     let t = pack_parsed(cx, t);
-                    (k.dupe(), (id_loc, t))
+                    (k.dupe(), (id_loc, t, polarity))
                 })
                 .collect();
             let namespace_types = namespace_types
@@ -1034,9 +1069,10 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
             let statics = statics
                 .iter()
                 .map(|(k, (id_loc, t))| {
+                    let polarity = namespace_member_polarity(t);
                     let id_loc = pack_loc(id_loc);
                     let t = pack_parsed(cx, t);
-                    (k.dupe(), (id_loc, t))
+                    (k.dupe(), (id_loc, t, polarity))
                 })
                 .collect();
             let namespace_types = namespace_types

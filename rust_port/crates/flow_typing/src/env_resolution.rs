@@ -21,8 +21,11 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
+use flow_analysis::bindings::Kind;
 use flow_common::enclosing_context::EnclosingContext;
+use flow_common::files;
 use flow_common::flow_import_specifier;
+use flow_common::polarity::Polarity;
 use flow_common::reason;
 use flow_common::reason::Reason;
 use flow_common::subst_name::SubstName;
@@ -995,6 +998,22 @@ fn resolve_annotated_function<'cx>(
     ))
 }
 
+fn namespace_member_polarity(cx: &Context<'_>, key: &env_api::EnvKey<ALoc>) -> Polarity {
+    if cx
+        .environment()
+        .var_info
+        .scopes
+        .def_of_use_opt(&key.loc)
+        .is_some_and(|def| {
+            def.is(&key.loc) && matches!(def.kind, Kind::Const | Kind::DeclaredConst)
+        })
+    {
+        Polarity::Positive
+    } else {
+        Polarity::Neutral
+    }
+}
+
 fn resolve_function_statics<'cx>(
     cx: &mut Context<'cx>,
     reason: Reason,
@@ -1010,7 +1029,7 @@ fn resolve_function_statics<'cx>(
                     preferred_def_locs: None,
                     key_loc: Some(env_key.loc.dupe()),
                     type_: expr_t,
-                    polarity: flow_common::polarity::Polarity::Neutral,
+                    polarity: namespace_member_polarity(cx, env_key),
                 })));
             (reason::Name::new(name.dupe()), field)
         })
@@ -1026,6 +1045,38 @@ fn resolve_function_statics<'cx>(
         Type::new(TypeInner::FunProtoT(reason)),
         false,
     )
+}
+
+fn extend_class_statics(
+    cx: &mut Context<'_>,
+    class_t: &Type,
+    values: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
+) {
+    if values.is_empty() {
+        return;
+    }
+    if let Some(statics) = type_util::statics(class_t)
+        && let TypeInner::DefT(_, def) = statics.deref()
+        && let DefTInner::ObjT(object) = def.deref()
+    {
+        let mut props = cx.find_props(object.props_tmap.dupe());
+        for (name, key) in values {
+            let name = reason::Name::new(name.dupe());
+            if !props.contains_key(&name) {
+                let t = type_env::checked_find_loc_env_write(cx, key.def_loc_type, key.loc.dupe());
+                props.insert(
+                    name,
+                    type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
+                        preferred_def_locs: None,
+                        key_loc: Some(key.loc.dupe()),
+                        type_: t,
+                        polarity: namespace_member_polarity(cx, key),
+                    }))),
+                );
+            }
+        }
+        cx.add_property_map(object.props_tmap.dupe(), props);
+    }
 }
 
 fn replace_function_statics(function_t: Type, statics_t: &Type) -> Type {
@@ -2385,6 +2436,17 @@ fn resolve_import<'cx>(
             local,
         } => {
             let import_kind = kind.unwrap_or(import_kind);
+            if files::has_ts_ext(cx.file())
+                && import_kind == ast::statement::ImportKind::ImportValue
+            {
+                cx.add_ts_import_provenance(
+                    id_loc.dupe(),
+                    flow_import_specifier::FlowImportSpecifier::Userland(
+                        module_name_userland.dupe(),
+                    ),
+                    remote.dupe(),
+                );
+            }
             let singleton_concretize =
                 |cx: &mut Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
                     flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
@@ -2428,6 +2490,17 @@ fn resolve_import<'cx>(
             }
         }
         Import::Default(local_name) => {
+            if files::has_ts_ext(cx.file())
+                && import_kind == ast::statement::ImportKind::ImportValue
+            {
+                cx.add_ts_import_provenance(
+                    id_loc.dupe(),
+                    flow_import_specifier::FlowImportSpecifier::Userland(
+                        module_name_userland.dupe(),
+                    ),
+                    FlowSmolStr::new_inline("default"),
+                );
+            }
             let singleton_concretize =
                 |cx: &mut Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
                     flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
@@ -2913,7 +2986,7 @@ fn resolve<'cx>(
             class_loc,
             kind,
             this_super_write_locs: _,
-            namespace_types,
+            namespace_members,
         }) => {
             let class_t = resolve_class(
                 cx,
@@ -2923,14 +2996,15 @@ fn resolve<'cx>(
                 class_loc.dupe(),
                 class_,
             )?;
-            if namespace_types.is_empty() {
+            extend_class_statics(cx, &class_t, &namespace_members.values);
+            if namespace_members.types.is_empty() {
                 class_t
             } else {
                 let (name, name_loc) = match &class_.id {
                     Some(id) => (id.name.dupe(), id.loc.dupe()),
                     None => (FlowSmolStr::new(""), class_loc.dupe()),
                 };
-                wrap_with_namespace_types(cx, &name, name_loc, class_t, namespace_types)
+                wrap_with_namespace_types(cx, &name, name_loc, class_t, &namespace_members.types)
             }
         }
         Def::Record(box RecordDefData {
@@ -2981,12 +3055,13 @@ fn resolve<'cx>(
         Def::DeclaredClass(box DeclaredClassDefData {
             loc,
             decl,
-            namespace_types,
+            namespace_members,
         }) => {
             let class_t = resolve_declare_class(cx, loc.dupe(), decl)?;
+            extend_class_statics(cx, &class_t, &namespace_members.values);
             let id_name = &decl.id.name;
             let id_loc = decl.id.loc.dupe();
-            wrap_with_namespace_types(cx, id_name, id_loc, class_t, namespace_types)
+            wrap_with_namespace_types(cx, id_name, id_loc, class_t, &namespace_members.types)
         }
         Def::DeclaredComponent(loc, comp) => resolve_declare_component(cx, loc.dupe(), comp)?,
         Def::Enum {

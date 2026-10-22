@@ -5970,10 +5970,13 @@ pub mod cjs_extract_named_exports_t_kit {
     use flow_typing_type::type_::ExportKind;
     use flow_typing_type::type_::ModuleType;
     use flow_typing_type::type_::ModuleTypeInner;
+    use flow_typing_type::type_::NamedSymbol;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::exports;
+    use flow_typing_type::type_::poly;
     use flow_typing_type::type_::properties;
+    use flow_typing_type::type_util;
     use flow_utils_concurrency::job_error::JobError;
 
     use super::export_named_t_kit;
@@ -6012,6 +6015,73 @@ pub mod cjs_extract_named_exports_t_kit {
                     &module_type,
                 );
                 Ok(module_type)
+            }
+            TypeInner::DefT(_, def)
+                if let DefTInner::PolyT(poly) = def.deref()
+                    && let TypeInner::DefT(_, inner_def) = poly.t_out.deref()
+                    && matches!(inner_def.deref(), DefTInner::ClassT(_)) =>
+            {
+                let Some(statics) = type_util::statics(&poly.t_out) else {
+                    return Ok(local_module);
+                };
+                let mut module_export_types = local_module.module_export_types.clone();
+                module_export_types.value_exports_tmap = cx.make_export_map(exports::T::new());
+                let extracted = on_type(
+                    cx,
+                    concretize,
+                    reason,
+                    ModuleType::new(ModuleTypeInner {
+                        module_reason: local_module.module_reason.dupe(),
+                        module_export_types,
+                        module_is_strict: local_module.module_is_strict,
+                        module_available_platforms: local_module.module_available_platforms.clone(),
+                    }),
+                    statics.dupe(),
+                )?;
+                let bind = |t: &Type| {
+                    type_util::poly_type_of_tparam_list(
+                        poly::Id::generate_id(),
+                        poly.tparams_loc.dupe(),
+                        poly.tparams.dupe(),
+                        t.dupe(),
+                        poly.strictness_kind,
+                        poly.kind,
+                    )
+                };
+                let named = cx
+                    .find_exports(extracted.module_export_types.value_exports_tmap)
+                    .iter()
+                    .map(|(name, symbol)| {
+                        (
+                            name.dupe(),
+                            NamedSymbol::new(
+                                symbol.name_loc.dupe(),
+                                symbol.preferred_def_locs.clone(),
+                                bind(&symbol.type_),
+                                symbol.type_for_extends.as_ref().map(bind),
+                            ),
+                        )
+                    })
+                    .collect();
+                export_named_t_kit::mod_module_t(
+                    cx,
+                    named,
+                    exports::T::new(),
+                    ExportKind::DirectExport,
+                    &local_module,
+                );
+                Ok(local_module)
+            }
+            TypeInner::DefT(_, def)
+                if matches!(
+                    def.deref(),
+                    DefTInner::FunT(_, _) | DefTInner::ClassT(_) | DefTInner::PolyT(_)
+                ) =>
+            {
+                match type_util::statics(&t) {
+                    Some(statics) => on_type(cx, concretize, reason, local_module, statics.dupe()),
+                    None => Ok(local_module),
+                }
             }
             // ObjT CommonJS export values have their properties turned into named exports.
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ObjT(_)) => {

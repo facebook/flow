@@ -188,98 +188,114 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- es6modules.js:49:9
 
-Cannot import `doesntExist2` because there is no `doesntExist2` export in `./CommonJS_Clobbering_Class`. Did you mean
-`import doesntExist2 from "..."`? [missing-export]
+Cannot import `doesntExist2` because there is no `doesntExist2` export in `./CommonJS_Clobbering_Class`.
+[missing-export]
 
    49| import {doesntExist2} from "./CommonJS_Clobbering_Class"; // Error: Not an exported binding
                ^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:55:9
+Error ----------------------------------------------------------------------------------------------- es6modules.js:53:9
 
-Cannot import `staticNumber1` because there is no `staticNumber1` export in `./CommonJS_Clobbering_Class`. Did you mean
-`import staticNumber1 from "..."`? [missing-export]
+Cannot import `baseProp` because there is no `baseProp` export in `./CommonJS_Clobbering_Class`. [missing-export]
 
-   55| import {staticNumber1, baseProp, childProp} from "./CommonJS_Clobbering_Class"; // Error
-               ^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- es6modules.js:55:24
-
-Cannot import `baseProp` because there is no `baseProp` export in `./CommonJS_Clobbering_Class`. Did you mean
-`import baseProp from "..."`? [missing-export]
-
-   55| import {staticNumber1, baseProp, childProp} from "./CommonJS_Clobbering_Class"; // Error
-                              ^^^^^^^^
+   53| import {baseProp} from "./CommonJS_Clobbering_Class"; // Error: inherited baseProp is not a named export
+               ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:55:34
+Error ----------------------------------------------------------------------------------------------- es6modules.js:55:1
 
-Cannot import `childProp` because there is no `childProp` export in `./CommonJS_Clobbering_Class`. Did you mean
-`import childProp from "..."`? [missing-export]
+Cannot cast `staticNumber1()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   55| import {staticNumber1, baseProp, childProp} from "./CommonJS_Clobbering_Class"; // Error
-                                        ^^^^^^^^^
+   es6modules.js:55:1
+   55| staticNumber1() as string; // ERROR: number ~> string
+       ^^^^^^^^^^^^^^^
+
+References:
+   CommonJS_Clobbering_Class.js:8:26
+    8|   static staticNumber1():number { return 1; }
+                                ^^^^^^ [1]
+   es6modules.js:55:20
+   55| staticNumber1() as string; // ERROR: number ~> string
+                          ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:59:23
+Error ----------------------------------------------------------------------------------------------- es6modules.js:57:1
+
+Cannot cast `childProp` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   es6modules.js:57:1
+   57| childProp as string; // ERROR: number ~> string
+       ^^^^^^^^^
+
+References:
+   CommonJS_Clobbering_Class.js:6:21
+    6|   static childProp: number;
+                           ^^^^^^ [1]
+   es6modules.js:57:14
+   57| childProp as string; // ERROR: number ~> string
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- es6modules.js:61:23
 
 Cannot get `(new CJS_Clobb_Class()).doesntExist` because property `doesntExist` is missing in `CJS_Clobb_Class` [1].
 [prop-missing]
 
-   es6modules.js:59:23
-   59| new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
+   es6modules.js:61:23
+   61| new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
                              ^^^^^^^^^^^
 
 References:
-   es6modules.js:59:1
-   59| new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
+   es6modules.js:61:1
+   61| new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
        ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:61:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:63:18
 
 Cannot assign `CJS_Clobb_Class.staticNumber2()` to `h2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:61:18
-   61| var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
+   es6modules.js:63:18
+   63| var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    CommonJS_Clobbering_Class.js:9:26
     9|   static staticNumber2():number { return 2; }
                                 ^^^^^^ [1]
-   es6modules.js:61:9
-   61| var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
+   es6modules.js:63:9
+   63| var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:63:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:65:18
 
 Cannot assign `(new CJS_Clobb_Class()).instNumber1()` to `h4` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:63:18
-   63| var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
+   es6modules.js:65:18
+   65| var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    CommonJS_Clobbering_Class.js:12:17
    12|   instNumber1():number { return 1; }
                        ^^^^^^ [1]
-   es6modules.js:63:9
-   63| var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
+   es6modules.js:65:9
+   65| var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:66:5
+Error ----------------------------------------------------------------------------------------------- es6modules.js:68:5
 
-Cannot use `new` on `{readonly default: typeof CJS_Clobb_Class}` [1]. Only classes and interfaces with a construct
-signature can be constructed. [invalid-constructor]
+Cannot use `new` on
+`{readonly childProp: number, readonly default: typeof CJS_Clobb_Class, readonly name: string, readon...` [1]. Only
+classes and interfaces with a construct signature can be constructed. [invalid-constructor]
 
-   es6modules.js:66:5
-   66| new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
+   es6modules.js:68:5
+   68| new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
            ^^^^^^^^^^^^^^^^^^
 
 References:
@@ -287,106 +303,110 @@ References:
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:67:37
+Error ---------------------------------------------------------------------------------------------- es6modules.js:70:18
 
-Cannot call `CJS_Clobb_Class_NS.staticNumber3` because property `staticNumber3` is missing in
-`{readonly default: typeof CJS_Clobb_Class}` [1]. [prop-missing]
+Cannot assign `CJS_Clobb_Class_NS.staticNumber3()` to `i4` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
-   es6modules.js:67:37
-   67| var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
-                                           ^^^^^^^^^^^^^
+   es6modules.js:70:18
+   70| var i4: string = CJS_Clobb_Class_NS.staticNumber3(); // ERROR: number ~> string
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   CommonJS_Clobbering_Class.js
-   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   CommonJS_Clobbering_Class.js:10:26
+   10|   static staticNumber3():number { return 3; }
+                                ^^^^^^ [1]
+   es6modules.js:70:9
+   70| var i4: string = CJS_Clobb_Class_NS.staticNumber3(); // ERROR: number ~> string
+               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:69:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:72:18
 
 Cannot assign `(new CJS_Clobb_Class_NS.default()).instNumber2()` to `i3` because `number` [1] is incompatible with
 `string` [2]. [incompatible-type]
 
-   es6modules.js:69:18
-   69| var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
+   es6modules.js:72:18
+   72| var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    CommonJS_Clobbering_Class.js:13:17
    13|   instNumber2():number { return 2; }
                        ^^^^^^ [1]
-   es6modules.js:69:9
-   69| var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
+   es6modules.js:72:9
+   72| var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:75:9
+Error ----------------------------------------------------------------------------------------------- es6modules.js:78:9
 
 Cannot import `doesntExist3` because there is no `doesntExist3` export in `./CommonJS_Named`. [missing-export]
 
-   75| import {doesntExist3} from "./CommonJS_Named"; // Error: Not an exported binding
+   78| import {doesntExist3} from "./CommonJS_Named"; // Error: Not an exported binding
                ^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:79:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:82:18
 
 Cannot assign `numberValue2` to `j2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:79:18
-   79| var j2: string = numberValue2; // Error: number ~> string
+   es6modules.js:82:18
+   82| var j2: string = numberValue2; // Error: number ~> string
                         ^^^^^^^^^^^^
 
 References:
    CommonJS_Named.js:2:24
     2| exports.numberValue2 = 2;
                               ^ [1]
-   es6modules.js:79:9
-   79| var j2: string = numberValue2; // Error: number ~> string
+   es6modules.js:82:9
+   82| var j2: string = numberValue2; // Error: number ~> string
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:83:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:86:18
 
 Cannot assign `numVal3` to `k2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:83:18
-   83| var k2: string = numVal3; // Error: number ~> string
+   es6modules.js:86:18
+   86| var k2: string = numVal3; // Error: number ~> string
                         ^^^^^^^
 
 References:
    CommonJS_Named.js:3:24
     3| exports.numberValue3 = 3;
                               ^ [1]
-   es6modules.js:83:9
-   83| var k2: string = numVal3; // Error: number ~> string
+   es6modules.js:86:9
+   86| var k2: string = numVal3; // Error: number ~> string
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:87:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:90:18
 
 Cannot assign `CJS_Named.numberValue1` to `l2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:87:18
-   87| var l2: string = CJS_Named.numberValue1; // Error: number ~> string
+   es6modules.js:90:18
+   90| var l2: string = CJS_Named.numberValue1; // Error: number ~> string
                         ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    CommonJS_Named.js:1:24
     1| exports.numberValue1 = 1;
                               ^ [1]
-   es6modules.js:87:9
-   87| var l2: string = CJS_Named.numberValue1; // Error: number ~> string
+   es6modules.js:90:9
+   90| var l2: string = CJS_Named.numberValue1; // Error: number ~> string
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:88:11
+Error ---------------------------------------------------------------------------------------------- es6modules.js:91:11
 
 Cannot get `CJS_Named.doesntExist` because property `doesntExist` is missing in
 `{readonly default: {readonly numberValue1: number, readonly numberValue2: number, readonly numberVal...` [1].
 [missing-export]
 
-   es6modules.js:88:11
-   88| CJS_Named.doesntExist; // Error: doesntExist isn't a property
+   es6modules.js:91:11
+   91| CJS_Named.doesntExist; // Error: doesntExist isn't a property
                  ^^^^^^^^^^^
 
 References:
@@ -394,664 +414,664 @@ References:
    ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:92:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:95:18
 
 Cannot assign `CJS_Named_NS.default.numberValue4` to `m2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:92:18
-   92| var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
+   es6modules.js:95:18
+   95| var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    CommonJS_Named.js:4:24
     4| exports.numberValue4 = 4;
                               ^ [1]
-   es6modules.js:92:9
-   92| var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
+   es6modules.js:95:9
+   95| var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:93:18
+Error ---------------------------------------------------------------------------------------------- es6modules.js:96:18
 
 Cannot assign `CJS_Named_NS.numberValue4` to `m3` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:93:18
-   93| var m3: string = CJS_Named_NS.numberValue4; // Error: number ~> string
+   es6modules.js:96:18
+   96| var m3: string = CJS_Named_NS.numberValue4; // Error: number ~> string
                         ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    CommonJS_Named.js:4:24
     4| exports.numberValue4 = 4;
                               ^ [1]
-   es6modules.js:93:9
-   93| var m3: string = CJS_Named_NS.numberValue4; // Error: number ~> string
+   es6modules.js:96:9
+   96| var m3: string = CJS_Named_NS.numberValue4; // Error: number ~> string
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- es6modules.js:99:9
+Error ---------------------------------------------------------------------------------------------- es6modules.js:102:9
 
 Cannot import `doesntExist4` because there is no `doesntExist4` export in `./ES6_Default_AnonFunction1`. Did you mean
 `import doesntExist4 from "..."`? [missing-export]
 
-   99| import {doesntExist4} from "./ES6_Default_AnonFunction1"; // Error: Not an exported binding
-               ^^^^^^^^^^^^
+   102| import {doesntExist4} from "./ES6_Default_AnonFunction1"; // Error: Not an exported binding
+                ^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:103:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:106:18
 
 Cannot assign `ES6_Def_AnonFunc1()` to `n2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:103:18
-   103| var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
+   es6modules.js:106:18
+   106| var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Default_AnonFunction1.js:1:30
      1| declare export default () => number;
                                      ^^^^^^ [1]
-   es6modules.js:103:9
-   103| var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
+   es6modules.js:106:9
+   106| var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:107:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:110:18
 
 Cannot assign `ES6_Def_NamedFunc1()` to `o2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:107:18
-   107| var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
+   es6modules.js:110:18
+   110| var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Default_NamedFunction1.js:1:39
      1| declare export default function foo():number;
                                               ^^^^^^ [1]
-   es6modules.js:107:9
-   107| var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
+   es6modules.js:110:9
+   110| var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:115:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:118:18
 
 Cannot assign `(new ES6_Def_NamedClass1()).givesANum()` to `q2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:115:18
-   115| var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
+   es6modules.js:118:18
+   118| var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Default_NamedClass1.js:1:53
      1| declare export default class FooImpl { givesANum(): number; };
                                                             ^^^^^^ [1]
-   es6modules.js:115:9
-   115| var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
+   es6modules.js:118:9
+   118| var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:121:8
+Error ---------------------------------------------------------------------------------------------- es6modules.js:124:8
 
 Cannot import a default export because there is no default export in `./ES6_Named1`. [missing-export]
 
-   121| import doesntExist5 from "./ES6_Named1"; // Error: Not an exported binding
+   124| import doesntExist5 from "./ES6_Named1"; // Error: Not an exported binding
                ^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:125:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:128:18
 
 Cannot assign `specifierNumber1_1` to `r2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:125:18
-   125| var r2: string = specifierNumber1_1; // Error: number ~> string
+   es6modules.js:128:18
+   128| var r2: string = specifierNumber1_1; // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:1:26
      1| const specifierNumber1 = 1;
                                  ^ [1]
-   es6modules.js:125:9
-   125| var r2: string = specifierNumber1_1; // Error: number ~> string
+   es6modules.js:128:9
+   128| var r2: string = specifierNumber1_1; // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:129:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:132:18
 
 Cannot assign `specifierNumber2Renamed` to `s2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:129:18
-   129| var s2: string = specifierNumber2Renamed; // Error: number ~> string
+   es6modules.js:132:18
+   132| var s2: string = specifierNumber2Renamed; // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:2:26
      2| const specifierNumber2 = 2;
                                  ^ [1]
-   es6modules.js:129:9
-   129| var s2: string = specifierNumber2Renamed; // Error: number ~> string
+   es6modules.js:132:9
+   132| var s2: string = specifierNumber2Renamed; // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:133:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:136:18
 
 Cannot assign `specifierNumber3Renamed` to `t2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:133:18
-   133| var t2: string = specifierNumber3Renamed; // Error: number ~> string
+   es6modules.js:136:18
+   136| var t2: string = specifierNumber3Renamed; // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:3:26
      3| const specifierNumber3 = 3;
                                  ^ [1]
-   es6modules.js:133:9
-   133| var t2: string = specifierNumber3Renamed; // Error: number ~> string
+   es6modules.js:136:9
+   136| var t2: string = specifierNumber3Renamed; // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:138:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:141:18
 
 Cannot assign `groupedSpecifierNumber1` to `u3` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:138:18
-   138| var u3: string = groupedSpecifierNumber1; // Error: number ~> string
+   es6modules.js:141:18
+   141| var u3: string = groupedSpecifierNumber1; // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:4:33
      4| const groupedSpecifierNumber1 = 1;
                                         ^ [1]
-   es6modules.js:138:9
-   138| var u3: string = groupedSpecifierNumber1; // Error: number ~> string
+   es6modules.js:141:9
+   141| var u3: string = groupedSpecifierNumber1; // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:139:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:142:18
 
 Cannot assign `groupedSpecifierNumber2` to `u4` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:139:18
-   139| var u4: string = groupedSpecifierNumber2; // Error: number ~> string
+   es6modules.js:142:18
+   142| var u4: string = groupedSpecifierNumber2; // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:5:33
      5| const groupedSpecifierNumber2 = 2;
                                         ^ [1]
-   es6modules.js:139:9
-   139| var u4: string = groupedSpecifierNumber2; // Error: number ~> string
+   es6modules.js:142:9
+   142| var u4: string = groupedSpecifierNumber2; // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:143:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:146:18
 
 Cannot assign `givesANumber()` to `v2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:143:18
-   143| var v2: string = givesANumber(); // Error: number ~> string
+   es6modules.js:146:18
+   146| var v2: string = givesANumber(); // Error: number ~> string
                          ^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:12:41
     12| declare export function givesANumber(): number;
                                                 ^^^^^^ [1]
-   es6modules.js:143:9
-   143| var v2: string = givesANumber(); // Error: number ~> string
+   es6modules.js:146:9
+   146| var v2: string = givesANumber(); // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:147:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:150:18
 
 Cannot assign `(new NumberGenerator()).givesANumber()` to `w2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:147:18
-   147| var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
+   es6modules.js:150:18
+   150| var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:13:56
     13| declare export class NumberGenerator { givesANumber(): number; };
                                                                ^^^^^^ [1]
-   es6modules.js:147:9
-   147| var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
+   es6modules.js:150:9
+   150| var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:152:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:155:18
 
 Cannot assign `varDeclNumber1` to `x3` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:152:18
-   152| var x3: string = varDeclNumber1; // Error: number ~> string
+   es6modules.js:155:18
+   155| var x3: string = varDeclNumber1; // Error: number ~> string
                          ^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:15:36
     15| declare export var varDeclNumber1: number;
                                            ^^^^^^ [1]
-   es6modules.js:152:9
-   152| var x3: string = varDeclNumber1; // Error: number ~> string
+   es6modules.js:155:9
+   155| var x3: string = varDeclNumber1; // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:153:18
+Error --------------------------------------------------------------------------------------------- es6modules.js:156:18
 
 Cannot assign `varDeclNumber2` to `x4` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:153:18
-   153| var x4: string = varDeclNumber2; // Error: number ~> string
+   es6modules.js:156:18
+   156| var x4: string = varDeclNumber2; // Error: number ~> string
                          ^^^^^^^^^^^^^^
 
 References:
    ES6_Named1.js:16:36
     16| declare export var varDeclNumber2: number;
                                            ^^^^^^ [1]
-   es6modules.js:153:9
-   153| var x4: string = varDeclNumber2; // Error: number ~> string
+   es6modules.js:156:9
+   156| var x4: string = varDeclNumber2; // Error: number ~> string
                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:157:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:160:19
 
 Cannot assign `numberValue4` to `aa2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:157:19
-   157| var aa2: string = numberValue4; // Error: number ~> string
+   es6modules.js:160:19
+   160| var aa2: string = numberValue4; // Error: number ~> string
                           ^^^^^^^^^^^^
 
 References:
    ES6_ExportFrom_Source1.js:1:34
      1| declare export var numberValue1: number;
                                          ^^^^^^ [1]
-   es6modules.js:157:10
-   157| var aa2: string = numberValue4; // Error: number ~> string
+   es6modules.js:160:10
+   160| var aa2: string = numberValue4; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:161:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:164:19
 
 Cannot assign `numberValue2_renamed` to `ab2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:161:19
-   161| var ab2: string = numberValue2_renamed; // Error: number ~> string
+   es6modules.js:164:19
+   164| var ab2: string = numberValue2_renamed; // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_ExportFrom_Source1.js:2:34
      2| declare export var numberValue2: number;
                                          ^^^^^^ [1]
-   es6modules.js:161:10
-   161| var ab2: string = numberValue2_renamed; // Error: number ~> string
+   es6modules.js:164:10
+   164| var ab2: string = numberValue2_renamed; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:165:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:168:19
 
 Cannot assign `numberValue5` to `ac2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:165:19
-   165| var ac2: string = numberValue5; // Error: number ~> string
+   es6modules.js:168:19
+   168| var ac2: string = numberValue5; // Error: number ~> string
                           ^^^^^^^^^^^^
 
 References:
    ES6_ExportAllFrom_Source1.js:1:34
      1| declare export var numberValue1: number;
                                          ^^^^^^ [1]
-   es6modules.js:165:10
-   165| var ac2: string = numberValue5; // Error: number ~> string
+   es6modules.js:168:10
+   168| var ac2: string = numberValue5; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:171:40
+Error --------------------------------------------------------------------------------------------- es6modules.js:174:40
 
 Cannot get `require(...).doesntExist` because property `doesntExist` is missing in
 `{readonly default: () => number}` [1]. [missing-export]
 
-   es6modules.js:171:40
-   171| require('./ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
+   es6modules.js:174:40
+   174| require('./ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
                                                ^^^^^^^^^^^
 
 References:
-   es6modules.js:171:1
-   171| require('./ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
+   es6modules.js:174:1
+   174| require('./ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:175:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:178:19
 
 Cannot assign `ES6_Def_AnonFunc2()` to `ad2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:175:19
-   175| var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
+   es6modules.js:178:19
+   178| var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Default_AnonFunction2.js:1:29
      1| declare export default () =>number;
                                     ^^^^^^ [1]
-   es6modules.js:175:10
-   175| var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
+   es6modules.js:178:10
+   178| var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:179:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:182:19
 
 Cannot assign `ES6_Def_NamedFunc2()` to `ae2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:179:19
-   179| var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
+   es6modules.js:182:19
+   182| var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Default_NamedFunction2.js:1:39
      1| declare export default function foo():number;
                                               ^^^^^^ [1]
-   es6modules.js:179:10
-   179| var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
+   es6modules.js:182:10
+   182| var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:183:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:186:19
 
 Cannot assign `(new ES6_Def_NamedClass2()).givesANum()` to `ag2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:183:19
-   183| var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
+   es6modules.js:186:19
+   186| var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Default_NamedClass2.js:1:49
      1| declare export default class Foo { givesANum(): number; };
                                                         ^^^^^^ [1]
-   es6modules.js:183:10
-   183| var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
+   es6modules.js:186:10
+   186| var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:191:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:194:19
 
 Cannot assign `specifierNumber4` to `ah2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:191:19
-   191| var ah2: string = specifierNumber4; // Error: number ~> string
+   es6modules.js:194:19
+   194| var ah2: string = specifierNumber4; // Error: number ~> string
                           ^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named2.js:1:26
      1| const specifierNumber4 = 1;
                                  ^ [1]
-   es6modules.js:191:10
-   191| var ah2: string = specifierNumber4; // Error: number ~> string
+   es6modules.js:194:10
+   194| var ah2: string = specifierNumber4; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:195:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:198:19
 
 Cannot assign `specifierNumber5Renamed` to `ai2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:195:19
-   195| var ai2: string = specifierNumber5Renamed; // Error: number ~> string
+   es6modules.js:198:19
+   198| var ai2: string = specifierNumber5Renamed; // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named2.js:2:26
      2| const specifierNumber5 = 2;
                                  ^ [1]
-   es6modules.js:195:10
-   195| var ai2: string = specifierNumber5Renamed; // Error: number ~> string
+   es6modules.js:198:10
+   198| var ai2: string = specifierNumber5Renamed; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:201:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:204:19
 
 Cannot assign `groupedSpecifierNumber3` to `aj3` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:201:19
-   201| var aj3: string = groupedSpecifierNumber3; // Error: number ~> string
+   es6modules.js:204:19
+   204| var aj3: string = groupedSpecifierNumber3; // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named2.js:3:33
      3| const groupedSpecifierNumber3 = 1;
                                         ^ [1]
-   es6modules.js:201:10
-   201| var aj3: string = groupedSpecifierNumber3; // Error: number ~> string
+   es6modules.js:204:10
+   204| var aj3: string = groupedSpecifierNumber3; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:202:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:205:19
 
 Cannot assign `groupedSpecifierNumber4` to `aj4` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:202:19
-   202| var aj4: string = groupedSpecifierNumber4; // Error: number ~> string
+   es6modules.js:205:19
+   205| var aj4: string = groupedSpecifierNumber4; // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named2.js:4:33
      4| const groupedSpecifierNumber4 = 2;
                                         ^ [1]
-   es6modules.js:202:10
-   202| var aj4: string = groupedSpecifierNumber4; // Error: number ~> string
+   es6modules.js:205:10
+   205| var aj4: string = groupedSpecifierNumber4; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:206:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:209:19
 
 Cannot assign `givesANumber2()` to `ak2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:206:19
-   206| var ak2: string = givesANumber2(); // Error: number ~> string
+   es6modules.js:209:19
+   209| var ak2: string = givesANumber2(); // Error: number ~> string
                           ^^^^^^^^^^^^^^^
 
 References:
    ES6_Named2.js:10:42
     10| declare export function givesANumber2(): number;
                                                  ^^^^^^ [1]
-   es6modules.js:206:10
-   206| var ak2: string = givesANumber2(); // Error: number ~> string
+   es6modules.js:209:10
+   209| var ak2: string = givesANumber2(); // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:210:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:213:19
 
 Cannot assign `(new NumberGenerator2()).givesANumber()` to `al2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:210:19
-   210| var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
+   es6modules.js:213:19
+   213| var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_Named2.js:11:57
     11| declare export class NumberGenerator2 { givesANumber(): number; };
                                                                 ^^^^^^ [1]
-   es6modules.js:210:10
-   210| var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
+   es6modules.js:213:10
+   213| var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:216:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:219:19
 
 Cannot assign `varDeclNumber3` to `am3` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:216:19
-   216| var am3: string = varDeclNumber3; // Error: number ~> string
+   es6modules.js:219:19
+   219| var am3: string = varDeclNumber3; // Error: number ~> string
                           ^^^^^^^^^^^^^^
 
 References:
    ES6_Named2.js:13:36
     13| declare export var varDeclNumber3: number;
                                            ^^^^^^ [1]
-   es6modules.js:216:10
-   216| var am3: string = varDeclNumber3; // Error: number ~> string
+   es6modules.js:219:10
+   219| var am3: string = varDeclNumber3; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:217:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:220:19
 
 Cannot assign `varDeclNumber4` to `am4` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:217:19
-   217| var am4: string = varDeclNumber4; // Error: number ~> string
+   es6modules.js:220:19
+   220| var am4: string = varDeclNumber4; // Error: number ~> string
                           ^^^^^^^^^^^^^^
 
 References:
    ES6_Named2.js:14:36
     14| declare export var varDeclNumber4: number;
                                            ^^^^^^ [1]
-   es6modules.js:217:10
-   217| var am4: string = varDeclNumber4; // Error: number ~> string
+   es6modules.js:220:10
+   220| var am4: string = varDeclNumber4; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:221:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:224:19
 
 Cannot assign `numberValue6` to `ap2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:221:19
-   221| var ap2: string = numberValue6; // Error: number ~> string
+   es6modules.js:224:19
+   224| var ap2: string = numberValue6; // Error: number ~> string
                           ^^^^^^^^^^^^
 
 References:
    ES6_ExportFrom_Source2.js:1:34
      1| declare export var numberValue1: number;
                                          ^^^^^^ [1]
-   es6modules.js:221:10
-   221| var ap2: string = numberValue6; // Error: number ~> string
+   es6modules.js:224:10
+   224| var ap2: string = numberValue6; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:225:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:228:19
 
 Cannot assign `numberValue2_renamed2` to `aq2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   es6modules.js:225:19
-   225| var aq2: string = numberValue2_renamed2; // Error: number ~> string
+   es6modules.js:228:19
+   228| var aq2: string = numberValue2_renamed2; // Error: number ~> string
                           ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ES6_ExportFrom_Source2.js:2:34
      2| declare export var numberValue2: number;
                                          ^^^^^^ [1]
-   es6modules.js:225:10
-   225| var aq2: string = numberValue2_renamed2; // Error: number ~> string
+   es6modules.js:228:10
+   228| var aq2: string = numberValue2_renamed2; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:229:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:232:19
 
 Cannot assign `numberValue7` to `ar2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:229:19
-   229| var ar2: string = numberValue7; // Error: number ~> string
+   es6modules.js:232:19
+   232| var ar2: string = numberValue7; // Error: number ~> string
                           ^^^^^^^^^^^^
 
 References:
    ES6_ExportAllFrom_Source2.js:1:34
      1| declare export var numberValue2: number;
                                          ^^^^^^ [1]
-   es6modules.js:229:10
-   229| var ar2: string = numberValue7; // Error: number ~> string
+   es6modules.js:232:10
+   232| var ar2: string = numberValue7; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:238:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:241:19
 
 Cannot assign `defaultNum` to `as2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:238:19
-   238| var as2: string = defaultNum; // Error: number ~> string
+   es6modules.js:241:19
+   241| var as2: string = defaultNum; // Error: number ~> string
                           ^^^^^^^^^^
 
 References:
    ES6_DefaultAndNamed.js:1:24
      1| declare export default number;
                                ^^^^^^ [1]
-   es6modules.js:238:10
-   238| var as2: string = defaultNum; // Error: number ~> string
+   es6modules.js:241:10
+   241| var as2: string = defaultNum; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:241:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:244:19
 
 Cannot assign `namedStr` to `as4` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   es6modules.js:241:19
-   241| var as4: number = namedStr; // Error: string ~> number
+   es6modules.js:244:19
+   244| var as4: number = namedStr; // Error: string ~> number
                           ^^^^^^^^
 
 References:
    ES6_DefaultAndNamed.js:2:25
      2| declare export var str: string;
                                 ^^^^^^ [1]
-   es6modules.js:241:10
-   241| var as4: number = namedStr; // Error: string ~> number
+   es6modules.js:244:10
+   244| var as4: number = namedStr; // Error: string ~> number
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:252:8
+Error ---------------------------------------------------------------------------------------------- es6modules.js:255:8
 
 Cannot import a default export because there is no default export in `./ES6_Named1`. Did you mean
 `import {specifierNumber1} from "./ES6_Named1"`? [missing-export]
 
-   252| import specifierNumber1 from "./ES6_Named1"; // Error: Did you mean `import {specifierNumber1} from ...`?
+   255| import specifierNumber1 from "./ES6_Named1"; // Error: Did you mean `import {specifierNumber1} from ...`?
                ^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- es6modules.js:253:9
+Error ---------------------------------------------------------------------------------------------- es6modules.js:256:9
 
 Cannot import `specifierNumber` because there is no `specifierNumber` export in `./ES6_Named1`. Did you mean
 `specifierNumber1`? [missing-export]
 
-   253| import {specifierNumber} from "./ES6_Named1"; // Error: Did you mean `specifierNumber1`?
+   256| import {specifierNumber} from "./ES6_Named1"; // Error: Did you mean `specifierNumber1`?
                 ^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:264:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:267:19
 
 Cannot assign `numberValue8` to `at2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:264:19
-   264| var at2: string = numberValue8; // Error: number ~> string
+   es6modules.js:267:19
+   267| var at2: string = numberValue8; // Error: number ~> string
                           ^^^^^^^^^^^^
 
 References:
    ES6_ExportAllFrom_Source1.js:1:34
      1| declare export var numberValue1: number;
                                          ^^^^^^ [1]
-   es6modules.js:264:10
-   264| var at2: string = numberValue8; // Error: number ~> string
+   es6modules.js:267:10
+   267| var at2: string = numberValue8; // Error: number ~> string
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- es6modules.js:267:19
+Error --------------------------------------------------------------------------------------------- es6modules.js:270:19
 
 Cannot assign `numberValue9` to `at4` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   es6modules.js:267:19
-   267| var at4: string = numberValue9; // Error: number ~> string
+   es6modules.js:270:19
+   270| var at4: string = numberValue9; // Error: number ~> string
                           ^^^^^^^^^^^^
 
 References:
    ES6_ExportAllFrom_Source2.js:1:34
      1| declare export var numberValue2: number;
                                          ^^^^^^ [1]
-   es6modules.js:267:10
-   267| var at4: string = numberValue9; // Error: number ~> string
+   es6modules.js:270:10
+   270| var at4: string = numberValue9; // Error: number ~> string
                  ^^^^^^ [2]
 
 

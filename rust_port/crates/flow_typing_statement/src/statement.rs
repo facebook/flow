@@ -1921,6 +1921,11 @@ fn export_specifiers<'a>(
     export_kind: statement::ExportKind,
     specifier: &statement::export_named_declaration::Specifier<ALoc, ALoc>,
 ) -> Result<statement::export_named_declaration::Specifier<ALoc, (ALoc, Type)>, JobError> {
+    use flow_env_builder::env_api::DefLocType;
+    use flow_env_builder::env_api::ValKind;
+    use flow_env_builder::env_api::has_assigning_write;
+    use flow_env_builder::name_def_types::ScopeKind;
+
     let effective_kind = |specifier_export_kind: statement::ExportKind| -> statement::ExportKind {
         flow_parser::ast_utils::effective_export_kind(export_kind, specifier_export_kind)
     };
@@ -1930,6 +1935,22 @@ fn export_specifiers<'a>(
                       loc: ALoc,
                       local_name: &FlowSmolStr|
      -> Result<(Option<ALoc>, Type), JobError> {
+        if kind == statement::ExportKind::ExportValue
+            && type_env::var_scope_kind(cx) == ScopeKind::DeclareModule
+            && let Some(type_env::LocalExportBinding {
+                def_loc: Some(def_loc),
+                val_kind: ValKind::Value,
+            }) = type_env::local_export_binding_at_loc(cx, loc.dupe())
+            && has_assigning_write(
+                EnvKey::ordinary(def_loc.dupe()),
+                &cx.environment().var_info.env_entries,
+            )
+        {
+            return Ok((
+                None,
+                type_env::checked_find_loc_env_write(cx, DefLocType::OrdinaryNameLoc, def_loc),
+            ));
+        }
         Ok(match kind {
             statement::ExportKind::ExportType => {
                 let t = type_env::var_ref(

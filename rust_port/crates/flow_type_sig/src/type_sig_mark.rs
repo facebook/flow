@@ -15,6 +15,7 @@
 // collector, the marking process is used to detect what values are reachable so
 // the remainder can be discarded.
 
+use flow_common::polarity::Polarity;
 use flow_parser::loc::Loc;
 
 use crate::signature_error::BindingValidation;
@@ -155,6 +156,22 @@ fn mark_parsed<'arena, 'ast>(
             ref_,
         } => resolve_value_ref(opts, scopes, tbls, marker, ref_),
         parse::Parsed::ValRef {
+            lookup: parse::ValRefLookup::NamespaceValueRefLookup(polarity),
+            ref_,
+        } => {
+            resolve_value_ref(opts, scopes, tbls, marker, ref_);
+            if let Some(Some(parse::BindingNode::LocalBinding(node))) = ref_.resolved.get()
+                && matches!(
+                    &*node.0.data(),
+                    parse::LocalBinding::LetConstBinding { is_const: true, .. }
+                        | parse::LocalBinding::ConstRefBinding { .. }
+                        | parse::LocalBinding::ConstFunBinding { .. }
+                )
+            {
+                polarity.set(Polarity::Positive);
+            }
+        }
+        parse::Parsed::ValRef {
             lookup: parse::ValRefLookup::TypeRefLookup,
             ref_,
         } => resolve_type_ref(opts, scopes, tbls, marker, ref_),
@@ -237,6 +254,7 @@ fn mark_local_binding<'arena, 'ast>(
             def,
         }
         | parse::LocalBinding::LetConstBinding {
+            is_const: _,
             id_loc,
             name: _,
             def,
@@ -330,12 +348,13 @@ fn mark_local_binding<'arena, 'ast>(
             id_loc,
             name: _,
             def,
+            namespace_values,
             namespace_types,
         } => {
             mark_loc(marker, id_loc);
             let def = def.get_forced(opts, scopes, tbls);
             mark_class(opts, scopes, tbls, marker, def);
-            for (id_loc, def) in namespace_types.values() {
+            for (id_loc, def) in namespace_types.values().chain(namespace_values.values()) {
                 mark_loc(marker, id_loc);
                 mark_parsed(opts, scopes, tbls, marker, def);
             }
@@ -344,12 +363,13 @@ fn mark_local_binding<'arena, 'ast>(
             id_loc,
             name: _,
             def,
+            namespace_values,
             namespace_types,
         } => {
             mark_loc(marker, id_loc);
             let def = def.get_forced(opts, scopes, tbls);
             mark_declare_class(opts, scopes, tbls, marker, def);
-            for (id_loc, def) in namespace_types.values() {
+            for (id_loc, def) in namespace_types.values().chain(namespace_values.values()) {
                 mark_loc(marker, id_loc);
                 mark_parsed(opts, scopes, tbls, marker, def);
             }

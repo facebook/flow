@@ -434,7 +434,6 @@ fn visit_toplevel_statement<'a>(
         | StatementInner::FunctionDeclaration { .. }
         | StatementInner::ComponentDeclaration { .. }
         | StatementInner::VariableDeclaration { .. }
-        | StatementInner::ClassDeclaration { .. }
         | StatementInner::RecordDeclaration { .. }
         | StatementInner::DeclareModule { .. }
         | StatementInner::ImportDeclaration { .. }
@@ -514,6 +513,17 @@ fn visit_toplevel_statement<'a>(
                         t.dupe(),
                     );
                 }
+            }
+        }
+        StatementInner::ClassDeclaration { inner, .. } => {
+            if in_declare_namespace && let Some(id) = &inner.id {
+                let (name_loc, t) = &id.loc;
+                module_info::export_value(
+                    info,
+                    Name::new(id.name.dupe()),
+                    name_loc.dupe(),
+                    t.dupe(),
+                );
             }
         }
         StatementInner::DeclareClass { inner, .. } => {

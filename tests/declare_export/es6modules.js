@@ -48,11 +48,13 @@ var f4: string = CJS_Clobb_Lit_NS.default.numberValue5; // Error: number ~> stri
 
 import {doesntExist2} from "./CommonJS_Clobbering_Class"; // Error: Not an exported binding
 
-// The following import should error because class statics are not turned into
-// named exports for now. This avoids complexities with polymorphic static
-// members (where the polymophism is defined on the class itself rather than the
-// method).
-import {staticNumber1, baseProp, childProp} from "./CommonJS_Clobbering_Class"; // Error
+// Own class statics are named exports; inherited statics are not.
+import {staticNumber1, childProp} from "./CommonJS_Clobbering_Class";
+import {baseProp} from "./CommonJS_Clobbering_Class"; // Error: inherited baseProp is not a named export
+staticNumber1() as number;
+staticNumber1() as string; // ERROR: number ~> string
+childProp as number;
+childProp as string; // ERROR: number ~> string
 
 import CJS_Clobb_Class from "./CommonJS_Clobbering_Class";
 new CJS_Clobb_Class();
@@ -64,7 +66,8 @@ var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
 
 import * as CJS_Clobb_Class_NS from "./CommonJS_Clobbering_Class";
 new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
-var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
+var i1: number = CJS_Clobb_Class_NS.staticNumber3();
+var i4: string = CJS_Clobb_Class_NS.staticNumber3(); // ERROR: number ~> string
 var i2: number = new CJS_Clobb_Class_NS.default().instNumber2();
 var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
 

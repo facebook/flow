@@ -2250,6 +2250,22 @@ pub fn make_exact_object(
     ))
 }
 
+pub fn statics(t: &Type) -> Option<&Type> {
+    use crate::type_::DefTInner;
+
+    match t.deref() {
+        TypeInner::DefT(_, def) => match def.deref() {
+            DefTInner::FunT(statics, _) => Some(statics),
+            DefTInner::ClassT(t) => statics(t),
+            DefTInner::PolyT(poly) => statics(&poly.t_out),
+            DefTInner::InstanceT(instance) => Some(&instance.static_),
+            _ => None,
+        },
+        TypeInner::ThisInstanceT(instance) => Some(&instance.instance.static_),
+        _ => None,
+    }
+}
+
 pub fn class_type(t: Type, structural: bool, annot_loc: Option<ALoc>) -> Type {
     use crate::type_::DefT;
     use crate::type_::DefTInner;

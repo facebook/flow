@@ -1,0 +1,65 @@
+Error ------------------------------------------------------------------------------------------ bounded_consumer.js:6:4
+
+Cannot call `id` because in type argument `T`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   bounded_consumer.js:6:4
+   6| id('x'); // ERROR
+         ^^^ [1]
+
+References:
+   bounded.js:3:25
+   3| class Bounded<T extends number> {
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- bounded_consumer.js:7:12
+
+Cannot call `Bounded.id` because in type argument `T`: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   bounded_consumer.js:7:12
+   7| Bounded.id('x'); // ERROR
+                 ^^^ [1]
+
+References:
+   bounded.js:3:25
+   3| class Bounded<T extends number> {
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:10:1
+
+Cannot cast `count` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:10:1
+   10| count as string; // ERROR
+       ^^^^^
+
+References:
+   box.js:5:17
+    5|   static count: number = 1;
+                       ^^^^^^ [1]
+   consumer.js:10:10
+   10| count as string; // ERROR
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:11:1
+
+Cannot cast `echo(...)` to `string` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:11:1
+   11| echo(true) as string; // ERROR
+       ^^^^^^^^^^
+
+References:
+   consumer.js:11:6
+   11| echo(true) as string; // ERROR
+            ^^^^ [1]
+   consumer.js:11:15
+   11| echo(true) as string; // ERROR
+                     ^^^^^^ [2]
+
+
+
+Found 4 errors
