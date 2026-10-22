@@ -1620,9 +1620,7 @@ fn __flow_impl<'cx>(
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (l, &tout_t))?;
         }
-        (DefT(_, def_t), DeepReadOnlyT(tout, _) | HooklikeT(tout))
-            if matches!(def_t.deref(), PolyT(box _)) =>
-        {
+        (DefT(_, deref!(PolyT(box _))), DeepReadOnlyT(tout, _) | HooklikeT(tout)) => {
             let tout_t = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (l, &tout_t))?;
         }
@@ -8123,19 +8121,16 @@ fn __flow_impl<'cx>(
         // * Enable structural subtyping for upperbounds like interfaces *
         // ***************************************************************
         (ObjProtoT(_), ImplementsT(_, _)) | (FunProtoT(_), ImplementsT(_, _)) => {}
-        (DefT(_, def_t), ImplementsT(_, _)) if matches!(def_t.deref(), NullT) => {}
-        (DefT(reason_inst, def_t), ImplementsT(use_op, t))
-            if let InstanceT(inst_t) = def_t.deref()
-                && matches!(&inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
+        (DefT(_, deref!(NullT)), ImplementsT(_, _)) => {}
+        (DefT(reason_inst, deref!(InstanceT(inst_t))), ImplementsT(use_op, t))
+            if matches!(&inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             let inst = &inst_t.inst;
             let upper_inst_abstract = inst.inst_abstract;
             let super_ = &inst_t.super_;
             let implementor_strictness_kind = match t.deref() {
-                DefT(_, def_t) if let InstanceT(instance) = def_t.deref() => {
-                    instance.inst.strictness_kind
-                }
-                DefT(_, def_t) if let ObjT(obj) = def_t.deref() => obj.strictness_kind,
+                DefT(_, deref!(InstanceT(instance))) => instance.inst.strictness_kind,
+                DefT(_, deref!(ObjT(obj))) => obj.strictness_kind,
                 _ => TypeStrictnessKind::Flow,
             };
             let strictness_kind = inst.strictness_kind.join(implementor_strictness_kind);
@@ -8184,21 +8179,18 @@ fn __flow_impl<'cx>(
                                     .map(|member| (member.dupe(), checked_names.clone())),
                             );
                         }
-                        DefT(_, def_t)
-                            if let InstanceT(super_inst) = def_t.deref()
-                                && !matches!(
-                                    super_inst.inst.inst_kind,
-                                    InstanceKind::InterfaceKind { .. }
-                                ) =>
+                        DefT(_, deref!(InstanceT(super_inst)))
+                            if !matches!(
+                                super_inst.inst.inst_kind,
+                                InstanceKind::InterfaceKind { .. }
+                            ) =>
                         {
                             if !seen_classes.insert((super_t.dupe(), checked_names.clone())) {
                                 continue;
                             }
                             match t.deref() {
                                 // Private (`#`) members are not checked.
-                                DefT(_, def_t)
-                                    if matches!(def_t.deref(), InstanceT(_) | ObjT(_)) =>
-                                {
+                                DefT(_, deref!(InstanceT(_) | ObjT(_))) => {
                                     let unchecked = |props: properties::Id| {
                                         properties::PropertiesMap::from_btree_map(
                                             cx.find_props(props)
@@ -8240,15 +8232,15 @@ fn __flow_impl<'cx>(
                                 // An array's members come from a builtin instance, so
                                 // compare that instance with the class. A tuple's
                                 // members are those of `ReadonlyArray`.
-                                DefT(r, def_t) if let ArrT(arr) = def_t.deref() => {
+                                DefT(r, deref!(ArrT(arr))) => {
                                     let (name, elem_t) = match arr.as_ref() {
-                                        ArrType::ArrayAT(box ArrayATData { elem_t, .. }) => {
+                                        ArrayAT(box ArrayATData { elem_t, .. }) => {
                                             ("Array", elem_t)
                                         }
-                                        ArrType::TupleAT(box TupleATData { elem_t, .. })
-                                        | ArrType::ROArrayAT(box ROArrayATData {
-                                            elem_t, ..
-                                        }) => ("ReadonlyArray", elem_t),
+                                        TupleAT(box TupleATData { elem_t, .. })
+                                        | ROArrayAT(box ROArrayATData { elem_t, .. }) => {
+                                            ("ReadonlyArray", elem_t)
+                                        }
                                     };
                                     let instance = get_builtin_typeapp(
                                         cx,
@@ -8289,9 +8281,8 @@ fn __flow_impl<'cx>(
                 }
             }
         }
-        (DefT(_, def_t), ImplementsT(use_op, implementor))
-            if let ObjT(obj) = def_t.deref()
-                && obj.strictness_kind.is_typescript_loose()
+        (DefT(_, deref!(ObjT(obj))), ImplementsT(use_op, implementor))
+            if obj.strictness_kind.is_typescript_loose()
                 && obj_type::get_dict_opt(&obj.flags.obj_kind).is_none() =>
         {
             // TS-mode: a class may `implements` a resolved object type
@@ -8342,17 +8333,16 @@ fn __flow_impl<'cx>(
         // for the inherited properties are non-strict: they are not required to
         // exist.
         (
-            DefT(ureason, def_t),
+            DefT(ureason, deref!(InstanceT(inst_t))),
             SuperT(box SuperTData {
                 use_op,
                 reason,
                 derived_type: derived,
             }),
-        ) if let InstanceT(inst_t) = def_t.deref()
-            && matches!(
-                &inst_t.inst.inst_kind,
-                InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }
-            ) =>
+        ) if matches!(
+            &inst_t.inst.inst_kind,
+            InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }
+        ) =>
         {
             let st = &inst_t.static_;
             let DerivedType {
@@ -8417,17 +8407,16 @@ fn __flow_impl<'cx>(
             }
         }
         (
-            DefT(ureason, def_t),
+            DefT(ureason, deref!(ObjT(obj))),
             SuperT(box SuperTData {
                 use_op,
                 reason,
                 derived_type: derived,
             }),
-        ) if let ObjT(obj) = def_t.deref()
-            && obj
-                .strictness_kind
-                .join(derived.strictness_kind)
-                .is_typescript_loose() =>
+        ) if obj
+            .strictness_kind
+            .join(derived.strictness_kind)
+            .is_typescript_loose() =>
         {
             // TS-mode: an interface may extend a resolved object type
             // (e.g. `interface X extends Omit<Y, K>`). Run the same
@@ -8609,10 +8598,7 @@ fn __flow_impl<'cx>(
         // ******************************
         // * functions statics - part B *
         // ******************************
-        (DefT(reason, def_t), _)
-            if let FunT(static_, _) = def_t.deref()
-                && flow_js_utils::object_like_op(u) =>
-        {
+        (DefT(reason, deref!(FunT(static_, _))), _) if flow_js_utils::object_like_op(u) => {
             rec_flow(
                 cx,
                 env,
@@ -8630,10 +8616,15 @@ fn __flow_impl<'cx>(
         // *****************************************
         // * classes can have their prototype read *
         // *****************************************
-        (DefT(reason, def_t), GetPropT(box data))
-            if let ClassT(instance) = def_t.deref()
-                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name == &Name::new("prototype")) =>
-        {
+        (
+            DefT(reason, deref!(ClassT(instance))),
+            GetPropT(
+                box data @ GetPropTData {
+                    propref: box PropRef::Named { name, .. },
+                    ..
+                },
+            ),
+        ) if name == &Name::new("prototype") => {
             let instance = helpers::reposition(
                 cx,
                 env,
@@ -8657,9 +8648,7 @@ fn __flow_impl<'cx>(
         // Instead, we just flip the boolean flag to true, indicating that when the
         // InstanceT ~> Set/GetPrivatePropT or PrivateMethodT constraint is processed that we should
         // look at the private static fields instead of the private instance fields.
-        (DefT(reason, def_t), GetPrivatePropT(box gpp_data))
-            if let ClassT(instance) = def_t.deref() =>
-        {
+        (DefT(reason, deref!(ClassT(instance))), GetPrivatePropT(box gpp_data)) => {
             let new_u = UseT::new(GetPrivatePropT(Box::new(GetPrivatePropTData {
                 use_op: gpp_data.use_op.dupe(),
                 reason: gpp_data.reason.dupe(),
@@ -8682,9 +8671,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (DefT(reason, def_t), SetPrivatePropT(box spp_data))
-            if let ClassT(instance) = def_t.deref() =>
-        {
+        (DefT(reason, deref!(ClassT(instance))), SetPrivatePropT(box spp_data)) => {
             let new_u = UseT::new(SetPrivatePropT(Box::new(SetPrivatePropTData {
                 use_op: spp_data.use_op.dupe(),
                 reason: spp_data.reason.dupe(),
@@ -8710,9 +8697,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (DefT(reason, def_t), PrivateMethodT(box pm_data))
-            if let ClassT(instance) = def_t.deref() =>
-        {
+        (DefT(reason, deref!(ClassT(instance))), PrivateMethodT(box pm_data)) => {
             let new_u = UseT::new(PrivateMethodT(Box::new(PrivateMethodTData {
                 use_op: pm_data.use_op.dupe(),
                 reason: pm_data.reason.dupe(),
@@ -8737,7 +8722,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            DefT(reason, def_t),
+            DefT(reason, deref!(ClassT(instance))),
             MethodT(box MethodTData {
                 use_op,
                 reason: reason_call,
@@ -8745,7 +8730,7 @@ fn __flow_impl<'cx>(
                 propref,
                 method_action: action,
             }),
-        ) if let ClassT(instance) = def_t.deref() => {
+        ) => {
             let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
@@ -8793,10 +8778,7 @@ fn __flow_impl<'cx>(
                 action,
             )?;
         }
-        (DefT(reason, def_t), _)
-            if let ClassT(instance) = def_t.deref()
-                && flow_js_utils::object_like_op(u) =>
-        {
+        (DefT(reason, deref!(ClassT(instance))), _) if flow_js_utils::object_like_op(u) => {
             let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
@@ -8833,7 +8815,7 @@ fn __flow_impl<'cx>(
           excluded from subclass compatibility checks, but are allowed on ClassT
           types.
         */
-        (DefT(reason, def_t), CallT(..)) if let ClassT(instance) = def_t.deref() => {
+        (DefT(reason, deref!(ClassT(instance))), CallT(..)) => {
             let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
@@ -8851,18 +8833,26 @@ fn __flow_impl<'cx>(
         // *********
         // * enums *
         // *********
-        (DefT(_, def_t), GetPropT(box data))
-            if let EnumObjectT {
-                enum_value_t,
-                enum_info,
-            } = def_t.deref()
-                && let EnumInfoInner::ConcreteEnum(enum_info) = EnumInfo::deref(enum_info)
-                && let PropRef::Named {
-                    reason: prop_reason,
-                    name: member_name,
+        (
+            DefT(
+                _,
+                deref!(EnumObjectT {
+                    enum_value_t,
+                    enum_info
+                }),
+            ),
+            GetPropT(
+                box data @ GetPropTData {
+                    propref:
+                        box PropRef::Named {
+                            reason: prop_reason,
+                            name: member_name,
+                            ..
+                        },
                     ..
-                } = data.propref.as_ref() =>
-        {
+                },
+            ),
+        ) if let EnumInfoInner::ConcreteEnum(enum_info) = EnumInfo::deref(enum_info) => {
             flow_js_utils::get_prop_t_kit::on_enum_object_t::<FlowJs>(
                 cx,
                 env,
@@ -8879,7 +8869,7 @@ fn __flow_impl<'cx>(
             )?(cx, (*data.tout).dupe())?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(EnumObjectT { .. })),
             TestPropT(box TestPropTData {
                 reason,
                 propref,
@@ -8887,7 +8877,7 @@ fn __flow_impl<'cx>(
                 hint,
                 ..
             }),
-        ) if matches!(def_t.deref(), EnumObjectT { .. }) => {
+        ) => {
             rec_flow(
                 cx,
                 env,
@@ -8910,20 +8900,21 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            DefT(_, def_t),
+            DefT(
+                _,
+                deref!(EnumObjectT {
+                    enum_value_t,
+                    enum_info
+                }),
+            ),
             MethodT(box MethodTData {
                 use_op,
                 reason: call_reason,
                 prop_reason: lookup_reason,
-                propref,
+                propref: propref @ box PropRef::Named { .. },
                 method_action: action,
             }),
-        ) if let EnumObjectT {
-            enum_value_t,
-            enum_info,
-        } = def_t.deref()
-            && matches!(&**propref, PropRef::Named { .. }) =>
-        {
+        ) => {
             let t = flow_typing_tvar::mk_no_wrap_where(
                 cx,
                 lookup_reason.dupe(),
@@ -8973,9 +8964,10 @@ fn __flow_impl<'cx>(
                 action,
             )?;
         }
-        (DefT(_, def_t), GetElemT(box GetElemTData { key_t, tout, .. }))
-            if let EnumObjectT { enum_info, .. } = def_t.deref() =>
-        {
+        (
+            DefT(_, deref!(EnumObjectT { enum_info, .. })),
+            GetElemT(box GetElemTData { key_t, tout, .. }),
+        ) => {
             let reason = reason_of_t(key_t);
             flow_js_utils::add_output_with_env(
                 cx,
@@ -8997,9 +8989,10 @@ fn __flow_impl<'cx>(
             let open_tout = Type::new(OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&any, &open_tout))?;
         }
-        (DefT(_, def_t), SetPropT(_, op_reason, _, _, _, _, tout))
-            if let EnumObjectT { enum_info, .. } = def_t.deref() =>
-        {
+        (
+            DefT(_, deref!(EnumObjectT { enum_info, .. })),
+            SetPropT(_, op_reason, _, _, _, _, tout),
+        ) => {
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
@@ -9019,7 +9012,7 @@ fn __flow_impl<'cx>(
             }
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(EnumObjectT { enum_info, .. })),
             SetElemT(box SetElemTData {
                 use_op: _,
                 reason: op_reason,
@@ -9028,7 +9021,7 @@ fn __flow_impl<'cx>(
                 tin: _,
                 tout,
             }),
-        ) if let EnumObjectT { enum_info, .. } = def_t.deref() => {
+        ) => {
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
@@ -9047,9 +9040,7 @@ fn __flow_impl<'cx>(
                 rec_flow_t(cx, env, trace, unknown_use(), (&any, tout))?;
             }
         }
-        (DefT(_, def_t), GetValuesT(op_reason, tout))
-            if let EnumObjectT { enum_info, .. } = def_t.deref() =>
-        {
+        (DefT(_, deref!(EnumObjectT { enum_info, .. })), GetValuesT(op_reason, tout)) => {
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
@@ -9067,9 +9058,7 @@ fn __flow_impl<'cx>(
             let any = any_t::error(op_reason.dupe());
             rec_flow_t(cx, env, trace, unknown_use(), (&any, tout))?;
         }
-        (DefT(_, def_t), GetDictValuesT(reason, result))
-            if let EnumObjectT { enum_info, .. } = def_t.deref() =>
-        {
+        (DefT(_, deref!(EnumObjectT { enum_info, .. })), GetDictValuesT(reason, result)) => {
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
@@ -9088,17 +9077,15 @@ fn __flow_impl<'cx>(
             rec_flow(cx, env, trace, (&any, result))?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(EnumValueT(enum_info))),
             MethodT(box MethodTData {
                 use_op,
                 reason: call_reason,
                 prop_reason: lookup_reason,
-                propref,
+                propref: propref @ box PropRef::Named { .. },
                 method_action: action,
             }),
-        ) if let EnumValueT(enum_info) = def_t.deref()
-            && matches!(&**propref, PropRef::Named { .. }) =>
-        {
+        ) => {
             let representation_t = match EnumInfo::deref(enum_info) {
                 EnumInfoInner::ConcreteEnum(ce) => &ce.representation_t,
                 EnumInfoInner::AbstractEnum { representation_t } => representation_t,
@@ -9162,7 +9149,7 @@ fn __flow_impl<'cx>(
         // result of the read cannot be used in any interesting way.
         // **************************************************************************
         (
-            DefT(_, def_t),
+            DefT(_, deref!(NullT | VoidT)),
             TestPropT(box TestPropTData {
                 use_op,
                 reason,
@@ -9171,7 +9158,7 @@ fn __flow_impl<'cx>(
                 tout,
                 hint,
             }),
-        ) if matches!(def_t.deref(), NullT | VoidT) => {
+        ) => {
             // The wildcard TestPropT implementation forwards the lower bound to
             // LookupT. This is unfortunate, because LookupT is designed to terminate
             // (successfully) on NullT, but property accesses on null should be type
@@ -9198,15 +9185,16 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            DefT(r, def_t),
+            DefT(
+                r,
+                deref!(MixedT(
+                    MixedFlavor::MixedTruthy | MixedFlavor::MixedNonMaybe
+                )),
+            ),
             TestPropT(box TestPropTData {
                 use_op, id, tout, ..
             }),
-        ) if matches!(
-            def_t.deref(),
-            MixedT(MixedFlavor::MixedTruthy) | MixedT(MixedFlavor::MixedNonMaybe)
-        ) =>
-        {
+        ) => {
             // Special-case property tests of definitely non-null/non-void values to
             // return mixed and treat them as a hit.
             cx.test_prop_hit(*id);
@@ -9223,12 +9211,11 @@ fn __flow_impl<'cx>(
                 use_op,
                 reason,
                 id,
-                propref,
+                propref: propref @ box PropRef::Named { name, .. },
                 tout,
                 hint,
             }),
-        ) if matches!(&**propref, PropRef::Named { name, .. } if name == &Name::new("constructor")) =>
-        {
+        ) if name == &Name::new("constructor") => {
             rec_flow(
                 cx,
                 env,
@@ -9269,8 +9256,7 @@ fn __flow_impl<'cx>(
             };
             let test_info = Some((*id, (reason_prop.dupe(), l.dupe())));
             let lookup_default = match l.deref() {
-                DefT(_, obj_def) if matches!(obj_def.deref(), ObjT(obj) if obj_type::is_exact(&obj.flags.obj_kind)) =>
-                {
+                DefT(_, deref!(ObjT(obj))) if obj_type::is_exact(&obj.flags.obj_kind) => {
                     let r = reason_op.dupe().replace_desc(VirtualReasonDesc::RVoid);
                     Some((Type::new(DefT(r, DefT::new(VoidT))), lookup_default))
                 }
@@ -9294,7 +9280,7 @@ fn __flow_impl<'cx>(
                 test_info,
             )));
             let method_accessible = match l.deref() {
-                DefT(_, d) if matches!(d.deref(), InstanceT(_)) => false,
+                DefT(_, deref!(InstanceT(_))) => false,
                 _ => true,
             };
             rec_flow(
@@ -9335,7 +9321,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             let t = match l.deref() {
-                DefT(_, def_t) if matches!(def_t.deref(), EmptyT) => else_t,
+                DefT(_, deref!(EmptyT)) => else_t,
                 _ => then_t_opt.as_ref().unwrap_or(l),
             };
             collector.add(t.dupe());
@@ -9408,14 +9394,14 @@ fn __flow_impl<'cx>(
         // * GetEnumT *
         // ************
         (
-            DefT(enum_reason, def_t),
+            DefT(enum_reason, deref!(EnumValueT(enum_info))),
             GetEnumT(box GetEnumTData {
                 orig_t,
                 kind: GetEnumKind::GetEnumObject,
                 collector,
                 ..
             }),
-        ) if let EnumValueT(enum_info) = def_t.deref() => {
+        ) => {
             let enum_value_t = match orig_t {
                 Some(t) => t.dupe(),
                 None => l.dupe(),
@@ -9440,13 +9426,13 @@ fn __flow_impl<'cx>(
             collector.add(l.dupe());
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(EnumObjectT { enum_value_t, .. })),
             GetEnumT(box GetEnumTData {
                 kind: GetEnumKind::GetEnumValue,
                 collector,
                 ..
             }),
-        ) if let EnumObjectT { enum_value_t, .. } = def_t.deref() => {
+        ) => {
             collector.add(enum_value_t.dupe());
         }
         // **********************************
@@ -9672,22 +9658,19 @@ fn __flow_impl<'cx>(
             rec_flow(cx, env, trace, (&fun, u))?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(NullT)),
             LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_obj),
                 indexer_fallback,
                 try_ts_on_failure,
-                propref,
+                propref: propref @ box PropRef::Named { .. },
                 lookup_action: action,
                 method_accessible: _,
                 ids,
                 ignore_dicts: _,
             }),
-        ) if matches!(def_t.deref(), NullT)
-            && try_ts_on_failure.is_empty()
-            && matches!(&**propref, PropRef::Named { .. }) =>
-        {
+        ) if try_ts_on_failure.is_empty() => {
             strict_lookup_failed(
                 cx,
                 env,
@@ -9709,13 +9692,13 @@ fn __flow_impl<'cx>(
                 lookup_kind: box LookupKind::Strict(strict_obj),
                 indexer_fallback,
                 try_ts_on_failure,
-                propref,
+                propref: propref @ box PropRef::Named { .. },
                 lookup_action: action,
                 method_accessible: _,
                 ids,
                 ignore_dicts: _,
             }),
-        ) if try_ts_on_failure.is_empty() && matches!(&**propref, PropRef::Named { .. }) => {
+        ) if try_ts_on_failure.is_empty() => {
             strict_lookup_failed(
                 cx,
                 env,
@@ -9732,22 +9715,19 @@ fn __flow_impl<'cx>(
         // A computed lookup never carries an `indexer_fallback`: an indexer answers a
         // computed access on the spot, so there is nothing to hold back.
         (
-            DefT(_, def_t),
+            DefT(_, deref!(NullT)),
             LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_obj),
                 try_ts_on_failure,
-                propref,
+                propref: propref @ box PropRef::Computed(elem_t),
                 lookup_action: action,
                 method_accessible: _,
                 ids: _,
                 ignore_dicts: _,
                 indexer_fallback: _,
             }),
-        ) if matches!(def_t.deref(), NullT)
-            && try_ts_on_failure.is_empty()
-            && let PropRef::Computed(elem_t) = &**propref =>
-        {
+        ) if try_ts_on_failure.is_empty() => {
             strict_computed_lookup_failed(
                 cx, env, trace, l, reason_op, strict_obj, propref, elem_t, action,
             )?;
@@ -9759,21 +9739,19 @@ fn __flow_impl<'cx>(
                 lookup_kind: box LookupKind::Strict(strict_obj),
                 indexer_fallback: _,
                 try_ts_on_failure,
-                propref,
+                propref: propref @ box PropRef::Computed(elem_t),
                 lookup_action: action,
                 method_accessible: _,
                 ids: _,
                 ignore_dicts: _,
             }),
-        ) if try_ts_on_failure.is_empty()
-            && let PropRef::Computed(elem_t) = &**propref =>
-        {
+        ) if try_ts_on_failure.is_empty() => {
             strict_computed_lookup_failed(
                 cx, env, trace, l, reason_op, strict_obj, propref, elem_t, action,
             )?;
         }
         (
-            _,
+            ObjProtoT(_) | FunProtoT(_) | DefT(_, deref!(NullT)),
             LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind:
@@ -9785,12 +9763,7 @@ fn __flow_impl<'cx>(
                 ids,
                 ..
             }),
-        ) if match l.deref() {
-            ObjProtoT(_) | FunProtoT(_) => true,
-            DefT(_, def_t) => matches!(def_t.deref(), NullT),
-            _ => false,
-        } && try_ts_on_failure.is_empty() =>
-        {
+        ) if try_ts_on_failure.is_empty() => {
             // An indexer matched the access on the way up, so the lookup did not fail and
             // the not-found default does not apply.
             if let Some(fallback) = indexer_fallback {
@@ -9870,7 +9843,7 @@ fn __flow_impl<'cx>(
             }
         }
         // SuperT only involves non-strict lookups
-        (DefT(_, def_t), SuperT(..)) if matches!(def_t.deref(), NullT) => {}
+        (DefT(_, deref!(NullT)), SuperT(..)) => {}
         (ObjProtoT(_), SuperT(..)) => {}
         (FunProtoT(_), SuperT(..)) => {}
         // ExtendsUseT searches for a nominal superclass. The search terminates with
@@ -9894,7 +9867,7 @@ fn __flow_impl<'cx>(
             let any2 = any_t::why(*src, reason_op.dupe());
             rec_flow_t(cx, env, trace, use_op.dupe(), (&any2, t2))?;
         }
-        (DefT(lreason, def_t), ExtendsUseT(..)) if let ObjT(obj) = def_t.deref() => {
+        (DefT(lreason, deref!(ObjT(obj))), ExtendsUseT(..)) => {
             let proto_t = &obj.proto_t;
             let repositioned = helpers::reposition(
                 cx,
@@ -9907,7 +9880,7 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(cx, env, trace, (&repositioned, u))?;
         }
-        (DefT(reason, def_t), ExtendsUseT(..)) if let ClassT(instance) = def_t.deref() => {
+        (DefT(reason, deref!(ClassT(instance))), ExtendsUseT(..)) => {
             let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
@@ -9959,29 +9932,23 @@ fn __flow_impl<'cx>(
                 reason: _,
                 targs: try_ts,
                 true_t: ext_l,
-                false_t: ext_u,
+                false_t: ext_u @ deref!(DefT(_, deref!(InstanceT(inst_t)))),
             }),
-        ) if is_extends_use_t_root(root)
-            && try_ts.is_empty()
-            && let DefT(_, inner_def) = ext_u.deref()
-            && let InstanceT(inst_t) = inner_def.deref()
-            && {
-                match &inst_t.inst.inst_kind {
-                    InstanceKind::InterfaceKind { .. } => true,
-                    InstanceKind::ClassKind => inst_t.inst.strictness_kind.is_typescript_loose(),
-                    InstanceKind::RecordKind { .. } => false,
-                }
-            } =>
+        ) if is_extends_use_t_root(root) && try_ts.is_empty() && {
+            match &inst_t.inst.inst_kind {
+                InstanceKind::InterfaceKind { .. } => true,
+                InstanceKind::ClassKind => inst_t.inst.strictness_kind.is_typescript_loose(),
+                InstanceKind::RecordKind { .. } => false,
+            }
+        } =>
         {
             let super_ = &inst_t.super_;
             let own_props = inst_t.inst.own_props.dupe();
             let inst_kind = &inst_t.inst.inst_kind;
             let upper_inst_abstract = inst_t.inst.inst_abstract;
             let lower_strictness_kind = match ext_l.deref() {
-                DefT(_, def_t) if let InstanceT(instance) = def_t.deref() => {
-                    instance.inst.strictness_kind
-                }
-                DefT(_, def_t) if let ObjT(obj) = def_t.deref() => obj.strictness_kind,
+                DefT(_, deref!(InstanceT(instance))) => instance.inst.strictness_kind,
+                DefT(_, deref!(ObjT(obj))) => obj.strictness_kind,
                 _ => TypeStrictnessKind::Flow,
             };
             let strictness_kind = inst_t.inst.strictness_kind.join(lower_strictness_kind);
@@ -10017,8 +9984,7 @@ fn __flow_impl<'cx>(
             let inst_dict = &inst_t.inst.inst_dict;
             let check_structural_interface = |cx: &mut Context<'cx>, env: &FlowJsEnv| {
                 if matches!(inst_kind, InstanceKind::InterfaceKind { .. })
-                    && let DefT(_, def_t) = ext_l.deref()
-                    && matches!(def_t.deref(), ObjT(_))
+                    && matches!(ext_l, deref!(DefT(_, deref!(ObjT(_)))))
                 {
                     return rec_flow(
                         cx,
@@ -10108,19 +10074,17 @@ fn __flow_impl<'cx>(
             rec_flow_t(cx, env, trace, unknown_use(), (l, &open_tout))?;
         }
         // Render Type Misc Uses
+        #[rustfmt::skip]
         (
-            DefT(_, def_t),
+            DefT(_, deref!(RendersT(deref!(
+                CanonicalRendersForm::IntrinsicRenders(_)
+                | CanonicalRendersForm::NominalRenders { .. }
+            )))),
             ExitRendersT {
                 renders_reason,
                 u: exit_u,
             },
-        ) if let RendersT(renders) = def_t.deref()
-            && matches!(
-                renders.as_ref(),
-                CanonicalRendersForm::IntrinsicRenders(_)
-                    | CanonicalRendersForm::NominalRenders { .. }
-            ) =>
-        {
+        ) => {
             let mixed_element = FlowJs::get_builtin_react_type_with_env(
                 cx, env,
                 Some(trace),
@@ -10130,14 +10094,14 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(cx, env, trace, (&mixed_element, exit_u))?;
         }
-        (DefT(renders_reason, def_t), _)
-            if let RendersT(renders) = def_t.deref()
-                && matches!(
-                    renders.as_ref(),
-                    CanonicalRendersForm::IntrinsicRenders(_)
-                        | CanonicalRendersForm::NominalRenders { .. }
-                ) =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(renders_reason, deref!(RendersT(deref!(
+                CanonicalRendersForm::IntrinsicRenders(_)
+                | CanonicalRendersForm::NominalRenders { .. }
+            )))),
+            _,
+        ) => {
             let mixed_element = FlowJs::get_builtin_react_type_with_env(
                 cx, env,
                 Some(trace),
@@ -10147,13 +10111,14 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(cx, env, trace, (&mixed_element, u))?;
         }
-        (DefT(r, def_t), _)
-            if let RendersT(renders) = def_t.deref()
-                && let CanonicalRendersForm::StructuralRenders {
-                    renders_variant: RendersVariant::RendersNormal,
-                    renders_structural_type,
-                } = renders.as_ref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(r, deref!(RendersT(deref!(CanonicalRendersForm::StructuralRenders {
+                renders_variant: RendersVariant::RendersNormal,
+                renders_structural_type,
+            })))),
+            _,
+        ) => {
             let t = renders_structural_type;
             let exit_u = UseT::new(ExitRendersT {
                 renders_reason: r.dupe(),
@@ -10248,23 +10213,23 @@ fn __flow_impl<'cx>(
 
         // ToStringT passes through strings unchanged, and flows a generic StrT otherwise
         (
-            DefT(_, def_t),
+            DefT(_, deref!(StrGeneralT(_) | SingletonStrT { .. })),
             ToStringT {
                 orig_t: None,
                 t_out,
                 ..
             },
-        ) if matches!(def_t.deref(), StrGeneralT(_) | SingletonStrT { .. }) => {
+        ) => {
             rec_flow(cx, env, trace, (l, t_out))?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(StrGeneralT(_) | SingletonStrT { .. })),
             ToStringT {
                 orig_t: Some(t),
                 t_out,
                 ..
             },
-        ) if matches!(def_t.deref(), StrGeneralT(_) | SingletonStrT { .. }) => {
+        ) => {
             rec_flow(cx, env, trace, (t, t_out))?;
         }
         (_, ToStringT { reason, t_out, .. }) => {
@@ -10279,13 +10244,13 @@ fn __flow_impl<'cx>(
         // same symbol type, and is left out of runtime key enumeration
         // (`Object.keys`) entirely, matching JavaScript.
         (
-            DefT(_, def_t),
+            DefT(_, deref!(UniqueSymbolT(_) | SymbolT)),
             GetKeysDictKeyT {
                 t_out,
                 include_symbols,
                 ..
             },
-        ) if matches!(def_t.deref(), UniqueSymbolT(_) | SymbolT) => {
+        ) => {
             if *include_symbols {
                 rec_flow(cx, env, trace, (l, t_out.as_ref()))?;
             }
@@ -10309,20 +10274,18 @@ fn __flow_impl<'cx>(
         // **********************
         // * Array library call *
         // **********************
-        (DefT(reason, def_t), _)
-            if let ArrT(arr) = def_t.deref()
-                && let ArrType::ArrayAT(box ArrayATData {
-                    elem_t,
-                    react_dro: Some(ReactDro(dro_loc, dro_type)),
-                    tuple_view,
-                    strictness_kind,
-                    ..
-                }) = arr.deref()
-                && matches!(
-                    u.deref(),
-                    GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..)
-                ) =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(reason, deref!(ArrT(deref!(ArrayAT(box ArrayATData {
+                elem_t,
+                react_dro: Some(ReactDro(dro_loc, dro_type)),
+                tuple_view,
+                strictness_kind,
+                literal,
+                fresh,
+            }))))),
+            GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..),
+        ) => {
             match u.deref() {
                 MethodT(box MethodTData {
                     use_op,
@@ -10361,20 +10324,20 @@ fn __flow_impl<'cx>(
                     )?;
                     let arr_no_dro = Type::new(DefT(
                         reason.dupe(),
-                        DefT::new(ArrT(Rc::new(ArrType::ArrayAT(Box::new(ArrayATData {
+                        DefT::new(ArrT(Rc::new(ArrayAT(Box::new(ArrayATData {
                             elem_t: elem_t.dupe(),
                             react_dro: None,
                             tuple_view: tuple_view.clone(),
                             strictness_kind: *strictness_kind,
-                            literal: arr.literal(),
-                            fresh: arr.fresh(),
+                            literal: *literal,
+                            fresh: *fresh,
                         }))))),
                     ));
                     rec_flow(cx, env, trace, (&arr_no_dro, u))?;
                 }
-                GetPropT(box data)
-                    if let PropRef::Named { name, .. } = data.propref.as_ref()
-                        && matches!(
+                GetPropT(box data @ GetPropTData {
+                    propref: box PropRef::Named { name, .. }, ..
+                }) if matches!(
                             name.as_str_opt(),
                             Some(
                                 "fill"
@@ -10405,13 +10368,13 @@ fn __flow_impl<'cx>(
                     )?;
                     let arr_no_dro = Type::new(DefT(
                         reason.dupe(),
-                        DefT::new(ArrT(Rc::new(ArrType::ArrayAT(Box::new(ArrayATData {
+                        DefT::new(ArrT(Rc::new(ArrayAT(Box::new(ArrayATData {
                             elem_t: elem_t.dupe(),
                             react_dro: None,
                             tuple_view: tuple_view.clone(),
                             strictness_kind: *strictness_kind,
-                            literal: arr.literal(),
-                            fresh: arr.fresh(),
+                            literal: *literal,
+                            fresh: *fresh,
                         }))))),
                     ));
                     rec_flow(cx, env, trace, (&arr_no_dro, u))?;
@@ -10446,31 +10409,26 @@ fn __flow_impl<'cx>(
                     rec_flow(cx, env, trace, (&ro_arr, &u_mod))?;
                 }
             }
-        }
-        (DefT(reason, def_t), _)
-            if let ArrT(arr) = def_t.deref()
-                && let ArrType::ArrayAT(box ArrayATData { elem_t, .. }) = arr.deref()
-                && matches!(
-                    u.deref(),
-                    GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..)
-                ) =>
-        {
+        },
+        (
+            DefT(reason, deref!(ArrT(deref!(ArrayAT(box ArrayATData { elem_t, .. }))))),
+            GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..),
+        ) => {
             let arr_t = get_builtin_typeapp(cx, env, reason, None, "Array", vec![elem_t.dupe()]);
             rec_flow(cx, env, trace, (&arr_t, u))?;
         }
         // *************************
         // * Tuple "length" access *
         // *************************
-        (DefT(reason, def_t), GetPropT(box data))
-            if let ArrT(arr) = def_t.deref()
-                && let ArrType::TupleAT(box TupleATData {
-                    arity,
-                    inexact,
-                    rest,
-                    ..
-                }) = arr.deref()
-                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name == &Name::new("length")) =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(reason, deref!(ArrT(deref!(TupleAT(box TupleATData {
+                arity, inexact, rest, ..
+            }))))),
+            GetPropT(box data @ GetPropTData {
+                propref: box PropRef::Named { name, .. }, ..
+            }),
+        ) if name == &Name::new("length") => {
             flow_js_utils::get_prop_t_kit::on_array_length::<FlowJs>(
                 cx,
                 env,
@@ -10481,34 +10439,18 @@ fn __flow_impl<'cx>(
                 data.reason.loc().dupe(),
             )?(cx, (*data.tout).dupe())?;
         }
-        (DefT(reason, def_t), _)
-            if let ArrT(arr) = def_t.deref()
-                && matches!(
-                    arr.deref(),
-                    ArrType::TupleAT(box TupleATData {
-                        react_dro: Some(_),
-                        ..
-                    }) | ArrType::ROArrayAT(box ROArrayATData { react_dro: Some(_), .. })
-                )
-                && matches!(
-                    u.deref(),
-                    GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..)
-                ) =>
-        {
-            let (elem_t, dro) = match arr.deref() {
-                ArrType::TupleAT(box TupleATData {
-                    elem_t,
-                    react_dro: Some(dro),
-                    ..
-                }) => (elem_t, dro),
-                ArrType::ROArrayAT(box ROArrayATData {
-                    elem_t,
-                    react_dro: Some(dro),
-                    ..
-                }) => (elem_t, dro),
-                _ => unreachable!(),
-            };
-            let ReactDro(dro_loc, dro_type) = dro;
+        #[rustfmt::skip]
+        (
+            DefT(reason, deref!(ArrT(deref!(
+                TupleAT(box TupleATData {
+                    elem_t, react_dro: Some(ReactDro(dro_loc, dro_type)), ..
+                })
+                | ROArrayAT(box ROArrayATData {
+                    elem_t, react_dro: Some(ReactDro(dro_loc, dro_type)), ..
+                })
+            )))),
+            GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..),
+        ) => {
             let u_mod = type_util::mod_use_op_of_use_t(
                 |use_op: &UseOp| {
                     VirtualUseOp::Frame(
@@ -10531,17 +10473,10 @@ fn __flow_impl<'cx>(
                 get_builtin_typeapp(cx, env, reason, Some(true), "ReadonlyArray", vec![dro_elem]);
             rec_flow(cx, env, trace, (&ro_arr, &u_mod))?;
         }
-        (DefT(reason, def_t), _)
-            if let ArrT(arr) = def_t.deref()
-                && matches!(
-                    arr.deref(),
-                    ArrType::TupleAT(box TupleATData { .. }) | ArrType::ROArrayAT(box ROArrayATData { .. })
-                )
-                && matches!(
-                    u.deref(),
-                    GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..)
-                ) =>
-        {
+        (
+            DefT(reason, deref!(ArrT(arr @ deref!(TupleAT(..) | ROArrayAT(..))))),
+            GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..),
+        ) => {
             let t = elemt_of_arrtype(arr);
             let ro_arr = get_builtin_typeapp(cx, env, reason, None, "ReadonlyArray", vec![t]);
             rec_flow(cx, env, trace, (&ro_arr, u))?;
@@ -10549,9 +10484,8 @@ fn __flow_impl<'cx>(
         // ***********************
         // * String library call *
         // ***********************
-        (DefT(reason, def_t), _)
-            if matches!(def_t.deref(), StrGeneralT(_) | SingletonStrT { .. })
-                && primitive_promoting_use_t(u) =>
+        (DefT(reason, deref!(StrGeneralT(_) | SingletonStrT { .. })), _)
+            if primitive_promoting_use_t(u) =>
         {
             let string_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "String")?;
             rec_flow(cx, env, trace, (&string_t, u))?;
@@ -10559,9 +10493,8 @@ fn __flow_impl<'cx>(
         // ***********************
         // * Number library call *
         // ***********************
-        (DefT(reason, def_t), _)
-            if matches!(def_t.deref(), NumGeneralT(_) | SingletonNumT { .. })
-                && primitive_promoting_use_t(u) =>
+        (DefT(reason, deref!(NumGeneralT(_) | SingletonNumT { .. })), _)
+            if primitive_promoting_use_t(u) =>
         {
             let number_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "Number")?;
             rec_flow(cx, env, trace, (&number_t, u))?;
@@ -10569,9 +10502,8 @@ fn __flow_impl<'cx>(
         // ************************
         // * Boolean library call *
         // ************************
-        (DefT(reason, def_t), _)
-            if matches!(def_t.deref(), BoolGeneralT | SingletonBoolT { .. })
-                && primitive_promoting_use_t(u) =>
+        (DefT(reason, deref!(BoolGeneralT | SingletonBoolT { .. })), _)
+            if primitive_promoting_use_t(u) =>
         {
             let bool_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "Boolean")?;
             rec_flow(cx, env, trace, (&bool_t, u))?;
@@ -10579,9 +10511,8 @@ fn __flow_impl<'cx>(
         // ***********************
         // * BigInt library call *
         // ***********************
-        (DefT(reason, def_t), _)
-            if matches!(def_t.deref(), BigIntGeneralT(_) | SingletonBigIntT { .. })
-                && primitive_promoting_use_t(u) =>
+        (DefT(reason, deref!(BigIntGeneralT(_) | SingletonBigIntT { .. })), _)
+            if primitive_promoting_use_t(u) =>
         {
             let bigint_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "BigInt")?;
             rec_flow(cx, env, trace, (&bigint_t, u))?;
@@ -10589,43 +10520,37 @@ fn __flow_impl<'cx>(
         // ***********************
         // * Symbol library call *
         // ***********************
-        (DefT(reason, def_t), _)
-            if matches!(def_t.deref(), SymbolT | UniqueSymbolT(_))
-                && primitive_promoting_use_t(u) =>
-        {
+        (DefT(reason, deref!(SymbolT | UniqueSymbolT(_))), _) if primitive_promoting_use_t(u) => {
             let symbol_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "Symbol")?;
             rec_flow(cx, env, trace, (&symbol_t, u))?;
         }
         // *****************************************************
         // * Nice error messages for mixed function refinement *
         // *****************************************************
-        (DefT(lreason, def_t), _)
-            if matches!(def_t.deref(), MixedT(MixedFlavor::MixedFunction))
-                && matches!(
-                    u.deref(),
-                    MethodT(..) | SetPropT(..) | GetPropT(..) | LookupT(..)
-                ) =>
-        {
+        (
+            DefT(lreason, deref!(MixedT(MixedFlavor::MixedFunction))),
+            MethodT(..) | SetPropT(..) | GetPropT(..) | LookupT(..),
+        ) => {
             let fun_proto = Type::new(FunProtoT(lreason.dupe()));
             rec_flow(cx, env, trace, (&fun_proto, u))?;
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(MixedT(MixedFlavor::MixedFunction))),
             CallT(box CallTData {
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
             }),
-        ) if matches!(def_t.deref(), MixedT(MixedFlavor::MixedFunction)) => {
+        ) => {
             tout.add(l.dupe());
         }
         (
-            DefT(lreason, def_t),
+            DefT(lreason, deref!(MixedT(MixedFlavor::MixedFunction))),
             CallT(box CallTData {
                 use_op,
                 reason: ureason,
                 ..
             }),
-        ) if matches!(def_t.deref(), MixedT(MixedFlavor::MixedFunction)) => {
+        ) => {
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
@@ -10677,13 +10602,13 @@ fn __flow_impl<'cx>(
         }
         // Super classes are collected too, so that subclasses of `Promise` are found
         (
-            DefT(_, def_t),
+            DefT(_, deref!(InstanceT(inst_t))),
             ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForUnusedPromiseCheck,
                 collector,
                 ..
             }),
-        ) if let InstanceT(inst_t) = def_t.deref() => {
+        ) => {
             collector.add(l.dupe());
             if !flow_js_utils::is_builtin_class_id("Promise", inst_t.inst.class_id.dupe(), cx) {
                 rec_flow(cx, env, trace, (&inst_t.super_, u))?;
