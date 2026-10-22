@@ -6060,11 +6060,10 @@ pub fn rec_sub_t<'cx>(
         // ***********************************************
         // You can use a function as a callable object
         // ***********************************************
-        (DefT(_, ld), DefT(reason, ud))
-            if matches!(ld.deref(), FunT(_, _))
-                && let ObjT(o) = ud.deref()
-                && let Some(call_t) = &o.call_t =>
-        {
+        (
+            DefT(_, deref!(FunT(_, _))),
+            DefT(reason, deref!(ObjT(o @ deref!(ObjType { call_t: Some(call_t), .. })))),
+        ) => {
             let t = cx.find_call(*call_t);
             FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op.dupe(), t)))?;
             let new_obj = ObjType {
@@ -6083,10 +6082,8 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &obj_t)
         }
 
-        (DefT(_, ld), DefT(reason, ud))
-            if matches!(ld.deref(), FunT(_, _))
-                && let InstanceT(inst_t) = ud.deref()
-                && let Some(call_t) = &inst_t.inst.inst_call_t =>
+        (DefT(_, deref!(FunT(_, _))), DefT(reason, deref!(InstanceT(inst_t))))
+            if let Some(call_t) = &inst_t.inst.inst_call_t =>
         {
             let t = cx.find_call(*call_t);
             FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op.dupe(), t)))?;
@@ -6116,10 +6113,8 @@ pub fn rec_sub_t<'cx>(
         // Now that call properties are stored separately, it is particularly
         // egregious to emit this constraint. This only serves to maintain buggy
         // behavior, which should be fixed, and this code removed.
-        (DefT(lreason, ld), DefT(ureason, ud))
-            if let FunT(_, fun) = ld.deref()
-                && let ObjT(obj) = ud.deref()
-                && matches!(obj.flags.obj_kind, ObjKind::Exact | ObjKind::Indexed(_))
+        (DefT(lreason, deref!(FunT(_, fun))), DefT(ureason, deref!(ObjT(obj))))
+            if matches!(obj.flags.obj_kind, ObjKind::Exact | ObjKind::Indexed(_))
                 && (!fun
                     .strictness_kind
                     .join(obj.strictness_kind)
@@ -6194,10 +6189,7 @@ pub fn rec_sub_t<'cx>(
         // the union type contains both a function type and a object type as
         // members, clearly intending for function types to match the former
         // instead of the latter.
-        (DefT(_, ld), DefT(_, ud))
-            if let (FunT(statics, _), ObjT(obj)) =
-                (ld.deref(), ud.deref()) =>
-        {
+        (DefT(_, deref!(FunT(statics, _))), DefT(_, deref!(ObjT(obj)))) => {
             if !flow_js_utils::quick_error_fun_as_obj(
                 cx,
                 env,
@@ -6212,10 +6204,8 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
         // TODO: similar concern as above
-        (DefT(_, ld), DefT(_, ud))
-            if let (FunT(statics, _), InstanceT(inst_t)) =
-                (ld.deref(), ud.deref())
-                && matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
+        (DefT(_, deref!(FunT(statics, _))), DefT(_, deref!(InstanceT(inst_t))))
+            if matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             let mut filtered = cx.find_props(inst_t.inst.own_props.dupe());
             filtered.remove(&Name::new("constructor"));
@@ -6233,19 +6223,15 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
 
-        (DefT(_, ld), DefT(_, ud))
-            if let FunT(statics, _) = ld.deref()
-                && matches!(ud.deref(), InstanceT(_)) =>
-        {
+        (DefT(_, deref!(FunT(statics, _))), DefT(_, deref!(InstanceT(_)))) => {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, statics, u)
         }
 
         // ***************************************************
         // classes and arrays can implement some interface
         // ***************************************************
-        (DefT(_, ld), DefT(_, ud))
-            if matches!(ld.deref(), ClassT(_) | ArrT(_))
-                && matches!(ud.deref(), InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
+        (DefT(_, deref!(ClassT(_) | ArrT(_))), DefT(_, deref!(InstanceT(inst))))
+            if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             FlowJs::rec_flow_with_env(
                 cx, env,
@@ -6254,9 +6240,9 @@ pub fn rec_sub_t<'cx>(
                 &UseT::new(ImplementsT(use_op, l.dupe())),
             )
         }
-        (DefT(reason, ld), DefT(_, ud))
-            if matches!(
-                ld.deref(),
+        #[rustfmt::skip]
+        (
+            DefT(reason, deref!(
                 BoolGeneralT
                     | SingletonBoolT { .. }
                     | NumGeneralT(_)
@@ -6267,7 +6253,9 @@ pub fn rec_sub_t<'cx>(
                     | SingletonBigIntT { .. }
                     | SymbolT
                     | UniqueSymbolT(_)
-            ) && (matches!(
+            )),
+            DefT(_, ud @ deref!(InstanceT(_) | ObjT(_))),
+        ) if (matches!(
                 ud.deref(),
                 InstanceT(inst)
                     if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { reject_primitives: false, .. })
@@ -6275,33 +6263,16 @@ pub fn rec_sub_t<'cx>(
             ) || matches!(ud.deref(), ObjT(obj) if obj.strictness_kind.is_typescript_loose())) =>
         {
             let builtin_name = match l.deref() {
-                DefT(_, ld)
-                    if matches!(
-                        ld.deref(),
-                        BoolGeneralT | SingletonBoolT { .. }
-                    ) =>
-                {
+                DefT(_, deref!(BoolGeneralT | SingletonBoolT { .. })) => {
                     "Boolean"
                 }
-                DefT(_, ld)
-                    if matches!(
-                        ld.deref(),
-                        NumGeneralT(_) | SingletonNumT { .. }
-                    ) =>
-                {
+                DefT(_, deref!(NumGeneralT(_) | SingletonNumT { .. })) => {
                     "Number"
                 }
-                DefT(_, ld)
-                    if matches!(
-                        ld.deref(),
-                        BigIntGeneralT(_) | SingletonBigIntT { .. }
-                    ) =>
-                {
+                DefT(_, deref!(BigIntGeneralT(_) | SingletonBigIntT { .. })) => {
                     "BigInt"
                 }
-                DefT(_, ld)
-                    if matches!(ld.deref(), SymbolT | UniqueSymbolT(_)) =>
-                {
+                DefT(_, deref!(SymbolT | UniqueSymbolT(_))) => {
                     "Symbol"
                 }
                 _ => "String",
@@ -6309,11 +6280,10 @@ pub fn rec_sub_t<'cx>(
             let builtin = FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, None, builtin_name)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &builtin, u)
         }
-        (DefT(reason, ld), DefT(interface_reason, ud))
-            if matches!(
-                ld.deref(),
-                BoolGeneralT | SingletonBoolT { .. }
-            ) && matches!(ud.deref(), InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
+        (
+            DefT(reason, deref!(BoolGeneralT | SingletonBoolT { .. })),
+            DefT(interface_reason, deref!(InstanceT(inst))),
+        ) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -6328,11 +6298,10 @@ pub fn rec_sub_t<'cx>(
                 })),
             )
         }
-        (DefT(reason, ld), DefT(interface_reason, ud))
-            if matches!(
-                ld.deref(),
-                NumGeneralT(_) | SingletonNumT { .. }
-            ) && matches!(ud.deref(), InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
+        (
+            DefT(reason, deref!(NumGeneralT(_) | SingletonNumT { .. })),
+            DefT(interface_reason, deref!(InstanceT(inst))),
+        ) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -6347,11 +6316,10 @@ pub fn rec_sub_t<'cx>(
                 })),
             )
         }
-        (DefT(reason, ld), DefT(interface_reason, ud))
-            if matches!(
-                ld.deref(),
-                StrGeneralT(_) | SingletonStrT { .. }
-            ) && matches!(ud.deref(), InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
+        (
+            DefT(reason, deref!(StrGeneralT(_) | SingletonStrT { .. })),
+            DefT(interface_reason, deref!(InstanceT(inst))),
+        ) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             flow_js_utils::add_output_with_env(
                 cx,env,
@@ -6508,9 +6476,7 @@ pub fn rec_sub_t<'cx>(
         // *********************
         // functions statics
         // *********************
-        (DefT(reason, ld), AnyT(_, _))
-            if let FunT(static_, _) = ld.deref() =>
-        {
+        (DefT(reason, deref!(FunT(static_, _))), AnyT(_, _)) => {
             FlowJs::rec_flow_with_env(
                 cx, env,
                 trace,
@@ -6526,13 +6492,7 @@ pub fn rec_sub_t<'cx>(
         // *****************
         // class statics
         // *****************
-        (DefT(reason, ld), _)
-            if let ClassT(instance) = ld.deref()
-                && (matches!(
-                    u.deref(),
-                    DefT(_, ud) if matches!(ud.deref(), ObjT(_))
-                ) || matches!(u.deref(), AnyT(_, _))) =>
-        {
+        (DefT(reason, deref!(ClassT(instance))), DefT(_, deref!(ObjT(_))) | AnyT(_, _)) => {
             let collector = TypeCollector::create();
             FlowJs::rec_flow_with_env(
                 cx, env, trace, instance,
@@ -6566,10 +6526,7 @@ pub fn rec_sub_t<'cx>(
         // The same issue is also true for constructors, which are similarly
         // excluded from subclass compatibility checks, but are allowed on ClassT
         // types.
-        (DefT(reason, ld), DefT(_, ud))
-            if let ClassT(instance) = ld.deref()
-                && matches!(ud.deref(), FunT(_, _)) =>
-        {
+        (DefT(reason, deref!(ClassT(instance))), DefT(_, deref!(FunT(_, _)))) => {
             let collector = TypeCollector::create();
             FlowJs::rec_flow_with_env(
                 cx, env, trace, instance,
@@ -6896,10 +6853,7 @@ pub fn rec_sub_t<'cx>(
                 FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Function")?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &fun_proto)
         }
-        (DefT(lreason, ld), DefT(ureason, ud))
-            if matches!(ld.deref(), MixedT(MixedFlavor::MixedFunction))
-                && matches!(ud.deref(), FunT(_, _)) =>
-        {
+        (DefT(lreason, deref!(MixedT(MixedFlavor::MixedFunction))), DefT(ureason, deref!(FunT(_, _)))) => {
             flow_js_utils::add_output_with_env(
                 cx,env,
                 flow_js_utils::incompatible_type_error(
