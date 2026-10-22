@@ -2666,28 +2666,28 @@ fn __flow_impl<'cx>(
         }
         // helpers
         (
-            DefT(reason_o, def_t),
+            DefT(
+                reason_o,
+                deref!(ObjT(deref!(ObjType {
+                    props_tmap: mapr,
+                    flags,
+                    ..
+                }))),
+            ),
             HasOwnPropT(box HasOwnPropTData {
                 use_op,
                 reason: reason_op,
                 type_: key,
             }),
-        ) if let ObjT(obj) = def_t.deref() => {
-            let ObjType {
-                props_tmap: mapr,
-                flags,
-                ..
-            } = obj.as_ref();
+        ) => {
             let dropped = drop_generic(key.dupe());
             match (dropped.deref(), &flags.obj_kind) {
                 // If we have a literal string and that property exists
-                (DefT(_, inner_def), _)
-                    if let SingletonStrT { value: x, .. } = inner_def.deref()
-                        && cx.has_prop(mapr.dupe(), &Name::new(x.dupe())) => {}
+                (DefT(_, deref!(SingletonStrT { value: x, .. })), _)
+                    if cx.has_prop(mapr.dupe(), &Name::new(x.dupe())) => {}
                 // If we have a symbol key and that property exists
-                (DefT(_, inner_def), _)
-                    if let UniqueSymbolT(data) = inner_def.deref()
-                        && cx.has_prop(mapr.dupe(), &Name::symbol(data.symbol.dupe())) => {}
+                (DefT(_, deref!(UniqueSymbolT(data))), _)
+                    if cx.has_prop(mapr.dupe(), &Name::symbol(data.symbol.dupe())) => {}
                 // If we have a dictionary, try that next
                 (
                     _,
@@ -2700,32 +2700,30 @@ fn __flow_impl<'cx>(
                 }
                 _ => {
                     let names_a_prop = match dropped.deref() {
-                        DefT(_, inner_def2) => matches!(
-                            inner_def2.deref(),
-                            SingletonStrT { .. }
-                                | StrGeneralT(_)
-                                | NumericStrKeyT(_)
-                                | UniqueSymbolT(_)
-                        ),
+                        DefT(
+                            _,
+                            deref!(
+                                SingletonStrT { .. }
+                                    | StrGeneralT(_)
+                                    | NumericStrKeyT(_)
+                                    | UniqueSymbolT(_)
+                            ),
+                        ) => true,
                         TemplateLiteralT { .. } => true,
                         _ => false,
                     };
                     let err = if names_a_prop {
                         let (prop, suggestion) = match dropped.deref() {
-                            DefT(_, inner_def2)
-                                if let SingletonStrT { value: prop, .. } = inner_def2.deref() =>
-                            {
-                                (
-                                    Some(Name::new(prop.dupe())),
-                                    prop_typo_suggestion(cx, &[mapr.dupe()], prop.as_str()),
-                                )
-                            }
+                            DefT(_, deref!(SingletonStrT { value: prop, .. })) => (
+                                Some(Name::new(prop.dupe())),
+                                prop_typo_suggestion(cx, &[mapr.dupe()], prop.as_str()),
+                            ),
                             // Name the missing symbol key, mirroring the `InstanceT`
                             // branch. Without this the error degrades to the computed
                             // "an index signature ... is missing" wording. There is no
                             // typo suggestion: a symbol key has no string spelling to
                             // match against string property names.
-                            DefT(_, inner_def2) if let UniqueSymbolT(data) = inner_def2.deref() => {
+                            DefT(_, deref!(UniqueSymbolT(data))) => {
                                 (Some(Name::symbol(data.symbol.dupe())), None)
                             }
                             _ => (None, None),
@@ -2752,30 +2750,23 @@ fn __flow_impl<'cx>(
             }
         }
         (
-            DefT(reason_o, def_t),
+            DefT(reason_o, deref!(InstanceT(instance_t))),
             HasOwnPropT(box HasOwnPropTData {
                 use_op,
                 reason: reason_op,
                 type_: key,
             }),
-        ) if let InstanceT(instance_t) = def_t.deref()
-            && let Some(x) = match key.deref() {
-                DefT(_, kd) if let SingletonStrT { value, .. } = kd.deref() => {
-                    Some(Name::new(value.dupe()))
-                }
-                // A `unique symbol` key resolves to a distinct named member by its
-                // nominal identity, mirroring the `ObjT` branch above.
-                DefT(_, kd) if let UniqueSymbolT(data) = kd.deref() => {
-                    Some(Name::symbol(data.symbol.dupe()))
-                }
-                GenericT(box GenericTData { bound, .. })
-                    if let DefT(_, kd) = bound.deref()
-                        && let SingletonStrT { value, .. } = kd.deref() =>
-                {
-                    Some(Name::new(value.dupe()))
-                }
-                _ => None,
-            } =>
+        ) if let Some(x) = match key.deref() {
+            DefT(_, deref!(SingletonStrT { value, .. })) => Some(Name::new(value.dupe())),
+            // A `unique symbol` key resolves to a distinct named member by its
+            // nominal identity, mirroring the `ObjT` branch above.
+            DefT(_, deref!(UniqueSymbolT(data))) => Some(Name::symbol(data.symbol.dupe())),
+            GenericT(box GenericTData {
+                bound: deref!(DefT(_, deref!(SingletonStrT { value, .. }))),
+                ..
+            }) => Some(Name::new(value.dupe())),
+            _ => None,
+        } =>
         {
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
                 |reason, t| helpers::possible_concrete_types_for_inspection(cx, env, reason, t),
@@ -2816,21 +2807,18 @@ fn __flow_impl<'cx>(
             }
         }
         (
-            DefT(reason_o, def_t),
+            DefT(reason_o, deref!(InstanceT(_))),
             HasOwnPropT(box HasOwnPropTData {
                 use_op,
                 reason: reason_op,
                 type_: key,
             }),
-        ) if matches!(def_t.deref(), InstanceT(_)) => {
+        ) => {
             // Same as for objects above: a key that cannot spell a property
             // name is not a missing property, it is not a key at all.
             let dropped = drop_generic(key.dupe());
             let names_a_prop = match dropped.deref() {
-                DefT(_, key_def) => matches!(
-                    key_def.deref(),
-                    SingletonStrT { .. } | StrGeneralT(_) | NumericStrKeyT(_)
-                ),
+                DefT(_, deref!(SingletonStrT { .. } | StrGeneralT(_) | NumericStrKeyT(_))) => true,
                 TemplateLiteralT { .. } => true,
                 _ => false,
             };
@@ -2861,16 +2849,20 @@ fn __flow_impl<'cx>(
             }),
         ) => {}
         (
-            DefT(_, def_t),
+            DefT(
+                _,
+                deref!(ObjT(deref!(ObjType {
+                    flags,
+                    props_tmap,
+                    ..
+                }))),
+            ),
             GetKeysT {
                 reason: reason_op,
                 t_out: keys,
                 include_symbols,
             },
-        ) if let ObjT(obj) = def_t.deref() => {
-            let ObjType {
-                flags, props_tmap, ..
-            } = obj.as_ref();
+        ) => {
             let dict_t = obj_type::get_dict_opt(&flags.obj_kind);
             // Type-level `keyof` includes symbols, while runtime key
             // enumeration (`Object.keys`) omits them, matching JavaScript.
@@ -2887,13 +2879,13 @@ fn __flow_impl<'cx>(
             }
         }
         (
-            DefT(_, def_t),
+            DefT(_, deref!(InstanceT(instance_t))),
             GetKeysT {
                 reason: reason_op,
                 t_out: keys,
                 include_symbols,
             },
-        ) if let InstanceT(instance_t) = def_t.deref() => {
+        ) => {
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
                 |reason, t| helpers::possible_concrete_types_for_inspection(cx, env, reason, t),
                 instance_t,
@@ -2939,13 +2931,11 @@ fn __flow_impl<'cx>(
         // **********
         // * values *
         // **********
-        (DefT(_, def_t), GetValuesT(reason, values)) if let ObjT(o) = def_t.deref() => {
+        (DefT(_, deref!(ObjT(o))), GetValuesT(reason, values)) => {
             let values_l = flow_js_utils::get_values_type_of_obj_t(cx, o, reason.dupe());
             rec_flow_t(cx, env, trace, unknown_use(), (&values_l, values))?;
         }
-        (DefT(_, def_t), GetValuesT(reason, values))
-            if let InstanceT(instance_t) = def_t.deref() =>
-        {
+        (DefT(_, deref!(InstanceT(instance_t))), GetValuesT(reason, values)) => {
             let inst = &instance_t.inst;
             let values_l = flow_js_utils::get_values_type_of_instance_t(
                 cx,
@@ -2955,7 +2945,7 @@ fn __flow_impl<'cx>(
             );
             rec_flow_t(cx, env, trace, unknown_use(), (&values_l, values))?;
         }
-        (DefT(_, def_t), GetValuesT(reason, t_out)) if let ArrT(arr) = def_t.deref() => {
+        (DefT(_, deref!(ArrT(arr))), GetValuesT(reason, t_out)) => {
             let elem_t = elemt_of_arrtype(arr);
             let mod_elem = type_util::mod_reason_of_t(&|_| reason.dupe(), &elem_t);
             rec_flow_t(cx, env, trace, unknown_use(), (&mod_elem, t_out))?;
@@ -2969,24 +2959,23 @@ fn __flow_impl<'cx>(
         // ***********************************************
         // * Values of a dictionary - `mixed` otherwise. *
         // ***********************************************
-        (DefT(_, def_t), GetDictValuesT(_, result))
-            if let ObjT(obj) = def_t.deref()
-                && let ObjType {
-                    flags, props_tmap, ..
-                } = obj.as_ref()
-                && let ObjKind::Indexed(DictType {
-                    value,
-                    dict_polarity,
+        #[rustfmt::skip]
+        (
+            DefT(_, deref!(ObjT(deref!(ObjType {
+                flags: Flags {
+                    obj_kind: ObjKind::Indexed(DictType { value, dict_polarity, .. }),
                     ..
-                }) = &flags.obj_kind
-                && Polarity::compat(*dict_polarity, Polarity::Positive)
+                },
+                props_tmap,
+                ..
+            })))),
+            GetDictValuesT(_, result),
+        ) if Polarity::compat(*dict_polarity, Polarity::Positive)
                 && cx.find_props(props_tmap.dupe()).is_empty() =>
         {
             rec_flow(cx, env, trace, (value, result))?;
         }
-        (DefT(_, def_t), GetDictValuesT(reason, result))
-            if matches!(def_t.deref(), ObjT(_) | InstanceT(_)) =>
-        {
+        (DefT(_, deref!(ObjT(_) | InstanceT(_))), GetDictValuesT(reason, result)) => {
             let mixed = mixed_t::why(reason.dupe());
             rec_flow(cx, env, trace, (&mixed, result))?;
         }
@@ -3122,32 +3111,24 @@ fn __flow_impl<'cx>(
             )?;
         }
         // Shortcut for indexed accesses with the same type as the dict key.
+        #[rustfmt::skip]
         (
             UnionT(_, _),
             ElemT(box ElemTData {
                 use_op,
                 reason,
-                obj,
+                obj: deref!(DefT(_, deref!(ObjT(deref!(ObjType {
+                    flags: flags @ Flags {
+                        obj_kind: ObjKind::Indexed(DictType { key, value, dict_polarity, .. }),
+                        ..
+                    },
+                    ..
+                }))))),
                 action: box ElemAction::ReadElem(box ReadElemData { tout, .. }),
             }),
-        ) if let DefT(_, obj_def) = obj.deref()
-            && let ObjT(obj_t) = obj_def.deref()
-            && {
-                let ObjType { flags, .. } = obj_t.as_ref();
-                match obj_type::get_dict_opt(&flags.obj_kind) {
-                    Some(DictType {
-                        key, dict_polarity, ..
-                    }) => {
-                        flow_typing_flow_common::concrete_type_eq::eq_with_env(cx, env, l, key)
-                            && Polarity::compat(*dict_polarity, Polarity::Positive)
-                    }
-                    None => false,
-                }
-            } =>
+        ) if flow_typing_flow_common::concrete_type_eq::eq_with_env(cx, env, l, key)
+            && Polarity::compat(*dict_polarity, Polarity::Positive) =>
         {
-            let ObjType { flags, .. } = obj_t.as_ref();
-            let dict = obj_type::get_dict_opt(&flags.obj_kind).unwrap();
-            let value = &dict.value;
             let value = helpers::reposition_reason(cx, env, Some(trace), reason, false, value)?;
             let value = match &flags.react_dro {
                 Some(dro) => {
@@ -3244,9 +3225,8 @@ fn __flow_impl<'cx>(
             // skip_optional and no_unchecked_indexed_access are irrelevant here since
             // we require no dict and only match properties that exist in the prop map.
             match obj.deref() {
-                DefT(_, def_t)
-                    if let ObjT(obj_t) = def_t.deref()
-                        && obj_type::get_dict_opt(&obj_t.flags.obj_kind).is_none()
+                DefT(_, deref!(ObjT(obj_t)))
+                    if obj_type::get_dict_opt(&obj_t.flags.obj_kind).is_none()
                         && rep.members_iter().count() > 100 =>
                 {
                     let props = cx.find_props(obj_t.props_tmap.dupe());
@@ -3504,12 +3484,14 @@ fn __flow_impl<'cx>(
         ) => {
             for t in rep.members_iter() {
                 let u_inner = match use_op {
-                    VirtualUseOp::Op(root)
-                        if let VirtualRootUseOp::ClassExtendsCheck(box ClassExtendsCheckData {
-                            def,
-                            ..
-                        }) = root.deref() =>
-                    {
+                    VirtualUseOp::Op(
+                        deref!(
+                            VirtualRootUseOp::ClassExtendsCheck(box ClassExtendsCheckData {
+                                def,
+                                ..
+                            })
+                        ),
+                    ) => {
                         let new_use_op = VirtualUseOp::Op(Arc::new(
                             VirtualRootUseOp::ClassExtendsCheck(Box::new(ClassExtendsCheckData {
                                 def: def.dupe(),
@@ -3532,15 +3514,15 @@ fn __flow_impl<'cx>(
         (IntersectionT(_, rep), ImplementsT(use_op, this)) => {
             for t in rep.members_iter() {
                 let u_inner = match use_op {
-                    VirtualUseOp::Op(root)
-                        if let VirtualRootUseOp::ClassImplementsCheck(
-                            box ClassImplementsCheckData {
+                    VirtualUseOp::Op(
+                        deref!(
+                            VirtualRootUseOp::ClassImplementsCheck(box ClassImplementsCheckData {
                                 def,
                                 name,
                                 implements: _,
-                            },
-                        ) = root.deref() =>
-                    {
+                            })
+                        ),
+                    ) => {
                         let new_use_op =
                             VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ClassImplementsCheck(
                                 Box::new(ClassImplementsCheckData {
@@ -3717,21 +3699,21 @@ fn __flow_impl<'cx>(
                 _ => (l.dupe(), None),
             };
             let arrtype = match lt.deref() {
-                DefT(_, lt_def) if let ArrT(arrtype) = lt_def.deref() => {
+                DefT(_, deref!(ArrT(arrtype))) => {
                     // Arrays
                     match (&resolve_spread.rrt_resolve_to, arrtype.as_ref()) {
                         (
                             SpreadResolve::ResolveSpreadsToTupleType { inexact, .. },
-                            ArrType::ArrayAT(box ArrayATData {
+                            ArrayAT(box ArrayATData {
                                 tuple_view: None, ..
                             })
-                            | ArrType::ROArrayAT(box ROArrayATData { .. })
-                            | ArrType::TupleAT(box TupleATData { rest: Some(_), .. }),
+                            | ROArrayAT(box ROArrayATData { .. })
+                            | TupleAT(box TupleATData { rest: Some(_), .. }),
                         ) if *inexact || !resolve_spread.rrt_unresolved.is_empty() => {
                             // Only the last spread of a tuple type can have an unknown number of
                             // elements, which become its rest element.
                             let error = match arrtype.as_ref() {
-                                ArrType::TupleAT(_) => {
+                                TupleAT(_) => {
                                     let loc = match resolve_spread.rrt_unresolved.first() {
                                         Some(UnresolvedParam::UnresolvedArg(
                                             box UnresolvedArgData(elem, _),
@@ -3808,13 +3790,11 @@ fn __flow_impl<'cx>(
                             let arr_reason = reason.dupe().replace_desc_new(None);
                             Type::new(DefT(
                                 arr_reason,
-                                DefT::new(ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
-                                    ROArrayATData {
-                                        elem_t: elem_t.dupe(),
-                                        react_dro: None,
-                                        literal: false,
-                                    },
-                                ))))),
+                                DefT::new(ArrT(Rc::new(ROArrayAT(Box::new(ROArrayATData {
+                                    elem_t: elem_t.dupe(),
+                                    react_dro: None,
+                                    literal: false,
+                                }))))),
                             ))
                         }
                         ResolveTo::Tuple => {
@@ -3844,7 +3824,7 @@ fn __flow_impl<'cx>(
                     if !flow_js_utils::tvar_visitors::has_unresolved_tvars_or_placeholders(cx, l) {
                         tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &elem_t);
                     }
-                    ArrType::ArrayAT(Box::new(ArrayATData {
+                    ArrayAT(Box::new(ArrayATData {
                         elem_t,
                         tuple_view: None,
                         react_dro: None,
