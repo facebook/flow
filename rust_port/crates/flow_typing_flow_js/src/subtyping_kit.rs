@@ -62,7 +62,7 @@ use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_implicit_instantiation_check::Operation;
 use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
-use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrType::*;
 use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::CanonicalRendersForm;
@@ -2945,23 +2945,14 @@ pub fn rec_sub_t<'cx>(
         // *******************************
         // * common implicit conversions *
         // *******************************
-        (DefT(_, ld), DefT(_, ud))
-            if matches!(
-                ld.deref(),
-                NumGeneralT(_) | SingletonNumT { .. }
-            ) && matches!(ud.deref(), NumGeneralT(_)) =>
-        {
+        (DefT(_, deref!(NumGeneralT(_) | SingletonNumT { .. })), DefT(_, deref!(NumGeneralT(_)))) => {
             Ok(())
         }
-        (DefT(r, ld), MaybeT(_, tout))
-            if matches!(ld.deref(), NullT | VoidT) =>
-        {
+        (DefT(r, deref!(NullT | VoidT)), MaybeT(_, tout)) => {
             let empty = Type::new(DefT(r.dupe(), DefT::new(EmptyT)));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &empty, tout)
         }
-        (DefT(r, ld), MaybeT(_, tout))
-            if matches!(ld.deref(), MixedT(MixedFlavor::MixedEverything)) =>
-        {
+        (DefT(r, deref!(MixedT(MixedFlavor::MixedEverything))), MaybeT(_, tout)) => {
             let mixed = Type::new(DefT(
                 r.dupe(),
                 DefT::new(MixedT(MixedFlavor::MixedNonMaybe)),
@@ -2981,9 +2972,7 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &void, u)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
-        (DefT(r, ld), OptionalT { type_: tout, .. })
-            if matches!(ld.deref(), VoidT) =>
-        {
+        (DefT(r, deref!(VoidT)), OptionalT { type_: tout, .. }) => {
             let empty = Type::new(DefT(r.dupe(), DefT::new(EmptyT)));
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &empty, tout)
         }
@@ -5619,24 +5608,15 @@ pub fn rec_sub_t<'cx>(
         // ********************************************
         // array types deconstruct into their parts
         // ********************************************
-        (DefT(r1, ld), DefT(r2, ud))
-            if let ArrT(arr1) = ld.deref()
-                && let ArrT(arr2) = ud.deref()
-                && let (
-                    ArrType::ArrayAT(box ArrayATData {
-                        elem_t: t1,
-                        tuple_view: tv1,
-                        strictness_kind: strictness_kind1,
-                        ..
-                    }),
-                    ArrType::ArrayAT(box ArrayATData {
-                        elem_t: t2,
-                        tuple_view: tv2,
-                        strictness_kind: strictness_kind2,
-                        ..
-                    }),
-                ) = (arr1.as_ref(), arr2.as_ref()) =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(r1, deref!(ArrT(deref!(ArrayAT(box ArrayATData {
+                elem_t: t1, tuple_view: tv1, strictness_kind: strictness_kind1, fresh: lit1, ..
+            }))))),
+            DefT(r2, deref!(ArrT(deref!(ArrayAT(box ArrayATData {
+                elem_t: t2, tuple_view: tv2, strictness_kind: strictness_kind2, ..
+            }))))),
+        ) => {
             let use_op = VirtualUseOp::Frame(
                 Arc::new(VirtualFrameUseOp::ArrayElementCompatibility {
                     lower: r1.dupe(),
@@ -5644,7 +5624,6 @@ pub fn rec_sub_t<'cx>(
                 }),
                 Arc::new(use_op),
             );
-            let lit1 = arr1.fresh();
             let ts1 = tv1
                 .as_ref()
                 .map(|tv| type_util::tuple_ts_of_elements(&tv.elements))
@@ -5658,7 +5637,7 @@ pub fn rec_sub_t<'cx>(
                 env,
                 trace,
                 use_op,
-                lit1,
+                *lit1,
                 strictness_kind1.join(*strictness_kind2),
                 r1,
                 l,
@@ -5673,27 +5652,16 @@ pub fn rec_sub_t<'cx>(
             )
         }
         // Tuples can flow to tuples with the same arity
-        (DefT(r1, ld), DefT(r2, ud))
-            if let ArrT(arr1) = ld.deref()
-                && let ArrT(arr2) = ud.deref()
-                && let (
-                    ArrType::TupleAT(box TupleATData {
-                        elements: elements1,
-                        arity: lower_arity,
-                        inexact: lower_inexact,
-                        rest: rest1,
-                        ..
-                    }),
-                    ArrType::TupleAT(box TupleATData {
-                        elements: elements2,
-                        arity: upper_arity,
-                        inexact: upper_inexact,
-                        rest: rest2,
-                        ..
-                    }),
-                ) = (arr1.as_ref(), arr2.as_ref()) =>
-        {
-            let fresh = arr1.literal();
+        #[rustfmt::skip]
+        (
+            DefT(r1, deref!(ArrT(deref!(TupleAT(box TupleATData {
+                elements: elements1, arity: lower_arity, inexact: lower_inexact,
+                rest: rest1, literal: fresh, ..
+            }))))),
+            DefT(r2, deref!(ArrT(deref!(TupleAT(box TupleATData {
+                elements: elements2, arity: upper_arity, inexact: upper_inexact, rest: rest2, ..
+            }))))),
+        ) => {
             let (num_req1, num_total1) = *lower_arity;
             let (num_req2, num_total2) = *upper_arity;
             // A tuple with a rest element has no maximum length, like an inexact tuple.
@@ -5729,7 +5697,7 @@ pub fn rec_sub_t<'cx>(
                                             optional1: bool,
                                             optional2: bool|
                  -> Result<(), FlowJsException> {
-                    if !(fresh || Polarity::compat(p1, p2)) {
+                    if !(*fresh || Polarity::compat(p1, p2)) {
                         flow_js_utils::add_output_with_env(
                             cx,env,
                             ErrorMessage::ETupleElementPolarityMismatch(Box::new(
@@ -5785,7 +5753,7 @@ pub fn rec_sub_t<'cx>(
                     } else {
                         t2
                     };
-                    match (fresh, p2) {
+                    match (*fresh, p2) {
                         (true, _) | (_, Polarity::Positive) => {
                             FlowJs::rec_flow_t_with_env(cx, env, trace, elem_use_op, t1, t2_inner)?;
                         }
@@ -5889,20 +5857,15 @@ pub fn rec_sub_t<'cx>(
         }
 
         // TypeScript treats mutable arrays covariantly, including tuples used as arrays.
-        (DefT(r1, ld), DefT(r2, ud))
-            if let ArrT(arr1) = ld.deref()
-                && let ArrT(arr2) = ud.deref()
-                && let ArrType::TupleAT(box TupleATData {
-                    elem_t: t1,
-                    strictness_kind: strictness_kind1,
-                    ..
-                }) = arr1.as_ref()
-                && let ArrType::ArrayAT(box ArrayATData {
-                    elem_t: t2,
-                    strictness_kind: strictness_kind2,
-                    ..
-                }) = arr2.as_ref()
-                && strictness_kind1
+        #[rustfmt::skip]
+        (
+            DefT(r1, deref!(ArrT(deref!(TupleAT(box TupleATData {
+                elem_t: t1, strictness_kind: strictness_kind1, ..
+            }))))),
+            DefT(r2, deref!(ArrT(deref!(ArrayAT(box ArrayATData {
+                elem_t: t2, strictness_kind: strictness_kind2, ..
+            }))))),
+        ) if strictness_kind1
                     .join(*strictness_kind2)
                     .is_typescript_loose() =>
         {
@@ -5917,19 +5880,13 @@ pub fn rec_sub_t<'cx>(
         }
 
         // Arrays with known elements can flow to tuples
-        (DefT(r1, ld), DefT(r2, ud))
-            if let ArrT(arr1) = ld.deref()
-                && let ArrType::ArrayAT(box ArrayATData {
-                    elem_t: t1,
-                    tuple_view,
-                    react_dro,
-                    ..
-                }) = arr1.as_ref()
-                && let ArrT(arr2) = ud.deref()
-                && let ArrType::TupleAT(box TupleATData {
-                    strictness_kind, ..
-                }) = arr2.as_ref() =>
-        {
+        #[rustfmt::skip]
+        (
+            DefT(r1, deref!(ArrT(deref!(ArrayAT(box ArrayATData {
+                elem_t: t1, tuple_view, react_dro, literal, fresh, ..
+            }))))),
+            DefT(r2, deref!(ArrT(deref!(TupleAT(box TupleATData { strictness_kind, .. }))))),
+        ) => {
             match tuple_view {
                 None => {
                     flow_js_utils::add_output_with_env(
@@ -5946,7 +5903,7 @@ pub fn rec_sub_t<'cx>(
                 Some(tv) => {
                     let tuple_t = Type::new(DefT(
                         r1.dupe(),
-                        DefT::new(ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                        DefT::new(ArrT(Rc::new(TupleAT(Box::new(
                             TupleATData {
                                 elem_t: t1.dupe(),
                                 elements: tv.elements.dupe(),
@@ -5955,8 +5912,8 @@ pub fn rec_sub_t<'cx>(
                                 rest: tv.rest.dupe(),
                                 react_dro: react_dro.clone(),
                                 strictness_kind: *strictness_kind,
-                                literal: arr1.literal(),
-                                fresh: arr1.fresh(),
+                                literal: *literal,
+                                fresh: *fresh,
                             },
                         ))))),
                     ));
@@ -5967,16 +5924,15 @@ pub fn rec_sub_t<'cx>(
         }
 
         // Read only arrays are the super type of all tuples and arrays
-        (DefT(r1, ld), DefT(r2, ud))
-            if let ArrT(arr1) = ld.deref()
-                && let ArrT(arr2) = ud.deref()
-                && let ArrType::ROArrayAT(box ROArrayATData { elem_t: t2, .. }) = arr2.as_ref() =>
-        {
-            let t1 = match arr1.as_ref() {
-                ArrType::ArrayAT(box ArrayATData { elem_t, .. })
-                | ArrType::TupleAT(box TupleATData { elem_t, .. }) => elem_t,
-                ArrType::ROArrayAT(box ROArrayATData { elem_t: t, .. }) => t,
-            };
+        #[rustfmt::skip]
+        (
+            DefT(r1, deref!(ArrT(deref!(
+                ArrayAT(box ArrayATData { elem_t: t1, .. })
+                | TupleAT(box TupleATData { elem_t: t1, .. })
+                | ROArrayAT(box ROArrayATData { elem_t: t1, .. })
+            )))),
+            DefT(r2, deref!(ArrT(deref!(ROArrayAT(box ROArrayATData { elem_t: t2, .. }))))),
+        ) => {
             let use_op = VirtualUseOp::Frame(
                 Arc::new(VirtualFrameUseOp::ArrayElementCompatibility {
                     lower: r1.dupe(),
@@ -5991,19 +5947,17 @@ pub fn rec_sub_t<'cx>(
                 &UseT::new(UseT(use_op, t2.dupe())),
             )
         }
-        (DefT(_, ld), DefT(r2, ud))
-            if matches!(ld.deref(), InstanceT(_))
-                && let ArrT(arr2) = ud.deref()
-                && let ArrType::ArrayAT(box ArrayATData { elem_t, .. }) = arr2.as_ref() =>
-        {
+        (
+            DefT(_, deref!(InstanceT(_))),
+            DefT(r2, deref!(ArrT(deref!(ArrayAT(box ArrayATData { elem_t, .. }))))),
+        ) => {
             let arrt = FlowJs::get_builtin_typeapp_with_env(cx, env, r2, None, "Array", vec![elem_t.dupe()]);
             FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, arrt)))
         }
-        (DefT(_, ld), DefT(r2, ud))
-            if matches!(ld.deref(), InstanceT(_))
-                && let ArrT(arr2) = ud.deref()
-                && let ArrType::ROArrayAT(box ROArrayATData { elem_t: elemt, .. }) = arr2.as_ref() =>
-        {
+        (
+            DefT(_, deref!(InstanceT(_))),
+            DefT(r2, deref!(ArrT(deref!(ROArrayAT(box ROArrayATData { elem_t: elemt, .. }))))),
+        ) => {
             let arrt = FlowJs::get_builtin_typeapp_with_env(
                 cx,
                 env,
@@ -6018,10 +5972,7 @@ pub fn rec_sub_t<'cx>(
         // **************************************************
         // instances of classes follow declared hierarchy
         // **************************************************
-        (DefT(_, ld), DefT(_, ud))
-            if matches!(ld.deref(), InstanceT(_))
-                && matches!(ud.deref(), InstanceT(_)) =>
-        {
+        (DefT(_, deref!(InstanceT(_))), DefT(_, deref!(InstanceT(_)))) => {
             FlowJs::rec_flow_with_env(
                 cx, env,
                 trace,
@@ -6033,10 +5984,7 @@ pub fn rec_sub_t<'cx>(
         // ********************************************************
         // runtime types derive static types through annotation
         // ********************************************************
-        (DefT(rl, ld), DefT(_, ud))
-            if let (ClassT(l_inner), ClassT(u_inner)) =
-                (ld.deref(), ud.deref()) =>
-        {
+        (DefT(rl, deref!(ClassT(l_inner))), DefT(_, deref!(ClassT(u_inner)))) => {
             let repositioned = FlowJs::reposition_with_env(
                 cx, env,
                 Some(trace),
@@ -6053,10 +6001,8 @@ pub fn rec_sub_t<'cx>(
             )
         }
 
-        (DefT(reason_l, ld), DefT(reason_u, ud))
-            if let InstanceT(instance) = ld.deref()
-                && matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. })
-                && let ClassT(class_instance) = ud.deref() =>
+        (DefT(reason_l, deref!(InstanceT(instance))), DefT(reason_u, deref!(ClassT(class_instance))))
+            if matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             let concretize = |cx: &mut Context<'_>, t: &Type| {
                 FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, type_util::reason_of_t(t), t)
