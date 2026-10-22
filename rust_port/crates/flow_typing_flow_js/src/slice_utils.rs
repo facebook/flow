@@ -1779,15 +1779,10 @@ pub fn object_read_only<'cx>(
         };
         let call = None;
         let id = cx.generate_property_map(props_map);
-        let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
-        // Avoid referring directly to the $ReadOnly keyword
-        let (reason, literal) = match reason.desc(false) {
-            Some(VirtualReasonDesc::RReadOnlyType) => (r.dupe(), *literal),
-            _ => (reason.dupe(), false),
-        };
+        let proto = Type::new(TypeInner::ObjProtoT(r.dupe()));
         mk_object_type(
             cx,
-            &reason,
+            r,
             false,
             true,
             interface.clone(),
@@ -1799,7 +1794,7 @@ pub fn object_read_only<'cx>(
             proto,
             generics.clone(),
             *strictness_kind,
-            literal,
+            *literal,
         )
     };
     let mapped: Vec<Type> = x.iter().map(mk_read_only_object).collect();
@@ -2621,15 +2616,11 @@ fn resolve_with_env<'cx, A>(
                 | ArrType::ROArrayAT(box ROArrayATData {
                     elem_t, react_dro, ..
                 }) if matches!(tool, object::Tool::ReadOnly) => {
-                    let def_reason = match reason.desc(false) {
-                        Some(VirtualReasonDesc::RReadOnlyType) => r.dupe(),
-                        _ => reason.dupe(),
-                    };
                     return return_(
                         cx,
                         use_op,
                         Type::new(TypeInner::DefT(
-                            def_reason,
+                            r.dupe(),
                             DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
                                 ROArrayATData {
                                     elem_t: elem_t.dupe(),
@@ -2658,15 +2649,11 @@ fn resolve_with_env<'cx, A>(
                         reason: elem.reason.dupe(),
                     };
                     let elements: Vec<TupleElement> = elements.iter().map(read_only).collect();
-                    let def_reason = match reason.desc(false) {
-                        Some(VirtualReasonDesc::RReadOnlyType) => r.dupe(),
-                        _ => reason.dupe(),
-                    };
                     return return_(
                         cx,
                         use_op,
                         Type::new(TypeInner::DefT(
-                            def_reason,
+                            r.dupe(),
                             DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
                                 TupleATData {
                                     elem_t: elem_t.dupe(),

@@ -2381,7 +2381,7 @@ fn merge_annot<'cx>(
             })
         }
         Annot::ReadOnly(box (loc, t)) => {
-            let reason = reason::mk_reason(RReadOnlyType, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::MakeReadOnly {
                 loc: Box::new(loc.dupe()),
             }));

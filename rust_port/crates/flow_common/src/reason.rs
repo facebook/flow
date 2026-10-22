@@ -329,7 +329,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RImportMeta,
     RAwait,
     RNoProviders,
-    RReadOnlyType,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
     RReactProps,
@@ -534,7 +533,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 from_component_syntax: *from_component_syntax,
             },
             RReactChildren => RReactChildren,
-            RReadOnlyType => RReadOnlyType,
 
             // Recursive variants
             RFunctionCall(d) => RFunctionCall(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
@@ -1439,7 +1437,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RNoProviders => "no providers".to_string(),
 
         // Type wrappers
-        RReadOnlyType => "`Readonly`".to_string(),
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),
         RRequiredOf(d) => format!("required of {}", string_of_desc(d)),
 

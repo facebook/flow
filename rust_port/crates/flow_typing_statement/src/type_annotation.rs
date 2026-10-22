@@ -1377,8 +1377,7 @@ fn convert_inner<'a>(
                 }
                 let argument_ast = convert_inner(cx, env, &inner.argument)?;
                 let arg_t = argument_ast.loc().1.dupe();
-                let reason =
-                    reason::mk_reason(reason::VirtualReasonDesc::RReadOnlyType, loc.dupe());
+                let reason = reason::mk_reason(None, loc.dupe());
                 let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::MakeReadOnly {
                     loc: Box::new(loc.dupe()),
                 }));
@@ -2472,10 +2471,7 @@ fn convert_inner<'a>(
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
-                            let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RReadOnlyType,
-                                loc.dupe(),
-                            );
+                            let reason = reason::mk_reason(None, loc.dupe());
                             let result_t =
                                 FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                                     cx,
@@ -2506,10 +2502,7 @@ fn convert_inner<'a>(
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
-                            let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RReadOnlyType,
-                                loc.dupe(),
-                            );
+                            let reason = reason::mk_reason(None, loc.dupe());
                             let result_t =
                                 FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                                     cx,
@@ -2835,10 +2828,7 @@ fn convert_inner<'a>(
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
-                            let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RReadOnlyType,
-                                loc.dupe(),
-                            );
+                            let reason = reason::mk_reason(None, loc.dupe());
                             let result_t =
                                 FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                                     cx,
