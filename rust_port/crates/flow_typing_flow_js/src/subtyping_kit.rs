@@ -1175,14 +1175,14 @@ fn try_method_bivariant<'cx>(
             #[rustfmt::skip]
             (
                 DefT(_, deref!(PolyT(box PolyTData {
-                        tparams: ps1,
-                        t_out: inner1 @ deref!(DefT(_, deref!(FunT(_, _)))),
-                        ..
+                    tparams: ps1,
+                    t_out: inner1 @ deref!(DefT(_, deref!(FunT(_, _)))),
+                    ..
                 }))),
                 DefT(_, deref!(PolyT(box PolyTData {
-                        tparams: ps2,
-                        t_out: inner2 @ deref!(DefT(_, deref!(FunT(_, _)))),
-                        ..
+                    tparams: ps2,
+                    t_out: inner2 @ deref!(DefT(_, deref!(FunT(_, _)))),
+                    ..
                 }))),
             ) if ps1.len() == ps2.len() => {
                 let (map1, generics) = flow_js_utils::mk_tparams(cx, ps1);
@@ -1309,18 +1309,16 @@ fn try_method_bivariant<'cx>(
             #[rustfmt::skip]
             (
                 DefT(_, deref!(PolyT(box PolyTData {
-                        tparams: ps1,
-                        t_out: deref!(DefT(_, deref!(FunT(_, _)))),
-                        ..
+                    tparams: ps1,
+                    t_out: deref!(DefT(_, deref!(FunT(_, _)))),
+                    ..
                 }))),
                 DefT(_, deref!(PolyT(box PolyTData {
-                        tparams: ps2,
-                        t_out: deref!(DefT(_, deref!(FunT(_, _)))),
-                        ..
+                    tparams: ps2,
+                    t_out: deref!(DefT(_, deref!(FunT(_, _)))),
+                    ..
                 }))),
-            ) if ps1.len() == ps2.len() => {
-                true
-            },
+            ) if ps1.len() == ps2.len() => true,
             _ => false,
         }
     }
@@ -5106,9 +5104,9 @@ pub fn rec_sub_t<'cx>(
                 component_kind,
             }))),
             DefT(_, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
-                    config: configu,
-                    renders: rendersu,
-                    component_kind: ComponentKind::Structural,
+                config: configu,
+                renders: rendersu,
+                component_kind: ComponentKind::Structural,
             }))),
         ) => {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), configu, configl)?;
@@ -5146,19 +5144,17 @@ pub fn rec_sub_t<'cx>(
                 ..
             }))),
             DefT(_, deref!(ReactAbstractComponentT(box ReactAbstractComponentTData {
-                    component_kind: ComponentKind::Nominal(idu, name_u, _),
-                    config: configu,
-                    renders: rendersu,
-                    ..
+                component_kind: ComponentKind::Nominal(idu, name_u, _),
+                config: configu,
+                renders: rendersu,
+                ..
             }))),
-        ) if (idl == idu
-                    || type_util::nominal_id_have_same_logical_module(
-                        &cx.file_options(),
-                        cx.projects_options(),
-                        (idl, Some(name_l.as_str())),
-                        (idu, Some(name_u.as_str())),
-                    )) =>
-        {
+        ) if idl == idu || type_util::nominal_id_have_same_logical_module(
+            &cx.file_options(),
+            cx.projects_options(),
+            (idl, Some(name_l.as_str())),
+            (idu, Some(name_u.as_str())),
+        ) => {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), configu, configl)?;
             let use_op = UseOp::Frame(
                 Arc::new(VirtualFrameUseOp::RendersCompatibility),
@@ -5560,9 +5556,8 @@ pub fn rec_sub_t<'cx>(
         // object is a subtype. We use `ExtendsUseT` to walk the proto chain of the
         // object, in case it includes a nominal type.
         (DefT(_, ld @ deref!(ObjT(_) | ClassT(_))), DefT(_, deref!(InstanceT(inst))))
-            if (matches!(ld.deref(), ObjT(_))
-                    || (matches!(ld.deref(), ClassT(_))
-                        && matches!(inst.inst.inst_kind, InstanceKind::ClassKind))) =>
+            if matches!(ld.deref(), ObjT(_))
+                || matches!(inst.inst.inst_kind, InstanceKind::ClassKind) =>
         {
             FlowJs::rec_flow_with_env(
                 cx, env,
@@ -6255,13 +6250,10 @@ pub fn rec_sub_t<'cx>(
                     | UniqueSymbolT(_)
             )),
             DefT(_, ud @ deref!(InstanceT(_) | ObjT(_))),
-        ) if (matches!(
-                ud.deref(),
-                InstanceT(inst)
-                    if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { reject_primitives: false, .. })
-                        && inst.inst.strictness_kind.is_typescript_loose()
-            ) || matches!(ud.deref(), ObjT(obj) if obj.strictness_kind.is_typescript_loose())) =>
-        {
+        ) if matches!(ud.deref(), InstanceT(inst)
+            if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { reject_primitives: false, .. })
+                && inst.inst.strictness_kind.is_typescript_loose()
+        ) || matches!(ud.deref(), ObjT(obj) if obj.strictness_kind.is_typescript_loose()) => {
             let builtin_name = match l.deref() {
                 DefT(_, deref!(BoolGeneralT | SingletonBoolT { .. })) => {
                     "Boolean"
@@ -6541,51 +6533,36 @@ pub fn rec_sub_t<'cx>(
         // *********
         // Enums
         // *********
-        (DefT(_, ld), DefT(_, ud))
-            if matches!((ld.deref(), ud.deref()), (
-                EnumObjectT { enum_info: ei1, .. },
-                EnumObjectT { enum_info: ei2, .. },
-            ) if matches!((ei1.deref().deref(), ei2.deref().deref()), (
+        (
+            DefT(_, deref!(EnumObjectT { enum_info: ei1, .. })),
+            DefT(_, deref!(EnumObjectT { enum_info: ei2, .. })),
+        ) if let (
                 EnumInfoInner::ConcreteEnum(c1),
                 EnumInfoInner::ConcreteEnum(c2),
-            ) if c1.enum_id == c2.enum_id)) =>
+            ) = (ei1.deref().deref(), ei2.deref().deref())
+                && c1.enum_id == c2.enum_id =>
         {
             Ok(())
         }
-        (DefT(_, ld), DefT(_, ud))
-            if matches!((ld.deref(), ud.deref()), (
-                EnumValueT(ei1),
-                EnumValueT(ei2),
-            ) if matches!((ei1.deref().deref(), ei2.deref().deref()), (
+        (DefT(_, deref!(EnumValueT(ei1))), DefT(_, deref!(EnumValueT(ei2))))
+            if let (
                 EnumInfoInner::ConcreteEnum(c1),
                 EnumInfoInner::ConcreteEnum(c2),
-            ) if c1.enum_id == c2.enum_id)) =>
+            ) = (ei1.deref().deref(), ei2.deref().deref())
+                && c1.enum_id == c2.enum_id =>
         {
             Ok(())
         }
-        (DefT(enum_reason_l, ld), DefT(enum_reason_u, ud))
-            if let Some((c1, c2)) = {
-                match (ld.deref(), ud.deref()) {
-                    (
-                        EnumObjectT { enum_info: ei1, .. },
-                        EnumObjectT { enum_info: ei2, .. },
-                    ) => match (ei1.deref().deref(), ei2.deref().deref()) {
-                        (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) => {
-                            Some((c1, c2))
-                        }
-                        _ => None,
-                    },
-                    (EnumValueT(ei1), EnumValueT(ei2)) => {
-                        match (ei1.deref().deref(), ei2.deref().deref()) {
-                            (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) => {
-                                Some((c1, c2))
-                            }
-                            _ => None,
-                        }
-                    }
-                    _ => None,
-                }
-            } && type_util::nominal_id_have_same_logical_module(
+        (
+            DefT(enum_reason_l, deref!(EnumObjectT { enum_info: ei1, .. })),
+            DefT(enum_reason_u, deref!(EnumObjectT { enum_info: ei2, .. })),
+        )
+        | (
+            DefT(enum_reason_l, deref!(EnumValueT(ei1))),
+            DefT(enum_reason_u, deref!(EnumValueT(ei2))),
+        ) if let (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) =
+            (ei1.deref().deref(), ei2.deref().deref())
+            && type_util::nominal_id_have_same_logical_module(
                 &cx.file_options(),
                 cx.projects_options(),
                 (&c1.enum_id, Some(c1.enum_name.as_str())),
@@ -6595,56 +6572,28 @@ pub fn rec_sub_t<'cx>(
                 && c1.has_unknown_members == c2.has_unknown_members =>
         {
             if type_util::is_in_common_interface_conformance_check(&use_op) {
-                let repr_pair = match (ld.deref(), ud.deref()) {
-                    (
-                        EnumObjectT { enum_info: ei1, .. },
-                        EnumObjectT { enum_info: ei2, .. },
-                    ) => match (ei1.deref().deref(), ei2.deref().deref()) {
-                        (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) => {
-                            Some((&c1.representation_t, &c2.representation_t))
-                        }
-                        _ => None,
-                    },
-                    (EnumValueT(ei1), EnumValueT(ei2)) => {
-                        match (ei1.deref().deref(), ei2.deref().deref()) {
-                            (EnumInfoInner::ConcreteEnum(c1), EnumInfoInner::ConcreteEnum(c2)) => {
-                                Some((&c1.representation_t, &c2.representation_t))
-                            }
-                            _ => None,
-                        }
-                    }
-                    _ => None,
-                };
-                if let Some((r1, r2)) = repr_pair {
-                    let use_op = VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::EnumRepresentationTypeCompatibility {
-                            lower: enum_reason_l.dupe(),
-                            upper: enum_reason_u.dupe(),
-                        }),
-                        Arc::new(use_op),
-                    );
-                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, r1, r2)?;
-                }
+                let use_op = VirtualUseOp::Frame(
+                    Arc::new(VirtualFrameUseOp::EnumRepresentationTypeCompatibility {
+                        lower: enum_reason_l.dupe(),
+                        upper: enum_reason_u.dupe(),
+                    }),
+                    Arc::new(use_op),
+                );
+                FlowJs::rec_flow_t_with_env(
+                    cx, env, trace, use_op, &c1.representation_t, &c2.representation_t,
+                )?;
             }
             Ok(())
         }
 
-        (DefT(_, ld), DefT(_, ud))
-            if let (
-                EnumObjectT {
-                    enum_value_t: ev1, ..
-                },
-                EnumObjectT {
-                    enum_value_t: ev2, ..
-                },
-            ) = (ld.deref(), ud.deref()) =>
-        {
+        (
+            DefT(_, deref!(EnumObjectT { enum_value_t: ev1, .. })),
+            DefT(_, deref!(EnumObjectT { enum_value_t: ev2, .. })),
+        ) => {
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, ev1, ev2)
         }
-        (DefT(enum_reason_l, ld), DefT(enum_reason_u, ud))
-            if let (EnumValueT(ei_l), EnumValueT(ei_u)) =
-                (ld.deref(), ud.deref())
-                && let EnumInfoInner::AbstractEnum {
+        (DefT(enum_reason_l, deref!(EnumValueT(ei_l))), DefT(enum_reason_u, deref!(EnumValueT(ei_u))))
+            if let EnumInfoInner::AbstractEnum {
                     representation_t: repr_u,
                 } = ei_u.deref().deref() =>
         {
@@ -6661,50 +6610,27 @@ pub fn rec_sub_t<'cx>(
             );
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, repr_l, repr_u)
         }
-        (DefT(enum_reason, ld), _)
-            if let EnumValueT(ei) = ld.deref()
-                && let repr = match ei.deref().deref() {
+        (DefT(enum_reason, deref!(EnumValueT(ei))), _)
+            if let repr = match ei.deref().deref() {
                     EnumInfoInner::ConcreteEnum(c) => &c.representation_t,
                     EnumInfoInner::AbstractEnum { representation_t } => representation_t,
                 }
                 && type_util::quick_subtype(None::<&mut fn(&Type)>, repr, u) =>
         {
             let representation_type = match repr.deref() {
-                DefT(_, d)
-                    if matches!(
-                        d.deref(),
-                        BoolGeneralT | SingletonBoolT { .. }
-                    ) =>
-                {
+                DefT(_, deref!(BoolGeneralT | SingletonBoolT { .. })) => {
                     Some(FlowSmolStr::new_inline("boolean"))
                 }
-                DefT(_, d)
-                    if matches!(
-                        d.deref(),
-                        NumGeneralT(_) | SingletonNumT { .. }
-                    ) =>
-                {
+                DefT(_, deref!(NumGeneralT(_) | SingletonNumT { .. })) => {
                     Some(FlowSmolStr::new_inline("number"))
                 }
-                DefT(_, d)
-                    if matches!(
-                        d.deref(),
-                        StrGeneralT(_) | SingletonStrT { .. }
-                    ) =>
-                {
+                DefT(_, deref!(StrGeneralT(_) | SingletonStrT { .. })) => {
                     Some(FlowSmolStr::new_inline("string"))
                 }
-                DefT(_, d)
-                    if matches!(d.deref(), SymbolT | UniqueSymbolT(_)) =>
-                {
+                DefT(_, deref!(SymbolT | UniqueSymbolT(_))) => {
                     Some(FlowSmolStr::new_inline("symbol"))
                 }
-                DefT(_, d)
-                    if matches!(
-                        d.deref(),
-                        BigIntGeneralT(_) | SingletonBigIntT { .. }
-                    ) =>
-                {
+                DefT(_, deref!(BigIntGeneralT(_) | SingletonBigIntT { .. })) => {
                     Some(FlowSmolStr::new_inline("bigint"))
                 }
                 _ => None,
@@ -6713,13 +6639,11 @@ pub fn rec_sub_t<'cx>(
                 fn loop_(use_op: &UseOp) -> bool {
                     match use_op {
                         VirtualUseOp::Op(_) => false,
-                        VirtualUseOp::Frame(frame, _)
-                            if matches!(
-                                frame.as_ref(),
-                                VirtualFrameUseOp::TypeArgCompatibility(_)
-                                    | VirtualFrameUseOp::TypeParamBound { .. }
-                            ) =>
-                        {
+                        VirtualUseOp::Frame(
+                            deref!(VirtualFrameUseOp::TypeArgCompatibility(_)
+                                | VirtualFrameUseOp::TypeParamBound { .. }),
+                            _,
+                        ) => {
                             true
                         }
                         VirtualUseOp::Frame(_, parent) => loop_(parent),

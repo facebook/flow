@@ -403,12 +403,15 @@ fn same_generic_indexed_access<'cx>(
     (t1, d1): (&Type, &TypeDestructorT),
     (t2, d2): (&Type, &TypeDestructorT),
 ) -> bool {
-    let (Destructor::ElementType { index_type: i1 }, Destructor::ElementType { index_type: i2 }) =
-        (d1.2.as_ref(), d2.2.as_ref())
+    let (
+        Destructor::ElementType {
+            index_type: deref!(GenericT(g1)),
+        },
+        Destructor::ElementType {
+            index_type: deref!(GenericT(g2)),
+        },
+    ) = (d1.2.as_ref(), d2.2.as_ref())
     else {
-        return false;
-    };
-    let (GenericT(g1), GenericT(g2)) = (i1.deref(), i2.deref()) else {
         return false;
     };
     g1.id == g2.id && flow_js_utils::is_same_non_generic_instance_annot(cx, t1, t2)
