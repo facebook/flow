@@ -132,13 +132,12 @@ export function parse(
     options.enableTypesPragmaDetection = true;
   }
   // Flow Rust parser outputs ESTree-compatible AST directly. The wire→ESTree
-  // loc/range normalization (source-filename assignment, `node.range` synthesis
-  // from `loc.rangeStart`/`rangeEnd`, then cleanup of those wire-only loc
-  // fields) is done at the parser level inside `FlowParser.parse` so callers
-  // that bypass this hermes-parser-compatibility wrapper still get canonical
-  // ESTree loc/range. Optional-chain ESTree wrapping is emitted by the WASM
-  // serializer, mirroring upstream `HermesToESTreeAdapter.mapChainExpression`.
-  // See FlowParser.js.
+  // loc/range normalization (source-filename assignment and `range` on every
+  // loc's owner) is done by the deserializer inside `FlowParser.parse` so
+  // callers that bypass this hermes-parser-compatibility wrapper still get
+  // canonical ESTree loc/range. Optional-chain ESTree wrapping is emitted by
+  // the WASM serializer, mirroring upstream
+  // `HermesToESTreeAdapter.mapChainExpression`. See FlowParserDeserializer.js.
   return FlowParser.parse(code, options);
 }
 

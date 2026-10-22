@@ -18,12 +18,15 @@ import type {BabelFile} from './babel/BabelAST';
 import HermesParserDecodeUTF8String from './HermesParserDecodeUTF8String';
 import NODE_DESERIALIZERS from './FlowParserNodeDeserializers';
 
+type Range = [number, number];
+
 type FlowComment = {
   type: 'Block' | 'Line' | 'CommentBlock' | 'CommentLine',
   loc: HermesSourceLocation,
   value: ?string,
   start?: number,
   end?: number,
+  range?: Range,
 };
 
 type ExtendedPosition = {
@@ -34,6 +37,12 @@ type ExtendedPosition = {
 
 const LOCATION_IDENTIFIER_NAME = 1 << 0;
 
+type ParserError = {
+  loc: HermesSourceLocation,
+  message: string,
+  range: Range,
+};
+
 export type FlowParserProgram = {
   type: 'Program',
   loc: HermesSourceLocation,
@@ -41,7 +50,7 @@ export type FlowParserProgram = {
   comments: Array<FlowComment>,
   interpreter?: ?HermesNode,
   tokens?: Array<HermesToken>,
-  errors?: Array<{loc: HermesSourceLocation, message: string}>,
+  errors?: Array<ParserError>,
   sourceType?: 'script' | 'module',
   docblock?: unknown,
   [string]: unknown,
@@ -60,8 +69,10 @@ export default class FlowParserDeserializer {
   readonly positionBufferSize: number;
   readonly stringBufferBase: number;
   readonly locMap: {[number]: HermesSourceLocation};
+  // ESTree mode: the `range` of each loc's owner, indexed by loc ID.
+  readonly locRanges: Array<?Range>;
+  readonly sourceFilename: ?string;
   readonly extendedPositions: Array<?ExtendedPosition>;
-  readonly extendedRanges: WeakMap<HermesSourceLocation, ExtendedPosition>;
   readonly HEAPU8: FlowParserWASM['HEAPU8'];
   readonly HEAPU32: FlowParserWASM['HEAPU32'];
   readonly HEAPF64: FlowParserWASM['HEAPF64'];
@@ -105,8 +116,12 @@ export default class FlowParserDeserializer {
     // null pointer (encoded as `(0,)` with no length word).
     this.stringBufferBase = stringBufferBase;
     this.locMap = {};
+    this.locRanges = [];
+    this.sourceFilename =
+      typeof options.sourceFilename === 'string'
+        ? options.sourceFilename
+        : null;
     this.extendedPositions = [];
-    this.extendedRanges = new WeakMap();
 
     this.HEAPU8 = wasmParser.HEAPU8;
     this.HEAPU32 = wasmParser.HEAPU32;
@@ -139,6 +154,7 @@ export default class FlowParserDeserializer {
   }
 
   deserializeESTreeProgram(): FlowParserProgram {
+    const range = this.addRangeForNextLoc();
     const program: FlowParserProgram = {
       type: 'Program',
       loc: this.addEmptyLoc(),
@@ -152,25 +168,27 @@ export default class FlowParserDeserializer {
       this.deserializeTokens();
     }
     program.errors = this.deserializeErrors();
+    program.range = range;
     this.fillLocs();
     return program;
   }
 
   /**
    * Errors are serialized as a 4-byte count followed by (locId, message)
-   * pairs. Each entry becomes `{loc, message}` matching the OCaml/Hermes
-   * shape consumed by the hardcoded fixture comparator.
+   * pairs. Each entry becomes `{loc, message, range}` matching the
+   * OCaml/Hermes shape consumed by the hardcoded fixture comparator.
    */
-  deserializeErrors(): Array<{loc: HermesSourceLocation, message: string}> {
+  deserializeErrors(): Array<ParserError> {
     const size = this.next();
     const errors = [];
     for (let i = 0; i < size; i++) {
+      const range = this.addRangeForNextLoc();
       const loc = this.addEmptyLoc();
       const message = this.deserializeString();
       if (message == null) {
         throw new Error('Expected serialized parser error message');
       }
-      errors.push({loc, message});
+      errors.push({loc, message, range});
     }
     return errors;
   }
@@ -243,11 +261,18 @@ export default class FlowParserDeserializer {
         }`,
       );
     }
+    // Every node's payload starts with its own loc ID.
+    if (this.extendedLocationHeaders) {
+      const position = this.nextExtendedPosition();
+      // $FlowFixMe[invalid-this-arg]
+      const node = deserializeNode.call(this);
+      this.addExtendedRange(node, position);
+      return node;
+    }
+    const range = this.addRangeForNextLoc();
     // $FlowFixMe[invalid-this-arg]
     const node = deserializeNode.call(this);
-    if (this.extendedLocationHeaders) {
-      this.addExtendedRange(node);
-    }
+    node.range = range;
     return node;
   }
 
@@ -288,6 +313,7 @@ export default class FlowParserDeserializer {
       if (commentType == null) {
         throw new Error('Expected serialized comment type');
       }
+      const position = this.nextExtendedPosition();
       const loc = this.addEmptyLoc();
       const comment: FlowComment = {
         // $FlowExpectedError[incompatible-type] Rust emits the closed comment type set.
@@ -295,7 +321,7 @@ export default class FlowParserDeserializer {
         loc,
         value: this.deserializeString(),
       };
-      this.addExtendedRange(comment);
+      this.addExtendedRange(comment, position);
       comments.push(comment);
     }
 
@@ -307,10 +333,12 @@ export default class FlowParserDeserializer {
     const comments = [];
     for (let i = 0; i < size; i++) {
       const commentType = this.commentTypes[this.next()];
+      const range = this.addRangeForNextLoc();
       const comment: FlowComment = {
         type: commentType,
         loc: this.addEmptyLoc(),
         value: this.deserializeString(),
+        range,
       };
       comments.push(comment);
     }
@@ -323,12 +351,14 @@ export default class FlowParserDeserializer {
 
     for (let i = 0; i < size; i++) {
       const tokenType = this.tokenTypes[this.next()];
+      const range = this.addRangeForNextLoc();
       const loc = this.addEmptyLoc();
       const value = this.deserializeString();
       const token: HermesToken = {
         type: tokenType,
         loc,
         value,
+        range,
       };
       tokens.push(token);
     }
@@ -357,7 +387,6 @@ export default class FlowParserDeserializer {
           loc.identifierName = identifierName;
         }
       }
-      this.extendedRanges.set(loc, position);
       return loc;
     }
     const loc: HermesSourceLocation = {};
@@ -389,21 +418,39 @@ export default class FlowParserDeserializer {
     }
   }
 
-  addExtendedRange(owner: {
-    readonly loc: HermesSourceLocation,
-    start?: number,
-    end?: number,
-    ...
-  }): void {
-    if (owner.loc == null) {
-      return;
-    }
-    const position = this.extendedRanges.get(owner.loc);
-    if (position == null) {
+  /**
+   * Extended mode: the position of the loc whose ID is the next word in the
+   * program buffer.
+   */
+  nextExtendedPosition(): ?ExtendedPosition {
+    return this.extendedPositions[this.HEAPU32[this.programBufferIdx]];
+  }
+
+  addExtendedRange(
+    owner: {
+      readonly loc: HermesSourceLocation,
+      start?: number,
+      end?: number,
+      ...
+    },
+    position: ?ExtendedPosition,
+  ): void {
+    if (position == null || owner.loc !== position.loc) {
       return;
     }
     owner.start = position.start;
     owner.end = position.end;
+  }
+
+  /**
+   * ESTree mode: creates the `range` for the loc whose ID is the next word in
+   * the program buffer, for the caller to attach to that loc's owner.
+   * `fillLocs` fills it in along with the loc.
+   */
+  addRangeForNextLoc(): Range {
+    const range: Range = [0, 0];
+    this.locRanges[this.HEAPU32[this.programBufferIdx]] = range;
+    return range;
   }
 
   /**
@@ -412,6 +459,7 @@ export default class FlowParserDeserializer {
    * or end position, followed by line, column, and offset (4-bytes each).
    */
   fillLocs(): void {
+    const sourceFilename = this.sourceFilename;
     for (let i = 0; i < this.positionBufferSize; i++) {
       const locId = this.HEAPU32[this.positionBufferIdx++];
       const kind = this.HEAPU32[this.positionBufferIdx++];
@@ -423,18 +471,24 @@ export default class FlowParserDeserializer {
       if (loc == null) {
         throw new Error(`Missing serialized location ${locId}`);
       }
+      const range = this.locRanges[locId];
       if (kind === 0) {
         loc.start = {
           line,
           column,
         };
-        loc.rangeStart = offset;
+        if (range != null) {
+          range[0] = offset;
+        }
       } else {
         loc.end = {
           line,
           column,
         };
-        loc.rangeEnd = offset;
+        loc.source = sourceFilename;
+        if (range != null) {
+          range[1] = offset;
+        }
       }
     }
   }

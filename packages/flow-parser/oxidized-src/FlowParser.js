@@ -44,30 +44,6 @@ type FlowParse = (
   number,
 ) => number;
 
-type WireSourceLocation = {
-  source?: ?string,
-  start?: unknown,
-  end?: unknown,
-  rangeStart?: number,
-  rangeEnd?: number,
-  [string]: unknown,
-};
-
-type WireNode = {
-  loc?: WireSourceLocation,
-  range?: [number, number],
-  [string]: unknown,
-};
-
-function asWireNode(value: unknown): ?WireNode {
-  if (value == null || typeof value !== 'object') {
-    return null;
-  }
-  // $FlowExpectedError[incompatible-type] Dynamic binary-schema envelope.
-  // $FlowExpectedError[incompatible-variance] Dynamic binary-schema envelope.
-  return value;
-}
-
 let FlowParserWASM: FlowParserWASMType;
 let flowParse: FlowParse;
 let flowParseResult_free: number => void;
@@ -353,66 +329,6 @@ function parse(source: string, options: ParserOptions): Program | BabelFile {
     }
     const ast = deserialized;
 
-    // Wire→ESTree loc/range normalization. The wire format carries
-    // `rangeStart` / `rangeEnd` on the loc object; ESTree consumers expect a
-    // `range: [start, end]` array on the *node* itself, plus a clean
-    // `loc: { source, start, end }`. This walk is the parser-level analog of
-    // upstream HermesToESTreeAdapter.transform()'s mandatory range conversion
-    // (HermesToESTreeAdapter.js:39 — `node.range = [loc.rangeStart, loc.rangeEnd]`).
-    // Lives here (not in src/index.js) so callers that bypass the public
-    // hermes-parser-compatibility wrapper (e.g. the wasm fixture runner that
-    // tests raw Flow ESTree parity with the OCaml parser) still get the
-    // canonical ESTree loc/range shape.
-    //
-    // Track visited nodes so a malformed AST with a cycle doesn't blow the
-    // stack; track visited locs separately because two nodes can share a loc
-    // reference and we must read `rangeStart`/`rangeEnd` before deleting them.
-    const sourceFilename =
-      typeof options.sourceFilename === 'string'
-        ? options.sourceFilename
-        : null;
-    const visitedNodes: WeakSet<WireNode> = new WeakSet();
-    const locRanges: WeakMap<WireSourceLocation, [number, number]> =
-      new WeakMap();
-    function fixLocs(node: unknown): void {
-      const wireNode = asWireNode(node);
-      if (wireNode == null) {
-        return;
-      }
-      if (visitedNodes.has(wireNode)) {
-        return;
-      }
-      visitedNodes.add(wireNode);
-      if (wireNode.loc != null) {
-        const loc = wireNode.loc;
-        let range = locRanges.get(loc);
-        if (range == null) {
-          const rangeStart = loc.rangeStart;
-          const rangeEnd = loc.rangeEnd;
-          if (rangeStart == null || rangeEnd == null) {
-            throw new Error('Expected serialized source range');
-          }
-          loc.source = sourceFilename;
-          range = [rangeStart, rangeEnd];
-          locRanges.set(loc, range);
-          delete loc.rangeStart;
-          delete loc.rangeEnd;
-        }
-        wireNode.range = range;
-      }
-      for (const key of Object.keys(wireNode)) {
-        const val = wireNode[key];
-        if (Array.isArray(val)) {
-          for (const child of val) {
-            fixLocs(child);
-          }
-        } else {
-          fixLocs(val);
-        }
-      }
-    }
-    fixLocs(ast);
-
     // First-error-throw lives at the wasm boundary so the public
     // src/index.js parse() stays close to upstream. Direct callers (e.g.
     // the wasm fixture runner that wants raw ast.errors instead of a
@@ -475,9 +391,9 @@ function parse(source: string, options: ParserOptions): Program | BabelFile {
 }
 
 function asProgram(ast: FlowParserProgram): Program {
-  // FlowParserProgram is the deserialized wire shape. `fixLocs` above mutates
-  // that shape into the public ESTree Program shape, including loc/range
-  // fields that Flow cannot prove from the serializer protocol.
+  // FlowParserProgram is the deserialized wire shape. In ESTree mode the
+  // deserializer already emits the public ESTree loc/range fields, which
+  // Flow cannot prove from the serializer protocol.
   // $FlowExpectedError[incompatible-type] Normalized binary-schema boundary.
   return ast;
 }
