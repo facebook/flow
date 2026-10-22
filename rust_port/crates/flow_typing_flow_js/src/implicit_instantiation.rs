@@ -10,7 +10,6 @@ use std::collections::BTreeSet;
 use std::collections::VecDeque;
 use std::ops::Deref;
 use std::rc::Rc;
-use std::sync::Arc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
@@ -2489,24 +2488,7 @@ pub mod instantiation_solver {
             _env: &FlowJsEnv,
             tparam: &TypeParam,
         ) -> Result<InferredTarg, FlowJsException> {
-            let inferred = match &tparam.default {
-                None => type_util::mod_reason_of_t(
-                    &|r: Reason| {
-                        r.update_desc(|d| {
-                            d.map(|d| VirtualReasonDesc::RTypeParamBound(Arc::new(d)))
-                        })
-                    },
-                    &tparam.bound,
-                ),
-                Some(t) => type_util::mod_reason_of_t(
-                    &|r: Reason| {
-                        r.update_desc(|d| {
-                            d.map(|d| VirtualReasonDesc::RTypeParamDefault(Arc::new(d)))
-                        })
-                    },
-                    t,
-                ),
-            };
+            let inferred = tparam.default.as_ref().unwrap_or(&tparam.bound).dupe();
             flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
                 vec![format!(
                     "Constant type parameter {} is pinned to {}",
@@ -2547,20 +2529,10 @@ pub mod instantiation_solver {
             instantiation_reason: &Reason,
         ) -> Result<InferredTarg, FlowJsException> {
             match &tparam.default {
-                Some(inferred) => {
-                    let inferred = type_util::mod_reason_of_t(
-                        &|r: Reason| {
-                            r.update_desc(|d| {
-                                d.map(|d| VirtualReasonDesc::RTypeParamDefault(Arc::new(d)))
-                            })
-                        },
-                        inferred,
-                    );
-                    Ok(InferredTarg {
-                        tparam: tparam.dupe(),
-                        inferred,
-                    })
-                }
+                Some(inferred) => Ok(InferredTarg {
+                    tparam: tparam.dupe(),
+                    inferred: inferred.dupe(),
+                }),
                 None => {
                     if !matches!(
                         *cx.typing_mode(),

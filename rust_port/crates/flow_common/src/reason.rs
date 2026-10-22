@@ -381,8 +381,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RTypeAlias(Box<(FlowSmolStr, Option<L>, Option<Arc<VirtualReasonDesc<L>>>)>),
     ROpaqueType(FlowSmolStr),
     RTypeParam(Box<(SubstName, L, L)>),
-    RTypeParamDefault(Arc<VirtualReasonDesc<L>>),
-    RTypeParamBound(Arc<VirtualReasonDesc<L>>),
     RTypeof(FlowSmolStr),
     RMethod(Option<FlowSmolStr>),
     RMethodCall(Option<FlowSmolStr>),
@@ -568,8 +566,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 d.as_ref().map(|d| Arc::new(d.map_locs(f))),
             ))),
             RTypeParam(box (s, l1, l2)) => RTypeParam(Box::new((s.clone(), f(l1), f(l2)))),
-            RTypeParamBound(d) => RTypeParamBound(Arc::new(d.map_locs(f))),
-            RTypeParamDefault(d) => RTypeParamDefault(Arc::new(d.map_locs(f))),
             ROptional(d) => ROptional(Arc::new(d.map_locs(f))),
             RMaybe(d) => RMaybe(Arc::new(d.map_locs(f))),
             RRestArrayLit(d) => RRestArrayLit(d.as_ref().map(|d| Arc::new(d.map_locs(f)))),
@@ -1425,18 +1421,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RTypeAlias(box (x, _, _)) => format!("`{}`", prettify_react_util(x)),
         ROpaqueType(x) => format!("`{}`", prettify_react_util(x)),
         RTypeParam(box (x, _, _)) => x.formatted_string_of_subst_name(),
-        RTypeParamDefault(r) => {
-            format!(
-                "{} (inferred from type parameter's default)",
-                string_of_desc(r)
-            )
-        }
-        RTypeParamBound(r) => {
-            format!(
-                "{} (inferred from type parameter's bound)",
-                string_of_desc(r)
-            )
-        }
         RTypeof(x) => format!("`typeof {}`", x),
 
         // Methods and parameters
