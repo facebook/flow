@@ -323,6 +323,7 @@ fn check_for_duplicate_exports(env: &mut ParserEnv, stmts: &[ast::statement::Sta
     }
 
     let mut seen = (HashSet::new(), HashSet::new());
+    let mut seen_interfaces = HashSet::new();
 
     for stmt in stmts {
         match stmt.deref() {
@@ -365,7 +366,9 @@ fn check_for_duplicate_exports(env: &mut ParserEnv, stmts: &[ast::statement::Sta
                             record_export(env, &mut seen, export_kind, loc, &inner.id.name);
                         }
                         StatementInner::InterfaceDeclaration { loc, inner } => {
-                            record_export(env, &mut seen, export_kind, loc, &inner.id.name);
+                            if !env.is_ts() || seen_interfaces.insert(inner.id.name.dupe()) {
+                                record_export(env, &mut seen, export_kind, loc, &inner.id.name);
+                            }
                         }
                         StatementInner::ClassDeclaration { loc, inner } => {
                             if let Some(ref id) = inner.id {

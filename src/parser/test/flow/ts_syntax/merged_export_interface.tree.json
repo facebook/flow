@@ -1,0 +1,693 @@
+{
+  "body": [
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 43,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 35,
+              "line": 2
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 38,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 37,
+                    "line": 2
+                  }
+                },
+                "name": "a",
+                "optional": false,
+                "range": [
+                  108,
+                  109
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 41,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 37,
+                  "line": 2
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                108,
+                112
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 41,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 40,
+                      "line": 2
+                    }
+                  },
+                  "name": "T",
+                  "optional": false,
+                  "range": [
+                    111,
+                    112
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 41,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 40,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  111,
+                  112
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            106,
+            114
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 22,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 2
+            }
+          },
+          "name": "Tippy",
+          "optional": false,
+          "range": [
+            88,
+            93
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 43,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "range": [
+          78,
+          114
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": {
+          "loc": {
+            "end": {
+              "column": 34,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 22,
+              "line": 2
+            }
+          },
+          "params": [
+            {
+              "bound": null,
+              "const": false,
+              "default": {
+                "loc": {
+                  "end": {
+                    "column": 33,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 27,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  98,
+                  104
+                ],
+                "type": "NumberTypeAnnotation"
+              },
+              "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 2
+                }
+              },
+              "name": "T",
+              "range": [
+                94,
+                104
+              ],
+              "type": "TypeParameter",
+              "variance": null
+            }
+          ],
+          "range": [
+            93,
+            105
+          ],
+          "type": "TypeParameterDeclaration"
+        }
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 43,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        71,
+        114
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 48,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 35,
+              "line": 3
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 38,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 37,
+                    "line": 3
+                  }
+                },
+                "name": "b",
+                "optional": false,
+                "range": [
+                  152,
+                  153
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 46,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 37,
+                  "line": 3
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                152,
+                161
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "loc": {
+                  "end": {
+                    "column": 46,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 40,
+                    "line": 3
+                  }
+                },
+                "range": [
+                  155,
+                  161
+                ],
+                "type": "StringTypeAnnotation"
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            150,
+            163
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 22,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 3
+            }
+          },
+          "name": "Tippy",
+          "optional": false,
+          "range": [
+            132,
+            137
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 48,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "range": [
+          122,
+          163
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": {
+          "loc": {
+            "end": {
+              "column": 34,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 22,
+              "line": 3
+            }
+          },
+          "params": [
+            {
+              "bound": null,
+              "const": false,
+              "default": {
+                "loc": {
+                  "end": {
+                    "column": 33,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 27,
+                    "line": 3
+                  }
+                },
+                "range": [
+                  142,
+                  148
+                ],
+                "type": "NumberTypeAnnotation"
+              },
+              "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 3
+                }
+              },
+              "name": "T",
+              "range": [
+                138,
+                148
+              ],
+              "type": "TypeParameter",
+              "variance": null
+            }
+          ],
+          "range": [
+            137,
+            149
+          ],
+          "type": "TypeParameterDeclaration"
+        }
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 48,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "range": [
+        115,
+        163
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 49,
+              "line": 4
+            },
+            "source": null,
+            "start": {
+              "column": 35,
+              "line": 4
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 38,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 37,
+                    "line": 4
+                  }
+                },
+                "name": "c",
+                "optional": false,
+                "range": [
+                  201,
+                  202
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 47,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 37,
+                  "line": 4
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                201,
+                211
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "loc": {
+                  "end": {
+                    "column": 47,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 40,
+                    "line": 4
+                  }
+                },
+                "range": [
+                  204,
+                  211
+                ],
+                "type": "BooleanTypeAnnotation"
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            199,
+            213
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 22,
+              "line": 4
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 4
+            }
+          },
+          "name": "Tippy",
+          "optional": false,
+          "range": [
+            181,
+            186
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 49,
+            "line": 4
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 4
+          }
+        },
+        "range": [
+          171,
+          213
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": {
+          "loc": {
+            "end": {
+              "column": 34,
+              "line": 4
+            },
+            "source": null,
+            "start": {
+              "column": 22,
+              "line": 4
+            }
+          },
+          "params": [
+            {
+              "bound": null,
+              "const": false,
+              "default": {
+                "loc": {
+                  "end": {
+                    "column": 33,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 27,
+                    "line": 4
+                  }
+                },
+                "range": [
+                  191,
+                  197
+                ],
+                "type": "NumberTypeAnnotation"
+              },
+              "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 4
+                }
+              },
+              "name": "T",
+              "range": [
+                187,
+                197
+              ],
+              "type": "TypeParameter",
+              "variance": null
+            }
+          ],
+          "range": [
+            186,
+            198
+          ],
+          "type": "TypeParameterDeclaration"
+        }
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 49,
+          "line": 4
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 4
+        }
+      },
+      "range": [
+        164,
+        213
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 70,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        70
+      ],
+      "type": "Line",
+      "value": " Repeated exported interfaces merge in TypeScript declaration files."
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 49,
+      "line": 4
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 2
+    }
+  },
+  "range": [
+    71,
+    213
+  ],
+  "type": "Program"
+}

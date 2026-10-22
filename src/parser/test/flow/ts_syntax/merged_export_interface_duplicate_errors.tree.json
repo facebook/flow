@@ -1,0 +1,1212 @@
+{
+  "body": [
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 34,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 32,
+              "line": 2
+            }
+          },
+          "properties": [],
+          "range": [
+            113,
+            115
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 31,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 2
+            }
+          },
+          "name": "AliasCollision",
+          "optional": false,
+          "range": [
+            98,
+            112
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 34,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "range": [
+          88,
+          115
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 34,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        81,
+        115
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 26,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 3
+            }
+          },
+          "name": "AliasCollision",
+          "optional": false,
+          "range": [
+            128,
+            142
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 36,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "range": [
+          123,
+          152
+        ],
+        "right": {
+          "loc": {
+            "end": {
+              "column": 35,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 29,
+              "line": 3
+            }
+          },
+          "range": [
+            145,
+            151
+          ],
+          "type": "NumberTypeAnnotation"
+        },
+        "type": "TypeAlias",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 36,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "range": [
+        116,
+        152
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 28,
+              "line": 4
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 4
+            }
+          },
+          "name": "ReverseCollision",
+          "optional": false,
+          "range": [
+            174,
+            190
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 38,
+            "line": 4
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 4
+          }
+        },
+        "range": [
+          169,
+          200
+        ],
+        "right": {
+          "loc": {
+            "end": {
+              "column": 37,
+              "line": 4
+            },
+            "source": null,
+            "start": {
+              "column": 31,
+              "line": 4
+            }
+          },
+          "range": [
+            193,
+            199
+          ],
+          "type": "NumberTypeAnnotation"
+        },
+        "type": "TypeAlias",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 38,
+          "line": 4
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 4
+        }
+      },
+      "range": [
+        162,
+        200
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 36,
+              "line": 5
+            },
+            "source": null,
+            "start": {
+              "column": 34,
+              "line": 5
+            }
+          },
+          "properties": [],
+          "range": [
+            235,
+            237
+          ],
+          "trailingComments": [
+            {
+              "loc": {
+                "end": {
+                  "column": 45,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 37,
+                  "line": 5
+                }
+              },
+              "range": [
+                238,
+                246
+              ],
+              "type": "Line",
+              "value": " ERROR"
+            }
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 33,
+              "line": 5
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 5
+            }
+          },
+          "name": "ReverseCollision",
+          "optional": false,
+          "range": [
+            218,
+            234
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 36,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 5
+          }
+        },
+        "range": [
+          208,
+          237
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 36,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 5
+        }
+      },
+      "range": [
+        201,
+        237
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 45,
+              "line": 8
+            },
+            "source": null,
+            "start": {
+              "column": 32,
+              "line": 8
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 35,
+                    "line": 8
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 34,
+                    "line": 8
+                  }
+                },
+                "name": "a",
+                "optional": false,
+                "range": [
+                  360,
+                  361
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 43,
+                  "line": 8
+                },
+                "source": null,
+                "start": {
+                  "column": 34,
+                  "line": 8
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                360,
+                369
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "loc": {
+                  "end": {
+                    "column": 43,
+                    "line": 8
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 37,
+                    "line": 8
+                  }
+                },
+                "range": [
+                  363,
+                  369
+                ],
+                "type": "NumberTypeAnnotation"
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            358,
+            371
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 31,
+              "line": 8
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 8
+            }
+          },
+          "name": "ExplicitExport",
+          "optional": false,
+          "range": [
+            343,
+            357
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 45,
+            "line": 8
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 8
+          }
+        },
+        "range": [
+          333,
+          371
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 45,
+          "line": 8
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 8
+        }
+      },
+      "range": [
+        326,
+        371
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 45,
+              "line": 9
+            },
+            "source": null,
+            "start": {
+              "column": 32,
+              "line": 9
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 35,
+                    "line": 9
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 34,
+                    "line": 9
+                  }
+                },
+                "name": "b",
+                "optional": false,
+                "range": [
+                  406,
+                  407
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 43,
+                  "line": 9
+                },
+                "source": null,
+                "start": {
+                  "column": 34,
+                  "line": 9
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                406,
+                415
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "loc": {
+                  "end": {
+                    "column": 43,
+                    "line": 9
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 37,
+                    "line": 9
+                  }
+                },
+                "range": [
+                  409,
+                  415
+                ],
+                "type": "StringTypeAnnotation"
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            404,
+            417
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 31,
+              "line": 9
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 9
+            }
+          },
+          "name": "ExplicitExport",
+          "optional": false,
+          "range": [
+            389,
+            403
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 45,
+            "line": 9
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 9
+          }
+        },
+        "range": [
+          379,
+          417
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 45,
+          "line": 9
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 9
+        }
+      },
+      "range": [
+        372,
+        417
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": null,
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 31,
+          "line": 10
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 10
+        }
+      },
+      "range": [
+        418,
+        449
+      ],
+      "source": null,
+      "specifiers": [
+        {
+          "exportKind": "value",
+          "exported": {
+            "loc": {
+              "end": {
+                "column": 28,
+                "line": 10
+              },
+              "source": null,
+              "start": {
+                "column": 14,
+                "line": 10
+              }
+            },
+            "name": "ExplicitExport",
+            "optional": false,
+            "range": [
+              432,
+              446
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 28,
+              "line": 10
+            },
+            "source": null,
+            "start": {
+              "column": 14,
+              "line": 10
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 28,
+                "line": 10
+              },
+              "source": null,
+              "start": {
+                "column": 14,
+                "line": 10
+              }
+            },
+            "name": "ExplicitExport",
+            "optional": false,
+            "range": [
+              432,
+              446
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            432,
+            446
+          ],
+          "type": "ExportSpecifier"
+        }
+      ],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declarations": [
+        {
+          "id": {
+            "loc": {
+              "end": {
+                "column": 27,
+                "line": 13
+              },
+              "source": null,
+              "start": {
+                "column": 14,
+                "line": 13
+              }
+            },
+            "name": "value",
+            "optional": false,
+            "range": [
+              515,
+              528
+            ],
+            "type": "Identifier",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 13
+                },
+                "source": null,
+                "start": {
+                  "column": 19,
+                  "line": 13
+                }
+              },
+              "range": [
+                520,
+                528
+              ],
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "loc": {
+                  "end": {
+                    "column": 27,
+                    "line": 13
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 21,
+                    "line": 13
+                  }
+                },
+                "range": [
+                  522,
+                  528
+                ],
+                "type": "NumberTypeAnnotation"
+              }
+            }
+          },
+          "init": null,
+          "loc": {
+            "end": {
+              "column": 27,
+              "line": 13
+            },
+            "source": null,
+            "start": {
+              "column": 14,
+              "line": 13
+            }
+          },
+          "range": [
+            515,
+            528
+          ],
+          "type": "VariableDeclarator"
+        }
+      ],
+      "kind": "const",
+      "loc": {
+        "end": {
+          "column": 28,
+          "line": 13
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 13
+        }
+      },
+      "range": [
+        501,
+        529
+      ],
+      "type": "DeclareVariable"
+    },
+    {
+      "declaration": null,
+      "exportKind": "value",
+      "loc": {
+        "end": {
+          "column": 17,
+          "line": 14
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 14
+        }
+      },
+      "range": [
+        530,
+        547
+      ],
+      "source": null,
+      "specifiers": [
+        {
+          "exportKind": "value",
+          "exported": {
+            "loc": {
+              "end": {
+                "column": 14,
+                "line": 14
+              },
+              "source": null,
+              "start": {
+                "column": 9,
+                "line": 14
+              }
+            },
+            "name": "value",
+            "optional": false,
+            "range": [
+              539,
+              544
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 14,
+              "line": 14
+            },
+            "source": null,
+            "start": {
+              "column": 9,
+              "line": 14
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 14,
+                "line": 14
+              },
+              "source": null,
+              "start": {
+                "column": 9,
+                "line": 14
+              }
+            },
+            "name": "value",
+            "optional": false,
+            "range": [
+              539,
+              544
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            539,
+            544
+          ],
+          "type": "ExportSpecifier"
+        }
+      ],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": null,
+      "exportKind": "value",
+      "loc": {
+        "end": {
+          "column": 17,
+          "line": 15
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 15
+        }
+      },
+      "range": [
+        548,
+        565
+      ],
+      "source": null,
+      "specifiers": [
+        {
+          "exportKind": "value",
+          "exported": {
+            "loc": {
+              "end": {
+                "column": 14,
+                "line": 15
+              },
+              "source": null,
+              "start": {
+                "column": 9,
+                "line": 15
+              }
+            },
+            "name": "value",
+            "optional": false,
+            "range": [
+              557,
+              562
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 14,
+              "line": 15
+            },
+            "source": null,
+            "start": {
+              "column": 9,
+              "line": 15
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 14,
+                "line": 15
+              },
+              "source": null,
+              "start": {
+                "column": 9,
+                "line": 15
+              }
+            },
+            "name": "value",
+            "optional": false,
+            "range": [
+              557,
+              562
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            557,
+            562
+          ],
+          "type": "ExportSpecifier"
+        }
+      ],
+      "type": "ExportNamedDeclaration"
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 80,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        80
+      ],
+      "type": "Line",
+      "value": " Type aliases cannot share an exported name with an interface in either order."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 45,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 37,
+          "line": 3
+        }
+      },
+      "range": [
+        153,
+        161
+      ],
+      "type": "Line",
+      "value": " ERROR"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 45,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 37,
+          "line": 5
+        }
+      },
+      "range": [
+        238,
+        246
+      ],
+      "type": "Line",
+      "value": " ERROR"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 77,
+          "line": 7
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 7
+        }
+      },
+      "range": [
+        248,
+        325
+      ],
+      "type": "Line",
+      "value": " Explicit type exports still conflict with merged inline interface exports."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 40,
+          "line": 10
+        },
+        "source": null,
+        "start": {
+          "column": 32,
+          "line": 10
+        }
+      },
+      "range": [
+        450,
+        458
+      ],
+      "type": "Line",
+      "value": " ERROR"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 40,
+          "line": 12
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 12
+        }
+      },
+      "range": [
+        460,
+        500
+      ],
+      "type": "Line",
+      "value": " Repeated value exports remain errors."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 26,
+          "line": 15
+        },
+        "source": null,
+        "start": {
+          "column": 18,
+          "line": 15
+        }
+      },
+      "range": [
+        566,
+        574
+      ],
+      "type": "Line",
+      "value": " ERROR"
+    }
+  ],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 36,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 7,
+          "line": 3
+        }
+      },
+      "message": "Duplicate export for `AliasCollision`"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 36,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 7,
+          "line": 5
+        }
+      },
+      "message": "Duplicate export for `ReverseCollision`"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 28,
+          "line": 10
+        },
+        "source": null,
+        "start": {
+          "column": 14,
+          "line": 10
+        }
+      },
+      "message": "Duplicate export for `ExplicitExport`"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 14,
+          "line": 15
+        },
+        "source": null,
+        "start": {
+          "column": 9,
+          "line": 15
+        }
+      },
+      "message": "Duplicate export for `value`"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 17,
+      "line": 15
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 2
+    }
+  },
+  "range": [
+    81,
+    565
+  ],
+  "type": "Program"
+}

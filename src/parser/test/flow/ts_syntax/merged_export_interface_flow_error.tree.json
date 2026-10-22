@@ -1,0 +1,399 @@
+{
+  "body": [
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 36,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 23,
+              "line": 2
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 26,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 25,
+                    "line": 2
+                  }
+                },
+                "name": "a",
+                "optional": false,
+                "range": [
+                  84,
+                  85
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 34,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 25,
+                  "line": 2
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                84,
+                93
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "loc": {
+                  "end": {
+                    "column": 34,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 28,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  87,
+                  93
+                ],
+                "type": "NumberTypeAnnotation"
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            82,
+            95
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 22,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 2
+            }
+          },
+          "name": "Tippy",
+          "optional": false,
+          "range": [
+            76,
+            81
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 36,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "range": [
+          66,
+          95
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 36,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        59,
+        95
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    },
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 36,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 23,
+              "line": 3
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 26,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 25,
+                    "line": 3
+                  }
+                },
+                "name": "b",
+                "optional": false,
+                "range": [
+                  121,
+                  122
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 34,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 25,
+                  "line": 3
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                121,
+                130
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "loc": {
+                  "end": {
+                    "column": 34,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 28,
+                    "line": 3
+                  }
+                },
+                "range": [
+                  124,
+                  130
+                ],
+                "type": "StringTypeAnnotation"
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            119,
+            132
+          ],
+          "trailingComments": [
+            {
+              "loc": {
+                "end": {
+                  "column": 45,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 37,
+                  "line": 3
+                }
+              },
+              "range": [
+                133,
+                141
+              ],
+              "type": "Line",
+              "value": " ERROR"
+            }
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 22,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 3
+            }
+          },
+          "name": "Tippy",
+          "optional": false,
+          "range": [
+            113,
+            118
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 36,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "range": [
+          103,
+          132
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 36,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "range": [
+        96,
+        132
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 58,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        58
+      ],
+      "type": "Line",
+      "value": " Repeated interface exports remain errors in Flow files."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 45,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 37,
+          "line": 3
+        }
+      },
+      "range": [
+        133,
+        141
+      ],
+      "type": "Line",
+      "value": " ERROR"
+    }
+  ],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 36,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 7,
+          "line": 3
+        }
+      },
+      "message": "Duplicate export for `Tippy`"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 36,
+      "line": 3
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 2
+    }
+  },
+  "range": [
+    59,
+    132
+  ],
+  "type": "Program"
+}

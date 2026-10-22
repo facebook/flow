@@ -754,6 +754,74 @@ Error --------------------------------------------------------------------------
       ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------- exported_interface_merging_usage.js:8:1
+
+Cannot cast `tippy.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   exported_interface_merging_usage.js:8:1
+   8| tippy.a as string; // ERROR
+      ^^^^^^^
+
+References:
+   exported_interface_merging.d.ts:2:28
+   2| export interface Tippy<T = number> { a: T } // OK
+                                 ^^^^^^ [1]
+   exported_interface_merging_usage.js:8:12
+   8| tippy.a as string; // ERROR
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------- exported_interface_merging_usage.js:9:1
+
+Cannot cast `tippy.b` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   exported_interface_merging_usage.js:9:1
+   9| tippy.b as number; // ERROR
+      ^^^^^^^
+
+References:
+   exported_interface_merging.d.ts:3:41
+   3| export interface Tippy<T = number> { b: string } // OK
+                                              ^^^^^^ [1]
+   exported_interface_merging_usage.js:9:12
+   9| tippy.b as number; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------- exported_interface_merging_usage.js:16:1
+
+Cannot cast `generic.a` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   exported_interface_merging_usage.js:16:1
+   16| generic.a as number; // ERROR
+       ^^^^^^^^^
+
+References:
+   exported_interface_merging_usage.js:12:30
+   12| declare const generic: Tippy<string>;
+                                    ^^^^^^ [1]
+   exported_interface_merging_usage.js:16:14
+   16| generic.a as number; // ERROR
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------- exported_interface_merging_usage.js:22:1
+
+Cannot cast `control.a` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   exported_interface_merging_usage.js:22:1
+   22| control.a as string; // ERROR
+       ^^^^^^^^^
+
+References:
+   exported_interface_merging.d.ts:7:24
+    7| interface Control { a: number } // OK
+                              ^^^^^^ [1]
+   exported_interface_merging_usage.js:22:14
+   22| control.a as string; // ERROR
+                    ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------- generic_tagged_template.js:4:1
 
 Cannot cast template string to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1737,4 +1805,4 @@ References:
 
 
 
-Found 114 errors
+Found 118 errors
