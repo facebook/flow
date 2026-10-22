@@ -331,17 +331,6 @@ fn multiflow_args<'cx>(
                         result
                     }
                 };
-            let fresh = matches!(
-                reason_op.desc(true),
-                Some(
-                    VirtualReasonDesc::RCode(_)
-                        | VirtualReasonDesc::RFunctionCall(_)
-                        | VirtualReasonDesc::RConstructorCall(_)
-                        | VirtualReasonDesc::RMethodCall(_)
-                        | VirtualReasonDesc::RJSXFunctionCall(_)
-                        | VirtualReasonDesc::RFunctionType
-                )
-            );
             {
                 let use_op = use_op.dupe();
                 flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout| {
@@ -356,7 +345,7 @@ fn multiflow_args<'cx>(
                     let elem_t = flow_typing_tvar::mk(cx, element_reason);
                     let resolve_to = SpreadResolve::ResolveSpreadsToArrayLiteral {
                         literal: true,
-                        fresh,
+                        fresh: true,
                         kind: ArrayLiteralKind::RestArguments,
                         id: flow_common::reason::mk_id() as i32,
                         elem_t,

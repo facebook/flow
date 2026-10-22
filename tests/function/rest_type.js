@@ -29,3 +29,17 @@ type rest_intersection = (...xs: { x: number, ... } & [1,2]) => number; // OK
 
 type empty_rest = <T extends Array<unknown>>(...xs: T) => T; // OK
 ((f: empty_rest) => f() as empty); // Error Array ~> empty
+
+type OneNumber = (value: number) => void;
+type OneString = (value: string) => void;
+type OneNumberOrString = (value: number | string) => void;
+
+declare const acceptsNumbersOrStrings: (...args: Array<number | string>) => void;
+acceptsNumbersOrStrings as (value: number) => void;
+acceptsNumbersOrStrings as OneNumber;
+acceptsNumbersOrStrings as (value: string) => void;
+acceptsNumbersOrStrings as OneString;
+
+declare const acceptsOnlyNumbers: (...args: Array<number>) => void;
+acceptsOnlyNumbers as (value: number | string) => void; // Error: string ~> number
+acceptsOnlyNumbers as OneNumberOrString; // Error: string ~> number
