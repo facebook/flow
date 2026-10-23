@@ -10415,11 +10415,34 @@ fn __flow_impl<'cx>(
                 }
             }
         },
+        #[rustfmt::skip]
         (
-            DefT(reason, deref!(ArrT(deref!(ArrayAT(box ArrayATData { elem_t, .. }))))),
+            DefT(reason, deref!(ArrT(deref!(ArrayAT(box ArrayATData {
+                elem_t, strictness_kind, ..
+            }))))),
             GetPropT(..) | SetPropT(..) | MethodT(..) | LookupT(..),
         ) => {
-            let arr_t = get_builtin_typeapp(cx, env, reason, None, "Array", vec![elem_t.dupe()]);
+            // The members are those of the builtin `Array` instance, with `this` being the array
+            // type `T[]` of the receiver.
+            let this_t = Type::new(DefT(
+                reason.dupe(),
+                DefT::new(ArrT(Rc::new(ArrayAT(Box::new(
+                    ArrayATData {
+                        react_dro: None,
+                        elem_t: elem_t.dupe(),
+                        tuple_view: None,
+                        strictness_kind: *strictness_kind,
+                        literal: false,
+                        fresh: false,
+                    },
+                ))))),
+            ));
+            let arr_t = Type::new(ThisTypeAppT(Box::new(ThisTypeAppTData {
+                reason: reason.dupe(),
+                this_t,
+                type_: flow_js_utils::lookup_builtin_type_with_env(cx, env, "Array", reason.dupe()),
+                targs: Some(Rc::from([elem_t.dupe()])),
+            })));
             rec_flow(cx, env, trace, (&arr_t, u))?;
         }
         // *************************
