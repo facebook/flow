@@ -3606,8 +3606,7 @@ fn convert_inner<'a>(
             let object_comments = &body.comments;
             let extends = &inner.extends;
             let iface_comments = &inner.comments;
-            let reason =
-                reason::mk_annot_reason(reason::VirtualReasonDesc::RInterfaceType, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             let mut env = env.clone();
             env.tparams_map
                 .remove(&SubstName::name(FlowSmolStr::new_inline("this")));
@@ -3701,8 +3700,7 @@ fn convert_inner<'a>(
                 }
                 // Desugar `new (params) => T` to an inline interface whose [inst_construct_t]
                 // carries the constructor signature.
-                let reason =
-                    reason::mk_annot_reason(reason::VirtualReasonDesc::RInterfaceType, loc.dupe());
+                let reason = reason::mk_annot_reason(None, loc.dupe());
                 let id = cx.make_aloc_id(loc);
                 let super_ = func_class_sig_types::class::Super::Interface(
                     func_class_sig_types::class::InterfaceSuper {

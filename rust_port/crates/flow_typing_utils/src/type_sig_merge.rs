@@ -2862,7 +2862,7 @@ fn merge_annot<'cx>(
             })
         }
         Annot::InlineInterface(box (loc, def)) => {
-            let reason = reason::mk_annot_reason(RInterfaceType, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             let id = cx.make_aloc_id(loc);
             merge_interface(env, cx, file, reason, None, id, def, true, false, vec![])
         }
@@ -2870,7 +2870,7 @@ fn merge_annot<'cx>(
             // TS-only `object`: an empty interface that rejects primitives. Built
             // here (in the signature path) so it behaves identically to the
             // checking-path builtin in type_annotation.rs.
-            let reason = reason::mk_annot_reason(RInterfaceType, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             let id = cx.make_aloc_id(loc);
             let def = InterfaceSig {
                 extends: vec![],

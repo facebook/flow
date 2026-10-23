@@ -6522,7 +6522,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
         // when it walks the interface's [tparams_locs] for any inner method.
         self.force_add_binding(
             EnvKey::ordinary(name_loc.dupe()),
-            mk_reason(VirtualReasonDesc::RInterfaceType, loc.dupe()),
+            mk_reason(None, loc.dupe()),
             Def::Interface(loc.dupe(), interface.clone()),
         );
 

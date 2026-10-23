@@ -289,7 +289,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RObject,
     RObjectLit,
     RObjectType,
-    RInterfaceType,
     RArray,
     RArrayLit,
     REmptyArrayLit,
@@ -422,7 +421,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RObject => RObject,
             RObjectLit => RObjectLit,
             RObjectType => RObjectType,
-            RInterfaceType => RInterfaceType,
             RArray => RArray,
             RArrayLit => RArrayLit,
             REmptyArrayLit => REmptyArrayLit,
@@ -1234,7 +1232,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RObject => "object".to_string(),
         RObjectLit => "object literal".to_string(),
         RObjectType => "object type".to_string(),
-        RInterfaceType => "interface type".to_string(),
 
         // Arrays
         RArray => "array".to_string(),

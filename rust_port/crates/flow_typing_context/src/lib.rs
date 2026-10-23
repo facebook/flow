@@ -47,7 +47,6 @@ use flow_common::platform_set::PlatformSet;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReason;
-use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::string_of_aloc;
 use flow_common::refinement_invalidation::RefinementInvalidation;
 use flow_common::slow_to_check_logging::SlowToCheckLogging;
@@ -1865,8 +1864,7 @@ impl<'a> Context<'a> {
                         let Some(bad_fields) = fields.get(bad_loc) else {
                             continue;
                         };
-                        let current_decl =
-                            VirtualReason::new(VirtualReasonDesc::RInterfaceType, bad_loc.dupe());
+                        let current_decl = VirtualReason::new(None, bad_loc.dupe());
                         let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration(Box::new(
                             MergedDeclarationData {
                                 conflict: MergedDeclarationConflict::Property,
@@ -1927,7 +1925,7 @@ impl<'a> Context<'a> {
                                             first_decl_loc: first_loc.dupe(),
                                             first_decl: declaration_type(first_loc),
                                             current_decl: VirtualReason::new(
-                                                VirtualReasonDesc::RInterfaceType,
+                                                None,
                                                 (*decl_loc).dupe(),
                                             ),
                                         }),
@@ -3426,6 +3424,7 @@ impl<'a> Context<'a> {
 #[cfg(test)]
 mod tests {
     use flow_aloc::ALocTable;
+    use flow_common::reason::VirtualReasonDesc;
     use flow_common::reason::locationless_reason;
     use flow_typing_type::type_::constraint::Constraints;
 
