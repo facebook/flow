@@ -5963,6 +5963,45 @@ pub fn rec_sub_t<'cx>(
             );
             FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, arrt)))
         }
+        // An instance of the builtin `Array` (`ReadonlyArray`) class is the array type `T[]`
+        // (`readonly T[]`), so an array is checked against it as one.
+        #[rustfmt::skip]
+        (
+            DefT(_, deref!(ArrT(_))),
+            DefT(r2, deref!(InstanceT(inst))),
+        ) if let [(_, _, elem_t, _)] = &*inst.inst.type_args
+                && flow_js_utils::is_builtin_class_id("Array", inst.inst.class_id.dupe(), cx) =>
+        {
+            let arrt = Type::new(DefT(
+                r2.dupe().update_desc_new(|desc| desc),
+                DefT::new(ArrT(Rc::new(ArrayAT(Box::new(ArrayATData {
+                    react_dro: inst.inst.inst_react_dro.clone(),
+                    elem_t: elem_t.dupe(),
+                    tuple_view: None,
+                    strictness_kind: inst.inst.strictness_kind,
+                    literal: false,
+                    fresh: false,
+                }))))),
+            ));
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, arrt)))
+        }
+        #[rustfmt::skip]
+        (
+            DefT(_, deref!(ArrT(_))),
+            DefT(r2, deref!(InstanceT(inst))),
+        ) if let [(_, _, elem_t, _)] = &*inst.inst.type_args
+                && flow_js_utils::is_builtin_class_id("ReadonlyArray", inst.inst.class_id.dupe(), cx) =>
+        {
+            let arrt = Type::new(DefT(
+                r2.dupe().update_desc_new(|desc| desc),
+                DefT::new(ArrT(Rc::new(ROArrayAT(Box::new(ROArrayATData {
+                    elem_t: elem_t.dupe(),
+                    react_dro: inst.inst.inst_react_dro.clone(),
+                    literal: false,
+                }))))),
+            ));
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseT(use_op, arrt)))
+        }
 
         // **************************************************
         // instances of classes follow declared hierarchy
