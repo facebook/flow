@@ -1,3 +1,21 @@
+Error ------------------------------------------------------------------------------------------------- builtin.js:10:31
+
+Cannot assign `new String(...)` to `lengthTest2` because property `length` is read-only in `String` [1] but writable in
+`IHasLength` [2]. [incompatible-variance]
+
+   builtin.js:10:31
+     10| var lengthTest2: IHasLength = new String('hello');
+                                       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1054:24
+   1054|     new (value?: any): String;
+                                ^^^^^^ [1]
+   builtin.js:10:18
+     10| var lengthTest2: IHasLength = new String('hello');
+                          ^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- builtin.js:11:31
 
 Cannot assign `123` to `lengthTest3` because `123` [1], a primitive, cannot be used as a subtype of `IHasLength` [2].
@@ -156,4 +174,4 @@ References:
 
 
 
-Found 9 errors
+Found 10 errors

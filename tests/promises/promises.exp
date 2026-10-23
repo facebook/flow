@@ -946,17 +946,17 @@ References:
    <BUILTINS>/lib.es2024.promise.js:22:26
      22|     resolve: (value: T | PromiseLike<T>) => void;
                                   ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:3706:18
-   3706|       onFulfill: null | void,
+   <BUILTINS>/lib.es5.js:3714:18
+   3714|       onFulfill: null | void,
                           ^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:3683:20
-   3683|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
+   <BUILTINS>/lib.es5.js:3691:20
+   3691|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es5.js:3716:18
-   3716|       onFulfill: (value: R) => Promise<U> | U,
+   <BUILTINS>/lib.es5.js:3724:18
+   3724|       onFulfill: (value: R) => Promise<U> | U,
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/lib.es5.js:3683:19
-   3683|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
+   <BUILTINS>/lib.es5.js:3691:19
+   3691|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 

@@ -106,7 +106,7 @@ Flags: --pretty
     {"name":"repeat","type":"(this: String, count: number) => string"},
     {
       "name":"replace",
-      "type":"(this: String, searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
+      "type":"(this: String, searchValue: string | RegExp, replacer: (substring: string, ...args: Array<any>) => string) => string"
     },
     {
       "name":"replaceAll",
@@ -120,7 +120,7 @@ Flags: --pretty
     {"name":"small","type":"(this: String) => string"},
     {
       "name":"split",
-      "type":"(this: String, separator?: string | RegExp, limit?: number) => Array<string>"
+      "type":"(this: String, separator: string | RegExp, limit?: number) => Array<string>"
     },
     {
       "name":"startsWith",
@@ -139,11 +139,11 @@ Flags: --pretty
     {"name":"sup","type":"(this: String) => string"},
     {
       "name":"toLocaleLowerCase",
-      "type":"(this: String, locale?: string | Array<string>) => string"
+      "type":"(this: String, locales?: string | Array<string>) => string"
     },
     {
       "name":"toLocaleUpperCase",
-      "type":"(this: String, locale?: string | Array<string>) => string"
+      "type":"(this: String, locales?: string | Array<string>) => string"
     },
     {"name":"toLowerCase","type":"(this: String) => string"},
     {"name":"toString","type":"(this: String) => string"},
