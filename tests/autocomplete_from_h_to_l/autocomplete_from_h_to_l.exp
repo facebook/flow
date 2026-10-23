@@ -2484,7 +2484,7 @@ Flags: --pretty
     },
     {
       "name":"?.copyWithin",
-      "type":"void | ((this: this, target: number, start: number, end?: number) => Array<T>)"
+      "type":"void | ((this: this, target: number, start: number, end?: number) => this)"
     },
     {
       "name":"?.entries",
@@ -2611,7 +2611,7 @@ Flags: --pretty
     },
     {
       "name":"copyWithin",
-      "type":"(this: this, target: number, start: number, end?: number) => Array<T>"
+      "type":"(this: this, target: number, start: number, end?: number) => this"
     },
     {"name":"entries","type":"(this: this) => ArrayIterator<[number, T]>"},
     {
