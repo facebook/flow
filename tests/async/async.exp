@@ -213,45 +213,21 @@ Unexpected number, expected the token `,` [ParseError]
               ^
 
 
-Error ----------------------------------------------------------------------------------------------- generator.js:21:30
+Error ----------------------------------------------------------------------------------------------- generator.js:22:12
 
-Cannot expect `AsyncGenerator` as the return type of async generator function because in type argument `Yield` [1]:
-`number` [2] is incompatible with `string` [3]. [incompatible-type]
+Cannot yield `await Promise.all(...)` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   generator.js:21:30
-   21| async function *genError1(): AsyncGenerator<number, void, void> {
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   generator.js:22:12
+   22|     yield* await Promise.all(["a"]); // error string ~> number
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2018.asyncgenerator.js:23:30
-   23| interface AsyncGenerator<out Yield,out Return,in Next> extends AsyncIteratorObject<Yield,Return,Next> {
-                                    ^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:52:59
+   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                 ^^^^^^^^^^^^^ [1]
    generator.js:21:45
    21| async function *genError1(): AsyncGenerator<number, void, void> {
                                                    ^^^^^^ [2]
-   <BUILTINS>/lib.es2015.promise.js:52:59
-   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
-                                                                 ^^^^^^^^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- generator.js:21:30
-
-In type argument `Yield` [1]: `string` [2] is incompatible with `number` [3]. [incompatible-type]
-
-   generator.js:21:30
-   21| async function *genError1(): AsyncGenerator<number, void, void> {
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es2018.asyncgenerator.js:23:30
-   23| interface AsyncGenerator<out Yield,out Return,in Next> extends AsyncIteratorObject<Yield,Return,Next> {
-                                    ^^^^^ [1]
-   <BUILTINS>/lib.es2015.promise.js:52:59
-   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
-                                                                 ^^^^^^^^^^^^^ [2]
-   generator.js:21:45
-   21| async function *genError1(): AsyncGenerator<number, void, void> {
-                                                   ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- generator.js:26:12
@@ -271,4 +247,4 @@ References:
 
 
 
-Found 18 errors
+Found 17 errors

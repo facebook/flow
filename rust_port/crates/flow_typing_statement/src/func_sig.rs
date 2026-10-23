@@ -111,21 +111,16 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
         yield_expr: &'ast ast::expression::Yield<ALoc, (ALoc, Type)>,
     ) -> Result<(), JobError> {
         let (_, ref t) = yield_expr.result_out;
-        let use_op = if yield_expr.delegate {
-            type_::unknown_use()
-        } else {
-            UseOp::Op(Arc::new(type_::RootUseOp::GeneratorYield {
-                value: match &yield_expr.argument {
-                    Some(expr) => {
-                        let mut mapper = flow_typing_utils::typed_ast_utils::UntypedAstMapper;
-                        let Ok(untyped_expr) =
-                            polymorphic_ast_mapper::expression(&mut mapper, expr);
-                        reason::mk_expression_reason(&untyped_expr)
-                    }
-                    None => type_util::reason_of_t(t).dupe(),
-                },
-            }))
-        };
+        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::GeneratorYield {
+            value: match &yield_expr.argument {
+                Some(expr) => {
+                    let mut mapper = flow_typing_utils::typed_ast_utils::UntypedAstMapper;
+                    let Ok(untyped_expr) = polymorphic_ast_mapper::expression(&mut mapper, expr);
+                    reason::mk_expression_reason(&untyped_expr)
+                }
+                None => type_util::reason_of_t(t).dupe(),
+            },
+        }));
         flow_js::flow_non_speculating(
             self.cx,
             (
