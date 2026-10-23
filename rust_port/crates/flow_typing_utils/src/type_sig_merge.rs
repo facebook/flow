@@ -1624,7 +1624,7 @@ fn merge_impl<'cx>(
             let ns_reason = reason::mk_reason(RModule(mref.dupe()), loc.dupe());
             let name = mref.dupe().into_inner();
             let ns_t = import_ns(cx, file, ns_reason, &name, loc.dupe(), index.clone());
-            let reason = reason::mk_annot_reason(RAsyncImport, loc.dupe());
+            let reason = reason::mk_annot_reason(None, loc.dupe());
             flow_js_utils::lookup_builtin_typeapp(cx, reason, "Promise", vec![ns_t])
         }
         Pack::Packed::ModuleRef(box Pack::PackedLocIndex { loc, index }) => {

@@ -7344,7 +7344,7 @@ fn expression_<'a>(
                         };
                         flow_js::flow_t_non_speculating(cx, (t, &str_module_t::at(loc.dupe())))?;
                     }
-                    let reason = mk_reason(VirtualReasonDesc::RNewFunction, loc.dupe());
+                    let reason = mk_reason(None, loc.dupe());
                     let proto = obj_proto::make(reason.dupe());
                     let t = Type::new(TypeInner::DefT(
                         reason.dupe(),
@@ -8310,7 +8310,7 @@ fn expression_<'a>(
                         Err(err) => panic!("Should not be under speculation: {:?}", err),
                     }
                 };
-                let reason = mk_annot_reason(VirtualReasonDesc::RAsyncImport, loc.dupe());
+                let reason = mk_annot_reason(None, loc.dupe());
                 Ok(FlowJs::get_builtin_typeapp(
                     cx,
                     &reason,
@@ -11024,7 +11024,7 @@ fn unary<'a>(
                 &expr.argument,
             )?;
             let argt = argument.loc().1.dupe();
-            let reason = mk_reason(RNonnullAssert, loc.dupe());
+            let reason = mk_reason(None, loc.dupe());
             let tout = type_operation_utils::operators::non_maybe(cx, &reason, &argt)?;
             (
                 tout,
@@ -11624,7 +11624,7 @@ pub fn assignment_lhs<'a>(
                             }),
                         }),
                         &mut |loc: ALoc| -> (ALoc, Type) {
-                            let reason = mk_reason(RNonnullAssert, loc.dupe());
+                            let reason = mk_reason(None, loc.dupe());
                             let t = type_operation_utils::operators::non_maybe(cx, &reason, &t)
                                 .unwrap();
                             (loc, t)
@@ -11642,7 +11642,7 @@ pub fn assignment_lhs<'a>(
                     let t = typed_expr.loc().1.dupe();
                     let typed_expr =
                         reconstruct_ast.call(typed_expr, &mut |loc: ALoc| -> (ALoc, Type) {
-                            let reason = mk_reason(RNonnullAssert, loc.dupe());
+                            let reason = mk_reason(None, loc.dupe());
                             let t = type_operation_utils::operators::non_maybe(cx, &reason, &t)
                                 .unwrap();
                             (loc, t)

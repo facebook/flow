@@ -2326,8 +2326,7 @@ fn resolve_op_assign<'cx>(
             let lhs_patt = statement::assignment_lhs(cx, lhs)?;
             let (lhs_loc, lhs_t) = lhs_patt.loc();
             let lhs_t = if assertion {
-                let reason =
-                    reason::mk_reason(reason::VirtualReasonDesc::RNonnullAssert, lhs_loc.dupe());
+                let reason = reason::mk_reason(None, lhs_loc.dupe());
                 type_operation_utils::operators::non_maybe(cx, &reason, lhs_t)?
             } else {
                 lhs_t.dupe()
