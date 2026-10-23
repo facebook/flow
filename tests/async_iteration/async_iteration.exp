@@ -27,8 +27,8 @@ References:
    delegate_yield.js:7:1
     7| delegate_next().next(0); // err number ~> void
        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es2018.asyncgenerator.js:25:22
-   25|     next(...[value]: [] | [Next]): Promise<IteratorResult<Yield,Return>>;
+   <BUILTINS>/lib.es2018.asyncgenerator.js:24:22
+   24|     next(...[value]: [] | [TNext]): Promise<IteratorResult<T, TReturn>>;
                             ^^ [4]
 
 
@@ -182,9 +182,9 @@ References:
    return.js:1:40
     1| declare const gen: AsyncGenerator<void,string,void>;
                                               ^^^^^^ [2]
-   <BUILTINS>/lib.es2018.asyncgenerator.js:26:28
-   26|     return(value: Return | PromiseLike<Return>): Promise<IteratorResult<Yield,Return>>;
-                                  ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2018.asyncgenerator.js:25:29
+   25|     return(value: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+                                   ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- return.js:6:3
@@ -219,9 +219,9 @@ References:
    return.js:15:12
    15|     return 0;
                   ^ [2]
-   <BUILTINS>/lib.es2018.asyncgenerator.js:26:28
-   26|     return(value: Return | PromiseLike<Return>): Promise<IteratorResult<Yield,Return>>;
-                                  ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2018.asyncgenerator.js:25:29
+   25|     return(value: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+                                   ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:5
@@ -290,6 +290,79 @@ References:
    throw.js:29:16
    29|       value as void; // error: number ~> void
                       ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- typescript_generator.js:6:13
+
+Cannot call `constructor` because in array element: `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   typescript_generator.js:6:13
+    6| constructor(1); // ERROR
+                   ^ [1]
+
+References:
+   <BUILTINS>/lib.es2018.asyncgenerator.js:65:15
+   65|     (...args: string[]): AsyncGeneratorFunction;
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- typescript_generator.js:20:5
+
+Cannot cast `result.value` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   typescript_generator.js:20:5
+   20|     result.value as string; // ERROR: unknown default yield
+           ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2018.asyncgenerator.js:22:30
+   22| interface AsyncGenerator<T = unknown, TReturn = any, TNext = any> extends AsyncIteratorObject<T, TReturn, TNext> {
+                                    ^^^^^^^ [1]
+   typescript_generator.js:20:21
+   20|     result.value as string; // ERROR: unknown default yield
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- typescript_generator.js:28:7
+
+Cannot call `typed.return` because: [incompatible-type]
+ - Either `void` [1] is incompatible with `string` [2].
+ - Or `void` [1] is incompatible with `PromiseLike<string>` [3].
+
+   typescript_generator.js:28:7
+   28| typed.return(); // ERROR
+             ^^^^^^
+
+References:
+   typescript_generator.js:28:1
+   28| typed.return(); // ERROR
+       ^^^^^^^^^^^^^^ [1]
+   typescript_generator.js:24:45
+   24| declare const typed: AsyncGenerator<number, string, boolean>;
+                                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2018.asyncgenerator.js:25:29
+   25|     return(value: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+                                   ^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------ typescript_generator.js:29:14
+
+Cannot call `typed.return` with `1` bound to `value` because: [incompatible-type]
+ - Either `1` [1] is incompatible with `string` [2].
+ - Or `1` [1], a primitive, cannot be used as a subtype of `PromiseLike<string>` [3]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+
+   typescript_generator.js:29:14
+   29| typed.return(1); // ERROR
+                    ^ [1]
+
+References:
+   typescript_generator.js:24:45
+   24| declare const typed: AsyncGenerator<number, string, boolean>;
+                                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2018.asyncgenerator.js:25:29
+   25|     return(value: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+                                   ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------- typescript_iterator.js:5:10
@@ -433,4 +506,4 @@ References:
 
 
 
-Found 22 errors
+Found 26 errors
