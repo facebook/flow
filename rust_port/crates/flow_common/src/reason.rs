@@ -303,7 +303,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RThisType,
     RImplicitInstantiation,
     RKeySet,
-    RConditional,
     RPrototype,
     RObjectPrototype,
     RFunctionPrototype,
@@ -318,12 +317,10 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RSomeProperty,
     RGlobalObject,
     RProviders,
-    RUpdate,
     RContextualVariable,
     RNext,
     RModuleReference,
     RImportMeta,
-    RAwait,
     RNoProviders,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
@@ -446,7 +443,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RThisType => RThisType,
             RImplicitInstantiation => RImplicitInstantiation,
             RKeySet => RKeySet,
-            RConditional => RConditional,
             RPrototype => RPrototype,
             RObjectPrototype => RObjectPrototype,
             RFunctionPrototype => RFunctionPrototype,
@@ -478,12 +474,10 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RCode(s) => RCode(s.dupe()),
             RGlobalObject => RGlobalObject,
             RProviders => RProviders,
-            RUpdate => RUpdate,
             RContextualVariable => RContextualVariable,
             RNext => RNext,
             RModuleReference => RModuleReference,
             RImportMeta => RImportMeta,
-            RAwait => RAwait,
             RNoProviders => RNoProviders,
             ROpaqueType(s) => ROpaqueType(s.dupe()),
             RObjectKeyMirror => RObjectKeyMirror,
@@ -1282,7 +1276,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RImplicitInstantiation => "implicit instantiation".to_string(),
 
         RKeySet => "key set".to_string(),
-        RConditional => "conditional".to_string(),
 
         // Prototypes
         RPrototype => "prototype".to_string(),
@@ -1348,12 +1341,10 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Misc operations
         RGlobalObject => "global object".to_string(),
         RProviders => "providers".to_string(),
-        RUpdate => "update".to_string(),
         RContextualVariable => "contextual variable".to_string(),
         RNext => "next".to_string(),
         RModuleReference => "module reference".to_string(),
         RImportMeta => "import.meta".to_string(),
-        RAwait => "await".to_string(),
         RNoProviders => "no providers".to_string(),
 
         // Type wrappers

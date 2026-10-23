@@ -7678,7 +7678,7 @@ fn expression_<'a>(
                 }))
             };
             let decl = *decl;
-            let reason = mk_reason(VirtualReasonDesc::RConditional, loc.dupe());
+            let reason = mk_reason(None, loc.dupe());
             let test = condition(
                 cx,
                 EnclosingContext::OtherTestContext,
@@ -10991,7 +10991,7 @@ fn unary<'a>(
             )
         }
         UnaryOperator::Await => {
-            let reason = mk_reason(RAwait, loc.dupe());
+            let reason = mk_reason(None, loc.dupe());
             let argument_ast = expression_inner(
                 None,
                 None,
@@ -11052,7 +11052,7 @@ fn update<'a>(
     loc: ALoc,
     expr: &expression::Update<ALoc, ALoc>,
 ) -> Result<(Type, expression::Update<ALoc, (ALoc, Type)>), CheckExprError> {
-    let reason = mk_reason(RUpdate, loc.dupe());
+    let reason = mk_reason(None, loc.dupe());
     let arg_ast = expression_inner(
         None,
         None,

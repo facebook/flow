@@ -2376,7 +2376,7 @@ fn resolve_update<'cx>(
     exp_loc: ALoc,
     id_reason: Reason,
 ) -> Result<Type, JobError> {
-    let reason = reason::mk_reason(reason::VirtualReasonDesc::RUpdate, exp_loc);
+    let reason = reason::mk_reason(None, exp_loc);
     let id_t = type_env::ref_entry_exn(type_env::LookupMode::ForValue, cx, id_loc, id_reason)?;
     type_operation_utils::operators::unary_arith(cx, &reason, &type_::UnaryArithKind::Update, &id_t)
 }
