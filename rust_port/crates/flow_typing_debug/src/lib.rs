@@ -2968,6 +2968,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             reason,
             hint_available: _,
             from_generic_function: _,
+            is_return_annotation: _,
         } => {
             format!(
                 "EMissingLocalAnnotation ({} {:?})",

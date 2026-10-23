@@ -2762,8 +2762,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     })
                 }
                 BindingsKind::GeneratorNext => {
-                    let desc = VirtualReasonDesc::RNext;
-                    let reason = VirtualReason::new(desc, loc.dupe());
+                    let reason = VirtualReason::new(None, loc.dupe());
                     self.env_state.write_entries.insert(
                         EnvKey::new(DefLocType::OrdinaryNameLoc, loc.dupe()),
                         EnvEntry::AssigningWrite(reason.dupe()),

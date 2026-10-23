@@ -2585,6 +2585,8 @@ pub enum Message<L: Dupe> {
 
     MessageMissingAnnotation(Option<VirtualReasonDesc<L>>),
     MessageMissingThisAnnotation,
+    MessageMissingReturnAnnotation,
+    MessageMissingReturnAnnotationForGenericFunction,
     MessageMissingParameterAnnotation,
     MessageMissingParameterAnnotationDueToContextualTypingFailure,
     MessageMissingAnnotationDueToContextualTypingFailure(Option<VirtualReasonDesc<L>>),

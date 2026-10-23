@@ -158,7 +158,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:11:34
 
 Cannot call `React.lazy` with function bound to `component` because: [incompatible-type]
- - return [1] is incompatible with `Promise` [2]
+ -  [1] is incompatible with `Promise` [2]
     - in the return value > type argument `R` [3]: `(x: Props) => React.Node` [4] is incompatible with
       `{readonly default: component(...any) renders any, ...}` [5]
 
@@ -199,7 +199,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:12:34
 
 Cannot call `React.lazy` with function bound to `component` because: [incompatible-type]
- - return [1] is incompatible with `Promise` [2]
+ -  [1] is incompatible with `Promise` [2]
     - in the return value > type argument `R` [3]: property `default` is missing in `{name: string, ...}` [4] but exists
       in `{readonly default: component(...any) renders any, ...}` [5]
 

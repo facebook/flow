@@ -2138,7 +2138,7 @@ impl<'a> DefFinder<'a> {
                     _ => {
                         // TODO: This should be a parse error, but we only produce an internal
                         // error in statement.rs.
-                        mk_reason(VirtualReasonDesc::RContextualVariable, param_loc.dupe())
+                        mk_reason(None, param_loc.dupe())
                     }
                 };
                 self.record_hint(param_loc.dupe(), hints.clone());
@@ -2845,7 +2845,7 @@ impl<'a> DefFinder<'a> {
                 };
                 this.add_ordinary_binding(
                     loc,
-                    mk_reason(VirtualReasonDesc::RNext, body_loc),
+                    mk_reason(None, body_loc),
                     Def::GeneratorNext(Box::new(gen_val)),
                 );
             }

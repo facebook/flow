@@ -15178,6 +15178,7 @@ pub fn mk_class_sig<'a>(
                                 reason: reason.to_error_reference(),
                                 hint_available: false,
                                 from_generic_function: false,
+                                is_return_annotation: false,
                             },
                         );
                     }
@@ -15378,6 +15379,7 @@ pub fn mk_class_sig<'a>(
                                 ),
                                 hint_available: false,
                                 from_generic_function: false,
+                                is_return_annotation: false,
                             },
                         );
                         let t = any_t::make(
@@ -20140,10 +20142,7 @@ pub fn mk_func_sig<'a>(
         func_tparams.as_ref(),
     )?;
     let fparams = mk_params(cx, &tparams_map, params)?;
-    let ret_reason = mk_reason(
-        VirtualReasonDesc::RReturn,
-        crate::func_sig::return_loc(func),
-    );
+    let ret_reason = mk_reason(None, crate::func_sig::return_loc(func));
     let has_nonvoid_return = flow_env_builder::nonvoid_return::might_have_nonvoid_return(
         &loc,
         func,
@@ -20212,6 +20211,7 @@ pub fn mk_func_sig<'a>(
                     reason: reason.to_error_reference(),
                     hint_available: false,
                     from_generic_function,
+                    is_return_annotation: true,
                 },
             );
             let t = any_t::make(

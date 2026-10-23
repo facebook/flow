@@ -574,7 +574,7 @@ fn resolve_hint<'cx>(
                         })
                         .collect();
                     Type::new(TypeInner::UnionT(
-                        reason::mk_reason(reason::VirtualReasonDesc::RProviders, l1),
+                        reason::mk_reason(None, l1),
                         type_::union_rep::make(
                             None,
                             type_::union_rep::UnionKind::ProvidersKind,

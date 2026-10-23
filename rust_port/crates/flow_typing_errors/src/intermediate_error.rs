@@ -8303,6 +8303,16 @@ where
                 code("this"),
                 text("."),
             ]),
+            MessageMissingReturnAnnotation => friendly::Message(vec![
+                text("Missing an annotation on "),
+                text("return"),
+                text("."),
+            ]),
+            MessageMissingReturnAnnotationForGenericFunction => friendly::Message(vec![
+                text("Missing an annotation on "),
+                text("return"),
+                text(" because generic functions must be fully annotated."),
+            ]),
             MessageMissingParameterAnnotation => {
                 friendly::Message(vec![text("Missing an annotation on this parameter.")])
             }

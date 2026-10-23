@@ -743,14 +743,14 @@ pub fn provider_type_for_def_loc<'cx>(
     use flow_typing_type::type_::mixed_t;
     use flow_typing_type::type_::union_rep;
     match providers.len() {
-        0 => mixed_t::make(mk_reason(VirtualReasonDesc::RNoProviders, def_loc)),
+        0 => mixed_t::make(mk_reason(None, def_loc)),
         1 => providers.into_iter().next().unwrap(),
         _ => {
             let mut iter = providers.into_iter();
             let t1 = iter.next().unwrap();
             let t2 = iter.next().unwrap();
             let ts: Vec<Type> = iter.collect();
-            let reason = mk_reason(VirtualReasonDesc::RProviders, def_loc);
+            let reason = mk_reason(None, def_loc);
             if intersect {
                 Type::new(TypeInner::IntersectionT(
                     reason,
@@ -2829,10 +2829,5 @@ pub fn discriminant_after_negated_cases<'cx>(
 pub fn get_next<'cx>(cx: &mut Context<'cx>, loc: ALoc) -> Result<Type, JobError> {
     use flow_common::reason::mk_reason;
 
-    read_entry_exn(
-        LookupMode::ForValue,
-        cx,
-        loc.dupe(),
-        mk_reason(VirtualReasonDesc::RNext, loc),
-    )
+    read_entry_exn(LookupMode::ForValue, cx, loc.dupe(), mk_reason(None, loc))
 }

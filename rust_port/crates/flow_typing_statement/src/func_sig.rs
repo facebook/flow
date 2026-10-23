@@ -520,10 +520,9 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
         Kind::Generator { .. } | Kind::AsyncGenerator { .. } => {
             let yield_t = flow_typing_tvar::mk(cx, reason.dupe().replace_desc(None));
             let next_t = match return_t {
-                AnnotatedOrInferred::Annotated(_) => flow_typing_tvar::mk(
-                    cx,
-                    reason.dupe().replace_desc(reason::VirtualReasonDesc::RNext),
-                ),
+                AnnotatedOrInferred::Annotated(_) => {
+                    flow_typing_tvar::mk(cx, reason.dupe().replace_desc(None))
+                }
                 AnnotatedOrInferred::Inferred(_) => {
                     type_::void::make(reason.dupe().replace_desc(reason::VirtualReasonDesc::RVoid))
                 }

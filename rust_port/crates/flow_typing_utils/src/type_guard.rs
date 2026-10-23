@@ -248,7 +248,7 @@ fn check_assertion_consistency<'cx>(
     for AssertionExit { return_loc, read } in exits {
         let implicit_return = return_loc.is_none();
         let exit_reason = match return_loc {
-            Some(loc) => mk_reason(RReturn, loc),
+            Some(loc) => mk_reason(None, loc),
             None => reason.dupe(),
         };
         let exit_loc = exit_reason.loc().dupe();

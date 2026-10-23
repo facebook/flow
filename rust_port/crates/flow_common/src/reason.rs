@@ -308,17 +308,12 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RDestructuring,
     RDefaultValue,
     RConstructor,
-    RReturn,
     RRegExp,
     RDummyPrototype,
     RDummyThis,
     RObjectKeyMirror,
     RSomeProperty,
     RGlobalObject,
-    RProviders,
-    RContextualVariable,
-    RNext,
-    RNoProviders,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
     RReactProps,
@@ -447,7 +442,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RDefaultValue => RDefaultValue,
             RConstructor => RConstructor,
             RRecordType(s) => RRecordType(s.dupe()),
-            RReturn => RReturn,
             RRegExp => RRegExp,
             RDummyPrototype => RDummyPrototype,
             RDummyThis => RDummyThis,
@@ -470,10 +464,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RDefaultImportedType(s, u) => RDefaultImportedType(s.dupe(), u.clone()),
             RCode(s) => RCode(s.dupe()),
             RGlobalObject => RGlobalObject,
-            RProviders => RProviders,
-            RContextualVariable => RContextualVariable,
-            RNext => RNext,
-            RNoProviders => RNoProviders,
             ROpaqueType(s) => ROpaqueType(s.dupe()),
             RObjectKeyMirror => RObjectKeyMirror,
             RRendersNothing => RRendersNothing,
@@ -1285,7 +1275,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RRecordType(name) => format!("record `{}`", name),
 
         // Misc
-        RReturn => "return".to_string(),
         RRegExp => "regexp".to_string(),
         RDummyPrototype => "empty prototype object".to_string(),
         RDummyThis => "bound `this` in method".to_string(),
@@ -1332,10 +1321,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Misc operations
         RGlobalObject => "global object".to_string(),
-        RProviders => "providers".to_string(),
-        RContextualVariable => "contextual variable".to_string(),
-        RNext => "next".to_string(),
-        RNoProviders => "no providers".to_string(),
 
         // Type wrappers
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),
