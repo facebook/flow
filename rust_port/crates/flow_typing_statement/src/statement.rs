@@ -1710,7 +1710,7 @@ pub fn module_ref_literal<'a>(
         }
         Err(err) => panic!("Should not be under speculation: {:?}", err),
     };
-    let reason = mk_reason(VirtualReasonDesc::RModuleReference, loc.dupe());
+    let reason = mk_reason(None, loc.dupe());
     let t = FlowJs::get_builtin_typeapp(cx, &reason, None, "$Flow$ModuleRef", vec![require_t]);
     Ok((
         t,
@@ -6978,7 +6978,7 @@ fn expression_<'a>(
                     v
                 }
             } else {
-                let reason = mk_reason(VirtualReasonDesc::RMatch, loc.dupe());
+                let reason = mk_reason(None, loc.dupe());
                 let arg = expression(None, None, Some(true), cx, &inner.arg)?;
                 let has_hint: LazyBool = {
                     let old_has_hint = has_hint.dupe();
@@ -8241,7 +8241,7 @@ fn expression_<'a>(
         ExpressionInner::MetaProperty { inner, .. }
             if inner.meta.name.as_str() == "import" && inner.property.name.as_str() == "meta" =>
         {
-            let reason = mk_reason(VirtualReasonDesc::RImportMeta, loc.dupe());
+            let reason = mk_reason(None, loc.dupe());
             let t = flow_js::get_builtin_type_non_speculating(cx, &reason, None, "ImportMeta")?;
             expression::Expression::new(ExpressionInner::MetaProperty {
                 loc: (loc.dupe(), t.dupe()),

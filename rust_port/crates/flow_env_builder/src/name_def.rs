@@ -4574,8 +4574,6 @@ impl<'a> DefFinder<'a> {
         hints: &AstHints,
         x: &ast::match_::Match<ALoc, ALoc, ast::expression::Expression<ALoc, ALoc>>,
     ) -> Result<(), EnvInvariant<ALoc>> {
-        use flow_common::reason::VirtualReasonDesc::RMatch;
-
         let ast::match_::Match {
             arg,
             cases,
@@ -4586,7 +4584,7 @@ impl<'a> DefFinder<'a> {
         self.visit_expression(EnclosingContext::NoContext, &vec![], arg)?;
         self.add_ordinary_binding_with_kind(
             match_keyword_loc.dupe(),
-            mk_reason(RMatch, match_keyword_loc.dupe()),
+            mk_reason(None, match_keyword_loc.dupe()),
             DefinitionReferenceKind::Match,
             Def::Binding(Box::new(Binding::Root(mk_value(
                 None,
@@ -7207,8 +7205,6 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
         _loc: &ALoc,
         x: &ast::match_::Match<ALoc, ALoc, ast::statement::Statement<ALoc, ALoc>>,
     ) -> Result<(), EnvInvariant<ALoc>> {
-        use flow_common::reason::VirtualReasonDesc::RMatch;
-
         let ast::match_::Match {
             arg,
             cases,
@@ -7218,7 +7214,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
         self.visit_expression(EnclosingContext::NoContext, &Vec::new(), arg)?;
         self.add_ordinary_binding_with_kind(
             match_keyword_loc.dupe(),
-            mk_reason(RMatch, match_keyword_loc.dupe()),
+            mk_reason(None, match_keyword_loc.dupe()),
             DefinitionReferenceKind::Match,
             Def::Binding(Box::new(Binding::Root(mk_value(
                 None,

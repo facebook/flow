@@ -285,7 +285,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RUniqueSymbol,
     RExports,
     RNullOrVoid,
-    RMatch,
     RObject,
     RObjectLit,
     RObjectType,
@@ -319,8 +318,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RProviders,
     RContextualVariable,
     RNext,
-    RModuleReference,
-    RImportMeta,
     RNoProviders,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
@@ -476,13 +473,10 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RProviders => RProviders,
             RContextualVariable => RContextualVariable,
             RNext => RNext,
-            RModuleReference => RModuleReference,
-            RImportMeta => RImportMeta,
             RNoProviders => RNoProviders,
             ROpaqueType(s) => ROpaqueType(s.dupe()),
             RObjectKeyMirror => RObjectKeyMirror,
             RRendersNothing => RRendersNothing,
-            RMatch => RMatch,
             RObjectPatternRestProp => RObjectPatternRestProp,
             RArrayPatternRestProp => RArrayPatternRestProp,
             RModule(u) => RModule(u.clone()),
@@ -1212,8 +1206,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RBigIntLit(x) => format!("bigint literal `{}`", x),
         RBooleanLit(b) => format!("boolean literal `{}`", b),
 
-        RMatch => "match".to_string(),
-
         // Objects
         RObject => "object".to_string(),
         RObjectLit => "object literal".to_string(),
@@ -1343,8 +1335,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RProviders => "providers".to_string(),
         RContextualVariable => "contextual variable".to_string(),
         RNext => "next".to_string(),
-        RModuleReference => "module reference".to_string(),
-        RImportMeta => "import.meta".to_string(),
         RNoProviders => "no providers".to_string(),
 
         // Type wrappers

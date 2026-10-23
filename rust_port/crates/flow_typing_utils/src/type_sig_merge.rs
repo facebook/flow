@@ -1629,7 +1629,7 @@ fn merge_impl<'cx>(
         }
         Pack::Packed::ModuleRef(box Pack::PackedLocIndex { loc, index }) => {
             let t = require(cx, file, loc.dupe(), *index, true);
-            let reason = reason::mk_reason(RModuleReference, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             flow_js_utils::lookup_builtin_typeapp(cx, reason, "$Flow$ModuleRef", vec![t])
         }
         Pack::Packed::ImportTypeAnnot(box Pack::PackedLocIndex { loc, index }) => {
