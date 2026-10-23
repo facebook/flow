@@ -4535,11 +4535,19 @@ pub fn for_of_elemt<'a>(
         let loc = reason.loc().dupe();
         // Second and third args here are never relevant to the loop, but they should be as
         // general as possible to allow iterating over arbitrary generators
-        let targs = vec![
-            elem_t.dupe(),
-            mixed_t::why(reason.dupe()),
-            empty_t::why(reason.dupe()),
-        ];
+        let targs = if await_ {
+            vec![
+                elem_t.dupe(),
+                any_t::placeholder(reason.dupe()),
+                any_t::placeholder(reason.dupe()),
+            ]
+        } else {
+            vec![
+                elem_t.dupe(),
+                mixed_t::why(reason.dupe()),
+                empty_t::why(reason.dupe()),
+            ]
+        };
         type_operation_utils::type_assertions::assert_iterable(
             cx,
             loc,

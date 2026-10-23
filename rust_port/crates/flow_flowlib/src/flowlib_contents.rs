@@ -28,7 +28,6 @@ flowlib_file!(LIB_ES2015_ITERABLE_JS, "lib.es2015.iterable.js");
 flowlib_file!(LIB_ES2015_PROMISE_JS, "lib.es2015.promise.js");
 flowlib_file!(LIB_ES2016_ARRAY_INCLUDE_JS, "lib.es2016.array.include.js");
 flowlib_file!(LIB_ES2018_ASYNCGENERATOR_JS, "lib.es2018.asyncgenerator.js");
-flowlib_file!(LIB_ES2018_ASYNCITERABLE_JS, "lib.es2018.asynciterable.js");
 flowlib_file!(LIB_ES2019_ARRAY_JS, "lib.es2019.array.js");
 flowlib_file!(LIB_ES2020_PROMISE_JS, "lib.es2020.promise.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
@@ -90,7 +89,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         tslib_contents::LIB_ES2017_TYPEDARRAYS_D_TS,
     ),
     ("lib.es2018.asyncgenerator.js", LIB_ES2018_ASYNCGENERATOR_JS),
-    ("lib.es2018.asynciterable.js", LIB_ES2018_ASYNCITERABLE_JS),
+    (
+        "lib.es2018.asynciterable.js",
+        tslib_contents::LIB_ES2018_ASYNCITERABLE_D_TS,
+    ),
     ("lib.es2018.intl.js", tslib_contents::LIB_ES2018_INTL_D_TS),
     (
         "lib.es2018.promise.js",

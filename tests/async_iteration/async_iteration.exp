@@ -1,22 +1,35 @@
-Error ------------------------------------------------------------------------------------------- delegate_yield.js:7:22
+Error ------------------------------------------------------------------------------------------- delegate_yield.js:7:17
 
-Cannot call `delegate_next().next` with `0` bound to `value` because `0` [1] is incompatible with `void` [2].
-[incompatible-type]
+Cannot call `delegate_next().next` because: [incompatible-type]
+ - Either in index `0`: `0` [1] is incompatible with `void` [2].
+ - Or `[0]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
-   delegate_yield.js:7:22
-   7| delegate_next().next(0); // err number ~> void
-                           ^ [1]
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   delegate_yield.js:7:17
+    7| delegate_next().next(0); // err number ~> void
+                       ^^^^
 
 References:
+   delegate_yield.js:7:22
+    7| delegate_next().next(0); // err number ~> void
+                            ^ [1]
    delegate_yield.js:1:33
-                                      v
-   1| async function *delegate_next() {
-   2|   async function *inner() {
-   3|     var x: void = yield; // ok, unannotated defaults to void
-   4|   }
-   5|   yield *inner();
-   6| }
-      ^ [2]
+                                       v
+    1| async function *delegate_next() {
+    2|   async function *inner() {
+    3|     var x: void = yield; // ok, unannotated defaults to void
+    4|   }
+    5|   yield *inner();
+    6| }
+       ^ [2]
+   delegate_yield.js:7:1
+    7| delegate_next().next(0); // err number ~> void
+       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2018.asyncgenerator.js:25:22
+   25|     next(...[value]: [] | [Next]): Promise<IteratorResult<Yield,Return>>;
+                            ^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- delegate_yield.js:17:5
@@ -70,6 +83,69 @@ References:
                    ^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- iterator_object.js:7:1
+
+Cannot cast `gen()` to `AsyncIteratorObject<number | string, string | void, true>` because in type argument `T` [1]:
+`string` [2] is incompatible with `number` [3]. [incompatible-type]
+
+   iterator_object.js:7:1
+     7| gen() as AsyncIteratorObject<number | string, string | void, true>; // ERROR: invariant type parameters
+        ^^^^^
+
+References:
+   <BUILTINS>/lib.esnext.disposable.js:193:31
+   193| interface AsyncIteratorObject<T, TReturn, TNext> extends AsyncDisposable {
+                                      ^ [1]
+   iterator_object.js:7:39
+     7| gen() as AsyncIteratorObject<number | string, string | void, true>; // ERROR: invariant type parameters
+                                              ^^^^^^ [2]
+   iterator_object.js:1:39
+     1| async function* gen(): AsyncGenerator<number, string, boolean> {
+                                              ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- iterator_object.js:7:1
+
+Cannot cast `gen()` to `AsyncIteratorObject<number | string, string | void, true>` because in type argument
+`TReturn` [1]: `void` [2] is incompatible with `string` [3]. [incompatible-type]
+
+   iterator_object.js:7:1
+     7| gen() as AsyncIteratorObject<number | string, string | void, true>; // ERROR: invariant type parameters
+        ^^^^^
+
+References:
+   <BUILTINS>/lib.esnext.disposable.js:193:34
+   193| interface AsyncIteratorObject<T, TReturn, TNext> extends AsyncDisposable {
+                                         ^^^^^^^ [1]
+   iterator_object.js:7:56
+     7| gen() as AsyncIteratorObject<number | string, string | void, true>; // ERROR: invariant type parameters
+                                                               ^^^^ [2]
+   iterator_object.js:1:47
+     1| async function* gen(): AsyncGenerator<number, string, boolean> {
+                                                      ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- iterator_object.js:7:1
+
+Cannot cast `gen()` to `AsyncIteratorObject<number | string, string | void, true>` because in type argument `TNext` [1]:
+`boolean` [2] is incompatible with `true` [3]. [incompatible-type]
+
+   iterator_object.js:7:1
+     7| gen() as AsyncIteratorObject<number | string, string | void, true>; // ERROR: invariant type parameters
+        ^^^^^
+
+References:
+   <BUILTINS>/lib.esnext.disposable.js:193:43
+   193| interface AsyncIteratorObject<T, TReturn, TNext> extends AsyncDisposable {
+                                                  ^^^^^ [1]
+   iterator_object.js:1:55
+     1| async function* gen(): AsyncGenerator<number, string, boolean> {
+                                                              ^^^^^^^ [2]
+   iterator_object.js:7:62
+     7| gen() as AsyncIteratorObject<number | string, string | void, true>; // ERROR: invariant type parameters
+                                                                     ^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------- iterator_object.js:8:1
 
 Cannot cast `gen()` to `AsyncIteratorObject<number, number, boolean>` because in type argument `TReturn` [1]:
@@ -91,12 +167,32 @@ References:
                                              ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- return.js:5:12
+
+Cannot call `gen.return` with `0` bound to `value` because: [incompatible-type]
+ - Either `0` [1] is incompatible with `string` [2].
+ - Or `0` [1], a primitive, cannot be used as a subtype of `PromiseLike<string>` [3]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+
+   return.js:5:12
+    5| gen.return(0).then(result => { // ERROR: number is not the generator's return type
+                  ^ [1]
+
+References:
+   return.js:1:40
+    1| declare const gen: AsyncGenerator<void,string,void>;
+                                              ^^^^^^ [2]
+   <BUILTINS>/lib.es2018.asyncgenerator.js:26:28
+   26|     return(value: Return | PromiseLike<Return>): Promise<IteratorResult<Yield,Return>>;
+                                  ^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- return.js:6:3
 
 Cannot cast `result.value` to `void` because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    return.js:6:3
-   6|   result.value as void; // error: string | number ~> void
+   6|   result.value as void; // ERROR: string ~> void
         ^^^^^^^^^^^^
 
 References:
@@ -104,25 +200,28 @@ References:
    1| declare const gen: AsyncGenerator<void,string,void>;
                                              ^^^^^^ [1]
    return.js:6:19
-   6|   result.value as void; // error: string | number ~> void
+   6|   result.value as void; // ERROR: string ~> void
                         ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- return.js:6:3
+Error -------------------------------------------------------------------------------------------------- return.js:18:24
 
-Cannot cast `result.value` to `void` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
+Cannot call `refuse_return().return` with `"string"` bound to `value` because: [incompatible-type]
+ - Either `"string"` [1] is incompatible with `number` [2].
+ - Or `"string"` [1], a primitive, cannot be used as a subtype of `PromiseLike<number>` [3]. You can wrap it in
+   `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 
-   return.js:6:3
-   6|   result.value as void; // error: string | number ~> void
-        ^^^^^^^^^^^^
+   return.js:18:24
+   18| refuse_return().return("string").then(result => { // ERROR: string is not the generator's return type
+                              ^^^^^^^^ [1]
 
 References:
-   return.js:5:12
-   5| gen.return(0).then(result => {
-                 ^ [1]
-   return.js:6:19
-   6|   result.value as void; // error: string | number ~> void
-                        ^^^^ [2]
+   return.js:15:12
+   15|     return 0;
+                  ^ [2]
+   <BUILTINS>/lib.es2018.asyncgenerator.js:26:28
+   26|     return(value: Return | PromiseLike<Return>): Promise<IteratorResult<Yield,Return>>;
+                                  ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:5
@@ -193,5 +292,145 @@ References:
                       ^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- typescript_iterator.js:5:10
 
-Found 11 errors
+Cannot call `iterator.next` because: [incompatible-type]
+ - Either in index `0`: `1` [1] is incompatible with `boolean` [2].
+ - Or `[1]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   typescript_iterator.js:5:10
+    5| iterator.next(1); // ERROR
+                ^^^^
+
+References:
+   typescript_iterator.js:5:15
+    5| iterator.next(1); // ERROR
+                     ^ [1]
+   typescript_iterator.js:2:47
+    2| const iterator: AsyncIterator<number, string, boolean> = {next};
+                                                     ^^^^^^^ [2]
+   typescript_iterator.js:5:1
+    5| iterator.next(1); // ERROR
+       ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2018.asynciterable.js:33:22
+   33|     next(...[value]: [] | [TNext]): Promise<IteratorResult<T, TReturn>>;
+                            ^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- typescript_iterator.js:6:10
+
+Cannot call `iterator.next` because: [incompatible-type]
+ - Either `[true, false]` [1] has 2 elements but `Readonly<[]>` [2] has 0 elements.
+ - Or `[true, false]` [1] has 2 elements but `[boolean]` [3] has 1 element.
+
+   typescript_iterator.js:6:10
+    6| iterator.next(true, false); // ERROR
+                ^^^^
+
+References:
+   typescript_iterator.js:6:1
+    6| iterator.next(true, false); // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2018.asynciterable.js:33:22
+   33|     next(...[value]: [] | [TNext]): Promise<IteratorResult<T, TReturn>>;
+                            ^^ [2]
+   <BUILTINS>/lib.es2018.asynciterable.js:33:27
+   33|     next(...[value]: [] | [TNext]): Promise<IteratorResult<T, TReturn>>;
+                                 ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- typescript_iterator.js:8:1
+
+Cannot cast `iterator` to `AsyncIterable<number, string, boolean>` because property `@@asyncIterator` is missing in
+`AsyncIterator<number, string, boolean>` [1] but exists in `AsyncIterable<number, string, boolean>` [2].
+[incompatible-type]
+
+   typescript_iterator.js:8:1
+   8| iterator as AsyncIterable<number, string, boolean>; // ERROR: missing async iterator method
+      ^^^^^^^^
+
+References:
+   typescript_iterator.js:2:17
+   2| const iterator: AsyncIterator<number, string, boolean> = {next};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typescript_iterator.js:8:13
+   8| iterator as AsyncIterable<number, string, boolean>; // ERROR: missing async iterator method
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- typescript_iterator.js:15:16
+
+Cannot call `returnMethod` with `1` bound to `value` because: [incompatible-type]
+ - Either `1` [1] is incompatible with `string` [2].
+ - Or `1` [1], a primitive, cannot be used as a subtype of `PromiseLike<string>` [3]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+
+   typescript_iterator.js:15:16
+   15|   returnMethod(1); // ERROR
+                      ^ [1]
+
+References:
+   typescript_iterator.js:2:39
+    2| const iterator: AsyncIterator<number, string, boolean> = {next};
+                                             ^^^^^^ [2]
+   <BUILTINS>/lib.es2018.asynciterable.js:34:31
+   34|     return?(value?: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+                                     ^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- typescript_iterator.js:36:5
+
+Cannot cast `result.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   typescript_iterator.js:36:5
+   36|     result.value as string; // ERROR
+           ^^^^^^^^^^^^
+
+References:
+   typescript_iterator.js:31:39
+   31| declare const defaults: AsyncIterator<number>;
+                                             ^^^^^^ [1]
+   typescript_iterator.js:36:21
+   36|     result.value as string; // ERROR
+                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- typescript_iterator.js:44:5
+
+Cannot cast `result.value` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   typescript_iterator.js:44:5
+   44|     result.value as string; // ERROR: unknown default return
+           ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.iterable.js:25:35
+   25| type IteratorResult<out Yield,out Return> =
+                                         ^^^^^^ [1]
+   typescript_iterator.js:44:21
+   44|     result.value as string; // ERROR: unknown default return
+                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- typescript_iterator.js:44:5
+
+Cannot cast `result.value` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   typescript_iterator.js:44:5
+   44|     result.value as string; // ERROR: unknown default return
+           ^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2018.asynciterable.js:52:44
+   52| interface AsyncIteratorObject<T, TReturn = unknown, TNext = unknown> extends AsyncIterator<T, TReturn, TNext> {
+                                                  ^^^^^^^ [1]
+   typescript_iterator.js:44:21
+   44|     result.value as string; // ERROR: unknown default return
+                           ^^^^^^ [2]
+
+
+
+Found 22 errors

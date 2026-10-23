@@ -921,45 +921,6 @@ References:
                                               ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- withResolvers.js:4:9
-
-Cannot call `resolve` with `Promise.resolve(...)` bound to `value` because: [incompatible-type]
- - Either 
-    - `Promise` [1] is incompatible with `PromiseLike` [2]
-       - in property `then` > the first parameter: `null | void` [3] is incompatible with
-         `(value: number) => TResult1 | PromiseLike<TResult1>` [4]
- - Or 
-    - `Promise` [1] is incompatible with `PromiseLike` [2]
-       - in property `then` > the first parameter: `(value: 1) => Promise<empty>` [5] is incompatible with `void` [6]
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   withResolvers.js:4:9
-      4| resolve(Promise.resolve(1)); // Error (bug): `Promise` is not a subtype of `PromiseLike`
-                 ^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es2015.promise.js:38:51
-     38|     resolve<T = unknown>(object: Promise<T> | T): Promise<T>;
-                                                           ^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2024.promise.js:22:26
-     22|     resolve: (value: T | PromiseLike<T>) => void;
-                                  ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:3714:18
-   3714|       onFulfill: null | void,
-                          ^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:3691:20
-   3691|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es5.js:3724:18
-   3724|       onFulfill: (value: R) => Promise<U> | U,
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/lib.es5.js:3691:19
-   3691|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
-
-
 Error --------------------------------------------------------------------------------------------- withResolvers.js:7:9
 
 Cannot call `resolve` with `'s'` bound to `value` because: [incompatible-type]
@@ -1016,4 +977,4 @@ References:
 
 
 
-Found 54 errors
+Found 53 errors

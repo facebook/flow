@@ -2646,7 +2646,8 @@ fn merge_annot<'cx>(
                 FunctionReferenceKind::FunctionType,
                 def,
                 statics,
-                matches!(annot, Annot::MethodAnnot(_)) && def.strictness_kind.is_typescript_loose(),
+                matches!(annot, Annot::MethodAnnot(_))
+                    && (cx.is_global_lib_context() || def.strictness_kind.is_typescript_loose()),
                 matches!(annot, Annot::MethodAnnot(box (_, true, _))),
                 false,
                 matches!(annot, Annot::MethodAnnot(_)),

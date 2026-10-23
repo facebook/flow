@@ -42,6 +42,8 @@ pub(super) const LIB_ES2017_SHAREDMEMORY_D_TS: &str =
     include_tslib!("lib.es2017.sharedmemory.d.ts");
 pub(super) const LIB_ES2017_STRING_D_TS: &str = include_tslib!("lib.es2017.string.d.ts");
 pub(super) const LIB_ES2017_TYPEDARRAYS_D_TS: &str = include_tslib!("lib.es2017.typedarrays.d.ts");
+pub(super) const LIB_ES2018_ASYNCITERABLE_D_TS: &str =
+    include_tslib!("lib.es2018.asynciterable.d.ts");
 pub(super) const LIB_ES2018_INTL_D_TS: &str = include_tslib!("lib.es2018.intl.d.ts");
 pub(super) const LIB_ES2018_PROMISE_D_TS: &str = include_tslib!("lib.es2018.promise.d.ts");
 pub(super) const LIB_ES2018_REGEXP_D_TS: &str = include_tslib!("lib.es2018.regexp.d.ts");
@@ -160,7 +162,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ),
     (
         "lib.es2018.asynciterable.d.ts",
-        include_tslib!("lib.es2018.asynciterable.d.ts"),
+        LIB_ES2018_ASYNCITERABLE_D_TS,
     ),
     ("lib.es2018.d.ts", include_tslib!("lib.es2018.d.ts")),
     (

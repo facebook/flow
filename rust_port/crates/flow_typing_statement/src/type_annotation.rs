@@ -7539,8 +7539,9 @@ fn add_interface_properties<'a>(
                             })
                         )
                     );
-                    let optional_method =
-                        np.optional && cx.type_strictness_kind().is_typescript_loose();
+                    let optional_method = np.optional
+                        && (cx.is_global_lib_context()
+                            || cx.type_strictness_kind().is_typescript_loose());
                     let polarity = if ambiguous_numeric_key {
                         typed_ast_utils::polarity(np.variance.as_ref())
                     } else {
