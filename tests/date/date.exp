@@ -7,8 +7,8 @@ Cannot assign `d.getTime()` to `x` because `number` [1] is incompatible with `st
                         ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1109:16
-   1109|     getTime(): number;
+   <BUILTINS>/lib.es5.js:1117:16
+   1117|     getTime(): number;
                         ^^^^^^ [1]
    date.js:2:7
       2| var x:string = d.getTime(); // expect error
@@ -57,8 +57,8 @@ References:
    <BUILTINS>/lib.es5.js:240:16
     240|     valueOf(): unknown;
                         ^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:1250:16
-   1250|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:1115:16
+   1115|     valueOf(): number;
                         ^^^^^^ [4]
    <BUILTINS>/lib.es5.js:1256:16
    1256|     new(value: number | Date | string): Date;
