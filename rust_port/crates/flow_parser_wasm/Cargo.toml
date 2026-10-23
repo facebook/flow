@@ -15,7 +15,7 @@ prettyplease = { version = "0.3.0", features = ["verbatim"] }
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 quote = "1.0.47"
 serde = { version = "1.0.229", features = ["derive", "rc"] }
-serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.154", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 syn = { version = "3.0.6", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
 thiserror = "2.0.21"
 

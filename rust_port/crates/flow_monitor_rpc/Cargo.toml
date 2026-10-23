@@ -20,7 +20,7 @@ flow_services_export_index = { path = "../flow_services_export_index" }
 log = { version = "0.4.34", features = ["kv_unstable", "kv_unstable_std"] }
 lsp-types = "0.97"
 serde = { version = "1.0.229", features = ["derive", "rc"] }
-serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.154", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 uuid = { version = "1.26.1", features = ["rng-getrandom", "serde", "v4", "v5", "v6", "v7", "v8"] }
 
 [lints.rust]

@@ -48,7 +48,7 @@ flow_typing_ty_normalizer = { path = "../flow_typing_ty_normalizer" }
 flow_typing_utils = { path = "../flow_typing_utils" }
 lsp-types = "0.97"
 serde = { version = "1.0.229", features = ["derive", "rc"] }
-serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.154", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fbcode_build)"]}
