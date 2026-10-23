@@ -43,7 +43,7 @@ with `number` [2]. [incompatible-type]
 
 References:
    <BUILTINS>/lib.es5.js:681:38
-   681|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+   681|     sort(compareFn?: (a: T, b: T) => number): this;
                                              ^^^^^^ [2]
 
 

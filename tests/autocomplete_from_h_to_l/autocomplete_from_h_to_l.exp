@@ -2571,7 +2571,7 @@ Flags: --pretty
     },
     {
       "name":"?.sort",
-      "type":"void | ((this: this, compareFn?: (a: T, b: T) => number) => Array<T>)"
+      "type":"void | ((this: this, compareFn?: (a: T, b: T) => number) => this)"
     },
     {
       "name":"?.splice",
@@ -2692,7 +2692,7 @@ Flags: --pretty
     },
     {
       "name":"sort",
-      "type":"(this: this, compareFn?: (a: T, b: T) => number) => Array<T>"
+      "type":"(this: this, compareFn?: (a: T, b: T) => number) => this"
     },
     {
       "name":"splice",
