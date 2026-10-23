@@ -802,14 +802,20 @@ Flags: --pretty
     {"name":"[Symbol.iterator]","type":"(this: String) => StringIterator"},
     {"name":"anchor","type":"(this: String, name: string) => string"},
     {"name":"at","type":"(this: String, index: number) => string | void"},
+    {"name":"big","type":"(this: String) => string"},
+    {"name":"blink","type":"(this: String) => string"},
+    {"name":"bold","type":"(this: String) => string"},
     {"name":"charAt","type":"(this: String, pos: number) => string"},
     {"name":"charCodeAt","type":"(this: String, index: number) => number"},
-    {"name":"codePointAt","type":"(this: String, index: number) => number | void"},
+    {"name":"codePointAt","type":"(this: String, pos: number) => number | void"},
     {"name":"concat","type":"(this: String, ...strings: Array<string>) => string"},
     {
       "name":"endsWith",
-      "type":"(this: String, searchString: string, position?: number) => boolean"
+      "type":"(this: String, searchString: string, endPosition?: number) => boolean"
     },
+    {"name":"fixed","type":"(this: String) => string"},
+    {"name":"fontcolor","type":"(this: String, color: string) => string"},
+    {"name":"fontsize","type":"(this: String, size: string) => string"},
     {
       "name":"includes",
       "type":"(this: String, searchString: string, position?: number) => boolean"
@@ -819,12 +825,13 @@ Flags: --pretty
       "type":"(this: String, searchString: string, position?: number) => number"
     },
     {"name":"isWellFormed","type":"(this: String) => boolean"},
+    {"name":"italics","type":"(this: String) => string"},
     {
       "name":"lastIndexOf",
       "type":"(this: String, searchString: string, position?: number) => number"
     },
     {"name":"length","type":"number"},
-    {"name":"link","type":"(this: String, href: string) => string"},
+    {"name":"link","type":"(this: String, url: string) => string"},
     {
       "name":"localeCompare",
       "type":"(this: String, that: string, locales?: string | Array<string>, options?: Intl$CollatorOptions) => number"
@@ -837,7 +844,7 @@ Flags: --pretty
       "name":"matchAll",
       "type":"(this: String, regexp: string | RegExp) => RegExpStringIterator<RegExpMatchArray>"
     },
-    {"name":"normalize","type":"(this: String, format?: string) => string"},
+    {"name":"normalize","type":"(this: String, form?: string) => string"},
     {
       "name":"padEnd",
       "type":"(this: String, maxLength: number, fillString?: string) => string"
@@ -860,6 +867,7 @@ Flags: --pretty
       "name":"slice",
       "type":"(this: String, start?: number, end?: number) => string"
     },
+    {"name":"small","type":"(this: String) => string"},
     {
       "name":"split",
       "type":"(this: String, separator?: string | RegExp, limit?: number) => Array<string>"
@@ -868,6 +876,8 @@ Flags: --pretty
       "name":"startsWith",
       "type":"(this: String, searchString: string, position?: number) => boolean"
     },
+    {"name":"strike","type":"(this: String) => string"},
+    {"name":"sub","type":"(this: String) => string"},
     {
       "name":"substr",
       "type":"(this: String, from: number, length?: number) => string"
@@ -876,6 +886,7 @@ Flags: --pretty
       "name":"substring",
       "type":"(this: String, start: number, end?: number) => string"
     },
+    {"name":"sup","type":"(this: String) => string"},
     {
       "name":"toLocaleLowerCase",
       "type":"(this: String, locale?: string | Array<string>) => string"

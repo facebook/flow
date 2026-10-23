@@ -6649,7 +6649,8 @@ b.te
                   detail: 'string',
                   documentation: {
                     kind: 'markdown',
-                    value: 'Returns the name of the function.',
+                    value:
+                      'Returns the name of the function. Function names are read-only and can not be changed.',
                   },
                   insertTextFormat: 1,
                   kind: 6,
@@ -7117,7 +7118,8 @@ b.te
                   detail: 'string',
                   documentation: {
                     kind: 'markdown',
-                    value: 'Returns the name of the function.',
+                    value:
+                      'Returns the name of the function. Function names are read-only and can not be changed.',
                   },
                   insertTextFormat: 1,
                   kind: 6,

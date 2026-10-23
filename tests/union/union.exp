@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ issue-198.js:9:20
 
-Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1]. [prop-missing]
+Cannot call `str.toFixed` because property `toFixed` (did you mean `fixed`?) is missing in `String` [1]. [prop-missing]
 
    issue-198.js:9:20
      9|         return str.toFixed();

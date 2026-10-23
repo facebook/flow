@@ -1041,8 +1041,8 @@ Cannot cast `x.name` to `empty` because `string` [1] is incompatible with `empty
        ^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.core.js:79:20
-   79|     readonly name: string;
+   <BUILTINS>/lib.es2015.core.js:74:20
+   74|     readonly name: string;
                           ^^^^^^ [1]
    function.js:7:11
     7| x.name as empty; // ERROR
@@ -1058,8 +1058,8 @@ Cannot cast `y.name` to `empty` because `string` [1] is incompatible with `empty
        ^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.core.js:79:20
-   79|     readonly name: string;
+   <BUILTINS>/lib.es2015.core.js:74:20
+   74|     readonly name: string;
                           ^^^^^^ [1]
    function.js:8:11
     8| y.name as empty; // ERROR
