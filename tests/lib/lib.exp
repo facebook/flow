@@ -24,9 +24,9 @@ Cannot assign `Number.MAX_VALUE` to `y` because `number` [1] is incompatible wit
                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:269:16
-   269|     MAX_VALUE: number;
-                       ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:301:25
+   301|     readonly MAX_VALUE: number;
+                                ^^^^^^ [1]
    libtest.js:2:7
      2| var y:string = Number.MAX_VALUE;
               ^^^^^^ [2]

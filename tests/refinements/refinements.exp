@@ -13800,8 +13800,8 @@ References:
    tagged_union.js:120:24
    120|     if (z.toString === 0) {} // Error
                                ^ [2]
-   <BUILTINS>/lib.es5.js:319:5
-   319|     toString(radix?: number): string;
+   <BUILTINS>/lib.es5.js:270:5
+   270|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
