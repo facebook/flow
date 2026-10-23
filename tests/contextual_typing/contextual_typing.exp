@@ -82,7 +82,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ call_rest.js:5:16
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    5|     outer(...[(x) => { // TODO okay no annotation required
                      ^
@@ -90,7 +90,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error ------------------------------------------------------------------------------------------------ call_rest.js:9:22
 
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    9|     outer(...inner([(x) => { // TODO okay no annotation required
                            ^
@@ -251,7 +251,7 @@ References:
 
 Error -------------------------------------------------------------------------------- destructuring_assignment.js:26:14
 
-Missing an annotation on `n`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    26| [, b] = [1, (n) => {}]; // error: missing-local-annot (array hole pattern is unsupported)
                     ^
@@ -259,7 +259,7 @@ Missing an annotation on `n`. [missing-local-annot]
 
 Error --------------------------------------------------------------------------- encountered_placeholder_failure.js:8:5
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    8| id((item) => 1); // error
           ^^^^
@@ -267,8 +267,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:10:8
 
-An annotation on rest parameter `item` is required because Flow cannot infer its type from local context.
-[missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    10| id((...item) => 1); // error
               ^^^^
@@ -276,7 +275,7 @@ An annotation on rest parameter `item` is required because Flow cannot infer its
 
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:12:11
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    12| id(() => (item) => 1); // error
                  ^^^^
@@ -284,7 +283,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:14:24
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    14| async () => id(await ((item) => 1)) // error
                               ^^^^
@@ -292,7 +291,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:16:17
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    16| id(async () => (item) => 1); // error
                        ^^^^
@@ -300,7 +299,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:19:11
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    19| id({foo: (item) => 1}); // error
                  ^^^^
@@ -308,7 +307,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:21:13
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    21| id({[str]: (item) => 1}); // error
                    ^^^^
@@ -316,7 +315,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:23:15
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    23| id({...{foo: (item) => 1}}); // error
                      ^^^^
@@ -324,7 +323,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:25:6
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    25| id([(item) => 1]); // error
             ^^^^
@@ -347,7 +346,7 @@ References:
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:27:9
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    27| id([...(item) => 1]); // error
                ^^^^
@@ -355,7 +354,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:29:28
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    29| id({type: 'literal', foo: (item) => 1}) // error
                                   ^^^^
@@ -363,7 +362,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:32:8
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    32| id(id((item) => 1)); // error
               ^^^^
@@ -371,7 +370,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error ------------------------------------------------------------------------- encountered_placeholder_failure.js:38:13
 
-An annotation on `foo` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    38|   debounce((foo) => {}); // error
                    ^^^
@@ -636,7 +635,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- intersections.js:8:13
 
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    8|   foo('a', (x) => { x as number; }); // error
                   ^
@@ -737,7 +736,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- intersections.js:62:24
 
-An annotation on `s` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    62|   overload(foo || 42, (s) => {}); // error because we can't resolve overload, and on 1st arg
                               ^
@@ -970,7 +969,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:10:9
 
-An annotation on `u` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    10|     x.m(u => { u as string; });  // error: undefined not a function & mising local annotation
                ^
@@ -1026,7 +1025,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:29:10
 
-An annotation on `u` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    29|     x?.m(u => { u as string; });  // error: undefined not a function & mising local annotation
                 ^
@@ -1127,7 +1126,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- under_constrained.js:3:5
 
-An annotation on `y` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    3|   x(y => {}); // error missing annot
           ^
@@ -1135,7 +1134,7 @@ An annotation on `y` is required because Flow cannot infer its type from local c
 
 Error ----------------------------------------------------------------------------------------- under_constrained.js:8:5
 
-An annotation on `y` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    8|   x(y => {}); // error missing annot
           ^
@@ -1162,7 +1161,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:4:55
 
-An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
                                                             ^
@@ -1200,7 +1199,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:7:49
 
-An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
                                                       ^
@@ -1208,7 +1207,7 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 Error -------------------------------------------------------------------------------------------------- unions.js:10:32
 
-An annotation on `v` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    10|   const x: {...} | {...} = {a: v => v};
                                       ^

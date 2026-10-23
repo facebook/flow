@@ -2978,6 +2978,14 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EMissingThisAnnotation(loc) => {
             format!("EMissingThisAnnotation ({})", string_of_aloc(None, loc))
         }
+        ErrorMessage::EMissingParameterAnnotation {
+            loc,
+            hint_available,
+        } => format!(
+            "EMissingParameterAnnotation ({}, {})",
+            string_of_aloc(None, loc),
+            hint_available
+        ),
         ErrorMessage::EBindingError(box (_binding_error, loc, x, entry_loc)) => {
             format!(
                 "EBindingError(Box::new((_, {}, {}, {})))",

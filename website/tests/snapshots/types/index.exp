@@ -4,14 +4,14 @@ No errors!
 === block 2 ===
 Error -------------------------------------------------------------------------------- -:2:17
 
-Missing an annotation on `a`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    2| function concat(a, b) { // Error
                       ^
 
 Error -------------------------------------------------------------------------------- -:2:20
 
-Missing an annotation on `b`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    2| function concat(a, b) { // Error
                          ^

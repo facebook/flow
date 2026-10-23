@@ -1959,10 +1959,9 @@ fn resolve_binding<'cx>(
                     if has_hint {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            flow_typing_errors::error_message::ErrorMessage::EMissingLocalAnnotation {
-                                reason: ctx_reason.to_error_reference(),
+                            flow_typing_errors::error_message::ErrorMessage::EMissingParameterAnnotation {
+                                loc: param_loc.dupe(),
                                 hint_available: true,
-                                from_generic_function: false,
                             },
                         );
                     }
@@ -1975,10 +1974,9 @@ fn resolve_binding<'cx>(
             if hints.is_empty() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    flow_typing_errors::error_message::ErrorMessage::EMissingLocalAnnotation {
-                        reason: ctx_reason.to_error_reference(),
+                    flow_typing_errors::error_message::ErrorMessage::EMissingParameterAnnotation {
+                        loc: param_loc.dupe(),
                         hint_available: false,
-                        from_generic_function: false,
                     },
                 );
             }
@@ -1997,10 +1995,9 @@ fn resolve_binding<'cx>(
             type_env::bind_function_param(cx, t.dupe(), unannotated_reason.loc().dupe());
             flow_js_utils::add_output_non_speculating(
                 cx,
-                flow_typing_errors::error_message::ErrorMessage::EMissingLocalAnnotation {
-                    reason: unannotated_reason.to_error_reference(),
+                flow_typing_errors::error_message::ErrorMessage::EMissingParameterAnnotation {
+                    loc: unannotated_reason.loc().dupe(),
                     hint_available: false,
-                    from_generic_function: false,
                 },
             );
             Ok(t)

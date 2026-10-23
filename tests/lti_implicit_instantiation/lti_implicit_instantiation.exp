@@ -232,8 +232,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- speculation.js:21:9
 
-An annotation on rest parameter `args` is required because Flow cannot infer its type from local context.
-[missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    21|     (...args) => {
                ^^^^

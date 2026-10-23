@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:40:20
 
-An annotation on `opt` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    40|       options.find(opt => opt.value === selectedOption)
                           ^^^

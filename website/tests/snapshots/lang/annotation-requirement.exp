@@ -7,7 +7,7 @@ No errors!
 === block 3 ===
 Error ---------------------------------------------------------------- -:2:20
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    2| function getLength(x) { // Error
                          ^
@@ -21,7 +21,7 @@ No errors!
 === block 5 ===
 Error ---------------------------------------------------------------- -:4:25
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    4|   setStringNoAnnotation(x) { // Error
                               ^
@@ -38,7 +38,7 @@ No errors!
 === block 8 ===
 Error ---------------------------------------------------------------- -:2:22
 
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    2| const fn2: unknown = x => x + 1; // Error
                            ^
@@ -215,7 +215,7 @@ annotation at identifier: [signature-verification-failure]
 
 Error ---------------------------------------------------------------- -:7:28
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    7| export function getLength2(x) { // Error: Flow cannot determine the parameter or return type
                                  ^

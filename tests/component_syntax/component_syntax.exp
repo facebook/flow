@@ -1175,7 +1175,7 @@ Component identifiers must begin with an upper-case character [component-case]
 
 Error -------------------------------------------------------------------------------------------------- errors.js:27:22
 
-Missing an annotation on `unannotated`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    27| component HelloWorld(unannotated) { return } // error
                             ^^^^^^^^^^^

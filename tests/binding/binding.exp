@@ -1886,7 +1886,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- scope.js:141:36
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    141| function unannotated_param_as_type(x) { // error missing-local-annot
                                            ^

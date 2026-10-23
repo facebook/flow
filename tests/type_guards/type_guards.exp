@@ -993,7 +993,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:31:7
 
-An annotation on `otherValue` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    31|       otherValue, // error missing-local-annot
              ^^^^^^^^^^
@@ -1256,7 +1256,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inferred.js:108:45
 
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    108|   const [t1, u1] = takesOverloadedPolyGuard(x => x === 4); // error missing-local-annot
                                                     ^

@@ -76,7 +76,7 @@ Cannot get `module.exports.foo` because property `foo` is not readable. [cannot-
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:8:20
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    8| function addsAProp(x) {
                          ^
@@ -84,7 +84,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:12:29
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    12| function addsAPropToExports(x) {
                                    ^
@@ -212,7 +212,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------- good-es-export.js:3:20
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    3| function addsAProp(x) {
                          ^

@@ -3657,6 +3657,11 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EMissingThisAnnotation(L),
 
+    EMissingParameterAnnotation {
+        loc: L,
+        hint_available: bool,
+    },
+
     EBindingError(Box<(BindingError, L, Name, L)>),
 
     ERecursionLimit(L),
@@ -5525,6 +5530,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             },
 
             EMissingThisAnnotation(loc) => EMissingThisAnnotation(f(loc)),
+
+            EMissingParameterAnnotation {
+                loc,
+                hint_available,
+            } => EMissingParameterAnnotation {
+                loc: f(loc),
+                hint_available,
+            },
 
             EBindingError(box (b, loc, s, scope)) => {
                 EBindingError(Box::new((b, f(loc), s, f(scope))))
@@ -8648,6 +8661,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::EMissingThisAnnotation(loc) => Some(loc.dupe()),
 
+            Self::EMissingParameterAnnotation { loc, .. } => Some(loc.dupe()),
+
             Self::ESketchyNumberLint(_, value) => Some(value.loc.dupe()),
 
             Self::EInvalidExtends(box (loc, _)) => Some(loc.dupe()),
@@ -11581,6 +11596,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageMissingThisAnnotation)
             }
 
+            ErrorMessage::EMissingParameterAnnotation { hint_available, .. } => {
+                if hint_available {
+                    Normal(Message::MessageMissingParameterAnnotationDueToContextualTypingFailure)
+                } else {
+                    Normal(Message::MessageMissingParameterAnnotation)
+                }
+            }
+
             ErrorMessage::EMissingLocalAnnotation {
                 reason,
                 hint_available,
@@ -12917,6 +12940,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EInvalidExtends { .. } => Some(InvalidExtends),
             ErrorMessage::ELintSetting { .. } => Some(LintSetting),
             ErrorMessage::EMissingLocalAnnotation { .. } => Some(MissingLocalAnnot),
+            ErrorMessage::EMissingParameterAnnotation { .. } => Some(MissingLocalAnnot),
             ErrorMessage::EMissingThisAnnotation(_) => Some(MissingThisAnnot),
             ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData { .. }) => Some(MissingTypeArg),
             ErrorMessage::EMixedImportAndRequire { .. } => Some(MixedImportAndRequire),

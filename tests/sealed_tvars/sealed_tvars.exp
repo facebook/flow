@@ -24,7 +24,7 @@ Cannot use `42.f(...)` [1] as a superclass. Only variables and member expression
 
 Error ------------------------------------------------------------------------------------------------ class_ext.js:4:38
 
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    4|   class C extends (42 as any as D).f(x => 42) {}
                                            ^
@@ -262,7 +262,7 @@ Missing an annotation on property `l`. [missing-local-annot]
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:44:24
 
-Missing an annotation on `x`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    44| function UnannotParams(x, {a, b}, ...y) { }
                               ^
@@ -270,7 +270,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:44:27
 
-Missing an annotation on destructuring. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    44| function UnannotParams(x, {a, b}, ...y) { }
                                  ^^^^^^
@@ -278,7 +278,7 @@ Missing an annotation on destructuring. [missing-local-annot]
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:44:38
 
-Missing an annotation on rest parameter `y`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    44| function UnannotParams(x, {a, b}, ...y) { }
                                             ^
@@ -388,7 +388,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- regression_tests.js:118:20
 
-An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    118|   var x: number = (x) => x;
                            ^

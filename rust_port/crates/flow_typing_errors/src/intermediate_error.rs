@@ -8303,6 +8303,14 @@ where
                 code("this"),
                 text("."),
             ]),
+            MessageMissingParameterAnnotation => {
+                friendly::Message(vec![text("Missing an annotation on this parameter.")])
+            }
+            MessageMissingParameterAnnotationDueToContextualTypingFailure => {
+                friendly::Message(vec![text(
+                    "An annotation on this parameter is required because Flow cannot infer its type from local context.",
+                )])
+            }
             MessageMissingAnnotationDueToContextualTypingFailure(d) => friendly::Message(vec![
                 text("An annotation on "),
                 friendly::desc_of_reason_desc(d.as_ref()),

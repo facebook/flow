@@ -29,7 +29,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:35:15
 
-An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+An annotation on this parameter is required because Flow cannot infer its type from local context. [missing-local-annot]
 
    35|       .filter(item => item.isAvailable?.(...context) ?? true)
                      ^^^^

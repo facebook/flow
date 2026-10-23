@@ -1385,7 +1385,7 @@ Unsupported expression pattern in destructuring. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------------ empty_patterns.js:11:15
 
-Missing an annotation on destructuring. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    11|   function f1({}): void {} // error: missing-local-annot
                      ^^
@@ -1393,7 +1393,7 @@ Missing an annotation on destructuring. [missing-local-annot]
 
 Error ------------------------------------------------------------------------------------------ empty_patterns.js:12:15
 
-Missing an annotation on destructuring. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    12|   function g1([]): void {} // error: missing-local-annot
                      ^^
@@ -1401,7 +1401,7 @@ Missing an annotation on destructuring. [missing-local-annot]
 
 Error ------------------------------------------------------------------------------------------ empty_patterns.js:13:15
 
-Missing an annotation on destructuring. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    13|   function f2({}) { return 1 } // error: missing-local-annot
                      ^^
@@ -1409,7 +1409,7 @@ Missing an annotation on destructuring. [missing-local-annot]
 
 Error ------------------------------------------------------------------------------------------ empty_patterns.js:14:15
 
-Missing an annotation on destructuring. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    14|   function g2([]) { return 1 } // error: missing-local-annot
                      ^^

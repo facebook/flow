@@ -1397,7 +1397,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:290:37
 
-Missing an annotation on `cb`. [missing-local-annot]
+Missing an annotation on this parameter. [missing-local-annot]
 
    290| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
                                             ^^
