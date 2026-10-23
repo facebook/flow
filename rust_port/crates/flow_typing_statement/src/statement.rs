@@ -1660,7 +1660,7 @@ fn bigint_literal_inner<'a>(
 }
 
 pub fn regexp_literal<'a>(cx: &mut Context<'a>, loc: ALoc) -> Result<Type, JobError> {
-    let reason = mk_annot_reason(VirtualReasonDesc::RRegExp, loc);
+    let reason = mk_annot_reason(None, loc);
     flow_js::get_builtin_type_non_speculating(cx, &reason, None, "RegExp")
 }
 
@@ -14282,7 +14282,7 @@ fn static_method_call_object<'a>(
         let reason_clone = reason.dupe();
         let use_op_clone = use_op.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(cx, arr_reason, |cx, tvar| {
-            let keys_reason = reason_clone.dupe().replace_desc_new(RKeySet);
+            let keys_reason = reason_clone.dupe().replace_desc_new(None);
             flow_js::flow_non_speculating(
                 cx,
                 (

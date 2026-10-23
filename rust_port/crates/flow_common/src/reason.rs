@@ -301,17 +301,14 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RThis,
     RThisType,
     RImplicitInstantiation,
-    RKeySet,
     RPrototype,
     RObjectPrototype,
     RFunctionPrototype,
     RDestructuring,
     RDefaultValue,
     RConstructor,
-    RRegExp,
     RDummyPrototype,
     RDummyThis,
-    RObjectKeyMirror,
     RSomeProperty,
     RGlobalObject,
     RObjectPatternRestProp,
@@ -434,7 +431,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RThis => RThis,
             RThisType => RThisType,
             RImplicitInstantiation => RImplicitInstantiation,
-            RKeySet => RKeySet,
             RPrototype => RPrototype,
             RObjectPrototype => RObjectPrototype,
             RFunctionPrototype => RFunctionPrototype,
@@ -442,7 +438,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RDefaultValue => RDefaultValue,
             RConstructor => RConstructor,
             RRecordType(s) => RRecordType(s.dupe()),
-            RRegExp => RRegExp,
             RDummyPrototype => RDummyPrototype,
             RDummyThis => RDummyThis,
             RType(n) => RType(n.dupe()),
@@ -465,7 +460,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RCode(s) => RCode(s.dupe()),
             RGlobalObject => RGlobalObject,
             ROpaqueType(s) => ROpaqueType(s.dupe()),
-            RObjectKeyMirror => RObjectKeyMirror,
             RRendersNothing => RRendersNothing,
             RObjectPatternRestProp => RObjectPatternRestProp,
             RArrayPatternRestProp => RArrayPatternRestProp,
@@ -523,8 +517,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         match self.unwrap() {
             Some(
                 RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
-                | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RFbt | RTemplateString | RKeySet
-                | RRegExp,
+                | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RFbt | RTemplateString,
             ) => Scalar,
 
             Some(
@@ -1257,8 +1250,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RThisType => "`this` type".to_string(),
         RImplicitInstantiation => "implicit instantiation".to_string(),
 
-        RKeySet => "key set".to_string(),
-
         // Prototypes
         RPrototype => "prototype".to_string(),
         RObjectPrototype => "object prototype".to_string(),
@@ -1275,10 +1266,8 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RRecordType(name) => format!("record `{}`", name),
 
         // Misc
-        RRegExp => "regexp".to_string(),
         RDummyPrototype => "empty prototype object".to_string(),
         RDummyThis => "bound `this` in method".to_string(),
-        RObjectKeyMirror => "`$KeyMirror`".to_string(),
 
         // Type aliases and params
         RType(x) => format!("`{}`", prettify_react_util(x.as_str())),

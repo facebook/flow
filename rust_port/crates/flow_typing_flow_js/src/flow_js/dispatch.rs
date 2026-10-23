@@ -2740,10 +2740,8 @@ fn __flow_impl<'cx>(
                             suggestion,
                         }))
                     } else {
-                        let keys = Type::new(KeysT(
-                            reason_o.dupe().replace_desc_new(VirtualReasonDesc::RKeySet),
-                            l.dupe(),
-                        ));
+                        let keys =
+                            Type::new(KeysT(reason_o.dupe().replace_desc_new(None), l.dupe()));
                         flow_js_utils::incompatible_types_error(key, &keys, use_op.dupe(), None)
                     };
                     flow_js_utils::add_output_with_env(cx, env, err)?;
@@ -2832,10 +2830,7 @@ fn __flow_impl<'cx>(
                     suggestion: None,
                 }))
             } else {
-                let keys = Type::new(KeysT(
-                    reason_o.dupe().replace_desc_new(VirtualReasonDesc::RKeySet),
-                    l.dupe(),
-                ));
+                let keys = Type::new(KeysT(reason_o.dupe().replace_desc_new(None), l.dupe()));
                 flow_js_utils::incompatible_types_error(key, &keys, use_op.dupe(), None)
             };
             flow_js_utils::add_output_with_env(cx, env, err)?;

@@ -20,6 +20,7 @@ use flow_common::polarity::Polarity;
 use flow_common::reason;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
+use flow_common::reason::VirtualReasonDesc;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -1343,7 +1344,7 @@ fn convert_inner<'a>(
             let argument_ast = convert_inner(cx, env, &inner.argument)?;
             let arg_t = argument_ast.loc().1.dupe();
             let t = Type::new(type_::TypeInner::KeysT(
-                reason::mk_reason(reason::VirtualReasonDesc::RKeySet, loc.dupe()),
+                reason::mk_reason(None, loc.dupe()),
                 arg_t,
             ));
             ast::types::Type::new(TypeInner::Keyof {
@@ -2538,10 +2539,7 @@ fn convert_inner<'a>(
                             let tp = ts.into_iter().next().unwrap();
                             Ok(reconstruct_ast(
                                 Type::new(type_::TypeInner::KeysT(
-                                    reason::mk_reason(
-                                        reason::VirtualReasonDesc::RKeySet,
-                                        loc.dupe(),
-                                    ),
+                                    reason::mk_reason(None, loc.dupe()),
                                     tp,
                                 )),
                                 None,
@@ -2713,14 +2711,14 @@ fn convert_inner<'a>(
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let t1 = ts.into_iter().next().unwrap();
-                            let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RObjectKeyMirror,
-                                loc.dupe(),
-                            );
+                            let reason = reason::mk_reason(None, loc.dupe());
+                            let type_reason = reason.dupe().replace_desc(VirtualReasonDesc::RType(
+                                FlowSmolStr::new_inline("$KeyMirror"),
+                            ));
                             let result_t =
                                 FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                                     cx,
-                                    use_op(&reason),
+                                    use_op(&type_reason),
                                     &reason,
                                     &t1,
                                     &type_::Destructor::TypeMap(type_::TypeMap::ObjectKeyMirror),

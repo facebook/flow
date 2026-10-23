@@ -2423,7 +2423,7 @@ fn merge_annot<'cx>(
             })
         }
         Annot::Keys(box (loc, t)) => {
-            let reason = reason::mk_reason(RKeySet, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let t = merge_impl(env, cx, file, t, false, false);
             Type::new(type_::TypeInner::KeysT(reason, t))
         }
@@ -2576,9 +2576,11 @@ fn merge_annot<'cx>(
         }
         Annot::ObjKeyMirror(inner) => {
             let AnnotObjKeyMirror { loc, obj } = inner.as_ref();
-            let reason = reason::mk_reason(RObjectKeyMirror, loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
-                type_: reason.dupe(),
+                type_: reason
+                    .dupe()
+                    .replace_desc(RType(FlowSmolStr::new_inline("$KeyMirror"))),
             }));
             let obj = merge_impl(env, cx, file, obj, false, false);
             let id = eval_id_of_aloc(cx, loc.dupe());

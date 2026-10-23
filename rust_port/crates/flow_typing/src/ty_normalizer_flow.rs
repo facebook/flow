@@ -13,7 +13,6 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
-use flow_common::reason::VirtualReasonDesc;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty_printer;
@@ -108,10 +107,7 @@ impl NormalizerInput for FlowInput {
             flow_js::flow_non_speculating(env.cx, (&t, &use_t))?;
             match lookahead::peek_types(env.cx, &collector.collect_to_vec()) {
                 lookahead::Lookahead::LowerBounds(ref bounds) if bounds.len() == 1 => {
-                    let t = type_util::mod_reason_of_t(
-                        &|r| r.replace_desc(VirtualReasonDesc::RKeySet),
-                        &bounds[0],
-                    );
+                    let t = type_util::mod_reason_of_t(&|r| r.replace_desc(None), &bounds[0]);
                     cont(env, state, t)
                 }
                 _ => default(env, state),
