@@ -14,10 +14,14 @@
 // internally to distinguish them from project-root files. This marker is
 // stripped in to_string/to_absolute and replaced with the flowlib root.
 
+use std::cell::RefCell;
+use std::collections::HashSet;
+use std::hash::DefaultHasher;
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::LazyLock;
+use std::sync::Mutex;
 use std::sync::RwLock;
 
 use dupe::Dupe;
@@ -248,14 +252,71 @@ impl Hash for FileKeyInner {
     }
 }
 
+/// A file key is interned for the lifetime of the process, so it is cloned without touching a
+/// reference count. Reference counts shared by every worker that holds a location in a popular
+/// file are a source of contention between workers.
 #[derive(Debug, Clone, Dupe, serde::Serialize, serde::Deserialize)]
 pub struct FileKey {
-    inner: Arc<FileKeyInner>,
+    #[serde(deserialize_with = "deserialize_interned")]
+    inner: &'static FileKeyInner,
+}
+
+const INTERNER_SHARDS: usize = 64;
+
+static INTERNER: LazyLock<Vec<Mutex<HashSet<&'static FileKeyInner>>>> = LazyLock::new(|| {
+    (0..INTERNER_SHARDS)
+        .map(|_| Mutex::new(HashSet::new()))
+        .collect()
+});
+
+const LOCAL_CACHE_SIZE: usize = 4096;
+
+thread_local! {
+    /// A direct-mapped cache in front of the interner, so that most constructions find their
+    /// interned key without taking a lock, while the memory held per thread stays bounded.
+    static LOCAL_CACHE: RefCell<Vec<Option<&'static FileKeyInner>>> =
+        RefCell::new(vec![None; LOCAL_CACHE_SIZE]);
+}
+
+fn intern(inner: FileKeyInner) -> &'static FileKeyInner {
+    let hash = {
+        let mut hasher = DefaultHasher::new();
+        inner.hash(&mut hasher);
+        hasher.finish()
+    };
+    let slot = (hash as usize) % LOCAL_CACHE_SIZE;
+    if let Some(cached) = LOCAL_CACHE.with(|cache| cache.borrow()[slot])
+        && *cached == inner
+    {
+        return cached;
+    }
+    let shard = ((hash >> 32) as usize) % INTERNER_SHARDS;
+    let interned = {
+        let mut interned_set = INTERNER[shard]
+            .lock()
+            .expect("file key interner lock should not be poisoned");
+        match interned_set.get(&inner) {
+            Some(interned) => *interned,
+            None => {
+                let interned: &'static FileKeyInner = Box::leak(Box::new(inner));
+                interned_set.insert(interned);
+                interned
+            }
+        }
+    };
+    LOCAL_CACHE.with(|cache| cache.borrow_mut()[slot] = Some(interned));
+    interned
+}
+
+fn deserialize_interned<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<&'static FileKeyInner, D::Error> {
+    <FileKeyInner as serde::Deserialize>::deserialize(deserializer).map(intern)
 }
 
 impl PartialEq for FileKey {
     fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.inner, &other.inner) || self.inner.as_ref() == other.inner.as_ref()
+        std::ptr::eq(self.inner, other.inner) || self.inner == other.inner
     }
 }
 
@@ -263,12 +324,12 @@ impl Eq for FileKey {}
 
 impl Hash for FileKey {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.inner.as_ref().hash(state);
+        self.inner.hash(state);
     }
 }
 
 fn order_of_filename(file_key: &FileKey) -> i32 {
-    order_of_inner(file_key.inner.as_ref())
+    order_of_inner(file_key.inner)
 }
 
 impl PartialOrd for FileKey {
@@ -279,7 +340,7 @@ impl PartialOrd for FileKey {
 
 impl Ord for FileKey {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        if Arc::ptr_eq(&self.inner, &other.inner) {
+        if std::ptr::eq(self.inner, other.inner) {
             return std::cmp::Ordering::Equal;
         }
         let k = order_of_filename(self).cmp(&order_of_filename(other));
@@ -374,12 +435,12 @@ fn strip_flowlib_or_project_root(path: &str) -> String {
 impl FileKey {
     pub fn new(inner: FileKeyInner) -> Self {
         Self {
-            inner: Arc::new(inner),
+            inner: intern(inner),
         }
     }
 
     pub fn suffix(&self) -> &str {
-        inner_as_str(self.inner.as_ref())
+        inner_as_str(self.inner)
     }
 
     pub fn as_str(&self) -> &str {
@@ -387,14 +448,14 @@ impl FileKey {
     }
 
     pub fn inner(&self) -> &FileKeyInner {
-        self.inner.as_ref()
+        self.inner
     }
 
     // Returns the full absolute path — resolves the root on demand.
     // Allocates a new string via concatenation. Use suffix for hot paths
     // that don't need the absolute path (compare, Transaction hashing).
     pub fn to_absolute(&self) -> String {
-        match self.inner.as_ref() {
+        match self.inner {
             FileKeyInner::LibFile(x) | FileKeyInner::SourceFile(x) => {
                 if let Some(rest) = x.strip_prefix(FLOWLIB_MARKER) {
                     resolve_root_with(
@@ -418,7 +479,7 @@ impl FileKey {
     }
 
     pub fn is_lib_file(&self) -> bool {
-        match self.inner.as_ref() {
+        match self.inner {
             FileKeyInner::LibFile(_) => true,
             FileKeyInner::SourceFile(_) => false,
             FileKeyInner::JsonFile(_) => false,
@@ -427,7 +488,7 @@ impl FileKey {
     }
 
     pub fn map<F: FnOnce(&str) -> String>(&self, f: F) -> FileKey {
-        let new_inner = match self.inner.as_ref() {
+        let new_inner = match self.inner {
             FileKeyInner::LibFile(filename) => FileKeyInner::LibFile(f(filename)),
             FileKeyInner::SourceFile(filename) => FileKeyInner::SourceFile(f(filename)),
             FileKeyInner::JsonFile(filename) => FileKeyInner::JsonFile(f(filename)),
@@ -437,7 +498,7 @@ impl FileKey {
     }
 
     pub fn exists<F: FnOnce(&str) -> bool>(&self, f: F) -> bool {
-        match self.inner.as_ref() {
+        match self.inner {
             FileKeyInner::LibFile(intern)
             | FileKeyInner::SourceFile(intern)
             | FileKeyInner::JsonFile(intern)
