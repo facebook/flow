@@ -19998,9 +19998,8 @@ pub fn mk_func_sig<'a>(
         Ok(match argument {
             ast::pattern::Pattern::Identifier { inner: id, .. } => {
                 let ploc_clone = ploc.dupe();
-                let (t, typed_id) = id_param(cx, tparams_map, id, move |name| {
-                    mk_reason(VirtualReasonDesc::RRestParameter(Some(name)), ploc_clone)
-                })?;
+                let (t, typed_id) =
+                    id_param(cx, tparams_map, id, move |_| mk_reason(None, ploc_clone))?;
                 Ok(func_stmt_config_types::Rest {
                     t,
                     loc,

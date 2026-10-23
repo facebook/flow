@@ -360,7 +360,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RTypeof(FlowSmolStr),
     RMethod(Option<FlowSmolStr>),
     RParameter(Option<FlowSmolStr>),
-    RRestParameter(Option<FlowSmolStr>),
     RIdentifier(FlowSmolStr),
     RProperty(Option<Name>),
     RPrivateProperty(FlowSmolStr),
@@ -463,7 +462,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RTypeof(s) => RTypeof(s.dupe()),
             RMethod(opt) => RMethod(opt.dupe()),
             RParameter(opt) => RParameter(opt.dupe()),
-            RRestParameter(opt) => RRestParameter(opt.dupe()),
             RIdentifier(n) => RIdentifier(n.dupe()),
             RProperty(opt) => RProperty(opt.dupe()),
             RPrivateProperty(s) => RPrivateProperty(s.dupe()),
@@ -1320,8 +1318,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RMethod(None) => "computed method".to_string(),
         RParameter(Some(x)) => format!("`{}`", x),
         RParameter(None) => "parameter".to_string(),
-        RRestParameter(Some(x)) => format!("rest parameter `{}`", x),
-        RRestParameter(None) => "rest parameter".to_string(),
         RIdentifier(x) => format!("`{}`", prettify_react_util(x.as_str())),
 
         // Properties

@@ -5720,7 +5720,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             Pattern::Identifier { inner, .. } => {
                 let name = Some(inner.name.name.dupe());
                 if is_rest {
-                    VirtualReason::new(VirtualReasonDesc::RRestParameter(name), ploc.dupe())
+                    VirtualReason::new(None, ploc.dupe())
                 } else {
                     VirtualReason::new(VirtualReasonDesc::RParameter(name), ploc.dupe())
                 }

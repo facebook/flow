@@ -2134,13 +2134,7 @@ impl<'a> DefFinder<'a> {
             })),
             None => {
                 let reason = match argument {
-                    ast::pattern::Pattern::Identifier { inner, .. } => {
-                        let name = &inner.name.name;
-                        mk_reason(
-                            VirtualReasonDesc::RRestParameter(Some(name.clone())),
-                            param_loc.dupe(),
-                        )
-                    }
+                    ast::pattern::Pattern::Identifier { .. } => mk_reason(None, param_loc.dupe()),
                     _ => {
                         // TODO: This should be a parse error, but we only produce an internal
                         // error in statement.rs.
