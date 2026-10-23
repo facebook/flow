@@ -1338,6 +1338,129 @@ References:
                 ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------- rest_destructuring_flow.js:8:6
+
+Cannot call `rest.next` because: [incompatible-type]
+ - Either in index `0`: `1` [1] is incompatible with `string` [2].
+ - Or `[1]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   rest_destructuring_flow.js:8:6
+   8| rest.next(1); // ERROR
+           ^^^^
+
+References:
+   rest_destructuring_flow.js:8:11
+   8| rest.next(1); // ERROR
+                ^ [1]
+   rest_destructuring_flow.js:5:38
+   5| declare const rest: DestructuredRest<string>;
+                                           ^^^^^^ [2]
+   rest_destructuring_flow.js:8:1
+   8| rest.next(1); // ERROR
+      ^^^^^^^^^^^^ [3]
+   rest_destructuring_flow.js:2:20
+   2|   next(...[value]: [] | [T]): number;
+                         ^^ [4]
+
+
+Error ----------------------------------------------------------------------------------- rest_destructuring_flow.js:9:6
+
+Cannot call `rest.next` because: [incompatible-type]
+ - Either `["first", "second"]` [1] has 2 elements but `Readonly<[]>` [2] has 0 elements.
+ - Or `["first", "second"]` [1] has 2 elements but `[string]` [3] has 1 element.
+
+   rest_destructuring_flow.js:9:6
+   9| rest.next('first', 'second'); // ERROR
+           ^^^^
+
+References:
+   rest_destructuring_flow.js:9:1
+   9| rest.next('first', 'second'); // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   rest_destructuring_flow.js:2:20
+   2|   next(...[value]: [] | [T]): number;
+                         ^^ [2]
+   rest_destructuring_flow.js:2:25
+   2|   next(...[value]: [] | [T]): number;
+                              ^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- rest_destructuring_flow.js:13:6
+
+Cannot call `pair` because in index `0`: `"value"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   rest_destructuring_flow.js:13:6
+   13| pair('value', 1); // ERROR
+            ^^^^^^^ [1]
+
+References:
+   rest_destructuring_flow.js:11:43
+   11| declare const pair: (...[first, second]: [number, string]) => number;
+                                                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- rest_destructuring_flow.js:13:15
+
+Cannot call `pair` because in index `1`: `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_destructuring_flow.js:13:15
+   13| pair('value', 1); // ERROR
+                     ^ [1]
+
+References:
+   rest_destructuring_flow.js:11:51
+   11| declare const pair: (...[first, second]: [number, string]) => number;
+                                                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- rest_destructuring_flow.js:14:1
+
+Cannot call `pair` because `[1]` [1] has 1 element but `[number, string]` [2] has 2 elements. [invalid-tuple-arity]
+
+   rest_destructuring_flow.js:14:1
+   14| pair(1); // ERROR
+       ^^^^
+
+References:
+   rest_destructuring_flow.js:14:1
+   14| pair(1); // ERROR
+       ^^^^^^^ [1]
+   rest_destructuring_flow.js:11:42
+   11| declare const pair: (...[first, second]: [number, string]) => number;
+                                                ^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- rest_destructuring_flow.js:18:11
+
+Cannot call `anonymous` because in index `0`: `"value"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   rest_destructuring_flow.js:18:11
+   18| anonymous('value', 1); // ERROR
+                 ^^^^^^^ [1]
+
+References:
+   rest_destructuring_flow.js:16:31
+   16| declare const anonymous: (...[number, string]) => number;
+                                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- rest_destructuring_flow.js:18:20
+
+Cannot call `anonymous` because in index `1`: `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   rest_destructuring_flow.js:18:20
+   18| anonymous('value', 1); // ERROR
+                          ^ [1]
+
+References:
+   rest_destructuring_flow.js:16:39
+   16| declare const anonymous: (...[number, string]) => number;
+                                             ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------- shorthand_ambient_module_usage.js:3:10
 
 Cannot import `value` because there is no `value` export in `shorthand-explicit`. Did you mean
@@ -1805,4 +1928,4 @@ References:
 
 
 
-Found 118 errors
+Found 125 errors

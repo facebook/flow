@@ -1731,11 +1731,30 @@ fn function_param_list_without_parens(
     fn param(
         env: &mut ParserEnv,
         allow_optional: bool,
+        is_rest: bool,
     ) -> Result<types::function::Param<Loc, Loc>, Rollback> {
         match peek::token(env).clone() {
             TokenKind::TLcurly | TokenKind::TLbracket => {
                 if env.is_ts() {
                     destructuring_function_param(env, allow_optional)
+                } else if is_rest {
+                    match try_parse::to_parse(env, |env| {
+                        env.with_error_callback(
+                            |_| Err(Rollback),
+                            |env| {
+                                let annot = type_inner(env)?;
+                                if peek::token(env) == &TokenKind::TColon {
+                                    return Err(Rollback);
+                                }
+                                Ok(anonymous_function_param(annot))
+                            },
+                        )
+                    }) {
+                        try_parse::ParseResult::ParsedSuccessfully(param) => Ok(param),
+                        try_parse::ParseResult::FailedToParse => {
+                            destructuring_function_param(env, allow_optional)
+                        }
+                    }
                 } else {
                     let annot = type_inner(env)?;
                     Ok(anonymous_function_param(annot))
@@ -1763,7 +1782,7 @@ fn function_param_list_without_parens(
                     let (loc, mut param) = with_loc(None, env, |env| {
                         let leading = peek::comments(env);
                         expect::token(env, TokenKind::TEllipsis)?;
-                        let argument = param(env, false)?;
+                        let argument = param(env, false, true)?;
                         Ok(types::function::RestParam {
                             loc: LOC_NONE,
                             argument,
@@ -1811,13 +1830,13 @@ fn function_param_list_without_parens(
                 this = Some(this_param);
             }
             TokenKind::TIdentifier { raw, .. } if raw == "this" => {
-                params.push(param(env, true)?);
+                params.push(param(env, true, false)?);
                 if peek::token(env) != &TokenKind::TRparen {
                     expect::token(env, TokenKind::TComma)?;
                 }
             }
             _ => {
-                params.push(param(env, true)?);
+                params.push(param(env, true, false)?);
                 if peek::token(env) != &TokenKind::TRparen {
                     expect::token(env, TokenKind::TComma)?;
                 }
