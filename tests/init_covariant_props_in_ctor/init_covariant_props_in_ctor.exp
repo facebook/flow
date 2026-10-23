@@ -63,20 +63,31 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- a.js:71:7
 
-Cannot extend `F` [1] with `G` because property `prop` is write-only in `G` [2] but read-only in `A` [3].
+Cannot extend `F` [1] with `G` [2] because property `prop` is write-only in `G` [3] but read-only in `A` [4].
 [incompatible-variance]
 
    a.js:71:7
    71| class G extends F {
-             ^ [2]
+             ^ [3]
 
 References:
    a.js:71:17
    71| class G extends F {
                        ^ [1]
+   a.js:71:1
+       v------------------
+   71| class G extends F {
+   72|   writeonly prop: number               // ERROR: Was covariant in F and A
+   73|   constructor(prop: number) {
+   74|     super(prop);
+   75|     this.prop = prop;         // OK
+   76|     this.prop = prop;
+   77|   }
+   78| }
+       ^ [2]
    a.js:62:17
    62| class F extends A {
-                       ^ [3]
+                       ^ [4]
 
 
 

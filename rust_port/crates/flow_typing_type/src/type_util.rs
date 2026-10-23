@@ -1085,11 +1085,13 @@ where
                 upper: Box::new(type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper)),
             },
             ClassExtendsCheck(box ClassExtendsCheckData {
+                def_loc,
                 def,
                 extends_loc,
                 extends,
             }) => ClassExtendsCheck(Box::new(ClassExtendsCheckData {
-                def: mod_reason(def),
+                def_loc: f(def_loc),
+                def: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), def),
                 extends_loc: f(extends_loc),
                 extends: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), extends),
             })),

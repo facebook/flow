@@ -529,6 +529,20 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:14
+
+Cannot extend `T` [1] with `x1` [2] because `{f?: number, g: number}` [1] is not inheritable. [incompatible-use]
+
+   ops_on_react_config.js:10:14
+   10| export class x1 extends (0 as any as T) {}
+                    ^^ [2]
+
+References:
+   ops_on_react_config.js:10:38
+   10| export class x1 extends (0 as any as T) {}
+                                            ^ [1]
+
+
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:25
 
 Cannot use class extends on `T` [1] in an export position. Please provide an (alternative) annotation for class
@@ -542,20 +556,6 @@ References:
    ops_on_react_config.js:6:10
     6| type T = {f?: number, g: number} extends (infer O) ? O : empty;
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:38
-
-Cannot extend this type [1] with `T` because `{f?: number, g: number}` [2] is not inheritable. [incompatible-use]
-
-   ops_on_react_config.js:10:38
-   10| export class x1 extends (0 as any as T) {}
-                                            ^ [2]
-
-References:
-   ops_on_react_config.js:10:14
-   10| export class x1 extends (0 as any as T) {}
-                    ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:13:19
@@ -663,7 +663,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:30:14
 
-Cannot extend `Class<T>` [1] with `c7` because `{f?: number, g: number}` [1] is not inheritable. [incompatible-use]
+Cannot extend `Class<T>` [1] with `c7` [2] because `{f?: number, g: number}` [1] is not inheritable. [incompatible-use]
 
    ops_on_react_config.js:30:14
    30| export class c7 extends (0 as any as Class<T>) {}
@@ -673,6 +673,9 @@ References:
    ops_on_react_config.js:30:25
    30| export class c7 extends (0 as any as Class<T>) {}
                                ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   ops_on_react_config.js:30:8
+   30| export class c7 extends (0 as any as Class<T>) {}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:32:19

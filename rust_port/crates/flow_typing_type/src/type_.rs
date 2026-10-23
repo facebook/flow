@@ -1075,7 +1075,8 @@ pub enum AssignVarTarget<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     serde::Deserialize
 )]
 pub struct ClassExtendsCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
-    pub def: VirtualReason<L>,
+    pub def_loc: L,
+    pub def: type_or_type_desc::TypeOrTypeDescT<L>,
     pub extends_loc: L,
     pub extends: type_or_type_desc::TypeOrTypeDescT<L>,
 }

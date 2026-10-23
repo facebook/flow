@@ -6873,12 +6873,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             match use_op {
                 VirtualUseOp::Op(root) => match root.as_ref() {
                     VirtualRootUseOp::ClassExtendsCheck(box ClassExtendsCheckData {
+                        def_loc,
                         def,
                         extends_loc,
                         extends,
                     }) => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ClassExtendsCheck(
                         Box::new(ClassExtendsCheckData {
-                            def: def.dupe(),
+                            def_loc: def_loc.dupe(),
+                            def: f(def.clone()),
                             extends_loc: extends_loc.dupe(),
                             extends: f(extends.clone()),
                         }),

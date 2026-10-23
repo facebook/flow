@@ -3037,102 +3037,132 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:57:38
 
-Cannot extend `StrongerReceiverAssertion` [1] with `WeakerReceiverAssertion` because in property `check` > the type
-predicate: `AssertedValue` [2] is incompatible with `AssertedString` [3]. [incompatible-type]
+Cannot extend `StrongerReceiverAssertion` [1] with `WeakerReceiverAssertion` [2] because in property `check` > the type
+predicate: `AssertedValue` [3] is incompatible with `AssertedString` [4]. [incompatible-type]
 
    subtyping.js:57:38
    57|   check(x: unknown): asserts this is AssertedValue; // ERROR
-                                            ^^^^^^^^^^^^^ [2]
+                                            ^^^^^^^^^^^^^ [3]
 
 References:
    subtyping.js:56:47
    56| declare class WeakerReceiverAssertion extends StrongerReceiverAssertion {
                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:56:1
+       v------------------------------------------------------------------------
+   56| declare class WeakerReceiverAssertion extends StrongerReceiverAssertion {
+   57|   check(x: unknown): asserts this is AssertedValue; // ERROR
+   58| }
+       ^ [2]
    subtyping.js:49:38
    49|   check(x: unknown): asserts this is AssertedString;
-                                            ^^^^^^^^^^^^^^ [3]
+                                            ^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:30
 
-Cannot extend `BareReceiverAssertion` [1] with `ParameterInsteadOfReceiver` because in property `check` > the type
-predicate: type guard parameter `x` [2] does not appear in the same position as type guard parameter `this` [3].
+Cannot extend `BareReceiverAssertion` [1] with `ParameterInsteadOfReceiver` [2] because in property `check` > the type
+predicate: type guard parameter `x` [3] does not appear in the same position as type guard parameter `this` [4].
 [function-predicate]
 
    subtyping.js:73:30
    73|   check(x: unknown): asserts x; // ERROR
-                                    ^ [2]
+                                    ^ [3]
 
 References:
    subtyping.js:72:50
    72| declare class ParameterInsteadOfReceiver extends BareReceiverAssertion {
                                                         ^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:72:1
+       v-----------------------------------------------------------------------
+   72| declare class ParameterInsteadOfReceiver extends BareReceiverAssertion {
+   73|   check(x: unknown): asserts x; // ERROR
+   74| }
+       ^ [2]
    subtyping.js:61:30
    61|   check(x: unknown): asserts this;
-                                    ^^^^ [3]
+                                    ^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:77:30
 
-Cannot extend `BareParameterAssertion` [1] with `ReceiverInsteadOfParameter` because in property `check` > the type
-predicate: type guard parameter `this` [2] does not appear in the same position as type guard parameter `x` [3].
+Cannot extend `BareParameterAssertion` [1] with `ReceiverInsteadOfParameter` [2] because in property `check` > the type
+predicate: type guard parameter `this` [3] does not appear in the same position as type guard parameter `x` [4].
 [function-predicate]
 
    subtyping.js:77:30
    77|   check(x: unknown): asserts this; // ERROR
-                                    ^^^^ [2]
+                                    ^^^^ [3]
 
 References:
    subtyping.js:76:50
    76| declare class ReceiverInsteadOfParameter extends BareParameterAssertion {
                                                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:76:1
+       v------------------------------------------------------------------------
+   76| declare class ReceiverInsteadOfParameter extends BareParameterAssertion {
+   77|   check(x: unknown): asserts this; // ERROR
+   78| }
+       ^ [2]
    subtyping.js:65:30
    65|   check(x: unknown): asserts x;
-                                    ^ [3]
+                                    ^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:81:30
 
-Cannot extend `StrongerReceiverAssertion` [1] with `TypedParameterInsteadOfReceiver` because in property `check` > the
-type predicate: type guard parameter `x` [2] does not appear in the same position as type guard parameter `this` [3].
-[function-predicate]
+Cannot extend `StrongerReceiverAssertion` [1] with `TypedParameterInsteadOfReceiver` [2] because in property `check` >
+the type predicate: type guard parameter `x` [3] does not appear in the same position as type guard parameter
+`this` [4]. [function-predicate]
 
    subtyping.js:81:30
    81|   check(x: unknown): asserts x is AssertedString; // ERROR
-                                    ^ [2]
+                                    ^ [3]
 
 References:
    subtyping.js:80:55
    80| declare class TypedParameterInsteadOfReceiver extends StrongerReceiverAssertion {
                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:80:1
+       v--------------------------------------------------------------------------------
+   80| declare class TypedParameterInsteadOfReceiver extends StrongerReceiverAssertion {
+   81|   check(x: unknown): asserts x is AssertedString; // ERROR
+   82| }
+       ^ [2]
    subtyping.js:49:30
    49|   check(x: unknown): asserts this is AssertedString;
-                                    ^^^^ [3]
+                                    ^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:85:30
 
-Cannot extend `TypedParameterAssertion` [1] with `TypedReceiverInsteadOfParameter` because in property `check` > the
-type predicate: type guard parameter `this` [2] does not appear in the same position as type guard parameter `x` [3].
+Cannot extend `TypedParameterAssertion` [1] with `TypedReceiverInsteadOfParameter` [2] because in property `check` > the
+type predicate: type guard parameter `this` [3] does not appear in the same position as type guard parameter `x` [4].
 [function-predicate]
 
    subtyping.js:85:30
    85|   check(x: unknown): asserts this is AssertedString; // ERROR
-                                    ^^^^ [2]
+                                    ^^^^ [3]
 
 References:
    subtyping.js:84:55
    84| declare class TypedReceiverInsteadOfParameter extends TypedParameterAssertion {
                                                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:84:1
+       v------------------------------------------------------------------------------
+   84| declare class TypedReceiverInsteadOfParameter extends TypedParameterAssertion {
+   85|   check(x: unknown): asserts this is AssertedString; // ERROR
+   86| }
+       ^ [2]
    subtyping.js:69:30
    69|   check(x: unknown): asserts x is AssertedString;
-                                    ^ [3]
+                                    ^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:89:22
 
-Cannot extend `BareReceiverAssertion` [1] with `TypedInsteadOfBareReceiver` because in property `check` > the type
-predicate: `AssertedString` [2], a non-type-guard function, is incompatible with type guard [3], which is a type-guard
+Cannot extend `BareReceiverAssertion` [1] with `TypedInsteadOfBareReceiver` [2] because in property `check` > the type
+predicate: `AssertedString` [3], a non-type-guard function, is incompatible with type guard [4], which is a type-guard
 function. [function-predicate]
 
    subtyping.js:89:22
@@ -3143,37 +3173,49 @@ References:
    subtyping.js:88:50
    88| declare class TypedInsteadOfBareReceiver extends BareReceiverAssertion {
                                                         ^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:88:1
+       v-----------------------------------------------------------------------
+   88| declare class TypedInsteadOfBareReceiver extends BareReceiverAssertion {
+   89|   check(x: unknown): asserts this is AssertedString; // ERROR
+   90| }
+       ^ [2]
    subtyping.js:89:38
    89|   check(x: unknown): asserts this is AssertedString; // ERROR
-                                            ^^^^^^^^^^^^^^ [2]
+                                            ^^^^^^^^^^^^^^ [3]
    subtyping.js:61:22
    61|   check(x: unknown): asserts this;
-                            ^^^^^^^^^^^^ [3]
+                            ^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:93:22
 
-Cannot extend `StrongerReceiverAssertion` [1] with `BareInsteadOfTypedReceiver` because in property `check` > the type
-predicate: type guard [2], a non-type-guard function, is incompatible with `AssertedString` [3], which is a type-guard
-function. [function-predicate]
+Cannot extend `StrongerReceiverAssertion` [1] with `BareInsteadOfTypedReceiver` [2] because in property `check` > the
+type predicate: type guard [3], a non-type-guard function, is incompatible with `AssertedString` [4], which is a
+type-guard function. [function-predicate]
 
    subtyping.js:93:22
    93|   check(x: unknown): asserts this; // ERROR
-                            ^^^^^^^^^^^^ [2]
+                            ^^^^^^^^^^^^ [3]
 
 References:
    subtyping.js:92:50
    92| declare class BareInsteadOfTypedReceiver extends StrongerReceiverAssertion {
                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:92:1
+       v---------------------------------------------------------------------------
+   92| declare class BareInsteadOfTypedReceiver extends StrongerReceiverAssertion {
+   93|   check(x: unknown): asserts this; // ERROR
+   94| }
+       ^ [2]
    subtyping.js:49:38
    49|   check(x: unknown): asserts this is AssertedString;
-                                            ^^^^^^^^^^^^^^ [3]
+                                            ^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:97:22
 
-Cannot extend `BareParameterAssertion` [1] with `TypedReceiverInsteadOfBareParameter` because in property `check` > the
-type predicate: `AssertedString` [2], a non-type-guard function, is incompatible with type guard [3], which is a
+Cannot extend `BareParameterAssertion` [1] with `TypedReceiverInsteadOfBareParameter` [2] because in property `check` >
+the type predicate: `AssertedString` [3], a non-type-guard function, is incompatible with type guard [4], which is a
 type-guard function. [function-predicate]
 
    subtyping.js:97:22
@@ -3184,69 +3226,93 @@ References:
    subtyping.js:96:59
    96| declare class TypedReceiverInsteadOfBareParameter extends BareParameterAssertion {
                                                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:96:1
+       v---------------------------------------------------------------------------------
+   96| declare class TypedReceiverInsteadOfBareParameter extends BareParameterAssertion {
+   97|   check(x: unknown): asserts this is AssertedString; // ERROR
+   98| }
+       ^ [2]
    subtyping.js:97:38
    97|   check(x: unknown): asserts this is AssertedString; // ERROR
-                                            ^^^^^^^^^^^^^^ [2]
+                                            ^^^^^^^^^^^^^^ [3]
    subtyping.js:65:22
    65|   check(x: unknown): asserts x;
-                            ^^^^^^^^^ [3]
+                            ^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:97:30
 
-Cannot extend `BareParameterAssertion` [1] with `TypedReceiverInsteadOfBareParameter` because in property `check` > the
-type predicate: type guard parameter `this` [2] does not appear in the same position as type guard parameter `x` [3].
-[function-predicate]
+Cannot extend `BareParameterAssertion` [1] with `TypedReceiverInsteadOfBareParameter` [2] because in property `check` >
+the type predicate: type guard parameter `this` [3] does not appear in the same position as type guard parameter
+`x` [4]. [function-predicate]
 
    subtyping.js:97:30
    97|   check(x: unknown): asserts this is AssertedString; // ERROR
-                                    ^^^^ [2]
+                                    ^^^^ [3]
 
 References:
    subtyping.js:96:59
    96| declare class TypedReceiverInsteadOfBareParameter extends BareParameterAssertion {
                                                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:96:1
+       v---------------------------------------------------------------------------------
+   96| declare class TypedReceiverInsteadOfBareParameter extends BareParameterAssertion {
+   97|   check(x: unknown): asserts this is AssertedString; // ERROR
+   98| }
+       ^ [2]
    subtyping.js:65:30
    65|   check(x: unknown): asserts x;
-                                    ^ [3]
+                                    ^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- subtyping.js:101:22
 
-Cannot extend `StrongerReceiverAssertion` [1] with `BareParameterInsteadOfTypedReceiver` because in property `check` >
-the type predicate: type guard [2], a non-type-guard function, is incompatible with `AssertedString` [3], which is a
+Cannot extend `StrongerReceiverAssertion` [1] with `BareParameterInsteadOfTypedReceiver` [2] because in property `check`
+> the type predicate: type guard [3], a non-type-guard function, is incompatible with `AssertedString` [4], which is a
 type-guard function. [function-predicate]
 
    subtyping.js:101:22
    101|   check(x: unknown): asserts x; // ERROR
-                             ^^^^^^^^^ [2]
+                             ^^^^^^^^^ [3]
 
 References:
    subtyping.js:100:59
    100| declare class BareParameterInsteadOfTypedReceiver extends StrongerReceiverAssertion {
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:100:1
+        v------------------------------------------------------------------------------------
+   100| declare class BareParameterInsteadOfTypedReceiver extends StrongerReceiverAssertion {
+   101|   check(x: unknown): asserts x; // ERROR
+   102| }
+        ^ [2]
    subtyping.js:49:38
     49|   check(x: unknown): asserts this is AssertedString;
-                                             ^^^^^^^^^^^^^^ [3]
+                                             ^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- subtyping.js:101:30
 
-Cannot extend `StrongerReceiverAssertion` [1] with `BareParameterInsteadOfTypedReceiver` because in property `check` >
-the type predicate: type guard parameter `x` [2] does not appear in the same position as type guard parameter
-`this` [3]. [function-predicate]
+Cannot extend `StrongerReceiverAssertion` [1] with `BareParameterInsteadOfTypedReceiver` [2] because in property `check`
+> the type predicate: type guard parameter `x` [3] does not appear in the same position as type guard parameter
+`this` [4]. [function-predicate]
 
    subtyping.js:101:30
    101|   check(x: unknown): asserts x; // ERROR
-                                     ^ [2]
+                                     ^ [3]
 
 References:
    subtyping.js:100:59
    100| declare class BareParameterInsteadOfTypedReceiver extends StrongerReceiverAssertion {
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:100:1
+        v------------------------------------------------------------------------------------
+   100| declare class BareParameterInsteadOfTypedReceiver extends StrongerReceiverAssertion {
+   101|   check(x: unknown): asserts x; // ERROR
+   102| }
+        ^ [2]
    subtyping.js:49:30
     49|   check(x: unknown): asserts this is AssertedString;
-                                     ^^^^ [3]
+                                     ^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- test_context.js:9:14

@@ -3488,6 +3488,7 @@ fn __flow_impl<'cx>(
                     VirtualUseOp::Op(
                         deref!(
                             VirtualRootUseOp::ClassExtendsCheck(box ClassExtendsCheckData {
+                                def_loc,
                                 def,
                                 ..
                             })
@@ -3495,7 +3496,8 @@ fn __flow_impl<'cx>(
                     ) => {
                         let new_use_op = VirtualUseOp::Op(Arc::new(
                             VirtualRootUseOp::ClassExtendsCheck(Box::new(ClassExtendsCheckData {
-                                def: def.dupe(),
+                                def_loc: def_loc.dupe(),
+                                def: def.clone(),
                                 extends_loc: type_util::loc_of_t(t).dupe(),
                                 extends: TypeOrTypeDescT::Type(t.dupe()),
                             })),

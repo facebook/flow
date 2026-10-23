@@ -18,20 +18,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- C.js:4:9
 
-Cannot extend `B` [1] with `C` because in property `foo` > the first parameter: `string` [2] is incompatible with
-`number` [3]. [incompatible-type]
+Cannot extend `B` [1] with `C` [2] because in property `foo` > the first parameter: `string` [3] is incompatible with
+`number` [4]. [incompatible-type]
 
    C.js:4:9
    4|   foo(x:string):void { }
-              ^^^^^^ [2]
+              ^^^^^^ [3]
 
 References:
    C.js:3:17
    3| class C extends B {
                       ^ [1]
+   C.js:3:1
+      v------------------
+   3| class C extends B {
+   4|   foo(x:string):void { }
+   5| }
+      ^ [2]
    A.js:2:9
    2|   foo(x:number):void { }
-              ^^^^^^ [3]
+              ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------------- C.js:8:1

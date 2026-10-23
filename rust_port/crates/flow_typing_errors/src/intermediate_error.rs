@@ -1622,17 +1622,21 @@ where
                             VirtualRootUseOp::ClassExtendsCheck(box ClassExtendsCheckData {
                                 extends_loc,
                                 extends,
+                                def_loc,
                                 def,
-                            }) => root(
+                            }) => root_at_loc(
                                 loc,
                                 frames,
-                                def,
+                                loc_of_aloc(def_loc),
                                 RootMessage::RootCannotExtendClass {
                                     extends: MessageTypeReferenceData {
                                         loc: extends_loc.dupe(),
                                         desc: printed_type_desc(extends),
                                     },
-                                    def: def.desc.clone(),
+                                    def: MessageTypeReferenceData {
+                                        loc: def_loc.dupe(),
+                                        desc: printed_type_desc(def),
+                                    },
                                 },
                                 custom_error_message,
                             ),
@@ -5317,7 +5321,7 @@ where
                         text("Cannot extend "),
                         ref_of_type(extends),
                         text(" with "),
-                        friendly::desc_of_reason_desc(def.as_ref()),
+                        ref_of_type(def),
                     ]),
                 ),
                 RootMessage::RootCannotGetProp(prop) => (

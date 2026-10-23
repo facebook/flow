@@ -1309,7 +1309,7 @@ pub enum RootMessage<L: Dupe> {
     },
     RootCannotExtendClass {
         extends: MessageTypeReferenceData<L>,
-        def: Option<VirtualReasonDesc<L>>,
+        def: MessageTypeReferenceData<L>,
     },
     RootCannotGetProp(Option<VirtualReasonDesc<L>>),
     RootCannotGetRest(Option<VirtualReasonDesc<L>>),

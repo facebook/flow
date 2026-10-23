@@ -195,34 +195,46 @@ References:
 
 Error ---------------------------------------------------------------------------------- interface_extends_jslib.js:8:11
 
-Cannot extend `Omit<Base, "b">` [1] with `JsExt` because `{a: number}` [1] is not inheritable. [incompatible-use]
+Cannot extend `Omit<Base, "b">` [1] with `JsExt` [2] because `{a: number}` [1] is not inheritable. [incompatible-use]
 
    interface_extends_jslib.js:8:11
-   8| interface JsExt extends Omit<Base, "b"> { // ERROR: not inheritable in .js
-                ^^^^^
+    8| interface JsExt extends Omit<Base, "b"> { // ERROR: not inheritable in .js
+                 ^^^^^
 
 References:
    interface_extends_jslib.js:8:25
-   8| interface JsExt extends Omit<Base, "b"> { // ERROR: not inheritable in .js
-                              ^^^^^^^^^^^^^^^ [1]
+    8| interface JsExt extends Omit<Base, "b"> { // ERROR: not inheritable in .js
+                               ^^^^^^^^^^^^^^^ [1]
+   interface_extends_jslib.js:8:1
+       v-------------------------------------------------------------------------
+    8| interface JsExt extends Omit<Base, "b"> { // ERROR: not inheritable in .js
+    9|   c: boolean;
+   10| }
+       ^ [2]
 
 
 Error --------------------------------------------------------------------------------- interface_extends_object.ts:80:9
 
-Cannot extend `Omit<Animal, "sound">` [1] with `BadOverride` because in property `name`: `number` [2] is incompatible
-with `string` [3]. [incompatible-type]
+Cannot extend `Omit<Animal, "sound">` [1] with `BadOverride` [2] because in property `name`: `number` [3] is
+incompatible with `string` [4]. [incompatible-type]
 
    interface_extends_object.ts:80:9
    80|   name: number; // ERROR: number incompatible with string
-               ^^^^^^ [2]
+               ^^^^^^ [3]
 
 References:
    interface_extends_object.ts:79:31
    79| interface BadOverride extends Omit<Animal, "sound"> {
                                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+   interface_extends_object.ts:79:1
+       v----------------------------------------------------
+   79| interface BadOverride extends Omit<Animal, "sound"> {
+   80|   name: number; // ERROR: number incompatible with string
+   81| }
+       ^ [2]
    interface_extends_object.ts:8:9
     8|   name: string;
-               ^^^^^^ [3]
+               ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------- interface_extends_object.ts:86:27

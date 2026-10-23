@@ -1082,20 +1082,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:29:6
 
-Cannot extend `Base` [1] with interface type because in property `p`: `string` [2] is incompatible with `number` [3].
-[incompatible-type]
+Cannot extend `Base` [1] with `interface extends Base {p: string}` [2] because in property `p`: `string` [3] is
+incompatible with `number` [4]. [incompatible-type]
 
    inline.js:29:6
    29|   p: string, // error: string ~> number
-            ^^^^^^ [2]
+            ^^^^^^ [3]
 
 References:
    inline.js:28:34
    28| type Derived = interface extends Base {
                                         ^^^^ [1]
+   inline.js:28:16
+                      v-----------------------
+   28| type Derived = interface extends Base {
+   29|   p: string, // error: string ~> number
+   30| }
+       ^ [2]
    inline.js:27:21
    27| interface Base { p: number }
-                           ^^^^^^ [3]
+                           ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- inline.js:34:3
@@ -1857,20 +1863,23 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:3:31
 
-Cannot extend `I` [1] with `K` because in property `x`: `string` [2] is incompatible with `number` [3].
+Cannot extend `I` [1] with `K` [2] because in property `x`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    test3.js:3:31
    3| interface K extends I, J { x: string } // error: x is number in I
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [3]
 
 References:
    test3.js:3:21
    3| interface K extends I, J { x: string } // error: x is number in I
                           ^ [1]
+   test3.js:3:1
+   3| interface K extends I, J { x: string } // error: x is number in I
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test3.js:1:18
    1| interface I { x: number, y : string }
-                       ^^^^^^ [3]
+                       ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:5:3

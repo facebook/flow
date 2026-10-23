@@ -1,19 +1,25 @@
 Error --------------------------------------------------------------------------------------- extends_implements.ts:36:8
 
-Cannot extend `Parent` [1] with `Child` because in property `tag`: `"c"` [2] is incompatible with `"a" | "b"` [3].
+Cannot extend `Parent` [1] with `Child` [2] because in property `tag`: `"c"` [3] is incompatible with `"a" | "b"` [4].
 [incompatible-type]
 
    extends_implements.ts:36:8
    36|   tag: "c"; // ERROR: "c" is not assignable to "a" | "b"
-              ^^^ [2]
+              ^^^ [3]
 
 References:
    extends_implements.ts:35:25
    35| interface Child extends Parent {
                                ^^^^^^ [1]
+   extends_implements.ts:35:1
+       v-------------------------------
+   35| interface Child extends Parent {
+   36|   tag: "c"; // ERROR: "c" is not assignable to "a" | "b"
+   37| }
+       ^ [2]
    extends_implements.ts:33:8
    33|   tag: "a" | "b";
-              ^^^^^^^^^ [3]
+              ^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- flow_consumer.ts:28:44

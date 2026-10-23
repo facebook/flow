@@ -1,19 +1,25 @@
 Error ------------------------------------------------------------------------------------------------- lib/test.js:9:10
 
-Cannot extend `Class<_C>` [1] with `D` because in property `foo` > the return value: `string` [2] is incompatible with
-`number` [3]. [incompatible-type]
+Cannot extend `Class<_C>` [1] with `D` [2] because in property `foo` > the return value: `string` [3] is incompatible
+with `number` [4]. [incompatible-type]
 
    lib/test.js:9:10
-   9|   foo(): string;
-               ^^^^^^ [2]
+    9|   foo(): string;
+                ^^^^^^ [3]
 
 References:
    lib/test.js:8:25
-   8| declare class D extends _module.C {
-                              ^^^^^^^^^ [1]
+    8| declare class D extends _module.C {
+                               ^^^^^^^^^ [1]
+   lib/test.js:8:1
+       v----------------------------------
+    8| declare class D extends _module.C {
+    9|   foo(): string;
+   10| }
+       ^ [2]
    lib/test.js:2:10
-   2|   foo(): number;
-               ^^^^^^ [3]
+    2|   foo(): number;
+                ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- declare_class.js:8:7

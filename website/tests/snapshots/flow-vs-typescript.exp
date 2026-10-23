@@ -145,16 +145,22 @@ Cannot implement `ObjType` [1] because it is not an interface. [cannot-implement
 
 Error ------------------------------------------------------------------------- -:8:11
 
-Cannot extend `ObjType` [1] with `I` because `ObjType` [1] is not inheritable. [incompatible-use]
+Cannot extend `ObjType` [1] with `I` [2] because `ObjType` [1] is not inheritable. [incompatible-use]
 
    -:8:11
-   8| interface I extends ObjType { // ERROR: [incompatible-use]
-                ^
+    8| interface I extends ObjType { // ERROR: [incompatible-use]
+                 ^
 
 References:
    -:8:21
-   8| interface I extends ObjType { // ERROR: [incompatible-use]
-                          ^^^^^^^ [1]
+    8| interface I extends ObjType { // ERROR: [incompatible-use]
+                           ^^^^^^^ [1]
+   -:8:1
+       v---------------------------------------------------------
+    8| interface I extends ObjType { // ERROR: [incompatible-use]
+    9|   c: boolean;
+   10| }
+       ^ [2]
 
 
 Found 2 errors

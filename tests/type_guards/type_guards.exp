@@ -164,8 +164,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:40:5
 
-Cannot extend `C` [1] with `D1` because in property `m`: `(this: this, x: unknown) => boolean` [2], a non-type-guard
-function, is incompatible with `(this: this, x: unknown) => x is number` [3], which is a type-guard function.
+Cannot extend `C` [1] with `D1` [2] because in property `m`: `(this: this, x: unknown) => boolean` [3], a non-type-guard
+function, is incompatible with `(this: this, x: unknown) => x is number` [4], which is a type-guard function.
 [function-predicate]
 
    classes.js:40:5
@@ -173,36 +173,52 @@ function, is incompatible with `(this: this, x: unknown) => x is number` [3], wh
    40|     m(x: unknown): boolean { // error extends non-predicate
    41|       return true;
    42|     }
-           ^ [2]
+           ^ [3]
 
 References:
    classes.js:39:20
    39|   class D1 extends C {
                           ^ [1]
+   classes.js:39:3
+         v-------------------
+   39|   class D1 extends C {
+   40|     m(x: unknown): boolean { // error extends non-predicate
+   41|       return true;
+   42|     }
+   43|   }
+         ^ [2]
    classes.js:5:5
            v---------------------------
     5|     m(x: unknown): x is number {
     6|       return typeof x === 'number';
     7|     }
-           ^ [3]
+           ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:46:25
 
-Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: `unknown` [2] is incompatible with
-`number` [3]. [incompatible-type]
+Cannot extend `C` [1] with `D2` [2] because in property `m` > the type predicate: `unknown` [3] is incompatible with
+`number` [4]. [incompatible-type]
 
    classes.js:46:25
    46|     m(x: unknown): x is unknown { // error extends
-                               ^^^^^^^ [2]
+                               ^^^^^^^ [3]
 
 References:
    classes.js:45:20
    45|   class D2 extends C {
                           ^ [1]
+   classes.js:45:3
+         v-------------------
+   45|   class D2 extends C {
+   46|     m(x: unknown): x is unknown { // error extends
+   47|       return true;
+   48|     }
+   49|   }
+         ^ [2]
    classes.js:5:25
     5|     m(x: unknown): x is number {
-                               ^^^^^^ [3]
+                               ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:52:14
@@ -300,8 +316,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:107:5
 
-Cannot extend `C` [1] with `D1` because in property `m`: `(this: this, x: unknown) => boolean` [2], a non-type-guard
-function, is incompatible with `(this: this, x: unknown) => x is number` [3], which is a type-guard function.
+Cannot extend `C` [1] with `D1` [2] because in property `m`: `(this: this, x: unknown) => boolean` [3], a non-type-guard
+function, is incompatible with `(this: this, x: unknown) => x is number` [4], which is a type-guard function.
 [function-predicate]
 
    classes.js:107:5
@@ -309,33 +325,49 @@ function, is incompatible with `(this: this, x: unknown) => x is number` [3], wh
    107|     m(x: unknown): boolean { // error extends non-predicate
    108|       return true;
    109|     }
-            ^ [2]
+            ^ [3]
 
 References:
    classes.js:106:20
    106|   class D1 extends C {
                            ^ [1]
+   classes.js:106:3
+          v-------------------
+   106|   class D1 extends C {
+   107|     m(x: unknown): boolean { // error extends non-predicate
+   108|       return true;
+   109|     }
+   110|   }
+          ^ [2]
    classes.js:91:5
     91|     m(x: unknown): x is number;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ classes.js:113:25
 
-Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: `unknown` [2] is incompatible with
-`number` [3]. [incompatible-type]
+Cannot extend `C` [1] with `D2` [2] because in property `m` > the type predicate: `unknown` [3] is incompatible with
+`number` [4]. [incompatible-type]
 
    classes.js:113:25
    113|     m(x: unknown): x is unknown { // error unknown ~> number
-                                ^^^^^^^ [2]
+                                ^^^^^^^ [3]
 
 References:
    classes.js:112:20
    112|   class D2 extends C {
                            ^ [1]
+   classes.js:112:3
+          v-------------------
+   112|   class D2 extends C {
+   113|     m(x: unknown): x is unknown { // error unknown ~> number
+   114|       return true; // okay
+   115|     }
+   116|   }
+          ^ [2]
    classes.js:91:25
     91|     m(x: unknown): x is number;
-                                ^^^^^^ [3]
+                                ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ classes.js:119:14
@@ -3089,7 +3121,7 @@ or interface methods. [function-predicate]
 
 Error ----------------------------------------------------------------------------------------------------- this.js:28:5
 
-Cannot extend `A` [1] with `E` because in property `isB` > the type predicate: `B` [2] is incompatible with `C` [3].
+Cannot extend `A` [1] with `E` [2] because in property `isB` > the type predicate: `B` [3] is incompatible with `C` [4].
 [incompatible-type]
 
    this.js:28:5
@@ -3100,12 +3132,19 @@ References:
    this.js:27:27
    27|   declare class E extends A {
                                  ^ [1]
+   this.js:27:3
+         v--------------------------
+   27|   declare class E extends A {
+   28|     isB(): this is C; // error type guard is in invariant position
+   29|     isBImplies(): implies this is C; // okay type guard is in covariant position
+   30|   }
+         ^ [2]
    this.js:15:20
    15|     isB(): this is B; // okay
-                          ^ [2]
+                          ^ [3]
    this.js:28:20
    28|     isB(): this is C; // error type guard is in invariant position
-                          ^ [3]
+                          ^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- this.js:41:5
@@ -3421,8 +3460,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:186:5
 
-Cannot extend `AImported` [1] with `E` because in property `isB` > the type predicate: `BImported` [2] is incompatible
-with `CImported` [3]. [incompatible-type]
+Cannot extend `AImported` [1] with `E` [2] because in property `isB` > the type predicate: `BImported` [3] is
+incompatible with `CImported` [4]. [incompatible-type]
 
    this.js:186:5
    186|     isB(): this is CImported; // error type guard is in invariant position
@@ -3432,12 +3471,19 @@ References:
    this.js:185:27
    185|   declare class E extends AImported {
                                   ^^^^^^^^^ [1]
+   this.js:185:3
+          v----------------------------------
+   185|   declare class E extends AImported {
+   186|     isB(): this is CImported; // error type guard is in invariant position
+   187|     isBImplies(): implies this is CImported; // okay type guard is in covariant position
+   188|   }
+          ^ [2]
    this_exports.js:2:18
      2|   isB(): this is B;
-                         ^ [2]
+                         ^ [3]
    this.js:186:20
    186|     isB(): this is CImported; // error type guard is in invariant position
-                           ^^^^^^^^^ [3]
+                           ^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:195:5
@@ -3799,80 +3845,112 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:89:20
 
-Cannot extend `A` [1] with `Bad` because in property `isB` > the type predicate: `C` [2] is incompatible with `B` [3].
-[incompatible-type]
+Cannot extend `A` [1] with `Bad` [2] because in property `isB` > the type predicate: `C` [3] is incompatible with
+`B` [4]. [incompatible-type]
 
    this_classes.js:89:20
    89|     isB(): this is C { // error type guard is in invariant position
-                          ^ [2]
+                          ^ [3]
 
 References:
    this_classes.js:88:21
    88|   class Bad extends A {
                            ^ [1]
+   this_classes.js:88:3
+         v--------------------
+   88|   class Bad extends A {
+   89|     isB(): this is C { // error type guard is in invariant position
+   90|       return this instanceof C;
+   91|     }
+   92|   }
+         ^ [2]
    this_classes.js:80:20
    80|     isB(): this is B {
-                          ^ [3]
+                          ^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:96:12
 
-Cannot extend `A` [1] with `BadImplies` because in property `isB`: one-sided type guard [2] is incompatible with default
-type guard [3]. [function-predicate]
+Cannot extend `A` [1] with `BadImplies` [2] because in property `isB`: one-sided type guard [3] is incompatible with
+default type guard [4]. [function-predicate]
 
    this_classes.js:96:12
    96|     isB(): implies this is C { // error twice: one-sided vs default guard, and C ~> B
-                  ^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^ [3]
 
 References:
    this_classes.js:95:28
    95|   class BadImplies extends A {
                                   ^ [1]
+   this_classes.js:95:3
+         v---------------------------
+   95|   class BadImplies extends A {
+   96|     isB(): implies this is C { // error twice: one-sided vs default guard, and C ~> B
+   97|       return this instanceof C;
+   98|     }
+   99|   }
+         ^ [2]
    this_classes.js:80:12
    80|     isB(): this is B {
-                  ^^^^^^^^^ [3]
+                  ^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:96:28
 
-Cannot extend `A` [1] with `BadImplies` because in property `isB` > the type predicate: `C` [2] is incompatible with
-`B` [3]. [incompatible-type]
+Cannot extend `A` [1] with `BadImplies` [2] because in property `isB` > the type predicate: `C` [3] is incompatible with
+`B` [4]. [incompatible-type]
 
    this_classes.js:96:28
    96|     isB(): implies this is C { // error twice: one-sided vs default guard, and C ~> B
-                                  ^ [2]
+                                  ^ [3]
 
 References:
    this_classes.js:95:28
    95|   class BadImplies extends A {
                                   ^ [1]
+   this_classes.js:95:3
+         v---------------------------
+   95|   class BadImplies extends A {
+   96|     isB(): implies this is C { // error twice: one-sided vs default guard, and C ~> B
+   97|       return this instanceof C;
+   98|     }
+   99|   }
+         ^ [2]
    this_classes.js:80:20
    80|     isB(): this is B {
-                          ^ [3]
+                          ^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:103:5
 
-Cannot extend `A` [1] with `Dropped` because in property `isB`: `(this: this) => boolean` [2], a non-type-guard
-function, is incompatible with `(this: this) => this is B` [3], which is a type-guard function. [function-predicate]
+Cannot extend `A` [1] with `Dropped` [2] because in property `isB`: `(this: this) => boolean` [3], a non-type-guard
+function, is incompatible with `(this: this) => this is B` [4], which is a type-guard function. [function-predicate]
 
    this_classes.js:103:5
             v-------------------------------------------
    103|     isB(): boolean { // error missing type guard
    104|       return true;
    105|     }
-            ^ [2]
+            ^ [3]
 
 References:
    this_classes.js:102:25
    102|   class Dropped extends A {
                                 ^ [1]
+   this_classes.js:102:3
+          v------------------------
+   102|   class Dropped extends A {
+   103|     isB(): boolean { // error missing type guard
+   104|       return true;
+   105|     }
+   106|   }
+          ^ [2]
    this_classes.js:80:5
             v-----------------
     80|     isB(): this is B {
     81|       return this instanceof B;
     82|     }
-            ^ [3]
+            ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:133:14
@@ -4643,8 +4721,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:85:5
 
-Cannot extend `C<X>` [1] with `Bad` because in property `isD` > the type predicate: `D<X>` [2] is incompatible with
-`E<X>` [3]. [incompatible-type]
+Cannot extend `C<X>` [1] with `Bad<X>` [2] because in property `isD` > the type predicate: `D<X>` [3] is incompatible
+with `E<X>` [4]. [incompatible-type]
 
    this_generics.js:85:5
            v-----------------------------------------------------------------
@@ -4657,18 +4735,26 @@ References:
    this_generics.js:84:28
    84|   class Bad<out X> extends C<X> {
                                   ^^^^ [1]
+   this_generics.js:84:3
+         v------------------------------
+   84|   class Bad<out X> extends C<X> {
+   85|     isD(): this is E<X> { // error type guard is in invariant position
+   86|       return this instanceof E;
+   87|     }
+   88|   }
+         ^ [2]
    this_generics.js:77:20
    77|     isD(): this is D<X> {
-                          ^^^^ [2]
+                          ^^^^ [3]
    this_generics.js:85:20
    85|     isD(): this is E<X> { // error type guard is in invariant position
-                          ^^^^ [3]
+                          ^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:91:5
 
-Cannot extend `C<X>` [1] with `Implies` because in property `isD` > the type predicate: `D<X>` [2] is incompatible with
-`E<X>` [3]. [incompatible-type]
+Cannot extend `C<X>` [1] with `Implies<X>` [2] because in property `isD` > the type predicate: `D<X>` [3] is
+incompatible with `E<X>` [4]. [incompatible-type]
 
    this_generics.js:91:5
            v-----------------------------------------------------------------------------------
@@ -4681,30 +4767,46 @@ References:
    this_generics.js:90:32
    90|   class Implies<out X> extends C<X> {
                                       ^^^^ [1]
+   this_generics.js:90:3
+         v----------------------------------
+   90|   class Implies<out X> extends C<X> {
+   91|     isD(): implies this is E<X> { // error twice: one-sided vs default guard, and D ~> E
+   92|       return this instanceof E;
+   93|     }
+   94|   }
+         ^ [2]
    this_generics.js:77:20
    77|     isD(): this is D<X> {
-                          ^^^^ [2]
+                          ^^^^ [3]
    this_generics.js:91:28
    91|     isD(): implies this is E<X> { // error twice: one-sided vs default guard, and D ~> E
-                                  ^^^^ [3]
+                                  ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- this_generics.js:91:12
 
-Cannot extend `C<X>` [1] with `Implies` because in property `isD`: one-sided type guard [2] is incompatible with default
-type guard [3]. [function-predicate]
+Cannot extend `C<X>` [1] with `Implies<X>` [2] because in property `isD`: one-sided type guard [3] is incompatible with
+default type guard [4]. [function-predicate]
 
    this_generics.js:91:12
    91|     isD(): implies this is E<X> { // error twice: one-sided vs default guard, and D ~> E
-                  ^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    this_generics.js:90:32
    90|   class Implies<out X> extends C<X> {
                                       ^^^^ [1]
+   this_generics.js:90:3
+         v----------------------------------
+   90|   class Implies<out X> extends C<X> {
+   91|     isD(): implies this is E<X> { // error twice: one-sided vs default guard, and D ~> E
+   92|       return this instanceof E;
+   93|     }
+   94|   }
+         ^ [2]
    this_generics.js:77:12
    77|     isD(): this is D<X> {
-                  ^^^^^^^^^^^^ [3]
+                  ^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- this_generics.js:115:5

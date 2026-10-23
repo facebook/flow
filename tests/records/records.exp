@@ -211,7 +211,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:396:9
 
-Cannot extend `R` [1] with `C` because `R` [1] is not inheritable. [incompatible-use]
+Cannot extend `R` [1] with `C` [2] because `R` [1] is not inheritable. [incompatible-use]
 
    declaration.js:396:9
    396|   class C extends R { // ERROR
@@ -221,6 +221,11 @@ References:
    declaration.js:396:19
    396|   class C extends R { // ERROR
                           ^ [1]
+   declaration.js:396:3
+          v---------------------------
+   396|   class C extends R { // ERROR
+   397|   }
+          ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- declaration.js:399:22

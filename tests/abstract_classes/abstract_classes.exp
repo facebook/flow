@@ -135,20 +135,26 @@ The `abstract` modifier cannot be used with a private identifier. [ParseError]
 
 Error -------------------------------------------------------------------------------------- inheritance_override.js:6:8
 
-Cannot extend `A` [1] with `B` because in property `m` > the first parameter: `string` [2] is incompatible with
-`number` [3]. [incompatible-type]
+Cannot extend `A` [1] with `B` [2] because in property `m` > the first parameter: `string` [3] is incompatible with
+`number` [4]. [incompatible-type]
 
    inheritance_override.js:6:8
    6|   m(x: string): void {} // ERROR: narrowing parameter type
-             ^^^^^^ [2]
+             ^^^^^^ [3]
 
 References:
    inheritance_override.js:5:17
    5| class B extends A {
                       ^ [1]
+   inheritance_override.js:5:1
+      v------------------
+   5| class B extends A {
+   6|   m(x: string): void {} // ERROR: narrowing parameter type
+   7| }
+      ^ [2]
    inheritance_override.js:2:26
    2|   abstract m(x: string | number): void;
-                               ^^^^^^ [3]
+                               ^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------- inherited_concrete_impl.js:31:1

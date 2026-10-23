@@ -14,20 +14,41 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:19:12
 
-Cannot extend `Qux` [1] with `Foo` because in property `fooqux` > the first parameter: `string` [2] is incompatible with
-`number` [3]. [incompatible-type]
+Cannot extend `Qux` [1] with `Foo` [2] because in property `fooqux` > the first parameter: `string` [3] is incompatible
+with `number` [4]. [incompatible-type]
 
    Foo.js:19:12
    19|   fooqux(x:string) {
-                  ^^^^^^ [2]
+                  ^^^^^^ [3]
 
 References:
    Foo.js:5:19
     5| class Foo extends Qux {
                          ^^^ [1]
+   Foo.js:5:1
+       v----------------------
+    5| class Foo extends Qux {
+    6|   x:string;
+    7|   constructor(x:string) {
+    8|     this.x = x;
+    9|   }
+   10|
+   11|   foo(y:string,z:string):number {
+   12|     this.x = y;
+   13|     var u = new Foo("...").qux();
+   14|     var v = new Bar(y);
+   15|     v.self = v;
+   16|     return v.bar(z,u);
+   17|   }
+   18|
+   19|   fooqux(x:string) {
+   20|     this.x;
+   21|   }
+   22| }
+       ^ [2]
    Qux.js:6:12
     6|   fooqux(x:number) { }
-                  ^^^^^^ [3]
+                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------- Foo.js:8:5

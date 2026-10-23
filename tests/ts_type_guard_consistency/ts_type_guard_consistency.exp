@@ -1,19 +1,25 @@
 Error -------------------------------------------------------------------------------------------- assertions.d.ts:17:10
 
-Cannot extend `Parent` [1] with `Bad` because in property `check`: `string` [2] is incompatible with
-`(this: this, value: unknown) => asserts value is string` [3]. [incompatible-type]
+Cannot extend `Parent` [1] with `Bad` [2] because in property `check`: `string` [3] is incompatible with
+`(this: this, value: unknown) => asserts value is string` [4]. [incompatible-type]
 
    assertions.d.ts:17:10
    17|   check: string;
-                ^^^^^^ [2]
+                ^^^^^^ [3]
 
 References:
    assertions.d.ts:16:30
    16| export interface Bad extends Parent { // ERROR
                                     ^^^^^^ [1]
+   assertions.d.ts:16:8
+              v--------------------------------------
+   16| export interface Bad extends Parent { // ERROR
+   17|   check: string;
+   18| }
+       ^ [2]
    assertions.d.ts:9:3
     9|   check(value: unknown): asserts value is string;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- flow.js:2:10

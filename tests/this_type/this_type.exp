@@ -355,20 +355,26 @@ References:
 
 Error ------------------------------------------------------------------------------------------ default_import.js:26:12
 
-Cannot extend `CDefault` [1] with `BadCloneSub` because in property `clone` > the return value: `CDefault` [2] is
-incompatible with `empty` [3]. [incompatible-type]
+Cannot extend `CDefault` [1] with `BadCloneSub` [2] because in property `clone` > the return value: `CDefault` [3] is
+incompatible with `empty` [4]. [incompatible-type]
 
    default_import.js:26:12
    26|   clone(): CDefaultV { return this; } // ERROR — must return `this`, not `CDefaultV`
-                  ^^^^^^^^^ [2]
+                  ^^^^^^^^^ [3]
 
 References:
    default_import.js:25:27
    25| class BadCloneSub extends CDefaultV {
                                  ^^^^^^^^^ [1]
+   default_import.js:25:1
+       v------------------------------------
+   25| class BadCloneSub extends CDefaultV {
+   26|   clone(): CDefaultV { return this; } // ERROR — must return `this`, not `CDefaultV`
+   27| }
+       ^ [2]
    default_export.js:7:12
     7|   clone(): this;
-                  ^^^^ [3]
+                  ^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- export.js:26:13
@@ -410,38 +416,50 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:10
 
-Cannot extend `A1` [1] with `B1` because in property `foo` > the return value: `B1` [2] is incompatible with
-`empty` [3]. [incompatible-type]
+Cannot extend `A1` [1] with `B1` [2] because in property `foo` > the return value: `B1` [3] is incompatible with
+`empty` [4]. [incompatible-type]
 
    import.js:8:10
    8|   foo(): B1 { return new B1(); } // ERROR
-               ^^ [2]
+               ^^ [3]
 
 References:
    import.js:7:18
    7| class B1 extends A1 {
                        ^^ [1]
+   import.js:7:1
+      v--------------------
+   7| class B1 extends A1 {
+   8|   foo(): B1 { return new B1(); } // ERROR
+   9| }
+      ^ [2]
    export.js:2:10
    2|   foo(): this { return this; }
-               ^^^^ [3]
+               ^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:14:10
 
-Cannot extend `A3<X>` [1] with `B3` because in property `foo` > the return value: `B3<X>` [2] is incompatible with
-`empty` [3]. [incompatible-type]
+Cannot extend `A3<X>` [1] with `B3<X>` [2] because in property `foo` > the return value: `B3<X>` [3] is incompatible
+with `empty` [4]. [incompatible-type]
 
    import.js:14:10
    14|   foo(): B3<X> { return new B3(); } // ERROR
-                ^^^^^ [2]
+                ^^^^^ [3]
 
 References:
    import.js:13:21
    13| class B3<X> extends A3<X> {
                            ^^^^^ [1]
+   import.js:13:1
+       v--------------------------
+   13| class B3<X> extends A3<X> {
+   14|   foo(): B3<X> { return new B3(); } // ERROR
+   15| }
+       ^ [2]
    export.js:7:10
     7|   foo(): this { return this; }
-                ^^^^ [3]
+                ^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:18:22
@@ -846,38 +864,66 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:10
 
-Cannot extend `Base` [1] with `Override` because in property `bar` > the return value: `Override` [2] is incompatible
-with `empty` [3]. [incompatible-type]
+Cannot extend `Base` [1] with `Override` [2] because in property `bar` > the return value: `Override` [3] is
+incompatible with `empty` [4]. [incompatible-type]
 
    test.js:20:10
    20|   bar(): Override { return new Override; } // error (cf. OK above)
-                ^^^^^^^^ [2]
+                ^^^^^^^^ [3]
 
 References:
    test.js:16:24
    16| class Override extends Base {
                               ^^^^ [1]
+   test.js:16:1
+       v----------------------------
+   16| class Override extends Base {
+   17|   foo(): this { return this; } // OK
+   18|   qux(): this { return this; } // OK, too
+   19|
+   20|   bar(): Override { return new Override; } // error (cf. OK above)
+   21|                                              // see exploit below
+   22|
+   23|   corge(that: this) { } // error
+   24|                         // see exploit below
+   25|   grault(that: this) { } // error, too (only variance error with new-generics)
+   26| }
+       ^ [2]
    test.js:7:10
     7|   bar(): this { return this; }
-                ^^^^ [3]
+                ^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:16
 
-Cannot extend `Base` [1] with `Override` because in property `grault` > the first parameter: `empty` [2] is incompatible
-with `Base` [3]. [incompatible-type]
+Cannot extend `Base` [1] with `Override` [2] because in property `grault` > the first parameter: `empty` [3] is
+incompatible with `Base` [4]. [incompatible-type]
 
    test.js:25:16
    25|   grault(that: this) { } // error, too (only variance error with new-generics)
-                      ^^^^ [2]
+                      ^^^^ [3]
 
 References:
    test.js:16:24
    16| class Override extends Base {
                               ^^^^ [1]
+   test.js:16:1
+       v----------------------------
+   16| class Override extends Base {
+   17|   foo(): this { return this; } // OK
+   18|   qux(): this { return this; } // OK, too
+   19|
+   20|   bar(): Override { return new Override; } // error (cf. OK above)
+   21|                                              // see exploit below
+   22|
+   23|   corge(that: this) { } // error
+   24|                         // see exploit below
+   25|   grault(that: this) { } // error, too (only variance error with new-generics)
+   26| }
+       ^ [2]
    test.js:11:16
    11|   grault(that: Base) { }
-                      ^^^^ [3]
+                      ^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:23:15

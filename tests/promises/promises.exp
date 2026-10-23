@@ -358,110 +358,146 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
-`() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
+Cannot extend this type [1] with `NarrowFinally<R>` [2] because in property `finally` > the first parameter:
+`() => unknown` [3] is incompatible with `void` [4]. [incompatible-type]
 
    finally.js:18:22
    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
-                            ^^^^^^^^^^^^^ [2]
+                            ^^^^^^^^^^^^^ [3]
 
 References:
    finally.js:17:40
    17| declare class NarrowFinally<R> extends Promise<R> {
                                               ^^^^^^^^^^ [1]
+   finally.js:17:1
+       v--------------------------------------------------
+   17| declare class NarrowFinally<R> extends Promise<R> {
+   18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+   19| }
+       ^ [2]
    <BUILTINS>/lib.es2018.promise.js:30:25
    30|     finally(onfinally?: (() => void) | undefined | null): Promise<T>;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
-`() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
+Cannot extend this type [1] with `NarrowFinally<R>` [2] because in property `finally` > the first parameter:
+`() => unknown` [3] is incompatible with `void` [4]. [incompatible-type]
 
    finally.js:18:22
    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
-                            ^^^^^^^^^^^^^ [2]
+                            ^^^^^^^^^^^^^ [3]
 
 References:
    finally.js:17:40
    17| declare class NarrowFinally<R> extends Promise<R> {
                                               ^^^^^^^^^^ [1]
+   finally.js:17:1
+       v--------------------------------------------------
+   17| declare class NarrowFinally<R> extends Promise<R> {
+   18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+   19| }
+       ^ [2]
    <BUILTINS>/lib.es2018.promise.js:30:40
    30|     finally(onfinally?: (() => void) | undefined | null): Promise<T>;
-                                              ^^^^^^^^^ [3]
+                                              ^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
-`() => unknown` [2] is incompatible with `null` [3]. [incompatible-type]
+Cannot extend this type [1] with `NarrowFinally<R>` [2] because in property `finally` > the first parameter:
+`() => unknown` [3] is incompatible with `null` [4]. [incompatible-type]
 
    finally.js:18:22
    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
-                            ^^^^^^^^^^^^^ [2]
+                            ^^^^^^^^^^^^^ [3]
 
 References:
    finally.js:17:40
    17| declare class NarrowFinally<R> extends Promise<R> {
                                               ^^^^^^^^^^ [1]
+   finally.js:17:1
+       v--------------------------------------------------
+   17| declare class NarrowFinally<R> extends Promise<R> {
+   18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+   19| }
+       ^ [2]
    <BUILTINS>/lib.es2018.promise.js:30:52
    30|     finally(onfinally?: (() => void) | undefined | null): Promise<T>;
-                                                          ^^^^ [3]
+                                                          ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
-`() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
+Cannot extend this type [1] with `NarrowFinally<R>` [2] because in property `finally` > the first parameter:
+`() => unknown` [3] is incompatible with `void` [4]. [incompatible-type]
 
    finally.js:18:22
     18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
-                             ^^^^^^^^^^^^^ [2]
+                             ^^^^^^^^^^^^^ [3]
 
 References:
    finally.js:17:40
     17| declare class NarrowFinally<R> extends Promise<R> {
                                                ^^^^^^^^^^ [1]
+   finally.js:17:1
+        v--------------------------------------------------
+    17| declare class NarrowFinally<R> extends Promise<R> {
+    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+    19| }
+        ^ [2]
    <BUILTINS>/misc.js:217:23
    217|   finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
-`() => unknown` [2] is incompatible with `void` [3]. [incompatible-type]
+Cannot extend this type [1] with `NarrowFinally<R>` [2] because in property `finally` > the first parameter:
+`() => unknown` [3] is incompatible with `void` [4]. [incompatible-type]
 
    finally.js:18:22
     18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
-                             ^^^^^^^^^^^^^ [2]
+                             ^^^^^^^^^^^^^ [3]
 
 References:
    finally.js:17:40
     17| declare class NarrowFinally<R> extends Promise<R> {
                                                ^^^^^^^^^^ [1]
+   finally.js:17:1
+        v--------------------------------------------------
+    17| declare class NarrowFinally<R> extends Promise<R> {
+    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+    19| }
+        ^ [2]
    <BUILTINS>/misc.js:217:41
    217|   finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
-                                                ^^^^^^^^^ [3]
+                                                ^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- finally.js:18:22
 
-Cannot extend this type [1] with `NarrowFinally` because in property `finally` > the first parameter:
-`() => unknown` [2] is incompatible with `null` [3]. [incompatible-type]
+Cannot extend this type [1] with `NarrowFinally<R>` [2] because in property `finally` > the first parameter:
+`() => unknown` [3] is incompatible with `null` [4]. [incompatible-type]
 
    finally.js:18:22
     18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
-                             ^^^^^^^^^^^^^ [2]
+                             ^^^^^^^^^^^^^ [3]
 
 References:
    finally.js:17:40
     17| declare class NarrowFinally<R> extends Promise<R> {
                                                ^^^^^^^^^^ [1]
+   finally.js:17:1
+        v--------------------------------------------------
+    17| declare class NarrowFinally<R> extends Promise<R> {
+    18|   finally(onFinally: () => unknown): NarrowFinally<R>; // Error: `null` and `undefined` are not functions
+    19| }
+        ^ [2]
    <BUILTINS>/misc.js:217:53
    217|   finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
-                                                            ^^^^ [3]
+                                                            ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19

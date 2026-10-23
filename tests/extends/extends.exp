@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:6:7
 
-Cannot extend `Class<string>` [1] with `B` because `string` [1] is not inheritable. [incompatible-use]
+Cannot extend `Class<string>` [1] with `B` [2] because `string` [1] is not inheritable. [incompatible-use]
 
    test.js:6:7
    6| class B extends C {}
@@ -10,20 +10,23 @@ References:
    test.js:6:17
    6| class B extends C {}
                       ^ [1]
+   test.js:6:1
+   6| class B extends C {}
+      ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:30:17
+Error ----------------------------------------------------------------------------------------------------- test.js:30:7
 
-Cannot extend this type [1] with `obj` because `{}` [2] is not inheritable. [incompatible-use]
+Cannot extend `{}` [1] with `D` [2] because `{}` [1] is not inheritable. [incompatible-use]
 
-   test.js:30:17
-   30| class D extends obj {}
-                       ^^^ [2]
-
-References:
    test.js:30:7
    30| class D extends obj {}
-             ^ [1]
+             ^ [2]
+
+References:
+   test.js:30:17
+   30| class D extends obj {}
+                       ^^^ [1]
 
 
 

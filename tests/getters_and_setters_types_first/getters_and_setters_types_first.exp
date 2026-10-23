@@ -367,8 +367,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import-variance.js:9:2
 
-Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is read-only in `<<anonymous class>>` [2] but
-writable in `Base` [1]. [incompatible-variance]
+Cannot extend `Base` [1] with `<<anonymous class>>` [2] because property `x` is read-only in `<<anonymous class>>` [2]
+but writable in `Base` [1]. [incompatible-variance]
 
    import-variance.js:9:2
         v-------------------
@@ -386,8 +386,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-variance.js:14:2
 
-Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is write-only in `<<anonymous class>>` [2] but
-readable in `Base` [1]. [incompatible-variance]
+Cannot extend `Base` [1] with `<<anonymous class>>` [2] because property `x` is write-only in `<<anonymous class>>` [2]
+but readable in `Base` [1]. [incompatible-variance]
 
    import-variance.js:14:2
         v-------------------
@@ -405,8 +405,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-variance.js:25:2
 
-Cannot extend `Base` [1] with `<<anonymous class>>` because property `pos` is write-only in `<<anonymous class>>` [2]
-but read-only in `Base` [1]. [incompatible-variance]
+Cannot extend `Base` [1] with `<<anonymous class>>` [2] because property `pos` is write-only in
+`<<anonymous class>>` [2] but read-only in `Base` [1]. [incompatible-variance]
 
    import-variance.js:25:2
         v-------------------
@@ -424,8 +424,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-variance.js:35:2
 
-Cannot extend `Base` [1] with `<<anonymous class>>` because property `neg` is read-only in `<<anonymous class>>` [2] but
-write-only in `Base` [1]. [incompatible-variance]
+Cannot extend `Base` [1] with `<<anonymous class>>` [2] because property `neg` is read-only in `<<anonymous class>>` [2]
+but write-only in `Base` [1]. [incompatible-variance]
 
    import-variance.js:35:2
         v-------------------

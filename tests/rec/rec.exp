@@ -392,18 +392,18 @@ References:
                 ^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- this_subst.js:1:53
+Error ----------------------------------------------------------------------------------------------- this_subst.js:1:23
 
-Cannot extend this type [1] with `container` because `void` [2] is not inheritable. [incompatible-use]
+Cannot extend `void` [1] with `InstrumentedContainer` [2] because `void` [1] is not inheritable. [incompatible-use]
 
-   this_subst.js:1:53
-   1| var container = class InstrumentedContainer extends container {
-                                                          ^^^^^^^^^ [2]
-
-References:
    this_subst.js:1:23
    1| var container = class InstrumentedContainer extends container {
-                            ^^^^^^^^^^^^^^^^^^^^^ [1]
+                            ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   this_subst.js:1:53
+   1| var container = class InstrumentedContainer extends container {
+                                                          ^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------- trivially_recursive_with_evalt.js:2:10

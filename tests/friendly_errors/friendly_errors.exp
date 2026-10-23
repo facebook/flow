@@ -1,37 +1,49 @@
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:15:6
 
-Cannot extend `A` [1] with `C` because in property `p`: `string` [2] is incompatible with `number` [3].
+Cannot extend `A` [1] with `C` [2] because in property `p`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    class-extends-and-implements.js:15:6
    15|   p: string;
-            ^^^^^^ [2]
+            ^^^^^^ [3]
 
 References:
    class-extends-and-implements.js:14:17
    14| class C extends A {
                        ^ [1]
+   class-extends-and-implements.js:14:1
+       v------------------
+   14| class C extends A {
+   15|   p: string;
+   16| }
+       ^ [2]
    class-extends-and-implements.js:7:6
     7|   p: number;
-            ^^^^^^ [3]
+            ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:19:6
 
-Cannot extend `B<empty>` [1] with `D` because in property `p`: `string` [2] is incompatible with `number` [3].
+Cannot extend `B<empty>` [1] with `D` [2] because in property `p`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    class-extends-and-implements.js:19:6
    19|   p: string;
-            ^^^^^^ [2]
+            ^^^^^^ [3]
 
 References:
    class-extends-and-implements.js:18:17
    18| class D extends B<empty> {
                        ^^^^^^^^ [1]
+   class-extends-and-implements.js:18:1
+       v-------------------------
+   18| class D extends B<empty> {
+   19|   p: string;
+   20| }
+       ^ [2]
    class-extends-and-implements.js:11:6
    11|   p: number;
-            ^^^^^^ [3]
+            ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:31:6
@@ -72,110 +84,150 @@ References:
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:47:6
 
-Cannot extend `I` [1] with `K` because in property `p`: `string` [2] is incompatible with `number` [3].
+Cannot extend `I` [1] with `K` [2] because in property `p`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    class-extends-and-implements.js:47:6
    47|   p: string;
-            ^^^^^^ [2]
+            ^^^^^^ [3]
 
 References:
    class-extends-and-implements.js:46:21
    46| interface K extends I {
                            ^ [1]
+   class-extends-and-implements.js:46:1
+       v----------------------
+   46| interface K extends I {
+   47|   p: string;
+   48| }
+       ^ [2]
    class-extends-and-implements.js:39:6
    39|   p: number;
-            ^^^^^^ [3]
+            ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:51:6
 
-Cannot extend `J<empty>` [1] with `L` because in property `p`: `string` [2] is incompatible with `number` [3].
+Cannot extend `J<empty>` [1] with `L` [2] because in property `p`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    class-extends-and-implements.js:51:6
    51|   p: string;
-            ^^^^^^ [2]
+            ^^^^^^ [3]
 
 References:
    class-extends-and-implements.js:50:21
    50| interface L extends J<empty> {
                            ^^^^^^^^ [1]
+   class-extends-and-implements.js:50:1
+       v-----------------------------
+   50| interface L extends J<empty> {
+   51|   p: string;
+   52| }
+       ^ [2]
    class-extends-and-implements.js:43:6
    43|   p: number;
-            ^^^^^^ [3]
+            ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:71:7
 
-Cannot extend `M1` [1] with `O` because in property `p1`: `string` [2] is incompatible with `number` [3].
+Cannot extend `M1` [1] with `O` [2] because in property `p1`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    class-extends-and-implements.js:71:7
    71|   p1: string;
-             ^^^^^^ [2]
+             ^^^^^^ [3]
 
 References:
    class-extends-and-implements.js:70:21
    70| interface O extends M1, M2 {
                            ^^ [1]
+   class-extends-and-implements.js:70:1
+       v---------------------------
+   70| interface O extends M1, M2 {
+   71|   p1: string;
+   72|   p2: string;
+   73| }
+       ^ [2]
    class-extends-and-implements.js:55:7
    55|   p1: number;
-             ^^^^^^ [3]
+             ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:72:7
 
-Cannot extend `M2` [1] with `O` because in property `p2`: `string` [2] is incompatible with `number` [3].
+Cannot extend `M2` [1] with `O` [2] because in property `p2`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    class-extends-and-implements.js:72:7
    72|   p2: string;
-             ^^^^^^ [2]
+             ^^^^^^ [3]
 
 References:
    class-extends-and-implements.js:70:25
    70| interface O extends M1, M2 {
                                ^^ [1]
+   class-extends-and-implements.js:70:1
+       v---------------------------
+   70| interface O extends M1, M2 {
+   71|   p1: string;
+   72|   p2: string;
+   73| }
+       ^ [2]
    class-extends-and-implements.js:59:7
    59|   p2: number;
-             ^^^^^^ [3]
+             ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:76:7
 
-Cannot extend `N1<empty>` [1] with `P` because in property `p1`: `string` [2] is incompatible with `number` [3].
+Cannot extend `N1<empty>` [1] with `P` [2] because in property `p1`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    class-extends-and-implements.js:76:7
    76|   p1: string;
-             ^^^^^^ [2]
+             ^^^^^^ [3]
 
 References:
    class-extends-and-implements.js:75:21
    75| interface P extends N1<empty>, N2<empty> {
                            ^^^^^^^^^ [1]
+   class-extends-and-implements.js:75:1
+       v-----------------------------------------
+   75| interface P extends N1<empty>, N2<empty> {
+   76|   p1: string;
+   77|   p2: string;
+   78| }
+       ^ [2]
    class-extends-and-implements.js:63:7
    63|   p1: number;
-             ^^^^^^ [3]
+             ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:77:7
 
-Cannot extend `N2<empty>` [1] with `P` because in property `p2`: `string` [2] is incompatible with `number` [3].
+Cannot extend `N2<empty>` [1] with `P` [2] because in property `p2`: `string` [3] is incompatible with `number` [4].
 [incompatible-type]
 
    class-extends-and-implements.js:77:7
    77|   p2: string;
-             ^^^^^^ [2]
+             ^^^^^^ [3]
 
 References:
    class-extends-and-implements.js:75:32
    75| interface P extends N1<empty>, N2<empty> {
                                       ^^^^^^^^^ [1]
+   class-extends-and-implements.js:75:1
+       v-----------------------------------------
+   75| interface P extends N1<empty>, N2<empty> {
+   76|   p1: string;
+   77|   p2: string;
+   78| }
+       ^ [2]
    class-extends-and-implements.js:67:7
    67|   p2: number;
-             ^^^^^^ [3]
+             ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- class-extends-and-implements.js:97:7
@@ -1130,7 +1182,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:5:11
 
-Cannot extend `A` [1] with `B` because `A` [1] is not inheritable. [incompatible-use]
+Cannot extend `A` [1] with `B` [2] because `A` [1] is not inheritable. [incompatible-use]
 
    misc-incompatibles.js:5:11
    5| interface B extends A {}
@@ -1140,6 +1192,9 @@ References:
    misc-incompatibles.js:5:21
    5| interface B extends A {}
                           ^ [1]
+   misc-incompatibles.js:5:1
+   5| interface B extends A {}
+      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- misc-incompatibles.js:8:3

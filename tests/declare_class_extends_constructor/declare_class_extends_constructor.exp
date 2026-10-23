@@ -30,22 +30,22 @@ References:
                                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------- no_prototype_fallback.js:14:13
+Error ----------------------------------------------------------------------------------- no_prototype_fallback.js:15:15
 
-Cannot extend this type [1] with `AnyPrototype` because `AnyPrototypeConstructor` [2] is not inheritable.
-[incompatible-use]
+Cannot extend `AnyPrototypeConstructor` [1] with `AnyPrototypeSubclass` [2] because `AnyPrototypeConstructor` [3] is not
+inheritable. [incompatible-use]
 
-   no_prototype_fallback.js:14:13
-   14| declare var AnyPrototype: AnyPrototypeConstructor;
-                   ^^^^^^^^^^^^
-
-References:
    no_prototype_fallback.js:15:15
    15| declare class AnyPrototypeSubclass extends AnyPrototype {} // error: not inheritable
-                     ^^^^^^^^^^^^^^^^^^^^ [1]
+                     ^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   no_prototype_fallback.js:14:13
+   14| declare var AnyPrototype: AnyPrototypeConstructor;
+                   ^^^^^^^^^^^^ [1]
    no_prototype_fallback.js:14:27
    14| declare var AnyPrototype: AnyPrototypeConstructor;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                 ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- this_typed.js:19:1

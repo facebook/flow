@@ -29,20 +29,26 @@ Cannot resolve module `missing_module`. [cannot-resolve-module]
 
 Error -------------------------------------------------------------------------------------------- libs/imports.js:20:14
 
-Cannot extend `A` [1] with `D` because in property `m` > the return value: `number` [2] is incompatible with
-`string` [3]. [incompatible-type]
+Cannot extend `A` [1] with `D` [2] because in property `m` > the return value: `number` [3] is incompatible with
+`string` [4]. [incompatible-type]
 
    libs/imports.js:20:14
    20|         m(): number; // error number <: string
-                    ^^^^^^ [2]
+                    ^^^^^^ [3]
 
 References:
    libs/imports.js:19:36
    19|     declare export class D extends A {
                                           ^ [1]
+   libs/imports.js:19:20
+                          v------------------
+   19|     declare export class D extends A {
+   20|         m(): number; // error number <: string
+   21|     }
+           ^ [2]
    libs/imports.js:7:14
     7|         m(): string;
-                    ^^^^^^ [3]
+                    ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------- libs/invalid-nested.js:2:18
@@ -270,20 +276,26 @@ Cannot resolve module `missing_module`. [cannot-resolve-module]
 
 Error -------------------------------------------------------------------------------------------- libs/imports.js:20:14
 
-Cannot extend `A` [1] with `D` because in property `m` > the return value: `number` [2] is incompatible with
-`string` [3]. [incompatible-type]
+Cannot extend `A` [1] with `D` [2] because in property `m` > the return value: `number` [3] is incompatible with
+`string` [4]. [incompatible-type]
 
    libs/imports.js:20:14
    20|         m(): number; // error number <: string
-                    ^^^^^^ [2]
+                    ^^^^^^ [3]
 
 References:
    libs/imports.js:19:36
    19|     declare export class D extends A {
                                           ^ [1]
+   libs/imports.js:19:20
+                          v------------------
+   19|     declare export class D extends A {
+   20|         m(): number; // error number <: string
+   21|     }
+           ^ [2]
    libs/imports.js:7:14
     7|         m(): string;
-                    ^^^^^^ [3]
+                    ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------- libs/invalid-nested.js:2:18

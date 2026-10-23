@@ -46,7 +46,6 @@ use flow_typing_loc_env::func_class_sig_types;
 use flow_typing_loc_env::func_class_sig_types::ConfigTypes;
 use flow_typing_loc_env::func_class_sig_types::class as class_types;
 use flow_typing_type::type_::ThisInstanceTData;
-use flow_typing_type::type_::type_or_type_desc::ErrorTypeDesc;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::*;
 use flow_typing_type::type_util;
@@ -1333,9 +1332,10 @@ fn supertype<'a, C: ConfigTypes>(cx: &mut Context<'a>, x: &class_types::Class<C>
                     let c = if targs.is_none() {
                         let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck(Box::new(
                             ClassExtendsCheckData {
-                                def: type_util::reason_of_t(c).dupe(),
-                                extends_loc: x.instance.reason.loc.dupe(),
-                                extends: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown),
+                                def_loc: x.instance.reason.loc.dupe(),
+                                def: TypeOrTypeDescT::Type(class_super.this_tparam.bound.dupe()),
+                                extends_loc: type_util::loc_of_t(c).dupe(),
+                                extends: TypeOrTypeDescT::Type(c.dupe()),
                             },
                         ))));
                         specialize(cx, use_op, targs.clone(), c.dupe())
@@ -1683,12 +1683,13 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
         }
         merged
     };
+    let derived_t = match &x.super_ {
+        class_types::Super::Class(class_super) => class_super.this_tparam.bound.dupe(),
+        class_types::Super::Interface(_) => self_.dupe(),
+    };
     let reference = match &x.class_name {
         Some(name) => DerivedReference::Named(name.dupe()),
-        None => DerivedReference::Unnamed(match &x.super_ {
-            class_types::Super::Class(class_super) => class_super.this_tparam.bound.dupe(),
-            class_types::Super::Interface(_) => self_.dupe(),
-        }),
+        None => DerivedReference::Unnamed(derived_t.dupe()),
     };
     let polarity_object = match &reference {
         DerivedReference::Named(name) => PropPolarityMismatchObject::Class(NamedReferenceData {
@@ -1725,7 +1726,8 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     let (super_, _) = supertype(cx, x);
     let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck(Box::new(
         ClassExtendsCheckData {
-            def: def_reason,
+            def_loc: def_reason.loc().dupe(),
+            def: TypeOrTypeDescT::Type(derived_t),
             extends_loc: type_util::loc_of_t(&super_).dupe(),
             extends: TypeOrTypeDescT::Type(super_.dupe()),
         },
@@ -2659,9 +2661,10 @@ pub fn make_thises<'a, C: ConfigTypes>(
                     let c = if targs.is_none() {
                         let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck(Box::new(
                             ClassExtendsCheckData {
-                                def: type_util::reason_of_t(c).dupe(),
-                                extends_loc: x.instance.reason.loc.dupe(),
-                                extends: TypeOrTypeDescT::TypeDesc(ErrorTypeDesc::Unknown),
+                                def_loc: x.instance.reason.loc.dupe(),
+                                def: TypeOrTypeDescT::Type(class_super.this_tparam.bound.dupe()),
+                                extends_loc: type_util::loc_of_t(c).dupe(),
+                                extends: TypeOrTypeDescT::Type(c.dupe()),
                             },
                         ))));
                         specialize(cx, use_op, targs.clone(), c.dupe())

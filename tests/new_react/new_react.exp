@@ -42,8 +42,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
-Cannot extend `Component<Props, State>` [1] with `Foo` because in property `setState` > the first parameter: property
-`y_` is missing in `{readonly y?: number, ...}` [2] but exists in `{y_: string, ...}` [3]. [incompatible-type]
+Cannot extend `Component<Props, State>` [1] with `Foo` [2] because in property `setState` > the first parameter:
+property `y_` is missing in `{readonly y?: number, ...}` [3] but exists in `{y_: string, ...}` [4]. [incompatible-type]
 
    classes.js:23:3
    23|   setState(o: { y_: string, ... }): void { }
@@ -53,68 +53,200 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js:7:1
+       v------------------------------------------------
+    7| class Foo extends React.Component<Props, State> {
+    8|   static defaultProps: DefaultProps;
+    9|
+   10|   is_mounted: boolean;
+   11|
+   12|   static bar(): void {}
+   13|
+   14|   qux(): void {
+   15|     var _: string = this.props.x;
+   16|   }
+   17|
+   18|   constructor(props: Props) {
+   19|     super(props);
+   20|     this.state = { y: "" };
+   21|   }
+   22|
+   23|   setState(o: { y_: string, ... }): void { }
+   24|
+   25|   componentDidMount(): void {
+   26|     this.is_mounted = true;
+   27|   }
+   28|
+   29|   componentWillReceiveProps(
+   30|     nextProps: any,
+   31|     nextContext: any
+   32|   ): void {
+   33|     this.qux();
+   34|   }
+   35|
+   36| }
+       ^ [2]
    classes.js:7:42
     7| class Foo extends React.Component<Props, State> {
-                                                ^^^^^ [2]
+                                                ^^^^^ [3]
    classes.js:23:15
    23|   setState(o: { y_: string, ... }): void { }
-                     ^^^^^^^^^^^^^^^^^^^ [3]
+                     ^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `Component<Props, State>` [1] with `Foo` because in property `setState` > the first parameter:
-`{y_: string, ...}` [2] is incompatible with `null` [3]. [incompatible-type]
+Cannot extend `Component<Props, State>` [1] with `Foo` [2] because in property `setState` > the first parameter:
+`{y_: string, ...}` [3] is incompatible with `null` [4]. [incompatible-type]
 
    classes.js:23:15
     23|   setState(o: { y_: string, ... }): void { }
-                      ^^^^^^^^^^^^^^^^^^^ [2]
+                      ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    classes.js:7:19
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js:7:1
+        v------------------------------------------------
+     7| class Foo extends React.Component<Props, State> {
+     8|   static defaultProps: DefaultProps;
+     9|
+    10|   is_mounted: boolean;
+    11|
+    12|   static bar(): void {}
+    13|
+    14|   qux(): void {
+    15|     var _: string = this.props.x;
+    16|   }
+    17|
+    18|   constructor(props: Props) {
+    19|     super(props);
+    20|     this.state = { y: "" };
+    21|   }
+    22|
+    23|   setState(o: { y_: string, ... }): void { }
+    24|
+    25|   componentDidMount(): void {
+    26|     this.is_mounted = true;
+    27|   }
+    28|
+    29|   componentWillReceiveProps(
+    30|     nextProps: any,
+    31|     nextContext: any
+    32|   ): void {
+    33|     this.qux();
+    34|   }
+    35|
+    36| }
+        ^ [2]
    <BUILTINS>/react.js:977:23
    977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `Component<Props, State>` [1] with `Foo` because in property `setState` > the first parameter:
-`{y_: string, ...}` [2] is incompatible with `void` [3]. [incompatible-type]
+Cannot extend `Component<Props, State>` [1] with `Foo` [2] because in property `setState` > the first parameter:
+`{y_: string, ...}` [3] is incompatible with `void` [4]. [incompatible-type]
 
    classes.js:23:15
     23|   setState(o: { y_: string, ... }): void { }
-                      ^^^^^^^^^^^^^^^^^^^ [2]
+                      ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    classes.js:7:19
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js:7:1
+        v------------------------------------------------
+     7| class Foo extends React.Component<Props, State> {
+     8|   static defaultProps: DefaultProps;
+     9|
+    10|   is_mounted: boolean;
+    11|
+    12|   static bar(): void {}
+    13|
+    14|   qux(): void {
+    15|     var _: string = this.props.x;
+    16|   }
+    17|
+    18|   constructor(props: Props) {
+    19|     super(props);
+    20|     this.state = { y: "" };
+    21|   }
+    22|
+    23|   setState(o: { y_: string, ... }): void { }
+    24|
+    25|   componentDidMount(): void {
+    26|     this.is_mounted = true;
+    27|   }
+    28|
+    29|   componentWillReceiveProps(
+    30|     nextProps: any,
+    31|     nextContext: any
+    32|   ): void {
+    33|     this.qux();
+    34|   }
+    35|
+    36| }
+        ^ [2]
    <BUILTINS>/react.js:977:23
    977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `Component<Props, State>` [1] with `Foo` because in property `setState` > the first parameter:
-`{y_: string, ...}` [2] is incompatible with `(State, Props) => ?Readonly<Partial<State>>` [3]. [incompatible-type]
+Cannot extend `Component<Props, State>` [1] with `Foo` [2] because in property `setState` > the first parameter:
+`{y_: string, ...}` [3] is incompatible with `(State, Props) => ?Readonly<Partial<State>>` [4]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
    classes.js:23:15
     23|   setState(o: { y_: string, ... }): void { }
-                      ^^^^^^^^^^^^^^^^^^^ [2]
+                      ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    classes.js:7:19
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   classes.js:7:1
+        v------------------------------------------------
+     7| class Foo extends React.Component<Props, State> {
+     8|   static defaultProps: DefaultProps;
+     9|
+    10|   is_mounted: boolean;
+    11|
+    12|   static bar(): void {}
+    13|
+    14|   qux(): void {
+    15|     var _: string = this.props.x;
+    16|   }
+    17|
+    18|   constructor(props: Props) {
+    19|     super(props);
+    20|     this.state = { y: "" };
+    21|   }
+    22|
+    23|   setState(o: { y_: string, ... }): void { }
+    24|
+    25|   componentDidMount(): void {
+    26|     this.is_mounted = true;
+    27|   }
+    28|
+    29|   componentWillReceiveProps(
+    30|     nextProps: any,
+    31|     nextContext: any
+    32|   ): void {
+    33|     this.qux();
+    34|   }
+    35|
+    36| }
+        ^ [2]
    <BUILTINS>/react.js:977:52
    977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21

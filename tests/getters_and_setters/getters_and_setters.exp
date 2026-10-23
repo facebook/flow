@@ -454,8 +454,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:21:2
 
-Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is read-only in `<<anonymous class>>` [2] but
-writable in `Base` [1]. [incompatible-variance]
+Cannot extend `Base` [1] with `<<anonymous class>>` [2] because property `x` is read-only in `<<anonymous class>>` [2]
+but writable in `Base` [1]. [incompatible-variance]
 
    variance.js:21:2
         v-------------------
@@ -473,8 +473,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:26:2
 
-Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is write-only in `<<anonymous class>>` [2] but
-readable in `Base` [1]. [incompatible-variance]
+Cannot extend `Base` [1] with `<<anonymous class>>` [2] because property `x` is write-only in `<<anonymous class>>` [2]
+but readable in `Base` [1]. [incompatible-variance]
 
    variance.js:26:2
         v-------------------
@@ -492,8 +492,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:37:2
 
-Cannot extend `Base` [1] with `<<anonymous class>>` because property `pos` is write-only in `<<anonymous class>>` [2]
-but read-only in `Base` [1]. [incompatible-variance]
+Cannot extend `Base` [1] with `<<anonymous class>>` [2] because property `pos` is write-only in
+`<<anonymous class>>` [2] but read-only in `Base` [1]. [incompatible-variance]
 
    variance.js:37:2
         v-------------------
@@ -511,8 +511,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:47:2
 
-Cannot extend `Base` [1] with `<<anonymous class>>` because property `neg` is read-only in `<<anonymous class>>` [2] but
-write-only in `Base` [1]. [incompatible-variance]
+Cannot extend `Base` [1] with `<<anonymous class>>` [2] because property `neg` is read-only in `<<anonymous class>>` [2]
+but write-only in `Base` [1]. [incompatible-variance]
 
    variance.js:47:2
         v-------------------

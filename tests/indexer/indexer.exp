@@ -155,15 +155,15 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Cannot extend `C<{bar: string, foo: number, ...}>` [1] with `D` because in property `x` > the indexer property's key:
-property `qux` is missing in `{bar: string, foo: number, ...}` [2]. [prop-missing]
+Cannot extend `C<{bar: string, foo: number, ...}>` [1] with `D` [2] because in property `x` > the indexer property's
+key: property `qux` is missing in `{bar: string, foo: number, ...}` [3]. [prop-missing]
 
    test.js:19:1
        v---------------------------------------------------
    19| class D extends C<{foo: number, bar: string, ...}> {
    20|   x: { foo: number, qux: boolean, ... }; // error: qux not found
    21| }
-       ^
+       ^ [2]
 
 References:
    test.js:19:17
@@ -171,29 +171,35 @@ References:
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:19:19
    19| class D extends C<{foo: number, bar: string, ...}> {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:6
 
-Cannot extend `C<{bar: string, foo: number, ...}>` [1] with `D` because in property `x`: an index signature declaring
-the expected key / value type is missing in `{foo: number, qux: boolean, ...}` [2] but exists in
-`{[key: keyof {bar: string, foo: number, ...}]: any}` [3]. [incompatible-type]
+Cannot extend `C<{bar: string, foo: number, ...}>` [1] with `D` [2] because in property `x`: an index signature
+declaring the expected key / value type is missing in `{foo: number, qux: boolean, ...}` [3] but exists in
+`{[key: keyof {bar: string, foo: number, ...}]: any}` [4]. [incompatible-type]
 
 This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:20:6
    20|   x: { foo: number, qux: boolean, ... }; // error: qux not found
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    test.js:19:17
    19| class D extends C<{foo: number, bar: string, ...}> {
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:19:1
+       v---------------------------------------------------
+   19| class D extends C<{foo: number, bar: string, ...}> {
+   20|   x: { foo: number, qux: boolean, ... }; // error: qux not found
+   21| }
+       ^ [2]
    test.js:17:6
    17|   x: {[key: keyof X]: any}; // object with larger key set than X's
-            ^^^^^^^^^^^^^^^^^^^^^ [3]
+            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 
