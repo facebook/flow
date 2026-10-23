@@ -100,6 +100,34 @@ async function main() {
   if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
     throw 'There should be no errors if the library is correctly registered.';
   }
+  const declareGlobalErrors = flow.checkContent(
+    'test.ts',
+    `export {};
+declare global {
+  const defaultGlobal: string;
+}`,
+    config,
+  );
+  if (declareGlobalErrors.length > 0) {
+    throw (
+      'declare global should be enabled by default. Got: ' +
+      JSON.stringify(declareGlobalErrors, undefined, 2)
+    );
+  }
+  const nestedHookErrors = flow.checkContent(
+    'test.js',
+    'hook useOuter(): void { hook useInner(): void {} }',
+    config,
+  );
+  if (
+    nestedHookErrors.length !== 1 ||
+    !JSON.stringify(nestedHookErrors).includes('nested-hook')
+  ) {
+    throw (
+      'Default lints should reject nested hooks. Got: ' +
+      JSON.stringify(nestedHookErrors, undefined, 2)
+    );
+  }
   const ambiguousObjectTypeDefault = flow.checkContent(
     'test.js',
     'type T = {foo: string};',

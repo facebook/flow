@@ -152,7 +152,7 @@ fn config_options(config: Option<&Value>) -> Result<Options, String> {
         }
     }
 
-    let mut lint_severities = LintSettings::<Severity>::empty_severities();
+    let mut lint_severities = LintSettings::<Severity>::default_severities();
     for lint in [
         "deprecated-type",
         "sketchy-null",
@@ -191,6 +191,7 @@ fn config_options(config: Option<&Value>) -> Result<Options, String> {
         },
         babel_loose_array_spread: bool_config(config, "babel_loose_array_spread", false),
         component_syntax: true,
+        declare_global_support: true,
         enable_const_params: bool_config(config, "experimental.const_params", false),
         enable_pattern_matching: true,
         enable_records: true,
@@ -230,7 +231,7 @@ fn builtin_sig_options() -> TypeSigOptions {
         enable_enums: true,
         enable_component_syntax: true,
         component_syntax_enabled_in_config: true,
-        declare_global_support: false,
+        declare_global_support: true,
         enable_ts_syntax: true,
         enable_ts_utility_syntax: true,
         hook_compatibility: true,
