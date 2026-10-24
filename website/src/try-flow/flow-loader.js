@@ -158,9 +158,18 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.esnext.sharedmemory.js',
 ];
 
-function sourceUrlOf(url: string): string {
+const TSLIB_SOURCED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
+  ...TSLIB_SOURCED_FLOWLIB_FILES,
+  'lib.es2018.asyncgenerator.js',
+  'lib.es2018.asynciterable.js',
+];
+
+function sourceUrlOf(
+  url: string,
+  tslibSourcedFiles: ReadonlyArray<string>,
+): string {
   const filename = url.substring(url.lastIndexOf('/') + 1);
-  return TSLIB_SOURCED_FLOWLIB_FILES.includes(filename)
+  return tslibSourcedFiles.includes(filename)
     ? url.replace(/\/flowlib\/([^/]+)\.js$/, '/tslib/$1.d.ts')
     : url;
 }
@@ -185,7 +194,8 @@ function normalizeUrlForFilename(url: string) {
     : url;
 }
 
-function get(url: string) {
+function get(url: string, tslibSourcedFiles: ReadonlyArray<string>) {
+  const sourceUrl = sourceUrlOf(url, tslibSourcedFiles);
   return new Promise<[string, string]>((resolve, reject) => {
     const req = new XMLHttpRequest();
     req.timeout = 5000;
@@ -194,7 +204,11 @@ function get(url: string) {
         const name = normalizeUrlForFilename(url);
         resolve([name, req.response]);
       } else {
-        reject(Error(req.statusText));
+        reject(
+          new Error(
+            `Failed to load ${sourceUrl}: ${req.status} ${req.statusText}`,
+          ),
+        );
       }
     };
     req.onerror = () => {
@@ -206,7 +220,7 @@ function get(url: string) {
     req.onabort = () => {
       reject('Network request aborted');
     };
-    req.open('GET', sourceUrlOf(url));
+    req.open('GET', sourceUrl);
     req.send();
   });
 }
@@ -292,6 +306,7 @@ export function load(
     return Promise.resolve(cached);
   }
   const masterBasePath = masterVersionBasePath(version);
+  let tslibSourcedFiles = TSLIB_SOURCED_FLOWLIB_FILES_338;
   let flowPath: string;
   let libs: Array<string>;
   if (masterBasePath != null) {
@@ -309,6 +324,10 @@ export function load(
 
     const versionedBaseUrl = versionedUnpkgComUrl(releaseVersion);
     const minorVersion = parseInt(releaseVersion.split('.')[1], 10);
+    tslibSourcedFiles =
+      minorVersion >= 338
+        ? TSLIB_SOURCED_FLOWLIB_FILES_338
+        : TSLIB_SOURCED_FLOWLIB_FILES;
     flowPath = `${versionedBaseUrl}/flow.js`;
     libs =
       minorVersion >= 333
@@ -337,7 +356,7 @@ export function load(
   });
   return Promise.all([
     flowLoader.then(waitForReady),
-    ...libs.map(get),
+    ...libs.map(url => get(url, tslibSourcedFiles)),
   ] as any).then(([flow, ...contents]) => {
     contents.forEach(nameAndContent => {
       flow.registerFile(nameAndContent[0], nameAndContent[1]);

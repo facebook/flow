@@ -302,7 +302,7 @@ export default component TryFlow(
           return;
         }
         setLoading(false);
-        setInternalError(JSON.stringify(e));
+        setInternalError(e instanceof Error ? e.message : JSON.stringify(e));
       });
     return () => {
       cancelled = true;
@@ -504,7 +504,7 @@ export default component TryFlow(
       }
     } catch (e) {
       console.error(e);
-      setInternalError(JSON.stringify(e));
+      setInternalError(e instanceof Error ? e.message : JSON.stringify(e));
       setErrors([]);
       setAST({});
     }

@@ -9,7 +9,8 @@
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
-    "serve": "docusaurus serve"
+    "serve": "docusaurus serve",
+    "test:try-flow": "node --test tests/try-flow-loader-test.cjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.7.0",
