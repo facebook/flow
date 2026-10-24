@@ -98,6 +98,39 @@ test('hides loc and range recursively only when requested', () => {
   assert.equal(JSON.stringify(ast), original); // OK
 });
 
+// Node kinds lead each object, while other fields and array elements keep their order.
+test('puts type first recursively without sorting other fields', () => {
+  const ast = {
+    body: [
+      {name: 'first', optional: false, type: 'Identifier'},
+      {value: 2, raw: '2', type: 'Literal'},
+    ],
+    sourceType: 'module',
+    type: 'Program',
+    metadata: {z: 1, a: 2},
+  };
+  const original = JSON.stringify(ast);
+  for (const hideLocations of [false, true]) {
+    const displayed = formatAstForDisplay(ast, hideLocations);
+    assert.deepEqual(Object.keys(displayed), [
+      'type',
+      'body',
+      'sourceType',
+      'metadata',
+    ]); // OK
+    assert.deepEqual(Object.keys(displayed.body[0]), [
+      'type',
+      'name',
+      'optional',
+    ]); // OK
+    assert.deepEqual(Object.keys(displayed.body[1]), ['type', 'value', 'raw']); // OK
+    assert.deepEqual(Object.keys(displayed.metadata), ['z', 'a']); // OK
+    assert.equal(displayed.body[0].name, 'first'); // OK
+    assert.equal(displayed.body[1].value, 2); // OK
+  }
+  assert.equal(JSON.stringify(ast), original); // OK
+});
+
 // Primitive values, empty results, and unsupported-version messages are unchanged.
 test('preserves non-object values and empty trees', () => {
   for (const value of [null, false, 0, '', 'AST output is not supported.']) {

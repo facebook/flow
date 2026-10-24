@@ -18,14 +18,17 @@ export default function formatAstForDisplay(
     if (value == null || typeof value !== 'object') {
       return value;
     }
+    const entries = Object.entries(value).filter(
+      ([key]) =>
+        !(parentKey === 'loc' && key === 'source') &&
+        !(hideLocations && (key === 'loc' || key === 'range')),
+    );
+    const typeIndex = entries.findIndex(([key]) => key === 'type');
+    if (typeIndex > 0) {
+      entries.unshift(...entries.splice(typeIndex, 1));
+    }
     return Object.fromEntries(
-      Object.entries(value)
-        .filter(
-          ([key]) =>
-            !(parentKey === 'loc' && key === 'source') &&
-            !(hideLocations && (key === 'loc' || key === 'range')),
-        )
-        .map(([key, child]) => [key, visit(child, key)]),
+      entries.map(([key, child]) => [key, visit(child, key)]),
     );
   }
   return visit(ast, null);
