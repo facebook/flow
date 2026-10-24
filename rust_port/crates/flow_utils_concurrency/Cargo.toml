@@ -8,7 +8,7 @@ edition = "2024"
 [dependencies]
 crossbeam = "0.8.5"
 dupe = "0.9.1"
-equivalent = "1.0.2"
+equivalent = "1.0.3"
 flow_aloc = { path = "../flow_aloc" }
 flow_common_utils = { path = "../flow_common_utils" }
 hashbrown = "0.17.1"
