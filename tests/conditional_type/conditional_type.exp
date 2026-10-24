@@ -970,6 +970,20 @@ References:
                     ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------ nested_instantiation.js:135:3
+
+Cannot call `unwrapModule` because property `default` is missing in `{...}` [1]. [prop-missing]
+
+   nested_instantiation.js:135:3
+   135|   unwrapModule(true) as ExactFunction;
+          ^^^^^^^^^^^^
+
+References:
+   nested_instantiation.js:127:21
+   127|     TModule extends Modulish<AnyFunction>,
+                            ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ nested_instantiation.js:142:3
 
 Cannot cast `r` to `string` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -1673,4 +1687,4 @@ References:
 
 
 
-Found 106 errors
+Found 107 errors

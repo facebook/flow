@@ -930,7 +930,7 @@ impl<'cx> TypeMapper<'cx, MapCx> for Substituter {
         map_cx: &MapCx,
         t: Rc<Destructor>,
     ) -> Rc<Destructor> {
-        let (map, _, placeholder_no_infer, purpose, _) = map_cx;
+        let (map, _, placeholder_no_infer, purpose, use_op) = map_cx;
         match t.deref() {
             Destructor::ConditionalType(box DestructorConditionalTypeData {
                 distributive_tparam_name,
@@ -948,7 +948,7 @@ impl<'cx> TypeMapper<'cx, MapCx> for Substituter {
                         false,
                         *placeholder_no_infer,
                         *purpose,
-                        None,
+                        use_op.dupe(),
                     ),
                     false_t.dupe(),
                 );
@@ -962,7 +962,7 @@ impl<'cx> TypeMapper<'cx, MapCx> for Substituter {
                             false,
                             *placeholder_no_infer,
                             *purpose,
-                            None,
+                            use_op.dupe(),
                         ),
                         typeparam.bound.dupe(),
                     );
@@ -988,13 +988,19 @@ impl<'cx> TypeMapper<'cx, MapCx> for Substituter {
                         false,
                         *placeholder_no_infer,
                         *purpose,
-                        None,
+                        use_op.dupe(),
                     ),
                     extends_t.dupe(),
                 );
                 let true_t_prime = self.type_(
                     cx,
-                    &(current_map, false, *placeholder_no_infer, *purpose, None),
+                    &(
+                        current_map,
+                        false,
+                        *placeholder_no_infer,
+                        *purpose,
+                        use_op.dupe(),
+                    ),
                     true_t.dupe(),
                 );
                 if changed

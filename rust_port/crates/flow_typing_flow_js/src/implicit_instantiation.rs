@@ -4197,7 +4197,7 @@ pub mod kit {
                     );
                     type_subst::subst(
                         cx,
-                        Some(unknown_use()),
+                        Some(use_op.dupe()),
                         true,
                         false,
                         type_subst::Purpose::Normal,
