@@ -10,11 +10,12 @@
 import type {CollapsedFieldProps} from 'react-json-view';
 
 import * as React from 'react';
-import {useState, type MixedElement} from 'react';
+import {useMemo, useState, type MixedElement} from 'react';
 import ReactJson from 'react-json-view';
 import clsx from 'clsx';
 import styles from './TryFlow.module.css';
 import copyText from './clipboard';
+import formatAstForDisplay from './formatAstForDisplay';
 
 component CheckIcon() {
   return (
@@ -213,6 +214,7 @@ export default component TryFlowResults(
   onErrorSelect: (line: number, column: number) => void,
 ) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
+  const displayAst = useMemo(() => formatAstForDisplay(ast), [ast]);
   // On narrow screens the panes stack vertically and the results pane can be
   // collapsed down to just its tab bar, giving the editor more room. Clicking
   // the active tab collapses it; clicking anywhere on the tab bar expands it.
@@ -468,7 +470,7 @@ export default component TryFlowResults(
         ) : (
           <div className={styles.astBody}>
             <ReactJson
-              src={ast}
+              src={displayAst}
               indentWidth={2}
               quotesOnKeys={false}
               displayDataTypes={false}
