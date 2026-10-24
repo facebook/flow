@@ -64,6 +64,40 @@ test('preserves import and export sources', () => {
   assert.equal(Object.hasOwn(displayed.body[0].source.loc, 'source'), false); // OK
 });
 
+// Locations can be hidden and restored without modifying the parser's AST.
+test('hides loc and range recursively only when requested', () => {
+  const loc = {
+    source: null,
+    start: {line: 1, column: 0},
+    end: {line: 1, column: 1},
+  };
+  const ast = {
+    type: 'Program',
+    loc,
+    range: [0, 1],
+    body: [{type: 'Identifier', name: 'x', loc, range: [0, 1]}],
+    comments: [{type: 'Line', value: 'comment', loc, range: [0, 1]}],
+    errors: [{message: 'parse error', loc}],
+  };
+  const original = JSON.stringify(ast);
+  const hidden = formatAstForDisplay(ast, true);
+  for (const node of [
+    hidden,
+    hidden.body[0],
+    hidden.comments[0],
+    hidden.errors[0],
+  ]) {
+    assert.equal(Object.hasOwn(node, 'loc'), false); // OK
+    assert.equal(Object.hasOwn(node, 'range'), false); // OK
+  }
+  assert.equal(hidden.body[0].name, 'x'); // OK
+  const shown = formatAstForDisplay(ast, false);
+  assert.deepEqual(shown.body[0].range, [0, 1]); // OK
+  assert.deepEqual(shown.body[0].loc.start, loc.start); // OK
+  assert.equal(Object.hasOwn(shown.body[0].loc, 'source'), false); // OK
+  assert.equal(JSON.stringify(ast), original); // OK
+});
+
 // Primitive values, empty results, and unsupported-version messages are unchanged.
 test('preserves non-object values and empty trees', () => {
   for (const value of [null, false, 0, '', 'AST output is not supported.']) {

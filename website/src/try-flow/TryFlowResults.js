@@ -214,7 +214,11 @@ export default component TryFlowResults(
   onErrorSelect: (line: number, column: number) => void,
 ) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
-  const displayAst = useMemo(() => formatAstForDisplay(ast), [ast]);
+  const [hideLocations, setHideLocations] = useState(true);
+  const displayAst = useMemo(
+    () => formatAstForDisplay(ast, hideLocations),
+    [ast, hideLocations],
+  );
   // On narrow screens the panes stack vertically and the results pane can be
   // collapsed down to just its tab bar, giving the editor more room. Clicking
   // the active tab collapses it; clicking anywhere on the tab bar expands it.
@@ -280,7 +284,10 @@ export default component TryFlowResults(
       {/* Clicking the tab bar (anywhere not handled by a tab button) re-expands a
           collapsed results pane. */}
       <div
-        className={styles.toolbar}
+        className={clsx(
+          styles.toolbar,
+          activeToolbarTab === 'ast' && styles.astToolbar,
+        )}
         onClick={() => {
           if (collapsed) {
             setCollapsed(false);
@@ -351,6 +358,21 @@ export default component TryFlowResults(
                 {copiedAll ? 'Copied!' : 'Copy errors'}
               </span>
             </button>
+          )}
+          {activeToolbarTab === 'ast' && (
+            <label className={styles.astLocationToggle}>
+              <input
+                type="checkbox"
+                aria-label="Hide locations"
+                checked={hideLocations}
+                onChange={event =>
+                  setHideLocations(event.currentTarget.checked)
+                }
+              />
+              <span>
+                Hide loc<span className={styles.labelExtra}>ations</span>
+              </span>
+            </label>
           )}
           {isOldFlowVersion ? (
             <span className={styles.versionWarning}>old version selected</span>
@@ -479,7 +501,16 @@ export default component TryFlowResults(
                 if (cursorPosition == null) {
                   return false;
                 }
-                return shouldCollapse(cursorPosition, field.src);
+                const original = field.namespace
+                  .slice(1)
+                  .reduce<unknown>(
+                    (value, key) =>
+                      value != null && typeof value === 'object' && key != null
+                        ? value[key]
+                        : null,
+                    ast,
+                  );
+                return shouldCollapse(cursorPosition, original);
               }}
             />
           </div>

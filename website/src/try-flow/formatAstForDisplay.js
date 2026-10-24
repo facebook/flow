@@ -7,7 +7,10 @@
  * @format
  */
 
-export default function formatAstForDisplay(ast: unknown): unknown {
+export default function formatAstForDisplay(
+  ast: unknown,
+  hideLocations: boolean = false,
+): unknown {
   function visit(value: unknown, parentKey: ?string): unknown {
     if (Array.isArray(value)) {
       return value.map(child => visit(child, null));
@@ -17,7 +20,11 @@ export default function formatAstForDisplay(ast: unknown): unknown {
     }
     return Object.fromEntries(
       Object.entries(value)
-        .filter(([key]) => parentKey !== 'loc' || key !== 'source')
+        .filter(
+          ([key]) =>
+            !(parentKey === 'loc' && key === 'source') &&
+            !(hideLocations && (key === 'loc' || key === 'range')),
+        )
         .map(([key, child]) => [key, visit(child, key)]),
     );
   }
