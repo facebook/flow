@@ -1733,7 +1733,7 @@ fn dump_tvar_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, id: i32) -> S
                 )
             }
             Constraints::FullyResolved(s) => {
-                let payload = match s.get_forced_for_debugging() {
+                let payload = match s.forced() {
                     None => "unevaluated".to_string(),
                     Some(t) => dump_t_(depth.saturating_sub(1), tvars, cx, &t),
                 };

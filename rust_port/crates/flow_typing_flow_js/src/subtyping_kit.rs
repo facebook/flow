@@ -4880,17 +4880,33 @@ pub fn rec_sub_t<'cx>(
         ) => {
             let reason_op = type_util::reason_of_t(u);
             let ids = Vec1::try_from_vec(ids.to_vec()).unwrap();
-            // Outside implicit instantiation nothing expects unresolved tvars, so the
-            // type arguments are solved instead of instantiated as fresh tvars.
+            // Like a type application that keeps expanding, a check of a generic value that
+            // recurs through the value's own type is assumed to hold after the limit. A
+            // `Thenable<number>` checked against `Promise<number>` checks its generic `then`,
+            // whose return type is a `Thenable` checked against a `Promise` again.
+            let Some(env) = &env.push_polymorphic_lower_unless_loop(
+                cx.type_expansion_recursion_limit(),
+                tparams_loc,
+            ) else {
+                return Ok(());
+            };
             let (t_, _) = if env.in_implicit_instantiation() {
-                FlowJs::instantiate_poly_with_env(
-                    cx, env,
+                let Some(targs) =
+                    implicit_instantiation::kit::polymorphic_lower_targs(cx, env, l, &ids, u)?
+                else {
+                    return Ok(());
+                };
+                FlowJs::instantiate_poly_with_targs_with_env(
+                    cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     reason_op,
                     reason_tapp,
                     None,
+                    None,
                     (tparams_loc.dupe(), ids, t.dupe()),
+                    targs,
                 )?
             } else {
                 let check = ImplicitInstantiationCheck {

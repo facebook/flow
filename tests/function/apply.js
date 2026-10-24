@@ -28,9 +28,9 @@ test.apply("", "not array"); // error: string ~> object
 // - return type (number) is not void
 test.call.apply(test, [0, 123, 'foo']) as void;
 
-// expect 2 errors:
-// - lookup length on number (0 is used as `this`)
-// - 123 is not a string
+// expect 1 error, showing its two closest branches:
+// - in the return value, the cast's `(b: number)` has 1 parameter but `test`'s has 2
+// - in the first parameter, 123 is not a string
 test.bind.apply(test, [0, 123]) as (b: number) => number;
 
 // args are optional

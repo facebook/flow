@@ -1926,22 +1926,6 @@ fn check_instantiation<'cx, Obs: Observer>(
             let targs_rc: Option<Rc<[Targ]>> = targs.dupe();
             let (_, inferred_targ_list) = merge_targs(cx, &targs_rc)?;
             let new_tout_tvar = open_tvar(&new_tout).dupe();
-            let react_kit_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
-                use_op: use_op.dupe(),
-                reason: reason_op.dupe(),
-                tool: Box::new(react::Tool::<Cx>::CreateElement(Box::new(
-                    react::CreateElementData {
-                        component: check.lhs.dupe(),
-                        jsx_props: jsx_props.dupe(),
-                        targs: None,
-                        tout: new_tout_tvar,
-                        return_hint: hint_unavailable(),
-                        inferred_targs: None,
-                        specialized_component: None,
-                        specialized_props: None,
-                    },
-                ))),
-            })));
             let lower = FlowJs::mk_typeapp_instance_annot_with_env(
                 cx,
                 env,
@@ -1957,6 +1941,22 @@ fn check_instantiation<'cx, Obs: Observer>(
                     .map(|(_, t, _, _)| t.dupe())
                     .collect::<Rc<[_]>>(),
             )?;
+            let react_kit_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                use_op: use_op.dupe(),
+                reason: reason_op.dupe(),
+                tool: Box::new(react::Tool::<Cx>::CreateElement(Box::new(
+                    react::CreateElementData {
+                        component: lower.dupe(),
+                        jsx_props: jsx_props.dupe(),
+                        targs: None,
+                        tout: new_tout_tvar,
+                        return_hint: hint_unavailable(),
+                        inferred_targs: None,
+                        specialized_component: None,
+                        specialized_props: None,
+                    },
+                ))),
+            })));
             (inferred_targ_list, lower, react_kit_t, Some(new_tout))
         }
     };
@@ -2478,12 +2478,22 @@ pub mod pin_types {
 
 pub mod instantiation_solver {
 
+    use std::marker::PhantomData;
+
     use super::*;
 
-    struct MainObserver;
+    trait ConstantTparamMissingBounds {
+        fn on_missing_bounds<'cx>(
+            cx: &mut Context<'cx>,
+            env: &FlowJsEnv,
+            tparam: &TypeParam,
+        ) -> Result<InferredTarg, FlowJsException>;
+    }
 
-    impl Observer for MainObserver {
-        fn on_constant_tparam_missing_bounds<'cx>(
+    struct UseDefaultOrBound;
+
+    impl ConstantTparamMissingBounds for UseDefaultOrBound {
+        fn on_missing_bounds<'cx>(
             cx: &mut Context<'cx>,
             _env: &FlowJsEnv,
             tparam: &TypeParam,
@@ -2500,6 +2510,18 @@ pub mod instantiation_solver {
                 tparam: tparam.dupe(),
                 inferred,
             })
+        }
+    }
+
+    struct MainObserver<ConstantTparam = UseDefaultOrBound>(PhantomData<ConstantTparam>);
+
+    impl<ConstantTparam: ConstantTparamMissingBounds> Observer for MainObserver<ConstantTparam> {
+        fn on_constant_tparam_missing_bounds<'cx>(
+            cx: &mut Context<'cx>,
+            env: &FlowJsEnv,
+            tparam: &TypeParam,
+        ) -> Result<InferredTarg, FlowJsException> {
+            ConstantTparam::on_missing_bounds(cx, env, tparam)
         }
 
         fn on_pinned_tparam<'cx>(
@@ -2645,7 +2667,193 @@ pub mod instantiation_solver {
         )
     }
 
+    // Solves the type arguments of `check`'s operation, including how to instantiate the generic
+    // values that the solve meets ("polymorphic lowers" in the names below).
+    //
+    // A generic value can't be instantiated until the solve knows the type it flows to, and that
+    // type can depend on the rest of the operation:
+    //
+    //   declare function id<T>(x: T): T;
+    //   declare function apply<S>(fn: (S) => S, initial: S): S;
+    //   apply(id, 1);
+    //
+    // `id` flows to `(S) => S` and needs `S`, which comes from `1`. So the solve runs up to three
+    // times:
+    //
+    // 1. Solve once, giving placeholder type arguments to each generic value that flows to a type
+    //    mentioning the solve's tvars (see `kit::polymorphic_lower_targs`). If no generic value
+    //    needed placeholders, this solve is the answer. That is the common case.
+    // 2. Solve as a hint, with those generic values still placeholders. Pinning ignores the bounds
+    //    that `id<placeholder>` gives `S`, so `1` decides: `S = number`.
+    // 3. Solve for real. Each of those generic values is checked where this run meets it, against
+    //    the type it flows to with the hint solution in place of the solve's tvars. `id` is
+    //    checked against `(number) => number`, so it is instantiated as `id<number>`.
+    //
+    // A run doesn't look for the generic values: it meets them. It checks the operation as usual:
+    // `apply` is instantiated with new tvars for its type parameters,
+    // `(fn: (S') => S', initial: S') => S'`, and each argument flows to its parameter. So the type
+    // a generic value flows to is known when the run meets it: `id ~> (S') => S'` reaches the
+    // `PolyT` lower case in `subtyping_kit` with both. Every run does the same flows, so it meets
+    // the same generic values at the same places, each time with its own tvars. Only the hint
+    // solution is kept from one run to the next, by type parameter name.
+    //
+    // This applies to any generic value the solve meets, whether it is an argument like `id` or,
+    // say, the generic `then` method of a `Promise` argument checked against an interface.
+    //
+    // A generic value does not see how the others are instantiated. With
+    //
+    //   declare function pipe<A, B, C>(a: A, f: (A) => B, g: (B) => C): C;
+    //   declare function wrap<T>(x: T): Array<T>;
+    //   pipe('a', wrap, wrap);
+    //
+    // the second `wrap` needs `B`, which only the first `wrap`'s instantiation provides. The hint
+    // solve knows neither `B` nor `C`, so in step 3 the second `wrap` is checked against
+    // `(<placeholder>) => <placeholder>`, its `T` is its bound, and the call returns
+    // `Array<unknown>`.
+    //
+    // The hint solve uses the return hint too. With
+    //
+    //   declare function lift<T>(f: (T) => T): (T) => T;
+    //   const lifted: (string) => string = lift(id);
+    //
+    // `id` is checked against `(string) => string`. The errors of step 1, including the ones
+    // deferred to an enclosing speculation branch, are dropped, because step 3 redoes it.
     pub fn solve_targs<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: UseOp,
+        allow_underconstrained: bool,
+        has_syntactic_hint: bool,
+        return_hint: Option<(Type, flow_common::hint::HintKind)>,
+        check: &ImplicitInstantiationCheck,
+    ) -> Result<
+        (
+            BTreeMap<subst_name::SubstName, GeneralizedTarg>,
+            Vec<(Type, subst_name::SubstName)>,
+        ),
+        FlowJsException,
+    > {
+        // In the hint solve, a type parameter that the return type does not mention and that has
+        // no usable bounds becomes its default or a placeholder, not its bound.
+        //
+        // `MainObserver` can pin such a parameter to its bound because nothing reads it. A hint
+        // solve is different: its solution is the type that a generic argument is checked
+        // against. In
+        //
+        //   declare function on<T>(make: () => T): void;
+        //   declare function create<U>(): Array<U>;
+        //   on(create);
+        //
+        // `create` still has placeholder type arguments in the hint solve, so `T` only gets
+        // `Array<placeholder>`, which pinning ignores. Pinned to its bound, `T` would make
+        // `create` get checked against `() => mixed`, even though nothing said `mixed`. As a
+        // placeholder, `T` makes it get checked against `() => <placeholder>`, which says nothing
+        // about what it returns.
+        struct PolymorphicLowerHint;
+
+        impl ConstantTparamMissingBounds for PolymorphicLowerHint {
+            fn on_missing_bounds<'cx>(
+                cx: &mut Context<'cx>,
+                env: &FlowJsEnv,
+                tparam: &TypeParam,
+            ) -> Result<InferredTarg, FlowJsException> {
+                MainObserver::<Self>::on_missing_bounds(
+                    cx,
+                    env,
+                    &unknown_use(),
+                    tparam,
+                    &tparam.reason,
+                    &tparam.reason,
+                )
+            }
+        }
+
+        let init_errors = cx.errors();
+        let init_deferred_errors = env.deferred_error_count();
+        let solution = solve_targs_once::<MainObserver>(
+            cx,
+            env,
+            use_op.dupe(),
+            allow_underconstrained,
+            has_syntactic_hint,
+            return_hint.clone(),
+            check,
+        )?;
+        if !env.gave_polymorphic_lower_placeholders() {
+            return Ok(solution);
+        }
+        cx.reset_errors(init_errors);
+        env.truncate_deferred_errors(init_deferred_errors);
+
+        // The first solve's solution can't be the hint. It is pinned in checking mode, as the
+        // answer: there, a type parameter without evidence or a default is an error `any`, and its
+        // literals stay precise under a syntactic hint. A hint is what the generic values are
+        // checked against, so a type parameter the solve knows nothing about has to stay a
+        // placeholder, which tells the check nothing. Nor can the first solve run in hint
+        // evaluation mode, because it is the answer when no generic value needed placeholders.
+        //
+        // The hint solve is sandboxed. Hint evaluation mode makes a type parameter without
+        // evidence or a default a placeholder, and the caches are restored after it. It runs
+        // without speculation, so that its errors can't fail an enclosing speculation branch or be
+        // deferred to it, and they are dropped. Underconstrained type parameters aren't allowed,
+        // so pinning follows the polarity of each one in the return type. There is no syntactic
+        // hint, so literals are widened: `apply(id, 1)` hints `S = number`, not `S = 1`.
+        let original_errors = cx.errors();
+        let hint_solution = cx.run_in_hint_eval_mode(|cx| {
+            solve_targs_once::<MainObserver<PolymorphicLowerHint>>(
+                cx,
+                &env.without_speculation(),
+                unknown_use(),
+                false,
+                false,
+                return_hint.clone(),
+                check,
+            )
+        });
+        cx.reset_errors(original_errors);
+        let hints = sandboxed(hint_solution)?
+            .map(|(solution, _)| {
+                solution
+                    .into_iter()
+                    .map(|(name, targ)| (name, targ.to_type()))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        env.set_polymorphic_lower_hints(hints);
+        solve_targs_once::<MainObserver>(
+            cx,
+            env,
+            use_op,
+            allow_underconstrained,
+            has_syntactic_hint,
+            return_hint,
+            check,
+        )
+    }
+
+    // The outcome of a sandboxed solve: its result, or `None` if it failed a speculation or hit a
+    // limit. Those failures only mean there is no result, as when a hint evaluation fails.
+    // Cancellation and timeouts still abort the whole check.
+    pub(super) fn sandboxed<T>(
+        result: Result<T, FlowJsException>,
+    ) -> Result<Option<T>, FlowJsException> {
+        match result {
+            Ok(t) => Ok(Some(t)),
+            Err(
+                FlowJsException::Speculative(_)
+                | FlowJsException::SpeculationSingletonError
+                | FlowJsException::LimitExceeded,
+            ) => Ok(None),
+            Err(
+                e @ (FlowJsException::WorkerCanceled(_)
+                | FlowJsException::TimedOut(_)
+                | FlowJsException::DebugThrow { .. }),
+            ) => Err(e),
+        }
+    }
+
+    fn solve_targs_once<'cx, Obs: Observer>(
         cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
@@ -2689,7 +2897,7 @@ pub mod instantiation_solver {
             };
 
             let (inferred_targ_list, marked_tparams, tparams_map, tout) =
-                implicitly_instantiate::<MainObserver>(cx,env,  check)?;
+                implicitly_instantiate::<Obs>(cx,env,  check)?;
             let errors_before_using_return_hint = cx.errors();
             let has_new_errors = !init_errors.ptr_eq(&errors_before_using_return_hint);
             // Capture constraint cache right after implicitly_instantiate, before
@@ -2744,7 +2952,7 @@ pub mod instantiation_solver {
                             preserved = false;
                             // Re-run the implicit instantiation
                             let (inferred_targ_list, marked_tparams, tparams_map, _tout) =
-                                implicitly_instantiate::<MainObserver>(cx,env,  check)?;
+                                implicitly_instantiate::<Obs>(cx,env,  check)?;
                             let has_new_errors = !init_errors.ptr_eq(&cx.errors());
                             // Re-capture constraint cache after retry
                             if !has_new_errors {
@@ -2776,7 +2984,7 @@ pub mod instantiation_solver {
 
             cx.reset_errors(Default::default());
 
-            let result = pin_types::<MainObserver>(
+            let result = pin_types::<Obs>(
                 cx,
                 env,
                 &use_op,
@@ -2971,13 +3179,19 @@ pub mod kit {
         frozen_tvar(env, cx, t).map(|(id, _)| id)
     }
 
-    struct ConditionalTypeAnySubstituter<'a> {
+    struct FrozenTvarSubstituter<'a> {
         env: &'a FlowJsEnv,
-        any_t: Type,
+        // What to replace a frozen tvar with, by id. `None` leaves it to `unresolved`.
+        substitution: &'a dyn Fn(i32) -> Option<Type>,
+        // If set, every other unresolved tvar is replaced too: by the union of what has flowed
+        // into it so far, or by this when nothing has. `expanding` holds the tvars whose lower
+        // bounds are being replaced, so that a tvar that flows into itself stops there.
+        unresolved: Option<Type>,
+        expanding: BTreeSet<i32>,
         replaced_frozen_tvar_ids: BTreeSet<i32>,
     }
 
-    impl<'cx> TypeMapper<'cx, ()> for ConditionalTypeAnySubstituter<'_> {
+    impl<'cx> TypeMapper<'cx, ()> for FrozenTvarSubstituter<'_> {
         fn tvar(&mut self, _cx: &mut Context<'cx>, _map_cx: &(), _r: &Reason, id: u32) -> u32 {
             id
         }
@@ -3004,9 +3218,32 @@ pub mod kit {
         }
 
         fn type_(&mut self, cx: &mut Context<'cx>, map_cx: &(), t: Type) -> Type {
-            if let Some(id) = frozen_tvar_id(self.env, cx, &t) {
+            if let Some(id) = frozen_tvar_id(self.env, cx, &t)
+                && let Some(replacement) = (self.substitution)(id)
+            {
                 self.replaced_frozen_tvar_ids.insert(id);
-                return self.any_t.dupe();
+                return replacement;
+            }
+            if let Some(replacement) = self.unresolved.clone()
+                && let Some(node) = type_util::constraint_node_id(&t)
+                && let (root_id, constraint::Constraints::Unresolved(_)) =
+                    cx.find_constraints(node.id())
+            {
+                // A frozen tvar that `substitution` left alone belongs to an enclosing solve that
+                // is still inferring it, so what has flowed into it so far is not its answer.
+                if frozen_tvar_id(self.env, cx, &t).is_some() || !self.expanding.insert(root_id) {
+                    return replacement;
+                }
+                let lowers = flow_js_utils::possible_types(cx, root_id)
+                    .into_iter()
+                    .map(|lower| self.type_(cx, map_cx, lower))
+                    .collect::<Vec<_>>();
+                self.expanding.remove(&root_id);
+                return if lowers.is_empty() {
+                    replacement
+                } else {
+                    type_util::union_of_ts(type_util::reason_of_t(&t).dupe(), lowers, None)
+                };
             }
             if let TypeInner::EvalT {
                 type_, defer_use_t, ..
@@ -3044,6 +3281,200 @@ pub mod kit {
                 type_visitor::type_default(self, cx, pole, (), t);
             }
         }
+    }
+
+    /// The type arguments to instantiate the generic value `l` with when it flows to `u` during a
+    /// solve, or `None` if `l` doesn't flow to `u` at all.
+    ///
+    /// The examples use
+    ///
+    ///   declare function id<T>(x: T): T;
+    ///   declare function apply<S>(fn: (S) => S, initial: S): S;
+    ///   declare function f<T>(x: T, g: (string) => number): T;
+    ///
+    /// If the innermost solve (the innermost one that has tvars) checks a generic value against a
+    /// type, `l` doesn't flow. That check only infers the type arguments of the value it checks,
+    /// and the flow of that value, instantiated, meets `l` again outside the check. In
+    /// `apply(id, 1)`, `id` is checked against `(number) => number`. Any generic value met while
+    /// solving `id`'s `T` doesn't flow.
+    ///
+    /// Otherwise, which case applies depends on the tvars of ongoing solves that `l` or `u`
+    /// mention.
+    ///
+    /// - Tvars of the innermost solve. That solve decides the type arguments (see
+    ///   `instantiation_solver::solve_targs`). In its first two runs they are placeholders. In its
+    ///   final run, `l` is checked against `u` with the solve's hints in place of its tvars. In
+    ///   `apply(id, 1)`, `id` flows to `(S) => S`. It gets placeholders in the first two runs, and
+    ///   in the final run it is checked against `(number) => number`, which gives `[number]`.
+    /// - Only tvars of outer solves. The type arguments are placeholders. The outer solve meets
+    ///   `l` again when it redoes its solve with what this solve computes, and decides then.
+    /// - No tvars. `l` is checked against `u` right away. In `f(1, id)`, `id` flows to
+    ///   `(string) => number`, so it is instantiated as `id<string>`, and the flow then reports
+    ///   that `string` is not a `number`.
+    pub(crate) fn polymorphic_lower_targs<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        l: &Type,
+        tparams: &Vec1<TypeParam>,
+        u: &Type,
+    ) -> Result<Option<Vec<Type>>, FlowJsException> {
+        // The tvars of all ongoing solves that `ts` mention. While solving a call of
+        // `applyTo<T, U>(f: (T) => U, x: T): U`, the type `(T) => U` mentions `T` and `U`, and
+        // `(string) => number` mentions none. A solve nested in the current one would see all of
+        // them as frozen, which is how they are found.
+        fn implicit_instantiation_tvars_in<'cx>(
+            cx: &mut Context<'cx>,
+            env: &FlowJsEnv,
+            ts: &[&Type],
+        ) -> BTreeSet<i32> {
+            let mut collector = FrozenTvarCollector {
+                env: &env.solving_implicit_instantiation(),
+                frozen_tvars: BTreeMap::new(),
+            };
+            for t in ts {
+                collector.type_(cx, Polarity::Positive, (), t);
+            }
+            collector.frozen_tvars.into_keys().collect()
+        }
+
+        if env.in_polymorphic_lower_check() {
+            return Ok(None);
+        }
+        let mentioned = implicit_instantiation_tvars_in(cx, env, &[l, u]);
+        let checked = if mentioned.is_empty() {
+            Some(check_polymorphic_lower(cx, env, &BTreeMap::new(), l, u)?)
+        } else {
+            env.polymorphic_lower_hints(|id| mentioned.contains(&id))
+                .map(|(owner, hints)| check_polymorphic_lower(cx, &owner, &hints, l, u))
+                .transpose()?
+        };
+        Ok(Some(match checked {
+            Some(targs) if targs.len() == tparams.len() => targs.to_vec(),
+            _ => tparams
+                .iter()
+                .map(|tparam| cx.mk_placeholder(tparam.reason.dupe()))
+                .collect(),
+        }))
+    }
+
+    /// Checks the generic value `l` against `u`, the type it flows to, and returns the type
+    /// arguments to instantiate `l` with.
+    ///
+    /// The examples use
+    ///
+    ///   declare function id<T>(x: T): T;
+    ///   declare function pipe<A, B, C>(a: A, f: (A) => B, g: (B) => C): C;
+    ///   declare function compose<A, B, C>(f: (B) => C, g: (A) => B): (A) => C;
+    ///
+    /// The tvars of the innermost solve in `u` are replaced, as in a hint, by what `solution`
+    /// maps their names to, or by placeholders where it has nothing. In `pipe('a', id, id)`, the
+    /// first `id` flows to `(A) => B`. With `A = string` and nothing for `B`, it is checked against
+    /// `(string) => <placeholder>`, which gives `[string]`. They are looked up by name because
+    /// every run of the solve has new tvars for the same type parameters, and all of them stay in
+    /// its frame.
+    ///
+    /// The other tvars in `l` and `u` are replaced too: a tvar of an outer solve, which is still
+    /// inferring it, by a placeholder, and any other unresolved tvar by what has flowed into it so
+    /// far. This is what is known when the solve meets `l`, and `l` is checked only then. Bounds
+    /// that reach those tvars later in the solve are not seen.
+    ///
+    /// A type argument that the check does not decide is its bound. In `compose(id, id)`,
+    /// nothing decides either `id`'s `T`, so `compose(id, id)('a')` is `unknown`.
+    ///
+    /// The check is a single solve, and the generic values it meets don't flow (see
+    /// `polymorphic_lower_targs`), so it never starts another check.
+    pub(super) fn check_polymorphic_lower<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        solution: &BTreeMap<SubstName, Type>,
+        l: &Type,
+        u: &Type,
+    ) -> Result<Rc<[Type]>, FlowJsException> {
+        let TypeInner::DefT(_, def_t) = l.deref() else {
+            return Ok(Rc::from([]));
+        };
+        let DefTInner::PolyT(box PolyTData { tparams, .. }) = def_t.deref() else {
+            return Ok(Rc::from([]));
+        };
+        let placeholders = || {
+            tparams
+                .iter()
+                .map(|tparam| any_t::placeholder(tparam.reason.dupe()))
+                .collect()
+        };
+        let nested_env = env.without_speculation().checking_polymorphic_lower();
+        let hints: BTreeMap<i32, Type> = env
+            .implicit_instantiation_tvars()
+            .iter()
+            .filter_map(|tvar| match tvar.deref() {
+                TypeInner::ImplicitInstantiationTvar(data) => Some((
+                    data.id,
+                    solution
+                        .get(&data.name)
+                        .map(|t| t.dupe())
+                        .unwrap_or_else(|| any_t::placeholder(data.reason.dupe())),
+                )),
+                _ => None,
+            })
+            .collect();
+        let substitution = |id| hints.get(&id).cloned();
+        // Every other unresolved tvar is replaced too, by what has flowed into it so far, or by a
+        // placeholder. Otherwise the check's own tvars, like `id`'s `T`, would flow into those
+        // tvars and leave bounds on them that outlive the check.
+        let mut substituter = FrozenTvarSubstituter {
+            env: &nested_env,
+            substitution: &substitution,
+            unresolved: Some(any_t::placeholder(type_util::reason_of_t(u).dupe())),
+            expanding: BTreeSet::new(),
+            replaced_frozen_tvar_ids: BTreeSet::new(),
+        };
+        let hinted_l = substituter.type_(cx, &(), l.dupe());
+        let hinted_u = substituter.type_(cx, &(), u.dupe());
+        let poly_t = match hinted_l.deref() {
+            TypeInner::DefT(_, def_t)
+                if let DefTInner::PolyT(box PolyTData {
+                    tparams_loc,
+                    tparams,
+                    t_out,
+                    ..
+                }) = def_t.deref() =>
+            {
+                (
+                    tparams_loc.dupe(),
+                    Vec1::try_from_vec(tparams.to_vec())
+                        .expect("should have nonempty polymorphic type parameters"),
+                    t_out.dupe(),
+                )
+            }
+            _ => return Ok(placeholders()),
+        };
+        let check = ImplicitInstantiationCheck {
+            lhs: hinted_l.dupe(),
+            poly_t,
+            operation: (
+                unknown_use(),
+                type_util::reason_of_t(u).dupe(),
+                Operation::SubtypeLowerPoly(hinted_u),
+            ),
+        };
+        // The check is sandboxed: its errors are dropped, and the caches are restored so that a
+        // later flow of the same types is not skipped as already done. The real flow of `l`,
+        // instantiated with these type arguments, reports the errors.
+        let original_errors = cx.errors();
+        let solution = cx.run_and_rolled_back_cache(|cx| {
+            solve_targs(cx, &nested_env, unknown_use(), false, false, None, &check)
+        });
+        cx.reset_errors(original_errors);
+        let Some((solution, _)) = super::instantiation_solver::sandboxed(solution)? else {
+            return Ok(placeholders());
+        };
+        Ok(tparams
+            .iter()
+            .map(|tparam| match solution.get(&tparam.name) {
+                Some(targ) => targ.generalized.dupe(),
+                None => any_t::placeholder(tparam.reason.dupe()),
+            })
+            .collect())
     }
 
     // Where in the polytype body a tparam occurrence sits, for per-occurrence routing of
@@ -3437,7 +3868,10 @@ pub mod kit {
         };
 
         {
-            let env = &env.solving_implicit_instantiation();
+            let env = &match check.operation.2 {
+                Operation::SubtypeLowerPoly(_) => env.checking_polymorphic_lower(),
+                _ => env.solving_implicit_instantiation(),
+            };
             let (_, _, ref t) = check.poly_t;
             let (soln, inferred_targs) = solve_targs(
                 cx,
@@ -3779,9 +4213,12 @@ pub mod kit {
                         let fv2 = type_subst::free_var_finder(cx, Some(bound), extends_t);
                         fv1.union(fv2)
                     };
-                    let mut frozen_tvar_substituter = ConditionalTypeAnySubstituter {
+                    let any_t = any_t::placeholder(reason.dupe());
+                    let mut frozen_tvar_substituter = FrozenTvarSubstituter {
                         env: &nested_env,
-                        any_t: any_t::placeholder(reason.dupe()),
+                        substitution: &|_| Some(any_t.dupe()),
+                        unresolved: None,
+                        expanding: BTreeSet::new(),
                         replaced_frozen_tvar_ids: BTreeSet::new(),
                     };
                     let any_check = frozen_tvar_substituter.type_(cx, &(), check_t.dupe());

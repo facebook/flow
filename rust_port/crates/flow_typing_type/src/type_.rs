@@ -9931,7 +9931,8 @@ pub mod constraint {
                 Rc::ptr_eq(&self.inner, &other.inner)
             }
 
-            pub fn get_forced_for_debugging(&self) -> Option<A> {
+            /// The value if it has been forced, without forcing it.
+            pub fn forced(&self) -> Option<A> {
                 match unsafe { &*self.inner.get() } {
                     ForcingStateInner::Lazy(_)
                     | ForcingStateInner::LazyResult(_)

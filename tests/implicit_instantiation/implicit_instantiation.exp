@@ -27,6 +27,399 @@ References:
                                                ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- poly_value_rounds.js:9:1
+
+Cannot cast `apply(...)` to `string` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:9:1
+   9| apply(id, 1) as string; // ERROR
+      ^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:9:11
+   9| apply(id, 1) as string; // ERROR
+                ^ [1]
+   poly_value_rounds.js:9:17
+   9| apply(id, 1) as string; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- poly_value_rounds.js:9:1
+
+Cannot cast `apply(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:9:1
+   9| apply(id, 1) as string; // ERROR
+      ^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:9:11
+   9| apply(id, 1) as string; // ERROR
+                ^ [1]
+   poly_value_rounds.js:9:17
+   9| apply(id, 1) as string; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:14:1
+
+Cannot cast `box.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:14:1
+   14| box.value as string; // ERROR
+       ^^^^^^^^^
+
+References:
+   poly_value_rounds.js:12:40
+   12| const box = apply(identityBox, {value: 1});
+                                              ^ [1]
+   poly_value_rounds.js:14:14
+   14| box.value as string; // ERROR
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:21:1
+
+Cannot cast `piped.value` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:21:1
+   21| piped.value as string; // ERROR
+       ^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:18:23
+   18| declare function wrap<T>(x: T): Box<T>;
+                             ^ [1]
+   poly_value_rounds.js:21:16
+   21| piped.value as string; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:28:1
+
+Cannot cast `unhinted(...)` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:28:1
+   28| unhinted('a') as string; // ERROR
+       ^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:3:21
+    3| declare function id<T>(x: T): T;
+                           ^ [1]
+   poly_value_rounds.js:28:18
+   28| unhinted('a') as string; // ERROR
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:34:1
+
+Cannot cast `composed(...)` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:34:1
+   34| composed('a') as string; // ERROR
+       ^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:3:21
+    3| declare function id<T>(x: T): T;
+                           ^ [1]
+   poly_value_rounds.js:34:18
+   34| composed('a') as string; // ERROR
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:40:1
+
+Cannot cast `kept<...>(...)` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   poly_value_rounds.js:40:1
+   40| kept<string>('a') as number; // ERROR
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:40:6
+   40| kept<string>('a') as number; // ERROR
+            ^^^^^^ [1]
+   poly_value_rounds.js:40:22
+   40| kept<string>('a') as number; // ERROR
+                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:49:1
+
+Cannot cast `unobserved.value` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:49:1
+   49| unobserved.value as string; // ERROR
+       ^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:46:25
+   46| declare function create<T>(): Box<T>;
+                               ^ [1]
+   poly_value_rounds.js:49:21
+   49| unobserved.value as string; // ERROR
+                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:57:1
+
+Cannot cast `makeStore(...).value` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   poly_value_rounds.js:57:1
+   57| makeStore(Store, 1).value as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:57:18
+   57| makeStore(Store, 1).value as string; // ERROR
+                        ^ [1]
+   poly_value_rounds.js:57:30
+   57| makeStore(Store, 1).value as string; // ERROR
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:65:1
+
+Cannot cast `(new Registry(...)).get()` to `string` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   poly_value_rounds.js:65:1
+   65| new Registry(1, id).get() as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:65:14
+   65| new Registry(1, id).get() as string; // ERROR
+                    ^ [1]
+   poly_value_rounds.js:65:30
+   65| new Registry(1, id).get() as string; // ERROR
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:74:5
+
+Cannot cast `value` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   poly_value_rounds.js:74:5
+   74|     value as number; // ERROR
+           ^^^^^
+
+References:
+   poly_value_rounds.js:70:9
+   70|   value="a"
+               ^^^ [1]
+   poly_value_rounds.js:74:14
+   74|     value as number; // ERROR
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:87:1
+
+Cannot call `genericOverloaded` because: [incompatible-type]
+ - Either `1` [1] is incompatible with `string` [2].
+ - Or function type [3] requires another argument from call of `genericOverloaded` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   poly_value_rounds.js:87:1
+   87| genericOverloaded(id, 1) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:87:23
+   87| genericOverloaded(id, 1) as string; // ERROR
+                             ^ [1]
+   poly_value_rounds.js:87:29
+   87| genericOverloaded(id, 1) as string; // ERROR
+                                   ^^^^^^ [2]
+   poly_value_rounds.js:83:3
+   83|   <S>(fn: (S) => S, x: S, y: boolean): S,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   poly_value_rounds.js:87:1
+   87| genericOverloaded(id, 1) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:93:7
+
+Cannot call `apply` with `needsN` bound to `fn` because in type argument `T`: property `n` is missing in
+`{s: string}` [1] but exists in `N` [2]. [incompatible-type]
+
+   poly_value_rounds.js:93:7
+   93| apply(needsN, notN); // ERROR
+             ^^^^^^
+
+References:
+   poly_value_rounds.js:92:19
+   92| declare var notN: {s: string};
+                         ^^^^^^^^^^^ [1]
+   poly_value_rounds.js:91:35
+   91| declare function needsN<T extends N>(x: T): T;
+                                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:93:7
+
+Cannot call `apply` with `needsN` bound to `fn` because in type argument `T`: property `s` is extra in `{s: string}` [1]
+but missing in `N` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   poly_value_rounds.js:93:7
+   93| apply(needsN, notN); // ERROR
+             ^^^^^^
+
+References:
+   poly_value_rounds.js:92:19
+   92| declare var notN: {s: string};
+                         ^^^^^^^^^^^ [1]
+   poly_value_rounds.js:91:35
+   91| declare function needsN<T extends N>(x: T): T;
+                                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:98:6
+
+Cannot call `make` with `NeedsN` bound to `c` because in type argument `T`: property `n` is missing in `{s: string}` [1]
+but exists in `N` [2]. [incompatible-type]
+
+   poly_value_rounds.js:98:6
+   98| make(NeedsN, notN); // ERROR
+            ^^^^^^
+
+References:
+   poly_value_rounds.js:92:19
+   92| declare var notN: {s: string};
+                         ^^^^^^^^^^^ [1]
+   poly_value_rounds.js:94:32
+   94| declare class NeedsN<T extends N> {
+                                      ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- poly_value_rounds.js:98:6
+
+Cannot call `make` with `NeedsN` bound to `c` because in type argument `T`: property `s` is extra in `{s: string}` [1]
+but missing in `N` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   poly_value_rounds.js:98:6
+   98| make(NeedsN, notN); // ERROR
+            ^^^^^^
+
+References:
+   poly_value_rounds.js:92:19
+   92| declare var notN: {s: string};
+                         ^^^^^^^^^^^ [1]
+   poly_value_rounds.js:94:32
+   94| declare class NeedsN<T extends N> {
+                                      ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- poly_value_rounds.js:104:1
+
+Cannot cast `wrap.call(...).value` to `number` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   poly_value_rounds.js:104:1
+   104| wrap.call(null, 'a').value as number; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:104:17
+   104| wrap.call(null, 'a').value as number; // ERROR
+                        ^^^ [1]
+   poly_value_rounds.js:104:31
+   104| wrap.call(null, 'a').value as number; // ERROR
+                                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- poly_value_rounds.js:108:1
+
+Cannot cast `applied` to `Box<string>` because `unknown` [1] is incompatible with `{value: string}` [2].
+[incompatible-type]
+
+   poly_value_rounds.js:108:1
+   108| applied as Box<string>; // ERROR
+        ^^^^^^^
+
+References:
+   poly_value_rounds.js:105:29
+   105| declare function applyTo<T, U>(f: (T) => U, x: T): U;
+                                    ^ [1]
+   poly_value_rounds.js:108:12
+   108| applied as Box<string>; // ERROR
+                   ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- poly_value_rounds.js:114:1
+
+Cannot cast `last(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:114:1
+   114| last(...single, id) as string; // ERROR
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:112:24
+   112| declare const single: [number];
+                               ^^^^^^ [1]
+   poly_value_rounds.js:114:24
+   114| last(...single, id) as string; // ERROR
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- poly_value_rounds.js:119:1
+
+Cannot cast `maybeApply(...)` to `string` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:119:1
+   119| maybeApply(1, id) as string; // ERROR
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:119:12
+   119| maybeApply(1, id) as string; // ERROR
+                   ^ [1]
+   poly_value_rounds.js:119:22
+   119| maybeApply(1, id) as string; // ERROR
+                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- poly_value_rounds.js:119:1
+
+Cannot cast `maybeApply(...)` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   poly_value_rounds.js:119:1
+   119| maybeApply(1, id) as string; // ERROR
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   poly_value_rounds.js:119:12
+   119| maybeApply(1, id) as string; // ERROR
+                   ^ [1]
+   poly_value_rounds.js:119:22
+   119| maybeApply(1, id) as string; // ERROR
+                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- poly_value_rounds.js:126:1
+
+Cannot cast `listed` to `number` because `Array<unknown>` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   poly_value_rounds.js:126:1
+   126| listed as number; // ERROR
+        ^^^^^^
+
+References:
+   poly_value_rounds.js:124:23
+   124| declare const listed: Listed;
+                              ^^^^^^ [1]
+   poly_value_rounds.js:126:11
+   126| listed as number; // ERROR
+                  ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ repos_use.js:20:1
 
 Cannot cast `err1` to `"FOO"` because `"BAR"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
@@ -416,4 +809,4 @@ References:
 
 
 
-Found 25 errors
+Found 47 errors

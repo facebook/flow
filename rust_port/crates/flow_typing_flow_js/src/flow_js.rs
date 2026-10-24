@@ -610,7 +610,7 @@ impl FlowJs {
         )
     }
 
-    fn instantiate_poly_with_targs_with_env<'cx>(
+    pub(super) fn instantiate_poly_with_targs_with_env<'cx>(
         cx: &mut Context<'cx>,
         env: &FlowJsEnv,
         trace: DepthTrace,
