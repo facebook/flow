@@ -10,6 +10,7 @@
 export default function formatAstForDisplay(
   ast: unknown,
   hideLocations: boolean = false,
+  hideEmptyFields: boolean = false,
 ): unknown {
   function visit(value: unknown, parentKey: ?string): unknown {
     if (Array.isArray(value)) {
@@ -19,7 +20,8 @@ export default function formatAstForDisplay(
       return value;
     }
     const entries = Object.entries(value).filter(
-      ([key]) =>
+      ([key, child]) =>
+        !(hideEmptyFields && child == null) &&
         !(parentKey === 'loc' && key === 'source') &&
         !(hideLocations && (key === 'loc' || key === 'range')),
     );

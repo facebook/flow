@@ -131,6 +131,71 @@ test('puts type first recursively without sorting other fields', () => {
   assert.equal(JSON.stringify(ast), original); // OK
 });
 
+// Only null/undefined object fields are omitted; other empty/falsy values remain.
+test('hides null and undefined fields recursively without mutating input', () => {
+  const ast = {
+    missing: null,
+    absent: undefined,
+    body: [
+      {name: 'x', optional: null, annotation: undefined, type: 'Identifier'},
+    ],
+    falseValue: false,
+    zeroValue: 0,
+    emptyString: '',
+    emptyArray: [],
+    emptyObject: {},
+    type: 'Program',
+  };
+  const hidden = formatAstForDisplay(ast, false, true);
+  assert.equal(Object.hasOwn(hidden, 'missing'), false); // OK
+  assert.equal(Object.hasOwn(hidden, 'absent'), false); // OK
+  assert.deepEqual(Object.keys(hidden.body[0]), ['type', 'name']); // OK
+  assert.equal(hidden.falseValue, false); // OK
+  assert.equal(hidden.zeroValue, 0); // OK
+  assert.equal(hidden.emptyString, ''); // OK
+  assert.deepEqual(hidden.emptyArray, []); // OK
+  assert.deepEqual(hidden.emptyObject, {}); // OK
+  assert.equal(Object.keys(hidden)[0], 'type'); // OK
+  assert.equal(ast.missing, null); // OK
+  assert.equal(Object.hasOwn(ast, 'absent'), true); // OK
+  assert.equal(ast.body[0].optional, null); // OK
+  assert.equal(Object.hasOwn(ast.body[0], 'annotation'), true); // OK
+  const shown = formatAstForDisplay(ast, false, false);
+  assert.equal(Object.hasOwn(shown, 'missing'), true); // OK
+  assert.equal(Object.hasOwn(shown, 'absent'), true); // OK
+  assert.equal(Object.hasOwn(shown.body[0], 'optional'), true); // OK
+  assert.equal(Object.hasOwn(shown.body[0], 'annotation'), true); // OK
+});
+
+// Location filtering is independent, and null array slots must not shift indices.
+test('combines empty-field and location filters without removing array slots', () => {
+  const ast = {
+    elements: [
+      null,
+      undefined,
+      {name: 'x', optional: null, type: 'Identifier'},
+    ],
+    loc: {source: null, start: {line: 1, column: 0}, end: {line: 1, column: 1}},
+    range: [0, 1],
+    missing: null,
+    type: 'ArrayExpression',
+  };
+  for (const hideLocations of [false, true]) {
+    const displayed = formatAstForDisplay(ast, hideLocations, true);
+    assert.equal(displayed.elements.length, 3); // OK
+    assert.equal(displayed.elements[0], null); // OK
+    assert.equal(displayed.elements[1], undefined); // OK
+    assert.equal(displayed.elements[2].name, 'x'); // OK
+    assert.equal(Object.hasOwn(displayed.elements[2], 'optional'), false); // OK
+    assert.equal(Object.hasOwn(displayed, 'missing'), false); // OK
+    assert.equal(Object.hasOwn(displayed, 'loc'), !hideLocations); // OK
+    assert.equal(Object.hasOwn(displayed, 'range'), !hideLocations); // OK
+  }
+  const locationsHidden = formatAstForDisplay(ast, true, false);
+  assert.equal(locationsHidden.missing, null); // OK
+  assert.equal(Object.hasOwn(locationsHidden, 'loc'), false); // OK
+});
+
 // Primitive values, empty results, and unsupported-version messages are unchanged.
 test('preserves non-object values and empty trees', () => {
   for (const value of [null, false, 0, '', 'AST output is not supported.']) {

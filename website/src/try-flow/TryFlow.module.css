@@ -523,26 +523,33 @@
     margin-right: 10px;
 }
 
-.astLocationToggle {
+.astOptions {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.astOption {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     margin: 0;
     font-size: 13px;
+    line-height: 16px;
     white-space: nowrap;
     cursor: pointer;
 }
 
-.astLocationToggle input {
+.astOption input {
     margin: 0;
     accent-color: var(--flow-yellow);
 }
 
 @container tf-results (max-width: 550px) {
     .astToolbar .tab {
-        padding-inline: 8px;
+        padding-inline: 6px;
     }
-    .astLocationToggle .labelExtra {
+    .astOption .labelExtra {
         display: none;
     }
 }

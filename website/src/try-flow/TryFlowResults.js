@@ -215,9 +215,10 @@ export default component TryFlowResults(
 ) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
   const [hideLocations, setHideLocations] = useState(true);
+  const [hideEmptyFields, setHideEmptyFields] = useState(true);
   const displayAst = useMemo(
-    () => formatAstForDisplay(ast, hideLocations),
-    [ast, hideLocations],
+    () => formatAstForDisplay(ast, hideLocations, hideEmptyFields),
+    [ast, hideLocations, hideEmptyFields],
   );
   // On narrow screens the panes stack vertically and the results pane can be
   // collapsed down to just its tab bar, giving the editor more room. Clicking
@@ -360,19 +361,34 @@ export default component TryFlowResults(
             </button>
           )}
           {activeToolbarTab === 'ast' && (
-            <label className={styles.astLocationToggle}>
-              <input
-                type="checkbox"
-                aria-label="Hide locations"
-                checked={hideLocations}
-                onChange={event =>
-                  setHideLocations(event.currentTarget.checked)
-                }
-              />
-              <span>
-                Hide loc<span className={styles.labelExtra}>ations</span>
-              </span>
-            </label>
+            <div className={styles.astOptions}>
+              <label className={styles.astOption}>
+                <input
+                  type="checkbox"
+                  aria-label="Hide locations"
+                  checked={hideLocations}
+                  onChange={event =>
+                    setHideLocations(event.currentTarget.checked)
+                  }
+                />
+                <span>
+                  Hide loc<span className={styles.labelExtra}>ations</span>
+                </span>
+              </label>
+              <label className={styles.astOption}>
+                <input
+                  type="checkbox"
+                  aria-label="Hide empty fields"
+                  checked={hideEmptyFields}
+                  onChange={event =>
+                    setHideEmptyFields(event.currentTarget.checked)
+                  }
+                />
+                <span>
+                  Hide empty<span className={styles.labelExtra}> fields</span>
+                </span>
+              </label>
+            </div>
           )}
           {isOldFlowVersion ? (
             <span className={styles.versionWarning}>old version selected</span>
