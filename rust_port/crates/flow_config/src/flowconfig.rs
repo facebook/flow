@@ -2032,22 +2032,6 @@ pub mod opts {
                 assert_operator_parser(values, config)
             }),
             (
-                "experimental.disable_invariant_special_casing",
-                |values, config| {
-                    parse_boolean(
-                        |_opts, v| {
-                            if v {
-                                Ok(())
-                            } else {
-                                Err("This option can only be set to `true`.".to_owned())
-                            }
-                        },
-                        values,
-                        config,
-                    )
-                },
-            ),
-            (
                 "experimental.builtin_ts_libdef_dynamic_discovery",
                 |values, config| {
                     parse_boolean(
@@ -3524,6 +3508,7 @@ mod tests {
             "exact_by_default",
             "experimental.always_generalize_jsx",
             "experimental.assertion_functions",
+            "experimental.disable_invariant_special_casing",
             "experimental.fast_symlink_resolution",
             "experimental.importable_global_libdefs",
             "experimental.interface_dictionary_typing_fix",

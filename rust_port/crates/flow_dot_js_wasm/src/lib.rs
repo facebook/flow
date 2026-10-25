@@ -141,14 +141,6 @@ fn bool_config(config: &Value, key: &str, default: bool) -> bool {
 fn config_options(config: Option<&Value>) -> Result<Options, String> {
     let empty = Value::Object(Default::default());
     let config = config.unwrap_or(&empty);
-    {
-        let key = "experimental.disable_invariant_special_casing";
-        if let Some(value) = config.get(key)
-            && value != &Value::Bool(true)
-        {
-            return Err(format!("{key} can only be set to `true`."));
-        }
-    }
 
     let mut lint_severities = LintSettings::<Severity>::default_severities();
     for lint in [
