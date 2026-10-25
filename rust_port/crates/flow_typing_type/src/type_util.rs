@@ -2577,7 +2577,7 @@ pub fn subtype_this_of_function(funtype: &crate::type_::FunType) -> Type {
 
     let (this, subtyping) = &funtype.this_t;
     match subtyping {
-        ThisStatus::ThisFunction => this.dupe(),
+        ThisStatus::ThisFunction | ThisStatus::ThisMethodWithExplicitThis => this.dupe(),
         ThisStatus::ThisMethod => mixed_t::make(reason_of_t(this).dupe()),
     }
 }

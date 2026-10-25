@@ -49,6 +49,7 @@ pub(super) const LIB_ES2018_ASYNCITERABLE_D_TS: &str =
 pub(super) const LIB_ES2018_INTL_D_TS: &str = include_tslib!("lib.es2018.intl.d.ts");
 pub(super) const LIB_ES2018_PROMISE_D_TS: &str = include_tslib!("lib.es2018.promise.d.ts");
 pub(super) const LIB_ES2018_REGEXP_D_TS: &str = include_tslib!("lib.es2018.regexp.d.ts");
+pub(super) const LIB_ES2019_ARRAY_D_TS: &str = include_tslib!("lib.es2019.array.d.ts");
 pub(super) const LIB_ES2019_INTL_D_TS: &str = include_tslib!("lib.es2019.intl.d.ts");
 pub(super) const LIB_ES2019_STRING_D_TS: &str = include_tslib!("lib.es2019.string.d.ts");
 pub(super) const LIB_ES2019_OBJECT_D_TS: &str = include_tslib!("lib.es2019.object.d.ts");
@@ -174,10 +175,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.es2018.intl.d.ts", LIB_ES2018_INTL_D_TS),
     ("lib.es2018.promise.d.ts", LIB_ES2018_PROMISE_D_TS),
     ("lib.es2018.regexp.d.ts", LIB_ES2018_REGEXP_D_TS),
-    (
-        "lib.es2019.array.d.ts",
-        include_tslib!("lib.es2019.array.d.ts"),
-    ),
+    ("lib.es2019.array.d.ts", LIB_ES2019_ARRAY_D_TS),
     ("lib.es2019.d.ts", include_tslib!("lib.es2019.d.ts")),
     (
         "lib.es2019.full.d.ts",

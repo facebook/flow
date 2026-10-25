@@ -2520,11 +2520,11 @@ Flags: --pretty
     },
     {
       "name":"?.flat",
-      "type":"void | ((this: this, depth: number) => Array<unknown>)"
+      "type":"void | (<A, D extends number = 1>(this: A, depth?: D) => Array<FlatArray<A, D>>)"
     },
     {
       "name":"?.flatMap",
-      "type":"void | (<U, This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>)"
+      "type":"void | (<U, This = void>(this: this, callback: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg?: This) => Array<U>)"
     },
     {
       "name":"?.forEach",
@@ -2642,10 +2642,13 @@ Flags: --pretty
       "name":"findLastIndex",
       "type":"(this: this, predicate: (value: T, index: number, array: Array<T>) => unknown, thisArg?: any) => number"
     },
-    {"name":"flat","type":"(this: this, depth: number) => Array<unknown>"},
+    {
+      "name":"flat",
+      "type":"<A, D extends number = 1>(this: A, depth?: D) => Array<FlatArray<A, D>>"
+    },
     {
       "name":"flatMap",
-      "type":"<U, This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>"
+      "type":"<U, This = void>(this: this, callback: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg?: This) => Array<U>"
     },
     {
       "name":"forEach",

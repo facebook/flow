@@ -2227,6 +2227,9 @@ fn pin_types<'cx, Obs: Observer>(
                 // compatibility with existing code.
                 natural_inference::convert_literal_type_to_const(call_loc, cx, inferred.dupe())
             }
+            _ if let deref!(TypeInner::DefT(_, deref!(DefTInner::NumGeneralT(_)))) = &bound_t => {
+                inferred.dupe()
+            }
             _ => {
                 // Prevent leaking of precise singleton types
                 generalize_singletons(cx, &call_loc, has_syntactic_hint, inferred.dupe())

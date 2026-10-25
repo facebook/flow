@@ -1,3 +1,6 @@
+[libs]
+receiver_lib.js
+
 [options]
 all=true
 builtin_lib=core-only

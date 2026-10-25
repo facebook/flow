@@ -1,0 +1,20 @@
+--- tslib/lib.es2019.array.d.ts
++++ rust_port/crates/flow_flowlib/src/tslib_patches/lib.es2019.array.d.ts
+@@ -35,7 +35,7 @@
+      * thisArg is omitted, undefined is used as the this value.
+      */
+     flatMap<U, This = undefined>(
+-        callback: (this: This, value: T, index: number, array: T[]) => U | ReadonlyArray<U>,
++        callback: (this: This, value: T, index: number, array: T[]) => ReadonlyArray<U> | U,
+         thisArg?: This,
+     ): U[];
+ 
+@@ -63,7 +63,7 @@
+      * thisArg is omitted, undefined is used as the this value.
+      */
+     flatMap<U, This = undefined>(
+-        callback: (this: This, value: T, index: number, array: T[]) => U | ReadonlyArray<U>,
++        callback: (this: This, value: T, index: number, array: T[]) => ReadonlyArray<U> | U,
+         thisArg?: This,
+     ): U[];
+ 

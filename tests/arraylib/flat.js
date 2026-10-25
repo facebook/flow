@@ -16,11 +16,10 @@ const arr3: Array<Array<Array<number>>> = [[[1]]];
 const result3_0: Array<Array<number>> = arr3.flat(); // OK
 const result3_1: Array<number> = arr3.flat(); // Error
 
-// We don't support depth arguments of 2 or greater, other than saying it's `Array<unknown>`
-const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
-const result3_3: Array<unknown> = arr3.flat(2); // OK
+const result3_2: Array<number> = arr3.flat(2); // OK
+const result3_3: ReadonlyArray<unknown> = arr3.flat(2); // OK
 
-// We don't support depth arguments that are not literal numbers
+// A nonliteral depth may leave nested arrays in the result.
 const x: number = 1;
 const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
 const result2_7: Array<unknown> = arr2.flat(x); // OK

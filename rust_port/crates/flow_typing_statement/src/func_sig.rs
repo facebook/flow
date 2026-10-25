@@ -433,6 +433,9 @@ pub fn methodtype<'a, C: crate::func_params_intf::Config>(
         type_util::type_t_of_annotated_or_inferred(return_t).dupe(),
     );
     funtype.strictness_kind = cx.type_strictness_kind();
+    if fparams.this_.is_some() {
+        funtype.this_t.1 = type_::ThisStatus::ThisMethodWithExplicitThis;
+    }
     funtype.literal = x.literal;
     let t = Type::new(type_::TypeInner::DefT(
         reason.dupe(),

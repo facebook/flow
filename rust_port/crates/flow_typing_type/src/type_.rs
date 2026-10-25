@@ -4911,7 +4911,14 @@ impl TypeGuard {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ThisStatus {
     ThisMethod,
+    ThisMethodWithExplicitThis,
     ThisFunction,
+}
+
+impl ThisStatus {
+    pub fn is_method(&self) -> bool {
+        matches!(self, Self::ThisMethod | Self::ThisMethodWithExplicitThis)
+    }
 }
 
 /// A CallT constructor can be used to compute hints in calls to IntersectionTs.
@@ -7350,54 +7357,68 @@ pub mod properties {
     pub type Map = FlowOrdMap<Id, PropertiesMap>;
 
     pub fn method_to_function(t: &Type, use_mixed_this: bool) -> Type {
-        match &**t {
-            TypeInner::DefT(r, def_t) => match &**def_t {
-                DefTInner::FunT(static_, ft)
-                    if matches!(&ft.this_t, (_, ThisStatus::ThisMethod)) =>
-                {
-                    let mut new_ft = (**ft).clone();
-                    new_ft.this_t = (
-                        if use_mixed_this {
-                            mixed_t::make(r.dupe())
-                        } else {
-                            new_ft.this_t.0.dupe()
-                        },
-                        ThisStatus::ThisFunction,
-                    );
+        method_to_function_inner(t, use_mixed_this, false)
+    }
+
+    pub fn method_to_function_for_subtyping(t: &Type) -> Type {
+        method_to_function_inner(t, true, true)
+    }
+
+    fn method_to_function_inner(
+        t: &Type,
+        use_mixed_this: bool,
+        preserve_explicit_method: bool,
+    ) -> Type {
+        match t.deref() {
+            TypeInner::DefT(r, deref!(DefTInner::FunT(static_, ft)))
+                if ft.this_t.1.is_method()
+                    && !(preserve_explicit_method
+                        && ft.this_t.1 == ThisStatus::ThisMethodWithExplicitThis) =>
+            {
+                let mut new_ft = (**ft).clone();
+                new_ft.this_t = (
+                    if use_mixed_this && ft.this_t.1 == ThisStatus::ThisMethod {
+                        mixed_t::make(r.dupe())
+                    } else {
+                        new_ft.this_t.0.dupe()
+                    },
+                    ThisStatus::ThisFunction,
+                );
+                Type::new(TypeInner::DefT(
+                    r.dupe(),
+                    DefT::new(DefTInner::FunT(static_.dupe(), Rc::new(new_ft))),
+                ))
+            }
+            #[rustfmt::skip]
+            TypeInner::DefT(r, deref!(DefTInner::PolyT(box PolyTData {
+                kind: poly_kind,
+                tparams_loc,
+                tparams,
+                t_out,
+                id,
+                strictness_kind,
+            }))) => {
+                let new_t_out =
+                    method_to_function_inner(t_out, use_mixed_this, preserve_explicit_method);
+                if Rc::ptr_eq(&new_t_out.0, &t_out.0) {
+                    t.dupe()
+                } else {
                     Type::new(TypeInner::DefT(
                         r.dupe(),
-                        DefT::new(DefTInner::FunT(static_.dupe(), Rc::new(new_ft))),
+                        DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                            kind: *poly_kind,
+                            tparams_loc: tparams_loc.dupe(),
+                            tparams: tparams.dupe(),
+                            t_out: new_t_out,
+                            id: id.dupe(),
+                            strictness_kind: *strictness_kind,
+                        }))),
                     ))
                 }
-                DefTInner::PolyT(box PolyTData {
-                    kind: poly_kind,
-                    tparams_loc,
-                    tparams,
-                    t_out,
-                    id,
-                    strictness_kind,
-                }) => {
-                    let new_t_out = method_to_function(t_out, use_mixed_this);
-                    if Rc::ptr_eq(&new_t_out.0, &t_out.0) {
-                        t.dupe()
-                    } else {
-                        Type::new(TypeInner::DefT(
-                            r.dupe(),
-                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
-                                kind: *poly_kind,
-                                tparams_loc: tparams_loc.dupe(),
-                                tparams: tparams.dupe(),
-                                t_out: new_t_out,
-                                id: id.dupe(),
-                                strictness_kind: *strictness_kind,
-                            }))),
-                        ))
-                    }
-                }
-                _ => t.dupe(),
-            },
+            }
             TypeInner::IntersectionT(r, rep) => {
-                let new_rep = rep.map(|t| method_to_function(t, use_mixed_this));
+                let new_rep = rep
+                    .map(|t| method_to_function_inner(t, use_mixed_this, preserve_explicit_method));
                 if new_rep
                     .members_iter()
                     .zip(rep.members_iter())

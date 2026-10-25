@@ -228,6 +228,7 @@ fn funtype_to_json<'cx>(cx: &mut TypeJsonCx<'_, 'cx>, depth: i32, funtype: &FunT
     let (this_t_type, this_status) = &funtype.this_t;
     let this_status_json = match this_status {
         ThisStatus::ThisMethod => json!({"kind": "This_Method"}),
+        ThisStatus::ThisMethodWithExplicitThis => json!({"kind": "This_Method_Explicit_This"}),
         ThisStatus::ThisFunction => {
             json!({"kind": "This_Function"})
         }

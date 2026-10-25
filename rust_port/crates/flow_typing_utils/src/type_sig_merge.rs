@@ -4974,7 +4974,9 @@ fn merge_fun<'cx>(
                 }
             }
         };
-        let this_status = if is_method {
+        let this_status = if is_method && def_ref.this_param.is_some() {
+            type_::ThisStatus::ThisMethodWithExplicitThis
+        } else if is_method {
             type_::ThisStatus::ThisMethod
         } else {
             type_::ThisStatus::ThisFunction

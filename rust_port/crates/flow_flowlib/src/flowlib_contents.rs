@@ -27,13 +27,14 @@ flowlib_file!(LIB_ES2015_GENERATOR_JS, "lib.es2015.generator.js");
 flowlib_file!(LIB_ES2015_ITERABLE_JS, "lib.es2015.iterable.js");
 flowlib_file!(LIB_ES2015_PROMISE_JS, "lib.es2015.promise.js");
 flowlib_file!(LIB_ES2016_ARRAY_INCLUDE_JS, "lib.es2016.array.include.js");
-flowlib_file!(LIB_ES2019_ARRAY_JS, "lib.es2019.array.js");
 flowlib_file!(LIB_ES2020_PROMISE_JS, "lib.es2020.promise.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
 flowlib_file!(LIB_ESNEXT_ITERATOR_JS, "lib.esnext.iterator.js");
 flowlib_file!(MISC_JS, "misc.js");
 flowlib_file!(REACT_JS, "react.js");
 flowlib_file!(DOM_EXTRA_TO_BE_REMOVED_JS, "dom_extra_to_be_removed.js");
+
+const LIB_ES2019_ARRAY_D_TS: &str = include_str!("tslib_patches/lib.es2019.array.d.ts");
 
 /// The embedded flowlib file contents as (filename, contents) pairs.
 ///
@@ -104,7 +105,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
         "lib.es2018.regexp.js",
         tslib_contents::LIB_ES2018_REGEXP_D_TS,
     ),
-    ("lib.es2019.array.js", LIB_ES2019_ARRAY_JS),
+    ("lib.es2019.array.js", LIB_ES2019_ARRAY_D_TS),
     ("lib.es2019.intl.js", tslib_contents::LIB_ES2019_INTL_D_TS),
     (
         "lib.es2019.object.js",

@@ -107,7 +107,6 @@ use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::ReposUseTData;
 use flow_typing_type::type_::ThisInstanceTData;
-use flow_typing_type::type_::ThisStatus;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
@@ -302,7 +301,7 @@ fn property_type_for_subtyping(
     match prop.deref() {
         PropertyInner::Method { type_, .. } if strictness_kind.is_typescript_loose() => {
             PropertyType::SyntheticField {
-                get_type: Some(properties::method_to_function(type_, true)),
+                get_type: Some(properties::method_to_function_for_subtyping(type_)),
                 set_type: None,
             }
         }
@@ -320,7 +319,7 @@ fn try_property_method_bivariant<'cx>(
 ) -> Result<bool, FlowJsException> {
     fn is_method(t: &Type) -> bool {
         match t.deref() {
-            DefT(_, deref!(FunT(_, ft))) => ft.this_t.1 == ThisStatus::ThisMethod,
+            DefT(_, deref!(FunT(_, ft))) => ft.this_t.1.is_method(),
             DefT(_, deref!(PolyT(poly))) => is_method(&poly.t_out),
             IntersectionT(_, rep) => rep.members_iter().all(is_method),
             _ => false,
@@ -614,10 +613,8 @@ fn funt_to_funt_check_this_contravariant<'cx>(
         // a contravariant check would reject.
         // It would not compromise safety since after unbinding method,
         // ThisMethod is turned into ThisFunction.
-        (ThisStatus::ThisMethod, ThisStatus::ThisMethod) => {}
-        (ThisStatus::ThisMethod, ThisStatus::ThisFunction)
-        | (ThisStatus::ThisFunction, ThisStatus::ThisMethod)
-        | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
+        (lower, upper) if lower.is_method() && upper.is_method() => {}
+        _ => {
             FlowJs::rec_flow_with_env(
                 cx,
                 env,

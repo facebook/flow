@@ -6,6 +6,7 @@
  */
 
 #![feature(box_patterns)]
+#![feature(deref_patterns)]
 #![feature(deref_pure_trait)]
 pub mod source_or_generated_id;
 pub mod type_;
