@@ -148,14 +148,8 @@ fn parse_source_file(
     flow_parser::parse_program_file::<()>(false, None, parse_options, file.dupe(), content)
 }
 
-fn has_ts_global_augmentation(
-    enabled: bool,
-    is_lib_file: bool,
-    file: &FileKey,
-    ast: &Program<Loc, Loc>,
-) -> bool {
-    enabled
-        && !is_lib_file
+fn has_ts_global_augmentation(is_lib_file: bool, file: &FileKey, ast: &Program<Loc, Loc>) -> bool {
+    !is_lib_file
         && files::has_ts_ext(file)
         && is_external_module(file, ast)
         && has_top_level_declare_global(ast)
@@ -333,12 +327,8 @@ pub fn do_parse(
                     }
                 } else {
                     let dts_file_kind = dts_file_kind(file, &ast);
-                    let has_ts_global_augmentation = has_ts_global_augmentation(
-                        options.declare_global_support,
-                        is_lib_file,
-                        file,
-                        &ast,
-                    );
+                    let has_ts_global_augmentation =
+                        has_ts_global_augmentation(is_lib_file, file, &ast);
                     let arena = bumpalo::Bump::new();
                     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
                     let (sig_errors, locs, type_sig, type_sig_options) = parse_type_sig(
@@ -449,8 +439,7 @@ pub fn did_content_change(transaction: &Transaction, file: &FileKey) -> bool {
 
 fn file_has_ts_global_augmentation(options: &Options, file: &FileKey, content: &str) -> bool {
     let (ast, parse_errors) = parse_source_file(options, Ok(content), file, false);
-    parse_errors.is_empty()
-        && has_ts_global_augmentation(options.declare_global_support, false, file, &ast)
+    parse_errors.is_empty() && has_ts_global_augmentation(false, file, &ast)
 }
 
 /// The declaration files among `files` whose bytes on disk no longer match the parse heap.
@@ -474,8 +463,7 @@ pub fn changed_declaration_files<'a>(
             content_changed
                 && (has_dts_ext(file.as_str())
                     || transaction.has_ts_global_augmentation(file)
-                    || (options.declare_global_support
-                        && files::has_ts_ext(file)
+                    || (files::has_ts_ext(file)
                         && content.is_some_and(|content| {
                             file_has_ts_global_augmentation(options, file, &content)
                         })))

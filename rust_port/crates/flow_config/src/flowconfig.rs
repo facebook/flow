@@ -153,7 +153,6 @@ pub mod opts {
         pub component_syntax: bool,
         pub async_component_syntax: bool,
         pub async_component_syntax_includes: Vec<String>,
-        pub declare_global_support: bool,
         pub dev_only_refinement_info_as_errors: bool,
         pub emoji: Option<bool>,
         pub enable_const_params: Option<bool>,
@@ -288,7 +287,6 @@ pub mod opts {
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Vec::new(),
-            declare_global_support: true,
             dev_only_refinement_info_as_errors: false,
             emoji: None,
             enable_const_params: None,
@@ -2065,17 +2063,6 @@ pub mod opts {
                     config,
                 )
             }),
-            ("experimental.declare_global_support", |values, config| {
-                enum_parser(
-                    &[("true", true)],
-                    |opts, v| {
-                        opts.declare_global_support = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )
-            }),
             ("experimental.enable_custom_error", |values, config| {
                 parse_boolean(
                     |opts, v| {
@@ -3487,6 +3474,7 @@ mod tests {
             "experimental.always_generalize_jsx",
             "experimental.assertion_functions",
             "experimental.builtin_ts_libdef_dynamic_discovery",
+            "experimental.declare_global_support",
             "experimental.disable_invariant_special_casing",
             "experimental.fast_symlink_resolution",
             "experimental.function_and_object_type_is_no_longer_any",

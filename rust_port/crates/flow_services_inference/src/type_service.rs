@@ -2598,8 +2598,7 @@ fn global_scope_changes(
         .filter(|file| {
             !moved.contains(*file)
                 && !files::is_configured_lib_file(&options.file_options, file.as_str())
-                && (has_dts_ext(file.as_str())
-                    || (options.declare_global_support && files::has_ts_ext(file)))
+                && (has_dts_ext(file.as_str()) || files::has_ts_ext(file))
         })
         .duped()
         .collect();

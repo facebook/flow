@@ -58,7 +58,6 @@ fn sig_opts() -> TypeSigOptions {
         enable_enums: true,
         enable_component_syntax: true,
         component_syntax_enabled_in_config: true,
-        declare_global_support: false,
         enable_ts_syntax: true,
         enable_ts_utility_syntax: true,
         hook_compatibility: true,

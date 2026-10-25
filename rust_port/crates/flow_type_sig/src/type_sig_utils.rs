@@ -69,37 +69,34 @@ fn parse_libs<'arena: 'ast, 'ast>(
             parse::statement(opts, global_scope, &mut scopes, &mut tbls, stmt);
         }
     }
-    if opts.declare_global_support {
-        for (ast, strictness_kind, file_sig) in global_augmentation_asts {
-            tbls.set_strictness_kind(*strictness_kind);
-            let module_scope = parse::scope::create_augmentation_module(&mut scopes, global_scope);
-            let parent = if file_sig.requires().is_empty() {
-                module_scope
+    for (ast, strictness_kind, file_sig) in global_augmentation_asts {
+        tbls.set_strictness_kind(*strictness_kind);
+        let module_scope = parse::scope::create_augmentation_module(&mut scopes, global_scope);
+        let parent = if file_sig.requires().is_empty() {
+            module_scope
+        } else {
+            global_scope
+        };
+        let augmentation_scope =
+            parse::scope::push_declare_global(&mut scopes, parent, global_scope);
+        for stmt in ast.statements.iter() {
+            if let flow_parser::ast::statement::StatementInner::DeclareNamespace {
+                inner: decl, ..
+            } = &**stmt
+                && matches!(
+                    decl.id,
+                    flow_parser::ast::statement::declare_namespace::Id::Global(_)
+                )
+            {
+                parse::declare_global(
+                    opts,
+                    augmentation_scope,
+                    &mut scopes,
+                    &mut tbls,
+                    decl.as_ref(),
+                );
             } else {
-                global_scope
-            };
-            let augmentation_scope =
-                parse::scope::push_declare_global(&mut scopes, parent, global_scope);
-            for stmt in ast.statements.iter() {
-                if let flow_parser::ast::statement::StatementInner::DeclareNamespace {
-                    inner: decl,
-                    ..
-                } = &**stmt
-                    && matches!(
-                        decl.id,
-                        flow_parser::ast::statement::declare_namespace::Id::Global(_)
-                    )
-                {
-                    parse::declare_global(
-                        opts,
-                        augmentation_scope,
-                        &mut scopes,
-                        &mut tbls,
-                        decl.as_ref(),
-                    );
-                } else {
-                    parse::statement(opts, module_scope, &mut scopes, &mut tbls, stmt);
-                }
+                parse::statement(opts, module_scope, &mut scopes, &mut tbls, stmt);
             }
         }
     }

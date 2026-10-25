@@ -5155,7 +5155,6 @@ pub fn declare_namespace<'a>(
         return Ok(x);
     }
     let is_supported_global = matches!(id, statement::declare_namespace::Id::Global(_))
-        && cx.declare_global_support()
         && cx.is_ts_global_augmentation()
         && type_env::in_toplevel_scope(cx);
     let prev_scope_kind = type_env::set_scope_kind(
@@ -5219,21 +5218,6 @@ pub fn declare_namespace<'a>(
                 &body_statements,
                 flow_parser::ast_utils::DeclarationContext::DeclareGlobal,
             );
-            if !cx.declare_global_support() {
-                flow_js::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EUnsupportedSyntax(Box::new((
-                        name_loc.dupe(),
-                        UnsupportedSyntax::DeclareGlobal,
-                    ))),
-                );
-                flow_js::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EUndocumentedFeature {
-                        loc: name_loc.dupe(),
-                    },
-                );
-            }
             (t, statement::declare_namespace::Id::Global(ident.clone()))
         }
         statement::declare_namespace::Id::Local(ident) => {
