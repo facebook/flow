@@ -14,6 +14,7 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::path::absolute;
 use std::process::Command as ProcessCommand;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -2067,15 +2068,16 @@ pub fn get_temp_dir(cli_value: &Option<String>) -> String {
 
 pub fn normalize_temp_dir(cli_value: &Option<String>) -> PathBuf {
     let temp_dir = get_temp_dir(cli_value);
-    flow_common::files::cached_canonicalize(Path::new(&temp_dir)).unwrap_or_else(|_| {
-        #[cfg(windows)]
-        {
-            PathBuf::from(temp_dir.replace('/', "\\"))
-        }
-        #[cfg(not(windows))]
-        {
-            PathBuf::from(temp_dir)
-        }
+    #[cfg(windows)]
+    let temp_dir = temp_dir.replace('/', "\\");
+    let path = absolute(&temp_dir).unwrap_or_else(|error| {
+        let message = format!("Failed to resolve temporary directory {temp_dir}: {error}");
+        flow_common_exit::exit(FlowExitStatus::InputError, Some(&message));
+    });
+    flow_common::files::cached_canonicalize(&path).unwrap_or_else(|_| {
+        PathBuf::from(flow_common::files::imaginary_realpath(
+            &path.to_string_lossy(),
+        ))
     })
 }
 
