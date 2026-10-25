@@ -2108,10 +2108,6 @@ pub mod opts {
                 facebook_module_interop_parser(values, config)
             }),
             (
-                "experimental.function_and_object_type_is_no_longer_any",
-                |values, config| enum_parser(&[("true", ())], |_, ()| Ok(()), values, config),
-            ),
-            (
                 "experimental.log_per_error_typing_telemetry",
                 |values, config| {
                     parse_boolean(
@@ -3510,6 +3506,7 @@ mod tests {
             "experimental.assertion_functions",
             "experimental.disable_invariant_special_casing",
             "experimental.fast_symlink_resolution",
+            "experimental.function_and_object_type_is_no_longer_any",
             "experimental.importable_global_libdefs",
             "experimental.interface_dictionary_typing_fix",
             "experimental.new_this_typing",
