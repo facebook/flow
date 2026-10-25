@@ -1,0 +1,189 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
+
+Cannot cast `found` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:8:1
+   8| found as string; // ERROR
+      ^^^^^
+
+References:
+   test.js:6:21
+   6| const found = find([1, 2], value => value > 0);
+                          ^ [1]
+   test.js:8:10
+   8| found as string; // ERROR
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
+
+Cannot cast `found` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:8:1
+   8| found as string; // ERROR
+      ^^^^^
+
+References:
+   test.js:6:24
+   6| const found = find([1, 2], value => value > 0);
+                             ^ [1]
+   test.js:8:10
+   8| found as string; // ERROR
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:1
+
+Cannot cast `withFallback` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:12:1
+   12| withFallback as number; // ERROR
+       ^^^^^^^^^^^^
+
+References:
+   test.js:10:55
+   10| const withFallback = find([1, 2], value => value > 0, 'none');
+                                                             ^^^^^^ [1]
+   test.js:12:17
+   12| withFallback as number; // ERROR
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:1
+
+Cannot cast `omitted` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:17:1
+   17| omitted as number; // ERROR
+       ^^^^^^^
+
+References:
+   test.js:14:32
+   14| declare function defaulted<T = string>(value?: T): T;
+                                      ^^^^^^ [1]
+   test.js:17:12
+   17| omitted as number; // ERROR
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:1
+
+Cannot cast `supplied` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:21:1
+   21| supplied as string; // ERROR
+       ^^^^^^^^
+
+References:
+   test.js:19:28
+   19| const supplied = defaulted(1);
+                                  ^ [1]
+   test.js:21:13
+   21| supplied as string; // ERROR
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:24:1
+
+Cannot call `required` because in type argument `T`: `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:24:1
+   24| required(); // ERROR
+       ^^^^^^^^
+
+References:
+   test.js:24:1
+   24| required(); // ERROR
+       ^^^^^^^^^^ [1]
+   test.js:23:37
+   23| declare function required<T extends number = 1>(value: T): T;
+                                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:29:1
+
+Cannot cast `suppliedVoid` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:29:1
+   29| suppliedVoid as string; // ERROR
+       ^^^^^^^^^^^^
+
+References:
+   test.js:27:31
+   27| const suppliedVoid = identity(undefined);
+                                     ^^^^^^^^^ [1]
+   test.js:29:17
+   29| suppliedVoid as string; // ERROR
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+
+Cannot cast `aliasDefault` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:35:1
+   35| aliasDefault as number; // ERROR
+       ^^^^^^^^^^^^
+
+References:
+   test.js:32:30
+   32| declare function aliased<T = string>(value?: Identity<T>): T;
+                                    ^^^^^^ [1]
+   test.js:35:17
+   35| aliasDefault as number; // ERROR
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:1
+
+Cannot cast `nullableDefault` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:40:1
+   40| nullableDefault as number; // ERROR
+       ^^^^^^^^^^^^^^^
+
+References:
+   test.js:37:31
+   37| declare function nullable<T = string>(value: ?T): T;
+                                     ^^^^^^ [1]
+   test.js:40:20
+   40| nullableDefault as number; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:1
+
+Cannot cast `actualArgument` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:45:1
+   45| actualArgument as string; // ERROR
+       ^^^^^^^^^^^^^^
+
+References:
+   test.js:43:33
+   43| const actualArgument = multiple(1);
+                                       ^ [1]
+   test.js:45:19
+   45| actualArgument as string; // ERROR
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:49:1
+
+Cannot cast `actualEmpty` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   test.js:49:1
+   49| actualEmpty as empty; // ERROR
+       ^^^^^^^^^^^
+
+References:
+   test.js:26:31
+   26| declare function identity<T = string>(value: T): T;
+                                     ^^^^^^ [1]
+   test.js:49:16
+   49| actualEmpty as empty; // ERROR
+                      ^^^^^ [2]
+
+
+
+Found 11 errors

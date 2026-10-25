@@ -432,7 +432,7 @@ fn t_of_use_t<'cx>(
         seen: &mut BTreeSet<i32>,
         t: &Type,
     ) -> Result<UseTResult, FlowJsException> {
-        match merge_lower_bounds(cx, env, t)? {
+        match merge_lower_bounds(cx, env, false, t)? {
             Some(t) => Ok(UseTResult::UpperT(t)),
             None => merge_upper_bounds(cx, env, seen, t),
         }
@@ -536,7 +536,7 @@ fn t_of_use_t<'cx>(
                     let t_rest = t_rest.dupe();
                     bind_use_t_result(cx, result, |cx, tout_val: Type| {
                         let reversed = reverse_obj_kit_rest(cx, env, r, &t_rest, &tout_val, false)?;
-                        use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
+                        use_t_result_of_t_option(merge_lower_bounds(cx, env, false, &reversed))
                     })
                 }
                 box Destructor::NonMaybeType => {
@@ -561,7 +561,7 @@ fn t_of_use_t<'cx>(
                     bind_use_t_result(cx, result, |cx, t: Type| {
                         let reversed =
                             reverse_component_check_config(cx, env, r, &pmap, &t, false)?;
-                        use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
+                        use_t_result_of_t_option(merge_lower_bounds(cx, env, false, &reversed))
                     })
                 }
                 box Destructor::SpreadType(box DestructorSpreadTypeData(
@@ -582,7 +582,7 @@ fn t_of_use_t<'cx>(
                     bind_use_t_result(cx, result, |cx, t: Type| {
                         let reversed =
                             reverse_obj_spread(cx, env, r, &todo_rev, &acc_elements, &t, false)?;
-                        use_t_result_of_t_option(merge_lower_bounds(cx, env, &reversed))
+                        use_t_result_of_t_option(merge_lower_bounds(cx, env, false, &reversed))
                     })
                 }
                 box Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData {
@@ -633,6 +633,7 @@ fn t_of_use_t<'cx>(
                                 use_t_result_of_t_option(merge_lower_bounds(
                                     cx,
                                     env,
+                                    false,
                                     &arr_rest_result,
                                 ))
                             })
@@ -775,7 +776,12 @@ fn t_of_use_t<'cx>(
                                 FlowJs::flow_with_env(cx, env, &t, &UseT::new(u_inner))?;
                                 Ok::<(), FlowJsException>(())
                             })?;
-                        use_t_result_of_t_option(merge_lower_bounds(cx, env, &arr_rest_result))
+                        use_t_result_of_t_option(merge_lower_bounds(
+                            cx,
+                            env,
+                            false,
+                            &arr_rest_result,
+                        ))
                     })
                 }
                 SpreadResolve::ResolveSpreadsToTupleType { .. }
@@ -822,7 +828,7 @@ fn t_of_use_t<'cx>(
                         )]));
                         let reversed =
                             reverse_component_check_config(cx, env, r, &pmap, &t, *literal)?;
-                        match merge_lower_bounds(cx, env, &reversed)? {
+                        match merge_lower_bounds(cx, env, false, &reversed)? {
                             None => Ok(UseTResult::UpperEmpty),
                             Some(reversed) => {
                                 FlowJs::flow_t_with_env(cx, env, &reversed, tvar)?;
@@ -840,7 +846,7 @@ fn t_of_use_t<'cx>(
                     UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
                     UseTResult::UpperT(t) => {
                         let reversed = reverse_component_check_config(cx, env, r, pmap, &t, false)?;
-                        match merge_lower_bounds(cx, env, &reversed)? {
+                        match merge_lower_bounds(cx, env, false, &reversed)? {
                             None => Ok(UseTResult::UpperEmpty),
                             Some(reversed) => {
                                 FlowJs::flow_t_with_env(cx, env, &reversed, tvar)?;
@@ -870,7 +876,7 @@ fn t_of_use_t<'cx>(
                             &t,
                             literal,
                         )?;
-                        match merge_lower_bounds(cx, env, &reversed)? {
+                        match merge_lower_bounds(cx, env, false, &reversed)? {
                             None => Ok(UseTResult::UpperEmpty),
                             Some(reversed) => {
                                 FlowJs::flow_t_with_env(cx, env, &reversed, tvar)?;
@@ -885,7 +891,7 @@ fn t_of_use_t<'cx>(
                 let t_rest = t_rest.dupe();
                 bind_use_t_result(cx, result, |cx, t: Type| {
                     let reversed = reverse_obj_kit_rest(cx, env, r, &t_rest, &t, false)?;
-                    match merge_lower_bounds(cx, env, &reversed)? {
+                    match merge_lower_bounds(cx, env, false, &reversed)? {
                         None => Ok(UseTResult::UpperEmpty),
                         Some(reversed) => {
                             FlowJs::flow_t_with_env(cx, env, &reversed, tvar)?;
@@ -1256,7 +1262,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
                 FlowJs::flow_with_env(cx, env, &params_t, &UseT::new(u_inner))?;
                 Ok::<(), FlowJsException>(())
             })?;
-            merge_lower_bounds(cx, env, &arr_rest_result)?
+            merge_lower_bounds(cx, env, false, &arr_rest_result)?
         }
     };
     if let Some(solution) = &solution {
@@ -1438,6 +1444,7 @@ fn merge_upper_bounds<'cx>(
 fn merge_lower_bounds<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
+    filter_empty: bool,
     t: &Type,
 ) -> Result<Option<Type>, FlowJsException> {
     // When the input tvar has a ReposUseT upper bound it means that we might be
@@ -1486,6 +1493,12 @@ fn merge_lower_bounds<'cx>(
                     let flattened = union_flatten_list(collected);
                     let filtered: Vec<Type> = flattened
                         .into_iter()
+                        .filter(|t| match t.deref() {
+                            TypeInner::DefT(_, def_t) => {
+                                !(filter_empty && matches!(def_t.deref(), DefTInner::EmptyT))
+                            }
+                            _ => true,
+                        })
                         .filter(|t| !flow_js_utils::tvar_visitors::has_placeholders(cx, t))
                         .collect();
                     type_util::union_of_ts_opt(
@@ -1977,10 +1990,14 @@ fn make_pin_type<'cx, Obs: Observer>(
     let tparam_binder_reason = type_util::reason_of_t(t);
     let pin_tparam =
         |cx: &mut Context<'cx>, inferred: Type| Ok(Obs::on_pinned_tparam(cx, tparam, inferred));
+    // An `empty` lower bound carries no values, e.g. the one an omitted optional argument gives
+    // `T` in `(x?: T)`. It is not evidence against a default, so a tparam with a default falls
+    // back to it as if it had no lower bounds. Without a default, `empty` is still the solution.
+    let filter_empty = tparam.default.is_some();
 
     match polarity {
         // Nothing observes an unmarked tparam's solution, so it is never underconstrained.
-        None => match merge_lower_bounds(cx, env, t)? {
+        None => match merge_lower_bounds(cx, env, filter_empty, t)? {
             None => match merge_upper_bounds(cx, env, &mut BTreeSet::new(), t)? {
                 UseTResult::UpperEmpty | UseTResult::UpperNonT(_) => {
                     Obs::on_constant_tparam_missing_bounds(cx, env, tparam)
@@ -2000,7 +2017,7 @@ fn make_pin_type<'cx, Obs: Observer>(
         // to avoid cluttering the output we are actually interested in from this module,
         // I'm not going to start doing that until we need error diff information for
         // switching to Pierce's algorithm for implicit instantiation
-        Some(Polarity::Neutral) => match merge_lower_bounds(cx, env, t)? {
+        Some(Polarity::Neutral) => match merge_lower_bounds(cx, env, filter_empty, t)? {
             None => use_upper_bounds::<Obs>(
                 cx,
                 env,
@@ -2014,7 +2031,7 @@ fn make_pin_type<'cx, Obs: Observer>(
             ),
             Some(inferred) => pin_tparam(cx, inferred),
         },
-        Some(Polarity::Positive) => match merge_lower_bounds(cx, env, t)? {
+        Some(Polarity::Positive) => match merge_lower_bounds(cx, env, filter_empty, t)? {
             None => use_upper_bounds::<Obs>(
                 cx,
                 env,
@@ -2035,7 +2052,7 @@ fn make_pin_type<'cx, Obs: Observer>(
                                   tparam_binder_reason: &Reason,
                                   instantiation_reason: &Reason|
              -> Result<InferredTarg, FlowJsException> {
-                match merge_lower_bounds(cx, env, t)? {
+                match merge_lower_bounds(cx, env, filter_empty, t)? {
                     None => on_missing_bounds::<Obs>(
                         cx,
                         env,
