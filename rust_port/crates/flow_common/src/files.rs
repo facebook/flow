@@ -132,7 +132,6 @@ pub struct UntypedPattern {
 #[derive(Debug, Clone)]
 pub struct FileOptions {
     pub default_lib_dir: Option<LibDir>,
-    pub builtin_ts_libdef_dynamic_discovery: bool,
     pub ignores: Vec<IgnorePattern>,
     pub untyped: Vec<UntypedPattern>,
     pub declarations: Vec<(String, Regex)>,
@@ -154,7 +153,6 @@ impl Default for FileOptions {
     fn default() -> Self {
         Self {
             default_lib_dir: None,
-            builtin_ts_libdef_dynamic_discovery: true,
             ignores: Vec::new(),
             untyped: Vec::new(),
             declarations: Vec::new(),
@@ -742,7 +740,7 @@ pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<String> {
 }
 
 fn is_dynamically_discovered_builtin_ts_libdef(options: &FileOptions, path: &str) -> bool {
-    options.builtin_ts_libdef_dynamic_discovery && has_dts_ext(path) && is_in_flowlib(options, path)
+    has_dts_ext(path) && is_in_flowlib(options, path)
 }
 
 pub fn is_configured_lib_file(options: &FileOptions, path: &str) -> bool {

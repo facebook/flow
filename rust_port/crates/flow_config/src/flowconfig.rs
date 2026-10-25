@@ -150,7 +150,6 @@ pub mod opts {
         pub automatic_require_default: Option<bool>,
         pub babel_loose_array_spread: Option<bool>,
         pub ban_spread_key_props: Option<bool>,
-        pub builtin_ts_libdef_dynamic_discovery: bool,
         pub component_syntax: bool,
         pub async_component_syntax: bool,
         pub async_component_syntax_includes: Vec<String>,
@@ -286,7 +285,6 @@ pub mod opts {
             automatic_require_default: None,
             babel_loose_array_spread: None,
             ban_spread_key_props: None,
-            builtin_ts_libdef_dynamic_discovery: true,
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Vec::new(),
@@ -2031,22 +2029,6 @@ pub mod opts {
             ("experimental.assert_operator", |values, config| {
                 assert_operator_parser(values, config)
             }),
-            (
-                "experimental.builtin_ts_libdef_dynamic_discovery",
-                |values, config| {
-                    parse_boolean(
-                        |_opts, v| {
-                            if v {
-                                Ok(())
-                            } else {
-                                Err("This option can only be set to `true`.".to_owned())
-                            }
-                        },
-                        values,
-                        config,
-                    )
-                },
-            ),
             ("experimental.async_component_syntax", |values, config| {
                 parse_boolean(
                     |opts, v| {
@@ -3504,6 +3486,7 @@ mod tests {
             "exact_by_default",
             "experimental.always_generalize_jsx",
             "experimental.assertion_functions",
+            "experimental.builtin_ts_libdef_dynamic_discovery",
             "experimental.disable_invariant_special_casing",
             "experimental.fast_symlink_resolution",
             "experimental.function_and_object_type_is_no_longer_any",
