@@ -218,6 +218,7 @@ fn preserves_modules_and_import_attributes() {
         "import value, {a, b as c, d} from 'module';",
         "import value, * as ns from 'module'; import {} from 'module';",
         "import value from 'module' with {type: 'json', 'mode': 'x'};",
+        "export {default as data} from 'module' with {type: 'json', 'mode': 'x'};",
         "export const x = 1; export function f() {} export class C {}",
         "const x = 1; export {x, x as y, x as z}; export {x as remote} from 'module';",
         "export * from 'module'; export * as ns from 'module'; export {} from 'module';",

@@ -848,6 +848,7 @@ fn visit_toplevel_statement<'a>(
                 declaration,
                 specifiers,
                 source,
+                attributes: _,
                 export_kind,
                 comments: _,
             } = inner.deref();

@@ -279,6 +279,7 @@ module.exports = {
   ExportAllDeclaration: [
     'exported',
     'source',
+    'attributes',
   ],
   ExportAssignment: [
     'expression',
@@ -290,6 +291,7 @@ module.exports = {
     'declaration',
     'specifiers',
     'source',
+    'attributes',
   ],
   ExportNamespaceSpecifier: [
     'exported',

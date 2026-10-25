@@ -410,6 +410,7 @@ impl<'ast, 'a> AstVisitor<'ast, ALoc> for ExportsErrorChecker<'a> {
             source: _,
             specifiers,
             declaration,
+            attributes: _,
             comments: _,
         } = decl;
         if declaration.is_some() {

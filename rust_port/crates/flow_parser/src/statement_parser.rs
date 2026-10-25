@@ -2822,6 +2822,7 @@ fn export_declaration_statement(
                 declaration: Some(stmt),
                 specifiers: None,
                 source: None,
+                attributes: None,
                 export_kind: statement::ExportKind::ExportValue,
                 comments,
             }),
@@ -3177,6 +3178,7 @@ fn export_declaration(
                             declaration: Some(opaque_t),
                             specifiers: None,
                             source: None,
+                            attributes: None,
                             export_kind: statement::ExportKind::ExportType,
                             comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
                         }),
@@ -3206,6 +3208,7 @@ fn export_declaration(
                             declaration: Some(interface),
                             specifiers: None,
                             source: None,
+                            attributes: None,
                             export_kind: statement::ExportKind::ExportType,
                             comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
                         }),
@@ -3238,6 +3241,7 @@ fn export_declaration(
                         declaration: Some(stmt),
                         specifiers: None,
                         source: None,
+                        attributes: None,
                         export_kind: statement::ExportKind::ExportValue,
                         comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
                     }),
@@ -3336,13 +3340,16 @@ fn export_declaration(
                         },
                     ),
                 );
-                let (source, trailing) = export_source_and_semicolon(env)?;
+                let mut source = export_source(env)?;
+                let attributes = import_attributes(env)?;
+                let trailing = semicolon_and_trailing(env, &mut source)?;
                 Ok(StatementInner::ExportNamedDeclaration {
                     loc: LOC_NONE,
                     inner: Arc::new(statement::ExportNamedDeclaration {
                         declaration: None,
                         specifiers,
                         source: Some(source),
+                        attributes,
                         export_kind: statement::ExportKind::ExportValue,
                         comments: ast_utils::mk_comments_opt(
                             Some(leading.into()),
@@ -3370,13 +3377,15 @@ fn export_declaration(
                                 expect::token(env, TokenKind::TLcurly)?;
                                 let mut specifiers = export_specifiers(env)?;
                                 expect::token(env, TokenKind::TRcurly)?;
-                                let (source, trailing, specifiers) = match peek::token(env) {
+                                let (source, attributes, trailing, specifiers) = match peek::token(env) {
                                     TokenKind::TIdentifier { raw, .. } if raw == "from" => {
-                                        let (source, trailing) = export_source_and_semicolon(env)?;
+                                        let mut source = export_source(env)?;
+                                        let attributes = import_attributes(env)?;
+                                        let trailing = semicolon_and_trailing(env, &mut source)?;
                                         specifiers.iter_mut().for_each(|s| {
                                             s.from_remote = true;
                                         });
-                                        (Some(source), trailing, specifiers)
+                                        (Some(source), attributes, trailing, specifiers)
                                     }
                                     _ => {
                                         assert_export_specifier_identifiers(env, &specifiers)?;
@@ -3384,7 +3393,7 @@ fn export_declaration(
                                             SemicolonType::Explicit(trailing) => trailing,
                                             SemicolonType::Implicit(result) => result.trailing,
                                         };
-                                        (None, trailing, specifiers)
+                                        (None, None, trailing, specifiers)
                                     }
                                 };
                                 Ok(StatementInner::ExportNamedDeclaration {
@@ -3393,6 +3402,7 @@ fn export_declaration(
                                         declaration: None,
                                         specifiers: Some(statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers)),
                                         source,
+                                        attributes,
                                         export_kind: statement::ExportKind::ExportType,
                                         comments: ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into())),
                                     }),
@@ -3401,7 +3411,9 @@ fn export_declaration(
                             TokenKind::TMult => {
                                 let specifier_loc = peek::loc(env).dupe();
                                 expect::token(env, TokenKind::TMult)?;
-                                let (source, trailing) = export_source_and_semicolon(env)?;
+                                let mut source = export_source(env)?;
+                                let attributes = import_attributes(env)?;
+                                let trailing = semicolon_and_trailing(env, &mut source)?;
                                 Ok(StatementInner::ExportNamedDeclaration {
                                     loc: LOC_NONE,
                                     inner: Arc::new(statement::ExportNamedDeclaration {
@@ -3409,6 +3421,7 @@ fn export_declaration(
                                         specifiers: Some(statement::export_named_declaration::Specifier::ExportBatchSpecifier(
                                             statement::export_named_declaration::ExportBatchSpecifier{ loc: specifier_loc, specifier: None } )),
                                         source: Some(source),
+                                        attributes,
                                         export_kind: statement::ExportKind::ExportType,
                                         comments: ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into())),
                                     }),
@@ -3422,6 +3435,7 @@ fn export_declaration(
                                         declaration: None,
                                         specifiers: None,
                                         source: None,
+                                        attributes: None,
                                         export_kind: statement::ExportKind::ExportType,
                                         comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
                                     }),
@@ -3441,6 +3455,7 @@ fn export_declaration(
                                         declaration: Some(type_alias),
                                         specifiers: None,
                                         source: None,
+                                        attributes: None,
                                         export_kind: statement::ExportKind::ExportType,
                                         comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
                                     }),
@@ -3473,6 +3488,7 @@ fn export_declaration(
                                 declaration: Some(stmt),
                                 specifiers: None,
                                 source: None,
+                                attributes: None,
                                 export_kind: statement::ExportKind::ExportValue,
                                 comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
                             }),
@@ -3493,13 +3509,15 @@ fn export_declaration(
                         with_loc(Some(start_loc), env, |env| {
                             let mut specifiers = export_specifiers(env)?;
                             expect::token(env, TokenKind::TRcurly)?;
-                            let (source, trailing, specifiers) = match peek::token(env) {
+                            let (source, attributes, trailing, specifiers) = match peek::token(env) {
                                 TokenKind::TIdentifier { raw, .. } if raw == "from" => {
-                                    let (source, trailing) = export_source_and_semicolon(env)?;
+                                    let mut source = export_source(env)?;
+                                    let attributes = import_attributes(env)?;
+                                    let trailing = semicolon_and_trailing(env, &mut source)?;
                                     specifiers.iter_mut().for_each(|s| {
                                         s.from_remote=true;
                                     });
-                                    (Some(source), trailing, specifiers)
+                                    (Some(source), attributes, trailing, specifiers)
                                 }
                                 _ => {
                                     assert_export_specifier_identifiers(env, &specifiers)?;
@@ -3507,7 +3525,7 @@ fn export_declaration(
                                         SemicolonType::Explicit(trailing) => trailing,
                                         SemicolonType::Implicit(result) => result.trailing,
                                     };
-                                    (None, trailing, specifiers)
+                                    (None, None, trailing, specifiers)
                                 }
                             };
                             Ok(StatementInner::ExportNamedDeclaration {
@@ -3516,6 +3534,7 @@ fn export_declaration(
                                     declaration: None,
                                     specifiers: Some(statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers)),
                                     source,
+                                    attributes,
                                     export_kind,
                                     comments: ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into())),
                                 }),
@@ -4227,6 +4246,119 @@ fn declare_export_declaration(
     Ok(statement::Statement::new(s))
 }
 
+fn import_attributes(
+    env: &mut ParserEnv,
+) -> Result<
+    Option<(
+        Loc,
+        Vec<statement::import_declaration::ImportAttribute<Loc, Loc>>,
+    )>,
+    Rollback,
+> {
+    match peek::token(env) {
+        TokenKind::TWith => with_loc_opt(None, env, |env| {
+            eat::token(env)?; // consume 'with'
+            expect::token(env, TokenKind::TLcurly)?;
+
+            let mut attributes = Vec::new();
+            loop {
+                match peek::token(env) {
+                    TokenKind::TRcurly => break,
+                    TokenKind::TEof => {
+                        env.error_unexpected(Some("'}'".to_owned()))?;
+                        break;
+                    }
+                    _ => {
+                        if !attributes.is_empty() {
+                            if !eat::maybe(env, TokenKind::TComma)? {
+                                env.error(ParseError::ImportAttributeMissingComma)?;
+                            }
+                        }
+                        // Allow trailing comma
+                        if matches!(peek::token(env), TokenKind::TRcurly) {
+                            break;
+                        }
+                        attributes.push({
+                            let (loc, (key, value)) = with_loc(None, env, parse_attribute)?;
+                            statement::import_declaration::ImportAttribute { loc, key, value }
+                        });
+                    }
+                }
+            }
+
+            expect::token(env, TokenKind::TRcurly)?;
+            Ok(Some(attributes))
+        }),
+        _ => Ok(None),
+    }
+}
+
+fn parse_attribute(
+    env: &mut ParserEnv,
+) -> Result<
+    (
+        statement::import_declaration::ImportAttributeKey<Loc, Loc>,
+        (Loc, StringLiteral<Loc>),
+    ),
+    Rollback,
+> {
+    let key = match peek::token(env) {
+        TokenKind::TString(loc, value, raw, octal) => {
+            let loc = loc.dupe();
+            let value = value.to_owned();
+            let raw = raw.to_owned();
+            let octal = *octal;
+            let (loc, lit) = string_literal(env, loc, value, raw, octal)?;
+            statement::import_declaration::ImportAttributeKey::StringLiteral(loc, lit)
+        }
+        _ => {
+            let id = identifier_name(env)?;
+            statement::import_declaration::ImportAttributeKey::Identifier(id)
+        }
+    };
+
+    expect::token(env, TokenKind::TColon)?;
+
+    let value = match peek::token(env) {
+        TokenKind::TString(loc, value, raw, octal) => {
+            let loc = loc.dupe();
+            let value = value.to_owned();
+            let raw = raw.to_owned();
+            let octal = *octal;
+            string_literal(env, loc, value, raw, octal)?
+        }
+        _ => {
+            env.error_unexpected(Some("string literal".to_owned()))?;
+            let loc = peek::loc_skip_lookahead(env);
+            (
+                loc,
+                StringLiteral {
+                    value: FlowSmolStr::new_inline(""),
+                    raw: FlowSmolStr::new_inline(""),
+                    comments: None,
+                },
+            )
+        }
+    };
+
+    Ok((key, value))
+}
+
+fn semicolon_and_trailing(
+    env: &mut ParserEnv,
+    source: &mut (Loc, StringLiteral<Loc>),
+) -> Result<Vec<Comment<Loc>>, Rollback> {
+    match semicolon(env, None, true)? {
+        SemicolonType::Explicit(trailing) => Ok(trailing),
+        SemicolonType::Implicit(result) => {
+            if let Some(mut remover) = result.remover {
+                source.1 = remover.map_string_literal(&source.1);
+            }
+            Ok(Vec::new())
+        }
+    }
+}
+
 fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, Rollback> {
     fn missing_source(env: &mut ParserEnv) -> (Loc, StringLiteral<Loc>) {
         let loc = peek::loc_skip_lookahead(env);
@@ -4263,104 +4395,6 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                 Ok(missing_source(env))
             }
         }
-    }
-
-    fn import_attributes(
-        env: &mut ParserEnv,
-    ) -> Result<
-        Option<(
-            Loc,
-            Vec<statement::import_declaration::ImportAttribute<Loc, Loc>>,
-        )>,
-        Rollback,
-    > {
-        match peek::token(env) {
-            TokenKind::TWith => with_loc_opt(None, env, |env| {
-                eat::token(env)?; // consume 'with'
-                expect::token(env, TokenKind::TLcurly)?;
-
-                let mut attributes = Vec::new();
-                loop {
-                    match peek::token(env) {
-                        TokenKind::TRcurly => break,
-                        TokenKind::TEof => {
-                            env.error_unexpected(Some("'}'".to_owned()))?;
-                            break;
-                        }
-                        _ => {
-                            if !attributes.is_empty() {
-                                if !eat::maybe(env, TokenKind::TComma)? {
-                                    env.error(ParseError::ImportAttributeMissingComma)?;
-                                }
-                            }
-                            // Allow trailing comma
-                            if matches!(peek::token(env), TokenKind::TRcurly) {
-                                break;
-                            }
-                            attributes.push({
-                                let (loc, (key, value)) = with_loc(None, env, parse_attribute)?;
-                                statement::import_declaration::ImportAttribute { loc, key, value }
-                            });
-                        }
-                    }
-                }
-
-                expect::token(env, TokenKind::TRcurly)?;
-                Ok(Some(attributes))
-            }),
-            _ => Ok(None),
-        }
-    }
-
-    fn parse_attribute(
-        env: &mut ParserEnv,
-    ) -> Result<
-        (
-            statement::import_declaration::ImportAttributeKey<Loc, Loc>,
-            (Loc, StringLiteral<Loc>),
-        ),
-        Rollback,
-    > {
-        let key = match peek::token(env) {
-            TokenKind::TString(loc, value, raw, octal) => {
-                let loc = loc.dupe();
-                let value = value.to_owned();
-                let raw = raw.to_owned();
-                let octal = *octal;
-                let (loc, lit) = string_literal(env, loc, value, raw, octal)?;
-                statement::import_declaration::ImportAttributeKey::StringLiteral(loc, lit)
-            }
-            _ => {
-                let id = identifier_name(env)?;
-                statement::import_declaration::ImportAttributeKey::Identifier(id)
-            }
-        };
-
-        expect::token(env, TokenKind::TColon)?;
-
-        let value = match peek::token(env) {
-            TokenKind::TString(loc, value, raw, octal) => {
-                let loc = loc.dupe();
-                let value = value.to_owned();
-                let raw = raw.to_owned();
-                let octal = *octal;
-                string_literal(env, loc, value, raw, octal)?
-            }
-            _ => {
-                env.error_unexpected(Some("string literal".to_owned()))?;
-                let loc = peek::loc_skip_lookahead(env);
-                (
-                    loc,
-                    StringLiteral {
-                        value: FlowSmolStr::new_inline(""),
-                        raw: FlowSmolStr::new_inline(""),
-                        comments: None,
-                    },
-                )
-            }
-        };
-
-        Ok((key, value))
     }
 
     fn is_type_import(token: &TokenKind) -> bool {
@@ -4639,21 +4673,6 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                 Ok(Some(
                     statement::import_declaration::Specifier::ImportNamedSpecifiers(specifiers),
                 ))
-            }
-        }
-    }
-
-    fn semicolon_and_trailing(
-        env: &mut ParserEnv,
-        source: &mut (Loc, StringLiteral<Loc>),
-    ) -> Result<Vec<Comment<Loc>>, Rollback> {
-        match semicolon(env, None, true)? {
-            SemicolonType::Explicit(trailing) => Ok(trailing),
-            SemicolonType::Implicit(result) => {
-                if let Some(mut remover) = result.remover {
-                    source.1 = remover.map_string_literal(&source.1);
-                }
-                Ok(Vec::new())
             }
         }
     }

@@ -810,25 +810,32 @@ fn statement(
                     ast::statement::ExportKind::ExportType => "type",
                     ast::statement::ExportKind::ExportValue => "value",
                 };
+                let mut properties = vec![
+                    (
+                        "source",
+                        option(&inner.source, |(source_loc, lit)| {
+                            string_literal(offset_table, config, source_loc, lit)
+                        }),
+                    ),
+                    (
+                        "exported",
+                        option(&batch.specifier, |id| identifier(offset_table, config, id)),
+                    ),
+                    ("exportKind", string(export_kind_str)),
+                ];
+                if let Some((_, attrs)) = &inner.attributes {
+                    properties.push((
+                        "attributes",
+                        array_of_list(attrs, |a| import_attribute(offset_table, config, a)),
+                    ));
+                }
                 node(
                     offset_table,
                     config,
                     "ExportAllDeclaration",
                     loc,
                     inner.comments.as_ref(),
-                    vec![
-                        (
-                            "source",
-                            option(&inner.source, |(source_loc, lit)| {
-                                string_literal(offset_table, config, source_loc, lit)
-                            }),
-                        ),
-                        (
-                            "exported",
-                            option(&batch.specifier, |id| identifier(offset_table, config, id)),
-                        ),
-                        ("exportKind", string(export_kind_str)),
-                    ],
+                    properties,
                 )
             }
             _ => {
@@ -836,31 +843,38 @@ fn statement(
                     ast::statement::ExportKind::ExportType => "type",
                     ast::statement::ExportKind::ExportValue => "value",
                 };
+                let mut properties = vec![
+                    (
+                        "declaration",
+                        option(&inner.declaration, |stmt| {
+                            statement(offset_table, config, stmt)
+                        }),
+                    ),
+                    (
+                        "specifiers",
+                        export_specifiers(offset_table, config, &inner.specifiers),
+                    ),
+                    (
+                        "source",
+                        option(&inner.source, |(source_loc, lit)| {
+                            string_literal(offset_table, config, source_loc, lit)
+                        }),
+                    ),
+                    ("exportKind", string(export_kind_str)),
+                ];
+                if let Some((_, attrs)) = &inner.attributes {
+                    properties.push((
+                        "attributes",
+                        array_of_list(attrs, |a| import_attribute(offset_table, config, a)),
+                    ));
+                }
                 node(
                     offset_table,
                     config,
                     "ExportNamedDeclaration",
                     loc,
                     inner.comments.as_ref(),
-                    vec![
-                        (
-                            "declaration",
-                            option(&inner.declaration, |stmt| {
-                                statement(offset_table, config, stmt)
-                            }),
-                        ),
-                        (
-                            "specifiers",
-                            export_specifiers(offset_table, config, &inner.specifiers),
-                        ),
-                        (
-                            "source",
-                            option(&inner.source, |(source_loc, lit)| {
-                                string_literal(offset_table, config, source_loc, lit)
-                            }),
-                        ),
-                        ("exportKind", string(export_kind_str)),
-                    ],
+                    properties,
                 )
             }
         },

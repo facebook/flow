@@ -2891,6 +2891,7 @@ pub mod statement {
         pub declaration: Option<Statement<M, T>>,
         pub specifiers: Option<export_named_declaration::Specifier<M, T>>,
         pub source: Option<(T, StringLiteral<M>)>,
+        pub attributes: Option<(M, Vec<import_declaration::ImportAttribute<M, T>>)>,
         pub export_kind: ExportKind,
         pub comments: Option<Syntax<M, ()>>,
     }

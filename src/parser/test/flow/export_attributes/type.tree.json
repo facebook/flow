@@ -1,0 +1,185 @@
+{
+  "body": [
+    {
+      "attributes": [
+        {
+          "key": {
+            "loc": {
+              "end": {
+                "column": 44,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 40,
+                "line": 1
+              }
+            },
+            "name": "type",
+            "optional": false,
+            "range": [
+              40,
+              44
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 52,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 40,
+              "line": 1
+            }
+          },
+          "range": [
+            40,
+            52
+          ],
+          "type": "ImportAttribute",
+          "value": {
+            "loc": {
+              "end": {
+                "column": 52,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 46,
+                "line": 1
+              }
+            },
+            "range": [
+              46,
+              52
+            ],
+            "raw": "\"json\"",
+            "type": "Literal",
+            "value": "json"
+          }
+        }
+      ],
+      "declaration": null,
+      "exportKind": "type",
+      "loc": {
+        "end": {
+          "column": 55,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        55
+      ],
+      "source": {
+        "loc": {
+          "end": {
+            "column": 32,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 24,
+            "line": 1
+          }
+        },
+        "range": [
+          24,
+          32
+        ],
+        "raw": "\"module\"",
+        "type": "Literal",
+        "value": "module"
+      },
+      "specifiers": [
+        {
+          "exportKind": "value",
+          "exported": {
+            "loc": {
+              "end": {
+                "column": 17,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 13,
+                "line": 1
+              }
+            },
+            "name": "Data",
+            "optional": false,
+            "range": [
+              13,
+              17
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 17,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 13,
+              "line": 1
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 17,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 13,
+                "line": 1
+              }
+            },
+            "name": "Data",
+            "optional": false,
+            "range": [
+              13,
+              17
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            13,
+            17
+          ],
+          "type": "ExportSpecifier"
+        }
+      ],
+      "type": "ExportNamedDeclaration"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 55,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    55
+  ],
+  "type": "Program"
+}

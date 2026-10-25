@@ -3292,13 +3292,14 @@ fn enum_declaration(
     )
 }
 
-fn import_declaration(
+fn import_attributes(
     opts: &Opts,
-    loc: &Loc,
-    import: &ast::statement::ImportDeclaration<Loc, Loc>,
+    attributes: &Option<(
+        Loc,
+        Vec<ast::statement::import_declaration::ImportAttribute<Loc, Loc>>,
+    )>,
 ) -> LayoutNode {
-    let s_from = fuse(vec![atom("from"), pretty_space()]);
-    let attributes_layout = match &import.attributes {
+    match attributes {
         None => LayoutNode::empty(),
         Some((_, attrs)) => fuse(vec![
             pretty_space(),
@@ -3331,7 +3332,15 @@ fn import_declaration(
                     .collect(),
             )]),
         ]),
-    };
+    }
+}
+
+fn import_declaration(
+    opts: &Opts,
+    loc: &Loc,
+    import: &ast::statement::ImportDeclaration<Loc, Loc>,
+) -> LayoutNode {
+    let s_from = fuse(vec![atom("from"), pretty_space()]);
     layout_node_with_comments_opt(
         loc,
         import.comments.as_ref(),
@@ -3388,7 +3397,7 @@ fn import_declaration(
                 }
             },
             string_literal(opts, &import.source.0, &import.source.1),
-            attributes_layout,
+            import_attributes(opts, &import.attributes),
         ])),
     )
 }
@@ -3456,6 +3465,7 @@ fn export_declaration(
                     },
                     pretty_space(),
                     export_specifier(opts, export.source.as_ref(), specifier),
+                    import_attributes(opts, &export.attributes),
                 ])),
                 _ => panic!("Invalid export declaration"),
             },

@@ -607,7 +607,6 @@ impl Writer {
     }
 
     fn import_declaration(&mut self, import: &statement::ImportDeclaration<Loc, Loc>) -> Printed {
-        use statement::import_declaration::ImportAttributeKey;
         use statement::import_declaration::Specifier;
         if !matches!(import.import_kind, statement::ImportKind::ImportValue) {
             return Err(PrintError::UnloweredStatement(self.location.dupe()));
@@ -658,29 +657,38 @@ impl Writer {
             }
             writer.at(&import.source.0, |writer| writer.string(&import.source.1))?;
             if let Some((loc, attributes)) = &import.attributes {
-                writer.at(loc, |writer| {
-                    writer.token(" with {")?;
-                    for (index, attribute) in attributes.iter().enumerate() {
-                        if index != 0 {
-                            writer.token(", ")?;
-                        }
-                        writer.at(&attribute.loc, |writer| {
-                            match &attribute.key {
-                                ImportAttributeKey::Identifier(id) => writer.identifier(id)?,
-                                ImportAttributeKey::StringLiteral(loc, literal) => {
-                                    writer.at(loc, |writer| writer.string(literal))?
-                                }
-                            }
-                            writer.token(": ")?;
-                            writer.at(&attribute.value.0, |writer| {
-                                writer.string(&attribute.value.1)
-                            })
-                        })?;
-                    }
-                    writer.token("}")
-                })?;
+                writer.import_attributes(loc, attributes)?;
             }
             writer.token(";")
+        })
+    }
+
+    fn import_attributes(
+        &mut self,
+        loc: &Loc,
+        attributes: &[statement::import_declaration::ImportAttribute<Loc, Loc>],
+    ) -> Printed {
+        use statement::import_declaration::ImportAttributeKey;
+        self.at(loc, |writer| {
+            writer.token(" with {")?;
+            for (index, attribute) in attributes.iter().enumerate() {
+                if index != 0 {
+                    writer.token(", ")?;
+                }
+                writer.at(&attribute.loc, |writer| {
+                    match &attribute.key {
+                        ImportAttributeKey::Identifier(id) => writer.identifier(id)?,
+                        ImportAttributeKey::StringLiteral(loc, literal) => {
+                            writer.at(loc, |writer| writer.string(literal))?
+                        }
+                    }
+                    writer.token(": ")?;
+                    writer.at(&attribute.value.0, |writer| {
+                        writer.string(&attribute.value.1)
+                    })
+                })?;
+            }
+            writer.token("}")
         })
     }
 
@@ -730,6 +738,9 @@ impl Writer {
             if let Some((loc, source)) = &export.source {
                 writer.token(" from ")?;
                 writer.at(loc, |writer| writer.string(source))?;
+            }
+            if let Some((loc, attributes)) = &export.attributes {
+                writer.import_attributes(loc, attributes)?;
             }
             writer.token(";")
         })

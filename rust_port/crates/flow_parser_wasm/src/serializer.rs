@@ -2913,7 +2913,19 @@ impl<'a> Serializer<'a> {
         // importKind
         self.write_str(import_kind_str(decl.import_kind));
         // attributes
-        match &decl.attributes {
+        self.serialize_import_attributes(decl.attributes.as_ref());
+        // phase — the null string sentinel for an unmodified import.
+        self.write_str_opt(decl.phase.map(|phase| phase.as_str()));
+    }
+
+    fn serialize_import_attributes(
+        &mut self,
+        attributes: Option<&(
+            Loc,
+            Vec<ast::statement::import_declaration::ImportAttribute<Loc, Loc>>,
+        )>,
+    ) {
+        match attributes {
             Some((_attrs_loc, attrs)) => {
                 self.buf.push(attrs.len() as u32);
                 for attr in attrs.iter() {
@@ -2922,8 +2934,6 @@ impl<'a> Serializer<'a> {
             }
             None => self.buf.push(0),
         }
-        // phase — the null string sentinel for an unmodified import.
-        self.write_str_opt(decl.phase.map(|phase| phase.as_str()));
     }
 
     fn serialize_import_attribute(
@@ -3005,6 +3015,7 @@ impl<'a> Serializer<'a> {
                         None => self.write_null_node(),
                     }
                     self.write_str(export_kind_str(decl.export_kind));
+                    self.serialize_import_attributes(decl.attributes.as_ref());
                     return;
                 }
                 // 38: ExportAllDeclaration — source(Node) exported(Node) exportKind(String)
@@ -3029,6 +3040,7 @@ impl<'a> Serializer<'a> {
                     }
                 }
                 self.write_str(export_kind_str(decl.export_kind));
+                self.serialize_import_attributes(decl.attributes.as_ref());
             }
             specifiers => {
                 // 36: ExportNamedDeclaration — declaration specifiers source exportKind
@@ -3078,6 +3090,7 @@ impl<'a> Serializer<'a> {
                     None => self.write_null_node(),
                 }
                 self.write_str(export_kind_str(decl.export_kind));
+                self.serialize_import_attributes(decl.attributes.as_ref());
             }
         }
     }

@@ -14669,6 +14669,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
                 source,
                 specifiers,
                 declaration,
+                attributes: _,
                 comments,
             } = inner.as_ref();
             if let Some(stmt) = declaration {

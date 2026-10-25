@@ -9809,6 +9809,7 @@ pub fn export_named_declaration_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         source,
         specifiers,
         declaration,
+        attributes,
         comments,
     } = decl;
     if let Some((loc, src)) = source {
@@ -9819,6 +9820,9 @@ pub fn export_named_declaration_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     }
     if let Some(declaration) = declaration {
         visitor.statement(declaration)?;
+    }
+    if let Some((loc, attributes)) = attributes {
+        visitor.import_attributes(loc, attributes)?;
     }
     visitor.syntax_opt(comments.as_ref())?;
     Ok(())
@@ -9834,6 +9838,7 @@ pub fn map_export_named_declaration_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         source,
         specifiers,
         declaration,
+        attributes,
         comments,
     } = decl;
     let source_ = source.as_ref().map(|(loc, src)| {
@@ -9844,12 +9849,16 @@ pub fn map_export_named_declaration_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         .as_ref()
         .map(|spec| visitor.map_export_named_specifier(spec));
     let declaration_ = declaration.as_ref().map(|d| visitor.map_statement(d));
+    let attributes_ = attributes
+        .as_ref()
+        .map(|(loc, attrs)| (loc.dupe(), visitor.map_import_attributes(loc, attrs)));
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::statement::ExportNamedDeclaration {
         export_kind: *export_kind,
         source: source_,
         specifiers: specifiers_,
         declaration: declaration_,
+        attributes: attributes_,
         comments: comments_,
     }
 }

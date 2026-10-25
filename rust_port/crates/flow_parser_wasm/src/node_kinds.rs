@@ -636,6 +636,7 @@ define_nodes! {
         specifiers: NodeList,
         source: Node,
         exportKind: String,
+        attributes: NonEmptyNodeList,
     } from Statement::ExportNamedDeclaration { loc, inner }
         {=> self.serialize_export_named_declaration(loc, inner)},
     ExportDefaultDeclaration = 37 {
@@ -647,6 +648,7 @@ define_nodes! {
         source: Node,
         exported: Node,
         exportKind: String,
+        attributes: NonEmptyNodeList,
     },
     ExportSpecifier = 39 {
         exported: Node,
@@ -2004,6 +2006,7 @@ define_nodes! {
     BabelExportAllDeclaration = 265 as "ExportAllDeclaration" {
         source: Node,
         exportKind: String,
+        attributes: NonEmptyNodeList,
     },
     BabelDeclareVariable = 266 as "DeclareVariable" {
         id: Node,
@@ -2047,6 +2050,7 @@ define_nodes! {
         specifiers: NodeList,
         source: Node,
         exportKind: String,
+        attributes: NonEmptyNodeList,
     },
     BabelJSXOpeningElement = 274 as "JSXOpeningElement" {
         name: Node,

@@ -4039,6 +4039,7 @@ fn statement_<'a>(
                     declaration,
                     specifiers,
                     source,
+                    attributes: None,
                     export_kind: inner.export_kind,
                     comments: inner.comments.dupe(),
                 })

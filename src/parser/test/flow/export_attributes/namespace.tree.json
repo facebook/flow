@@ -1,0 +1,142 @@
+{
+  "body": [
+    {
+      "attributes": [
+        {
+          "key": {
+            "loc": {
+              "end": {
+                "column": 42,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 38,
+                "line": 1
+              }
+            },
+            "name": "type",
+            "optional": false,
+            "range": [
+              38,
+              42
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 50,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 38,
+              "line": 1
+            }
+          },
+          "range": [
+            38,
+            50
+          ],
+          "type": "ImportAttribute",
+          "value": {
+            "loc": {
+              "end": {
+                "column": 50,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 44,
+                "line": 1
+              }
+            },
+            "range": [
+              44,
+              50
+            ],
+            "raw": "\"json\"",
+            "type": "Literal",
+            "value": "json"
+          }
+        }
+      ],
+      "exportKind": "value",
+      "exported": {
+        "loc": {
+          "end": {
+            "column": 16,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 12,
+            "line": 1
+          }
+        },
+        "name": "data",
+        "optional": false,
+        "range": [
+          12,
+          16
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 53,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        53
+      ],
+      "source": {
+        "loc": {
+          "end": {
+            "column": 30,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 22,
+            "line": 1
+          }
+        },
+        "range": [
+          22,
+          30
+        ],
+        "raw": "\"module\"",
+        "type": "Literal",
+        "value": "module"
+      },
+      "type": "ExportAllDeclaration"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 53,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    53
+  ],
+  "type": "Program"
+}

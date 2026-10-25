@@ -191,6 +191,7 @@ impl StripFlow {
                     declaration: Some(variable),
                     specifiers: None,
                     source: None,
+                    attributes: None,
                     export_kind: statement::ExportKind::ExportValue,
                     comments,
                 }),

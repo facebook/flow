@@ -1,0 +1,122 @@
+{
+  "body": [
+    {
+      "attributes": [
+        {
+          "key": {
+            "loc": {
+              "end": {
+                "column": 39,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 35,
+                "line": 1
+              }
+            },
+            "name": "type",
+            "optional": false,
+            "range": [
+              35,
+              39
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 47,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 35,
+              "line": 1
+            }
+          },
+          "range": [
+            35,
+            47
+          ],
+          "type": "ImportAttribute",
+          "value": {
+            "loc": {
+              "end": {
+                "column": 47,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 41,
+                "line": 1
+              }
+            },
+            "range": [
+              41,
+              47
+            ],
+            "raw": "\"json\"",
+            "type": "Literal",
+            "value": "json"
+          }
+        }
+      ],
+      "exportKind": "type",
+      "exported": null,
+      "loc": {
+        "end": {
+          "column": 50,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        50
+      ],
+      "source": {
+        "loc": {
+          "end": {
+            "column": 27,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 19,
+            "line": 1
+          }
+        },
+        "range": [
+          19,
+          27
+        ],
+        "raw": "\"module\"",
+        "type": "Literal",
+        "value": "module"
+      },
+      "type": "ExportAllDeclaration"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 50,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    50
+  ],
+  "type": "Program"
+}

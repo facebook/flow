@@ -416,14 +416,19 @@ module.exports = [
 
   // 36: ExportNamedDeclaration
   function () {
-    return {
+    const node = {
       type: 'ExportNamedDeclaration',
       loc: this.addEmptyLoc(),
-      declaration: this.deserializeNode(),
-      specifiers: this.deserializeNodeList(),
-      source: this.deserializeNode(),
-      exportKind: this.deserializeString(),
     };
+    node.declaration = this.deserializeNode();
+    node.specifiers = this.deserializeNodeList();
+    node.source = this.deserializeNode();
+    node.exportKind = this.deserializeString();
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['attributes'] = value;
+    }
+    return node;
   },
 
   // 37: ExportDefaultDeclaration
@@ -442,13 +447,18 @@ module.exports = [
 
   // 38: ExportAllDeclaration
   function () {
-    return {
+    const node = {
       type: 'ExportAllDeclaration',
       loc: this.addEmptyLoc(),
-      source: this.deserializeNode(),
-      exported: this.deserializeNode(),
-      exportKind: this.deserializeString(),
     };
+    node.source = this.deserializeNode();
+    node.exported = this.deserializeNode();
+    node.exportKind = this.deserializeString();
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['attributes'] = value;
+    }
+    return node;
   },
 
   // 39: ExportSpecifier
@@ -3044,12 +3054,17 @@ module.exports = [
 
   // 265: BabelExportAllDeclaration
   function () {
-    return {
+    const node = {
       type: 'ExportAllDeclaration',
       loc: this.addEmptyLoc(),
-      source: this.deserializeNode(),
-      exportKind: this.deserializeString(),
     };
+    node.source = this.deserializeNode();
+    node.exportKind = this.deserializeString();
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['attributes'] = value;
+    }
+    return node;
   },
 
   // 266: BabelDeclareVariable
@@ -3175,6 +3190,10 @@ module.exports = [
     node.specifiers = this.deserializeNodeList();
     node.source = this.deserializeNode();
     node.exportKind = this.deserializeString();
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['attributes'] = value;
+    }
     return node;
   },
 

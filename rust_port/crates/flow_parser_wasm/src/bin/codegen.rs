@@ -782,7 +782,7 @@ const VISITOR_KEY_OVERRIDES: &[(&str, &[&str])] = &[
         "DeclareInterface",
         &["id", "typeParameters", "extends", "body"],
     ),
-    ("ExportAllDeclaration", &["exported", "source"]),
+    ("ExportAllDeclaration", &["exported", "source", "attributes"]),
     ("ExportSpecifier", &["exported", "local"]),
     (
         "FunctionDeclaration",
@@ -915,7 +915,11 @@ module.exports = {{
         let consider = |name: &'static str, ty: &PropType, entry: &mut Vec<&'static str>| {
             if matches!(
                 ty,
-                PropType::Node | PropType::NodeList | PropType::OptionalNode | PropType::MaybeNode
+                PropType::Node
+                    | PropType::NodeList
+                    | PropType::NonEmptyNodeList
+                    | PropType::OptionalNode
+                    | PropType::MaybeNode
             )
                 && !upstream_excluded.contains(&name)
                 && !extra_excluded.contains(&name)

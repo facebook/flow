@@ -1159,7 +1159,7 @@ fn export_named_declaration(
         comments: comments2,
         ..
     } = export2;
-    if src1 != src2 || kind1 != kind2 {
+    if src1 != src2 || kind1 != kind2 || export1.attributes != export2.attributes {
         return None;
     }
     let decls = diff_if_changed_nonopt_fn(

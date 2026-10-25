@@ -1159,7 +1159,8 @@ export interface ImportAttribute extends BaseNode {
   readonly key: Identifier | StringLiteral;
   readonly value: StringLiteral;
 
-  readonly parent: ImportDeclaration;
+  readonly parent:
+    ImportDeclaration | ExportNamedDeclaration | ExportAllDeclaration;
 }
 
 export interface ImportSpecifier extends BaseNode {
@@ -1230,6 +1231,7 @@ interface ExportNamedDeclarationBase extends BaseNode {
   readonly specifiers: ReadonlyArray<ExportSpecifier>;
   readonly source?: StringLiteral | null;
   readonly exportKind: 'value' | 'type';
+  readonly attributes?: ReadonlyArray<ImportAttribute>;
 }
 export interface ExportNamedDeclarationWithSpecifiers extends ExportNamedDeclarationBase {
   readonly type: 'ExportNamedDeclaration';
@@ -1276,6 +1278,7 @@ export interface ExportAllDeclaration extends BaseNode {
   readonly source: StringLiteral;
   readonly exportKind: 'value' | 'type';
   readonly exported?: Identifier | null;
+  readonly attributes?: ReadonlyArray<ImportAttribute>;
 }
 
 export interface ExportAssignment extends BaseNode {

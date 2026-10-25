@@ -3990,6 +3990,7 @@ pub fn export_named_declaration<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         source,
         specifiers,
         declaration,
+        attributes,
         comments,
     } = decl;
     let source_ = source
@@ -4004,12 +4005,21 @@ pub fn export_named_declaration<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .as_ref()
         .map(|d| statement(mapper, d))
         .transpose()?;
+    let attributes_ = attributes
+        .as_ref()
+        .map(|(annot, attrs)| {
+            let annot_ = mapper.on_loc_annot(annot)?;
+            let attrs_ = try_map_vec(attrs, |attr| import_attribute(mapper, attr))?;
+            Ok((annot_, attrs_))
+        })
+        .transpose()?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::statement::ExportNamedDeclaration {
         export_kind: *export_kind,
         source: source_,
         specifiers: specifiers_,
         declaration: declaration_,
+        attributes: attributes_,
         comments: comments_,
     })
 }

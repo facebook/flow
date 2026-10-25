@@ -636,6 +636,7 @@ impl ComponentLowerer {
                             ),
                             source: None,
                             export_kind: statement::ExportKind::ExportValue,
+                            attributes: None,
                             comments: original.comments.dupe(),
                         }),
                     }));
@@ -671,6 +672,7 @@ impl ComponentLowerer {
                         declaration: Some(result.function),
                         specifiers: original.specifiers.clone(),
                         source: original.source.clone(),
+                        attributes: original.attributes.clone(),
                         export_kind: original.export_kind,
                         comments: original.comments.dupe(),
                     }),
@@ -744,6 +746,7 @@ impl ComponentLowerer {
                                 )),
                                 specifiers: inner.specifiers.clone(),
                                 source: inner.source.clone(),
+                                attributes: inner.attributes.clone(),
                                 export_kind: inner.export_kind,
                                 comments: inner.comments.dupe(),
                             }),
