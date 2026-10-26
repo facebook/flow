@@ -601,12 +601,15 @@ pub mod response {
     pub mod inspect_types {
         use flow_parser::loc::Loc;
 
+        use crate::server_prot::refinement_invalidation;
+
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub struct Item {
             pub cursor_loc: Loc,
             pub type_loc: Loc,
             pub type_str: Option<String>,
             pub refining_locs: Vec<Loc>,
+            pub refinement_invalidated: Vec<(Loc, refinement_invalidation::Reason)>,
         }
 
         pub type Response = Result<Vec<Item>, String>;

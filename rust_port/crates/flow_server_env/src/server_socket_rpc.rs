@@ -1406,6 +1406,7 @@ pub mod inspect_types {
         pub type_loc: Loc,
         pub type_str: Option<String>,
         pub refining_locs: Vec<Loc>,
+        pub refinement_invalidated: Vec<(Loc, refinement_invalidation::Reason)>,
     }
 
     impl From<server_prot::response::inspect_types::Item> for Item {
@@ -1415,6 +1416,11 @@ pub mod inspect_types {
                 type_loc: item.type_loc.into(),
                 type_str: item.type_str,
                 refining_locs: item.refining_locs.into_iter().map(Loc::from).collect(),
+                refinement_invalidated: item
+                    .refinement_invalidated
+                    .into_iter()
+                    .map(|(loc, reason)| (loc.into(), reason))
+                    .collect(),
             }
         }
     }
@@ -1429,6 +1435,11 @@ pub mod inspect_types {
                     .refining_locs
                     .into_iter()
                     .map(Loc::into_flow_loc)
+                    .collect(),
+                refinement_invalidated: self
+                    .refinement_invalidated
+                    .into_iter()
+                    .map(|(loc, reason)| (loc.into_flow_loc(), reason))
                     .collect(),
             }
         }

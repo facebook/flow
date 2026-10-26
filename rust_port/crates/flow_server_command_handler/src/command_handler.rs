@@ -2180,7 +2180,7 @@ fn inspect_types(
     let items = result
         .into_iter()
         .map(
-            |(cursor_loc, type_loc, tys, refining_locs, _refinement_invalidated)| {
+            |(cursor_loc, type_loc, tys, refining_locs, refinement_invalidated)| {
                 let type_str = tys.map(|r| {
                     let (type_str, _refs) =
                         flow_common_ty::ty_printer::string_of_type_at_pos_result(
@@ -2203,6 +2203,7 @@ fn inspect_types(
                     type_loc,
                     type_str,
                     refining_locs,
+                    refinement_invalidated,
                 }
             },
         )

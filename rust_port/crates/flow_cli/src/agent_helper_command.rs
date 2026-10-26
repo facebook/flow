@@ -44,6 +44,12 @@ fn inspect_types_spec() -> flow_command_spec::Spec {
         "Also show where each queried value was refined",
         None,
     )
+    .flag(
+        "--show-invalidations",
+        &arg_spec::truthy(),
+        "Also show what invalidated each queried value's refinements",
+        None,
+    )
     .anon("file", &arg_spec::optional(arg_spec::string()))
 }
 
@@ -68,6 +74,7 @@ fn string_of_query_loc(strip_root: Option<&str>, cursor_loc: &Loc, type_loc: &Lo
 fn print_inspect_types_item(
     strip_root: Option<&str>,
     show_refinements: bool,
+    show_invalidations: bool,
     item: &server_prot::response::inspect_types::Item,
 ) {
     let server_prot::response::inspect_types::Item {
@@ -75,6 +82,7 @@ fn print_inspect_types_item(
         type_loc,
         type_str,
         refining_locs,
+        refinement_invalidated,
     } = item;
     println!("{}", string_of_query_loc(strip_root, cursor_loc, type_loc));
     println!("{}", type_str.as_deref().unwrap_or("(unknown)"));
@@ -84,6 +92,19 @@ fn print_inspect_types_item(
             .map(|loc| flow_common::reason::string_of_loc(strip_root, loc))
             .collect();
         println!("Refined at {}", refining_locs.join(", "));
+    }
+    if show_invalidations && !refinement_invalidated.is_empty() {
+        let invalidations: Vec<_> = refinement_invalidated
+            .iter()
+            .map(|(loc, reason)| {
+                format!(
+                    "{} at {}",
+                    flow_common::refinement_invalidation::string_of_reason(*reason),
+                    flow_common::reason::string_of_loc(strip_root, loc)
+                )
+            })
+            .collect();
+        println!("Refinement invalidated due to {}", invalidations.join(", "));
     }
 }
 
@@ -103,6 +124,8 @@ fn run_inspect_types(args: &arg_spec::Values) {
     .unwrap();
     let show_refinements =
         flow_command_spec::get(args, "--show-refinements", &arg_spec::truthy()).unwrap();
+    let show_invalidations =
+        flow_command_spec::get(args, "--show-invalidations", &arg_spec::truthy()).unwrap();
     let filename =
         flow_command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
 
@@ -138,7 +161,12 @@ fn run_inspect_types(args: &arg_spec::Values) {
                 if i > 0 {
                     println!();
                 }
-                print_inspect_types_item(strip_root.as_deref(), show_refinements, item);
+                print_inspect_types_item(
+                    strip_root.as_deref(),
+                    show_refinements,
+                    show_invalidations,
+                    item,
+                );
             }
         }
         response => {
