@@ -1962,6 +1962,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             InternalError::MissingEnvWrite(_) => "MissingEnvWrite",
             InternalError::EnvInvariant(_) => "EnvInvariant",
             InternalError::ImplicitInstantiationInvariant(_) => "ImplicitInstantiationInvariant",
+            InternalError::UnresolvedTvarInConditionalType => "UnresolvedTvarInConditionalType",
             InternalError::MethodBivariantInvariant(_) => "MethodBivariantInvariant",
             InternalError::WorkerCanceled => "WorkerCanceled",
         }

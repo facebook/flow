@@ -4048,6 +4048,7 @@ pub enum InternalError {
     ForcedReadOfUnderResolutionTvar(DefLocType),
     EnvInvariant(EnvInvariantFailure<ALoc>),
     ImplicitInstantiationInvariant(FlowSmolStr),
+    UnresolvedTvarInConditionalType,
     MethodBivariantInvariant(FlowSmolStr),
     WorkerCanceled,
 }
@@ -9353,6 +9354,9 @@ pub fn string_of_internal_error(error: &InternalError) -> FlowSmolStr {
             s
         )
         .into(),
+        InternalError::UnresolvedTvarInConditionalType => {
+            "unresolved tvar in conditional type outside implicit instantiation".into()
+        }
         InternalError::MethodBivariantInvariant(s) => format!(
             "Method bivariant subtyping issue, please report this to the Flow team: {}",
             s

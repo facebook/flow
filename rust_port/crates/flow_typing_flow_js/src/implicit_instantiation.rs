@@ -31,6 +31,7 @@ use flow_typing_errors::error_message::EImplicitInstantiationUnderconstrainedErr
 use flow_typing_errors::error_message::ETooFewTypeArgsData;
 use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::intermediate_error_types::ImplicitInstantiationReferenceData;
 use flow_typing_flow_common::concrete_type_eq;
 use flow_typing_flow_common::flow_cache;
@@ -4158,6 +4159,15 @@ pub mod kit {
             || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, extends_t)
             || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, true_t)
             || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, false_t);
+        if has_unresolved_tvars && !env.in_implicit_instantiation() {
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EInternal(Box::new((
+                    reason.loc().dupe(),
+                    InternalError::UnresolvedTvarInConditionalType,
+                ))),
+            );
+        }
         let (can_run_nested_solve, infer_through_frozen_tvar) = if env.in_implicit_instantiation()
             && has_unresolved_tvars
         {
