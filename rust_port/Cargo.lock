@@ -527,6 +527,7 @@ dependencies = [
  "flow_data_structure_wrapper",
  "flow_dev_tools",
  "flow_dfind",
+ "flow_docs",
  "flow_env_builder",
  "flow_env_builder_resolver",
  "flow_event_logger",

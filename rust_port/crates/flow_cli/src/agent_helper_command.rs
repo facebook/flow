@@ -13,12 +13,17 @@ use flow_server_env::server_prot;
 #[derive(Clone)]
 enum AgentHelperSubcommand {
     InspectTypes,
+    UnpackDocs,
 }
 
 const INSPECT_TYPES_DOC: &str = "Shows the hover type at each `// ^?` comment in a file";
+const UNPACK_DOCS_DOC: &str = "Writes the Flow docs bundled into this binary to a directory";
 
 fn subcommand_flag() -> arg_spec::FlagType<Option<(AgentHelperSubcommand, Vec<String>)>> {
-    arg_spec::command_flag(vec![("inspect-types", AgentHelperSubcommand::InspectTypes)])
+    arg_spec::command_flag(vec![
+        ("inspect-types", AgentHelperSubcommand::InspectTypes),
+        ("unpack-docs", AgentHelperSubcommand::UnpackDocs),
+    ])
 }
 
 fn inspect_types_spec() -> flow_command_spec::Spec {
@@ -250,6 +255,34 @@ fn run_inspect_types(args: &arg_spec::Values) {
     }
 }
 
+fn unpack_docs_spec() -> flow_command_spec::Spec {
+    flow_command_spec::Spec::new(
+        "unpack-docs",
+        UNPACK_DOCS_DOC,
+        flow_command_spec::Visibility::Public,
+        format!(
+            "Usage: {} agent-helper unpack-docs [OPTION]... DIR\n\nCreates DIR if needed and overwrites any docs already in it.\n",
+            flow_command_utils::exe_name()
+        ),
+    )
+    .anon("DIR", &arg_spec::string())
+}
+
+fn run_unpack_docs(args: &arg_spec::Values) {
+    let Some(dir) = flow_command_spec::get(args, "DIR", &arg_spec::string()).unwrap() else {
+        flow_command_spec::usage(&unpack_docs_spec());
+        flow_common_exit_status::exit(
+            flow_common_exit_status::FlowExitStatus::CommandlineUsageError,
+        );
+    };
+    if let Err(err) = std::fs::create_dir_all(&dir).and_then(|()| flow_docs::DOCS.extract(&dir)) {
+        flow_common_exit_status::exit_with_msg(
+            flow_common_exit_status::FlowExitStatus::UnknownError,
+            &format!("Could not unpack the docs into {dir}: {err}"),
+        );
+    }
+}
+
 fn root_spec() -> flow_command_spec::Spec {
     flow_command_spec::Spec::new(
         "agent-helper",
@@ -262,7 +295,10 @@ fn root_spec() -> flow_command_spec::Spec {
                 None,
                 None,
                 1,
-                &[("inspect-types".to_string(), INSPECT_TYPES_DOC.to_string())],
+                &[
+                    ("inspect-types".to_string(), INSPECT_TYPES_DOC.to_string()),
+                    ("unpack-docs".to_string(), UNPACK_DOCS_DOC.to_string()),
+                ],
             ),
         ),
     )
@@ -287,6 +323,9 @@ pub(crate) fn command() -> flow_command_spec::Command {
         let command = match subcommand {
             AgentHelperSubcommand::InspectTypes => {
                 flow_command_spec::command(inspect_types_spec(), run_inspect_types)
+            }
+            AgentHelperSubcommand::UnpackDocs => {
+                flow_command_spec::command(unpack_docs_spec(), run_unpack_docs)
             }
         };
         flow_command_utils::run_command(&command, &argv);

@@ -33,6 +33,7 @@ flow_daemon = { path = "../flow_daemon" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_dev_tools = { path = "../flow_dev_tools" }
 flow_dfind = { path = "../flow_dfind" }
+flow_docs = { path = "../flow_docs" }
 flow_env_builder = { path = "../flow_env_builder" }
 flow_env_builder_resolver = { path = "../flow_env_builder_resolver" }
 flow_event_logger = { path = "../flow_event_logger" }
