@@ -6291,7 +6291,7 @@ pub fn merge_builtins(
                         platform_availability_set,
                     } = info;
                     let type_exports = type_exports.iter().map(&type_export).collect::<Vec<_>>();
-                    let exports = exports.map(&cjs_exports_fn);
+                    let exports = exports.map(cjs_exports_fn);
                     let type_exports: BTreeMap<FlowSmolStr, LazyExport> =
                         type_export_keys.into_iter().zip(type_exports).collect();
                     Exports::CJSExports {
