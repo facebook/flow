@@ -257,6 +257,16 @@ mod val {
             Self::mk_with_write_state(Self::join_slice(&Self::union(&vals1, &vals2)))
         }
 
+        /// A value with the same term as `self`, as merging `self` with a value it subsumes
+        /// would give.
+        pub(super) fn renew(&self) -> Self {
+            Self::mk_with_write_state(self.write_state.dupe())
+        }
+
+        pub(super) fn is_unresolved_ref(&self) -> bool {
+            matches!(self.write_state, WriteState::Ref(_)) && Self::is_atom(&self.write_state)
+        }
+
         pub(super) fn one(reason: VirtualReason<L>) -> Self {
             Self::mk_with_write_state(WriteState::Loc(reason))
         }
@@ -442,6 +452,8 @@ type AbruptCompletionEnv<L> = (AbruptCompletion, Env<L>);
 #[derive(Debug, Clone, Dupe)]
 struct Havoc<L: Dupe> {
     unresolved: Val<L>,
+    /// `unresolved` merged with `Val::uninitialized()`, while `unresolved` is unresolved.
+    uninitialized: Val<L>,
     /// always Ref
     locs: Rc<RefCell<Vec<VirtualReason<L>>>>,
 }
@@ -603,8 +615,12 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
 
     fn havoc_uninitialized_ssa_env(&self) {
         for ssa in self.ssa_env.values() {
-            let uninit = Val::uninitialized();
-            *ssa.val_ref.borrow_mut() = Val::merge(&uninit, &ssa.havoc.unresolved);
+            let val = if ssa.havoc.unresolved.is_unresolved_ref() {
+                ssa.havoc.uninitialized.renew()
+            } else {
+                Val::merge(&Val::uninitialized(), &ssa.havoc.unresolved)
+            };
+            *ssa.val_ref.borrow_mut() = val;
         }
     }
 
@@ -621,10 +637,13 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
         let mut old_bindings = Vec::with_capacity(binding_names.len());
         for name in &binding_names {
             old_bindings.push((name.dupe(), self.ssa_env.get(name).cloned()));
+            let unresolved = self.mk_unresolved();
+            let uninitialized = Val::merge(&Val::uninitialized(), &unresolved);
             let ssa = Ssa {
                 val_ref: Rc::new(RefCell::new(Val::uninitialized())),
                 havoc: Havoc {
-                    unresolved: self.mk_unresolved(),
+                    unresolved,
+                    uninitialized,
                     locs: Rc::new(RefCell::new(Vec::new())),
                 },
             };
