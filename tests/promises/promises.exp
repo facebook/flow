@@ -135,35 +135,51 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ allSettled.js:2:9
 
-Cannot call `Promise.allSettled` because function [1] requires another argument. [incompatible-type]
+Cannot call `Promise.allSettled` because: [incompatible-type]
+ - Either function type [1] requires another argument from call of method `allSettled` [2].
+ - Or function type [3] requires another argument from call of method `allSettled` [2].
 
    allSettled.js:2:9
     2| Promise.allSettled<Array<unknown>>(); // Error: expected $Iterable instead of undefined (too few arguments)
                ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2020.promise.js:39:5
-           v-------------------------------------------------------------
-   39|     allSettled<T extends Iterable<unknown>>(promises: T): Promise<
-   40|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: PromiseSettledResult<Awaited<T[K]>>} :
-   41|       T extends Iterable<infer V> ? Array<PromiseSettledResult<Awaited<V>>> : any
-   42|     >;
-           ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:43:5
+   43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   allSettled.js:2:1
+    2| Promise.allSettled<Array<unknown>>(); // Error: expected $Iterable instead of undefined (too few arguments)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2020.promise.js:51:5
+   51|     allSettled<T>(values: Iterable<T | PromiseLike<T>>): Promise<PromiseSettledResult<$AllSettledAwaited<T>>[]>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- allSettled.js:5:36
+Error ------------------------------------------------------------------------------------------------ allSettled.js:5:9
 
-Cannot call `Promise.allSettled` with `0` bound to `promises` because `0` [1] is incompatible with `Array<unknown>` [2].
-[incompatible-type]
+Cannot call `Promise.allSettled` because: [incompatible-type]
+ - Either `0` [1], a primitive, cannot be used as a subtype of
+   `Iterable<Array<unknown> | PromiseLike<Array<unknown>>, void, void>` [2]. You can wrap it in `new Number(...))` to
+   turn it into an object and attempt to use it as a subtype of an interface.
+ - Or `0` [1] is incompatible with `Array<unknown>` [3].
 
-   allSettled.js:5:36
-   5| Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
-                                         ^ [1]
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   allSettled.js:5:9
+    5| Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
+               ^^^^^^^^^^
 
 References:
+   allSettled.js:5:36
+    5| Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
+                                          ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:51:27
+   51|     allSettled<T>(values: Iterable<T | PromiseLike<T>>): Promise<PromiseSettledResult<$AllSettledAwaited<T>>[]>;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    allSettled.js:5:20
-   5| Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
-                         ^^^^^^^^^^^^^^ [2]
+    5| Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
+                          ^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:31:7
@@ -175,9 +191,9 @@ Cannot cast `first.status` to `empty` because `"rejected"` [1] is incompatible w
              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2020.promise.js:27:20
-   27|   readonly status: 'rejected',
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2020.promise.js:26:13
+   26|     status: "rejected";
+                   ^^^^^^^^^^ [1]
    allSettled.js:31:23
    31|       first.status as empty // Error: 'rejected' case was not covered
                              ^^^^^ [2]
@@ -192,9 +208,9 @@ Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [
                                     ^^^
 
 References:
-   <BUILTINS>/lib.es2020.promise.js:40:80
-   40|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: PromiseSettledResult<Awaited<T[K]>>} :
-                                                                                      ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2020.promise.js:43:120
+   43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:2:9
@@ -498,6 +514,24 @@ References:
    <BUILTINS>/misc.js:217:53
    217|   finally(onfinally?: (() => unknown) | undefined | null): Promise<R>;
                                                             ^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ generic_awaited.js:17:1
+
+Cannot cast `awaited` to `number` because `PromiseLike<number>` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   generic_awaited.js:17:1
+   17| awaited as number; // ERROR
+       ^^^^^^^
+
+References:
+   generic_awaited.js:15:24
+   15| declare const awaited: Awaited<PromiseLike<number>>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   generic_awaited.js:17:12
+   17| awaited as number; // ERROR
+                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19
@@ -921,6 +955,311 @@ References:
                                               ^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------- typescript_allSettled.js:4:1
+
+Cannot cast `tupleResult` to `Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>` because in index
+`0` of type argument `R` [1]: [incompatible-type]
+ - Either in type argument `T` [2]: `number` [3] is incompatible with `string` [4].
+ - Or property `reason` is missing in
+   `PromiseFulfilledResult<$AllSettledAwaited<Readonly<[Promise<number>, string]>[0]>>` [5] but exists in
+   `PromiseRejectedResult` [6].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   typescript_allSettled.js:4:1
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+        ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:20:34
+    20| interface PromiseFulfilledResult<T> {
+                                         ^ [2]
+   <BUILTINS>/lib.es2020.promise.js:43:120
+    43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   typescript_allSettled.js:4:46
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+                                                     ^^^^^^ [4]
+   <BUILTINS>/lib.es2020.promise.js:43:99
+    43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/lib.es2020.promise.js:30:60
+    30| type PromiseSettledResult<T> = PromiseFulfilledResult<T> | PromiseRejectedResult;
+                                                                   ^^^^^^^^^^^^^^^^^^^^^ [6]
+
+
+Error ------------------------------------------------------------------------------------- typescript_allSettled.js:4:1
+
+Cannot cast `tupleResult` to `Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>` because in index
+`0` of type argument `R` [1]: [incompatible-type]
+ - Either in type argument `T` [2]: `string` [3] is incompatible with `number` [4].
+ - Or property `reason` is missing in `PromiseFulfilledResult<string>` [5] but exists in `PromiseRejectedResult` [6].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   typescript_allSettled.js:4:1
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+        ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:20:34
+    20| interface PromiseFulfilledResult<T> {
+                                         ^ [2]
+   typescript_allSettled.js:4:46
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+                                                     ^^^^^^ [3]
+   <BUILTINS>/lib.es2020.promise.js:43:120
+    43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   typescript_allSettled.js:4:25
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/lib.es2020.promise.js:30:60
+    30| type PromiseSettledResult<T> = PromiseFulfilledResult<T> | PromiseRejectedResult;
+                                                                   ^^^^^^^^^^^^^^^^^^^^^ [6]
+
+
+Error ------------------------------------------------------------------------------------- typescript_allSettled.js:4:1
+
+Cannot cast `tupleResult` to `Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>` because in index
+`1` of type argument `R` [1]: [incompatible-type]
+ - Either in type argument `T` [2]: `string` [3] is incompatible with `number` [4].
+ - Or property `reason` is missing in
+   `PromiseFulfilledResult<$AllSettledAwaited<Readonly<[Promise<number>, string]>[1]>>` [5] but exists in
+   `PromiseRejectedResult` [6].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   typescript_allSettled.js:4:1
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+        ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:20:34
+    20| interface PromiseFulfilledResult<T> {
+                                         ^ [2]
+   <BUILTINS>/lib.es2020.promise.js:43:120
+    43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   typescript_allSettled.js:4:76
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+                                                                                   ^^^^^^ [4]
+   <BUILTINS>/lib.es2020.promise.js:43:99
+    43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/lib.es2020.promise.js:30:60
+    30| type PromiseSettledResult<T> = PromiseFulfilledResult<T> | PromiseRejectedResult;
+                                                                   ^^^^^^^^^^^^^^^^^^^^^ [6]
+
+
+Error ------------------------------------------------------------------------------------- typescript_allSettled.js:4:1
+
+Cannot cast `tupleResult` to `Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>` because in index
+`1` of type argument `R` [1]: [incompatible-type]
+ - Either in type argument `T` [2]: `number` [3] is incompatible with `string` [4].
+ - Or property `reason` is missing in `PromiseFulfilledResult<number>` [5] but exists in `PromiseRejectedResult` [6].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   typescript_allSettled.js:4:1
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+        ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:20:34
+    20| interface PromiseFulfilledResult<T> {
+                                         ^ [2]
+   typescript_allSettled.js:4:76
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+                                                                                   ^^^^^^ [3]
+   <BUILTINS>/lib.es2020.promise.js:43:120
+    43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   typescript_allSettled.js:4:55
+     4| tupleResult as Promise<[PromiseSettledResult<string>, PromiseSettledResult<number>]>; // ERROR
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/lib.es2020.promise.js:30:60
+    30| type PromiseSettledResult<T> = PromiseFulfilledResult<T> | PromiseRejectedResult;
+                                                                   ^^^^^^^^^^^^^^^^^^^^^ [6]
+
+
+Error ------------------------------------------------------------------------------------- typescript_allSettled.js:9:1
+
+Cannot cast `arrayResult` to `Promise<Array<PromiseSettledResult<string>>>` because in type argument `R` [1] > array
+element: `PromiseSettledResult<$AllSettledAwaited<ReadonlyArray<number | PromiseLike<number>>[number]>>` [2] is not
+exactly the same as `PromiseSettledResult<string>` [3]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<PromiseSettledResult<$AllSettledAwaited<ReadonlyArray<number | PromiseLike<number>>[number]>>>` [4]
+and `Array<PromiseSettledResult<string>>` [5] exactly the same
+- Or make `Array<PromiseSettledResult<string>>` [5] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   typescript_allSettled.js:9:1
+     9| arrayResult as Promise<Array<PromiseSettledResult<string>>>; // ERROR
+        ^^^^^^^^^^^
+
+References:
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:43:99
+    43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   typescript_allSettled.js:9:30
+     9| arrayResult as Promise<Array<PromiseSettledResult<string>>>; // ERROR
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2020.promise.js:43:73
+    43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   typescript_allSettled.js:9:24
+     9| arrayResult as Promise<Array<PromiseSettledResult<string>>>; // ERROR
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------ typescript_allSettled.js:13:1
+
+Cannot cast `iterableResult` to `Promise<Array<PromiseSettledResult<string>>>` because in type argument `R` [1] > array
+element: `PromiseSettledResult<$AllSettledAwaited<Promise<number>>>` [2] is not exactly the same as
+`PromiseSettledResult<string>` [3]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<PromiseSettledResult<$AllSettledAwaited<Promise<number>>>>` [4] and
+`Array<PromiseSettledResult<string>>` [5] exactly the same
+- Or make `Array<PromiseSettledResult<string>>` [5] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   typescript_allSettled.js:13:1
+    13| iterableResult as Promise<Array<PromiseSettledResult<string>>>; // ERROR
+        ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/misc.js:216:19
+   216| interface Promise<R> {
+                          ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:51:66
+    51|     allSettled<T>(values: Iterable<T | PromiseLike<T>>): Promise<PromiseSettledResult<$AllSettledAwaited<T>>[]>;
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   typescript_allSettled.js:13:33
+    13| iterableResult as Promise<Array<PromiseSettledResult<string>>>; // ERROR
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2020.promise.js:51:66
+    51|     allSettled<T>(values: Iterable<T | PromiseLike<T>>): Promise<PromiseSettledResult<$AllSettledAwaited<T>>[]>;
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   typescript_allSettled.js:13:27
+    13| iterableResult as Promise<Array<PromiseSettledResult<string>>>; // ERROR
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------ typescript_allSettled.js:24:1
+
+Cannot cast `awaited` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   typescript_allSettled.js:24:1
+   24| awaited as string; // ERROR
+       ^^^^^^^
+
+References:
+   typescript_allSettled.js:22:24
+   22| declare const awaited: $AllSettledAwaited<number | PromiseLike<PromiseLike<number>>>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   typescript_allSettled.js:24:12
+   24| awaited as string; // ERROR
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- typescript_allSettled.js:30:16
+
+Cannot assign object literal to `settled[0]` because: [incompatible-type]
+ - Either in property `value`: `"wrong"` [1] is incompatible with `number` [2].
+ - Or in property `status`: `"fulfilled"` [3] is incompatible with `"rejected"` [4].
+
+   typescript_allSettled.js:30:16
+   30|   settled[0] = {status: 'fulfilled', value: 'wrong'}; // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typescript_allSettled.js:30:45
+   30|   settled[0] = {status: 'fulfilled', value: 'wrong'}; // ERROR
+                                                   ^^^^^^^ [1]
+   <BUILTINS>/lib.es2020.promise.js:43:120
+   43|     allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   typescript_allSettled.js:30:25
+   30|   settled[0] = {status: 'fulfilled', value: 'wrong'}; // ERROR
+                               ^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2020.promise.js:26:13
+   26|     status: "rejected";
+                   ^^^^^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------- typescript_allSettled.js:35:19
+
+Cannot assign `'wrong'` to `fulfilled.value` because `"wrong"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   typescript_allSettled.js:35:19
+   35| fulfilled.value = 'wrong'; // ERROR
+                         ^^^^^^^ [1]
+
+References:
+   typescript_allSettled.js:33:49
+   33| declare const fulfilled: PromiseFulfilledResult<number>;
+                                                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- typescript_allSettled.js:37:20
+
+Cannot assign `'rejected'` to `fulfilled.status` because `"rejected"` [1] is incompatible with `"fulfilled"` [2].
+[incompatible-type]
+
+   typescript_allSettled.js:37:20
+   37| fulfilled.status = 'rejected'; // ERROR
+                          ^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/lib.es2020.promise.js:21:13
+   21|     status: "fulfilled";
+                   ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ typescript_allSettled.js:44:1
+
+Cannot cast `settled` to `PromiseSettledResult<number | string>` because in type argument `T` [1]: `string` [2] is
+incompatible with `number` [3]. [incompatible-type]
+
+   typescript_allSettled.js:44:1
+   44| settled as PromiseSettledResult<number | string>; // ERROR
+       ^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2020.promise.js:30:27
+   30| type PromiseSettledResult<T> = PromiseFulfilledResult<T> | PromiseRejectedResult;
+                                 ^ [1]
+   typescript_allSettled.js:44:42
+   44| settled as PromiseSettledResult<number | string>; // ERROR
+                                                ^^^^^^ [2]
+   typescript_allSettled.js:43:45
+   43| declare const settled: PromiseSettledResult<number>;
+                                                   ^^^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------------- withResolvers.js:7:9
 
 Cannot call `resolve` with `'s'` bound to `value` because: [incompatible-type]
@@ -977,4 +1316,4 @@ References:
 
 
 
-Found 53 errors
+Found 65 errors

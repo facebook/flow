@@ -58,6 +58,7 @@ pub(super) const LIB_ES2020_BIGINT_D_TS: &str = include_tslib!("lib.es2020.bigin
 pub(super) const LIB_ES2020_DATE_D_TS: &str = include_tslib!("lib.es2020.date.d.ts");
 pub(super) const LIB_ES2020_INTL_D_TS: &str = include_tslib!("lib.es2020.intl.d.ts");
 pub(super) const LIB_ES2020_NUMBER_D_TS: &str = include_tslib!("lib.es2020.number.d.ts");
+pub(super) const LIB_ES2020_PROMISE_D_TS: &str = include_tslib!("lib.es2020.promise.d.ts");
 pub(super) const LIB_ES2020_SHAREDMEMORY_D_TS: &str =
     include_tslib!("lib.es2020.sharedmemory.d.ts");
 pub(super) const LIB_ES2020_STRING_D_TS: &str = include_tslib!("lib.es2020.string.d.ts");
@@ -194,10 +195,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2020.intl.d.ts", LIB_ES2020_INTL_D_TS),
     ("lib.es2020.number.d.ts", LIB_ES2020_NUMBER_D_TS),
-    (
-        "lib.es2020.promise.d.ts",
-        include_tslib!("lib.es2020.promise.d.ts"),
-    ),
+    ("lib.es2020.promise.d.ts", LIB_ES2020_PROMISE_D_TS),
     ("lib.es2020.sharedmemory.d.ts", LIB_ES2020_SHAREDMEMORY_D_TS),
     ("lib.es2020.string.d.ts", LIB_ES2020_STRING_D_TS),
     (

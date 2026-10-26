@@ -52,5 +52,5 @@ async function test2(): Promise<Readonly<[
   $SettledPromiseResult<string>,
   $SettledPromiseResult<void>,
 ]>> {
-  return Promise.allSettled([new Foo(), new Bar(), 400, 'Bar', Promise.resolve()]);
+  return Promise.allSettled([new Foo(), new Bar(), 400 as number, 'Bar' as string, Promise.resolve()]);
 }

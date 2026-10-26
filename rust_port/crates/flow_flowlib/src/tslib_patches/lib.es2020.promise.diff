@@ -1,0 +1,29 @@
+--- tslib/lib.es2020.promise.d.ts
++++ rust_port/crates/flow_flowlib/src/tslib_patches/lib.es2020.promise.d.ts
+@@ -29,6 +29,10 @@
+ 
+ type PromiseSettledResult<T> = PromiseFulfilledResult<T> | PromiseRejectedResult;
+ 
++type $AllSettledAwaited<T> =
++    T extends Promise<infer U> ? U :
++    T extends PromiseLike<infer U> ? $AllSettledAwaited<U> : T;
++
+ interface PromiseConstructor {
+     /**
+      * Creates a Promise that is resolved with an array of results when all
+@@ -36,7 +40,7 @@
+      * @param values An array of Promises.
+      * @returns A new Promise.
+      */
+-    allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<Awaited<T[P]>>; }>;
++    allSettled<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<$AllSettledAwaited<T[P]>>; }>;
+ 
+     /**
+      * Creates a Promise that is resolved with an array of results when all
+@@ -44,5 +48,5 @@
+      * @param values An array of Promises.
+      * @returns A new Promise.
+      */
+-    allSettled<T>(values: Iterable<T | PromiseLike<T>>): Promise<PromiseSettledResult<Awaited<T>>[]>;
++    allSettled<T>(values: Iterable<T | PromiseLike<T>>): Promise<PromiseSettledResult<$AllSettledAwaited<T>>[]>;
+ }
