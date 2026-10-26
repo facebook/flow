@@ -1518,6 +1518,7 @@ dependencies = [
  "flow_hh_logger",
  "flow_parser",
  "flow_parsing",
+ "flow_profiling",
  "flow_server_env",
  "flow_server_files",
  "flow_services_inference",

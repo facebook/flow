@@ -20,6 +20,7 @@ flow_heap = { path = "../flow_heap" }
 flow_hh_logger = { path = "../flow_hh_logger" }
 flow_parser = { path = "../flow_parser" }
 flow_parsing = { path = "../flow_parsing" }
+flow_profiling = { path = "../flow_profiling" }
 flow_server_env = { path = "../flow_server_env" }
 flow_server_files = { path = "../flow_server_files" }
 flow_services_inference = { path = "../flow_services_inference" }

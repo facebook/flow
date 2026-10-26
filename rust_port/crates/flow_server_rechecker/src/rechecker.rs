@@ -15,6 +15,8 @@ use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_heap::heap_state::CommittedHeap;
 use flow_heap::parsing_heaps::ActiveTransaction;
+use flow_profiling::memory_utils;
+use flow_profiling::profiling_js;
 use flow_server_env::lsp_prot;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
@@ -109,7 +111,7 @@ fn recheck(
         None => find_refs_types::empty_request(),
     };
 
-    let _should_print_summary = options.profile;
+    let should_print_summary = options.profile && !options.quiet;
     let recheck_start = Instant::now();
 
     send_start_recheck(&env);
@@ -118,20 +120,25 @@ fn recheck(
         flow_flowlib::extract_if_missing_or_exit(options.file_options.default_lib_dir.as_ref());
     }
 
-    let recheck_result = type_service::recheck(
-        Some(orchestrator),
-        workers,
-        orchestrator.heap(),
-        options,
-        &updates,
-        &find_ref_request,
-        files_to_force,
-        incompatible_lib_change,
-        changed_mergebase,
-        missed_changes,
-        will_be_checked_files,
-        env,
-    );
+    let recheck_profiling = profiling_js::Running::new("Recheck");
+    let recheck_result = profiling_js::with_current(&recheck_profiling, || {
+        memory_utils::with_committed_heap(orchestrator.heap().dupe(), || {
+            type_service::recheck(
+                Some(orchestrator),
+                workers,
+                orchestrator.heap(),
+                options,
+                &updates,
+                &find_ref_request,
+                files_to_force,
+                incompatible_lib_change,
+                changed_mergebase,
+                missed_changes,
+                will_be_checked_files,
+                env,
+            )
+        })
+    });
     let (log_recheck_event, recheck_stats, find_ref_results, prepared) = match recheck_result {
         Ok((log_event, stats, results, prepared)) => (log_event, stats, results, prepared),
         Err(type_service::RecheckError::Canceled(changed_files)) => {
@@ -142,6 +149,10 @@ fn recheck(
         }
     };
     orchestrator.commit_recheck(|| prepared.commit(), recheck_epoch);
+    let recheck_profiling = recheck_profiling.finish();
+    if should_print_summary {
+        profiling_js::print_summary(&recheck_profiling);
+    }
 
     if let Some(FindRefCommand {
         client_id,
