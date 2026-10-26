@@ -359,6 +359,10 @@ pub fn standalone_response_needs_checked_dependencies_retry(
         | (
             server_prot::request::Command::INLAY_HINT(_),
             server_prot::response::Response::INLAY_HINT(Err(error)),
+        )
+        | (
+            server_prot::request::Command::INSPECT_TYPES(_),
+            server_prot::response::Response::INSPECT_TYPES(Err(error)),
         ) => is_checked_dependencies_retry_error(error),
         (
             server_prot::request::Command::AUTOFIX_EXPORTS { .. },
@@ -2099,6 +2103,112 @@ fn inlay_hint(
     }
 }
 
+fn inspect_types(
+    orchestrator: Option<&ServerOrchestratorHandle>,
+    cache: &mut CheckContentsCache,
+    options: &Options,
+    env: &server_env::Env,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
+    input: &server_prot::inspect_types_options::T,
+) -> Result<
+    (
+        server_prot::response::inspect_types::Response,
+        Option<lsp_prot::Json>,
+    ),
+    WorkloadCanceled,
+> {
+    let server_prot::inspect_types_options::T {
+        input: ref file_input,
+        wait_for_recheck: _,
+    } = *input;
+    let (file_key, content) = match of_file_input(options, env, file_input) {
+        Err(IdeFileError::Failed(e)) => return Ok((Err(e), None)),
+        Err(IdeFileError::Skipped(reason)) => return Ok((Ok(vec![]), json_of_skipped(&reason))),
+        Ok(file) => file,
+    };
+    let parse_result = || parse_contents(options, env.configured_libs(), &content, &file_key);
+    let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+        orchestrator,
+        cache,
+        options,
+        env.configured_libs(),
+        None,
+        transaction.clone(),
+        env.master_cx.clone(),
+        file_key.dupe(),
+        content.dupe(),
+        parse_result,
+    );
+    let (parse_artifacts, typecheck_artifacts) = match &file_artifacts_result {
+        Ok(check_result) => check_result,
+        Err(parse_errors) => {
+            let err_str = type_contents_error_to_string(
+                parse_errors,
+                "Couldn't parse file in parse_contents",
+            )?;
+            let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
+            return Ok((
+                Err(err_str),
+                Some(serde_json::Value::Object(json_props.into_iter().collect())),
+            ));
+        }
+    };
+    let loc_of_aloc =
+        |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc { transaction.loc_of_aloc(aloc) };
+    // Same normalizer settings as an LSP hover.
+    let batched_result = typecheck_artifacts.cx.with_cx(cache, |cx| {
+        let enable_enums = cx.enable_enums();
+        let remote_binding_kind =
+            |aloc: &flow_aloc::ALoc| binder_kind_at_aloc(&transaction, enable_enums, aloc);
+        flow_services_type_info::type_info_service::batched_type_at_pos_from_special_comments(
+            cx,
+            parse_artifacts.file_sig.clone(),
+            &typecheck_artifacts.typed_ast,
+            false,
+            40,
+            false,
+            false,
+            &loc_of_aloc,
+            &remote_binding_kind,
+            file_key.dupe(),
+        )
+    });
+    let (result, json_data) = match batched_result {
+        Ok(tuple) => tuple,
+        Err(e) => return Ok((Err(format!("inspect_types: cancel/timeout: {:?}", e)), None)),
+    };
+    let items = result
+        .into_iter()
+        .map(
+            |(cursor_loc, type_loc, tys, _refining_locs, _refinement_invalidated)| {
+                let type_str = tys.map(|r| {
+                    let (type_str, _refs) =
+                        flow_common_ty::ty_printer::string_of_type_at_pos_result(
+                            flow_common_ty::ty_printer::TypeAtPosPrint {
+                                ty: &r.ty,
+                                refs: None,
+                                binder: r.binder.as_ref(),
+                                alias: r.alias.as_ref(),
+                            },
+                            &loc_of_aloc,
+                            &PrinterOptions {
+                                size: MAX_TYPE_AT_POS_PRINT_SIZE,
+                                ..Default::default()
+                            },
+                        );
+                    type_str
+                });
+                server_prot::response::inspect_types::Item {
+                    cursor_loc,
+                    type_loc,
+                    type_str,
+                }
+            },
+        )
+        .collect();
+    Ok((Ok(items), Some(json_data)))
+}
+
 fn insert_type(
     orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &mut CheckContentsCache,
@@ -3371,6 +3481,21 @@ fn handle_inlay_hint(
     ))
 }
 
+fn handle_inspect_types(
+    orchestrator: Option<&ServerOrchestratorHandle>,
+    cache: &mut CheckContentsCache,
+    options: &Options,
+    env: &server_env::Env,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
+    input: &server_prot::inspect_types_options::T,
+) -> EphemeralParallelizableResult {
+    let (result, json_data) = inspect_types(orchestrator, cache, options, env, transaction, input)?;
+    Ok((
+        server_prot::response::Response::INSPECT_TYPES(result),
+        json_data,
+    ))
+}
+
 fn handle_insert_type(
     orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &mut CheckContentsCache,
@@ -3597,6 +3722,9 @@ pub fn handle_ephemeral_command_for_standalone(
         }
         server_prot::request::Command::INLAY_HINT(input) => {
             handle_inlay_hint(orchestrator, cache, options, env, transaction, &input)
+        }
+        server_prot::request::Command::INSPECT_TYPES(input) => {
+            handle_inspect_types(orchestrator, cache, options, env, transaction, &input)
         }
         server_prot::request::Command::TYPE_OF_NAME(input) => {
             handle_type_of_name(orchestrator, cache, options, env, transaction, &input)
@@ -3966,6 +4094,9 @@ fn get_ephemeral_handler(
             mk_parallelizable(input.wait_for_recheck, options)
         }
         server_prot::request::Command::INLAY_HINT(input) => {
+            mk_parallelizable(input.wait_for_recheck, options)
+        }
+        server_prot::request::Command::INSPECT_TYPES(input) => {
             mk_parallelizable(input.wait_for_recheck, options)
         }
         server_prot::request::Command::TYPE_OF_NAME(input) => {

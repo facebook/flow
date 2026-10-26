@@ -505,6 +505,10 @@ pub enum CliCommand {
     },
     INFER_TYPE(InferTypeOptions),
     INLAY_HINT(InlayHintOptions),
+    INSPECT_TYPES {
+        input: FileInput,
+        wait_for_recheck: Option<bool>,
+    },
     TYPE_OF_NAME(TypeOfNameOptions),
     INSERT_TYPE {
         input: FileInput,
@@ -649,6 +653,15 @@ impl From<server_prot::request::Command> for CliCommand {
             },
             server_prot::request::Command::INFER_TYPE(input) => Self::INFER_TYPE(input.into()),
             server_prot::request::Command::INLAY_HINT(input) => Self::INLAY_HINT(input.into()),
+            server_prot::request::Command::INSPECT_TYPES(
+                server_prot::inspect_types_options::T {
+                    input,
+                    wait_for_recheck,
+                },
+            ) => Self::INSPECT_TYPES {
+                input: input.into(),
+                wait_for_recheck,
+            },
             server_prot::request::Command::TYPE_OF_NAME(input) => Self::TYPE_OF_NAME(input.into()),
             server_prot::request::Command::INSERT_TYPE {
                 input,
@@ -810,6 +823,15 @@ impl CliCommand {
             CliCommand::INLAY_HINT(input) => {
                 server_prot::request::Command::INLAY_HINT(input.into_server_options())
             }
+            CliCommand::INSPECT_TYPES {
+                input,
+                wait_for_recheck,
+            } => server_prot::request::Command::INSPECT_TYPES(
+                server_prot::inspect_types_options::T {
+                    input: input.into_server_file_input(),
+                    wait_for_recheck,
+                },
+            ),
             CliCommand::TYPE_OF_NAME(input) => {
                 server_prot::request::Command::TYPE_OF_NAME(input.into_server_options())
             }
@@ -1374,6 +1396,40 @@ pub mod inlay_hint {
     pub type Response = Result<Vec<Item>, String>;
 }
 
+pub mod inspect_types {
+    use super::Loc;
+    use super::*;
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct Item {
+        pub cursor_loc: Loc,
+        pub type_loc: Loc,
+        pub type_str: Option<String>,
+    }
+
+    impl From<server_prot::response::inspect_types::Item> for Item {
+        fn from(item: server_prot::response::inspect_types::Item) -> Self {
+            Self {
+                cursor_loc: item.cursor_loc.into(),
+                type_loc: item.type_loc.into(),
+                type_str: item.type_str,
+            }
+        }
+    }
+
+    impl Item {
+        pub fn into_server_item(self) -> server_prot::response::inspect_types::Item {
+            server_prot::response::inspect_types::Item {
+                cursor_loc: self.cursor_loc.into_flow_loc(),
+                type_loc: self.type_loc.into_flow_loc(),
+                type_str: self.type_str,
+            }
+        }
+    }
+
+    pub type Response = Result<Vec<Item>, String>;
+}
+
 pub type AutocompleteResponse = Result<(completion::T, server_prot::response::AcType), String>;
 pub type ApplyCodeActionResponse = Result<Patch, String>;
 pub type AutofixExportsResponse = Result<(Patch, Vec<String>), String>;
@@ -1411,6 +1467,7 @@ pub enum CliResponse {
     GRAPH_DEP_GRAPH(GraphDepGraphResponse),
     INFER_TYPE(InferTypeResponse),
     INLAY_HINT(inlay_hint::Response),
+    INSPECT_TYPES(inspect_types::Response),
     TYPE_OF_NAME(Vec<InferTypeOfNameResponse>),
     INSERT_TYPE(InsertTypeResponse),
     SUGGEST_IMPORTS(SuggestImportsResponse),
@@ -1485,6 +1542,11 @@ impl CliResponse {
             server_prot::response::Response::INLAY_HINT(response) => {
                 Ok(Self::INLAY_HINT(response.map(|items| {
                     items.into_iter().map(inlay_hint::Item::from).collect()
+                })))
+            }
+            server_prot::response::Response::INSPECT_TYPES(response) => {
+                Ok(Self::INSPECT_TYPES(response.map(|items| {
+                    items.into_iter().map(inspect_types::Item::from).collect()
                 })))
             }
             server_prot::response::Response::TYPE_OF_NAME(response) => Ok(Self::TYPE_OF_NAME(
@@ -1585,6 +1647,14 @@ impl CliResponse {
                     items
                         .into_iter()
                         .map(inlay_hint::Item::into_server_item)
+                        .collect()
+                }))
+            }
+            CliResponse::INSPECT_TYPES(response) => {
+                server_prot::response::Response::INSPECT_TYPES(response.map(|items| {
+                    items
+                        .into_iter()
+                        .map(inspect_types::Item::into_server_item)
                         .collect()
                 }))
             }

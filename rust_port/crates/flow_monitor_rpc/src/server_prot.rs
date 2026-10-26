@@ -53,6 +53,16 @@ pub mod inlay_hint_options {
     }
 }
 
+pub mod inspect_types_options {
+    use flow_server_utils::file_input::FileInput;
+
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    pub struct T {
+        pub input: FileInput,
+        pub wait_for_recheck: Option<bool>,
+    }
+}
+
 pub mod type_of_name_options {
     use std::path::PathBuf;
 
@@ -104,6 +114,7 @@ pub mod request {
     use crate::server_prot::code_action;
     use crate::server_prot::infer_type_options;
     use crate::server_prot::inlay_hint_options;
+    use crate::server_prot::inspect_types_options;
     use crate::server_prot::type_of_name_options;
 
     #[derive(
@@ -234,6 +245,7 @@ pub mod request {
         },
         INFER_TYPE(infer_type_options::T),
         INLAY_HINT(inlay_hint_options::T),
+        INSPECT_TYPES(inspect_types_options::T),
         TYPE_OF_NAME(type_of_name_options::T),
         INSERT_TYPE {
             input: FileInput,
@@ -368,6 +380,9 @@ pub mod request {
             ),
             Command::INLAY_HINT(inlay_hint_options::T { input, .. }) => {
                 format!("inlay-hint {}", input.filename_of_file_input())
+            }
+            Command::INSPECT_TYPES(inspect_types_options::T { input, .. }) => {
+                format!("inspect-types {}", input.filename_of_file_input())
             }
             Command::TYPE_OF_NAME(type_of_name_options::T { input, names, .. }) => format!(
                 "type-of-name {} {}",
@@ -583,6 +598,19 @@ pub mod response {
         pub type Response = Result<Vec<Item>, String>;
     }
 
+    pub mod inspect_types {
+        use flow_parser::loc::Loc;
+
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+        pub struct Item {
+            pub cursor_loc: Loc,
+            pub type_loc: Loc,
+            pub type_str: Option<String>,
+        }
+
+        pub type Response = Result<Vec<Item>, String>;
+    }
+
     pub type InsertTypeResponse = Result<Patch, String>;
 
     pub type RageResponse = Vec<(String, String)>;
@@ -629,6 +657,7 @@ pub mod response {
         GET_DEF(GetDefResponse),
         INFER_TYPE(InferTypeResponse),
         INLAY_HINT(inlay_hint::Response),
+        INSPECT_TYPES(inspect_types::Response),
         TYPE_OF_NAME(Vec<InferTypeOfNameResponse>),
         INSERT_TYPE(InsertTypeResponse),
         RAGE(RageResponse),
@@ -661,6 +690,7 @@ pub mod response {
             Response::GET_DEF(_) => "get_def response",
             Response::INFER_TYPE(_) => "infer_type response",
             Response::INLAY_HINT(_) => "inlay_hint response",
+            Response::INSPECT_TYPES(_) => "inspect_types response",
             Response::TYPE_OF_NAME(_) => "type_of_name response",
             Response::INSERT_TYPE(_) => "insert_type response",
             Response::RAGE(_) => "rage response",
