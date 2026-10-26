@@ -16,6 +16,7 @@ use flow_common::options::Options;
 use flow_config::LazyMode;
 use flow_server_monitor::StartArgs;
 
+mod agent_helper_command;
 mod apply_code_action_command;
 mod ast_command;
 mod autocomplete_command;
@@ -242,6 +243,7 @@ pub(crate) fn check_entry_point() {
 
 fn explicit_commands() -> Vec<flow_command_spec::Command> {
     vec![
+        agent_helper_command::command(),
         apply_code_action_command::command(),
         ast_command::command(),
         autocomplete_command::command(),
