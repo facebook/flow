@@ -125,53 +125,136 @@ mod val {
             }
         }
 
-        fn normalize(t: &WriteState<L>) -> BTreeSet<WriteState<L>> {
+        fn join_slice(states: &[WriteState<L>]) -> WriteState<L> {
+            match states {
+                [] => WriteState::Phi(Rc::from([])),
+                [state] => state.dupe(),
+                _ => WriteState::Phi(Rc::from(states)),
+            }
+        }
+
+        /// The atomic terms of `t` (`Uninitialized`, `Loc(_)`, and `Ref` cells holding
+        /// `Unresolved(_)`) as a sorted set without duplicates.
+        fn normalize(t: &WriteState<L>) -> Vec<WriteState<L>> {
+            let mut vals = Vec::new();
+            Self::normalize_into(t, &mut vals);
+            vals.sort();
+            vals.dedup();
+            vals
+        }
+
+        fn normalize_into(t: &WriteState<L>, vals: &mut Vec<WriteState<L>>) {
             match t {
-                WriteState::Uninitialized | WriteState::Loc(_) => {
-                    let mut set = BTreeSet::new();
-                    set.insert(t.dupe());
-                    set
-                }
+                WriteState::Uninitialized | WriteState::Loc(_) => vals.push(t.dupe()),
                 WriteState::Ref(r) => {
-                    let borrowed = r.borrow();
-                    match &*borrowed {
-                        RefState::Unresolved(_) => {
-                            drop(borrowed);
-                            let mut set = BTreeSet::new();
-                            set.insert(t.dupe());
-                            set
-                        }
-                        RefState::Resolved(resolved) => {
-                            let resolved = resolved.dupe();
-                            drop(borrowed);
-                            let vals = Self::normalize(&resolved);
-                            let joined = Self::join(&vals);
-                            *r.borrow_mut() = RefState::Resolved(joined);
-                            vals
+                    let resolved = match &*r.borrow() {
+                        RefState::Unresolved(_) => None,
+                        RefState::Resolved(resolved) => Some(resolved.dupe()),
+                    };
+                    match resolved {
+                        None => vals.push(t.dupe()),
+                        Some(resolved) => {
+                            let resolved_vals = Self::normalize(&resolved);
+                            *r.borrow_mut() = RefState::Resolved(Self::join_slice(&resolved_vals));
+                            vals.extend(resolved_vals);
                         }
                     }
                 }
-                WriteState::Phi(ts) => ts
-                    .iter()
-                    .flat_map(|t| Self::normalize(t).into_iter())
-                    .collect(),
+                WriteState::Phi(ts) => {
+                    for t in ts.iter() {
+                        Self::normalize_into(t, vals);
+                    }
+                }
             }
+        }
+
+        fn is_atom(t: &WriteState<L>) -> bool {
+            match t {
+                WriteState::Uninitialized | WriteState::Loc(_) => true,
+                WriteState::Ref(r) => matches!(*r.borrow(), RefState::Unresolved(_)),
+                WriteState::Phi(_) => false,
+            }
+        }
+
+        /// If `t` is already in the form `join` gives to a normal form, its atomic terms.
+        fn normal_atoms(t: &WriteState<L>) -> Option<&[WriteState<L>]> {
+            match t {
+                WriteState::Phi(ts) => (ts.len() != 1
+                    && ts.iter().all(Self::is_atom)
+                    && ts.windows(2).all(|w| w[0] < w[1]))
+                .then_some(&**ts),
+                _ => Self::is_atom(t).then_some(std::slice::from_ref(t)),
+            }
+        }
+
+        /// Whether every element of `small` is in `big`; both are sorted without duplicates.
+        fn is_subset(small: &[WriteState<L>], big: &[WriteState<L>]) -> bool {
+            if let [x] = small {
+                return big.binary_search(x).is_ok();
+            }
+            if small.len() > big.len() {
+                return false;
+            }
+            let mut big = big.iter();
+            small
+                .iter()
+                .all(|x| big.by_ref().find(|y| *y >= x).is_some_and(|y| y == x))
+        }
+
+        /// The union of two sorted sets without duplicates.
+        fn union(vals1: &[WriteState<L>], vals2: &[WriteState<L>]) -> Vec<WriteState<L>> {
+            let mut union = Vec::with_capacity(vals1.len() + vals2.len());
+            let (mut i, mut j) = (0, 0);
+            while i < vals1.len() && j < vals2.len() {
+                match vals1[i].cmp(&vals2[j]) {
+                    std::cmp::Ordering::Less => {
+                        union.push(vals1[i].dupe());
+                        i += 1;
+                    }
+                    std::cmp::Ordering::Greater => {
+                        union.push(vals2[j].dupe());
+                        j += 1;
+                    }
+                    std::cmp::Ordering::Equal => {
+                        union.push(vals1[i].dupe());
+                        i += 1;
+                        j += 1;
+                    }
+                }
+            }
+            union.extend(vals1[i..].iter().duped());
+            union.extend(vals2[j..].iter().duped());
+            union
         }
 
         pub(super) fn merge(t1: &Self, t2: &Self) -> Self {
             if t1.id == t2.id {
-                t1.dupe()
-            } else {
-                // Merging can easily lead to exponential blowup in size of terms if we're not careful.
-                // We amortize costs by computing normal forms as sets of "atomic" terms, so that
-                // merging would correspond to set union.
-                // (Atomic terms include `Uninitialized`, `Loc(_)`, and `Ref` cells holding `Unresolved(_)`.)
-                // Note that normal forms might change over time, as unresolved refs become resolved;
-                // thus, we do not shortcut normalization of previously normalized terms.
-                let vals1 = Self::normalize(&t1.write_state);
-                let vals2 = Self::normalize(&t2.write_state);
-                Self::mk_with_write_state(Self::join(vals1.union(&vals2)))
+                return t1.dupe();
             }
+            // Merging can easily lead to exponential blowup in size of terms if we're not careful.
+            // We amortize costs by computing normal forms as sets of "atomic" terms, so that
+            // merging would correspond to set union.
+            // (Atomic terms include `Uninitialized`, `Loc(_)`, and `Ref` cells holding `Unresolved(_)`.)
+            // Note that normal forms might change over time, as unresolved refs become resolved;
+            // thus, we do not shortcut normalization of previously normalized terms.
+            if let (Some(vals1), Some(vals2)) = (
+                Self::normal_atoms(&t1.write_state),
+                Self::normal_atoms(&t2.write_state),
+            ) {
+                // Both terms are their own normal forms, so when one contains the other, the
+                // join of the union is that term.
+                let write_state = if Self::is_subset(vals2, vals1) {
+                    t1.write_state.dupe()
+                } else if Self::is_subset(vals1, vals2) {
+                    t2.write_state.dupe()
+                } else {
+                    Self::join_slice(&Self::union(vals1, vals2))
+                };
+                return Self::mk_with_write_state(write_state);
+            }
+            let vals1 = Self::normalize(&t1.write_state);
+            let vals2 = Self::normalize(&t2.write_state);
+            Self::mk_with_write_state(Self::join_slice(&Self::union(&vals1, &vals2)))
         }
 
         pub(super) fn one(reason: VirtualReason<L>) -> Self {
