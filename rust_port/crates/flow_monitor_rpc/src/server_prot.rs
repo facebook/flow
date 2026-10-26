@@ -606,6 +606,7 @@ pub mod response {
             pub cursor_loc: Loc,
             pub type_loc: Loc,
             pub type_str: Option<String>,
+            pub refining_locs: Vec<Loc>,
         }
 
         pub type Response = Result<Vec<Item>, String>;

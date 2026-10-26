@@ -11,3 +11,6 @@ assert_ok "$FLOW" agent-helper inspect-types --strip-root test.js
 
 printf "\ntest.js (stdin)\n"
 assert_ok "$FLOW" agent-helper inspect-types --strip-root --path test.js < test.js
+
+printf "\ntest.js --show-refinements\n"
+assert_ok "$FLOW" agent-helper inspect-types --strip-root --show-refinements test.js

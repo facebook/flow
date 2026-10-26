@@ -1405,6 +1405,7 @@ pub mod inspect_types {
         pub cursor_loc: Loc,
         pub type_loc: Loc,
         pub type_str: Option<String>,
+        pub refining_locs: Vec<Loc>,
     }
 
     impl From<server_prot::response::inspect_types::Item> for Item {
@@ -1413,6 +1414,7 @@ pub mod inspect_types {
                 cursor_loc: item.cursor_loc.into(),
                 type_loc: item.type_loc.into(),
                 type_str: item.type_str,
+                refining_locs: item.refining_locs.into_iter().map(Loc::from).collect(),
             }
         }
     }
@@ -1423,6 +1425,11 @@ pub mod inspect_types {
                 cursor_loc: self.cursor_loc.into_flow_loc(),
                 type_loc: self.type_loc.into_flow_loc(),
                 type_str: self.type_str,
+                refining_locs: self
+                    .refining_locs
+                    .into_iter()
+                    .map(Loc::into_flow_loc)
+                    .collect(),
             }
         }
     }
