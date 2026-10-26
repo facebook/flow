@@ -17,3 +17,6 @@ assert_ok "$FLOW" agent-helper inspect-types --strip-root --show-refinements tes
 
 printf "\ntest.js --show-refinements --show-invalidations\n"
 assert_ok "$FLOW" agent-helper inspect-types --strip-root --show-refinements --show-invalidations test.js
+
+printf "\ntest.js --pretty --show-refinements --show-invalidations\n"
+assert_ok "$FLOW" agent-helper inspect-types --strip-root --pretty --show-refinements --show-invalidations test.js

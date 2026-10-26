@@ -76,3 +76,91 @@ Refinement invalidated due to function call at test.js:25:3-10
 
 test.js:29:3
 (unknown)
+
+test.js --pretty --show-refinements --show-invalidations
+[
+  {
+    "cursor":{"column":7,"line":3},
+    "invalidations":[],
+    "loc":{
+      "end":{"column":9,"line":3},
+      "source":"test.js",
+      "start":{"column":7,"line":3},
+      "type":"SourceFile"
+    },
+    "refinements":[],
+    "type":"const num: 1"
+  },
+  {
+    "cursor":{"column":3,"line":10},
+    "invalidations":[],
+    "loc":{
+      "end":{"column":3,"line":10},
+      "source":"test.js",
+      "start":{"column":1,"line":10},
+      "type":"SourceFile"
+    },
+    "refinements":[],
+    "type":"let foo: number | string"
+  },
+  {
+    "cursor":{"column":5,"line":15},
+    "invalidations":[],
+    "loc":{
+      "end":{"column":5,"line":15},
+      "source":"test.js",
+      "start":{"column":5,"line":15},
+      "type":"SourceFile"
+    },
+    "refinements":[
+      {
+        "end":{"column":15,"line":14},
+        "source":"test.js",
+        "start":{"column":7,"line":14},
+        "type":"SourceFile"
+      }
+    ],
+    "type":"(parameter) x: string"
+  },
+  {
+    "cursor":{"column":7,"line":20},
+    "invalidations":[],
+    "loc":{
+      "end":{"column":10,"line":20},
+      "source":"test.js",
+      "start":{"column":6,"line":20},
+      "type":"SourceFile"
+    },
+    "refinements":[],
+    "type":"type Alias = {readonly f: number}"
+  },
+  {
+    "cursor":{"column":7,"line":26},
+    "invalidations":[
+      {
+        "loc":{
+          "end":{"column":10,"line":25},
+          "source":"test.js",
+          "start":{"column":3,"line":25},
+          "type":"SourceFile"
+        },
+        "reason":"function call"
+      }
+    ],
+    "loc":{
+      "end":{"column":7,"line":26},
+      "source":"test.js",
+      "start":{"column":7,"line":26},
+      "type":"SourceFile"
+    },
+    "refinements":[],
+    "type":"(property) p: ?number"
+  },
+  {
+    "cursor":{"column":3,"line":29},
+    "invalidations":[],
+    "loc":null,
+    "refinements":[],
+    "type":null
+  }
+]

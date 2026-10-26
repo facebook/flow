@@ -32,7 +32,7 @@ fn inspect_types_spec() -> flow_command_spec::Spec {
         ),
     );
     let spec = flow_command_utils::add_base_flags(spec);
-    let spec = flow_command_utils::add_connect_flags(spec);
+    let spec = flow_command_utils::add_connect_and_json_flags(spec);
     let spec = flow_command_utils::add_root_flag(spec);
     let spec = flow_command_utils::add_strip_root_flag(spec);
     let spec = flow_command_utils::add_from_flag(spec);
@@ -108,9 +108,65 @@ fn print_inspect_types_item(
     }
 }
 
+fn json_of_inspect_types_item(
+    strip_root: Option<&str>,
+    show_refinements: bool,
+    show_invalidations: bool,
+    item: &server_prot::response::inspect_types::Item,
+) -> serde_json::Value {
+    let server_prot::response::inspect_types::Item {
+        cursor_loc,
+        type_loc,
+        type_str,
+        refining_locs,
+        refinement_invalidated,
+    } = item;
+    let json_of_loc = |loc: &Loc| flow_common::reason::json_of_loc(strip_root, false, None, loc);
+    let mut props = serde_json::Map::new();
+    props.insert(
+        "cursor".to_string(),
+        serde_json::json!({
+            "line": cursor_loc.start.line,
+            "column": cursor_loc.start.column + 1,
+        }),
+    );
+    props.insert(
+        "loc".to_string(),
+        if *type_loc == LOC_NONE {
+            serde_json::Value::Null
+        } else {
+            json_of_loc(type_loc)
+        },
+    );
+    props.insert("type".to_string(), serde_json::json!(type_str));
+    if show_refinements {
+        props.insert(
+            "refinements".to_string(),
+            serde_json::Value::Array(refining_locs.iter().map(json_of_loc).collect()),
+        );
+    }
+    if show_invalidations {
+        props.insert(
+            "invalidations".to_string(),
+            serde_json::Value::Array(
+                refinement_invalidated
+                    .iter()
+                    .map(|(loc, reason)| {
+                        serde_json::json!({
+                            "loc": json_of_loc(loc),
+                            "reason": flow_common::refinement_invalidation::string_of_reason(*reason),
+                        })
+                    })
+                    .collect(),
+            ),
+        );
+    }
+    serde_json::Value::Object(props)
+}
+
 fn run_inspect_types(args: &arg_spec::Values) {
     let base_flags = flow_command_utils::get_base_flags(args);
-    let connect_flags = flow_command_utils::get_connect_flags(args);
+    let (connect_flags, json, pretty) = flow_command_utils::get_connect_and_json_flags(args);
     let root_arg =
         flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
     let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
@@ -149,7 +205,11 @@ fn run_inspect_types(args: &arg_spec::Values) {
     );
     match response {
         server_prot::response::Response::INSPECT_TYPES(Err(err)) => {
-            eprintln!("{}", err);
+            if json || pretty {
+                flow_hh_json::prerr_json_endline(pretty, &serde_json::json!({ "error": err }));
+            } else {
+                eprintln!("{}", err);
+            }
         }
         server_prot::response::Response::INSPECT_TYPES(Ok(items)) => {
             let strip_root = if strip_root {
@@ -157,6 +217,21 @@ fn run_inspect_types(args: &arg_spec::Values) {
             } else {
                 None
             };
+            if json || pretty {
+                let items = items
+                    .iter()
+                    .map(|item| {
+                        json_of_inspect_types_item(
+                            strip_root.as_deref(),
+                            show_refinements,
+                            show_invalidations,
+                            item,
+                        )
+                    })
+                    .collect();
+                flow_hh_json::print_json_endline(pretty, &serde_json::Value::Array(items));
+                return;
+            }
             for (i, item) in items.iter().enumerate() {
                 if i > 0 {
                     println!();
