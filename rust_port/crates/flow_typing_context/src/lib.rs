@@ -1650,7 +1650,8 @@ impl<'a> Context<'a> {
             .typescript_library_definition_support
     }
 
-    /// Whether the current source module contributes a supported `declare global` block.
+    /// Whether the current source module contributes a supported `declare global` block or a
+    /// `.d.ts` `export as namespace` UMD global.
     pub fn is_ts_global_augmentation(&self) -> bool {
         self.inner().metadata.overridable.is_ts_global_augmentation
     }

@@ -236,7 +236,8 @@ impl TypedParse {
         self.ast.is_some()
     }
 
-    /// Whether this source module contributes a direct TypeScript `declare global` block.
+    /// Whether this source module contributes a direct TypeScript `declare global` block or a
+    /// `.d.ts` `export as namespace` UMD global.
     pub fn has_ts_global_augmentation(&self) -> bool {
         self.has_ts_global_augmentation
     }

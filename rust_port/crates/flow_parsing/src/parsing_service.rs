@@ -34,6 +34,7 @@ use flow_parser::dts_file_kind::DtsFileKind;
 use flow_parser::dts_file_kind::FileSemanticRole;
 use flow_parser::dts_file_kind::dts_file_kind;
 use flow_parser::dts_file_kind::has_top_level_declare_global;
+use flow_parser::dts_file_kind::has_top_level_namespace_export;
 use flow_parser::dts_file_kind::is_external_module;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::has_dts_ext;
@@ -120,7 +121,8 @@ pub struct ParseResults {
     pub all_unordered_libs: BTreeSet<FlowSmolStr>,
     // declaration file kinds encountered by parse attempts
     pub dts_file_kinds: BTreeMap<FileKey, DtsFileKind>,
-    // TypeScript external modules containing a direct `declare global` block
+    // TypeScript external modules containing a direct `declare global` block or, with
+    // `experimental.export_as_namespace_support`, a `.d.ts` `export as namespace`
     pub ts_global_augmentation_files: FlowOrdSet<FileKey>,
 }
 
@@ -148,11 +150,19 @@ fn parse_source_file(
     flow_parser::parse_program_file::<()>(false, None, parse_options, file.dupe(), content)
 }
 
-fn has_ts_global_augmentation(is_lib_file: bool, file: &FileKey, ast: &Program<Loc, Loc>) -> bool {
+fn has_ts_global_augmentation(
+    options: &Options,
+    is_lib_file: bool,
+    file: &FileKey,
+    ast: &Program<Loc, Loc>,
+) -> bool {
     !is_lib_file
         && files::has_ts_ext(file)
         && is_external_module(file, ast)
-        && has_top_level_declare_global(ast)
+        && (has_top_level_declare_global(ast)
+            || (options.export_as_namespace_support
+                && has_dts_ext(file.as_str())
+                && has_top_level_namespace_export(ast)))
 }
 
 pub fn parse_package_json_file(
@@ -328,7 +338,7 @@ pub fn do_parse(
                 } else {
                     let dts_file_kind = dts_file_kind(file, &ast);
                     let has_ts_global_augmentation =
-                        has_ts_global_augmentation(is_lib_file, file, &ast);
+                        has_ts_global_augmentation(options, is_lib_file, file, &ast);
                     let arena = bumpalo::Bump::new();
                     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
                     let (sig_errors, locs, type_sig, type_sig_options) = parse_type_sig(
@@ -439,7 +449,7 @@ pub fn did_content_change(transaction: &Transaction, file: &FileKey) -> bool {
 
 fn file_has_ts_global_augmentation(options: &Options, file: &FileKey, content: &str) -> bool {
     let (ast, parse_errors) = parse_source_file(options, Ok(content), file, false);
-    parse_errors.is_empty() && has_ts_global_augmentation(false, file, &ast)
+    parse_errors.is_empty() && has_ts_global_augmentation(options, false, file, &ast)
 }
 
 /// The declaration files among `files` whose bytes on disk no longer match the parse heap.

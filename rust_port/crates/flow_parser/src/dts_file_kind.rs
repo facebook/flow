@@ -97,6 +97,15 @@ pub fn has_top_level_declare_global<Loc: Dupe>(ast: &Program<Loc, Loc>) -> bool 
     })
 }
 
+pub fn has_top_level_namespace_export<Loc: Dupe>(ast: &Program<Loc, Loc>) -> bool {
+    ast.statements.iter().any(|statement| {
+        matches!(
+            &**statement,
+            StatementInner::NamespaceExportDeclaration { .. }
+        )
+    })
+}
+
 fn is_external_module_statement(statement: &StatementInner<Loc, Loc>) -> bool {
     match statement {
         StatementInner::ImportDeclaration { .. }
