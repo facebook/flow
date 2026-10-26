@@ -65,7 +65,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> FlowError<L> {
         M: Clone + Dupe + PartialEq + Eq + PartialOrd + Ord,
     {
         FlowError {
-            loc: error.loc.map(&f),
+            loc: error.loc.map(f),
             msg: ErrorMessage::map_loc_of_error_message(f, error.msg),
             source_file: error.source_file,
         }
