@@ -104,7 +104,6 @@ fn is_external_module_statement(statement: &StatementInner<Loc, Loc>) -> bool {
         | StatementInner::ExportNamedDeclaration { .. }
         | StatementInner::ExportDefaultDeclaration { .. }
         | StatementInner::ExportAssignment { .. }
-        | StatementInner::NamespaceExportDeclaration { .. }
         | StatementInner::DeclareExportDeclaration { .. } => true,
         StatementInner::Block { .. }
         | StatementInner::Break { .. }
@@ -135,6 +134,7 @@ fn is_external_module_statement(statement: &StatementInner<Loc, Loc>) -> bool {
         | StatementInner::InterfaceDeclaration { .. }
         | StatementInner::Labeled { .. }
         | StatementInner::Match { .. }
+        | StatementInner::NamespaceExportDeclaration { .. }
         | StatementInner::RecordDeclaration { .. }
         | StatementInner::Return { .. }
         | StatementInner::Switch { .. }
