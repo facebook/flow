@@ -53,14 +53,17 @@ use crate::ssa_api::WriteLoc;
 /// a reference to something that is unknown at a particular point in the AST
 /// during traversal, but will be known by the time traversal is complete.
 mod val {
-    use std::sync::atomic::AtomicU32;
-    use std::sync::atomic::Ordering;
+    use std::cell::Cell;
 
     use dupe::IterDupedExt;
 
     use super::*;
 
-    static CURR_ID: AtomicU32 = AtomicU32::new(0);
+    thread_local! {
+        // Ids only need to be distinct among the values of one analysis, which runs on a single
+        // thread.
+        static CURR_ID: Cell<u64> = const { Cell::new(0) };
+    }
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
     enum RefState<L: Dupe> {
@@ -80,12 +83,16 @@ mod val {
 
     #[derive(Debug, Clone, Dupe)]
     pub(super) struct Val<L: Dupe> {
-        id: u32,
+        id: u64,
         write_state: WriteState<L>,
     }
 
-    pub(super) fn new_id() -> u32 {
-        CURR_ID.fetch_add(1, Ordering::Relaxed)
+    fn new_id() -> u64 {
+        CURR_ID.with(|id| {
+            let next = id.get();
+            id.set(next + 1);
+            next
+        })
     }
 
     impl<L: Dupe + Clone + Ord> Val<L> {
@@ -207,15 +214,15 @@ mod val {
             let (mut i, mut j) = (0, 0);
             while i < vals1.len() && j < vals2.len() {
                 match vals1[i].cmp(&vals2[j]) {
-                    std::cmp::Ordering::Less => {
+                    Ordering::Less => {
                         union.push(vals1[i].dupe());
                         i += 1;
                     }
-                    std::cmp::Ordering::Greater => {
+                    Ordering::Greater => {
                         union.push(vals2[j].dupe());
                         j += 1;
                     }
-                    std::cmp::Ordering::Equal => {
+                    Ordering::Equal => {
                         union.push(vals1[i].dupe());
                         i += 1;
                         j += 1;
