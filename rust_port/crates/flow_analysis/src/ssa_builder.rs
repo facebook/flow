@@ -16,6 +16,7 @@
 //! need to modify the name_resolver as well, but not necessarily with identical changes.
 
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::hash::Hash;
@@ -27,7 +28,6 @@ use dupe::IterDupedExt;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::expression::ExpressionInner;
@@ -340,8 +340,59 @@ mod val {
 
 use val::Val;
 
-/// An environment is a map from variables to values.
-type Env<L> = BTreeMap<FlowSmolStr, Val<L>>;
+/// An environment is a map from variables to values, kept as a vector sorted by variable.
+#[derive(Debug, Clone)]
+struct Env<L: Dupe>(Vec<(FlowSmolStr, Val<L>)>);
+
+impl<L: Dupe> Env<L> {
+    fn get(&self, x: &FlowSmolStr) -> Option<&Val<L>> {
+        self.0
+            .binary_search_by(|(k, _)| k.cmp(x))
+            .ok()
+            .map(|i| &self.0[i].1)
+    }
+
+    /// Looks up variables in increasing order, resuming each search where the last one ended.
+    fn cursor(&self) -> EnvCursor<'_, L> {
+        EnvCursor { env: self, pos: 0 }
+    }
+}
+
+impl<L: Dupe> FromIterator<(FlowSmolStr, Val<L>)> for Env<L> {
+    /// The variables must come in increasing order, as the SSA environment iterates them.
+    fn from_iter<I: IntoIterator<Item = (FlowSmolStr, Val<L>)>>(iter: I) -> Self {
+        let entries: Vec<_> = iter.into_iter().collect();
+        debug_assert!(entries.windows(2).all(|w| w[0].0 < w[1].0));
+        Env(entries)
+    }
+}
+
+struct EnvCursor<'a, L: Dupe> {
+    env: &'a Env<L>,
+    pos: usize,
+}
+
+impl<'a, L: Dupe> EnvCursor<'a, L> {
+    fn get(&mut self, x: &FlowSmolStr) -> Option<&'a Val<L>> {
+        let entries = &self.env.0;
+        if self.pos > 0 && entries[self.pos - 1].0 >= *x {
+            return self.env.get(x);
+        }
+        while self.pos < entries.len() {
+            let (k, v) = &entries[self.pos];
+            self.pos += 1;
+            match k.cmp(x) {
+                Ordering::Less => {}
+                Ordering::Equal => return Some(v),
+                Ordering::Greater => {
+                    self.pos -= 1;
+                    return None;
+                }
+            }
+        }
+        None
+    }
+}
 
 /// Abrupt completions induce control flows, so modeling them accurately is
 /// necessary for soundness.
@@ -418,7 +469,7 @@ pub struct SsaBuilder<Loc: Dupe + Clone + Eq + Ord + Hash + Default> {
     /// TODO: These low-level operations should probably be replaced by
     /// higher-level "control-flow-graph" operations that can be implemented using
     /// them, e.g., those that deal with branches and loops.
-    ssa_env: FlowOrdMap<FlowSmolStr, Ssa<Loc>>,
+    ssa_env: BTreeMap<FlowSmolStr, Ssa<Loc>>,
     /// List of (abrupt_completion, environment) pairs.When an abrupt completion is raised, it falls through any subsequent
     /// straight-line code, until it reaches a merge point in the control-flow
     /// graph. At that point, it can be re-raised if and only if all other reaching
@@ -453,7 +504,7 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
             unresolved_ref_id_counter: 0,
             values: BTreeMap::new(),
             unbound_names: BTreeSet::new(),
-            ssa_env: FlowOrdMap::new(),
+            ssa_env: BTreeMap::new(),
             abrupt_completion_envs: Vec::new(),
             possible_labeled_continues: Vec::new(),
         }
@@ -483,6 +534,7 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
     fn merge_remote_ssa_env(&self, env: &Env<Loc>) {
         // NOTE: env might have more keys than ssa_env, since the environment it
         // describes might be nested inside the current environment
+        let mut env = env.cursor();
         for (x, ssa) in &self.ssa_env {
             let remote_val = env.get(x).unwrap();
             let current = ssa.val_ref.borrow().dupe();
@@ -491,6 +543,8 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
     }
 
     fn merge_ssa_env(&self, env1: &Env<Loc>, env2: &Env<Loc>) {
+        let mut env1 = env1.cursor();
+        let mut env2 = env2.cursor();
         for (key, ssa) in &self.ssa_env {
             let val1 = env1.get(key).unwrap();
             let val2 = env2.get(key).unwrap();
@@ -499,6 +553,7 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
     }
 
     fn merge_self_ssa_env(&self, env: &Env<Loc>) {
+        let mut env = env.cursor();
         for (x, ssa) in &self.ssa_env {
             if let Some(env_val) = env.get(x) {
                 let current = ssa.val_ref.borrow().clone();
@@ -508,6 +563,7 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
     }
 
     fn reset_ssa_env(&self, env0: &Env<Loc>) {
+        let mut env0 = env0.cursor();
         for (x, ssa) in &self.ssa_env {
             if let Some(env_val) = env0.get(x) {
                 *ssa.val_ref.borrow_mut() = env_val.clone();
@@ -523,6 +579,7 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
     }
 
     fn assert_ssa_env(&mut self, env0: &Env<Loc>) {
+        let mut env0 = env0.cursor();
         for (x, ssa) in &self.ssa_env {
             if let Some(env_val) = env0.get(x) {
                 Val::resolve(env_val, &ssa.val_ref.borrow());
