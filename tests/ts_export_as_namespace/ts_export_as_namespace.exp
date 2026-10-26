@@ -1,0 +1,252 @@
+Error ---------------------------------------------------------------------------------------------------- bad_js.js:2:1
+
+`export as namespace` may only appear in declaration files. [unsupported-syntax]
+
+   2| export as namespace BadJs; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- bad_ts.ts:2:1
+
+`export as namespace` may only appear in declaration files. [unsupported-syntax]
+
+   2| export as namespace BadTs; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- nested.d.ts:3:3
+
+`export as namespace` may only appear at the top level. [unsupported-syntax]
+
+   3|   export as namespace Nested; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- script.d.ts:2:1
+
+`export as namespace` may only appear in module files. [unsupported-syntax]
+
+   2| export as namespace Script; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:18
+
+Cannot resolve name `UmdEs`. [cannot-resolve-name]
+
+   5| declare const i: UmdEs.I;
+                       ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:5:18
+
+Cannot use `I` as a type because it is an `any`-typed value. Type `I` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   5| declare const i: UmdEs.I;
+                       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:19
+
+Cannot resolve name `UmdCjs`. [cannot-resolve-name]
+
+   9| declare const mm: UmdCjs.M;
+                        ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:19
+
+Cannot use `M` as a type because it is an `any`-typed value. Type `M` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   9| declare const mm: UmdCjs.M;
+                        ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:22
+
+Cannot resolve name `UmdClass`. [cannot-resolve-name]
+
+   12| declare const thing: UmdClass;
+                            ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:20
+
+Cannot resolve name `UmdClass`. [cannot-resolve-name]
+
+   14| declare const sub: UmdClass.SubThing;
+                          ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:20
+
+Cannot use `SubThing` as a type because it is an `any`-typed value. Type `SubThing` properly, so it is no longer
+`any`-typed, to use it as an annotation. [value-as-type]
+
+   14| declare const sub: UmdClass.SubThing;
+                          ^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:18
+
+Cannot resolve name `SameFileA`. [cannot-resolve-name]
+
+   17| declare const s: SameFileA.S;
+                        ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:18
+
+Cannot use `S` as a type because it is an `any`-typed value. Type `S` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   17| declare const s: SameFileA.S;
+                        ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:6
+
+Cannot resolve name `SameFileB`. [cannot-resolve-name]
+
+   18| s as SameFileB.S;
+            ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:6
+
+Cannot use `S` as a type because it is an `any`-typed value. Type `S` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   18| s as SameFileB.S;
+            ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:1
+
+Cannot resolve name `UmdEs`. [cannot-resolve-name]
+
+   21| UmdEs.f(); // ERROR
+       ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:22:1
+
+Cannot resolve name `UmdCjs`. [cannot-resolve-name]
+
+   22| UmdCjs(); // ERROR
+       ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:5
+
+Cannot resolve name `UmdClass`. [cannot-resolve-name]
+
+   23| new UmdClass(); // ERROR
+           ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:24:27
+
+Cannot resolve name `UmdEs`. [cannot-resolve-name]
+
+   24| type EsNamespace = typeof UmdEs; // ERROR
+                                 ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:10
+
+Cannot resolve name `UmdClass`. [cannot-resolve-name]
+
+   27| const t: UmdClass = new Thing();
+                ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:28:21
+
+Cannot resolve name `UmdEs`. [cannot-resolve-name]
+
+   28| ({x: 1}) as es.I as UmdEs.I;
+                           ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:28:21
+
+Cannot use `I` as a type because it is an `any`-typed value. Type `I` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   28| ({x: 1}) as es.I as UmdEs.I;
+                           ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:34:18
+
+Cannot resolve name `Dup`. [cannot-resolve-name]
+
+   34| declare const a: Dup.A;
+                        ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:34:18
+
+Cannot use `A` as a type because it is an `any`-typed value. Type `A` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   34| declare const a: Dup.A;
+                        ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:35:18
+
+Cannot resolve name `Dup`. [cannot-resolve-name]
+
+   35| declare const b: Dup.B; // ERROR
+                        ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:35:18
+
+Cannot use `B` as a type because it is an `any`-typed value. Type `B` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   35| declare const b: Dup.B; // ERROR
+                        ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:38:18
+
+Cannot resolve name `UmdImports`. [cannot-resolve-name]
+
+   38| declare const y: UmdImports.I; // ERROR
+                        ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:38:18
+
+Cannot use `I` as a type because it is an `any`-typed value. Type `I` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   38| declare const y: UmdImports.I; // ERROR
+                        ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:39:19
+
+Cannot resolve name `Script`. [cannot-resolve-name]
+
+   39| declare const sc: Script; // ERROR
+                         ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- umd_imports.d.ts:3:1
+
+`export as namespace` is not supported in a module with imports or re-exports. The global will not be declared.
+[unsupported-syntax]
+
+   3| export as namespace UmdImports; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 30 errors

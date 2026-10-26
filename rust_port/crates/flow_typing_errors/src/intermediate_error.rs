@@ -9579,6 +9579,7 @@ where
             MessageUnsupportedSyntax(syntax) => {
                 use crate::intermediate_error_types::ContextDependentUnsupportedStatement::*;
                 use crate::intermediate_error_types::DeclareClassPropKind;
+                use crate::intermediate_error_types::NamespaceExportDeclarationKind;
                 use crate::intermediate_error_types::TsLibSyntaxKind;
                 use crate::intermediate_error_types::UnsupportedSyntax::*;
                 match syntax {
@@ -9909,6 +9910,18 @@ where
                             Satisfies => "`satisfies` expression",
                         };
                         friendly::Message(vec![text(kind_str), text(" is not enabled.")])
+                    }
+                    NamespaceExportDeclaration(kind) => {
+                        use NamespaceExportDeclarationKind::*;
+                        let suffix = match kind {
+                            NotTopLevel => " may only appear at the top level.",
+                            NotInModule => " may only appear in module files.",
+                            NotInDeclarationFile => " may only appear in declaration files.",
+                            ModuleWithImports => {
+                                " is not supported in a module with imports or re-exports. The global will not be declared."
+                            }
+                        };
+                        friendly::Message(vec![code("export as namespace"), text(suffix)])
                     }
                     RequireDynamicArgument => friendly::Message(vec![
                         text("The parameter passed to "),

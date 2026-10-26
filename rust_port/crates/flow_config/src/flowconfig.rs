@@ -158,6 +158,7 @@ pub mod opts {
         pub enable_const_params: Option<bool>,
         pub enums: bool,
         pub estimate_recheck_time: Option<bool>,
+        pub export_as_namespace_support: bool,
         pub saved_state_restart_on_reinit: bool,
         pub facebook_fbs: Option<String>,
         pub facebook_fbt: Option<String>,
@@ -292,6 +293,7 @@ pub mod opts {
             enable_const_params: None,
             enums: true,
             estimate_recheck_time: None,
+            export_as_namespace_support: false,
             saved_state_restart_on_reinit: true,
             facebook_fbs: None,
             facebook_fbt: None,
@@ -2073,6 +2075,19 @@ pub mod opts {
                     config,
                 )
             }),
+            (
+                "experimental.export_as_namespace_support",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.export_as_namespace_support = v;
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
             ("experimental.facebook_module_interop", |values, config| {
                 facebook_module_interop_parser(values, config)
             }),

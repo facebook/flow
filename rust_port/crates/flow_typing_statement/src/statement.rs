@@ -51,6 +51,7 @@ use flow_lazy::ContextFamily;
 use flow_parser::ast;
 use flow_parser::ast::expression;
 use flow_parser::ast::statement;
+use flow_parser::file_key::has_dts_ext;
 use flow_parser::jsdoc;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::polymorphic_ast_mapper;
@@ -95,6 +96,7 @@ use flow_typing_errors::intermediate_error_types::DeclareComponentInvalidParamKi
 use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_errors::intermediate_error_types::MatchInvalidCaseSyntax;
 use flow_typing_errors::intermediate_error_types::NamedReferenceData;
+use flow_typing_errors::intermediate_error_types::NamespaceExportDeclarationKind;
 use flow_typing_errors::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use flow_typing_errors::intermediate_error_types::TsLibSyntaxKind;
 use flow_typing_errors::intermediate_error_types::UnrecognizedAssertionCallee;
@@ -3934,13 +3936,31 @@ fn statement_<'a>(
             }
         }
         StatementInner::NamespaceExportDeclaration { .. } => {
-            flow_js::add_output_non_speculating(
-                cx,
-                ErrorMessage::EUnsupportedSyntax(Box::new((
-                    loc.dupe(),
-                    UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::NamespaceExportDeclaration),
-                ))),
-            );
+            let unsupported = if !cx.export_as_namespace_support() {
+                Some(UnsupportedSyntax::TSLibSyntax(
+                    TsLibSyntaxKind::NamespaceExportDeclaration,
+                ))
+            } else if !(type_env::in_toplevel_scope(cx) || type_env::in_global_scope(cx)) {
+                Some(UnsupportedSyntax::NamespaceExportDeclaration(
+                    NamespaceExportDeclarationKind::NotTopLevel,
+                ))
+            } else if cx.is_global_lib_context() {
+                Some(UnsupportedSyntax::NamespaceExportDeclaration(
+                    NamespaceExportDeclarationKind::NotInModule,
+                ))
+            } else if !has_dts_ext(cx.file().as_str()) {
+                Some(UnsupportedSyntax::NamespaceExportDeclaration(
+                    NamespaceExportDeclarationKind::NotInDeclarationFile,
+                ))
+            } else {
+                None
+            };
+            if let Some(unsupported) = unsupported {
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((loc.dupe(), unsupported))),
+                );
+            }
             {
                 let Ok(v) =
                     polymorphic_ast_mapper::statement(&mut typed_ast_utils::ErrorMapper, stmt);

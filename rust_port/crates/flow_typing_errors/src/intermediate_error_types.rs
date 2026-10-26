@@ -277,12 +277,32 @@ pub enum UnsupportedSyntax {
     DeclareVariableAnnotationAndInit,
     DeclareClassProperty(DeclareClassPropKind),
     TSLibSyntax(TsLibSyntaxKind),
+    NamespaceExportDeclaration(NamespaceExportDeclarationKind),
     ExportTypeSpecifierInExportType,
     UniqueSymbolPosition,
     UniqueSymbolNotConst,
     UniqueSymbolNotReadOnly,
     UniqueSymbolNotStaticReadOnly,
     UniqueSymbolLoopBinding,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum NamespaceExportDeclarationKind {
+    NotTopLevel,
+    NotInModule,
+    NotInDeclarationFile,
+    ModuleWithImports,
 }
 
 #[derive(

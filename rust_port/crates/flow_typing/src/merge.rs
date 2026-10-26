@@ -37,6 +37,7 @@ use flow_parser::ast;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::file_key::FileKey;
+use flow_parser::file_key::has_dts_ext;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
 use flow_type_sig::compact_table;
@@ -71,7 +72,9 @@ use flow_typing_errors::flow_error::FlowError;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
 use flow_typing_errors::intermediate_error_types::ConstantConditionWarning;
 use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
+use flow_typing_errors::intermediate_error_types::NamespaceExportDeclarationKind;
 use flow_typing_errors::intermediate_error_types::StrictComparisonInfo;
+use flow_typing_errors::intermediate_error_types::UnsupportedSyntax;
 use flow_typing_exists_check::ExistsCheck;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::type_subst;
@@ -1220,6 +1223,28 @@ fn detect_import_export_errors<'cx>(
     strict_es6_import_export::detect_errors(cx, file_sig, program, metadata);
     for msg in module_exports_checker::check_program(file_sig, program) {
         flow_js_utils::add_output_non_speculating(cx, msg);
+    }
+    // The UMD global is built from the builtins copy of this module, which cannot resolve
+    // imports, so it is not declared.
+    if cx.export_as_namespace_support()
+        && !cx.is_global_lib_context()
+        && has_dts_ext(cx.file().as_str())
+        && !file_sig.requires().is_empty()
+    {
+        for stmt in program.statements.iter() {
+            if let ast::statement::StatementInner::NamespaceExportDeclaration { loc, .. } = &**stmt
+            {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        loc.dupe(),
+                        UnsupportedSyntax::NamespaceExportDeclaration(
+                            NamespaceExportDeclarationKind::ModuleWithImports,
+                        ),
+                    ))),
+                );
+            }
+        }
     }
 }
 
