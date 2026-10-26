@@ -1,0 +1,20 @@
+--- tslib/lib.es2016.array.include.d.ts
++++ rust_port/crates/flow_flowlib/src/tslib_patches/lib.es2016.array.include.d.ts
+@@ -23,7 +23,7 @@
+      * @param searchElement The element to search for.
+      * @param fromIndex The position in this array at which to begin searching for searchElement.
+      */
+-    includes(searchElement: T, fromIndex?: number): boolean;
++    includes(searchElement: T, fromIndex?: number): implies searchElement is T;
+ }
+ 
+ interface ReadonlyArray<T> {
+@@ -32,7 +32,7 @@
+      * @param searchElement The element to search for.
+      * @param fromIndex The position in this array at which to begin searching for searchElement.
+      */
+-    includes(searchElement: T, fromIndex?: number): boolean;
++    includes(searchElement: T, fromIndex?: number): implies searchElement is T;
+ }
+ 
+ interface Int8Array<TArrayBuffer extends ArrayBufferLike> {
