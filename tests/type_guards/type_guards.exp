@@ -1523,13 +1523,13 @@ Error --------------------------------------------------------------------------
 `Generator<empty, empty, empty>` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    invalid.js:19:34
-   19| function *generator(x: unknown): x is number { // error
-                                        ^^^^^^^^^^^ [2]
+    19| function *generator(x: unknown): x is number { // error
+                                         ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/lib.es2015.generator.js:23:11
-   23| interface Generator<out Yield,out Return,in Next> extends IteratorObject<Yield,Return,Next> {
-                 ^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:283:11
+   283| interface Generator<out T = unknown, out TReturn = any, in TNext = any> {}
+                  ^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
@@ -1553,16 +1553,16 @@ Cannot return `(typeof x) == "number"` because `Generator<empty, boolean, empty>
 `boolean` [2]. [incompatible-type]
 
    invalid.js:20:10
-   20|   return typeof x == "number";
-                ^^^^^^^^^^^^^^^^^^^^
+    20|   return typeof x == "number";
+                 ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.generator.js:23:11
-   23| interface Generator<out Yield,out Return,in Next> extends IteratorObject<Yield,Return,Next> {
-                 ^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:283:11
+   283| interface Generator<out T = unknown, out TReturn = any, in TNext = any> {}
+                  ^^^^^^^^^ [1]
    invalid.js:19:34
-   19| function *generator(x: unknown): x is number { // error
-                                        ^^^^^^^^^^^ [2]
+    19| function *generator(x: unknown): x is number { // error
+                                         ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:25:3

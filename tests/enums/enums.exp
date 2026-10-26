@@ -2225,7 +2225,7 @@ Cannot expect number as the return type of function because `number` [1] is inco
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:201:20
 
-Cannot expect `Generator` as the return type of generator function because in type argument `Return` [1]: `number` [2]
+Cannot expect `Generator` as the return type of generator function because in type argument `TReturn` [1]: `number` [2]
 is incompatible with `void` [3]. [incompatible-type]
 
    exhaustive-check-implicit-return.js:201:20
@@ -2233,9 +2233,9 @@ is incompatible with `void` [3]. [incompatible-type]
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/lib.es2015.generator.js:23:35
-    23| interface Generator<out Yield,out Return,in Next> extends IteratorObject<Yield,Return,Next> {
-                                          ^^^^^^ [1]
+   <BUILTINS>/misc.js:283:42
+   283| interface Generator<out T = unknown, out TReturn = any, in TNext = any> {}
+                                                 ^^^^^^^ [1]
    exhaustive-check-implicit-return.js:201:36
    201| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
                                            ^^^^^^ [2]

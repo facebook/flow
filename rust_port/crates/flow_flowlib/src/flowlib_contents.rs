@@ -23,7 +23,6 @@ macro_rules! flowlib_file {
 flowlib_file!(LIB_ES5_JS, "lib.es5.js");
 flowlib_file!(LIB_ES2015_COLLECTION_JS, "lib.es2015.collection.js");
 flowlib_file!(LIB_ES2015_CORE_JS, "lib.es2015.core.js");
-flowlib_file!(LIB_ES2015_GENERATOR_JS, "lib.es2015.generator.js");
 flowlib_file!(LIB_ES2015_ITERABLE_JS, "lib.es2015.iterable.js");
 flowlib_file!(LIB_ES2015_PROMISE_JS, "lib.es2015.promise.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
@@ -32,6 +31,7 @@ flowlib_file!(MISC_JS, "misc.js");
 flowlib_file!(REACT_JS, "react.js");
 flowlib_file!(DOM_EXTRA_TO_BE_REMOVED_JS, "dom_extra_to_be_removed.js");
 
+const LIB_ES2015_GENERATOR_D_TS: &str = include_str!("tslib_patches/lib.es2015.generator.d.ts");
 const LIB_ES2016_ARRAY_INCLUDE_D_TS: &str =
     include_str!("tslib_patches/lib.es2016.array.include.d.ts");
 const LIB_ES2019_ARRAY_D_TS: &str = include_str!("tslib_patches/lib.es2019.array.d.ts");
@@ -49,7 +49,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2015.collection.js", LIB_ES2015_COLLECTION_JS),
     ("lib.es2015.core.js", LIB_ES2015_CORE_JS),
-    ("lib.es2015.generator.js", LIB_ES2015_GENERATOR_JS),
+    ("lib.es2015.generator.js", LIB_ES2015_GENERATOR_D_TS),
     ("lib.es2015.iterable.js", LIB_ES2015_ITERABLE_JS),
     ("lib.es2015.promise.js", LIB_ES2015_PROMISE_JS),
     ("lib.es2015.proxy.js", tslib_contents::LIB_ES2015_PROXY_D_TS),
