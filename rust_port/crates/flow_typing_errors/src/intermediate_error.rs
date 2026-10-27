@@ -1594,9 +1594,11 @@ where
                                         (&reason.loc, ValueDesc::Reason(reason.desc.clone()))
                                     }
                                     AssignVarInit::Default(box AssignVarDefaultData {
-                                        loc,
+                                        loc: default_loc,
                                         default,
-                                    }) => (loc, ValueDesc::Type(printed_type_desc(default))),
+                                    }) => {
+                                        (default_loc, ValueDesc::Type(printed_type_desc(default)))
+                                    }
                                 };
                                 root_at_loc(
                                     loc,
