@@ -119,7 +119,7 @@ fn format_errors(
             )
             .expect("failed to write errors");
             if agent_helper_hints {
-                crate::agent_helper_command::print_error_hints(&mut out, &errors)
+                crate::agent_helper_command::print_error_hints(&mut out, &errors, None)
                     .expect("failed to write error hints");
             }
             use std::io::Write;

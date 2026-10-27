@@ -174,7 +174,7 @@ fn main(args: &arg_spec::Values) {
                 )
                 .expect("failed to write cli errors");
                 if agent_helper_hints {
-                    crate::agent_helper_command::print_error_hints(&mut out, &errors)
+                    crate::agent_helper_command::print_error_hints(&mut out, &errors, None)
                         .expect("failed to write cli error hints");
                 }
                 out.flush().expect("failed to flush cli errors");
