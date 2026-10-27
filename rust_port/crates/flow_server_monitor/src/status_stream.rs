@@ -251,12 +251,19 @@ pub fn wait_for_signficant_status(
     let (lock, cvar) = &SIGNIFICANT_TRANSITION;
     let guard = lock.lock().unwrap();
     let timeout_duration = Duration::from_secs_f64(timeout);
-    let result = cvar.wait_timeout(guard, timeout_duration).unwrap();
-    match &*result.0 {
-        Some((status, watcher_status)) if !result.1.timed_out() => {
-            (status.clone(), watcher_status.clone())
+    let transition = {
+        let (guard, wait_result) = cvar.wait_timeout(guard, timeout_duration).unwrap();
+        if wait_result.timed_out() {
+            None
+        } else {
+            guard.clone()
         }
-        _ => get_status(),
+    };
+    // `get_status` must run after the guard above is released: broadcasters hold
+    // `CURRENT_STATUS` and the status info lock while taking `SIGNIFICANT_TRANSITION`.
+    match transition {
+        Some(status) => status,
+        None => get_status(),
     }
 }
 
