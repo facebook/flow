@@ -1978,6 +1978,58 @@ fn prop_exists_test_generic<'cx>(
                         }
                     }
                 }
+                // As in TypeScript, an instance is only ruled out as a member of a union, by a
+                // field whose type consists of literal values, e.g. the `done` of
+                // `IteratorResult`.
+                DefTInner::InstanceT(inst_t) => {
+                    let name = Name::new(key);
+                    let prop = cx.get_prop(inst_t.inst.own_props.dupe(), &name);
+                    match prop.as_ref().map(flow_typing_type::type_::property::read_t) {
+                        Some(Some(t)) => {
+                            let pred = if sense { pred } else { not_pred };
+                            let ts =
+                                FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                                    cx,
+                                    env,
+                                    reason_of_t(&t),
+                                    &t,
+                                )?;
+                            if result_collector.from_union.get()
+                                && ts.iter().all(is_literal_value)
+                                && ts.iter().all(|t| guard_prop(cx, t, pred))
+                            {
+                                report_changes_to_input(result_collector);
+                            } else {
+                                report_unchanged_filtering_result_to_predicate_result(
+                                    orig_obj.dupe(),
+                                    result_collector,
+                                );
+                            }
+                        }
+                        Some(None) => {
+                            report_unchanged_filtering_result_to_predicate_result(
+                                orig_obj.dupe(),
+                                result_collector,
+                            );
+                            flow_js_utils::add_output_with_env(
+                                cx,
+                                env,
+                                ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
+                                    prop_loc: reason.loc().dupe(),
+                                    prop_name: Some(name),
+                                    use_op: unknown_use(),
+                                })),
+                            )?;
+                        }
+                        // The prop may still be a method, an accessor or an inherited field.
+                        None => {
+                            report_unchanged_filtering_result_to_predicate_result(
+                                orig_obj.dupe(),
+                                result_collector,
+                            );
+                        }
+                    }
+                }
                 DefTInner::ArrT(arr_t)
                     if let ArrType::TupleAT(box TupleATData { elements, rest, .. }) =
                         arr_t.deref()
@@ -3125,6 +3177,21 @@ fn guard_prop<'cx>(cx: &mut Context<'cx>, source: &Type, pred: &PropGuard) -> bo
         PropGuard::PropGuardNotVoid => {
             is_empty_and_changed(type_filter::not_undefined(cx, source.dupe()))
         }
+    }
+}
+
+fn is_literal_value(t: &Type) -> bool {
+    match t.deref() {
+        TypeInner::DefT(_, def_t) => matches!(
+            def_t.deref(),
+            DefTInner::SingletonStrT { .. }
+                | DefTInner::SingletonNumT { .. }
+                | DefTInner::SingletonBoolT { .. }
+                | DefTInner::SingletonBigIntT { .. }
+                | DefTInner::VoidT
+                | DefTInner::NullT
+        ),
+        _ => false,
     }
 }
 

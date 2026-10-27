@@ -2756,6 +2756,333 @@ References:
                ^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:12:5
+
+Cannot cast `x` to `empty` because `Done` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   instance_prop_exists.js:12:5
+   12|     x as empty; // ERROR: only Done
+           ^
+
+References:
+   instance_prop_exists.js:10:20
+   10|   declare const x: Done | NotDone;
+                          ^^^^ [1]
+   instance_prop_exists.js:12:10
+   12|     x as empty; // ERROR: only Done
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:12:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:12:5
+   12|     x as empty; // ERROR: only Done
+           ^
+
+References:
+   instance_prop_exists.js:11:7
+   11|   if (x.done) {
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:13:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:13:5
+   13|     x as Done; // OK
+           ^
+
+References:
+   instance_prop_exists.js:11:7
+   11|   if (x.done) {
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:15:5
+
+Cannot cast `x` to `empty` because `NotDone` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   instance_prop_exists.js:15:5
+   15|     x as empty; // ERROR: only NotDone
+           ^
+
+References:
+   instance_prop_exists.js:10:27
+   10|   declare const x: Done | NotDone;
+                                 ^^^^^^^ [1]
+   instance_prop_exists.js:15:10
+   15|     x as empty; // ERROR: only NotDone
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:15:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:15:5
+   15|     x as empty; // ERROR: only NotDone
+           ^
+
+References:
+   instance_prop_exists.js:11:7
+   11|   if (x.done) {
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:16:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:16:5
+   16|     x as NotDone; // OK
+           ^
+
+References:
+   instance_prop_exists.js:11:7
+   11|   if (x.done) {
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:32:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:32:5
+   32|     r.value as string; // OK
+           ^
+
+References:
+   instance_prop_exists.js:31:7
+   31|   if (r.done) {
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:34:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:34:5
+   34|     r.value as number; // OK
+           ^
+
+References:
+   instance_prop_exists.js:31:7
+   31|   if (r.done) {
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:37:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:37:5
+   37|     r.value as number; // OK
+           ^
+
+References:
+   instance_prop_exists.js:36:8
+   36|   if (!r.done) {
+              ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:56:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:56:5
+   56|     x as StrP; // OK
+           ^
+
+References:
+   instance_prop_exists.js:55:7
+   55|   if (x.p != null) {
+             ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:58:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:58:5
+   58|     x as NullP | VoidP; // OK
+           ^
+
+References:
+   instance_prop_exists.js:55:7
+   55|   if (x.p != null) {
+             ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:68:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:68:5
+   68|     x as null | void; // OK
+           ^
+
+References:
+   instance_prop_exists.js:67:8
+   67|   if (!x?.done) {
+              ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:83:9
+
+Cannot get `x.done` because property `done` is not readable. [cannot-read]
+
+   83|   if (x.done) { // ERROR: prop not readable
+               ^^^^
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:83:7
+
+Property `done` is not readable. [cannot-read]
+
+   83|   if (x.done) { // ERROR: prop not readable
+             ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:84:5
+
+Cannot cast `x` to `ReadOnly` because property `b` is missing in `WriteOnly` [1] but exists in `ReadOnly` [2].
+[incompatible-type]
+
+   instance_prop_exists.js:84:5
+   84|     x as ReadOnly; // ERROR
+           ^
+
+References:
+   instance_prop_exists.js:82:20
+   82|   declare const x: WriteOnly | ReadOnly;
+                          ^^^^^^^^^ [1]
+   instance_prop_exists.js:84:10
+   84|     x as ReadOnly; // ERROR
+                ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:84:5
+
+Cannot cast `x` to `ReadOnly` because property `done` is write-only in `WriteOnly` [1] but readable in `ReadOnly` [2].
+[incompatible-variance]
+
+   instance_prop_exists.js:84:5
+   84|     x as ReadOnly; // ERROR
+           ^
+
+References:
+   instance_prop_exists.js:82:20
+   82|   declare const x: WriteOnly | ReadOnly;
+                          ^^^^^^^^^ [1]
+   instance_prop_exists.js:84:10
+   84|     x as ReadOnly; // ERROR
+                ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:84:5
+
+Cannot cast `x` to `ReadOnly` because in property `done`: `false` [1] is incompatible with `true` [2].
+[incompatible-type]
+
+   instance_prop_exists.js:84:5
+   84|     x as ReadOnly; // ERROR
+           ^
+
+References:
+   instance_prop_exists.js:79:11
+   79|     done: false;
+                 ^^^^^ [1]
+   instance_prop_exists.js:75:21
+   75|     writeonly done: true;
+                           ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:84:5
+
+Refined at [1] [InferError]
+
+   instance_prop_exists.js:84:5
+   84|     x as ReadOnly; // ERROR
+           ^
+
+References:
+   instance_prop_exists.js:83:7
+   83|   if (x.done) { // ERROR: prop not readable
+             ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- instance_prop_exists.js:94:9
+
+Cannot cast `this` to `empty` because `Lazy` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   instance_prop_exists.js:94:9
+   94|         this as empty; // ERROR
+               ^^^^
+
+References:
+   instance_prop_exists.js:90:9
+   90|   class Lazy {
+               ^^^^ [1]
+   instance_prop_exists.js:94:17
+   94|         this as empty; // ERROR
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ instance_prop_exists.js:110:5
+
+Cannot cast `x` to `WithoutMethod` because `WithMethod` [1] is incompatible with `WithoutMethod` [2].
+[incompatible-type]
+
+   instance_prop_exists.js:110:5
+   110|     x as WithoutMethod; // ERROR
+            ^
+
+References:
+   instance_prop_exists.js:108:20
+   108|   declare const x: WithMethod | WithoutMethod;
+                           ^^^^^^^^^^ [1]
+   instance_prop_exists.js:110:10
+   110|     x as WithoutMethod; // ERROR
+                 ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ instance_prop_exists.js:125:5
+
+Cannot cast `x` to `Other` because `Child` [1] is incompatible with `Other` [2]. [incompatible-type]
+
+   instance_prop_exists.js:125:5
+   125|     x as Other; // ERROR
+            ^
+
+References:
+   instance_prop_exists.js:123:20
+   123|   declare const x: Child | Other;
+                           ^^^^^ [1]
+   instance_prop_exists.js:125:10
+   125|     x as Other; // ERROR
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ instance_prop_exists.js:139:5
+
+Cannot cast `x` to `FalseP` because `ObjP` [1] is incompatible with `FalseP` [2]. [incompatible-type]
+
+   instance_prop_exists.js:139:5
+   139|     x as FalseP; // ERROR
+            ^
+
+References:
+   instance_prop_exists.js:137:20
+   137|   declare const x: ObjP | FalseP;
+                           ^^^^ [1]
+   instance_prop_exists.js:139:10
+   139|     x as FalseP; // ERROR
+                 ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:13:10
 
 Refinement invalidated due to function call at [1] [InferError]
@@ -17874,4 +18201,4 @@ References:
 
 
 
-Found 1202 errors
+Found 1224 errors
