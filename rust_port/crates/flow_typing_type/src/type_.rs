@@ -1081,20 +1081,38 @@ pub enum AssignVarInit<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     Default(Box<AssignVarDefaultData<L>>),
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
+/// Compared by location only: the type is what the error prints, and must not tell apart errors
+/// that are otherwise the same.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AssignVarDefaultData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub loc: L,
     pub default: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for AssignVarDefaultData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.loc == other.loc
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for AssignVarDefaultData<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Hash> Hash for AssignVarDefaultData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.loc.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for AssignVarDefaultData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for AssignVarDefaultData<L> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.loc.cmp(&other.loc)
+    }
 }
 
 #[derive(
@@ -1258,17 +1276,9 @@ pub struct ConstrainedAssignmentData<L: Dupe + PartialEq + Eq + PartialOrd + Ord
     pub providers: Arc<[L]>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
+/// Compared without `lower_t` and `upper_t`: the types are what the error prints, and must not
+/// tell apart errors or constraints that are otherwise the same.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FunParamData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub n: i32,
     pub name: Option<FlowSmolStr>,
@@ -1276,6 +1286,42 @@ pub struct FunParamData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub upper: VirtualReason<L>,
     pub lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
     pub upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for FunParamData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.n == other.n
+            && self.name == other.name
+            && self.lower == other.lower
+            && self.upper == other.upper
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for FunParamData<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Hash> Hash for FunParamData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.n.hash(state);
+        self.name.hash(state);
+        self.lower.hash(state);
+        self.upper.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for FunParamData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for FunParamData<L> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.n
+            .cmp(&other.n)
+            .then_with(|| self.name.cmp(&other.name))
+            .then_with(|| self.lower.cmp(&other.lower))
+            .then_with(|| self.upper.cmp(&other.upper))
+    }
 }
 
 #[derive(
