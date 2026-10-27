@@ -30,7 +30,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    6|     constructor():number { }

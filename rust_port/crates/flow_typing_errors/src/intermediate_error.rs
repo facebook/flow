@@ -1879,6 +1879,7 @@ where
                                 upper,
                                 fn_,
                                 type_guard: true,
+                                ..
                             }) => root(
                                 loc,
                                 frames,
@@ -1892,6 +1893,7 @@ where
 
                             VirtualRootUseOp::FunImplicitReturn(box FunImplicitReturnData {
                                 upper,
+                                upper_t,
                                 fn_,
                                 ..
                             }) => root(
@@ -1899,7 +1901,7 @@ where
                                 frames,
                                 upper,
                                 RootMessage::RootCannotExpectImplicitReturn {
-                                    upper: upper.desc.clone(),
+                                    upper: printed_type_desc(upper_t),
                                     fn_: fn_.desc.clone(),
                                 },
                                 custom_error_message,
@@ -5401,7 +5403,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot expect "),
-                        friendly::desc_of_reason_desc(upper.as_ref()),
+                        desc_of_type_desc(upper),
                         text(" as the return type of "),
                         friendly::desc_of_reason_desc(fn_.as_ref()),
                     ]),

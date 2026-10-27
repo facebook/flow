@@ -1194,10 +1194,12 @@ where
             FunImplicitReturn(box FunImplicitReturnData {
                 fn_,
                 upper,
+                upper_t,
                 type_guard,
             }) => FunImplicitReturn(Box::new(FunImplicitReturnData {
                 fn_: mod_reason(fn_),
                 upper: mod_reason(upper),
+                upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
                 type_guard,
             })),
             GeneratorYield { value } => GeneratorYield {

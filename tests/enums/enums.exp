@@ -2159,7 +2159,7 @@ References:
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:160:19
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    160| function q(x: E): number { // Error: switch isn't exhaustive
@@ -2183,7 +2183,7 @@ References:
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:167:19
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    167| function r(x: E): number { // Error
@@ -2192,7 +2192,7 @@ Cannot expect number as the return type of function because `number` [1] is inco
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:178:19
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    178| function s(x: E): number { // Error: second switch isn't exhaustive
@@ -2216,7 +2216,7 @@ References:
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:194:21
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    194| function t(x: any): number { // Error
@@ -2225,8 +2225,8 @@ Cannot expect number as the return type of function because `number` [1] is inco
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:201:20
 
-Cannot expect `Generator` as the return type of generator function because in type argument `TReturn` [1]: `number` [2]
-is incompatible with `void` [3]. [incompatible-type]
+Cannot expect `Generator<void, number, void>` as the return type of generator function because in type argument
+`TReturn` [1]: `number` [2] is incompatible with `void` [3]. [incompatible-type]
 
    exhaustive-check-implicit-return.js:201:20
    201| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
@@ -2258,7 +2258,7 @@ References:
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:208:25
 
-Cannot expect `Promise` as the return type of async function because in type argument `R` [1]: `number` [2] is
+Cannot expect `Promise<number>` as the return type of async function because in type argument `R` [1]: `number` [2] is
 incompatible with `void` [3]. [incompatible-type]
 
    exhaustive-check-implicit-return.js:208:25
@@ -2291,7 +2291,7 @@ References:
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:215:19
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    215| function w(x: E): number { // Error: number not compatible with implicitly returned undefined

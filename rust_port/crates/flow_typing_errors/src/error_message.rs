@@ -53,6 +53,7 @@ use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::ComponentRestParamCompatibilityData;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::EvalMappedTypeData;
+use flow_typing_type::type_::FunImplicitReturnData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::FunReturnData;
 use flow_typing_type::type_::IndexedTypeAccessData;
@@ -6963,6 +6964,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         };
                         VirtualUseOp::Op(Arc::new(VirtualRootUseOp::AssignVar { var, init }))
                     }
+                    VirtualRootUseOp::FunImplicitReturn(box FunImplicitReturnData {
+                        fn_,
+                        upper,
+                        upper_t,
+                        type_guard,
+                    }) => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::FunImplicitReturn(
+                        Box::new(FunImplicitReturnData {
+                            fn_: fn_.dupe(),
+                            upper: upper.dupe(),
+                            upper_t: f(upper_t.clone()),
+                            type_guard: *type_guard,
+                        }),
+                    ))),
                     VirtualRootUseOp::Cast {
                         lower,
                         upper: box upper,

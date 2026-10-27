@@ -831,21 +831,45 @@ pub struct FunMissingArgData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub def: VirtualReason<L>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
+/// Compared without `upper_t`: the type is what the error prints, and must not tell apart errors
+/// or constraints that are otherwise the same.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FunImplicitReturnData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub fn_: VirtualReason<L>,
     pub upper: VirtualReason<L>,
+    pub upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
     pub type_guard: bool,
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for FunImplicitReturnData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.fn_ == other.fn_ && self.upper == other.upper && self.type_guard == other.type_guard
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for FunImplicitReturnData<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Hash> Hash for FunImplicitReturnData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.fn_.hash(state);
+        self.upper.hash(state);
+        self.type_guard.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for FunImplicitReturnData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for FunImplicitReturnData<L> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.fn_
+            .cmp(&other.fn_)
+            .then_with(|| self.upper.cmp(&other.upper))
+            .then_with(|| self.type_guard.cmp(&other.type_guard))
+    }
 }
 
 #[derive(

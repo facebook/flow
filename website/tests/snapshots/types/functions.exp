@@ -106,7 +106,7 @@ No errors!
 === block 16 ===
 Error ---------------------------------------------------------------------------- -:2:18
 
-Cannot expect boolean as the return type of function because `boolean` [1] is incompatible with `void` [1].
+Cannot expect `boolean` as the return type of function because `boolean` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    2| function func(): boolean { // Error

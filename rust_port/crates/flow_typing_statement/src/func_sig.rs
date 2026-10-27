@@ -671,6 +671,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     type_::FunImplicitReturnData {
                         fn_: reason_fn.dupe(),
                         upper: type_util::reason_of_t(&return_t).dupe(),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(&return_t),
                         type_guard: false,
                     },
                 ))));
@@ -693,6 +694,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     type_::FunImplicitReturnData {
                         fn_: reason_fn.dupe(),
                         upper: type_util::reason_of_t(&return_t).dupe(),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(&return_t),
                         type_guard: false,
                     },
                 ))));
@@ -719,6 +721,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     type_::FunImplicitReturnData {
                         fn_: reason_fn.dupe(),
                         upper: type_util::reason_of_t(&return_t).dupe(),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(&return_t),
                         type_guard: false,
                     },
                 ))));
@@ -745,6 +748,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     type_::FunImplicitReturnData {
                         fn_: reason_fn.dupe(),
                         upper: type_util::reason_of_t(&return_t).dupe(),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(&return_t),
                         type_guard: false,
                     },
                 ))));
@@ -787,6 +791,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     type_::FunImplicitReturnData {
                         fn_: reason_fn.dupe(),
                         upper: type_util::reason_of_t(&return_t).dupe(),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(&return_t),
                         type_guard: true,
                     },
                 ))));

@@ -1340,7 +1340,7 @@ pub enum RootMessage<L: Dupe> {
     RootCannotDefineShadowedProtoProperty,
     RootCannotDelete(Option<VirtualReasonDesc<L>>),
     RootCannotExpectImplicitReturn {
-        upper: Option<VirtualReasonDesc<L>>,
+        upper: ErrorTypeDesc<L>,
         fn_: Option<VirtualReasonDesc<L>>,
     },
     RootCannotExtendClass {

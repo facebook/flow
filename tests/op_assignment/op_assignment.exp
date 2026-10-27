@@ -270,7 +270,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:138:29
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    138|   function alwaysThrows1(): number { x ??= invariant(false); } // Error
@@ -279,7 +279,7 @@ Cannot expect number as the return type of function because `number` [1] is inco
 
 Error --------------------------------------------------------------------------------------------------- test.js:139:29
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    139|   function alwaysThrows2(): number { y &&= invariant(false); } // Error
@@ -288,7 +288,7 @@ Cannot expect number as the return type of function because `number` [1] is inco
 
 Error --------------------------------------------------------------------------------------------------- test.js:140:29
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    140|   function alwaysThrows3(): number { x ||= invariant(false); } // Error: void ~> number, constant-condition error

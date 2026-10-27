@@ -1088,7 +1088,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- updates.js:39:29
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    39|   function alwaysThrows1(): number {
@@ -1097,7 +1097,7 @@ Cannot expect number as the return type of function because `number` [1] is inco
 
 Error ------------------------------------------------------------------------------------------------- updates.js:42:29
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    42|   function alwaysThrows2(): number {
@@ -1106,7 +1106,7 @@ Cannot expect number as the return type of function because `number` [1] is inco
 
 Error ------------------------------------------------------------------------------------------------- updates.js:45:29
 
-Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    45|   function alwaysThrows3(): number {

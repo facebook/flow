@@ -38,8 +38,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- async.js:43:31
 
-Cannot expect undefined as the return type of async function because `void` [1] is incompatible with
-`Promise<void>` [1]. [incompatible-type]
+Cannot expect `void` as the return type of async function because `void` [1] is incompatible with `Promise<void>` [1].
+[incompatible-type]
 
    43|   static async m(a: unknown): void { await a; } // error, void != Promise<void>
                                      ^^^^ [1]
@@ -82,8 +82,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- async2.js:48:30
 
-Cannot expect undefined as the return type of async function because `void` [1] is incompatible with
-`Promise<void>` [1]. [incompatible-type]
+Cannot expect `void` as the return type of async function because `void` [1] is incompatible with `Promise<void>` [1].
+[incompatible-type]
 
    48|   async function voidoid5(): void { // error, void != Promise<void>
                                     ^^^^ [1]
@@ -91,7 +91,7 @@ Cannot expect undefined as the return type of async function because `void` [1] 
 
 Error --------------------------------------------------------------------------------------------------- async2.js:55:5
 
-Cannot expect `Promise` as the return type of async function because in type argument `R` [1]: `number` [2] is
+Cannot expect `Promise<number>` as the return type of async function because in type argument `R` [1]: `number` [2] is
 incompatible with `void` [3]. [incompatible-type]
 
    async2.js:55:5
