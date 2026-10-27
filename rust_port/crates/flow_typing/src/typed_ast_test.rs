@@ -16,7 +16,6 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::LazyALocTable;
 use flow_common::options::Options;
-use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_lint_settings::lint_settings::LintSettings;
@@ -83,7 +82,7 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
     // we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
     // to avoid any "Any value used as type" errors that may otherwise appear
     let mk_builtins: MkBuiltins = Rc::new(|_cx: &mut Context<'_>| {
-        let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
+        let reason = flow_common::reason::mk_reason(None, ALoc::none());
         let t = Type::new(TypeInner::AnyT(
             reason.dupe(),
             AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)),

@@ -13,7 +13,6 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::LazyALocTable;
 use flow_common::options::Options;
-use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_lint_settings::lint_settings::LintSettings;
@@ -94,7 +93,7 @@ fn mk_loc(start: (i32, i32), end_: (i32, i32)) -> Loc {
 }
 
 fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
-    let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
+    let reason = flow_common::reason::mk_reason(None, ALoc::none());
     let mut builtins_values: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
         FlowOrdMap::new();
     for name in &[

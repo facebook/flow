@@ -513,7 +513,6 @@ mod collect_function_method_inserting_points_tests {
     use flow_aloc::ALoc;
     use flow_aloc::ALocTable;
     use flow_aloc::LazyALocTable;
-    use flow_common::reason::VirtualReasonDesc;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_lint_settings::lint_settings::LintSettings;
@@ -538,7 +537,7 @@ mod collect_function_method_inserting_points_tests {
     use crate::ast_extraction_utils::insertion_point_collectors;
 
     fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
-        let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
+        let reason = flow_common::reason::mk_reason(None, ALoc::none());
         let any_t = |r: &flow_common::reason::Reason| -> Type {
             Type::new(TypeInner::AnyT(
                 r.dupe(),
@@ -757,7 +756,6 @@ mod find_closest_enclosing_class_tests {
     use flow_aloc::ALoc;
     use flow_aloc::ALocTable;
     use flow_aloc::LazyALocTable;
-    use flow_common::reason::VirtualReasonDesc;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_lint_settings::lint_settings::LintSettings;
@@ -782,7 +780,7 @@ mod find_closest_enclosing_class_tests {
     use crate::ast_extraction_utils::insertion_point_collectors;
 
     fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
-        let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
+        let reason = flow_common::reason::mk_reason(None, ALoc::none());
         let any_t = |r: &flow_common::reason::Reason| -> Type {
             Type::new(TypeInner::AnyT(
                 r.dupe(),
@@ -1388,7 +1386,6 @@ mod type_synthesizer_tests {
     use flow_aloc::ALoc;
     use flow_aloc::ALocTable;
     use flow_aloc::LazyALocTable;
-    use flow_common::reason::VirtualReasonDesc;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_lint_settings::lint_settings::LintSettings;
@@ -1416,7 +1413,7 @@ mod type_synthesizer_tests {
     use crate::refactor_extract_utils::type_synthesizer;
 
     fn dummy_context<'cx>(arena: &'cx mut ContextArena) -> Context<'cx> {
-        let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RAnyExplicit, ALoc::none());
+        let reason = flow_common::reason::mk_reason(None, ALoc::none());
         let any_t = |r: &flow_common::reason::Reason| -> Type {
             Type::new(TypeInner::AnyT(
                 r.dupe(),

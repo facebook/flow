@@ -271,7 +271,6 @@ impl ReasonDescFunction {
     serde::Deserialize
 )]
 pub enum VirtualReasonDesc<L: Dupe> {
-    RAnyExplicit,
     RNumber,
     RBigInt,
     RString,
@@ -376,7 +375,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
 
         match self {
             // Simple variants with no locations - need to reconstruct for type conversion
-            RAnyExplicit => RAnyExplicit,
             RNumber => RNumber,
             RBigInt => RBigInt,
             RString => RString,
@@ -1158,7 +1156,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RString => "string".to_string(),
         RBoolean => "boolean".to_string(),
         RMixed => "`unknown`".to_string(),
-        RAnyExplicit => "explicit 'any'".to_string(),
         RVoid => "undefined".to_string(),
         RNull => "null".to_string(),
         RVoidedNull => "undefined (result of null short-circuiting an optional chain)".to_string(),

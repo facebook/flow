@@ -25,7 +25,6 @@ mod tests {
     use flow_common::polarity::Polarity;
     use flow_common::reason::Name;
     use flow_common::reason::Reason;
-    use flow_common::reason::VirtualReasonDesc;
     use flow_common::reason::locationless_reason;
     use flow_common::verbose::Verbose;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
@@ -180,7 +179,7 @@ mod tests {
     }
 
     fn dummy_reason() -> Reason {
-        locationless_reason(VirtualReasonDesc::RAnyExplicit)
+        locationless_reason(None)
     }
 
     mod type_parser {

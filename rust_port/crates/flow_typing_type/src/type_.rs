@@ -11310,24 +11310,17 @@ pub mod empty_t {
 pub mod any_t {
     use super::*;
 
-    pub fn desc(source: &AnySource) -> Option<flow_common::reason::ReasonDesc> {
-        match source {
-            AnySource::AnnotatedAny => Some(flow_common::reason::VirtualReasonDesc::RAnyExplicit),
-            _ => None,
-        }
-    }
-
     pub fn make(source: AnySource, r: Reason) -> Type {
         Type::new(TypeInner::AnyT(r, source))
     }
 
     pub fn at(source: AnySource, tok: ALoc) -> Type {
-        let reason = flow_common::reason::mk_annot_reason(desc(&source), tok);
+        let reason = flow_common::reason::mk_annot_reason(None, tok);
         make(source, reason)
     }
 
     pub fn why(source: AnySource, reason: Reason) -> Type {
-        let reason = reason.replace_desc(desc(&source));
+        let reason = reason.replace_desc(None);
         make(source, reason)
     }
 
@@ -11352,7 +11345,7 @@ pub mod any_t {
     }
 
     pub fn locationless(source: AnySource) -> Type {
-        let reason = flow_common::reason::locationless_reason(desc(&source));
+        let reason = flow_common::reason::locationless_reason(None);
         make(source, reason)
     }
 }
