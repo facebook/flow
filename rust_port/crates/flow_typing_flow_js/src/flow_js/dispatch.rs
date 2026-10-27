@@ -7598,7 +7598,7 @@ fn __flow_impl<'cx>(
                         elem_t.dupe()
                     } else {
                         type_util::union_of_ts(
-                            reason.dupe().replace_desc(VirtualReasonDesc::RTupleElement),
+                            reason.dupe().replace_desc(None),
                             elements
                                 .iter()
                                 .chain(rest)

@@ -324,7 +324,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
         instantiable: bool,
         is_empty: bool,
     },
-    RTupleElement,
     RTupleOutOfBoundsAccess(i32),
     RFunction(ReasonDescFunction),
     REnum {
@@ -406,7 +405,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RArrayType => RArrayType,
             RROArrayType => RROArrayType,
             RTupleType => RTupleType,
-            RTupleElement => RTupleElement,
             RTupleOutOfBoundsAccess(i) => RTupleOutOfBoundsAccess(*i),
             RTupleUnknownElementFromInexact => RTupleUnknownElementFromInexact,
             RFunction(func) => RFunction(*func),
@@ -1200,7 +1198,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Tuples
         RTupleType => "tuple type".to_string(),
-        RTupleElement => "tuple element".to_string(),
         RTupleOutOfBoundsAccess(i) => {
             format!("undefined (out of bounds tuple access at index {})", i)
         }
