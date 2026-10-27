@@ -6076,7 +6076,7 @@ fn object_<'a>(
                 ) =>
                 {
                     let v_loc = v.loc().dupe();
-                    let reason = mk_reason(VirtualReasonDesc::RPrototype, v_loc);
+                    let reason = mk_reason(None, v_loc);
                     let v_typed = expression(None, None, Some(as_const), cx, v)?;
                     let (_, vt) = v_typed.loc();
                     let collector = TypeCollector::create();
@@ -14417,7 +14417,7 @@ fn static_method_call_object<'a>(
         ("getPrototypeOf", None, [ExpressionOrSpread::Expression(e)]) => {
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
-            let proto_reason = mk_reason(RPrototype, e.loc().dupe());
+            let proto_reason = mk_reason(None, e.loc().dupe());
             let collector = TypeCollector::create();
             flow_js::flow_non_speculating(
                 cx,
@@ -14445,7 +14445,7 @@ fn static_method_call_object<'a>(
         ("create", None, [ExpressionOrSpread::Expression(e)]) => {
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
-            let proto_reason = mk_reason(RPrototype, e.loc().dupe());
+            let proto_reason = mk_reason(None, e.loc().dupe());
             let collector = TypeCollector::create();
             flow_js::flow_non_speculating(
                 cx,
@@ -14496,7 +14496,7 @@ fn static_method_call_object<'a>(
             error_on_this_uses_in_object_methods(cx, obj_properties);
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
-            let proto_reason = mk_reason(RPrototype, e.loc().dupe());
+            let proto_reason = mk_reason(None, e.loc().dupe());
             let collector = TypeCollector::create();
             flow_js::flow_non_speculating(
                 cx,

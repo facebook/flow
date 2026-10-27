@@ -4609,10 +4609,7 @@ fn convert_object<'a>(
                         }
                     };
                     if name.as_str() == "__proto__" && !(method || optional) && variance.is_none() {
-                        let reason = reason::mk_reason(
-                            reason::VirtualReasonDesc::RPrototype,
-                            value.loc().dupe(),
-                        );
+                        let reason = reason::mk_reason(None, value.loc().dupe());
                         let proto =
                             crate::type_annotation_cons_gen::obj_test_proto(cx, reason.dupe(), t);
                         let typeof_annot = type_util::typeof_annotation(reason, proto.dupe(), None);

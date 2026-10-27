@@ -2728,7 +2728,7 @@ fn merge_annot<'cx>(
                     Type::new(type_::TypeInner::ObjProtoT(reason.dupe())),
                 ),
                 ObjAnnotProto::ObjAnnotExplicitProto(box (proto_loc, t)) => {
-                    let proto_reason = reason::mk_reason(RPrototype, proto_loc.dupe());
+                    let proto_reason = reason::mk_reason(None, proto_loc.dupe());
                     let proto_t = merge_impl(env, cx, file, t, false, false);
                     let proto =
                         annotation_inference::obj_test_proto(cx, proto_reason.dupe(), proto_t);
@@ -3419,13 +3419,11 @@ fn merge_object_lit<'cx>(
     as_const: bool,
     strictness_kind: TypeStrictnessKind,
 ) -> Type {
-    use flow_common::reason::VirtualReasonDesc::*;
-
     let reason = reason::mk_obj_lit_reason(as_const, frozen, loc.dupe());
     let proto_t = match proto {
         None => Type::new(type_::TypeInner::ObjProtoT(reason.dupe())),
         Some((proto_loc, t)) => {
-            let proto_reason = reason::mk_reason(RPrototype, proto_loc.dupe());
+            let proto_reason = reason::mk_reason(None, proto_loc.dupe());
             let proto_t = merge_impl(env, cx, file, t, false, false);
             let proto = annotation_inference::obj_test_proto(cx, proto_reason.dupe(), proto_t);
             type_util::typeof_annotation(proto_reason, proto, None)
