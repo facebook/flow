@@ -668,6 +668,8 @@ pub mod response {
         STATUS {
             status_response: StatusResponse,
             lazy_stats: LazyStats,
+            /// Rechecks since the current type errors first appeared, if there are any.
+            unresolved_error_rounds: Option<u32>,
         },
         SAVE_STATE(Result<String, String>),
         SUGGEST_IMPORTS(SuggestImportsResponse),

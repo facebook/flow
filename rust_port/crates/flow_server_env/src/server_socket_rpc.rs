@@ -1492,6 +1492,7 @@ pub enum CliResponse {
     STATUS {
         status_response: server_prot::response::StatusResponse,
         lazy_stats: LazyStats,
+        unresolved_error_rounds: Option<u32>,
     },
 }
 
@@ -1582,9 +1583,11 @@ impl CliResponse {
             server_prot::response::Response::STATUS {
                 status_response,
                 lazy_stats,
+                unresolved_error_rounds,
             } => Ok(Self::STATUS {
                 status_response,
                 lazy_stats,
+                unresolved_error_rounds,
             }),
             response => Err(format!(
                 "Unsupported CLI socket response: {}",
@@ -1691,9 +1694,11 @@ impl CliResponse {
             CliResponse::STATUS {
                 status_response,
                 lazy_stats,
+                unresolved_error_rounds,
             } => server_prot::response::Response::STATUS {
                 status_response,
                 lazy_stats,
+                unresolved_error_rounds,
             },
         }
     }
