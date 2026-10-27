@@ -1013,6 +1013,8 @@ pub(crate) mod scope {
             values: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             types: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             modules: BTreeMap<FlowSmolStr, (LocNode<'arena>, Rc<RefCell<Exports<'arena, 'ast>>>)>,
+            umd_modules:
+                BTreeMap<FlowSmolStr, (LocNode<'arena>, Rc<RefCell<Exports<'arena, 'ast>>>)>,
         },
         DeclareGlobal {
             parent: ScopeId,
@@ -1163,6 +1165,7 @@ pub(crate) mod scope {
             values: BTreeMap::new(),
             types: BTreeMap::new(),
             modules: BTreeMap::new(),
+            umd_modules: BTreeMap::new(),
         })
     }
 
@@ -1264,6 +1267,30 @@ pub(crate) mod scope {
         })
     }
 
+    pub(crate) fn bind_umd_global<'arena, 'ast>(
+        scopes: &mut Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        scope: ScopeId,
+        id: &ast::Identifier<Loc, Loc>,
+    ) {
+        let Scope::Module {
+            parent: Some(global),
+            exports,
+            ..
+        } = scopes.get(scope)
+        else {
+            return;
+        };
+        let (global, exports) = (*global, exports.dupe());
+        let Scope::Global { umd_modules, .. } = scopes.get_mut(global) else {
+            return;
+        };
+        // Like TypeScript, the first UMD declaration of a name wins.
+        umd_modules
+            .entry(id.name.dupe())
+            .or_insert_with(|| (tbls.push_loc(id.loc.dupe()), exports));
+    }
+
     fn modify_exports<'arena, 'ast>(
         scopes: &mut Scopes<'arena, 'ast>,
         id: ScopeId,
@@ -1288,13 +1315,23 @@ pub(crate) mod scope {
         BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
         BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
         BTreeMap<FlowSmolStr, (LocNode<'arena>, Rc<RefCell<Exports<'arena, 'ast>>>)>,
+        BTreeMap<FlowSmolStr, (LocNode<'arena>, Rc<RefCell<Exports<'arena, 'ast>>>)>,
     ) {
         match scopes.get(scope) {
             Scope::Global {
                 values,
                 types,
                 modules,
-            } => (values.clone(), types.clone(), modules.clone()),
+                umd_modules,
+            } => {
+                // Like TypeScript, UMD globals never shadow other globals.
+                let umd_modules = umd_modules
+                    .iter()
+                    .filter(|(name, _)| !values.contains_key(*name) && !types.contains_key(*name))
+                    .map(|(name, module)| (name.dupe(), module.clone()))
+                    .collect();
+                (values.clone(), types.clone(), modules.clone(), umd_modules)
+            }
             _ => panic!("Expected Global scope"),
         }
     }

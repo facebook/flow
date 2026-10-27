@@ -53,6 +53,7 @@ fn default_sig_options() -> TypeSigOptions {
         component_syntax_enabled_in_config: true,
         enable_ts_syntax: true,
         enable_ts_utility_syntax: true,
+        export_as_namespace_support: false,
         hook_compatibility: true,
         enable_records: true,
         enable_relay_integration: false,
@@ -150,6 +151,7 @@ fn print_builtins_with_global_augmentations(
     }
     let opts = TypeSigOptions {
         for_builtins: true,
+        export_as_namespace_support: true,
         ..default_sig_options()
     };
     let arena = bumpalo::Bump::new();
@@ -246,6 +248,13 @@ fn print_builtins_with_global_augmentations(
     // Global modules
     for (name, module_def) in &builtins.global_modules {
         output.push_str(&format!("\nBuiltin module {}:\n", name));
+        output.push_str(&format!("Loc: {:?}\n", module_def.loc));
+        output.push_str(&format!("{:#?}\n", module_def.module_kind));
+    }
+
+    // Global UMD modules
+    for (name, module_def) in &builtins.global_umd_modules {
+        output.push_str(&format!("\nBuiltin UMD global {}:\n", name));
         output.push_str(&format!("Loc: {:?}\n", module_def.loc));
         output.push_str(&format!("{:#?}\n", module_def.module_kind));
     }
@@ -24493,5 +24502,402 @@ Builtin global value p
     assert_eq!(
         dedent_trim(expected_output),
         dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_umd_global() {
+    let augmentation = r#"
+        export declare const x: number;
+        export interface I {}
+        export as namespace Umd;
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:21-22]
+1. [1:24-30]
+2. [2:17-18]
+3. [3:20-23]
+4. [0:0]
+Local defs:
+0. Variable(
+    DefVariable {
+        id_loc: 0,
+        name: "x",
+        def: Annot(
+            Number(
+                1,
+            ),
+        ),
+    },
+)
+1. Interface(
+    DefInterface {
+        id_loc: 2,
+        name: "I",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {},
+            computed_props: [],
+            calls: [],
+            constructs: [],
+            dict: None,
+            abstract_: false,
+            strictness_kind: TypeScriptLoose,
+        },
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 4,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                4,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 2,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value globalThis
+Builtin UMD global Umd:
+Loc: 3
+ESModule {
+    type_exports: [
+        ExportTypeBinding(
+            1,
+        ),
+    ],
+    exports: [
+        ExportBinding(
+            0,
+        ),
+    ],
+    ts_pending: [],
+    info: ESModuleInfo {
+        type_export_keys: [
+            "I",
+        ],
+        type_stars: [],
+        export_keys: [
+            "x",
+        ],
+        stars: [],
+        ts_pending_keys: [],
+        strict: true,
+        platform_availability_set: None,
+    },
+}
+    "#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins_with_global_augmentations(
+            vec![],
+            vec![augmentation],
+        ))
+    )
+}
+
+#[test]
+fn builtin_umd_global_export_assignment() {
+    let augmentation = r#"
+        declare function m(): m.M;
+        declare namespace m {
+          interface M {}
+        }
+        export = m;
+        export as namespace Umd;
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:17-18]
+1. [1:18-25]
+2. [1:22-25]
+3. [1:22-23]
+4. [1:24-25]
+5. [3:12-13]
+6. [5:9-10]
+7. [6:20-23]
+8. [0:0]
+Local defs:
+0. DeclareFun(
+    DefDeclareFun {
+        id_loc: 0,
+        name: "m",
+        fn_loc: 1,
+        def: FunSig {
+            tparams: Mono,
+            params: [],
+            rest_param: None,
+            this_param: None,
+            return_: TyRef(
+                Qualified(
+                    TyRefQualified {
+                        loc: 2,
+                        id_loc: 4,
+                        name: "M",
+                        qualification: Unqualified(
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 3,
+                                    index: 0,
+                                },
+                            ),
+                        ),
+                    },
+                ),
+            ),
+            type_guard: None,
+            effect_: ArbitraryEffect,
+            strictness_kind: TypeScriptLoose,
+        },
+        statics: {},
+        namespace_types: {
+            "M": (
+                5,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+        tail: [],
+    },
+)
+1. Interface(
+    DefInterface {
+        id_loc: 5,
+        name: "M",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {},
+            computed_props: [],
+            calls: [],
+            constructs: [],
+            dict: None,
+            abstract_: false,
+            strictness_kind: TypeScriptLoose,
+        },
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 8,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                8,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 8,
+                            index: 2,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value globalThis
+Builtin UMD global Umd:
+Loc: 7
+CJSModule {
+    type_exports: [],
+    exports: Some(
+        Ref(
+            LocalRef(
+                PackedRefLocal {
+                    ref_loc: 6,
+                    index: 0,
+                },
+            ),
+        ),
+    ),
+    info: CJSModuleInfo {
+        type_export_keys: [],
+        type_stars: [],
+        strict: true,
+        platform_availability_set: None,
+    },
+}
+    "#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins_with_global_augmentations(
+            vec![],
+            vec![augmentation],
+        ))
+    )
+}
+
+#[test]
+fn builtin_umd_global_skipped_with_imports() {
+    let augmentation = r#"
+        import type {T} from './other';
+        export declare const x: T;
+        export as namespace Umd;
+    "#;
+    let expected_output = r#"
+Locs:
+0. [0:0]
+Local defs:
+0. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 0,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value globalThis
+    "#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins_with_global_augmentations(
+            vec![],
+            vec![augmentation],
+        ))
+    )
+}
+
+#[test]
+fn builtin_umd_global_first_in_wins() {
+    let builtins = r#"
+        declare var Taken: number;
+    "#;
+    let taken = r#"
+        export declare const t: number;
+        export as namespace Taken;
+    "#;
+    let first = r#"
+        export declare const a: number;
+        export as namespace Dup;
+        export as namespace Dup;
+    "#;
+    let second = r#"
+        export declare const b: number;
+        export as namespace Dup;
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:12-17]
+1. [1:19-25]
+2. [1:21-22]
+3. [1:24-30]
+4. [2:20-23]
+5. [0:0]
+Local defs:
+0. Variable(
+    DefVariable {
+        id_loc: 0,
+        name: "Taken",
+        def: Annot(
+            Number(
+                1,
+            ),
+        ),
+    },
+)
+1. Variable(
+    DefVariable {
+        id_loc: 2,
+        name: "a",
+        def: Annot(
+            Number(
+                3,
+            ),
+        ),
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 5,
+        name: "globalThis",
+        values: {
+            "Taken": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+            "globalThis": (
+                5,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 2,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value Taken
+Builtin global value globalThis
+Builtin UMD global Dup:
+Loc: 4
+ESModule {
+    type_exports: [],
+    exports: [
+        ExportBinding(
+            1,
+        ),
+    ],
+    ts_pending: [],
+    info: ESModuleInfo {
+        type_export_keys: [],
+        type_stars: [],
+        export_keys: [
+            "a",
+        ],
+        stars: [],
+        ts_pending_keys: [],
+        strict: true,
+        platform_availability_set: None,
+    },
+}
+    "#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins_with_global_augmentations(
+            vec![builtins],
+            vec![taken, first, second],
+        ))
     )
 }

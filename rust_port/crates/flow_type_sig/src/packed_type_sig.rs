@@ -60,4 +60,6 @@ pub struct Builtins<Loc> {
     pub global_values: BTreeMap<FlowSmolStr, Index<PackedDef<Index<Loc>>>>,
     pub global_types: BTreeMap<FlowSmolStr, Index<PackedDef<Index<Loc>>>>,
     pub global_modules: BTreeMap<FlowSmolStr, ModuleDef<Index<Loc>>>,
+    /// Modules declaring a UMD global with `export as namespace`, keyed by the global name.
+    pub global_umd_modules: BTreeMap<FlowSmolStr, ModuleDef<Index<Loc>>>,
 }

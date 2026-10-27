@@ -35,6 +35,14 @@ use crate::type_sig_options::TypeSigOptions;
 use crate::type_sig_pack as pack;
 use crate::type_sig_parse as parse;
 
+type BuiltinModules<'arena, 'ast> = BTreeMap<
+    FlowSmolStr,
+    (
+        parse::LocNode<'ast>,
+        Rc<RefCell<parse::Exports<'arena, 'ast>>>,
+    ),
+>;
+
 fn parse_libs<'arena: 'ast, 'ast>(
     opts: &TypeSigOptions,
     arenas: &'arena bumpalo::Bump,
@@ -46,13 +54,8 @@ fn parse_libs<'arena: 'ast, 'ast>(
     (
         BTreeMap<FlowSmolStr, parse::BindingNode<'arena, 'ast>>,
         BTreeMap<FlowSmolStr, parse::BindingNode<'arena, 'ast>>,
-        BTreeMap<
-            FlowSmolStr,
-            (
-                parse::LocNode<'ast>,
-                Rc<RefCell<parse::Exports<'arena, 'ast>>>,
-            ),
-        >,
+        BuiltinModules<'arena, 'ast>,
+        BuiltinModules<'arena, 'ast>,
     ),
 ) {
     let mut scopes = parse::scope::Scopes::new();
@@ -95,6 +98,15 @@ fn parse_libs<'arena: 'ast, 'ast>(
                     &mut tbls,
                     decl.as_ref(),
                 );
+            } else if let flow_parser::ast::statement::StatementInner::NamespaceExportDeclaration {
+                inner,
+                ..
+            } = &**stmt
+                && opts.export_as_namespace_support
+                // A UMD global aliases this copy of the module, which cannot resolve imports.
+                && file_sig.requires().is_empty()
+            {
+                parse::scope::bind_umd_global(&mut scopes, &mut tbls, module_scope, &inner.id);
             } else {
                 parse::statement(opts, module_scope, &mut scopes, &mut tbls, stmt);
             }
@@ -122,16 +134,11 @@ fn pack_builtins<'arena: 'ast, 'ast>(
     opts: &TypeSigOptions,
     mut scopes: parse::scope::Scopes<'arena, 'ast>,
     mut tbls: parse::Tables<'arena, 'ast>,
-    (global_values, global_types, global_modules): (
+    (global_values, global_types, global_modules, global_umd_modules): (
         BTreeMap<FlowSmolStr, parse::BindingNode<'arena, 'ast>>,
         BTreeMap<FlowSmolStr, parse::BindingNode<'arena, 'ast>>,
-        BTreeMap<
-            FlowSmolStr,
-            (
-                parse::LocNode<'ast>,
-                Rc<RefCell<parse::Exports<'arena, 'ast>>>,
-            ),
-        >,
+        BuiltinModules<'arena, 'ast>,
+        BuiltinModules<'arena, 'ast>,
     ),
 ) -> (Vec<Errno<Index<Loc>>>, Table<Loc>, Builtins<Loc>) {
     // mark - forces lazys, which may append to tbls.additional_errors
@@ -142,7 +149,7 @@ fn pack_builtins<'arena: 'ast, 'ast>(
     for b in global_types.values() {
         mark::mark_binding(opts, &mut scopes, &mut tbls, &mut marker, b);
     }
-    for (loc, exports) in global_modules.values() {
+    for (loc, exports) in global_modules.values().chain(global_umd_modules.values()) {
         mark::mark_builtin_module(opts, &mut scopes, &mut tbls, loc, &exports.borrow());
     }
     mark::mark_errors(&mut marker, &tbls.additional_errors);
@@ -175,7 +182,7 @@ fn pack_builtins<'arena: 'ast, 'ast>(
     let (pattern_defs, _) = pattern_defs.copy(|parsed| pack::pack_parsed(&mut cx, parsed));
     let (patterns, _) = patterns.copy(|pattern| pack::pack_pattern(pattern));
 
-    let (global_values, global_types, global_modules) = {
+    let (global_values, global_types, global_modules, global_umd_modules) = {
         let global_values: BTreeMap<FlowSmolStr, Index<_>> = global_values
             .into_iter()
             .map(|(k, v)| (k, pack::pack_builtin(v)))
@@ -184,16 +191,26 @@ fn pack_builtins<'arena: 'ast, 'ast>(
             .into_iter()
             .map(|(k, v)| (k, pack::pack_builtin(v)))
             .collect();
-        let global_modules: BTreeMap<FlowSmolStr, ModuleDef<Index<Loc>>> = global_modules
-            .into_iter()
-            .map(|(name, (loc, exports))| {
-                let (loc, module_kind) =
-                    pack::pack_builtin_module(&mut cx, &name, (loc, &exports.borrow()));
-                (name, ModuleDef { loc, module_kind })
-            })
-            .collect();
+        let mut pack_modules =
+            |modules: BuiltinModules<'arena, 'ast>| -> BTreeMap<FlowSmolStr, ModuleDef<Index<Loc>>> {
+                modules
+                    .into_iter()
+                    .map(|(name, (loc, exports))| {
+                        let (loc, module_kind) =
+                            pack::pack_builtin_module(&mut cx, &name, (loc, &exports.borrow()));
+                        (name, ModuleDef { loc, module_kind })
+                    })
+                    .collect()
+            };
+        let global_modules = pack_modules(global_modules);
+        let global_umd_modules = pack_modules(global_umd_modules);
 
-        (global_values, global_types, global_modules)
+        (
+            global_values,
+            global_types,
+            global_modules,
+            global_umd_modules,
+        )
     };
     let builtins = Builtins {
         module_refs,
@@ -204,6 +221,7 @@ fn pack_builtins<'arena: 'ast, 'ast>(
         global_values,
         global_types,
         global_modules,
+        global_umd_modules,
     };
 
     (cx.take_errs(), locs, builtins)

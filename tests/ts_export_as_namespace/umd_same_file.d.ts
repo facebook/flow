@@ -3,4 +3,4 @@ export interface S {
 }
 export as namespace SameFileA;
 export as namespace SameFileB;
-export as namespace SameFileA; // ERROR
+export as namespace SameFileA;
