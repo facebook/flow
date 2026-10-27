@@ -7,6 +7,7 @@
   "files": [
     "flowlib",
     "tslib",
+    "tslib_patches",
     "flow.js",
     "README.md"
   ],

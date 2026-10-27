@@ -1,3 +1,4 @@
 **/*.js
 flowlib
 tslib
+tslib_patches

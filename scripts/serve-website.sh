@@ -29,6 +29,7 @@ pushd "$WEBSITE" > /dev/null
 ln -sf "$FLOW_OUT_DIR/flow.js" "static/flow/master/flow.js"
 ln -sfn "$DIR/../lib" "static/flow/master/flowlib"
 ln -sfn "$DIR/../tslib" "static/flow/master/tslib"
+"$DIR/apply-tslib-patches.sh" "static/flow/master/tslib_patches"
 
 yarn install
 PATH="$FLOW_OUT_DIR:$PATH" yarn start --host ::

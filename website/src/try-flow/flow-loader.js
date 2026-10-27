@@ -164,11 +164,24 @@ const TSLIB_SOURCED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
   'lib.es2018.asynciterable.js',
 ];
 
+// Flowlib files taken from `tslib/` with Flow-specific changes. Their contents are fetched from the
+// adapted `.d.ts` file in `tslib_patches/`.
+const TSLIB_PATCHED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
+  'lib.es2015.generator.js',
+  'lib.es2016.array.include.js',
+  'lib.es2019.array.js',
+  'lib.es2020.promise.js',
+];
+
 function sourceUrlOf(
   url: string,
   tslibSourcedFiles: ReadonlyArray<string>,
+  tslibPatchedFiles: ReadonlyArray<string>,
 ): string {
   const filename = url.substring(url.lastIndexOf('/') + 1);
+  if (tslibPatchedFiles.includes(filename)) {
+    return url.replace(/\/flowlib\/([^/]+)\.js$/, '/tslib_patches/$1.d.ts');
+  }
   return tslibSourcedFiles.includes(filename)
     ? url.replace(/\/flowlib\/([^/]+)\.js$/, '/tslib/$1.d.ts')
     : url;
@@ -194,8 +207,12 @@ function normalizeUrlForFilename(url: string) {
     : url;
 }
 
-function get(url: string, tslibSourcedFiles: ReadonlyArray<string>) {
-  const sourceUrl = sourceUrlOf(url, tslibSourcedFiles);
+function get(
+  url: string,
+  tslibSourcedFiles: ReadonlyArray<string>,
+  tslibPatchedFiles: ReadonlyArray<string>,
+) {
+  const sourceUrl = sourceUrlOf(url, tslibSourcedFiles, tslibPatchedFiles);
   return new Promise<[string, string]>((resolve, reject) => {
     const req = new XMLHttpRequest();
     req.timeout = 5000;
@@ -307,6 +324,7 @@ export function load(
   }
   const masterBasePath = masterVersionBasePath(version);
   let tslibSourcedFiles = TSLIB_SOURCED_FLOWLIB_FILES_338;
+  let tslibPatchedFiles = TSLIB_PATCHED_FLOWLIB_FILES_338;
   let flowPath: string;
   let libs: Array<string>;
   if (masterBasePath != null) {
@@ -328,6 +346,8 @@ export function load(
       minorVersion >= 338
         ? TSLIB_SOURCED_FLOWLIB_FILES_338
         : TSLIB_SOURCED_FLOWLIB_FILES;
+    tslibPatchedFiles =
+      minorVersion >= 338 ? TSLIB_PATCHED_FLOWLIB_FILES_338 : [];
     flowPath = `${versionedBaseUrl}/flow.js`;
     libs =
       minorVersion >= 333
@@ -356,7 +376,7 @@ export function load(
   });
   return Promise.all([
     flowLoader.then(waitForReady),
-    ...libs.map(url => get(url, tslibSourcedFiles)),
+    ...libs.map(url => get(url, tslibSourcedFiles, tslibPatchedFiles)),
   ] as any).then(([flow, ...contents]) => {
     contents.forEach(nameAndContent => {
       flow.registerFile(nameAndContent[0], nameAndContent[1]);

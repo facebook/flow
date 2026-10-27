@@ -12,4 +12,5 @@ rm -rf "website/static/flow/master/flowlib"
 cp -r "lib" "website/static/flow/master/flowlib"
 rm -rf "website/static/flow/master/tslib"
 cp -r "tslib" "website/static/flow/master/tslib"
+scripts/apply-tslib-patches.sh "website/static/flow/master/tslib_patches"
 cd website && INCLUDE_PAST_RELEASES=1 IN_FLOW_TEST=1 FLOW_MAX_WORKERS=2 DOCUSAURUS_SSR_CONCURRENCY=2 yarn build

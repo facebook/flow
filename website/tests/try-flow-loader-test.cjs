@@ -9,13 +9,22 @@
  */
 
 const assert = require('node:assert/strict');
+const {execFileSync} = require('node:child_process');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const {test} = require('node:test');
 const vm = require('node:vm');
 const {transformFileSync} = require('@babel/core');
 
 const flowDir = path.resolve(__dirname, '../..');
+const tslibPatchesDir = fs.mkdtempSync(
+  path.join(os.tmpdir(), 'tslib_patches-'),
+);
+process.on('exit', () => fs.rmSync(tslibPatchesDir, {recursive: true}));
+execFileSync(path.join(flowDir, 'scripts/apply-tslib-patches.sh'), [
+  tslibPatchesDir,
+]);
 const loader = transformFileSync(
   path.resolve(__dirname, '../src/try-flow/flow-loader.js'),
   {
@@ -58,9 +67,13 @@ function createLoader(missingUrl) {
       }
       const relative = this.url
         .replace('/flow/master/flowlib/', 'lib/')
-        .replace('/flow/master/tslib/', 'tslib/');
+        .replace('/flow/master/tslib/', 'tslib/')
+        .replace('/flow/master/tslib_patches/', `${tslibPatchesDir}/`);
       try {
-        this.response = fs.readFileSync(path.join(flowDir, relative), 'utf8');
+        this.response = fs.readFileSync(
+          path.resolve(flowDir, relative),
+          'utf8',
+        );
         this.status = this.url === missingUrl ? 404 : 200;
       } catch (error) {
         if (error.code !== 'ENOENT') throw error;
@@ -99,6 +112,14 @@ test('loads master builtins from the current Flow and TypeScript libraries', asy
     assert.equal(
       registered.get(filename),
       fs.readFileSync(path.join(flowDir, `tslib/${name}.d.ts`), 'utf8'),
+    ); // OK
+    assert.equal(getBuiltins().includes(filename), true); // OK
+  }
+  for (const name of ['lib.es2016.array.include', 'lib.es2019.array']) {
+    const filename = `/flow/master/flowlib/${name}.js`;
+    assert.equal(
+      registered.get(filename),
+      fs.readFileSync(path.join(tslibPatchesDir, `${name}.d.ts`), 'utf8'),
     ); // OK
     assert.equal(getBuiltins().includes(filename), true); // OK
   }
