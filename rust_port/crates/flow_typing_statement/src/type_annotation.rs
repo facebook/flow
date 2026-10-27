@@ -2174,9 +2174,7 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let arg = ts.into_iter().next().unwrap();
                             let result_reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
-                                    kind_name,
-                                )),
+                                reason::VirtualReasonDesc::RType(FlowSmolStr::new(kind_name)),
                                 loc.dupe(),
                             );
                             let uo = use_op(&result_reason);

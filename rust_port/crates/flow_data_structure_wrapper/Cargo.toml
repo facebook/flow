@@ -6,7 +6,6 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-arcstr = "1.2.0"
 dupe = "0.9.1"
 im = { version = "15.1", features = ["rayon", "serde"] }
 parking_lot = { version = "0.12.1", features = ["arc_lock", "send_guard"] }
