@@ -523,7 +523,7 @@
     margin-right: 10px;
 }
 
-.errorFormats {
+.formatPills {
     display: flex;
     flex: none;
     gap: 2px;
@@ -533,7 +533,7 @@
     background: var(--tf-bar-track);
 }
 
-.errorFormat {
+.formatPill {
     appearance: none;
     -webkit-appearance: none;
     border: none;
@@ -551,12 +551,12 @@
     transition: background-color 0.15s, color 0.15s;
 }
 
-.errorFormat:hover {
+.formatPill:hover {
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
 }
 
-.errorFormat:focus-visible {
+.formatPill:focus-visible {
     outline: 2px solid var(--flow-yellow);
     outline-offset: -1px;
 }
@@ -584,27 +584,28 @@
 }
 
 @container tf-results (max-width: 650px) {
-    .errorsToolbar .tab {
+    .errorsToolbar .tab,
+    .astToolbar .tab {
         padding-inline: 6px;
     }
     .errorsToolbar .toolbarButtonLabel {
         display: none;
     }
-    .errorsToolbar .resultsActions {
+    .errorsToolbar .resultsActions,
+    .astToolbar .resultsActions {
         gap: 6px;
         margin-right: 8px;
     }
 }
 
 @container tf-results (max-width: 550px) {
-    .astToolbar .tab {
-        padding-inline: 6px;
-    }
     .astOption .labelExtra {
         display: none;
     }
     .errorsToolbar .flowVersion,
-    .errorsToolbar .versionWarning {
+    .errorsToolbar .versionWarning,
+    .astToolbar .flowVersion,
+    .astToolbar .versionWarning {
         display: none;
     }
 }
@@ -743,8 +744,22 @@
 /* Results pane <=410px: also drop the version selector (a real version is
    preselected; the tabs and collapse chevron stay). */
 @container tf-results (max-width: 410px) {
-    .errorFormat {
+    .formatPill {
         padding-inline: 5px;
+    }
+    .astToolbar .tabs {
+        margin-inline: 4px;
+    }
+    .astToolbar .tab {
+        gap: 4px;
+        padding-inline: 4px;
+    }
+    .astToolbar .astOption {
+        font-size: 12px;
+    }
+    .astToolbar .resultsActions {
+        gap: 4px;
+        margin-right: 6px;
     }
     .flowVersion,
     .versionWarning {

@@ -194,6 +194,58 @@ function shouldCollapse(cursorPosition: Position, json: unknown): boolean {
   return true;
 }
 
+export component AstResult(
+  ast: interface {} | string,
+  format: 'tree' | 'json',
+  hideLocations: boolean,
+  hideEmptyFields: boolean,
+  cursorPosition: ?Position,
+) {
+  const displayAst = useMemo(
+    () => formatAstForDisplay(ast, hideLocations, hideEmptyFields),
+    [ast, hideLocations, hideEmptyFields],
+  );
+  if (typeof ast === 'string') {
+    return <pre className={styles.resultBody}>{ast}</pre>;
+  }
+  if (Object.keys(ast).length === 0) {
+    return <div className={styles.emptyState}>No AST to show.</div>;
+  }
+  if (format === 'json') {
+    return (
+      <pre className={styles.resultBody}>
+        {JSON.stringify(displayAst, null, 2)}
+      </pre>
+    );
+  }
+  return (
+    <div className={styles.astBody}>
+      <ReactJson
+        src={displayAst}
+        indentWidth={2}
+        quotesOnKeys={false}
+        displayDataTypes={false}
+        enableClipboard={false}
+        shouldCollapse={field => {
+          if (cursorPosition == null) {
+            return false;
+          }
+          const original = field.namespace
+            .slice(1)
+            .reduce<unknown>(
+              (value, key) =>
+                value != null && typeof value === 'object' && key != null
+                  ? value[key]
+                  : null,
+              ast,
+            );
+          return shouldCollapse(cursorPosition, original);
+        }}
+      />
+    </div>
+  );
+}
+
 export default component TryFlowResults(
   flowVersion: string,
   flowVersions: ReadonlyArray<string>,
@@ -207,12 +259,9 @@ export default component TryFlowResults(
 ) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
   const [errorFormat, setErrorFormat] = useState<'default' | 'json'>('default');
+  const [astFormat, setAstFormat] = useState<'tree' | 'json'>('tree');
   const [hideLocations, setHideLocations] = useState(true);
   const [hideEmptyFields, setHideEmptyFields] = useState(true);
-  const displayAst = useMemo(
-    () => formatAstForDisplay(ast, hideLocations, hideEmptyFields),
-    [ast, hideLocations, hideEmptyFields],
-  );
   // On narrow screens the panes stack vertically and the results pane can be
   // collapsed down to just its tab bar, giving the editor more room. Clicking
   // the active tab collapses it; clicking anywhere on the tab bar expands it.
@@ -348,13 +397,13 @@ export default component TryFlowResults(
             <div
               role="group"
               aria-label="Error format"
-              className={styles.errorFormats}>
+              className={styles.formatPills}>
               {ERROR_FORMATS.map(({value, label}) => (
                 <button
                   key={value}
                   type="button"
                   className={clsx(
-                    styles.errorFormat,
+                    styles.formatPill,
                     errorFormat === value && styles.selectedTab,
                   )}
                   aria-pressed={errorFormat === value}
@@ -364,6 +413,29 @@ export default component TryFlowResults(
                     setCollapsed(false);
                   }}>
                   {label}
+                </button>
+              ))}
+            </div>
+          )}
+          {activeToolbarTab === 'ast' && (
+            <div
+              role="group"
+              aria-label="AST format"
+              className={styles.formatPills}>
+              {(['tree', 'json'] as const).map(value => (
+                <button
+                  key={value}
+                  type="button"
+                  className={clsx(
+                    styles.formatPill,
+                    astFormat === value && styles.selectedTab,
+                  )}
+                  aria-pressed={astFormat === value}
+                  onClick={() => {
+                    setAstFormat(value);
+                    setCollapsed(false);
+                  }}>
+                  {value === 'tree' ? 'Tree' : 'JSON'}
                 </button>
               ))}
             </div>
@@ -509,38 +581,15 @@ export default component TryFlowResults(
             </ul>
           </pre>
         ))}
-      {!loading &&
-        activeToolbarTab === 'ast' &&
-        (typeof ast === 'string' ? (
-          <pre className={styles.resultBody}>{ast}</pre>
-        ) : Object.keys(ast).length === 0 ? (
-          <div className={styles.emptyState}>No AST to show.</div>
-        ) : (
-          <div className={styles.astBody}>
-            <ReactJson
-              src={displayAst}
-              indentWidth={2}
-              quotesOnKeys={false}
-              displayDataTypes={false}
-              enableClipboard={false}
-              shouldCollapse={field => {
-                if (cursorPosition == null) {
-                  return false;
-                }
-                const original = field.namespace
-                  .slice(1)
-                  .reduce<unknown>(
-                    (value, key) =>
-                      value != null && typeof value === 'object' && key != null
-                        ? value[key]
-                        : null,
-                    ast,
-                  );
-                return shouldCollapse(cursorPosition, original);
-              }}
-            />
-          </div>
-        ))}
+      {!loading && activeToolbarTab === 'ast' && (
+        <AstResult
+          ast={ast}
+          format={astFormat}
+          hideLocations={hideLocations}
+          hideEmptyFields={hideEmptyFields}
+          cursorPosition={cursorPosition}
+        />
+      )}
     </div>
   );
 }

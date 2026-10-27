@@ -16,7 +16,7 @@ const {transformFileSync} = require('@babel/core');
 const React = require('react');
 const {renderToStaticMarkup} = require('react-dom/server');
 
-function loadComponent(filename) {
+function loadComponent(filename, exportName = 'default') {
   const compiled = new Module(filename, module);
   compiled.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = compiled.require.bind(compiled);
@@ -42,7 +42,7 @@ function loadComponent(filename) {
     }).code,
     filename,
   );
-  return compiled.exports.default;
+  return compiled.exports[exportName];
 }
 
 const TryFlowResults = loadComponent(
@@ -113,4 +113,64 @@ test('distinguishes loading and internal failures from no errors', () => {
   assert.match(html, /TryFlow encountered an internal error:/); // OK
   assert.match(html, /Example internal failure/); // OK
   assert.doesNotMatch(html, /No errors/); // OK
+});
+
+const AstResult = loadComponent(
+  path.resolve(__dirname, '../src/try-flow/TryFlowResults.js'),
+  'AstResult',
+);
+
+function renderAst(overrides = {}) {
+  return renderToStaticMarkup(
+    React.createElement(AstResult, {
+      ast: {},
+      format: 'tree',
+      hideLocations: true,
+      hideEmptyFields: true,
+      cursorPosition: null,
+      ...overrides,
+    }),
+  );
+}
+
+// JSON uses the same display filters as the tree, without changing the original AST.
+test('serializes the filtered AST as indented JSON', () => {
+  const loc = {source: 'example.js', start: {line: 1, column: 0}};
+  const ast = {
+    body: [{name: 'x', loc, optional: null, type: 'Identifier'}],
+    loc,
+    range: [0, 1],
+    type: 'Program',
+  };
+  const original = JSON.stringify(ast);
+  const expected = {type: 'Program', body: [{type: 'Identifier', name: 'x'}]};
+  assert.equal(
+    renderAst({ast, format: 'json'}),
+    renderToStaticMarkup(
+      React.createElement('pre', null, JSON.stringify(expected, null, 2)),
+    ),
+  ); // OK
+  assert.equal(JSON.stringify(ast), original); // OK
+  const shown = renderAst({
+    ast,
+    format: 'json',
+    hideLocations: false,
+    hideEmptyFields: false,
+  });
+  assert.match(shown, /&quot;loc&quot;:/); // OK
+  assert.match(shown, /&quot;range&quot;:/); // OK
+  assert.match(shown, /&quot;optional&quot;: null/); // OK
+  assert.doesNotMatch(shown, /example\.js/); // OK
+});
+
+// Empty trees and parser/unsupported-version messages stay meaningful in either format.
+test('preserves empty and string AST results in Tree and JSON modes', () => {
+  for (const format of ['tree', 'json']) {
+    assert.match(renderAst({format}), /No AST to show\./); // OK
+    const ast = 'AST output is not supported in this version of Flow.';
+    assert.equal(
+      renderAst({ast, format}),
+      renderToStaticMarkup(React.createElement('pre', null, ast)),
+    ); // OK
+  }
 });
