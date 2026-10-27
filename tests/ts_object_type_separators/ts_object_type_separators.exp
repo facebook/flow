@@ -1,0 +1,19 @@
+Error ------------------------------------------------------------------------------------------------------ test.ts:8:1
+
+Cannot cast `shape.count` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.ts:8:1
+   8| shape.count satisfies string; // ERROR
+      ^^^^^^^^^^^
+
+References:
+   test.ts:3:10
+   3|   count: number // OK
+               ^^^^^^ [1]
+   test.ts:8:23
+   8| shape.count satisfies string; // ERROR
+                            ^^^^^^ [2]
+
+
+
+Found 1 error
