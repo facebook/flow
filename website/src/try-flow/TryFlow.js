@@ -719,7 +719,7 @@ export default component TryFlow(
       <TryFlowResults
         flowVersion={flowVersion}
         flowVersions={flowVersions}
-        changeFlowVersion={event => setFlowVersion(event.target.value)}
+        changeFlowVersion={setFlowVersion}
         loading={loading}
         errors={errors}
         internalError={internalError}

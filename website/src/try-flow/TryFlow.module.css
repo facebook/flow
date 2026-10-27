@@ -523,6 +523,44 @@
     margin-right: 10px;
 }
 
+.errorFormats {
+    display: flex;
+    flex: none;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: var(--tf-bar-track);
+}
+
+.errorFormat {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    border-radius: 999px;
+    margin: 0;
+    padding: 4px 8px;
+    background: transparent;
+    color: var(--tf-text-on-bar);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.errorFormat:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.errorFormat:focus-visible {
+    outline: 2px solid var(--flow-yellow);
+    outline-offset: -1px;
+}
+
 .astOptions {
     display: flex;
     flex-direction: column;
@@ -545,11 +583,28 @@
     accent-color: var(--flow-yellow);
 }
 
+@container tf-results (max-width: 650px) {
+    .errorsToolbar .tab {
+        padding-inline: 6px;
+    }
+    .errorsToolbar .toolbarButtonLabel {
+        display: none;
+    }
+    .errorsToolbar .resultsActions {
+        gap: 6px;
+        margin-right: 8px;
+    }
+}
+
 @container tf-results (max-width: 550px) {
     .astToolbar .tab {
         padding-inline: 6px;
     }
     .astOption .labelExtra {
+        display: none;
+    }
+    .errorsToolbar .flowVersion,
+    .errorsToolbar .versionWarning {
         display: none;
     }
 }
@@ -688,7 +743,10 @@
 /* Results pane <=410px: also drop the version selector (a real version is
    preselected; the tabs and collapse chevron stay). */
 @container tf-results (max-width: 410px) {
-    .resultsActions select,
+    .errorFormat {
+        padding-inline: 5px;
+    }
+    .flowVersion,
     .versionWarning {
         display: none;
     }

@@ -17,6 +17,14 @@ import styles from './TryFlow.module.css';
 import copyText from './clipboard';
 import formatAstForDisplay from './formatAstForDisplay';
 
+const ERROR_FORMATS: ReadonlyArray<{
+  value: 'default' | 'json',
+  label: string,
+}> = [
+  {value: 'default', label: 'Rich'},
+  {value: 'json', label: 'JSON'},
+];
+
 component CheckIcon() {
   return (
     <svg
@@ -28,22 +36,6 @@ component CheckIcon() {
       strokeLinejoin="round"
       aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-component JsonIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true">
-      <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1" />
-      <path d="M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1" />
     </svg>
   );
 }
@@ -205,7 +197,7 @@ function shouldCollapse(cursorPosition: Position, json: unknown): boolean {
 export default component TryFlowResults(
   flowVersion: string,
   flowVersions: ReadonlyArray<string>,
-  changeFlowVersion: (SyntheticInputEvent<>) => void,
+  changeFlowVersion: (version: string) => void,
   loading: boolean,
   errors: ReadonlyArray<FlowJsError>,
   internalError: string,
@@ -214,6 +206,7 @@ export default component TryFlowResults(
   onErrorSelect: (line: number, column: number) => void,
 ) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
+  const [errorFormat, setErrorFormat] = useState<'default' | 'json'>('default');
   const [hideLocations, setHideLocations] = useState(true);
   const [hideEmptyFields, setHideEmptyFields] = useState(true);
   const displayAst = useMemo(
@@ -232,7 +225,11 @@ export default component TryFlowResults(
     // Only show the "Copied!" confirmation if the write actually succeeds.
     // copyText falls back to execCommand where the async Clipboard API is
     // unavailable or blocked (insecure context, unfocused doc, embedded iframe).
-    copyText(errorsToText(errors)).then(ok => {
+    const text =
+      errorFormat === 'json'
+        ? JSON.stringify(errors, null, 2)
+        : errorsToText(errors);
+    copyText(text).then(ok => {
       if (!ok) return;
       setCopiedAll(true);
       setTimeout(() => setCopiedAll(false), 1500);
@@ -287,6 +284,7 @@ export default component TryFlowResults(
       <div
         className={clsx(
           styles.toolbar,
+          activeToolbarTab === 'errors' && styles.errorsToolbar,
           activeToolbarTab === 'ast' && styles.astToolbar,
         )}
         onClick={() => {
@@ -319,20 +317,6 @@ export default component TryFlowResults(
             type="button"
             className={clsx(
               styles.tab,
-              activeToolbarTab === 'json' && styles.selectedTab,
-            )}
-            aria-pressed={activeToolbarTab === 'json'}
-            onClick={e => {
-              e.stopPropagation();
-              selectTab('json');
-            }}>
-            <JsonIcon />
-            JSON
-          </button>
-          <button
-            type="button"
-            className={clsx(
-              styles.tab,
               activeToolbarTab === 'ast' && styles.selectedTab,
             )}
             aria-pressed={activeToolbarTab === 'ast'}
@@ -359,6 +343,30 @@ export default component TryFlowResults(
                 {copiedAll ? 'Copied!' : 'Copy errors'}
               </span>
             </button>
+          )}
+          {activeToolbarTab === 'errors' && (
+            <div
+              role="group"
+              aria-label="Error format"
+              className={styles.errorFormats}>
+              {ERROR_FORMATS.map(({value, label}) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={clsx(
+                    styles.errorFormat,
+                    errorFormat === value && styles.selectedTab,
+                  )}
+                  aria-pressed={errorFormat === value}
+                  onClick={() => {
+                    setErrorFormat(value);
+                    setCopiedAll(false);
+                    setCollapsed(false);
+                  }}>
+                  {label}
+                </button>
+              ))}
+            </div>
           )}
           {activeToolbarTab === 'ast' && (
             <div className={styles.astOptions}>
@@ -393,8 +401,11 @@ export default component TryFlowResults(
           {isOldFlowVersion ? (
             <span className={styles.versionWarning}>old version selected</span>
           ) : null}
-          {/* $FlowFixMe[incompatible-type] SyntheticInputEvent vs SyntheticEvent */}
-          <select value={flowVersion} onChange={changeFlowVersion}>
+          <select
+            className={styles.flowVersion}
+            aria-label="Flow version"
+            value={flowVersion}
+            onChange={event => changeFlowVersion(event.currentTarget.value)}>
             {flowVersions.map(version => (
               <option key={version} value={version}>
                 {version.replace('master', 'main')}
@@ -430,6 +441,14 @@ export default component TryFlowResults(
               <li>TryFlow encountered an internal error: {internalError}</li>
             </ul>
           </pre>
+        ) : errorFormat === 'json' ? (
+          errors.length === 0 ? (
+            <div className={styles.emptyState}>No errors to show as JSON.</div>
+          ) : (
+            <pre className={styles.resultBody}>
+              {JSON.stringify(errors, null, 2)}
+            </pre>
+          )
         ) : errors.length === 0 ? (
           <div className={styles.noErrors}>
             <span className={styles.noErrorsCheck}>
@@ -488,15 +507,6 @@ export default component TryFlowResults(
                 );
               })}
             </ul>
-          </pre>
-        ))}
-      {!loading &&
-        activeToolbarTab === 'json' &&
-        (errors.length === 0 ? (
-          <div className={styles.emptyState}>No errors to show as JSON.</div>
-        ) : (
-          <pre className={styles.resultBody}>
-            {JSON.stringify(errors, null, 2)}
           </pre>
         ))}
       {!loading &&
