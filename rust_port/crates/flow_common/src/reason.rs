@@ -307,7 +307,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RDummyPrototype,
     RDummyThis,
     RSomeProperty,
-    RGlobalObject,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
     RReactProps,
@@ -448,7 +447,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RImportStar(s) => RImportStar(s.dupe()),
             RDefaultImportedType(s, u) => RDefaultImportedType(s.dupe(), u.clone()),
             RCode(s) => RCode(s.dupe()),
-            RGlobalObject => RGlobalObject,
             ROpaqueType(s) => ROpaqueType(s.dupe()),
             RRendersNothing => RRendersNothing,
             RObjectPatternRestProp => RObjectPatternRestProp,
@@ -1290,9 +1288,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
             format!("Default import from `{}`", module_name.display())
         }
         RCode(x) => format!("`{}`", x),
-
-        // Misc operations
-        RGlobalObject => "global object".to_string(),
 
         // Type wrappers
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),

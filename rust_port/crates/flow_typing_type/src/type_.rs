@@ -12311,7 +12311,7 @@ pub fn dummy_this(loc: ALoc) -> Type {
 }
 
 pub fn global_this(reason: Reason) -> Type {
-    let reason = reason.replace_desc(VirtualReasonDesc::RGlobalObject);
+    let reason = reason.replace_desc(None);
     Type::new(TypeInner::ObjProtoT(reason))
 }
 

@@ -1481,7 +1481,6 @@ fn initialize_globals(
     cache: &mut ValCache<ALoc>,
 ) -> HashMap<FlowSmolStr, EnvVal> {
     use flow_common::reason::VirtualReason;
-    use flow_common::reason::VirtualReasonDesc;
     use refinement_key::Proj;
 
     let mut globals = HashMap::with_capacity(unbound_names.len() + exclude_syms.len() + 10);
@@ -1517,7 +1516,7 @@ fn initialize_globals(
     // this has to come later, since this can be thought to be unbound names
     // in SSA builder when it's used as a type.
     {
-        let reason = VirtualReason::new(VirtualReasonDesc::RGlobalObject, program_loc.dupe());
+        let reason = VirtualReason::new(None, program_loc.dupe());
         let v = ssa_val::global_this(cache, reason);
         let entry = EnvVal::new(EnvValInner {
             val_ref: Rc::new(RefCell::new(v.dupe())),
