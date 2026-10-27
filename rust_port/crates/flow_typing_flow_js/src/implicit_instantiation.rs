@@ -631,12 +631,13 @@ fn t_of_use_t<'cx>(
                                         Ok::<(), FlowJsException>(())
                                     },
                                 )?;
-                                use_t_result_of_t_option(merge_lower_bounds(
-                                    cx,
-                                    env,
-                                    false,
-                                    &arr_rest_result,
-                                ))
+                                match merge_lower_bounds(cx, env, false, &arr_rest_result)? {
+                                    None => Ok(UseTResult::UpperEmpty),
+                                    Some(solution) => {
+                                        FlowJs::flow_t_with_env(cx, env, &solution, tvar)?;
+                                        Ok(UseTResult::UpperT(solution))
+                                    }
+                                }
                             })
                         }
                         _ => Ok(UseTResult::UpperNonT(u.dupe())),
@@ -777,12 +778,13 @@ fn t_of_use_t<'cx>(
                                 FlowJs::flow_with_env(cx, env, &t, &UseT::new(u_inner))?;
                                 Ok::<(), FlowJsException>(())
                             })?;
-                        use_t_result_of_t_option(merge_lower_bounds(
-                            cx,
-                            env,
-                            false,
-                            &arr_rest_result,
-                        ))
+                        match merge_lower_bounds(cx, env, false, &arr_rest_result)? {
+                            None => Ok(UseTResult::UpperEmpty),
+                            Some(solution) => {
+                                FlowJs::flow_t_with_env(cx, env, &solution, tvar)?;
+                                Ok(UseTResult::UpperT(solution))
+                            }
+                        }
                     })
                 }
                 SpreadResolve::ResolveSpreadsToTupleType { .. }
@@ -3178,31 +3180,54 @@ pub mod instantiation_solver {
                 visitor.type_(cx, Polarity::Positive, (Marked::new(), tparams_set), true_t)
             };
 
-            let mut result_map = FlowOrdMap::new();
-            for (name, targ, bound) in &inferred_targ_list {
-                let tparam = match tparams_map.get(name) {
-                    Some(tp) => tp,
-                    None => return Ok(None),
-                };
-                let polarity = marked_tparams.get(name);
-                let InferredTarg { inferred, .. } = make_pin_type::<MainObserver>(
-                    cx,
-                    env,
-                    use_op,
-                    tparam,
-                    polarity,
-                    &Some(bound.dupe()),
-                    reason,
-                    targ,
-                )?;
-                if speculative_subtyping_succeeds(cx, env, trace, unknown_use(), &inferred, bound)?
-                {
-                    result_map.insert(name.dupe(), inferred);
-                } else {
-                    return Ok(None);
-                }
+            // Pinning can finish the extends check: a reversed solution flows back into its tvar
+            // and resolves what waited on it, e.g. the tuple type `[infer A, ...infer B]` or the
+            // params `(a: infer A, ...rest: infer B)` once `B` is pinned. If that fails, so does
+            // the check.
+            let mut solution = None;
+            let pinning = speculation_kit::try_singleton_custom_throw_on_failure(
+                cx,
+                env,
+                Box::new(|cx, env| {
+                    let mut result_map = FlowOrdMap::new();
+                    for (name, targ, bound) in &inferred_targ_list {
+                        let tparam = match tparams_map.get(name) {
+                            Some(tp) => tp,
+                            None => return Ok(()),
+                        };
+                        let polarity = marked_tparams.get(name);
+                        let InferredTarg { inferred, .. } = make_pin_type::<MainObserver>(
+                            cx,
+                            env,
+                            use_op,
+                            tparam,
+                            polarity,
+                            &Some(bound.dupe()),
+                            reason,
+                            targ,
+                        )?;
+                        if speculative_subtyping_succeeds(
+                            cx,
+                            env,
+                            trace,
+                            unknown_use(),
+                            &inferred,
+                            bound,
+                        )? {
+                            result_map.insert(name.dupe(), inferred);
+                        } else {
+                            return Ok(());
+                        }
+                    }
+                    solution = Some(result_map);
+                    Ok(())
+                }),
+            );
+            match pinning {
+                Ok(()) => Ok(solution),
+                Err(FlowJsException::SpeculationSingletonError) => Ok(None),
+                Err(e) => Err(e),
             }
-            Ok(Some(result_map))
         } else {
             Ok(None)
         }

@@ -597,7 +597,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- bind.js:42:17
 
 Cannot call `receiver.method.bind` because: [incompatible-type]
- - Either in the first parameter: `string` [1] is incompatible with `number` [2].
+ - Either in the first parameter: `string` [1] is incompatible with `1` [2].
  - Or no more than 1 argument is expected by function type [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

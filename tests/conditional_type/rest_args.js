@@ -52,7 +52,7 @@ type TailKind<T extends ReadonlyArray<unknown>> =
     ? R extends [string, boolean] ? 'tail' : 'bad'
     : 'none';
 declare const tailKind: TailKind<[number, string, boolean]>;
-tailKind as 'tail';
+tailKind as 'tail'; // ERROR: tuple elements are invariant, so `number` is not `unknown`
 tailKind as 'bad'; // ERROR
 
 function bindGeneric<T>(callback: (label: string, ...values: Array<T>) => void):
