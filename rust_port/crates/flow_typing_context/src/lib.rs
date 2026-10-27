@@ -566,6 +566,7 @@ struct ContextInner {
     builtin_values: HashMap<FlowSmolStr, (ALoc, Type)>,
     builtin_types: HashMap<FlowSmolStr, (ALoc, Type)>,
     builtin_modules: HashMap<FlowSmolStr, (Reason, LazyModuleType<Cx>)>,
+    builtin_umd_values: HashMap<FlowSmolStr, (ALoc, Type)>,
     hint_map_arglist_cache: HashMap<(ALoc, Option<ALoc>), Vec<(ALoc, type_::CallArg)>>,
     hint_map_jsx_cache: HashMap<(Reason, String, Vec<ALoc>, ALoc), LazyHintMapJsx>,
     hint_eval_cache: IntHashMap<i32, Option<Type>>,
@@ -725,6 +726,7 @@ impl ContextArena {
             builtin_values: HashMap::new(),
             builtin_types: HashMap::new(),
             builtin_modules: HashMap::new(),
+            builtin_umd_values: HashMap::new(),
             hint_map_arglist_cache: HashMap::new(),
             hint_map_jsx_cache: HashMap::new(),
             hint_eval_cache: IntHashMap::default(),
@@ -1306,8 +1308,26 @@ impl<'a> Context<'a> {
                     .insert(FlowSmolStr::from(name), (l.dupe(), t.dupe()));
                 Some((l, t))
             }
-            None => self.builtin_value_opt(name),
+            None => self
+                .builtin_value_opt(name)
+                .or_else(|| self.builtin_umd_value_opt(name)),
         }
+    }
+
+    /// The UMD global `name` declared with `export as namespace`. Like library signatures, which
+    /// cannot see them, library definitions don't get UMD globals.
+    pub fn builtin_umd_value_opt(&mut self, name: &str) -> Option<(ALoc, Type)> {
+        if self.is_global_lib_context() {
+            return None;
+        }
+        if let Some((l, t)) = self.inner().builtin_umd_values.get(name) {
+            return Some((l.dupe(), t.dupe()));
+        }
+        let (l, t) = self.builtins().read_umd_value_opt(self, name)?;
+        self.inner_mut()
+            .builtin_umd_values
+            .insert(FlowSmolStr::from(name), (l.dupe(), t.dupe()));
+        Some((l, t))
     }
 
     pub fn builtin_module_opt(&mut self, name: &Userland) -> Option<(Reason, LazyModuleType<Cx>)> {

@@ -6112,6 +6112,7 @@ pub fn merge_builtins(
     BTreeMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>>,
     BTreeMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>>,
     BTreeMap<FlowSmolStr, flow_typing_builtins::LazyModule<Cx>>,
+    BTreeMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>>,
 ) {
     let source = Some(file_key.dupe());
     let aloc_table: flow_aloc::LazyALocTable = Rc::new(LazyCell::new(Box::new({
@@ -6369,6 +6370,7 @@ pub fn merge_builtins(
 
     let mut builtin_modules: BTreeMap<FlowSmolStr, flow_typing_builtins::LazyModule<Cx>> =
         BTreeMap::new();
+    let mut builtin_umd_modules = Vec::new();
     let file_id = arena.add_sig_file(|file_id| {
         builtin_modules = builtins
             .global_modules
@@ -6377,6 +6379,22 @@ pub fn merge_builtins(
                 let module_loc = (*aloc)(&module_def.loc);
                 let lazy_module = map_module(file_id, module_loc, &module_def.module_kind);
                 (module_name.dupe(), lazy_module)
+            })
+            .collect();
+        builtin_umd_modules = builtins
+            .global_umd_modules
+            .iter()
+            .map(|(name, module_def)| {
+                let id_loc = (*aloc)(&module_def.loc);
+                let lazy_module = map_module(file_id, id_loc.dupe(), &module_def.module_kind);
+                let export_assignment = matches!(
+                    module_def.module_kind,
+                    Pack::ModuleKind::CJSModule {
+                        exports: Some(_),
+                        ..
+                    }
+                );
+                (name.dupe(), id_loc, export_assignment, lazy_module)
             })
             .collect();
 
@@ -6455,5 +6473,59 @@ pub fn merge_builtins(
         })
         .collect();
 
-    (builtin_values, builtin_types, builtin_modules)
+    // Like TypeScript's `resolveExternalModuleSymbol`, a UMD global is the `export =` value of
+    // the module when there is one, and otherwise its namespace object.
+    let builtin_umd_values: BTreeMap<FlowSmolStr, flow_typing_builtins::LazyVal<Cx>> =
+        builtin_umd_modules
+            .into_iter()
+            .map(|(name, id_loc, export_assignment, lazy_module)| {
+                let lazy_val: flow_typing_builtins::LazyVal<Cx> = Rc::new(flow_lazy::Lazy::new({
+                    let name = name.dupe();
+                    move |cx: &mut Context<'_>| {
+                        let (r, lazy_module) = lazy_module.get_forced(cx);
+                        let s =
+                            type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
+                                r.dupe(),
+                                lazy_module.dupe(),
+                            );
+                        let resolved_require = ResolvedRequire::TypedModule(
+                            annotation_inference::force_module_type_thunk(cx.id(), s),
+                        );
+                        let reason = reason::mk_reason(
+                            reason::VirtualReasonDesc::RIdentifier(name.dupe()),
+                            id_loc.dupe(),
+                        );
+                        let module_name = Userland::from_smol_str(name.dupe());
+                        let t = if export_assignment {
+                            annotation_inference::import_default(
+                                cx,
+                                reason,
+                                type_::ImportKind::ImportValue,
+                                &name,
+                                module_name,
+                                false,
+                                resolved_require,
+                            )
+                        } else {
+                            annotation_inference::import_ns(
+                                cx,
+                                reason,
+                                Symbol::mk_module_symbol(module_name.into_inner(), id_loc.dupe()),
+                                false,
+                                resolved_require,
+                            )
+                        };
+                        (id_loc.dupe(), t)
+                    }
+                }));
+                (name, lazy_val)
+            })
+            .collect();
+
+    (
+        builtin_values,
+        builtin_types,
+        builtin_modules,
+        builtin_umd_values,
+    )
 }

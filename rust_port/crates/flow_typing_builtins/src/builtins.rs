@@ -33,6 +33,8 @@ pub struct Builtins<CX: ContextFamily> {
     original_global_values: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
     original_global_types: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
     original_global_modules: FlowOrdMap<FlowSmolStr, LazyModule<CX>>,
+    /// UMD globals declared with `export as namespace`. They never shadow the globals above.
+    original_global_umd_values: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
     read_value: ReadBuiltin<CX, LazyVal<CX>, (ALoc, Type)>,
     read_module: ReadBuiltin<CX, LazyModule<CX>, (Reason, ModuleType)>,
 }
@@ -51,6 +53,10 @@ impl<CX: ContextFamily> std::fmt::Debug for Builtins<CX> {
             .field(
                 "original_global_modules",
                 &format!("<{} entries>", self.original_global_modules.len()),
+            )
+            .field(
+                "original_global_umd_values",
+                &format!("<{} entries>", self.original_global_umd_values.len()),
             )
             .finish()
     }
@@ -85,6 +91,12 @@ impl<CX: ContextFamily> Builtins<CX> {
         Some((self.read_value)(cx, lazy_val))
     }
 
+    /// Reads the UMD global `name` into `cx`, like [Builtins::read_value_opt].
+    pub fn read_umd_value_opt(&self, cx: &mut CX::Context<'_>, name: &str) -> Option<(ALoc, Type)> {
+        let lazy_val = self.original_global_umd_values.get(name)?;
+        Some((self.read_value)(cx, lazy_val))
+    }
+
     /// Reads the global module `name` into `cx`, like [Builtins::read_value_opt].
     pub fn read_module_opt(
         &self,
@@ -112,6 +124,7 @@ impl<CX: ContextFamily> Builtins<CX> {
             values,
             types,
             modules,
+            FlowOrdMap::new(),
         )
     }
 
@@ -123,11 +136,13 @@ impl<CX: ContextFamily> Builtins<CX> {
         values: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
         types: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
         modules: FlowOrdMap<FlowSmolStr, LazyModule<CX>>,
+        umd_values: FlowOrdMap<FlowSmolStr, LazyVal<CX>>,
     ) -> Self {
         Builtins {
             original_global_values: values,
             original_global_types: types,
             original_global_modules: modules,
+            original_global_umd_values: umd_values,
             read_value,
             read_module,
         }

@@ -8,14 +8,18 @@ i.x as string; // ERROR
 
 declare const mm: UmdCjs.M;
 mm.y as string;
+mm.y as number; // ERROR
 
 declare const thing: UmdClass;
 thing.foo() as number;
+thing.foo() as string; // ERROR
 declare const sub: UmdClass.SubThing;
 sub.z as boolean;
+sub.z as string; // ERROR
 
 declare const s: SameFileA.S;
 s as SameFileB.S;
+s.s as string; // ERROR
 
 // Value positions are not allowed in a module
 UmdEs.f(); // ERROR

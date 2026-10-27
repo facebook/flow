@@ -2265,7 +2265,7 @@ pub fn mk_builtins(
             global_libdefs: _,
             builtins,
         } => {
-            let (values, types, modules) = type_sig_merge::merge_builtins(
+            let (values, types, modules, umd_values) = type_sig_merge::merge_builtins(
                 arena,
                 builtin_leader_file_key.dupe(),
                 builtins.builtin_locs.dupe(),
@@ -2274,6 +2274,7 @@ pub fn mk_builtins(
             let values: FlowOrdMap<_, _> = values.into_iter().collect();
             let types: FlowOrdMap<_, _> = types.into_iter().collect();
             let modules: FlowOrdMap<_, _> = modules.into_iter().collect();
+            let umd_values: FlowOrdMap<_, _> = umd_values.into_iter().collect();
             let source_cx = {
                 let values = values.dupe();
                 let types = types.dupe();
@@ -2323,6 +2324,7 @@ pub fn mk_builtins(
                     values.dupe(),
                     types.dupe(),
                     modules.dupe(),
+                    umd_values.dupe(),
                 )
             })
         }
