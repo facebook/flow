@@ -2226,10 +2226,7 @@ pub fn read_class_self_type<'cx>(cx: &mut Context<'cx>, loc: ALoc) -> Type {
         Some(t) => t,
         None => {
             // When checked_find_loc_env_write_opt returns None, we are reading an unreachable entry
-            flow_typing_type::type_::empty_t::why(flow_common::reason::mk_reason(
-                VirtualReasonDesc::REmpty,
-                loc,
-            ))
+            flow_typing_type::type_::empty_t::why(flow_common::reason::mk_reason(None, loc))
         }
     }
 }

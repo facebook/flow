@@ -11287,26 +11287,22 @@ pub mod mixed_t {
 pub mod empty_t {
     use super::*;
 
-    pub fn desc() -> flow_common::reason::ReasonDesc {
-        flow_common::reason::VirtualReasonDesc::REmpty
-    }
-
     pub fn make(reason: Reason) -> Type {
         Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::EmptyT)))
     }
 
     pub fn at(tok: ALoc) -> Type {
-        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        let reason = flow_common::reason::mk_annot_reason(None, tok);
         make(reason)
     }
 
     pub fn why(reason: Reason) -> Type {
-        let reason = reason.replace_desc(desc());
+        let reason = reason.replace_desc(None);
         make(reason)
     }
 
     pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
-        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        let r = if use_desc { r } else { r.replace_desc(None) };
         make(r)
     }
 }
@@ -11613,7 +11609,7 @@ pub mod locationless {
         use super::*;
 
         pub fn t() -> Type {
-            let reason = flow_common::reason::locationless_reason(super::super::empty_t::desc());
+            let reason = flow_common::reason::locationless_reason(None);
             super::super::empty_t::make(reason)
         }
     }

@@ -238,7 +238,7 @@ pub fn resolve<'cx>(
                 mk_singleton_str(loc, transform_string(kind, value.as_str()))
             }
             DefTInner::EmptyT => {
-                let r = reason::mk_annot_reason(VirtualReasonDesc::REmpty, loc);
+                let r = reason::mk_annot_reason(None, loc);
                 Type::new(TypeInner::DefT(r, DefT::new(DefTInner::EmptyT)))
             }
             _ => mk_deferred(result_reason, kind, arg),
@@ -259,7 +259,7 @@ pub fn resolve<'cx>(
                 .collect();
             match transformed.as_slice() {
                 [] => {
-                    let r = reason::mk_annot_reason(VirtualReasonDesc::REmpty, loc);
+                    let r = reason::mk_annot_reason(None, loc);
                     Type::new(TypeInner::DefT(r, DefT::new(DefTInner::EmptyT)))
                 }
                 [t] => t.dupe(),

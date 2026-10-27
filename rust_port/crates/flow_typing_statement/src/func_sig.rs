@@ -161,8 +161,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
         self.statement_list(statements)?;
         if !self.has_return_annot {
             if self.no_return && self.has_throw {
-                let reason =
-                    reason::mk_reason(reason::VirtualReasonDesc::REmpty, self.body_loc.dupe());
+                let reason = reason::mk_reason(None, self.body_loc.dupe());
                 let t = type_::empty_t::make(reason);
                 flow_js::flow_non_speculating(
                     self.cx,
