@@ -7,16 +7,16 @@
 # shellcheck disable=SC2094
 
 printf "test.js\n"
-assert_ok "$FLOW" agent-helper inspect-types --strip-root test.js
+assert_ok "$FLOW" agent-helper inspect-types --reason test --strip-root test.js
 
 printf "\ntest.js (stdin)\n"
-assert_ok "$FLOW" agent-helper inspect-types --strip-root --path test.js < test.js
+assert_ok "$FLOW" agent-helper inspect-types --reason test --strip-root --path test.js < test.js
 
 printf "\ntest.js --show-refinements\n"
-assert_ok "$FLOW" agent-helper inspect-types --strip-root --show-refinements test.js
+assert_ok "$FLOW" agent-helper inspect-types --reason test --strip-root --show-refinements test.js
 
 printf "\ntest.js --show-refinements --show-invalidations\n"
-assert_ok "$FLOW" agent-helper inspect-types --strip-root --show-refinements --show-invalidations test.js
+assert_ok "$FLOW" agent-helper inspect-types --reason test --strip-root --show-refinements --show-invalidations test.js
 
 printf "\ntest.js --pretty --show-refinements --show-invalidations\n"
-assert_ok "$FLOW" agent-helper inspect-types --strip-root --pretty --show-refinements --show-invalidations test.js
+assert_ok "$FLOW" agent-helper inspect-types --reason test --strip-root --pretty --show-refinements --show-invalidations test.js

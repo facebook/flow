@@ -90,6 +90,8 @@ mod stub {
         pub start_time: f64,
         // The AI-agent invocation ID, when present.
         pub agent_id: Option<String>,
+        // The --reason flag that `agent-helper` commands require.
+        pub reason: Option<String>,
     }
 
     // Persistent_context says what conditions were like when the message was received.
@@ -164,6 +166,7 @@ mod stub {
                 monitor_options: None,
                 server_options: None,
                 agent_id: None,
+                reason: None,
             })
         })
     }
@@ -241,6 +244,13 @@ mod stub {
             .lock()
             .expect("flow_event_logger context mutex poisoned")
             .agent_id = client_context.agent_id.clone();
+    }
+
+    pub fn set_reason(reason: Option<String>) {
+        context()
+            .lock()
+            .expect("flow_event_logger context mutex poisoned")
+            .reason = reason;
     }
 
     pub fn set_root(root: Option<String>) {
@@ -729,6 +739,7 @@ mod fb_facade {
         pub server_options: Option<ServerOptions>,
         pub start_time: f64,
         pub agent_id: Option<String>,
+        pub reason: Option<String>,
     }
 
     #[derive(Clone, Debug)]
@@ -890,6 +901,7 @@ mod fb_facade {
             }),
             start_time: ctx.start_time,
             agent_id: ctx.agent_id,
+            reason: ctx.reason,
         }
     }
 
@@ -917,6 +929,7 @@ mod fb_facade {
             }),
             start_time: ctx.start_time,
             agent_id: ctx.agent_id,
+            reason: ctx.reason,
         }
     }
 
@@ -990,6 +1003,11 @@ mod fb_facade {
     pub fn set_agent_id_from_client_context(client_context: &LoggingContext) {
         let fb_ctx = to_fb_logging_context(client_context.clone());
         fb::set_agent_id_from_client_context(&fb_ctx);
+    }
+
+    // SHIM: forwards directly; FB and OSS share identical signature.
+    pub fn set_reason(reason: Option<String>) {
+        fb::set_reason(reason);
     }
 
     // SHIM: forwards directly; FB and OSS share identical signature.

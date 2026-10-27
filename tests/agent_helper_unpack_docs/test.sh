@@ -9,11 +9,11 @@
 website_docs="$(dirname "$THIS_DIR")/website/docs"
 
 printf "unpack-docs docs\n"
-assert_ok "$FLOW" agent-helper unpack-docs docs
+assert_ok "$FLOW" agent-helper unpack-docs --reason test docs
 diff -r "$website_docs" docs
 printf "docs matches website/docs\n"
 
 printf "\nunpack-docs docs (already unpacked)\n"
-assert_ok "$FLOW" agent-helper unpack-docs docs
+assert_ok "$FLOW" agent-helper unpack-docs --reason test docs
 diff -r "$website_docs" docs
 printf "docs matches website/docs\n"

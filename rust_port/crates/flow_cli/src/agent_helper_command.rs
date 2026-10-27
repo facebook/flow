@@ -26,6 +26,30 @@ fn subcommand_flag() -> arg_spec::FlagType<Option<(AgentHelperSubcommand, Vec<St
     ])
 }
 
+fn add_reason_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
+    spec.flag(
+        "--reason",
+        &arg_spec::required(None, arg_spec::string()),
+        "Why you are running this command (required, used by logging)",
+        None,
+    )
+}
+
+fn set_reason_from_flag(args: &arg_spec::Values) {
+    let reason = flow_command_spec::get(
+        args,
+        "--reason",
+        &arg_spec::required(None, arg_spec::string()),
+    )
+    .unwrap_or_else(|err| {
+        flow_command_utils::die_bad_args(&flow_command_spec::error_message(&err))
+    });
+    if reason.trim().is_empty() {
+        flow_command_utils::die_bad_args("--reason must not be empty");
+    }
+    flow_event_logger::set_reason(Some(reason));
+}
+
 fn inspect_types_spec() -> flow_command_spec::Spec {
     let exe_name = flow_command_utils::exe_name();
     let spec = flow_command_spec::Spec::new(
@@ -33,9 +57,10 @@ fn inspect_types_spec() -> flow_command_spec::Spec {
         INSPECT_TYPES_DOC,
         flow_command_spec::Visibility::Public,
         format!(
-            "Usage: {exe_name} agent-helper inspect-types [OPTION]... [FILE]\n\nEach `// ^?` comment queries the column its `^` points at on the line above.\n\ne.g. {exe_name} agent-helper inspect-types foo.js\nor   {exe_name} agent-helper inspect-types < foo.js\n"
+            "Usage: {exe_name} agent-helper inspect-types --reason REASON [OPTION]... [FILE]\n\nEach `// ^?` comment queries the column its `^` points at on the line above.\n\ne.g. {exe_name} agent-helper inspect-types --reason \"why is x any\" foo.js\nor   {exe_name} agent-helper inspect-types --reason \"why is x any\" < foo.js\n"
         ),
     );
+    let spec = add_reason_flag(spec);
     let spec = flow_command_utils::add_base_flags(spec);
     let spec = flow_command_utils::add_connect_and_json_flags(spec);
     let spec = flow_command_utils::add_root_flag(spec);
@@ -170,6 +195,7 @@ fn json_of_inspect_types_item(
 }
 
 fn run_inspect_types(args: &arg_spec::Values) {
+    set_reason_from_flag(args);
     let base_flags = flow_command_utils::get_base_flags(args);
     let (connect_flags, json, pretty) = flow_command_utils::get_connect_and_json_flags(args);
     let root_arg =
@@ -261,15 +287,17 @@ fn unpack_docs_spec() -> flow_command_spec::Spec {
         UNPACK_DOCS_DOC,
         flow_command_spec::Visibility::Public,
         format!(
-            "Usage: {} agent-helper unpack-docs [OPTION]... DIR\n\nCreates DIR if needed and overwrites any docs already in it.\n",
+            "Usage: {} agent-helper unpack-docs --reason REASON [OPTION]... DIR\n\nCreates DIR if needed and overwrites any docs already in it.\n",
             flow_command_utils::exe_name()
         ),
     );
+    let spec = add_reason_flag(spec);
     let spec = flow_command_utils::add_from_flag(spec);
     spec.anon("DIR", &arg_spec::string())
 }
 
 fn run_unpack_docs(args: &arg_spec::Values) {
+    set_reason_from_flag(args);
     let Some(dir) = flow_command_spec::get(args, "DIR", &arg_spec::string()).unwrap() else {
         flow_command_spec::usage(&unpack_docs_spec());
         flow_common_exit_status::exit(
