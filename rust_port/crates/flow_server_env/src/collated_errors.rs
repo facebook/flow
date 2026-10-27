@@ -23,17 +23,28 @@ use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_typing_errors::intermediate_error_types::IntermediateError;
 
+/// A point in the server's error history, by wall clock and by error collation
+/// round (one per init or recheck).
+#[derive(Clone, Copy)]
+pub struct ErrorStateTimestamp {
+    pub time: f64,
+    pub round: u32,
+}
+
 #[derive(Clone, Copy)]
 pub struct ErrorStateTimestamps {
-    pub timestamp_start_of_non_zero_type_errors: Option<f64>,
-    pub timestamp_start_of_non_zero_type_errors_all_in_one_file: Option<f64>,
-    pub timestamp_start_of_non_zero_subtyping_errors: Option<f64>,
-    pub timestamp_start_of_non_zero_subtyping_errors_all_in_one_file: Option<f64>,
+    /// The number of error collations so far.
+    pub round: u32,
+    pub timestamp_start_of_non_zero_type_errors: Option<ErrorStateTimestamp>,
+    pub timestamp_start_of_non_zero_type_errors_all_in_one_file: Option<ErrorStateTimestamp>,
+    pub timestamp_start_of_non_zero_subtyping_errors: Option<ErrorStateTimestamp>,
+    pub timestamp_start_of_non_zero_subtyping_errors_all_in_one_file: Option<ErrorStateTimestamp>,
 }
 
 impl ErrorStateTimestamps {
     pub fn empty() -> Self {
         ErrorStateTimestamps {
+            round: 0,
             timestamp_start_of_non_zero_type_errors: None,
             timestamp_start_of_non_zero_type_errors_all_in_one_file: None,
             timestamp_start_of_non_zero_subtyping_errors: None,

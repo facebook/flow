@@ -38,6 +38,7 @@ use flow_typing_errors::intermediate_error_types::IntermediateError;
 use murmur3::murmur3_32;
 
 use crate::collated_errors::CollatedErrors;
+use crate::collated_errors::ErrorStateTimestamp;
 use crate::collated_errors::ErrorStateTimestamps;
 use crate::collated_errors::OverlayCollatedErrors;
 use crate::monitor_rpc;
@@ -577,6 +578,10 @@ pub struct ErrorResolutionStat {
     pub time_to_resolve_all_type_errors_in_one_file: Option<f64>,
     pub time_to_resolve_all_subtyping_errors: Option<f64>,
     pub time_to_resolve_all_subtyping_errors_in_one_file: Option<f64>,
+    pub rounds_to_resolve_all_type_errors: Option<u32>,
+    pub rounds_to_resolve_all_type_errors_in_one_file: Option<u32>,
+    pub rounds_to_resolve_all_subtyping_errors: Option<u32>,
+    pub rounds_to_resolve_all_subtyping_errors_in_one_file: Option<u32>,
 }
 
 pub fn update_error_state_timestamps(
@@ -587,6 +592,10 @@ pub fn update_error_state_timestamps(
         .unwrap()
         .as_secs_f64();
     let init_timestamps = collated_errors.error_state_timestamps;
+    let current = ErrorStateTimestamp {
+        time: current_time,
+        round: init_timestamps.round + 1,
+    };
     let (
         have_type_errors,
         have_type_errors_and_all_in_one_file,
@@ -596,7 +605,7 @@ pub fn update_error_state_timestamps(
     let timestamp_start_of_non_zero_type_errors = if have_type_errors {
         init_timestamps
             .timestamp_start_of_non_zero_type_errors
-            .or(Some(current_time))
+            .or(Some(current))
     } else {
         None
     };
@@ -604,14 +613,14 @@ pub fn update_error_state_timestamps(
         if have_type_errors_and_all_in_one_file {
             init_timestamps
                 .timestamp_start_of_non_zero_type_errors_all_in_one_file
-                .or(Some(current_time))
+                .or(Some(current))
         } else {
             None
         };
     let timestamp_start_of_non_zero_subtyping_errors = if have_subtyping_errors {
         init_timestamps
             .timestamp_start_of_non_zero_subtyping_errors
-            .or(Some(current_time))
+            .or(Some(current))
     } else {
         None
     };
@@ -619,20 +628,30 @@ pub fn update_error_state_timestamps(
         if have_subtyping_errors_and_all_in_one_file {
             init_timestamps
                 .timestamp_start_of_non_zero_subtyping_errors_all_in_one_file
-                .or(Some(current_time))
+                .or(Some(current))
         } else {
             None
         };
-    let time_to_resolve_errors =
-        |init_error_time: Option<f64>, current_error_time: Option<f64>| -> Option<f64> {
-            match (init_error_time, current_error_time) {
-                // If we start with no errors, then we are not resolving any errors.
-                (None, _) => None,
-                // If we end with errors, then we are not fully resolving all errors.
-                (_, Some(_)) => None,
-                (Some(t_start), None) => Some(current_time - t_start),
-            }
-        };
+    let time_to_resolve_errors = |init_error_time: Option<ErrorStateTimestamp>,
+                                  current_error_time: Option<ErrorStateTimestamp>|
+     -> Option<f64> {
+        match (init_error_time, current_error_time) {
+            // If we start with no errors, then we are not resolving any errors.
+            (None, _) => None,
+            // If we end with errors, then we are not fully resolving all errors.
+            (_, Some(_)) => None,
+            (Some(t_start), None) => Some(current.time - t_start.time),
+        }
+    };
+    let rounds_to_resolve_errors = |init_error_time: Option<ErrorStateTimestamp>,
+                                    current_error_time: Option<ErrorStateTimestamp>|
+     -> Option<u32> {
+        match (init_error_time, current_error_time) {
+            (None, _) => None,
+            (_, Some(_)) => None,
+            (Some(t_start), None) => Some(current.round - t_start.round),
+        }
+    };
     let time_to_resolve_all_type_errors = time_to_resolve_errors(
         init_timestamps.timestamp_start_of_non_zero_type_errors,
         timestamp_start_of_non_zero_type_errors,
@@ -649,7 +668,24 @@ pub fn update_error_state_timestamps(
         init_timestamps.timestamp_start_of_non_zero_subtyping_errors_all_in_one_file,
         timestamp_start_of_non_zero_subtyping_errors,
     );
+    let rounds_to_resolve_all_type_errors = rounds_to_resolve_errors(
+        init_timestamps.timestamp_start_of_non_zero_type_errors,
+        timestamp_start_of_non_zero_type_errors,
+    );
+    let rounds_to_resolve_all_type_errors_in_one_file = rounds_to_resolve_errors(
+        init_timestamps.timestamp_start_of_non_zero_type_errors_all_in_one_file,
+        timestamp_start_of_non_zero_type_errors,
+    );
+    let rounds_to_resolve_all_subtyping_errors = rounds_to_resolve_errors(
+        init_timestamps.timestamp_start_of_non_zero_subtyping_errors,
+        timestamp_start_of_non_zero_subtyping_errors,
+    );
+    let rounds_to_resolve_all_subtyping_errors_in_one_file = rounds_to_resolve_errors(
+        init_timestamps.timestamp_start_of_non_zero_subtyping_errors_all_in_one_file,
+        timestamp_start_of_non_zero_subtyping_errors,
+    );
     collated_errors.error_state_timestamps = ErrorStateTimestamps {
+        round: current.round,
         timestamp_start_of_non_zero_type_errors,
         timestamp_start_of_non_zero_type_errors_all_in_one_file,
         timestamp_start_of_non_zero_subtyping_errors,
@@ -660,6 +696,10 @@ pub fn update_error_state_timestamps(
         time_to_resolve_all_type_errors_in_one_file,
         time_to_resolve_all_subtyping_errors,
         time_to_resolve_all_subtyping_errors_in_one_file,
+        rounds_to_resolve_all_type_errors,
+        rounds_to_resolve_all_type_errors_in_one_file,
+        rounds_to_resolve_all_subtyping_errors,
+        rounds_to_resolve_all_subtyping_errors_in_one_file,
     }
 }
 
