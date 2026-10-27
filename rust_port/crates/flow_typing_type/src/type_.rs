@@ -636,7 +636,7 @@ pub enum ComponentKind {
 pub enum HintEvalResult {
     HintAvailable(Type, HintKind),
     NoHint,
-    EncounteredPlaceholder,
+    EncounteredPlaceholder(Option<Type>),
     DecompositionError,
 }
 

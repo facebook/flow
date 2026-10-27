@@ -1551,7 +1551,7 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
                             );
                             match (lazy_hint.1)(cx, true, Some(true), reason.dupe())? {
                                     type_::HintEvalResult::NoHint
-                                    | type_::HintEvalResult::EncounteredPlaceholder
+                                    | type_::HintEvalResult::EncounteredPlaceholder(_)
                                     | type_::HintEvalResult::DecompositionError => false,
                                     type_::HintEvalResult::HintAvailable(hint_t, _) => {
                                         match flow_js::FlowJs::singleton_concrete_type_for_inspection(

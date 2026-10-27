@@ -216,6 +216,77 @@ References:
                                       ^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- partial_return_hint.js:25:11
+
+Cannot call `wrapNum` because in type argument `T`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   partial_return_hint.js:25:11
+   25| pipe('a', wrapNum()); // ERROR: string is incompatible with number
+                 ^^^^^^^
+
+References:
+   partial_return_hint.js:25:6
+   25| pipe('a', wrapNum()); // ERROR: string is incompatible with number
+            ^^^ [1]
+   partial_return_hint.js:24:33
+   24| declare var wrapNum: <T extends number>() => (T) => T;
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- partial_return_hint.js:28:12
+
+Cannot call `wrap` because `T` [1] is underconstrained by call of `wrap` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   partial_return_hint.js:28:12
+   28| pipe2('a', wrap()); // ERROR: T is underconstrained
+                  ^^^^
+
+References:
+   partial_return_hint.js:1:20
+    1| declare var wrap: <T>() => (T) => T;
+                          ^ [1]
+   partial_return_hint.js:28:12
+   28| pipe2('a', wrap()); // ERROR: T is underconstrained
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- partial_return_hint.js:31:20
+
+Cannot call `wrap` because `T` [1] is underconstrained by call of `wrap` [2]. Either add explicit type arguments or cast
+the expression to your expected type. [underconstrained-implicit-instantiation]
+
+   partial_return_hint.js:31:20
+   31| pipe3('a', wrap(), wrap()); // ERROR: T is underconstrained in the second call
+                          ^^^^
+
+References:
+   partial_return_hint.js:1:20
+    1| declare var wrap: <T>() => (T) => T;
+                          ^ [1]
+   partial_return_hint.js:31:20
+   31| pipe3('a', wrap(), wrap()); // ERROR: T is underconstrained in the second call
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- partial_return_hint.js:34:14
+
+Cannot call `Set` because `T` [1] is underconstrained by new `Set` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
+
+   partial_return_hint.js:34:14
+   34| useState(new Set()); // ERROR: T is underconstrained
+                    ^^^
+
+References:
+   <BUILTINS>/lib.es2015.collection.js:78:10
+   78|     new <T>(iterable?: ?Iterable<T>): Set<T>;
+                ^ [1]
+   partial_return_hint.js:34:10
+   34| useState(new Set()); // ERROR: T is underconstrained
+                ^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:2:7
 
 Cannot call `first` with `1` bound to `x` because `1` [1] is incompatible with `Array<any>` [2]. [incompatible-type]
@@ -918,4 +989,4 @@ References:
 
 
 
-Found 59 errors
+Found 63 errors

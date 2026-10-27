@@ -1952,7 +1952,7 @@ fn resolve_binding<'cx>(
                 }
                 type_::HintEvalResult::NoHint
                 | type_::HintEvalResult::DecompositionError
-                | type_::HintEvalResult::EncounteredPlaceholder => {
+                | type_::HintEvalResult::EncounteredPlaceholder(_) => {
                     if has_hint {
                         flow_js_utils::add_output_non_speculating(
                             cx,

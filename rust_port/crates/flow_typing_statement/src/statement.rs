@@ -6465,7 +6465,7 @@ pub fn empty_array<'a>(cx: &mut Context<'a>, loc: ALoc) -> Result<(Reason, Type)
                 // its type.
                 empty_t::make(mk_reason(None, loc.dupe()))
             }
-            type_::HintEvalResult::NoHint | type_::HintEvalResult::EncounteredPlaceholder => {
+            type_::HintEvalResult::NoHint | type_::HintEvalResult::EncounteredPlaceholder(_) => {
                 // If there is no hint then raise an error. The EncounteredPlaceholder case
                 // corresponds to code like `const set = new Set([]);`. This case will
                 // raise a [missing-empty-array-annot] error on `[]`.

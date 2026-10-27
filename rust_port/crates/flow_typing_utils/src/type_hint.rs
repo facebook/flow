@@ -1729,7 +1729,12 @@ fn fully_resolve_final_result<'cx>(
                 flow_typing_debug::dump_t(Some(3), cx, &t),
             )]
         });
-        HintEvalResult::EncounteredPlaceholder
+        HintEvalResult::EncounteredPlaceholder(tvar_resolver::resolved_t_abortable(
+            |_| None,
+            false,
+            cx,
+            t,
+        ))
     } else {
         match tvar_resolver::resolved_t_abortable(|_| None, false, cx, t) {
             None => HintEvalResult::DecompositionError,

@@ -463,7 +463,7 @@ mod tests {
         match result {
             HintEvalResult::HintAvailable(t, _) => ty_normalizer_flow::debug_string_of_t(cx, t),
             HintEvalResult::NoHint => "NoHint".to_string(),
-            HintEvalResult::EncounteredPlaceholder => "EncounteredPlaceholder".to_string(),
+            HintEvalResult::EncounteredPlaceholder(_) => "EncounteredPlaceholder".to_string(),
             HintEvalResult::DecompositionError => "DecompositionError".to_string(),
         }
     }

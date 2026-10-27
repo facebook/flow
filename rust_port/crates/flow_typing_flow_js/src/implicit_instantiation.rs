@@ -1514,6 +1514,73 @@ fn merge_lower_bounds<'cx>(
     })
 }
 
+// Flowing into a return hint that contains placeholders can leak them into the
+// bounds of a type parameter, e.g. by unification in an invariant position or by
+// any-propagation into the type arguments of an existing bound. Pinning discards
+// bounds that contain placeholders, so the type parameter could be reported as
+// underconstrained even though it had other bounds. Bounds that are themselves
+// placeholders are harmless, since pinning just ignores them.
+fn placeholders_leaked_into_bounds<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    inferred_targ_list: &[(SubstName, Type, Type, bool)],
+) -> bool {
+    for (_, t, _, is_inferred) in inferred_targ_list {
+        if !*is_inferred {
+            continue;
+        }
+        let bounds = match pinning_source(cx, env, t) {
+            PinningSource::Constraints {
+                id,
+                constraints: constraint::Constraints::Unresolved(bounds),
+            } => {
+                let (lower_types, upper_types): (Vec<Type>, Vec<Type>) = {
+                    let bounds = bounds.borrow();
+                    (
+                        bounds.lower.keys().duped().collect(),
+                        bounds
+                            .upper
+                            .keys()
+                            .filter_map(|k| match k.use_t.deref() {
+                                UseTInner::UseT(_, t) => Some(t.dupe()),
+                                _ => None,
+                            })
+                            .collect(),
+                    )
+                };
+                let mut seen = BTreeSet::from([id]);
+                let mut collected = Vec::new();
+                collect_pinning_lowers(cx, env, &mut seen, &mut collected, lower_types);
+                let mut bounds = union_flatten_list(collected);
+                bounds.extend(upper_types);
+                bounds
+            }
+            PinningSource::Constraints {
+                constraints: constraint::Constraints::Resolved(t),
+                ..
+            } => {
+                if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
+                    return true;
+                }
+                continue;
+            }
+            PinningSource::Constraints {
+                constraints: constraint::Constraints::FullyResolved(_),
+                ..
+            }
+            | PinningSource::Concrete(_) => continue,
+        };
+        for t in bounds {
+            if !matches!(t.deref(), TypeInner::AnyT(_, AnySource::Placeholder))
+                && flow_js_utils::tvar_visitors::has_placeholders(cx, &t)
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 fn on_missing_bounds<'cx, Obs: Observer>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
@@ -2958,8 +3025,13 @@ pub mod instantiation_solver {
                         let errors_after_using_return_hint = cx.errors();
                         let return_hint_has_errors = !errors_before_using_return_hint
                             .ptr_eq(&errors_after_using_return_hint);
+                        let return_hint_leaked_placeholders =
+                            flow_js_utils::tvar_visitors::has_placeholders(cx, hint)
+                                && placeholders_leaked_into_bounds(cx, env, &inferred_targ_list);
 
-                        if (speculative_exn.is_some() || return_hint_has_errors)
+                        if (speculative_exn.is_some()
+                            || return_hint_has_errors
+                            || return_hint_leaked_placeholders)
                             && *kind == flow_common::hint::HintKind::BestEffortHint
                         {
                             // Restore state
@@ -3873,7 +3945,11 @@ pub mod kit {
         {
             HintEvalResult::HintAvailable(t, kind) => (true, Some((t, kind))),
             HintEvalResult::DecompositionError => (true, None),
-            HintEvalResult::NoHint | HintEvalResult::EncounteredPlaceholder => (false, None),
+            HintEvalResult::EncounteredPlaceholder(Some(t)) => (
+                false,
+                Some((t, flow_common::hint::HintKind::BestEffortHint)),
+            ),
+            HintEvalResult::NoHint | HintEvalResult::EncounteredPlaceholder(None) => (false, None),
         };
 
         // The `has_syntactic_hint` flag will inform the decision on whether to keep
