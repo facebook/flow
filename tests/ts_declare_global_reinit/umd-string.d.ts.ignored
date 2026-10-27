@@ -1,0 +1,3 @@
+export declare type T = string;
+
+export as namespace UmdGlobal;

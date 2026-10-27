@@ -1,0 +1,5 @@
+import {dependencyValue} from "./dependency";
+
+export declare type T = typeof dependencyValue;
+
+export as namespace UmdGlobal; // ERROR

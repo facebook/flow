@@ -1,0 +1,2 @@
+declare const umd: UmdGlobal.T;
+umd as number; // ERROR

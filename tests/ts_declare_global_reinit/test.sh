@@ -119,6 +119,97 @@ assert_ok "$FLOW" status . > /dev/null
 assert_no_reinit_since "$before"
 echo "no full reinit"
 
+printf "\n\n======removing a UMD declaration rebuilds globals======\n"
+before=$(reinit_count)
+cp umd-none.d.ts.ignored umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_errors "$FLOW" status .
+assert_reinit_since "$before"
+
+printf "\n\n======adding a UMD declaration rebuilds globals======\n"
+before=$(reinit_count)
+cp umd-string.d.ts.ignored umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_ok "$FLOW" status .
+assert_reinit_since "$before"
+
+printf "\n\n======editing a UMD contributor rebuilds globals======\n"
+before=$(reinit_count)
+cp umd-number.d.ts.ignored umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_errors "$FLOW" status .
+assert_reinit_since "$before"
+
+printf "\n\n======adding an import to a UMD contributor rebuilds globals======\n"
+before=$(reinit_count)
+cp umd-import.d.ts.ignored umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_errors "$FLOW" status .
+assert_reinit_since "$before"
+
+printf "\n\n======removing the module indicator of a UMD contributor rebuilds globals======\n"
+before=$(reinit_count)
+cp umd-script.d.ts.ignored umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_errors "$FLOW" status .
+assert_reinit_since "$before"
+
+cp umd-string.d.ts.ignored umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_ok "$FLOW" status . > /dev/null
+
+printf "\n\n======renaming a UMD contributor rebuilds globals======\n"
+before=$(reinit_count)
+mv umd.d.ts renamed-umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts renamed-umd.d.ts
+assert_ok "$FLOW" status .
+assert_reinit_since "$before"
+mv renamed-umd.d.ts umd.d.ts
+assert_ok "$FLOW" force-recheck renamed-umd.d.ts umd.d.ts
+assert_ok "$FLOW" status . > /dev/null
+
+printf "\n\n======deleting a UMD contributor rebuilds globals======\n"
+before=$(reinit_count)
+rm umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_errors "$FLOW" status .
+assert_reinit_since "$before"
+
+cp umd-string.d.ts.ignored umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_ok "$FLOW" status . > /dev/null
+
+printf "\n\n======a later UMD declaration of the same name is shadowed======\n"
+before=$(reinit_count)
+cp umd-number.d.ts.ignored umd_z.d.ts
+assert_ok "$FLOW" force-recheck umd_z.d.ts
+assert_ok "$FLOW" status .
+assert_reinit_since "$before"
+
+printf "\n\n======deleting the first UMD declaration exposes the later one======\n"
+before=$(reinit_count)
+rm umd.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts
+assert_errors "$FLOW" status .
+assert_reinit_since "$before"
+
+cp umd-string.d.ts.ignored umd.d.ts
+rm umd_z.d.ts
+assert_ok "$FLOW" force-recheck umd.d.ts umd_z.d.ts
+assert_ok "$FLOW" status . > /dev/null
+
+printf "\n\n======UMD consumer edit stays incremental======\n"
+cp umd_consumer.js umd_consumer.js.before
+before=$(reinit_count)
+cp umd_consumer-after.js.ignored umd_consumer.js
+assert_ok "$FLOW" force-recheck umd_consumer.js
+assert_errors "$FLOW" status .
+assert_no_reinit_since "$before"
+echo "no full reinit"
+mv umd_consumer.js.before umd_consumer.js
+assert_ok "$FLOW" force-recheck umd_consumer.js
+assert_ok "$FLOW" status . > /dev/null
+
 printf "\n\n======lazy saved-state load restores global augmentations======\n"
 set_saved_state_changes
 assert_ok "$FLOW" save-state --out .flow.saved_state > /dev/null
@@ -126,6 +217,10 @@ assert_ok "$FLOW" stop
 start_flow . --lazy --saved-state-fetcher local --saved-state-no-fallback
 assert_ok "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" force-recheck --focus consumer.js
+assert_ok "$FLOW" status --show-lazy-status .
+
+printf "\n\n======lazy saved-state load restores UMD globals======\n"
+assert_ok "$FLOW" force-recheck --focus umd_consumer.js
 assert_ok "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 
@@ -148,6 +243,31 @@ cp augmentation-string.ts.ignored created-augmentation.ts
 set_saved_state_changes created-augmentation.ts
 assert_saved_state_rejected "a new global contributor"
 rm created-augmentation.ts
+
+cp umd-number.d.ts.ignored umd.d.ts
+set_saved_state_changes
+assert_saved_state_rejected "an unreported changed UMD contributor"
+cp umd-string.d.ts.ignored umd.d.ts
+
+cp umd-number.d.ts.ignored umd.d.ts
+set_saved_state_changes umd.d.ts
+assert_saved_state_rejected "a changed UMD contributor"
+cp umd-string.d.ts.ignored umd.d.ts
+
+cp umd-none.d.ts.ignored umd.d.ts
+set_saved_state_changes umd.d.ts
+assert_saved_state_rejected "a removed UMD declaration"
+cp umd-string.d.ts.ignored umd.d.ts
+
+rm umd.d.ts
+set_saved_state_changes umd.d.ts
+assert_saved_state_rejected "a deleted UMD contributor"
+cp umd-string.d.ts.ignored umd.d.ts
+
+cp umd-string.d.ts.ignored created-umd.d.ts
+set_saved_state_changes created-umd.d.ts
+assert_saved_state_rejected "a new UMD contributor"
+rm created-umd.d.ts
 
 printf "\n\n======ordinary module change reuses saved state======\n"
 cp augmentation-none.ts.ignored unrelated.ts

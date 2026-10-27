@@ -1,0 +1,3 @@
+export declare type T = number;
+
+export as namespace UmdGlobal;

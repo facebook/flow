@@ -96,14 +96,205 @@ No errors!
 no full reinit
 
 
+======removing a UMD declaration rebuilds globals======
+Error --------------------------------------------------------------------------------------------- umd_consumer.js:1:20
+
+Cannot resolve name `UmdGlobal`. [cannot-resolve-name]
+
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- umd_consumer.js:1:20
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^^^
+
+
+
+Found 2 errors
+
+
+======adding a UMD declaration rebuilds globals======
+No errors!
+
+
+======editing a UMD contributor rebuilds globals======
+Error ---------------------------------------------------------------------------------------------- umd_consumer.js:2:1
+
+Cannot cast `umd` to `string` because `T` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   umd_consumer.js:2:1
+   2| umd as string; // ERROR
+      ^^^
+
+References:
+   umd_consumer.js:1:20
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^^^ [1]
+   umd_consumer.js:2:8
+   2| umd as string; // ERROR
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+======adding an import to a UMD contributor rebuilds globals======
+Error ----------------------------------------------------------------------------------------------------- umd.d.ts:5:1
+
+`export as namespace` is not supported in a module with imports or re-exports. The global will not be declared.
+[unsupported-syntax]
+
+   5| export as namespace UmdGlobal; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- umd_consumer.js:1:20
+
+Cannot resolve name `UmdGlobal`. [cannot-resolve-name]
+
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- umd_consumer.js:1:20
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^^^
+
+
+
+Found 3 errors
+
+
+======removing the module indicator of a UMD contributor rebuilds globals======
+Error ----------------------------------------------------------------------------------------------------- umd.d.ts:3:1
+
+`export as namespace` may only appear in module files. [unsupported-syntax]
+
+   3| export as namespace UmdGlobal; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- umd_consumer.js:1:20
+
+Cannot resolve name `UmdGlobal`. [cannot-resolve-name]
+
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- umd_consumer.js:1:20
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^^^
+
+
+
+Found 3 errors
+
+
+======renaming a UMD contributor rebuilds globals======
+No errors!
+
+
+======deleting a UMD contributor rebuilds globals======
+Error --------------------------------------------------------------------------------------------- umd_consumer.js:1:20
+
+Cannot resolve name `UmdGlobal`. [cannot-resolve-name]
+
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- umd_consumer.js:1:20
+
+Cannot use `T` as a type because it is an `any`-typed value. Type `T` properly, so it is no longer `any`-typed, to use
+it as an annotation. [value-as-type]
+
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^^^
+
+
+
+Found 2 errors
+
+
+======a later UMD declaration of the same name is shadowed======
+No errors!
+
+
+======deleting the first UMD declaration exposes the later one======
+Error ---------------------------------------------------------------------------------------------- umd_consumer.js:2:1
+
+Cannot cast `umd` to `string` because `T` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   umd_consumer.js:2:1
+   2| umd as string; // ERROR
+      ^^^
+
+References:
+   umd_consumer.js:1:20
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^^^ [1]
+   umd_consumer.js:2:8
+   2| umd as string; // ERROR
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+======UMD consumer edit stays incremental======
+Error ---------------------------------------------------------------------------------------------- umd_consumer.js:2:1
+
+Cannot cast `umd` to `number` because `T` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   umd_consumer.js:2:1
+   2| umd as number; // ERROR
+      ^^^
+
+References:
+   umd_consumer.js:1:20
+   1| declare const umd: UmdGlobal.T;
+                         ^^^^^^^^^^^ [1]
+   umd_consumer.js:2:8
+   2| umd as number; // ERROR
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+no full reinit
+
+
 ======lazy saved-state load restores global augmentations======
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 1/6 files.
+The Flow server is currently in lazy mode and is only checking 1/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 2/6 files.
+The Flow server is currently in lazy mode and is only checking 2/8 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+======lazy saved-state load restores UMD globals======
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 3/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 
@@ -117,6 +308,21 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 
 ======a new global contributor rejects saved state======
+
+
+======an unreported changed UMD contributor rejects saved state======
+
+
+======a changed UMD contributor rejects saved state======
+
+
+======a removed UMD declaration rejects saved state======
+
+
+======a deleted UMD contributor rejects saved state======
+
+
+======a new UMD contributor rejects saved state======
 
 
 ======ordinary module change reuses saved state======
