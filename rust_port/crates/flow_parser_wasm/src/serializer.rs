@@ -1241,7 +1241,7 @@ impl<'a> Serializer<'a> {
             ast::VarianceKind::Writeonly => "writeonly",
             ast::VarianceKind::In => "in",
             ast::VarianceKind::Out => "out",
-            ast::VarianceKind::InOut => "in-out",
+            ast::VarianceKind::InOut => "in out",
         });
     }
 

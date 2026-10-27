@@ -843,6 +843,12 @@ mod tests {
     }
 
     #[test]
+    fn variance_serializes_in_out_with_space() {
+        let buffers = parse_and_serialize_with_filename("type T<in out A> = A;", "");
+        assert_eq!(string_prop(&buffers, NodeKind::Variance, "kind"), "in out");
+    }
+
+    #[test]
     fn mapped_type_serializes_readonly_polarity_and_key_remapping() {
         for (source, expected_op) in [
             ("type T<O> = { readonly [K in keyof O]: O[K] };", None),

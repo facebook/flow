@@ -4776,7 +4776,7 @@ fn variance(offset_table: &OffsetTable, config: &Config, var: &ast::Variance<Loc
         VarianceKind::Writeonly => "writeonly",
         VarianceKind::In => "in",
         VarianceKind::Out => "out",
-        VarianceKind::InOut => "in-out",
+        VarianceKind::InOut => "in out",
     };
     node(
         offset_table,
