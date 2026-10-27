@@ -12823,7 +12823,7 @@ fn jsx_title<'a>(
             } else {
                 facebook_fbt.unwrap()
             };
-            let fbt_reason = mk_reason(VirtualReasonDesc::RFbt, loc_element.dupe());
+            let fbt_reason = mk_reason(None, loc_element.dupe());
             let t =
                 flow_js::get_builtin_type_non_speculating(cx, &fbt_reason, None, custom_jsx_type)?;
             // TODO check attribute types against an fbt API

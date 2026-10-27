@@ -296,7 +296,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RTupleType,
     RTupleUnknownElementFromInexact,
     RFunctionType,
-    RFbt,
     RTemplateString,
     RThis,
     RThisType,
@@ -412,7 +411,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RTupleUnknownElementFromInexact => RTupleUnknownElementFromInexact,
             RFunction(func) => RFunction(*func),
             RFunctionType => RFunctionType,
-            RFbt => RFbt,
             RUninitialized => RUninitialized,
             RPossiblyUninitialized => RPossiblyUninitialized,
             RComponent(n) => RComponent(n.dupe()),
@@ -513,7 +511,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         match self.unwrap() {
             Some(
                 RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
-                | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RFbt | RTemplateString,
+                | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RTemplateString,
             ) => Scalar,
 
             Some(
@@ -1213,9 +1211,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Functions
         RFunction(func) => format!("{}function", func.prefix()),
         RFunctionType => "function type".to_string(),
-
-        // JSX
-        RFbt => "`<fbt/>`".to_string(),
 
         // Template strings and enums
         RTemplateString => "template string".to_string(),
