@@ -211,6 +211,10 @@ fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &Connec
                     lazy_msg.as_deref(),
                 )
                 .expect("failed to write cli errors");
+                if crate::agent_helper_command::error_hints_enabled(flowconfig_name, &args.root) {
+                    crate::agent_helper_command::print_error_hints(&mut out, &cli_errors)
+                        .expect("failed to write cli error hints");
+                }
                 out.flush().expect("failed to flush cli errors");
             }
             flow_common_exit_status::exit(flow_command_utils::get_check_or_status_exit_code(

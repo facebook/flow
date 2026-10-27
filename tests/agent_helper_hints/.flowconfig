@@ -1,0 +1,3 @@
+[options]
+all=true
+experimental.agent_helper_hints=true

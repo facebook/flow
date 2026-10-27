@@ -43,6 +43,7 @@ fn format_errors(
         &[(PrintableError<Loc>, BTreeSet<Loc>)],
     ),
     lazy_msg: Option<String>,
+    agent_helper_hints: bool,
 ) -> Box<dyn FnOnce(Option<serde_json::Value>)> {
     let include_warnings = client_include_warnings || options.include_warnings;
     let should_include_profile = options.profile;
@@ -117,6 +118,10 @@ fn format_errors(
                 lazy_msg.as_deref(),
             )
             .expect("failed to write errors");
+            if agent_helper_hints {
+                crate::agent_helper_command::print_error_hints(&mut out, &errors)
+                    .expect("failed to write error hints");
+            }
             use std::io::Write;
             out.flush().expect("failed to flush errors");
             Box::new(move |_profiling| ())
@@ -294,6 +299,7 @@ fn check_main(
                 &options,
                 (errors, warnings, &suppressed_errors),
                 lazy_msg,
+                flowconfig_for_assert.options.agent_helper_hints,
             );
             Box::new(move |profiling| {
                 let profiling_props = if should_include_profile {
@@ -509,6 +515,7 @@ mod focus_check_command {
                     &options,
                     (errors, warnings, &suppressed_errors),
                     lazy_msg,
+                    flowconfig_for_assert.options.agent_helper_hints,
                 );
                 Box::new(move |profiling| {
                     let profiling_props = if should_include_profile {
