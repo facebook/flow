@@ -20,7 +20,7 @@
 //! - `bin/codegen.rs` — Generates `FlowParserNodeDeserializers.js` from the schema.
 //!   Run via `buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen`.
 
-mod babel_adapter;
+pub mod babel_adapter;
 pub mod node_kinds;
 pub mod position;
 pub mod runnable_js;
