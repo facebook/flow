@@ -76,6 +76,7 @@ use flow_typing_type::type_::EnumInfoInner;
 use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::FunRestParam;
+use flow_typing_type::type_::FunReturnData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::InstType;
@@ -769,10 +770,12 @@ fn funt_to_funt_check<'cx>(
         is_asserts(&ft1.type_guard) != is_asserts(&ft2.type_guard) && ft2.type_guard.is_some();
     if !assertion_kind_mismatch {
         let ret_use_op = VirtualUseOp::Frame(
-            Arc::new(VirtualFrameUseOp::FunReturn {
+            Arc::new(VirtualFrameUseOp::FunReturn(Box::new(FunReturnData {
                 lower: type_util::reason_of_t(&ft1.return_t).clone(),
                 upper: type_util::reason_of_t(&ft2.return_t).clone(),
-            }),
+                lower_t: flow_js_utils::type_or_type_desc_for_error(&ft1.return_t),
+                upper_t: flow_js_utils::type_or_type_desc_for_error(&ft2.return_t),
+            }))),
             Arc::new(use_op.dupe()),
         );
         FlowJs::rec_flow_with_env(

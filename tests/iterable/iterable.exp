@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- array.js:7:1
 
 Cannot cast array literal to `Iterable<number>` because: [incompatible-type]
- - in property `@@iterator`: `ArrayIterator` [1] is incompatible with `Iterator` [2]
+ - in property `@@iterator`: `ArrayIterator<"hi">` [1] is incompatible with `Iterator<number, void, void>` [2]
     - in the return value > type argument `Yield` [3]: `"hi"` [4] is incompatible with `number` [5]
 
    array.js:7:1
@@ -29,7 +29,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- array.js:8:1
 
 Cannot cast array literal to `Iterable<string>` because: [incompatible-type]
- - in property `@@iterator`: `ArrayIterator` [1] is incompatible with `Iterator` [2]
+ - in property `@@iterator`: `ArrayIterator<"hi" | 1>` [1] is incompatible with `Iterator<string, void, void>` [2]
     - in the return value > type argument `Yield` [3]: `1` [4] is incompatible with `string` [5]
 
    array.js:8:1
@@ -58,7 +58,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `x` because: [incompatible-type]
  - array type [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+    - in property `@@iterator`: `ArrayIterator<string | number>` [3] is incompatible with
+      `Iterator<string, void, void>` [4]
        - in the return value > type argument `Yield` [5]: `number` [6] is incompatible with `string` [7]
 
    caching_bug.js:21:79
@@ -128,7 +129,8 @@ Error --------------------------------------------------------------------------
 
 Cannot return `map` because: [incompatible-type]
  - `Map` [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator`: `MapIterator` [3] is incompatible with `Iterator` [4]
+    - in property `@@iterator`: `MapIterator<[number, string]>` [3] is incompatible with
+      `Iterator<string, void, void>` [4]
        - in the return value > type argument `Yield` [5]: `[number, string]` [6] is incompatible with `string` [7]
 
    map.js:14:10
@@ -163,7 +165,7 @@ Error --------------------------------------------------------------------------
 
 Cannot return `set` because: [incompatible-type]
  - `Set` [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator`: `SetIterator` [3] is incompatible with `Iterator` [4]
+    - in property `@@iterator`: `SetIterator<string>` [3] is incompatible with `Iterator<number, void, void>` [4]
        - in the return value > type argument `Yield` [5]: `string` [6] is incompatible with `number` [7]
 
    set.js:14:10
@@ -197,7 +199,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- string.js:3:1
 
 Cannot cast `new String(...)` to `Iterable<number>` because: [incompatible-type]
- - in property `@@iterator`: `StringIterator` [1] is incompatible with `Iterator` [2]
+ - in property `@@iterator`: `StringIterator` [1] is incompatible with `Iterator<number, void, void>` [2]
     - in the return value > type argument `Yield` [3]: `string` [4] is incompatible with `number` [5]
 
    string.js:3:1

@@ -1235,7 +1235,7 @@ pub enum Frame<L: Dupe> {
     FrameTypeParameterBound(FlowSmolStr),
     FrameTypePredicate,
     FrameReturnValue {
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, MessageTypeReferenceData<L>)>,
     },
     FrameUnionRepresentative(MessageTypeReferenceData<L>),
 }

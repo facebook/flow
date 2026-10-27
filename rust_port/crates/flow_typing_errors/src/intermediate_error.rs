@@ -47,6 +47,7 @@ use flow_typing_type::type_::FunCallMethodData;
 use flow_typing_type::type_::FunImplicitReturnData;
 use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
+use flow_typing_type::type_::FunReturnData;
 use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
 use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::JSXCreateElementData;
@@ -466,10 +467,17 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             lower: upper,
             upper: lower,
         },
-        FunReturn { lower, upper } => FunReturn {
+        FunReturn(box FunReturnData {
+            lower,
+            upper,
+            lower_t,
+            upper_t,
+        }) => FunReturn(Box::new(FunReturnData {
             lower: upper,
             upper: lower,
-        },
+            lower_t: upper_t,
+            upper_t: lower_t,
+        })),
         IndexerKeyCompatibility { lower, upper } => IndexerKeyCompatibility {
             lower: upper,
             upper: lower,
@@ -2492,12 +2500,23 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::FunReturn { lower, upper } => {
+                        VirtualFrameUseOp::FunReturn(box FunReturnData {
+                            lower,
+                            upper,
+                            lower_t,
+                            upper_t,
+                        }) => {
                             let (mut all_frames, explanations) = frames;
                             let incompatibility_pair = opt_incompatibility_pair(
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
-                            );
+                            )
+                            .map(|(lower, upper)| {
+                                (
+                                    printed_type_reference(&lower, lower_t),
+                                    printed_type_reference(&upper, upper_t),
+                                )
+                            });
                             all_frames.push(ErrorFrame::FrameReturnValue {
                                 incompatibility_pair,
                             });
@@ -4986,7 +5005,7 @@ where
             FrameReturnValue {
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the return value")]),
             ),
             FrameUnionRepresentative(union) => (

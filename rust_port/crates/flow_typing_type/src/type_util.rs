@@ -47,6 +47,7 @@ use crate::type_::FunCallMethodData;
 use crate::type_::FunImplicitReturnData;
 use crate::type_::FunMissingArgData;
 use crate::type_::FunParamData;
+use crate::type_::FunReturnData;
 use crate::type_::GenericTData;
 use crate::type_::GetElemTData;
 use crate::type_::GetEnumTData;
@@ -1408,10 +1409,17 @@ where
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
             },
-            FunReturn { lower, upper } => FunReturn {
+            FunReturn(box FunReturnData {
+                lower,
+                upper,
+                lower_t,
+                upper_t,
+            }) => FunReturn(Box::new(FunReturnData {
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
-            },
+                lower_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_t),
+                upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
+            })),
             ImplicitTypeParam => ImplicitTypeParam,
             IndexerKeyCompatibility { lower, upper } => IndexerKeyCompatibility {
                 lower: mod_reason(lower),

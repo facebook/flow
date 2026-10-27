@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ class_iterator.js:39:31
 
 Cannot assign `new BadIterable()` to `bad` because: [incompatible-type]
- - in property `@@iterator`: `IteratorObject` [1] is incompatible with `Iterator` [2]
+ - in property `@@iterator`: `IteratorObject<string>` [1] is incompatible with `Iterator<number, void, void>` [2]
     - in the return value > type argument `Yield` [3]: `string` [4] is incompatible with `number` [5]
 
    class_iterator.js:39:31
@@ -339,7 +339,7 @@ References:
 Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:18:1
 
 Cannot cast `bad` to `Iterable<number>` because: [incompatible-type]
- - in property `@@iterator`: `Iterator` [1] is incompatible with `Iterator` [2]
+ - in property `@@iterator`: `Iterator<string>` [1] is incompatible with `Iterator<number, void, void>` [2]
     - in the return value > type argument `Yield` [3]: `string` [4] is incompatible with `number` [5]
 
    type_well_known_symbol.js:18:1

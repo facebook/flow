@@ -42,7 +42,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+    - in property `@@iterator`: `ArrayIterator<"foo" | 123>` [3] is incompatible with
+      `Iterator<Readonly<[key: any, value: any]>, void, void>` [4]
        - in the return value > type argument `Yield` [5]: `"foo"` [6] is incompatible with
          `Readonly<[key: any, value: any]>` [7]
 
@@ -75,7 +76,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+    - in property `@@iterator`: `ArrayIterator<"foo" | 123>` [3] is incompatible with
+      `Iterator<Readonly<[key: any, value: any]>, void, void>` [4]
        - in the return value > type argument `Yield` [5]: `123` [6] is incompatible with
          `Readonly<[key: any, value: any]>` [7]
 
@@ -108,7 +110,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+    - in property `@@iterator`: `ArrayIterator<Array<"foo" | 123>>` [3] is incompatible with
+      `Iterator<Readonly<[key: number, value: string]>, void, void>` [4]
        - in the return value > type argument `Yield` [5] > index `0`: `"foo"` [6] is incompatible with `number` [7]
 
    map.js:29:42
@@ -140,7 +143,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator`: `ArrayIterator` [3] is incompatible with `Iterator` [4]
+    - in property `@@iterator`: `ArrayIterator<Array<"foo" | 123>>` [3] is incompatible with
+      `Iterator<Readonly<[key: number, value: string]>, void, void>` [4]
        - in the return value > type argument `Yield` [5] > index `1`: `123` [6] is incompatible with `string` [7]
 
    map.js:29:42
