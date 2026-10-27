@@ -3513,6 +3513,9 @@ fn class_declare_method(
     if decl_meth.override_ {
         props.push(("override", bool_value(true)));
     }
+    if let Some(tsa) = &decl_meth.ts_accessibility {
+        props.push(("tsAccessibility", ts_accessibility(tsa)));
+    }
     node(
         offset_table,
         config,

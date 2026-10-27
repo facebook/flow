@@ -1078,6 +1078,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         return_annot: &function::ReturnAnnot<Loc, Loc>,
         static_: bool,
         override_: bool,
+        ts_accessibility: Option<&class::ts_accessibility::TSAccessibility<Loc>>,
         leading: &[Comment<Loc>],
     ) -> Result<Option<class::BodyElement<Loc, Loc>>, Rollback> {
         match declaration_parser::convert_function_params_to_type_params(params) {
@@ -1134,6 +1135,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         static_,
                         override_,
                         optional: false,
+                        ts_accessibility: ts_accessibility.cloned(),
                         comments: ast_utils::mk_comments_opt(Some(leading.to_vec().into()), None),
                     },
                 )))
@@ -1155,6 +1157,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         static_: bool,
         override_: bool,
         optional: bool,
+        ts_accessibility: Option<&class::ts_accessibility::TSAccessibility<Loc>>,
         leading: &[Comment<Loc>],
     ) -> Result<Option<class::BodyElement<Loc, Loc>>, Rollback> {
         match declaration_parser::convert_function_params_to_type_params(params) {
@@ -1208,6 +1211,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         static_,
                         override_,
                         optional,
+                        ts_accessibility: ts_accessibility.cloned(),
                         comments: ast_utils::mk_comments_opt(Some(leading.to_vec().into()), None),
                     },
                 )))
@@ -1363,6 +1367,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     &return_annot,
                     static_,
                     override_,
+                    ts_accessibility.as_ref(),
                     &leading,
                 )? {
                     Some(decl) => Ok(decl),
@@ -1699,6 +1704,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 static_,
                 override_,
                 true,
+                ts_accessibility.as_ref(),
                 &leading,
             )? {
                 Some(element) => Ok(element),
@@ -1962,6 +1968,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     static_,
                     override_,
                     false,
+                    ts_accessibility.as_ref(),
                     &leading,
                 )? {
                     Some(element) => Ok(element),

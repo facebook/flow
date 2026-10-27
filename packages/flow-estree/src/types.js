@@ -1059,6 +1059,7 @@ export interface DeclareMethodDefinition extends BaseNode {
   readonly computed: boolean;
   readonly kind: 'get' | 'set' | null;
   readonly override: boolean;
+  readonly tsAccessibility?: TSAccessibility;
 
   readonly parent: ClassBody;
 }

@@ -1082,17 +1082,22 @@ module.exports = [
 
   // 92: DeclareMethodDefinition
   function () {
-    return {
+    const node = {
       type: 'DeclareMethodDefinition',
       loc: this.addEmptyLoc(),
-      key: this.deserializeNode(),
-      value: this.deserializeNode(),
-      static: this.deserializeBoolean(),
-      optional: this.deserializeBoolean(),
-      computed: this.deserializeBoolean(),
-      kind: this.deserializeString(),
-      override: this.deserializeBoolean(),
     };
+    node.key = this.deserializeNode();
+    node.value = this.deserializeNode();
+    node.static = this.deserializeBoolean();
+    node.optional = this.deserializeBoolean();
+    node.computed = this.deserializeBoolean();
+    node.kind = this.deserializeString();
+    node.override = this.deserializeBoolean();
+    {
+      const value = this.deserializeString();
+      if (value != null) node['tsAccessibility'] = value;
+    }
+    return node;
   },
 
   // 93: AbstractMethodDefinition

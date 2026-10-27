@@ -2572,7 +2572,7 @@ impl<'a> Serializer<'a> {
                 }
             }
             ast::class::BodyElement::DeclareMethod(dm) => {
-                // 92: DeclareMethodDefinition — key value static optional computed kind override
+                // 92: DeclareMethodDefinition — key value static optional computed kind override tsAccessibility
                 self.write_node_header(NodeKind::DeclareMethodDefinition, &dm.loc);
                 self.serialize_object_key(&dm.key);
                 // value: TypeAnnotation node wrapping the type
@@ -2587,6 +2587,11 @@ impl<'a> Serializer<'a> {
                 };
                 self.write_str_opt(kind_str);
                 self.write_bool(dm.override_);
+                self.write_str_opt(
+                    dm.ts_accessibility
+                        .as_ref()
+                        .map(|a| ts_accessibility_str(a.kind)),
+                );
             }
             ast::class::BodyElement::AbstractMethod(am) => {
                 // 93: AbstractMethodDefinition — key value computed override tsAccessibility

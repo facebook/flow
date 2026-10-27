@@ -2275,6 +2275,7 @@ fn class_declare_method(
         || m1.static_ != m2.static_
         || m1.kind != m2.kind
         || m1.optional != m2.optional
+        || m1.ts_accessibility != m2.ts_accessibility
     {
         return None;
     }

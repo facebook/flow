@@ -898,6 +898,53 @@ mod tests {
     }
 
     #[test]
+    fn declare_methods_serialize_accessibility() {
+        for filename in ["test.ts", "test.tsx", "test.mts", "test.cts", "test.d.ts"] {
+            for accessibility in [Some("private"), Some("protected"), Some("public"), None] {
+                let modifier = accessibility.unwrap_or("");
+                for method in ["m(x: number): void;", "m?<T>(x: T): T;"] {
+                    let source = format!("class C {{ {modifier} {method} }}");
+                    let buffers = parse_and_serialize_with_filename(&source, filename);
+                    assert_eq!(
+                        optional_string_prop(
+                            &buffers,
+                            NodeKind::DeclareMethodDefinition,
+                            "tsAccessibility",
+                        ),
+                        accessibility,
+                        "{filename}: {source}",
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn ambient_accessors_serialize_accessibility() {
+        for accessibility in ["private", "protected", "public"] {
+            for (method, kind) in [
+                ("get value(): number;", "get"),
+                ("set value(x: number);", "set"),
+            ] {
+                let source = format!("export class C {{ {accessibility} {method} }}");
+                let buffers = parse_and_serialize_with_filename(&source, "test.d.ts");
+                assert_eq!(
+                    string_prop(
+                        &buffers,
+                        NodeKind::DeclareMethodDefinition,
+                        "tsAccessibility"
+                    ),
+                    accessibility,
+                );
+                assert_eq!(
+                    string_prop(&buffers, NodeKind::DeclareMethodDefinition, "kind"),
+                    kind,
+                );
+            }
+        }
+    }
+
+    #[test]
     fn declare_variable_serializes_all_declarators() {
         let buf = parse_and_serialize("declare const A: number, B: string = \"x\";");
         let declare_variable_idx = buf

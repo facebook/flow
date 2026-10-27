@@ -1051,6 +1051,7 @@ define_nodes! {
         computed: Boolean,
         kind: String,
         override: Boolean,
+        tsAccessibility: MaybeString,
     },
     AbstractMethodDefinition = 93 {
         key: Node,

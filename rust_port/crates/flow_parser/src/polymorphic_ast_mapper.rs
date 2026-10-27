@@ -3003,11 +3003,22 @@ fn class_declare_method<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         static_,
         override_,
         optional,
+        ts_accessibility,
         comments,
     } = decl_meth;
     let loc_ = mapper.on_type_annot(loc)?;
     let key_ = class_method_key(mapper, key)?;
     let annot_ = type_annotation(mapper, annot)?;
+    let ts_accessibility_ = ts_accessibility
+        .as_ref()
+        .map(|tsa| {
+            Ok(ast::class::ts_accessibility::TSAccessibility {
+                loc: mapper.on_loc_annot(&tsa.loc)?,
+                kind: tsa.kind,
+                comments: syntax_opt(mapper, tsa.comments.as_ref())?,
+            })
+        })
+        .transpose()?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::class::DeclareMethod {
         loc: loc_,
@@ -3017,6 +3028,7 @@ fn class_declare_method<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         static_: *static_,
         override_: *override_,
         optional: *optional,
+        ts_accessibility: ts_accessibility_,
         comments: comments_,
     })
 }

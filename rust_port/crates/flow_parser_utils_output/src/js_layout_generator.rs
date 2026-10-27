@@ -7362,7 +7362,13 @@ fn class_declare_method(
         &decl_meth.loc,
         decl_meth.comments.as_ref(),
         with_semicolon(fuse(vec![
-            s_static, s_override, s_kind, s_key, s_optional, s_annot,
+            ts_accessibility_layout(decl_meth.ts_accessibility.as_ref()),
+            s_static,
+            s_override,
+            s_kind,
+            s_key,
+            s_optional,
+            s_annot,
         ])),
     )
 }

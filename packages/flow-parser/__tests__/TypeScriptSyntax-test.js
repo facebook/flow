@@ -435,6 +435,77 @@ describe('TypeScript-compatible syntax', () => {
     expect(isClassMember(method)).toBe(true);
   });
 
+  test.each([
+    'definition.ts',
+    'definition.tsx',
+    'definition.mts',
+    'definition.cts',
+  ])('overload signatures retain accessibility in %s', sourceFilename => {
+    for (const accessibility of ['private', 'protected', 'public']) {
+      const [declaration] = parse(
+        `class C {
+            ${accessibility} m(x: number): void;
+            ${accessibility} m(x: string): void;
+            ${accessibility} m(x: number | string) {}
+          }`,
+        {sourceFilename},
+      ).body;
+      if (declaration.type !== 'ClassDeclaration') {
+        throw new Error('expected a class declaration');
+      }
+      expect(declaration.body.body).toMatchObject([
+        {type: 'DeclareMethodDefinition', tsAccessibility: accessibility},
+        {type: 'DeclareMethodDefinition', tsAccessibility: accessibility},
+        {type: 'MethodDefinition', tsAccessibility: accessibility},
+      ]);
+    }
+  });
+
+  test('exported ambient methods retain accessibility and other modifiers', () => {
+    const [declaration] = parse(
+      `export class C extends Base {
+        private constructor();
+        private m(x: number): void;
+        protected n(x: string): void;
+        public p(): void;
+        protected override optional?<T>(x: T): T;
+        public static [Symbol.iterator](): Iterator<number>;
+        private get value(): number;
+        private set value(x: number);
+        protected get other(): string;
+        protected set other(x: string);
+        public get name(): string;
+        public set name(x: string);
+        unmodified(): void
+      }`,
+      {sourceFilename: 'definition.d.ts'},
+    ).body;
+    if (
+      declaration.type !== 'ExportNamedDeclaration' ||
+      declaration.declaration?.type !== 'ClassDeclaration'
+    ) {
+      throw new Error('expected an exported class declaration');
+    }
+    const methods = declaration.declaration.body.body;
+    expect(methods.every(isDeclareMethodDefinition)).toBe(true);
+    expect(methods).toMatchObject([
+      {tsAccessibility: 'private'},
+      {tsAccessibility: 'private'},
+      {tsAccessibility: 'protected'},
+      {tsAccessibility: 'public'},
+      {tsAccessibility: 'protected', optional: true, override: true},
+      {tsAccessibility: 'public', static: true, computed: true},
+      {tsAccessibility: 'private', kind: 'get'},
+      {tsAccessibility: 'private', kind: 'set'},
+      {tsAccessibility: 'protected', kind: 'get'},
+      {tsAccessibility: 'protected', kind: 'set'},
+      {tsAccessibility: 'public', kind: 'get'},
+      {tsAccessibility: 'public', kind: 'set'},
+      {optional: false, override: false, static: false, computed: false},
+    ]);
+    expect(methods[12]).not.toHaveProperty('tsAccessibility');
+  });
+
   test('declare export namespace specifiers', () => {
     const [declaration] = parse(
       'declare export * as Namespace from "module";',

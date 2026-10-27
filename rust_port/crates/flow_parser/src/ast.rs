@@ -6505,6 +6505,7 @@ pub mod class {
         pub static_: bool,
         pub override_: bool,
         pub optional: bool,
+        pub ts_accessibility: Option<ts_accessibility::TSAccessibility<M>>,
         pub comments: Option<Syntax<M, ()>>,
     }
 

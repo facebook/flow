@@ -7995,6 +7995,7 @@ pub fn class_declare_method_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         static_: _,
         override_: _,
         optional: _,
+        ts_accessibility: _,
         comments,
     } = decl_meth;
     visitor.object_key(key)?;
@@ -8015,6 +8016,7 @@ pub fn map_class_declare_method_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         static_,
         override_,
         optional,
+        ts_accessibility,
         comments,
     } = decl_meth;
 
@@ -8030,6 +8032,7 @@ pub fn map_class_declare_method_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         static_: *static_,
         override_: *override_,
         optional: *optional,
+        ts_accessibility: ts_accessibility.clone(),
         comments: comments_,
     }
 }

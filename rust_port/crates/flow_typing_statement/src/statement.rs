@@ -17602,6 +17602,7 @@ pub fn mk_class_sig<'a>(
                             let static_ = dm.static_;
                             let override_ = dm.override_;
                             let optional = dm.optional;
+                            let ts_accessibility = dm.ts_accessibility.clone();
                             let comments = dm.comments.dupe();
                             // Try to destructure as Identifier key + Function annot
                             let id_loc_and_id = match &dm.key {
@@ -17691,6 +17692,7 @@ pub fn mk_class_sig<'a>(
                                         let optional_t_c = optional_t.dupe();
                                         let func_t_c = func_t.dupe();
                                         let typed_func_c = typed_func.clone();
+                                        let ts_accessibility_c = ts_accessibility.clone();
                                         let comments_c = comments.clone();
                                         #[allow(clippy::arc_with_non_send_sync)]
                                         let get_element = Box::new(
@@ -17734,6 +17736,7 @@ pub fn mk_class_sig<'a>(
                                                         static_,
                                                         override_,
                                                         optional,
+                                                        ts_accessibility: ts_accessibility_c,
                                                         comments: comments_c,
                                                     },
                                                 ))
@@ -17755,6 +17758,7 @@ pub fn mk_class_sig<'a>(
                                         let annot_loc_c = annot_loc.dupe();
                                         let func_annot_loc_c = func_annot_loc.dupe();
                                         let typed_func_c = typed_func.clone();
+                                        let ts_accessibility_c = ts_accessibility.clone();
                                         let comments_c = comments.clone();
                                         #[allow(clippy::arc_with_non_send_sync)]
                                         let get_element = Box::new(
@@ -17804,6 +17808,7 @@ pub fn mk_class_sig<'a>(
                                                         static_,
                                                         override_,
                                                         optional,
+                                                        ts_accessibility: ts_accessibility_c,
                                                         comments: comments_c,
                                                     },
                                                 ))
