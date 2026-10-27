@@ -173,10 +173,7 @@ fn recheck(
     let duration = recheck_start.elapsed().as_secs_f64();
     let profiling = ProfilingFinished { duration };
 
-    let profiling_json = serde_json::json!({
-        "duration": profiling.get_profiling_duration(),
-    });
-    log_recheck_event(&profiling_json);
+    log_recheck_event(&recheck_profiling.to_event_logger_json_properties());
 
     let lsp_stats = lsp_prot::RecheckStats {
         dependent_file_count: recheck_stats.dependent_file_count as i32,
@@ -490,11 +487,9 @@ pub fn recheck_loop(
     let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
     loop {
         let should_print_summary = genv.options.profile;
-        let recheck_series_start = Instant::now();
+        let recheck_series_profiling = profiling_js::Running::new("RecheckSeries");
         let recheck_result = recheck_single(1, genv, orchestrator);
-        let recheck_series_profiling = ProfilingFinished {
-            duration: recheck_series_start.elapsed().as_secs_f64(),
-        };
+        let recheck_series_profiling = recheck_series_profiling.finish();
         if should_print_summary {
             flow_hh_logger::info!(
                 "RecheckSeries: wall duration {:.3}s",
@@ -514,9 +509,7 @@ pub fn recheck_loop(
             } => {
                 flow_event_logger::recheck_series(
                     recheck_count as i32,
-                    &serde_json::json!({
-                        "duration": recheck_series_profiling.get_profiling_duration(),
-                    }),
+                    &recheck_series_profiling.to_event_logger_json_properties(),
                 );
                 profiling_list.push(recheck_profiling);
             }

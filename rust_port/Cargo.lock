@@ -1527,7 +1527,6 @@ dependencies = [
  "flow_services_references",
  "flow_tokio_runtime",
  "flow_utils_concurrency",
- "serde_json",
 ]
 
 [[package]]
