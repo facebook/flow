@@ -1546,6 +1546,22 @@ pub struct EBuiltinNameLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq +
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct EUmdGlobalValueInModuleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EBuiltinModuleLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub name: FlowSmolStr,
@@ -3508,6 +3524,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EBuiltinNameLookupFailed(Box<EBuiltinNameLookupFailedData<L>>),
 
+    EUmdGlobalValueInModule(Box<EUmdGlobalValueInModuleData<L>>),
+
     EBuiltinModuleLookupFailed(Box<EBuiltinModuleLookupFailedData<L>>),
 
     EExpectedModuleLookupFailed(Box<EExpectedModuleLookupFailedData<L>>),
@@ -4868,6 +4886,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     loc: f(loc),
                     name,
                 }))
+            }
+
+            EUmdGlobalValueInModule(box EUmdGlobalValueInModuleData { loc, name }) => {
+                EUmdGlobalValueInModule(Box::new(EUmdGlobalValueInModuleData { loc: f(loc), name }))
             }
 
             EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
@@ -9071,6 +9093,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 | EnumErrorKind::TSEnumInvalidSyntax(box TSEnumInvalidSyntaxData { loc, .. }),
             )
             | Self::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { loc, .. })
+            | Self::EUmdGlobalValueInModule(box EUmdGlobalValueInModuleData { loc, .. })
             | Self::EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
                 loc, ..
             })
@@ -11119,6 +11142,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ..
             }) => Normal(Message::MessageCannotResolveBuiltinName(name)),
 
+            ErrorMessage::EUmdGlobalValueInModule(box EUmdGlobalValueInModuleData {
+                name, ..
+            }) => Normal(Message::MessageUmdGlobalValueInModule(name)),
+
             ErrorMessage::EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
                 name,
                 potential_generator,
@@ -12758,6 +12785,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { .. }) => {
                 Some(CannotResolveName)
+            }
+            ErrorMessage::EUmdGlobalValueInModule(box EUmdGlobalValueInModuleData { .. }) => {
+                Some(UmdGlobalValueAccess)
             }
             ErrorMessage::EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
                 ..

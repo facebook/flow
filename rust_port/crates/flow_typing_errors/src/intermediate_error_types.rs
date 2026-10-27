@@ -2240,6 +2240,8 @@ pub enum Message<L: Dupe> {
 
     MessageCannotResolveBuiltinName(FlowSmolStr),
 
+    MessageUmdGlobalValueInModule(FlowSmolStr),
+
     MessageCannotResolveBuiltinModule(Box<MessageCannotResolveBuiltinModuleData>),
 
     MessageCannotResolveExpectedModule {

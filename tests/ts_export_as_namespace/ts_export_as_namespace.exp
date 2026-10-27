@@ -117,7 +117,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:1
 
-Cannot resolve name `UmdEs`. [cannot-resolve-name]
+`UmdEs` refers to a UMD global declared with `export as namespace`, which cannot be used as a value in a module. Import
+it instead. [umd-global-value-access]
 
    25| UmdEs.f(); // ERROR
        ^^^^^
@@ -125,7 +126,8 @@ Cannot resolve name `UmdEs`. [cannot-resolve-name]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:1
 
-Cannot resolve name `UmdCjs`. [cannot-resolve-name]
+`UmdCjs` refers to a UMD global declared with `export as namespace`, which cannot be used as a value in a module. Import
+it instead. [umd-global-value-access]
 
    26| UmdCjs(); // ERROR
        ^^^^^^
@@ -133,7 +135,8 @@ Cannot resolve name `UmdCjs`. [cannot-resolve-name]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:27:5
 
-Cannot resolve name `UmdClass`. [cannot-resolve-name]
+`UmdClass` refers to a UMD global declared with `export as namespace`, which cannot be used as a value in a module.
+Import it instead. [umd-global-value-access]
 
    27| new UmdClass(); // ERROR
            ^^^^^^^^
@@ -141,7 +144,8 @@ Cannot resolve name `UmdClass`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:27
 
-Cannot resolve name `UmdEs`. [cannot-resolve-name]
+`UmdEs` refers to a UMD global declared with `export as namespace`, which cannot be used as a value in a module. Import
+it instead. [umd-global-value-access]
 
    28| type EsNamespace = typeof UmdEs; // ERROR
                                  ^^^^^

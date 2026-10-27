@@ -44,6 +44,7 @@ use flow_typing_errors::error_message::ETupleElementNotWritableData;
 use flow_typing_errors::error_message::ETupleNonIntegerIndexData;
 use flow_typing_errors::error_message::ETupleOutOfBoundsData;
 use flow_typing_errors::error_message::ETupleRequiredAfterOptionalData;
+use flow_typing_errors::error_message::EUmdGlobalValueInModuleData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::ErrorTypeReferenceData;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
@@ -2893,6 +2894,12 @@ fn emit_cacheable_env_error_with_env<'cx>(
                 name,
             }))
         }
+        CacheableEnvError::UmdGlobalValueInModule(name) => {
+            ErrorMessage::EUmdGlobalValueInModule(Box::new(EUmdGlobalValueInModuleData {
+                loc,
+                name,
+            }))
+        }
     };
     add_output_with_env(cx, env, msg).unwrap()
 }
@@ -2997,10 +3004,21 @@ pub fn lookup_builtin_value_result<'cx>(
         Vec<flow_env_builder::env_api::CacheableEnvError<ALoc>>,
     ),
 > {
+    use flow_env_builder::env_api::CacheableEnvError;
     use flow_typing_type::type_util::mod_reason_of_t;
 
-    match cx.builtin_value_opt(x) {
-        Some((_, t)) => Ok(mod_reason_of_t(&|_| reason.dupe(), &t)),
+    if let Some((_, t)) = cx.builtin_value_opt(x) {
+        return Ok(mod_reason_of_t(&|_| reason.dupe(), &t));
+    }
+    // Every non-library file is a module, and TypeScript does not let modules use UMD globals as
+    // values.
+    match cx.builtin_umd_value_opt(x) {
+        Some((_, t)) => Err((
+            mod_reason_of_t(&|_| reason.dupe(), &t),
+            vec![CacheableEnvError::UmdGlobalValueInModule(FlowSmolStr::new(
+                x,
+            ))],
+        )),
         None => lookup_builtin_name_error(x, reason.loc().dupe()),
     }
 }

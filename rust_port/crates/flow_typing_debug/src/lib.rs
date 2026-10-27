@@ -125,6 +125,7 @@ use flow_typing_errors::error_message::ETypeGuardFunctionParamHavocedData;
 use flow_typing_errors::error_message::ETypeGuardIncompatibleWithFunctionKindData;
 use flow_typing_errors::error_message::ETypeGuardInvalidParameterData;
 use flow_typing_errors::error_message::ETypeParamConstIncompatibilityData;
+use flow_typing_errors::error_message::EUmdGlobalValueInModuleData;
 use flow_typing_errors::error_message::EUnableToSpreadData;
 use flow_typing_errors::error_message::EUnionOptimizationData;
 use flow_typing_errors::error_message::EUnionOptimizationOnNonUnionData;
@@ -2418,6 +2419,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { loc, name }) => {
             format!(
                 "EBuiltinNameLookupFailed(Box::new(EBuiltinNameLookupFailedData {{ loc = {}; name = {:?} }}))",
+                string_of_aloc(None, loc),
+                name
+            )
+        }
+        ErrorMessage::EUmdGlobalValueInModule(box EUmdGlobalValueInModuleData { loc, name }) => {
+            format!(
+                "EUmdGlobalValueInModule(Box::new(EUmdGlobalValueInModuleData {{ loc = {}; name = {:?} }}))",
                 string_of_aloc(None, loc),
                 name
             )

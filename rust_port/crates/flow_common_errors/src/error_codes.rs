@@ -208,6 +208,7 @@ pub enum ErrorCode {
     ConstantCondition,
     ReservedKeyword,
     UnrecognizedAssertionCall,
+    UmdGlobalValueAccess,
 }
 
 pub fn code_of_lint(lint_kind: &LintKind) -> ErrorCode {
@@ -457,6 +458,7 @@ impl ErrorCode {
             ConstantCondition => "constant-condition",
             ReservedKeyword => "reserved-keyword",
             UnrecognizedAssertionCall => "unrecognized-assertion-call",
+            UmdGlobalValueAccess => "umd-global-value-access",
         }
     }
 }

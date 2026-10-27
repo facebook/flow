@@ -69,6 +69,7 @@ impl<L> EnvInvariant<L> {
 pub enum CacheableEnvError<L> {
     ReferencedBeforeDeclaration { def_loc: L, name: FlowSmolStr },
     BuiltinNameLookupFailed(FlowSmolStr),
+    UmdGlobalValueInModule(FlowSmolStr),
 }
 
 #[derive(Debug, Clone)]

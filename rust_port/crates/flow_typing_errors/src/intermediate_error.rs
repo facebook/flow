@@ -6515,6 +6515,13 @@ where
             MessageCannotResolveBuiltinName(name) => {
                 friendly::Message(vec![text("Cannot resolve name "), code(name), text(".")])
             }
+            MessageUmdGlobalValueInModule(name) => friendly::Message(vec![
+                code(name),
+                text(
+                    " refers to a UMD global declared with `export as namespace`, which cannot be \
+                     used as a value in a module. Import it instead.",
+                ),
+            ]),
             MessageCannotResolveBuiltinModule(box MessageCannotResolveBuiltinModuleData {
                 name,
                 potential_generator,
