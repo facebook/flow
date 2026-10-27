@@ -439,7 +439,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- regression_tests.js:154:31
 
-Cannot assign function to `defaultValue` because `(x: A) => 42` [1] is incompatible with `boolean` [2].
+Cannot assign `(x: A) => 42` to `defaultValue` because `(x: A) => 42` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    regression_tests.js:154:31
@@ -454,7 +454,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- regression_tests.js:160:14
 
-Cannot assign `C` to `foo` because class `C` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot assign class `C` to `foo` because class `C` [1] is incompatible with `number` [2]. [incompatible-type]
 
    regression_tests.js:160:14
    160|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }

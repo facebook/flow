@@ -19,6 +19,8 @@ use flow_typing_loc_env::component_sig_types::declaration_param_config::ParamAst
 use flow_typing_loc_env::component_sig_types::declaration_param_config::Pattern;
 use flow_typing_loc_env::component_sig_types::declaration_param_config::Rest;
 use flow_typing_loc_env::component_sig_types::declaration_param_config::RestAst;
+use flow_typing_type::type_::AssignVarDefaultData;
+use flow_typing_type::type_::AssignVarInit;
 use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
@@ -102,7 +104,10 @@ fn flow_default<'a>(
     let use_op = UseOp::Op(std::sync::Arc::new(
         flow_typing_type::type_::RootUseOp::AssignVar {
             var: Some(Box::new(target)),
-            init: type_util::reason_of_t(default_t).dupe(),
+            init: AssignVarInit::Default(Box::new(AssignVarDefaultData {
+                loc: type_util::loc_of_t(default_t).dupe(),
+                default: flow_js_utils::type_or_type_desc_for_error(default_t),
+            })),
         },
     ));
     flow_js::flow_non_speculating(

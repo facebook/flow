@@ -30,8 +30,11 @@ use flow_typing_context::Context;
 use flow_typing_default as default;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::UnsupportedSyntax;
+use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_type::type_;
+use flow_typing_type::type_::AssignVarDefaultData;
+use flow_typing_type::type_::AssignVarInit;
 use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
@@ -399,14 +402,19 @@ fn identifier<'a>(
         },
         &write_t,
     );
-    let init_reason = match (default_val, &acc.init) {
-        (Some(default::Default::Expr(t)), _) => type_util::reason_of_t(t).dupe(),
-        (_, Some(init)) => flow_common::reason::mk_expression_reason(init),
-        _ => type_util::reason_of_t(&current).dupe(),
+    let init = match (default_val, &acc.init) {
+        (Some(default::Default::Expr(t)), _) => {
+            AssignVarInit::Default(Box::new(AssignVarDefaultData {
+                loc: type_util::loc_of_t(t).dupe(),
+                default: flow_js_utils::type_or_type_desc_for_error(t),
+            }))
+        }
+        (_, Some(init)) => AssignVarInit::Reason(flow_common::reason::mk_expression_reason(init)),
+        _ => AssignVarInit::Reason(type_util::reason_of_t(&current).dupe()),
     };
     let use_op = UseOp::Op(Arc::new(RootUseOp::AssignVar {
         var: Some(Box::new(AssignVarTarget::Variable(reason))),
-        init: init_reason,
+        init,
     }));
     f(cx, &use_op, name_loc, name, default_val.as_ref(), current)
 }

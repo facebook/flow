@@ -882,7 +882,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- param_default.js:8:16
 
-Cannot assign undefined to `a` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot assign `void` to `a` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    param_default.js:8:16
    8| context = (a = undefined) => {a as number}; // error: void ~> number

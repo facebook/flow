@@ -3095,7 +3095,7 @@ fn statement_<'a>(
                             VirtualReasonDesc::RIdentifier(name_str.dupe()),
                             pat_loc.dupe(),
                         )))),
-                        init: reason_of_t(&t).dupe(),
+                        init: type_::AssignVarInit::Reason(reason_of_t(&t).dupe()),
                     }));
                     type_env::set_var(cx, &use_op, name_str, &t, pat_loc.dupe())?;
                     (
@@ -3235,7 +3235,7 @@ fn statement_<'a>(
                             VirtualReasonDesc::RIdentifier(name_str.dupe()),
                             pat_loc.dupe(),
                         )))),
-                        init: reason_of_t(&elem_t).dupe(),
+                        init: type_::AssignVarInit::Reason(reason_of_t(&elem_t).dupe()),
                     }));
                     type_env::set_var(cx, &use_op, name_str, &elem_t, pat_loc.dupe())?;
                     (
@@ -3460,7 +3460,7 @@ fn statement_<'a>(
                     VirtualReasonDesc::RIdentifier(name.display_smol_str()),
                     name_loc.dupe(),
                 )))),
-                init: reason_of_t(&class_t).dupe(),
+                init: type_::AssignVarInit::Reason(reason_of_t(&class_t).dupe()),
             }));
             type_env::init_implicit_let(cx, &use_op, &class_t, name_loc)?;
             statement::Statement::new(StatementInner::ClassDeclaration {
@@ -3477,7 +3477,7 @@ fn statement_<'a>(
                     VirtualReasonDesc::RIdentifier(name.dupe()),
                     loc.dupe(),
                 )))),
-                init: reason_of_t(&t).dupe(),
+                init: type_::AssignVarInit::Reason(reason_of_t(&t).dupe()),
             }));
             type_env::init_var(cx, &use_op, &t, name_loc)?;
             statement::Statement::new(StatementInner::DeclareClass {
@@ -3554,7 +3554,7 @@ fn statement_<'a>(
                         VirtualReasonDesc::RIdentifier(name.display_smol_str()),
                         name_loc.dupe(),
                     )))),
-                    init: reason_of_t(&record_t).dupe(),
+                    init: type_::AssignVarInit::Reason(reason_of_t(&record_t).dupe()),
                 }));
                 type_env::init_implicit_const(cx, &use_op, &record_t, name_loc)?;
                 statement::Statement::new(StatementInner::RecordDeclaration {
@@ -3582,7 +3582,7 @@ fn statement_<'a>(
                     VirtualReasonDesc::RIdentifier(name.dupe()),
                     loc.dupe(),
                 )))),
-                init: reason_of_t(&t).dupe(),
+                init: type_::AssignVarInit::Reason(reason_of_t(&t).dupe()),
             }));
             type_env::init_var(cx, &use_op, &t, name_loc)?;
             statement::Statement::new(StatementInner::DeclareComponent {
@@ -6237,7 +6237,7 @@ fn variable<'a>(
             if let Some((ref init_t, ref init_reason)) = init_opt {
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                     var: Some(Box::new(type_::AssignVarTarget::Variable(id_reason.dupe()))),
-                    init: init_reason.dupe(),
+                    init: type_::AssignVarInit::Reason(init_reason.dupe()),
                 }));
                 let init_t = if init_fills_annotated_symbol {
                     &annot_t
@@ -6274,7 +6274,7 @@ fn variable<'a>(
                     if let Some((ref init_t, ref init_reason)) = init_opt {
                         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                             var: Some(Box::new(type_::AssignVarTarget::Variable(id_reason.dupe()))),
-                            init: init_reason.dupe(),
+                            init: type_::AssignVarInit::Reason(init_reason.dupe()),
                         }));
                         flow_js::flow_non_speculating(
                             cx,
@@ -8147,7 +8147,7 @@ fn expression_<'a>(
                             VirtualReasonDesc::RIdentifier(name.dupe()),
                             name_loc.dupe(),
                         )))),
-                        init: reason_of_t(&class_t).dupe(),
+                        init: type_::AssignVarInit::Reason(reason_of_t(&class_t).dupe()),
                     }));
                     type_env::init_implicit_let(cx, &use_op, &class_t, name_loc)?;
                     expression::Expression::new(ExpressionInner::Class {
@@ -11084,7 +11084,7 @@ fn update<'a>(
                     VirtualReasonDesc::RIdentifier(name.dupe()),
                     id_loc.dupe(),
                 )))),
-                init: reason_of_t(&result_t).dupe(),
+                init: type_::AssignVarInit::Reason(reason_of_t(&result_t).dupe()),
             }));
             type_env::set_var(cx, &use_op, name, &result_t, id_loc)?;
             arg_ast
@@ -12234,7 +12234,7 @@ fn op_assignment<'a>(
                         VirtualReasonDesc::RIdentifier(name.name.dupe()),
                         id_loc.dupe(),
                     )))),
-                    init: rhs_reason.dupe(),
+                    init: type_::AssignVarInit::Reason(rhs_reason.dupe()),
                 }));
                 type_env::set_var(cx, &use_op, &name.name, result_t, id_loc)?;
             }
@@ -21273,7 +21273,7 @@ fn enum_declaration<'a>(
             VirtualReasonDesc::RIdentifier(name.dupe()),
             name_loc.dupe(),
         )))),
-        init: reason.dupe(),
+        init: type_::AssignVarInit::Reason(reason.dupe()),
     }));
     let t = if flow_common::files::has_ts_ext(cx.file()) {
         // TS enums are modeled as an object value of literal members plus a type

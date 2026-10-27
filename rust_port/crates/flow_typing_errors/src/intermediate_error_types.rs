@@ -1267,6 +1267,22 @@ pub enum AssignTargetDesc<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub enum AssignInitDesc<L: Dupe> {
+    Reason(Option<VirtualReasonDesc<L>>),
+    Default(ErrorTypeDesc<L>),
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RootMessage<L: Dupe> {
     RootCannotAccessIndex {
         index: ErrorTypeDesc<L>,
@@ -1274,7 +1290,7 @@ pub enum RootMessage<L: Dupe> {
     },
     RootCannotAddComputedProperty,
     RootCannotAssign {
-        init: Option<VirtualReasonDesc<L>>,
+        init: AssignInitDesc<L>,
         target: Option<AssignTargetDesc<L>>,
     },
     RootCannotCall(Option<VirtualReasonDesc<L>>),

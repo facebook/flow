@@ -18,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:1:22
 
-Cannot assign number literal `0` to `x` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot assign `0` to `x` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    generic.js:1:22
    1| function x<T>(x: T = 0) {}
@@ -32,7 +32,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:15
 
-Cannot assign number literal `0` to `x` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot assign `0` to `x` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    generic.js:4:15
    4|   x<T>(x: T = 0) {}
@@ -203,7 +203,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:26
 
-Cannot assign string literal `hello` to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot assign `"hello"` to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional.js:7:26
    7| function qux(x: number = "hello", ...y: [string, unknown]):string { foo(x); return y[0]; } // error: string ~> number
@@ -291,7 +291,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undefined.js:3:38
 
-Cannot assign undefined to `bar` because `void` [1] is incompatible with `{duck: unknown}` [2]. [incompatible-type]
+Cannot assign `void` to `bar` because `void` [1] is incompatible with `{duck: unknown}` [2]. [incompatible-type]
 
    undefined.js:3:38
    3| function foo(bar?: {duck: unknown} = undefined) {

@@ -476,7 +476,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:40:9
 
-Cannot assign boolean literal `true` to `p` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot assign `true` to `p` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    defaults.js:40:9
    40|     p = true, // error: boolean ~> string
@@ -522,7 +522,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:51:7
 
-Cannot assign boolean literal `true` to `p` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot assign `true` to `p` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    defaults.js:51:7
    51|   p = true, // error: boolean ~> string
@@ -695,8 +695,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:83:10
 
-Cannot assign number literal `123456` to `name` because `123456` [1] is incompatible with `string` [2].
-[incompatible-type]
+Cannot assign `123456` to `name` because `123456` [1] is incompatible with `string` [2]. [incompatible-type]
 
    defaults.js:83:10
    83|   name = 123456, // Not string type, error!
@@ -1162,7 +1161,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:3:30
 
-Cannot assign string literal `hi` to `defaults` because `"hi"` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot assign `"hi"` to `defaults` because `"hi"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    destructuring_missing_props.js:3:30
    3| var {nonExistent, defaults = 'hi', foo = 3} = x; // Error, missing nonExistent
@@ -1176,7 +1175,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:3:42
 
-Cannot assign number literal `3` to `foo` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot assign `3` to `foo` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_missing_props.js:3:42
    3| var {nonExistent, defaults = 'hi', foo = 3} = x; // Error, missing nonExistent
@@ -1221,8 +1220,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:9:32
 
-Cannot assign string literal `hi` to `defaults2` because `"hi"` [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot assign `"hi"` to `defaults2` because `"hi"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    destructuring_missing_props.js:9:32
    9| var {nonExistent2, defaults2 = 'hi', bar = 3} = y; // Error, missing nonExistent2
@@ -1236,7 +1234,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:9:44
 
-Cannot assign number literal `3` to `bar` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot assign `3` to `bar` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_missing_props.js:9:44
    9| var {nonExistent2, defaults2 = 'hi', bar = 3} = y; // Error, missing nonExistent2
@@ -1292,8 +1290,7 @@ References:
 
 Error ----------------------------------------------------------------------------- destructuring_missing_props.js:21:12
 
-Cannot assign string literal `string` to `qux` because `"string"` [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot assign `"string"` to `qux` because `"string"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    destructuring_missing_props.js:21:12
    21| var {qux = 'string'} = obj; // Error, qux missing
@@ -1307,7 +1304,7 @@ References:
 
 Error ----------------------------------------------------------------------------- destructuring_missing_props.js:27:18
 
-Cannot assign string literal `default` to `defaultProps` because `"default"` [1] is incompatible with `empty` [2].
+Cannot assign `"default"` to `defaultProps` because `"default"` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    destructuring_missing_props.js:27:18
@@ -1417,7 +1414,7 @@ Missing an annotation on this parameter. [missing-local-annot]
 
 Error ----------------------------------------------------------------------------------------- literal_defaults.js:9:14
 
-Cannot assign string literal `xxx` to `s` because `"xxx"` [1] is incompatible with `"s"` [2]. [incompatible-type]
+Cannot assign `"xxx"` to `s` because `"xxx"` [1] is incompatible with `"s"` [2]. [incompatible-type]
 
    literal_defaults.js:9:14
    9|   const {s = 'xxx'} = o; // ERROR
@@ -1431,7 +1428,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- literal_defaults.js:14:14
 
-Cannot assign number literal `999999` to `n` because `999999` [1] is incompatible with `1` [2]. [incompatible-type]
+Cannot assign `999999` to `n` because `999999` [1] is incompatible with `1` [2]. [incompatible-type]
 
    literal_defaults.js:14:14
    14|   const {n = 999999} = o; // ERROR
@@ -1445,7 +1442,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- literal_defaults.js:19:14
 
-Cannot assign boolean literal `false` to `b` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+Cannot assign `false` to `b` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    literal_defaults.js:19:14
    19|   const {b = false} = o; // ERROR
@@ -1459,7 +1456,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- literal_defaults.js:24:14
 
-Cannot assign bigint literal `999999n` to `i` because `999999n` [1] is incompatible with `1n` [2]. [incompatible-type]
+Cannot assign `999999n` to `i` because `999999n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    literal_defaults.js:24:14
    24|   const {i = 999999n} = o; // ERROR

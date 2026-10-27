@@ -30,6 +30,8 @@ use flow_parser::jsdoc;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
+use flow_typing_type::type_::AssignVarDefaultData;
+use flow_typing_type::type_::AssignVarInit;
 use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::ClassImplementsCheckData;
@@ -82,6 +84,7 @@ use super::error_message::util_use_op_of_msg;
 use super::flow_error::ErrorSet;
 use super::flow_error::FlowError;
 use super::intermediate_error_types::AccessChainSegment;
+use super::intermediate_error_types::AssignInitDesc;
 use super::intermediate_error_types::AssignTargetDesc;
 use super::intermediate_error_types::ErrorMessage;
 use super::intermediate_error_types::Explanation;
@@ -1570,23 +1573,36 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::AssignVar { var, init } => root(
-                                loc,
-                                frames,
-                                init,
-                                RootMessage::RootCannotAssign {
-                                    init: init.desc.clone(),
-                                    target: var.as_deref().map(|target| match target {
-                                        AssignVarTarget::Variable(reason) => {
-                                            AssignTargetDesc::Variable(reason.desc.clone())
-                                        }
-                                        AssignVarTarget::Annotation(t) => {
-                                            AssignTargetDesc::Annotation(printed_type_desc(t))
-                                        }
-                                    }),
-                                },
-                                custom_error_message,
-                            ),
+                            VirtualRootUseOp::AssignVar { var, init } => {
+                                let (init_loc, init) = match init {
+                                    AssignVarInit::Reason(reason) => {
+                                        (&reason.loc, AssignInitDesc::Reason(reason.desc.clone()))
+                                    }
+                                    AssignVarInit::Default(box AssignVarDefaultData {
+                                        loc,
+                                        default,
+                                    }) => {
+                                        (loc, AssignInitDesc::Default(printed_type_desc(default)))
+                                    }
+                                };
+                                root_at_loc(
+                                    loc,
+                                    frames,
+                                    loc_of_aloc(init_loc),
+                                    RootMessage::RootCannotAssign {
+                                        init,
+                                        target: var.as_deref().map(|target| match target {
+                                            AssignVarTarget::Variable(reason) => {
+                                                AssignTargetDesc::Variable(reason.desc.clone())
+                                            }
+                                            AssignVarTarget::Annotation(t) => {
+                                                AssignTargetDesc::Annotation(printed_type_desc(t))
+                                            }
+                                        }),
+                                    },
+                                    custom_error_message,
+                                )
+                            }
 
                             VirtualRootUseOp::DeleteVar { var } => root(
                                 loc,
@@ -2020,7 +2036,7 @@ where
                                     frames,
                                     loc_reason,
                                     RootMessage::RootCannotAssign {
-                                        init: value.desc.clone(),
+                                        init: AssignInitDesc::Reason(value.desc.clone()),
                                         target: Some(AssignTargetDesc::Variable(prop.desc.clone())),
                                     },
                                     custom_error_message,
@@ -5111,30 +5127,38 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![text("Cannot add computed property")]),
                 ),
-                RootMessage::RootCannotAssign { init, target } => match target {
-                    None => (
-                        RootKind::OperationRoot,
-                        friendly::Message(vec![
-                            text("Cannot assign "),
-                            friendly::desc_of_reason_desc(init.as_ref()),
-                            text(" to variable"),
-                        ]),
-                    ),
-                    Some(target) => (
-                        RootKind::OperationRoot,
-                        friendly::Message(vec![
-                            text("Cannot assign "),
-                            friendly::desc_of_reason_desc(init.as_ref()),
-                            text(" to "),
-                            match target {
-                                AssignTargetDesc::Variable(desc) => {
-                                    friendly::desc_of_reason_desc(desc.as_ref())
-                                }
-                                AssignTargetDesc::Annotation(desc) => desc_of_type_desc(desc),
-                            },
-                        ]),
-                    ),
-                },
+                RootMessage::RootCannotAssign { init, target } => {
+                    let init = match init {
+                        AssignInitDesc::Reason(desc) => {
+                            friendly::desc_of_reason_desc(desc.as_ref())
+                        }
+                        AssignInitDesc::Default(desc) => desc_of_type_desc(desc),
+                    };
+                    match target {
+                        None => (
+                            RootKind::OperationRoot,
+                            friendly::Message(vec![
+                                text("Cannot assign "),
+                                init,
+                                text(" to variable"),
+                            ]),
+                        ),
+                        Some(target) => (
+                            RootKind::OperationRoot,
+                            friendly::Message(vec![
+                                text("Cannot assign "),
+                                init,
+                                text(" to "),
+                                match target {
+                                    AssignTargetDesc::Variable(desc) => {
+                                        friendly::desc_of_reason_desc(desc.as_ref())
+                                    }
+                                    AssignTargetDesc::Annotation(desc) => desc_of_type_desc(desc),
+                                },
+                            ]),
+                        ),
+                    }
+                }
                 RootMessage::RootCannotCall(fn_) => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![

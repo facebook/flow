@@ -719,7 +719,7 @@ References:
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:32:17
 
-Cannot assign number literal `3` to `bar` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot assign `3` to `bar` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    component_type_checking.js:32:17
    32|   bar: string = 3, // ERROR
@@ -749,7 +749,7 @@ Cannot resolve name `foo`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:34:24
 
-Cannot assign string literal `str` to `a` because `"str"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot assign `"str"` to `a` because `"str"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    component_type_checking.js:34:24
    34|   destructured as {a = 'str'}: {a?: number}, // ERROR
@@ -1150,7 +1150,7 @@ statement must be included for all possible branches. [component-missing-return]
 
 Error -------------------------------------------------------------------------------------------------- errors.js:20:35
 
-Cannot assign `this.x` to `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot assign `number` to `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    errors.js:20:35
    20|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
@@ -3062,8 +3062,7 @@ cannot be optional. [incompatible-type]
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:6:23
 
-Cannot assign boolean literal `false` to `baz` because `false` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot assign `false` to `baz` because `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    rest_constraints.js:6:23
    6|   ...{foo, bar, baz = false}: {foo: number, bar: number, baz?: number} // ERROR bad default for baz

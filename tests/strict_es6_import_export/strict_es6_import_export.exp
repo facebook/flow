@@ -285,7 +285,7 @@ References:
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:29:12
 
-Cannot assign `Foo` to `y` because
+Cannot assign `module "./foo"` to `y` because
 `{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] is
 incompatible with `empty` [2]. [incompatible-type]
 

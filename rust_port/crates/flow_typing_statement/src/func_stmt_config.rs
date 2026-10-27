@@ -157,7 +157,10 @@ fn flow_default<'a>(
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let use_op = UseOp::Op(std::sync::Arc::new(type_::RootUseOp::AssignVar {
         var: Some(Box::new(target)),
-        init: type_util::reason_of_t(default_t).dupe(),
+        init: type_::AssignVarInit::Default(Box::new(type_::AssignVarDefaultData {
+            loc: type_util::loc_of_t(default_t).dupe(),
+            default: flow_js_utils::type_or_type_desc_for_error(default_t),
+        })),
     }));
     flow_js::flow_non_speculating(
         cx,

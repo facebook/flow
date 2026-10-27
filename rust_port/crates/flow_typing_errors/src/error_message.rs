@@ -46,6 +46,8 @@ use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
+use flow_typing_type::type_::AssignVarDefaultData;
+use flow_typing_type::type_::AssignVarInit;
 use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::ComponentRestParamCompatibilityData;
@@ -6937,13 +6939,28 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             current_decl: current_decl.dupe(),
                         }),
                     ))),
-                    VirtualRootUseOp::AssignVar {
-                        var: Some(box AssignVarTarget::Annotation(t)),
-                        init,
-                    } => VirtualUseOp::Op(Arc::new(VirtualRootUseOp::AssignVar {
-                        var: Some(Box::new(AssignVarTarget::Annotation(f(t.clone())))),
-                        init: init.dupe(),
-                    })),
+                    VirtualRootUseOp::AssignVar { var, init } => {
+                        let var = var.as_deref().map(|target| {
+                            Box::new(match target {
+                                AssignVarTarget::Variable(reason) => {
+                                    AssignVarTarget::Variable(reason.dupe())
+                                }
+                                AssignVarTarget::Annotation(t) => {
+                                    AssignVarTarget::Annotation(f(t.clone()))
+                                }
+                            })
+                        });
+                        let init = match init {
+                            AssignVarInit::Reason(reason) => AssignVarInit::Reason(reason.dupe()),
+                            AssignVarInit::Default(box AssignVarDefaultData { loc, default }) => {
+                                AssignVarInit::Default(Box::new(AssignVarDefaultData {
+                                    loc: loc.dupe(),
+                                    default: f(default.clone()),
+                                }))
+                            }
+                        };
+                        VirtualUseOp::Op(Arc::new(VirtualRootUseOp::AssignVar { var, init }))
+                    }
                     VirtualRootUseOp::Cast {
                         lower,
                         upper: box upper,

@@ -211,7 +211,7 @@ fn binding<'a>(
     let use_op = UseOp::Op(std::sync::Arc::new(
         flow_typing_type::type_::RootUseOp::AssignVar {
             var: Some(Box::new(AssignVarTarget::Variable(reason.dupe()))),
-            init: mk_expression_reason(acc),
+            init: flow_typing_type::type_::AssignVarInit::Reason(mk_expression_reason(acc)),
         },
     ));
     on_binding(cx, &use_op, name_loc, kind, name, current)

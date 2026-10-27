@@ -27,6 +27,8 @@ use flow_lazy::ContextFamily;
 
 use crate::type_::ArrRestTData;
 use crate::type_::AssertionFunctionConsistencyData;
+use crate::type_::AssignVarDefaultData;
+use crate::type_::AssignVarInit;
 use crate::type_::AssignVarTarget;
 use crate::type_::CallTData;
 use crate::type_::ClassExtendsCheckData;
@@ -1075,7 +1077,15 @@ where
                         ),
                     })
                 }),
-                init: mod_reason(init),
+                init: match init {
+                    AssignVarInit::Reason(reason) => AssignVarInit::Reason(mod_reason(reason)),
+                    AssignVarInit::Default(box AssignVarDefaultData { loc, default }) => {
+                        AssignVarInit::Default(Box::new(AssignVarDefaultData {
+                            loc: f(loc),
+                            default: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), default),
+                        }))
+                    }
+                },
             },
             Cast {
                 lower,

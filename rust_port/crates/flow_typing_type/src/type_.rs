@@ -1063,6 +1063,40 @@ pub enum AssignVarTarget<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     Annotation(type_or_type_desc::TypeOrTypeDescT<L>),
 }
 
+/// What an `AssignVar` assigns: a value referenced by its reason, or a default value, which is
+/// printed as its type.
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum AssignVarInit<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    Reason(VirtualReason<L>),
+    Default(Box<AssignVarDefaultData<L>>),
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct AssignVarDefaultData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub loc: L,
+    pub default: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -1394,7 +1428,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     },
     AssignVar {
         var: Option<Box<AssignVarTarget<L>>>,
-        init: VirtualReason<L>,
+        init: AssignVarInit<L>,
     },
     Cast {
         lower: VirtualReason<L>,
