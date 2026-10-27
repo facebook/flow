@@ -28,11 +28,14 @@ pub(super) const LIB_DECORATORS_LEGACY_D_TS: &str = include_tslib!("lib.decorato
 pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asynciterable.d.ts");
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
 pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
+pub(super) const LIB_ES2015_GENERATOR_D_TS: &str = include_tslib!("lib.es2015.generator.d.ts");
 pub(super) const LIB_ES2015_PROXY_D_TS: &str = include_tslib!("lib.es2015.proxy.d.ts");
 pub(super) const LIB_ES2015_REFLECT_D_TS: &str = include_tslib!("lib.es2015.reflect.d.ts");
 pub(super) const LIB_ES2015_SYMBOL_D_TS: &str = include_tslib!("lib.es2015.symbol.d.ts");
 pub(super) const LIB_ES2015_SYMBOL_WELLKNOWN_D_TS: &str =
     include_tslib!("lib.es2015.symbol.wellknown.d.ts");
+pub(super) const LIB_ES2016_ARRAY_INCLUDE_D_TS: &str =
+    include_tslib!("lib.es2016.array.include.d.ts");
 pub(super) const LIB_ES2016_INTL_D_TS: &str = include_tslib!("lib.es2016.intl.d.ts");
 pub(super) const LIB_ES2017_ARRAYBUFFER_D_TS: &str = include_tslib!("lib.es2017.arraybuffer.d.ts");
 pub(super) const LIB_ES2017_DATE_D_TS: &str = include_tslib!("lib.es2017.date.d.ts");
@@ -119,10 +122,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         include_tslib!("lib.es2015.core.d.ts"),
     ),
     ("lib.es2015.d.ts", include_tslib!("lib.es2015.d.ts")),
-    (
-        "lib.es2015.generator.d.ts",
-        include_tslib!("lib.es2015.generator.d.ts"),
-    ),
+    ("lib.es2015.generator.d.ts", LIB_ES2015_GENERATOR_D_TS),
     (
         "lib.es2015.iterable.d.ts",
         include_tslib!("lib.es2015.iterable.d.ts"),
@@ -140,7 +140,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ),
     (
         "lib.es2016.array.include.d.ts",
-        include_tslib!("lib.es2016.array.include.d.ts"),
+        LIB_ES2016_ARRAY_INCLUDE_D_TS,
     ),
     ("lib.es2016.d.ts", include_tslib!("lib.es2016.d.ts")),
     (

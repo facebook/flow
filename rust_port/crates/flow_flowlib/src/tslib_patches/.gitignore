@@ -1,0 +1,2 @@
+# The diffs are the source of the adapted TypeScript libraries.
+!*.diff
