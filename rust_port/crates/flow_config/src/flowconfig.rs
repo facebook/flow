@@ -141,6 +141,7 @@ pub mod opts {
 
     #[derive(Debug, Clone)]
     pub struct Opts {
+        pub agent_helper_hints: bool,
         pub agent_progress_keepalive: Option<u32>,
         pub all: Option<bool>,
         pub autoimports: Option<bool>,
@@ -276,6 +277,7 @@ pub mod opts {
             .collect();
 
         Opts {
+            agent_helper_hints: false,
             agent_progress_keepalive: None,
             all: None,
             autoimports: None,
@@ -2025,6 +2027,16 @@ pub mod opts {
             }),
             ("saved_state_restart_on_reinit", |values, config| {
                 saved_state_restart_on_reinit_parser(values, config)
+            }),
+            ("experimental.agent_helper_hints", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.agent_helper_hints = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
             }),
             ("experimental.assert_operator", |values, config| {
                 assert_operator_parser(values, config)
