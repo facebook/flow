@@ -339,7 +339,7 @@ fn type_impl<L: Dupe>(
         } => {
             let left_delim = if *optional { "?.[" } else { "[" };
             layout::fuse(vec![
-                type_(opts, depth, _object.as_ref(), size),
+                indexed_object_with_parens(opts, depth, _object.as_ref(), size),
                 LayoutNode::atom(left_delim.to_string()),
                 type_(opts, depth, index.as_ref(), size),
                 LayoutNode::atom("]".to_string()),
@@ -1242,7 +1242,7 @@ fn utility<L: Dupe>(
             type_with_parens(opts, depth, t.as_ref(), size),
         ]),
         Utility::ElementType(object, index) => layout::fuse(vec![
-            type_with_parens(opts, depth, object.as_ref(), size),
+            indexed_object_with_parens(opts, depth, object.as_ref(), size),
             LayoutNode::atom("[".to_string()),
             type_(opts, depth, index.as_ref(), size),
             LayoutNode::atom("]".to_string()),
@@ -1514,6 +1514,22 @@ fn type_with_parens<L: Dupe>(
             wrap_in_parens(type_(opts, depth, t, size))
         }
         _ => type_(opts, depth, t, size),
+    }
+}
+
+/// The object of an indexed access `O[K]`: anything that does not end in a
+/// primary type would otherwise swallow the `[K]` suffix.
+fn indexed_object_with_parens<L: Dupe>(
+    opts: &PrinterOptions,
+    depth: usize,
+    t: &Ty<L>,
+    size: &mut PrintState<L>,
+) -> LayoutNode {
+    match t {
+        Ty::Utility(Utility::Keys(_)) | Ty::Renders(_, _) | Ty::Component { .. } | Ty::Infer(_) => {
+            wrap_in_parens(type_(opts, depth, t, size))
+        }
+        _ => type_with_parens(opts, depth, t, size),
     }
 }
 

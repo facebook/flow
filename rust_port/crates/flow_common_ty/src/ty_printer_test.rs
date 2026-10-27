@@ -240,6 +240,27 @@ mod tests {
     }
 
     #[test]
+    fn test_indexed_access_parenthesizes_object() {
+        let index = |object: Ty<ALoc>| Ty::IndexedAccess {
+            _object: Arc::new(object),
+            index: Arc::new(Ty::StrLit(FlowSmolStr::new("a"))),
+            optional: false,
+        };
+        let opts = test_options();
+
+        let union = Ty::<ALoc>::Union(false, Arc::new(Ty::Num), Arc::new(Ty::Str), vec![].into());
+        assert_eq!(
+            string_of_t(&index(union), &opts),
+            "(number | string)[\"a\"]"
+        );
+        assert_eq!(
+            string_of_t(&index(void_fun()), &opts),
+            "(() => void)[\"a\"]"
+        );
+        assert_eq!(string_of_t(&index(Ty::Str), &opts), "string[\"a\"]");
+    }
+
+    #[test]
     fn test_truncated_object_reports_omitted_properties() {
         let field = |name: &str| Prop::NamedProp {
             name: Name::new(name),
