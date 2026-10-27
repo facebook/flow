@@ -8,5 +8,5 @@ enum E {}
 const bad: E = 0; // ERROR
 
 // The enum value itself is still a usable (empty) object.
-declare function takesObj(o: { readonly [string]: unknown }): void;
+declare function takesObj(o: { readonly [key: string]: unknown }): void;
 takesObj(E); // OK

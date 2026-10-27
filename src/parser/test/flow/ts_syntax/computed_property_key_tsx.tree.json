@@ -1,0 +1,393 @@
+{
+  "body": [
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 6,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 2
+          }
+        },
+        "name": "T",
+        "optional": false,
+        "range": [
+          98,
+          99
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 2,
+          "line": 6
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        93,
+        202
+      ],
+      "right": {
+        "callProperties": [],
+        "exact": false,
+        "indexers": [
+          {
+            "id": {
+              "loc": {
+                "end": {
+                  "column": 6,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 3,
+                  "line": 5
+                }
+              },
+              "name": "key",
+              "optional": false,
+              "range": [
+                172,
+                175
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 14,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 8,
+                  "line": 5
+                }
+              },
+              "range": [
+                177,
+                183
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "loc": {
+              "end": {
+                "column": 23,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 5
+              }
+            },
+            "range": [
+              171,
+              192
+            ],
+            "static": false,
+            "type": "ObjectTypeIndexer",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 23,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 17,
+                  "line": 5
+                }
+              },
+              "range": [
+                186,
+                192
+              ],
+              "type": "NumberTypeAnnotation"
+            },
+            "variance": null
+          }
+        ],
+        "inexact": false,
+        "internalSlots": [],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 6
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 2
+          }
+        },
+        "properties": [
+          {
+            "abstract": false,
+            "computed": true,
+            "init": null,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 19,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 3,
+                  "line": 3
+                }
+              },
+              "name": "TREND_SERIES_ALL",
+              "optional": false,
+              "range": [
+                107,
+                123
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "init",
+            "loc": {
+              "end": {
+                "column": 28,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 3
+              }
+            },
+            "method": false,
+            "optional": false,
+            "proto": false,
+            "range": [
+              106,
+              132
+            ],
+            "static": false,
+            "type": "ObjectTypeProperty",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 28,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 22,
+                  "line": 3
+                }
+              },
+              "range": [
+                126,
+                132
+              ],
+              "type": "NumberTypeAnnotation"
+            },
+            "variance": null
+          },
+          {
+            "abstract": false,
+            "computed": true,
+            "init": null,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 11,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 3,
+                  "line": 4
+                }
+              },
+              "range": [
+                143,
+                151
+              ],
+              "raw": "'data-x'",
+              "type": "Literal",
+              "value": "data-x"
+            },
+            "kind": "init",
+            "loc": {
+              "end": {
+                "column": 21,
+                "line": 4
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 4
+              }
+            },
+            "method": false,
+            "optional": true,
+            "proto": false,
+            "range": [
+              142,
+              161
+            ],
+            "static": false,
+            "type": "ObjectTypeProperty",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 21,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 15,
+                  "line": 4
+                }
+              },
+              "range": [
+                155,
+                161
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "variance": null
+          }
+        ],
+        "range": [
+          102,
+          201
+        ],
+        "trailingComments": [
+          {
+            "loc": {
+              "end": {
+                "column": 30,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 25,
+                "line": 5
+              }
+            },
+            "range": [
+              194,
+              199
+            ],
+            "type": "Line",
+            "value": " OK"
+          }
+        ],
+        "type": "ObjectTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 92,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        92
+      ],
+      "type": "Line",
+      "value": " TSX type literals retain computed keys and optionality while preserving index signatures."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 35,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 30,
+          "line": 3
+        }
+      },
+      "range": [
+        134,
+        139
+      ],
+      "type": "Line",
+      "value": " OK"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 28,
+          "line": 4
+        },
+        "source": null,
+        "start": {
+          "column": 23,
+          "line": 4
+        }
+      },
+      "range": [
+        163,
+        168
+      ],
+      "type": "Line",
+      "value": " OK"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 30,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 25,
+          "line": 5
+        }
+      },
+      "range": [
+        194,
+        199
+      ],
+      "type": "Line",
+      "value": " OK"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 2,
+      "line": 6
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 2
+    }
+  },
+  "range": [
+    93,
+    202
+  ],
+  "type": "Program"
+}

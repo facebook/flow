@@ -13,5 +13,5 @@ Object.entries(Color); // OK
 const spread = { ...Color }; // OK
 spread.Red satisfies number; // OK: 1
 
-declare function takesObj(o: { readonly [string]: unknown }): void;
+declare function takesObj(o: { readonly [key: string]: unknown }): void;
 takesObj(Color); // OK

@@ -2879,7 +2879,7 @@ fn object_type(
                 if variance_op.is_some() {
                     error_unexpected_variance(env, variance.as_ref())?;
                 }
-                if env.is_d_ts() {
+                if env.is_ts() {
                     computed_property(
                         env,
                         start_loc,
@@ -3094,10 +3094,10 @@ fn object_type(
         }
     }
 
-    /// Parse a computed-key member `[expr]...` in a `.d.ts` type, interface, or
-    /// `declare class` body, where `[expr]` is unambiguously a computed key (a
-    /// `.d.ts` body has no indexer to disambiguate from). The `[` has already
-    /// been consumed.
+    /// Parse a computed-key member `[expr]...` in a TypeScript type, interface,
+    /// or `declare class` body. Unlike Flow's unnamed indexers, TypeScript index
+    /// signatures have a `name: type` inside the brackets and are dispatched
+    /// separately. The `[` has already been consumed.
     fn computed_property(
         env: &mut ParserEnv,
         start_loc: Loc,
