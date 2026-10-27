@@ -2096,7 +2096,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:51:3
 
 Cannot cast `a` to `null | void` because
-`{b?: {c?: {d: number, ...}, e: number, f: ?(() => number), g: ?(() => number), ...}, ...}` [1] is incompatible with
+`{b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...}, ...}` [1] is incompatible with
 `null | void` [2]. [incompatible-type]
 
    refinements.js:51:3
@@ -2381,7 +2381,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:102:3
 
 Cannot cast `a` to `null | void` because
-`{b?: {c?: {d: number, ...}, e: number, f: ?(() => number), g: ?(() => number), ...}, ...}` [1] is incompatible with
+`{b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...}, ...}` [1] is incompatible with
 `null | void` [2]. [incompatible-type]
 
    refinements.js:102:3

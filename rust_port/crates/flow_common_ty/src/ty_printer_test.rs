@@ -203,6 +203,42 @@ mod tests {
         assert_eq!(result, "(this: string) => void");
     }
 
+    fn void_fun() -> Ty<ALoc> {
+        Ty::Fun(Box::new(FunT {
+            fun_this_param: None,
+            fun_params: vec![].into(),
+            fun_rest_param: None,
+            fun_return: ReturnT::ReturnType(Arc::new(Ty::Void)),
+            fun_type_params: None,
+            fun_static: Arc::new(Ty::Top),
+            fun_effect: FunEffect::Arbitrary,
+        }))
+    }
+
+    #[test]
+    fn test_maybe_function_omits_parens() {
+        let maybe_fun = Ty::<ALoc>::Union(
+            false,
+            Arc::new(Ty::Null),
+            Arc::new(Ty::Void),
+            vec![Arc::new(void_fun())].into(),
+        );
+        let result = string_of_t(&maybe_fun, &test_options());
+        assert_eq!(result, "?() => void");
+    }
+
+    #[test]
+    fn test_maybe_union_with_function_keeps_parens() {
+        let maybe_union = Ty::<ALoc>::Union(
+            false,
+            Arc::new(Ty::Null),
+            Arc::new(Ty::Void),
+            vec![Arc::new(void_fun()), Arc::new(Ty::Str)].into(),
+        );
+        let result = string_of_t(&maybe_union, &test_options());
+        assert_eq!(result, "?(() => void) | string");
+    }
+
     #[test]
     fn test_truncated_object_reports_omitted_properties() {
         let field = |name: &str| Prop::NamedProp {

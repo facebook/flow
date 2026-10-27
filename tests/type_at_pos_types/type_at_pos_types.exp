@@ -263,10 +263,10 @@ intersections.js:30:3,30:4
 
 At intersections.js:32:4
 Poly<
-  ?((
+  ?(
     LongLongLongLongLongLongLongLongName,
     AnotherLongLongLongLongLongLongLongLongName
-  ) => void),
+  ) => void,
 >
 
 'AnotherLongLongLongLongLongLongLongLongName' defined at intersections.js:22:20

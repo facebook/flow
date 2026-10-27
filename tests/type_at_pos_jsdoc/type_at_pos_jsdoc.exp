@@ -750,7 +750,7 @@ Flags: --strip-root
 **@see**  https://react.dev/reference/react/createContext
 (property) createContext: <T>(
   defaultValue: T,
-  calculateChangedBits: ?((a: T, b: T) => number)
+  calculateChangedBits: ?(a: T, b: T) => number
 ) => Context<T>
 
 'Context' defined at (lib) react.js:1368:9

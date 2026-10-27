@@ -133,7 +133,7 @@ At file.js:77:13
 file.js:77:13,77:15
 
 At file.js:83:13
-?((x: number) => number)
+?(x: number) => number
 file.js:83:13,83:15
 
 At file.js:92:14
@@ -231,11 +231,11 @@ At file.js:133:19
 file.js:133:19,133:21
 
 At file.js:139:14
-{foo?: ?(<X>(x: X) => X)}
+{foo?: ?<X>(x: X) => X}
 file.js:139:14,139:16
 
 At file.js:141:18
-?((x: number) => number)
+?(x: number) => number
 file.js:141:18,141:20
 
 At file.js:149:13
