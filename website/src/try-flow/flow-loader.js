@@ -172,6 +172,7 @@ const TSLIB_PATCHED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
   'lib.es2016.array.include.js',
   'lib.es2019.array.js',
   'lib.es2020.promise.js',
+  'lib.esnext.collection.js',
 ];
 
 function sourceUrlOf(

@@ -99,6 +99,7 @@ pub(super) const LIB_ES2024_SHAREDMEMORY_JS: &str = concat!(
 );
 pub(super) const LIB_ES2024_STRING_D_TS: &str = include_tslib!("lib.es2024.string.d.ts");
 pub(super) const LIB_ESNEXT_ARRAY_D_TS: &str = include_tslib!("lib.esnext.array.d.ts");
+pub(super) const LIB_ESNEXT_COLLECTION_D_TS: &str = include_tslib!("lib.esnext.collection.d.ts");
 pub(super) const LIB_ESNEXT_DECORATORS_D_TS: &str = include_tslib!("lib.esnext.decorators.d.ts");
 pub(super) const LIB_ESNEXT_DISPOSABLE_D_TS: &str = include_tslib!("lib.esnext.disposable.d.ts");
 pub(super) const LIB_ESNEXT_FLOAT16_D_TS: &str = include_tslib!("lib.esnext.float16.d.ts");
@@ -244,10 +245,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.es5.d.ts", include_tslib!("lib.es5.d.ts")),
     ("lib.es6.d.ts", include_tslib!("lib.es6.d.ts")),
     ("lib.esnext.array.d.ts", LIB_ESNEXT_ARRAY_D_TS),
-    (
-        "lib.esnext.collection.d.ts",
-        include_tslib!("lib.esnext.collection.d.ts"),
-    ),
+    ("lib.esnext.collection.d.ts", LIB_ESNEXT_COLLECTION_D_TS),
     ("lib.esnext.d.ts", include_tslib!("lib.esnext.d.ts")),
     ("lib.esnext.decorators.d.ts", LIB_ESNEXT_DECORATORS_D_TS),
     ("lib.esnext.disposable.d.ts", LIB_ESNEXT_DISPOSABLE_D_TS),

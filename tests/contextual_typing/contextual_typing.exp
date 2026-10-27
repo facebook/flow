@@ -485,8 +485,8 @@ Cannot cast `a` to `Set<empty>` because in type argument `T` [1]: `string` [2] i
           ^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:145:15
-   145| interface Set<T> {
+   <BUILTINS>/lib.esnext.collection.js:37:15
+    37| interface Set<T> {
                       ^ [1]
    implicit_instantiation.js:144:29
    144| function test12(foo: ?Array<string>) {
@@ -506,8 +506,8 @@ Cannot cast `b` to `Set<empty>` because in type argument `T` [1]: `string` [2] i
           ^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:145:15
-   145| interface Set<T> {
+   <BUILTINS>/lib.esnext.collection.js:37:15
+    37| interface Set<T> {
                       ^ [1]
    implicit_instantiation.js:144:29
    144| function test12(foo: ?Array<string>) {
