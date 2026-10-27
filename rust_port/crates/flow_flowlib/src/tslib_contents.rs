@@ -23,6 +23,7 @@ macro_rules! include_tslib {
     };
 }
 
+pub(super) const CSSTYPE_D_TS: &str = include_tslib!("csstype.d.ts");
 pub(super) const LIB_DECORATORS_D_TS: &str = include_tslib!("lib.decorators.d.ts");
 pub(super) const LIB_DECORATORS_LEGACY_D_TS: &str = include_tslib!("lib.decorators.legacy.d.ts");
 pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asynciterable.d.ts");

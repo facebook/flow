@@ -170,6 +170,10 @@ Flags: --pretty
     },
     {"name":"Attributes","type":"type Attributes = {key?: React$Key, ...}"},
     {
+      "name":"CSSProperties",
+      "type":"type CSSProperties = Properties<string | number>"
+    },
+    {
       "name":"ChildrenArray",
       "type":"type ChildrenArray<out T> = ReadonlyArray<ChildrenArray<T>> | T"
     },
