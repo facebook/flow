@@ -219,13 +219,9 @@ Cannot call `Promise` because function [1] requires another argument. [incompati
                    ^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:28:5
-           v---------------------------
-   28|     new<R = unknown>(callback: (
-   29|       resolve: (result: Promise<R> | R) => void,
-   30|       reject: (error: any) => void
-   31|     ) => unknown): Promise<R>;
-           ------------------------^ [1]
+   <BUILTINS>/lib.es2015.promise.js:32:5
+   32|     new <T = unknown>(executor: (resolve: (value: Promise<T> | T) => void, reject: (reason: any) => void) => unknown): Promise<T>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- globals.js:6:1
@@ -237,9 +233,9 @@ Cannot cast `y` to `empty` because `Promise<string>` [1] is incompatible with `e
        ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:31:20
-   31|     ) => unknown): Promise<R>;
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:32:120
+   32|     new <T = unknown>(executor: (resolve: (value: Promise<T> | T) => void, reject: (reason: any) => void) => unknown): Promise<T>;
+                                                                                                                              ^^^^^^^^^^ [1]
    globals.js:6:6
     6| y as empty;
             ^^^^^ [2]

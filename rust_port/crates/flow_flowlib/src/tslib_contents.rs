@@ -30,6 +30,7 @@ pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asyn
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
 pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
 pub(super) const LIB_ES2015_GENERATOR_D_TS: &str = include_tslib!("lib.es2015.generator.d.ts");
+pub(super) const LIB_ES2015_PROMISE_D_TS: &str = include_tslib!("lib.es2015.promise.d.ts");
 pub(super) const LIB_ES2015_PROXY_D_TS: &str = include_tslib!("lib.es2015.proxy.d.ts");
 pub(super) const LIB_ES2015_REFLECT_D_TS: &str = include_tslib!("lib.es2015.reflect.d.ts");
 pub(super) const LIB_ES2015_SYMBOL_D_TS: &str = include_tslib!("lib.es2015.symbol.d.ts");
@@ -128,10 +129,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2015.iterable.d.ts",
         include_tslib!("lib.es2015.iterable.d.ts"),
     ),
-    (
-        "lib.es2015.promise.d.ts",
-        include_tslib!("lib.es2015.promise.d.ts"),
-    ),
+    ("lib.es2015.promise.d.ts", LIB_ES2015_PROMISE_D_TS),
     ("lib.es2015.proxy.d.ts", LIB_ES2015_PROXY_D_TS),
     ("lib.es2015.reflect.d.ts", LIB_ES2015_REFLECT_D_TS),
     ("lib.es2015.symbol.d.ts", LIB_ES2015_SYMBOL_D_TS),

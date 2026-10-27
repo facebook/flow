@@ -811,7 +811,7 @@ References:
 
 Error ------------------------------------------------------------------------ new_typeof_constructor_interface.js:30:11
 
-Cannot call `resolve` with `'s'` bound to `result` because: [incompatible-type]
+Cannot call `resolve` with `'s'` bound to `value` because: [incompatible-type]
  - Either `"s"` [1], a primitive, cannot be used as a subtype of `Promise<number>` [2]. You can wrap it in
    `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `"s"` [1] is incompatible with `number` [3].
@@ -821,9 +821,9 @@ Cannot call `resolve` with `'s'` bound to `result` because: [incompatible-type]
                  ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:25
-   29|       resolve: (result: Promise<R> | R) => void,
-                               ^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.promise.js:32:51
+   32|     new <T = unknown>(executor: (resolve: (value: Promise<T> | T) => void, reject: (reason: any) => void) => unknown): Promise<T>;
+                                                         ^^^^^^^^^^ [2]
    new_typeof_constructor_interface.js:29:7
    29| new P<number>(resolve => {
              ^^^^^^ [3]

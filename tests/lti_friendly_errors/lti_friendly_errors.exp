@@ -11,9 +11,9 @@ References:
    <BUILTINS>/misc.js:216:19
    216| interface Promise<R> {
                           ^ [1]
-   <BUILTINS>/lib.es2015.promise.js:28:13
-    28|     new<R = unknown>(callback: (
-                    ^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.promise.js:32:14
+    32|     new <T = unknown>(executor: (resolve: (value: Promise<T> | T) => void, reject: (reason: any) => void) => unknown): Promise<T>;
+                     ^^^^^^^ [2]
    reason_of_inferred_targs.js:2:14
      2| p as Promise<string>; // error
                      ^^^^^^ [3]

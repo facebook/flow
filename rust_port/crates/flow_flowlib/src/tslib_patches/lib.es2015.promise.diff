@@ -1,0 +1,62 @@
+--- tslib/lib.es2015.promise.d.ts
++++ rust_port/crates/flow_flowlib/src/tslib_patches/lib.es2015.promise.d.ts
+@@ -29,7 +29,7 @@
+      * a resolve callback used to resolve the promise with a value or the result of another promise,
+      * and a reject callback used to reject the promise with a provided reason or error.
+      */
+-    new <T>(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
++    new <T = unknown>(executor: (resolve: (value: Promise<T> | T) => void, reject: (reason: any) => void) => unknown): Promise<T>;
+ 
+     /**
+      * Creates a Promise that is resolved with an array of results when all of the provided Promises
+@@ -37,10 +37,7 @@
+      * @param values An array of Promises.
+      * @returns A new Promise.
+      */
+-    all<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>;
+-
+-    // see: lib.es2015.iterable.d.ts
+-    // all<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>;
++    all<T extends Iterable<unknown>>(values: T): Promise<T extends readonly unknown[] ? { -readonly [P in keyof T]: Awaited<T[P]>; } : T extends Iterable<infer V> ? Awaited<V>[] : never>;
+ 
+     /**
+      * Creates a Promise that is resolved or rejected when any of the provided Promises are resolved
+@@ -48,35 +45,21 @@
+      * @param values An array of Promises.
+      * @returns A new Promise.
+      */
+-    race<T extends readonly unknown[] | []>(values: T): Promise<Awaited<T[number]>>;
+-
+-    // see: lib.es2015.iterable.d.ts
+-    // race<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
++    race<T>(values: Iterable<Promise<T> | T>): Promise<T>;
+ 
+     /**
+      * Creates a new rejected promise for the provided reason.
+      * @param reason The reason the promise was rejected.
+      * @returns A new rejected Promise.
+      */
+-    reject<T = never>(reason?: any): Promise<T>;
++    reject<T = unknown>(reason?: any): Promise<T>;
+ 
+     /**
+-     * Creates a new resolved promise.
+-     * @returns A resolved promise.
+-     */
+-    resolve(): Promise<void>;
+-    /**
+-     * Creates a new resolved promise for the provided value.
+-     * @param value A promise.
+-     * @returns A promise whose internal state matches the provided promise.
+-     */
+-    resolve<T>(value: T): Promise<Awaited<T>>;
+-    /**
+      * Creates a new resolved promise for the provided value.
+      * @param value A promise.
+      * @returns A promise whose internal state matches the provided promise.
+      */
+-    resolve<T>(value: T | PromiseLike<T>): Promise<Awaited<T>>;
++    resolve<T = unknown>(value: Promise<T> | T): Promise<T>;
+ }
+ 
+ declare var Promise: PromiseConstructor;
