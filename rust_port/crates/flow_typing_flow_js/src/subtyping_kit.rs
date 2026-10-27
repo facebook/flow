@@ -2116,6 +2116,17 @@ fn flow_obj_to_obj<'cx>(
                         polarity_mismatch_errs.extend(additional_polarity_mismatch_errs);
                     }
                 }
+                // TypeScript never checks a source index signature against an optional target
+                // property that the source does not declare.
+                (None, Some(_))
+                    if ustrictness_kind.is_typescript_loose()
+                        && matches!(
+                            up.deref(),
+                            PropertyInner::Field(box FieldData {
+                                type_: deref!(OptionalT { .. }),
+                                ..
+                            })
+                        ) => {}
                 (None, Some(dict)) if !flow_js_utils::is_dictionary_exempt(name) => {
                     let DictType {
                         key,

@@ -193,6 +193,75 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------- indexer_optional_props_usage.js:16:1
+
+Cannot cast `dict` to `SomeRequired` because in property `a`: `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   indexer_optional_props_usage.js:16:1
+   16| dict as SomeRequired; // ERROR: number vs string in `a`
+       ^^^^
+
+References:
+   indexer_optional_props_usage.js:10:41
+   10| declare const dict: {[string]: string | number};
+                                               ^^^^^^ [1]
+   indexer_optional_props_lib.ts:6:32
+    6| export type SomeRequired = {a: string; b?: string};
+                                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- indexer_optional_props_usage.js:19:1
+
+Cannot cast `dict` to `{readonly a?: string, readonly b?: string, ...}` because in property `a`: `number` [1] is
+incompatible with `string` [2]. [incompatible-type]
+
+   indexer_optional_props_usage.js:19:1
+   19| dict as {readonly a?: string, readonly b?: string, ...}; // ERROR: number vs string in `a` and `b`
+       ^^^^
+
+References:
+   indexer_optional_props_usage.js:10:41
+   10| declare const dict: {[string]: string | number};
+                                               ^^^^^^ [1]
+   indexer_optional_props_usage.js:19:23
+   19| dict as {readonly a?: string, readonly b?: string, ...}; // ERROR: number vs string in `a` and `b`
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- indexer_optional_props_usage.js:19:1
+
+Cannot cast `dict` to `{readonly a?: string, readonly b?: string, ...}` because in property `b`: `number` [1] is
+incompatible with `string` [2]. [incompatible-type]
+
+   indexer_optional_props_usage.js:19:1
+   19| dict as {readonly a?: string, readonly b?: string, ...}; // ERROR: number vs string in `a` and `b`
+       ^^^^
+
+References:
+   indexer_optional_props_usage.js:10:41
+   10| declare const dict: {[string]: string | number};
+                                               ^^^^^^ [1]
+   indexer_optional_props_usage.js:19:44
+   19| dict as {readonly a?: string, readonly b?: string, ...}; // ERROR: number vs string in `a` and `b`
+                                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- indexer_optional_props_usage.js:22:6
+
+Cannot cast object literal to `AllOptional` because in property `a`: `1` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   indexer_optional_props_usage.js:22:6
+   22| ({a: 1}) as AllOptional; // ERROR: number vs string in `a`
+            ^ [1]
+
+References:
+   indexer_optional_props_lib.ts:4:32
+    4| export type AllOptional = {a?: string; b?: string};
+                                      ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------- interface_extends_jslib.js:8:11
 
 Cannot extend `Omit<Base, "b">` [1] with `JsExt` [2] because `{a: number}` [1] is not inheritable. [incompatible-use]
@@ -461,4 +530,4 @@ References:
 
 
 
-Found 27 errors
+Found 31 errors
