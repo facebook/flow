@@ -108,7 +108,7 @@ fn array_element<'a>(
             value: NumberLiteral(i as f64, FlowSmolStr::new(i.to_string())),
         }),
     ));
-    let reason = mk_reason(VirtualReasonDesc::RArrayNthElement(i), loc.dupe());
+    let reason = mk_reason(None, loc.dupe());
     let new_init = init.as_ref().map(|init| {
         expression::Expression::new(expression::ExpressionInner::Member {
             loc: loc.dupe(),

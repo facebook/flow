@@ -933,7 +933,7 @@ pub fn merge_pattern<'cx>(
                 let __rc = file.patterns.get(*def).dupe();
                 __rc.get_forced(cx).dupe()
             };
-            let reason = reason::mk_reason(RArrayNthElement(*i as i32), loc.dupe());
+            let reason = reason::mk_reason(None, loc.dupe());
             let i = {
                 let reason = reason::mk_reason(RNumber, loc.dupe());
                 Type::new(type_::TypeInner::DefT(

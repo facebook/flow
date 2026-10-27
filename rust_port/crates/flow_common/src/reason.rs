@@ -322,7 +322,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RNumberLit(FlowSmolStr),
     RBigIntLit(FlowSmolStr),
     RBooleanLit(bool),
-    RArrayNthElement(i32),
     RInferredUnionElemArray {
         instantiable: bool,
         is_empty: bool,
@@ -407,7 +406,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RArrayLit => RArrayLit,
             REmptyArrayLit => REmptyArrayLit,
             RArrayType => RArrayType,
-            RArrayNthElement(i) => RArrayNthElement(*i),
             RROArrayType => RROArrayType,
             RTupleType => RTupleType,
             RTupleElement => RTupleElement,
@@ -1199,7 +1197,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RArrayLit => "array literal".to_string(),
         REmptyArrayLit => "empty array literal".to_string(),
         RArrayType => "array type".to_string(),
-        RArrayNthElement(i) => format!("element {}", i),
         RInferredUnionElemArray { .. } => "inferred union of array element types \
 (alternatively, provide an annotation to summarize the array element type)"
             .to_string(),

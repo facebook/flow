@@ -373,10 +373,7 @@ fn mk_selector_reason_has_default<'cx>(
             ));
             (
                 type_::Selector::Elem(key),
-                reason::mk_reason(
-                    reason::VirtualReasonDesc::RArrayNthElement(*n as i32),
-                    loc.dupe(),
-                ),
+                reason::mk_reason(None, loc.dupe()),
                 *has_default,
             )
         }
