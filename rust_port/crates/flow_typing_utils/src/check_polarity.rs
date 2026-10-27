@@ -283,6 +283,7 @@ fn check_polarity_impl<'cx>(
                         trace,
                         seen,
                         tparams,
+                        polarity,
                         Polarity::Positive,
                         first_spread,
                         spread,
@@ -313,6 +314,7 @@ fn check_polarity_impl<'cx>(
                 trace,
                 seen,
                 tparams,
+                polarity,
                 Polarity::Neutral,
                 first_spread,
                 spread,
@@ -761,9 +763,10 @@ fn check_polarity_typeparam<'cx>(
     Ok(())
 }
 
-// The elements of a tuple type spread end up as elements of the resulting tuple, with
-// `elem_polarity`: the elements before the first spread, the elements of the spread arguments, and
-// the elements after it. The spread itself is not evaluated, since evaluating it with type
+// The elements of a tuple type spread end up as elements of the resulting tuple: the elements of
+// the spread arguments with `elem_polarity`, and the tuple type's own elements, before and after
+// the spreads, with their own variance at the tuple type's `polarity`, unless `elem_polarity`
+// makes them read-only. The spread itself is not evaluated, since evaluating it with type
 // parameters reports errors at the definition.
 fn check_tuple_spread_polarity<'cx>(
     cx: &mut Context<'cx>,
@@ -771,6 +774,7 @@ fn check_tuple_spread_polarity<'cx>(
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
+    polarity: Polarity,
     elem_polarity: Polarity,
     first_spread: &Type,
     spread: &DestructorSpreadTupleTypeData,
@@ -780,16 +784,22 @@ fn check_tuple_spread_polarity<'cx>(
         unresolved,
         ..
     } = spread;
+    let own_polarity = |own: Polarity| match elem_polarity {
+        Polarity::Positive => Polarity::Positive,
+        Polarity::Neutral | Polarity::Negative => Polarity::mult(polarity, own),
+    };
     check_spread_argument_polarity(cx, env, trace, seen, tparams, elem_polarity, first_spread)?;
     for param in resolved.iter() {
         if let ResolvedParam::ResolvedArg(box ResolvedArgData(elem, _)) = param {
-            check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, &elem.t)?;
+            let polarity = own_polarity(elem.polarity);
+            check_polarity_impl(cx, env, trace, seen, tparams, polarity, &elem.t)?;
         }
     }
     for param in unresolved.iter() {
         match param {
             UnresolvedParam::UnresolvedArg(box UnresolvedArgData(elem, _)) => {
-                check_polarity_impl(cx, env, trace, seen, tparams, elem_polarity, &elem.t)?;
+                let polarity = own_polarity(elem.polarity);
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, &elem.t)?;
             }
             UnresolvedParam::UnresolvedSpreadArg(t) => {
                 check_spread_argument_polarity(cx, env, trace, seen, tparams, elem_polarity, t)?;

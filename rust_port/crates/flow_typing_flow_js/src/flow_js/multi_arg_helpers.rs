@@ -619,8 +619,10 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 let (mut args, seen_opt) = elements.iter().fold(
                                     (args, seen_opt),
                                     |(mut args, seen_opt), elem| {
+                                        // A spread copies its elements into writable ones.
                                         let new_elem = TupleElement {
                                             t: propagate_dro(cx, elem.t.dupe(), arrtype),
+                                            polarity: Polarity::Neutral,
                                             ..elem.clone()
                                         };
                                         args.push(ResolvedParam::ResolvedArg(Box::new(
@@ -660,6 +662,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                     |(mut args, seen_opt), elem| {
                                         let new_elem = TupleElement {
                                             t: propagate_dro(cx, elem.t.dupe(), arrtype),
+                                            polarity: Polarity::Neutral,
                                             ..elem.clone()
                                         };
                                         args.push(ResolvedParam::ResolvedArg(Box::new(
@@ -875,13 +878,9 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         optional,
                                         name,
                                         reason,
-                                        polarity: _,
+                                        polarity,
                                     } = elem;
-                                    let polarity = if as_const {
-                                        Polarity::Positive
-                                    } else {
-                                        Polarity::Neutral
-                                    };
+                                    let polarity = Polarity::apply_const(as_const, *polarity);
                                     let new_elem = TupleElement {
                                         t: t.dupe(),
                                         optional: *optional,
