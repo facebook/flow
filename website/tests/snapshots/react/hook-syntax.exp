@@ -24,11 +24,11 @@ The return value of a React hook [1] cannot be written to.
                  ^^^
 
 References:
-   <BUILTINS>/react.js:1163:26
+   <BUILTINS>/react.js:1184:26
                                   v---
-   1163|     declare hook useState<S>(
-   1164|       initialState: (() => S) | S,
-   1165|     ): [S, ReactSetStateFunction<S>];
+   1184|     declare hook useState<S>(
+   1185|       initialState: (() => S) | S,
+   1186|     ): [S, ReactSetStateFunction<S>];
              -------------------------------^ [1]
 
 Error -------------------------------------------------------------------------- -:13:8

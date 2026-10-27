@@ -8,8 +8,8 @@ is incompatible with exact `{}` [3]. [incompatible-exact]
                             ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:40
-   427|   declare export type ComponentType<in P extends {...}> = component(...P);
+   <BUILTINS>/react.js:447:40
+   447|   declare export type ComponentType<in P extends {...}> = component(...P);
                                                ^ [1]
    test.js:4:34
      4|   Component: React.ComponentType<{...P, ...{...}, ...}>,

@@ -21,8 +21,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:973:28
-   973|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:994:28
+   994|     declare class Component<Props, State = void> {
                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -35,8 +35,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:973:28
-   973|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:994:28
+   994|     declare class Component<Props, State = void> {
                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -100,49 +100,49 @@ Cannot extend `Component<Props, State>` [1] with `Foo` [2] because in property `
 `{y_: string, ...}` [3] is incompatible with `null` [4]. [incompatible-type]
 
    classes.js:23:15
-    23|   setState(o: { y_: string, ... }): void { }
-                      ^^^^^^^^^^^^^^^^^^^ [3]
+     23|   setState(o: { y_: string, ... }): void { }
+                       ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    classes.js:7:19
-     7| class Foo extends React.Component<Props, State> {
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+      7| class Foo extends React.Component<Props, State> {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:7:1
-        v------------------------------------------------
-     7| class Foo extends React.Component<Props, State> {
-     8|   static defaultProps: DefaultProps;
-     9|
-    10|   is_mounted: boolean;
-    11|
-    12|   static bar(): void {}
-    13|
-    14|   qux(): void {
-    15|     var _: string = this.props.x;
-    16|   }
-    17|
-    18|   constructor(props: Props) {
-    19|     super(props);
-    20|     this.state = { y: "" };
-    21|   }
-    22|
-    23|   setState(o: { y_: string, ... }): void { }
-    24|
-    25|   componentDidMount(): void {
-    26|     this.is_mounted = true;
-    27|   }
-    28|
-    29|   componentWillReceiveProps(
-    30|     nextProps: any,
-    31|     nextContext: any
-    32|   ): void {
-    33|     this.qux();
-    34|   }
-    35|
-    36| }
-        ^ [2]
-   <BUILTINS>/react.js:982:23
-   982|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+         v------------------------------------------------
+      7| class Foo extends React.Component<Props, State> {
+      8|   static defaultProps: DefaultProps;
+      9|
+     10|   is_mounted: boolean;
+     11|
+     12|   static bar(): void {}
+     13|
+     14|   qux(): void {
+     15|     var _: string = this.props.x;
+     16|   }
+     17|
+     18|   constructor(props: Props) {
+     19|     super(props);
+     20|     this.state = { y: "" };
+     21|   }
+     22|
+     23|   setState(o: { y_: string, ... }): void { }
+     24|
+     25|   componentDidMount(): void {
+     26|     this.is_mounted = true;
+     27|   }
+     28|
+     29|   componentWillReceiveProps(
+     30|     nextProps: any,
+     31|     nextContext: any
+     32|   ): void {
+     33|     this.qux();
+     34|   }
+     35|
+     36| }
+         ^ [2]
+   <BUILTINS>/react.js:1003:23
+   1003|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
@@ -151,49 +151,49 @@ Cannot extend `Component<Props, State>` [1] with `Foo` [2] because in property `
 `{y_: string, ...}` [3] is incompatible with `void` [4]. [incompatible-type]
 
    classes.js:23:15
-    23|   setState(o: { y_: string, ... }): void { }
-                      ^^^^^^^^^^^^^^^^^^^ [3]
+     23|   setState(o: { y_: string, ... }): void { }
+                       ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    classes.js:7:19
-     7| class Foo extends React.Component<Props, State> {
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+      7| class Foo extends React.Component<Props, State> {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:7:1
-        v------------------------------------------------
-     7| class Foo extends React.Component<Props, State> {
-     8|   static defaultProps: DefaultProps;
-     9|
-    10|   is_mounted: boolean;
-    11|
-    12|   static bar(): void {}
-    13|
-    14|   qux(): void {
-    15|     var _: string = this.props.x;
-    16|   }
-    17|
-    18|   constructor(props: Props) {
-    19|     super(props);
-    20|     this.state = { y: "" };
-    21|   }
-    22|
-    23|   setState(o: { y_: string, ... }): void { }
-    24|
-    25|   componentDidMount(): void {
-    26|     this.is_mounted = true;
-    27|   }
-    28|
-    29|   componentWillReceiveProps(
-    30|     nextProps: any,
-    31|     nextContext: any
-    32|   ): void {
-    33|     this.qux();
-    34|   }
-    35|
-    36| }
-        ^ [2]
-   <BUILTINS>/react.js:982:23
-   982|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+         v------------------------------------------------
+      7| class Foo extends React.Component<Props, State> {
+      8|   static defaultProps: DefaultProps;
+      9|
+     10|   is_mounted: boolean;
+     11|
+     12|   static bar(): void {}
+     13|
+     14|   qux(): void {
+     15|     var _: string = this.props.x;
+     16|   }
+     17|
+     18|   constructor(props: Props) {
+     19|     super(props);
+     20|     this.state = { y: "" };
+     21|   }
+     22|
+     23|   setState(o: { y_: string, ... }): void { }
+     24|
+     25|   componentDidMount(): void {
+     26|     this.is_mounted = true;
+     27|   }
+     28|
+     29|   componentWillReceiveProps(
+     30|     nextProps: any,
+     31|     nextContext: any
+     32|   ): void {
+     33|     this.qux();
+     34|   }
+     35|
+     36| }
+         ^ [2]
+   <BUILTINS>/react.js:1003:23
+   1003|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
@@ -204,49 +204,49 @@ Cannot extend `Component<Props, State>` [1] with `Foo` [2] because in property `
 Functions without statics are not compatible with objects.
 
    classes.js:23:15
-    23|   setState(o: { y_: string, ... }): void { }
-                      ^^^^^^^^^^^^^^^^^^^ [3]
+     23|   setState(o: { y_: string, ... }): void { }
+                       ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    classes.js:7:19
-     7| class Foo extends React.Component<Props, State> {
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+      7| class Foo extends React.Component<Props, State> {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:7:1
-        v------------------------------------------------
-     7| class Foo extends React.Component<Props, State> {
-     8|   static defaultProps: DefaultProps;
-     9|
-    10|   is_mounted: boolean;
-    11|
-    12|   static bar(): void {}
-    13|
-    14|   qux(): void {
-    15|     var _: string = this.props.x;
-    16|   }
-    17|
-    18|   constructor(props: Props) {
-    19|     super(props);
-    20|     this.state = { y: "" };
-    21|   }
-    22|
-    23|   setState(o: { y_: string, ... }): void { }
-    24|
-    25|   componentDidMount(): void {
-    26|     this.is_mounted = true;
-    27|   }
-    28|
-    29|   componentWillReceiveProps(
-    30|     nextProps: any,
-    31|     nextContext: any
-    32|   ): void {
-    33|     this.qux();
-    34|   }
-    35|
-    36| }
-        ^ [2]
-   <BUILTINS>/react.js:982:52
-   982|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+         v------------------------------------------------
+      7| class Foo extends React.Component<Props, State> {
+      8|   static defaultProps: DefaultProps;
+      9|
+     10|   is_mounted: boolean;
+     11|
+     12|   static bar(): void {}
+     13|
+     14|   qux(): void {
+     15|     var _: string = this.props.x;
+     16|   }
+     17|
+     18|   constructor(props: Props) {
+     19|     super(props);
+     20|     this.state = { y: "" };
+     21|   }
+     22|
+     23|   setState(o: { y_: string, ... }): void { }
+     24|
+     25|   componentDidMount(): void {
+     26|     this.is_mounted = true;
+     27|   }
+     28|
+     29|   componentWillReceiveProps(
+     30|     nextProps: any,
+     31|     nextContext: any
+     32|   ): void {
+     33|     this.qux();
+     34|   }
+     35|
+     36| }
+         ^ [2]
+   <BUILTINS>/react.js:1003:52
+   1003|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
@@ -434,8 +434,8 @@ Cannot get `this.state.x` because property `x` is missing in `void` [1]. [incomp
                               ^
 
 References:
-   <BUILTINS>/react.js:973:44
-   973|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:994:44
+   994|     declare class Component<Props, State = void> {
                                                    ^^^^ [1]
 
 
