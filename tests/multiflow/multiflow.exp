@@ -379,8 +379,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:6:29
 
-Cannot call `fun` with boolean literal `true` bound to `y` because `true` [1] is incompatible with `123` [2].
-[incompatible-type]
+Cannot call `fun` with `true` bound to `y` because `true` [1] is incompatible with `123` [2]. [incompatible-type]
 
    spread.js:6:29
    6| fun(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123 and 123 is unused
@@ -394,8 +393,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:17:42
 
-Cannot call `funWithRestArray` with boolean literal `true` bound to `y` because `true` [1] is incompatible with
-`123` [2]. [incompatible-type]
+Cannot call `funWithRestArray` with `true` bound to `y` because `true` [1] is incompatible with `123` [2].
+[incompatible-type]
 
    spread.js:17:42
    17| funWithRestArray(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123

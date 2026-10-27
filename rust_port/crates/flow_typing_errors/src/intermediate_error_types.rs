@@ -1213,17 +1213,17 @@ pub enum Frame<L: Dupe> {
     FrameEnumRepresentationType,
     FrameFunNthArgument {
         n: i32,
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, MessageTypeReferenceData<L>)>,
     },
     FrameFunThisArgument {
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, MessageTypeReferenceData<L>)>,
     },
     FrameFunNthParam {
         n: i32,
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, MessageTypeReferenceData<L>)>,
     },
     FrameFunThisParam {
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, MessageTypeReferenceData<L>)>,
     },
     FrameIndexerProperty {
         incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
@@ -1267,9 +1267,9 @@ pub enum AssignTargetDesc<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
-pub enum AssignInitDesc<L: Dupe> {
+pub enum ValueDesc<L: Dupe> {
     Reason(Option<VirtualReasonDesc<L>>),
-    Default(ErrorTypeDesc<L>),
+    Type(ErrorTypeDesc<L>),
 }
 
 #[derive(
@@ -1290,19 +1290,19 @@ pub enum RootMessage<L: Dupe> {
     },
     RootCannotAddComputedProperty,
     RootCannotAssign {
-        init: AssignInitDesc<L>,
+        init: ValueDesc<L>,
         target: Option<AssignTargetDesc<L>>,
     },
     RootCannotCall(Option<VirtualReasonDesc<L>>),
     RootCannotCallStandalone(Option<VirtualReasonDesc<L>>),
     RootCannotCallWithNamedParam {
         fn_: Option<VirtualReasonDesc<L>>,
-        lower: Option<VirtualReasonDesc<L>>,
+        lower: ValueDesc<L>,
         name: FlowSmolStr,
     },
     RootCannotCallWithNthParam {
         fn_: Option<VirtualReasonDesc<L>>,
-        lower: Option<VirtualReasonDesc<L>>,
+        lower: ValueDesc<L>,
         n: i32,
     },
     RootCannotCallObjectAssign(Option<VirtualReasonDesc<L>>),

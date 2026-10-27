@@ -1394,11 +1394,15 @@ where
                 name,
                 lower,
                 upper,
+                lower_t,
+                upper_t,
             }) => FunParam(Box::new(FunParamData {
                 n,
                 name,
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
+                lower_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_t),
+                upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
             })),
             FunRestParam { lower, upper } => FunRestParam {
                 lower: mod_reason(lower),

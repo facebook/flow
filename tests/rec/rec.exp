@@ -123,7 +123,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
 Cannot call `cases[type.kind]` because: [incompatible-type]
- - in at least one member of `"a" | "b" | "c"` [1]: `type` [2] is incompatible with `A` [3]
+ - in at least one member of `"a" | "b" | "c"` [1]: `Type` [2] is incompatible with `A` [3]
     - in the first argument > property `kind`: `"b"` [4] is not exactly the same as `"a"` [5]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
@@ -159,7 +159,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
 Cannot call `cases[type.kind]` because: [incompatible-type]
- - in at least one member of `"a" | "b" | "c"` [1]: `type` [2] is incompatible with `A` [3]
+ - in at least one member of `"a" | "b" | "c"` [1]: `Type` [2] is incompatible with `A` [3]
     - in the first argument > property `kind`: `"c"` [4] is not exactly the same as `"a"` [5]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,

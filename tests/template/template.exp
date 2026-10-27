@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ tagged_template.js:5:12
 
-Cannot call `tag` with string bound to `x` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot call `tag` with `string` bound to `x` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    tagged_template.js:5:12
    5|   tag`foo${'bad'}bar${2}`; // ERROR: string !~> number

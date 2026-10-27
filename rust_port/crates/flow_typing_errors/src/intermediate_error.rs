@@ -84,7 +84,6 @@ use super::error_message::util_use_op_of_msg;
 use super::flow_error::ErrorSet;
 use super::flow_error::FlowError;
 use super::intermediate_error_types::AccessChainSegment;
-use super::intermediate_error_types::AssignInitDesc;
 use super::intermediate_error_types::AssignTargetDesc;
 use super::intermediate_error_types::ErrorMessage;
 use super::intermediate_error_types::Explanation;
@@ -169,6 +168,7 @@ use super::intermediate_error_types::TypeGuardReferenceKind;
 use super::intermediate_error_types::UnnecessaryInvariantConditionKind;
 use super::intermediate_error_types::UnrecognizedAssertionCallee;
 use super::intermediate_error_types::ValueAsTypeReference;
+use super::intermediate_error_types::ValueDesc;
 use crate::error_message::CallTypeArityCallee;
 use crate::error_message::EExpectedBigIntLitData;
 use crate::error_message::EExpectedBooleanLitData;
@@ -452,11 +452,15 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             name,
             lower,
             upper,
+            lower_t,
+            upper_t,
         }) => FunParam(Box::new(FunParamData {
             n,
             name,
             lower: upper,
             upper: lower,
+            lower_t: upper_t,
+            upper_t: lower_t,
         })),
         FunRestParam { lower, upper } => FunRestParam {
             lower: upper,
@@ -787,6 +791,17 @@ fn printed_type_desc<L: Dupe>(type_desc: &TypeOrTypeDescT<L>) -> ErrorTypeDesc<L
     match type_desc {
         TypeOrTypeDescT::Type(_) => ErrorTypeDesc::Unknown,
         TypeOrTypeDescT::TypeDesc(desc) => desc.clone(),
+    }
+}
+
+/// References a printed type at the location `reason` would be referenced at.
+fn printed_type_reference<L: Dupe>(
+    reason: &VirtualReason<L>,
+    type_desc: &TypeOrTypeDescT<L>,
+) -> MessageTypeReferenceData<L> {
+    MessageTypeReferenceData {
+        loc: reason.annot_loc().unwrap_or(reason.def_loc()).dupe(),
+        desc: printed_type_desc(type_desc),
     }
 }
 
@@ -1576,14 +1591,12 @@ where
                             VirtualRootUseOp::AssignVar { var, init } => {
                                 let (init_loc, init) = match init {
                                     AssignVarInit::Reason(reason) => {
-                                        (&reason.loc, AssignInitDesc::Reason(reason.desc.clone()))
+                                        (&reason.loc, ValueDesc::Reason(reason.desc.clone()))
                                     }
                                     AssignVarInit::Default(box AssignVarDefaultData {
                                         loc,
                                         default,
-                                    }) => {
-                                        (loc, AssignInitDesc::Default(printed_type_desc(default)))
-                                    }
+                                    }) => (loc, ValueDesc::Type(printed_type_desc(default))),
                                 };
                                 root_at_loc(
                                     loc,
@@ -2036,7 +2049,7 @@ where
                                     frames,
                                     loc_reason,
                                     RootMessage::RootCannotAssign {
-                                        init: AssignInitDesc::Reason(value.desc.clone()),
+                                        init: ValueDesc::Reason(value.desc.clone()),
                                         target: Some(AssignTargetDesc::Variable(prop.desc.clone())),
                                     },
                                     custom_error_message,
@@ -2236,6 +2249,7 @@ where
                             n,
                             name,
                             lower: lower_prime,
+                            lower_t,
                             ..
                         }) = frame_rc.as_ref()
                             && let VirtualUseOp::Op(op_rc) = inner_use_op.as_ref()
@@ -2254,22 +2268,24 @@ where
                                 fn_,
                                 ..
                             }) => {
-                                // Get the actual argument at position n-1, or fallback to lower_prime
-                                let lower = if (*n as usize) <= args.len() {
-                                    &args[(*n as usize) - 1]
+                                // Get the actual argument at position n-1, or fallback to the
+                                // type of lower_prime
+                                let (lower, lower_desc) = if (*n as usize) <= args.len() {
+                                    let arg = &args[(*n as usize) - 1];
+                                    (arg, ValueDesc::Reason(arg.desc.clone()))
                                 } else {
-                                    lower_prime
+                                    (lower_prime, ValueDesc::Type(printed_type_desc(lower_t)))
                                 };
 
                                 let root_msg = match name {
                                     Some(name_str) => RootMessage::RootCannotCallWithNamedParam {
                                         fn_: fn_.desc.clone(),
-                                        lower: lower.desc.clone(),
+                                        lower: lower_desc,
                                         name: name_str.clone(),
                                     },
                                     None => RootMessage::RootCannotCallWithNthParam {
                                         fn_: fn_.desc.clone(),
-                                        lower: lower.desc.clone(),
+                                        lower: lower_desc,
                                         n: *n,
                                     },
                                 };
@@ -2783,6 +2799,8 @@ where
                             lower,
                             upper,
                             name,
+                            lower_t,
+                            upper_t,
                         }) if matches!(
                             inner.as_ref(),
                             VirtualUseOp::Frame(f_rc, _) if matches!(
@@ -2802,7 +2820,13 @@ where
                             let incompatibility_pair = opt_incompatibility_pair(
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
-                            );
+                            )
+                            .map(|(lower, upper)| {
+                                (
+                                    printed_type_reference(&lower, lower_t),
+                                    printed_type_reference(&upper, upper_t),
+                                )
+                            });
 
                             let frame = if name.as_deref() == Some("this") {
                                 ErrorFrame::FrameFunThisParam {
@@ -2834,6 +2858,8 @@ where
                             lower,
                             upper,
                             name,
+                            lower_t,
+                            upper_t,
                         }) => {
                             let frame_loc = loc_of_aloc(&lower.loc);
                             let final_loc = if frame_loc.contains(&loc) {
@@ -2846,7 +2872,13 @@ where
                             let incompatibility_pair = opt_incompatibility_pair(
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
-                            );
+                            )
+                            .map(|(lower, upper)| {
+                                (
+                                    printed_type_reference(&lower, lower_t),
+                                    printed_type_reference(&upper, upper_t),
+                                )
+                            });
 
                             let frame = if name.as_deref() == Some("this") {
                                 ErrorFrame::FrameFunThisArgument {
@@ -4232,6 +4264,11 @@ where
         ErrorTypeDesc::Unknown => code("?"),
     };
 
+    let desc_of_value_desc = |value: &ValueDesc<L>| match value {
+        ValueDesc::Reason(desc) => friendly::desc_of_reason_desc(desc.as_ref()),
+        ValueDesc::Type(desc) => desc_of_type_desc(desc),
+    };
+
     let desc_of_value_as_type_reference =
         |reference: Option<&ValueAsTypeReference>, value: &MessageTypeReferenceData<L>| {
             match reference {
@@ -4826,6 +4863,23 @@ where
                     None
                 }
             };
+        let map_typed_incompatibility = |pair: &Option<(
+            MessageTypeReferenceData<L>,
+            MessageTypeReferenceData<L>,
+        )>|
+         -> Option<friendly::Message<Loc>> {
+            if include_incompatibility_pair {
+                pair.as_ref().map(|(l, u)| {
+                    friendly::Message(vec![
+                        ref_of_type_desc(&l.loc, &l.desc),
+                        text(" is incompatible with "),
+                        ref_of_type_desc(&u.loc, &u.desc),
+                    ])
+                })
+            } else {
+                None
+            }
+        };
 
         match frame {
             FrameAnonymous => (None, friendly::Message(vec![])),
@@ -4884,26 +4938,26 @@ where
                 n,
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the "), text(&ordinal(*n)), text(" argument")]),
             ),
             FrameFunThisArgument {
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the "), code("this"), text(" argument")]),
             ),
             FrameFunNthParam {
                 n,
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the "), text(&ordinal(*n)), text(" parameter")]),
             ),
             FrameFunThisParam {
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the "), code("this"), text(" parameter")]),
             ),
             FrameIndexerProperty {
@@ -5127,38 +5181,30 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![text("Cannot add computed property")]),
                 ),
-                RootMessage::RootCannotAssign { init, target } => {
-                    let init = match init {
-                        AssignInitDesc::Reason(desc) => {
-                            friendly::desc_of_reason_desc(desc.as_ref())
-                        }
-                        AssignInitDesc::Default(desc) => desc_of_type_desc(desc),
-                    };
-                    match target {
-                        None => (
-                            RootKind::OperationRoot,
-                            friendly::Message(vec![
-                                text("Cannot assign "),
-                                init,
-                                text(" to variable"),
-                            ]),
-                        ),
-                        Some(target) => (
-                            RootKind::OperationRoot,
-                            friendly::Message(vec![
-                                text("Cannot assign "),
-                                init,
-                                text(" to "),
-                                match target {
-                                    AssignTargetDesc::Variable(desc) => {
-                                        friendly::desc_of_reason_desc(desc.as_ref())
-                                    }
-                                    AssignTargetDesc::Annotation(desc) => desc_of_type_desc(desc),
-                                },
-                            ]),
-                        ),
-                    }
-                }
+                RootMessage::RootCannotAssign { init, target } => match target {
+                    None => (
+                        RootKind::OperationRoot,
+                        friendly::Message(vec![
+                            text("Cannot assign "),
+                            desc_of_value_desc(init),
+                            text(" to variable"),
+                        ]),
+                    ),
+                    Some(target) => (
+                        RootKind::OperationRoot,
+                        friendly::Message(vec![
+                            text("Cannot assign "),
+                            desc_of_value_desc(init),
+                            text(" to "),
+                            match target {
+                                AssignTargetDesc::Variable(desc) => {
+                                    friendly::desc_of_reason_desc(desc.as_ref())
+                                }
+                                AssignTargetDesc::Annotation(desc) => desc_of_type_desc(desc),
+                            },
+                        ]),
+                    ),
+                },
                 RootMessage::RootCannotCall(fn_) => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
@@ -5180,7 +5226,7 @@ where
                         text("Cannot call "),
                         friendly::desc_of_reason_desc(fn_.as_ref()),
                         text(" with "),
-                        friendly::desc_of_reason_desc(lower.as_ref()),
+                        desc_of_value_desc(lower),
                         text(" bound to "),
                         code(name),
                     ]),
@@ -5191,7 +5237,7 @@ where
                         text("Cannot call "),
                         friendly::desc_of_reason_desc(fn_.as_ref()),
                         text(" with "),
-                        friendly::desc_of_reason_desc(lower.as_ref()),
+                        desc_of_value_desc(lower),
                         text(" bound to "),
                         text(&format!("the {} parameter", ordinal(*n))),
                     ]),

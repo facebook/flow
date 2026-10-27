@@ -53,6 +53,7 @@ use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::ComponentRestParamCompatibilityData;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::EvalMappedTypeData;
+use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::IndexedTypeAccessData;
 use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
 use flow_typing_type::type_::MergedDeclarationData;
@@ -7090,6 +7091,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                 custom_error_loc: custom_error_loc.dupe(),
                             }),
                         )),
+                        VirtualFrameUseOp::FunParam(box FunParamData {
+                            n,
+                            name,
+                            lower,
+                            upper,
+                            lower_t,
+                            upper_t,
+                        }) => Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
+                            n: *n,
+                            name: name.dupe(),
+                            lower: lower.dupe(),
+                            upper: upper.dupe(),
+                            lower_t: f(lower_t.clone()),
+                            upper_t: f(upper_t.clone()),
+                        }))),
                         VirtualFrameUseOp::UnionRepresentative(box UnionRepresentativeData {
                             loc,
                             reference_loc,

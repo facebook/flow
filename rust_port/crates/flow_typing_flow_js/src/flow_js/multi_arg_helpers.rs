@@ -172,6 +172,8 @@ fn multiflow_args<'cx>(
                             name: name.dupe(),
                             lower: reason_of_t(&tin).dupe(),
                             upper: reason_of_t(&tout).dupe(),
+                            lower_t: flow_js_utils::type_or_type_desc_for_error(&tin),
+                            upper_t: flow_js_utils::type_or_type_desc_for_error(&tout),
                         }))),
                         Arc::new(use_op.dupe()),
                     );

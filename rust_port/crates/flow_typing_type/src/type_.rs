@@ -1274,6 +1274,8 @@ pub struct FunParamData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub name: Option<FlowSmolStr>,
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
+    pub lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
 }
 
 #[derive(

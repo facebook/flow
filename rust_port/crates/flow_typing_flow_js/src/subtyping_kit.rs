@@ -590,6 +590,8 @@ fn funt_to_funt_check_this_contravariant<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
+    lower: &Type,
+    upper: &Type,
     lreason: &Reason,
     ft1: &flow_typing_type::type_::FunType,
     ureason: &Reason,
@@ -602,6 +604,8 @@ fn funt_to_funt_check_this_contravariant<'cx>(
             name: Some(FlowSmolStr::new_inline("this")),
             lower: lreason.dupe(),
             upper: ureason.dupe(),
+            lower_t: flow_js_utils::type_or_type_desc_for_error(lower),
+            upper_t: flow_js_utils::type_or_type_desc_for_error(upper),
         }))),
         Arc::new(use_op.dupe()),
     );
@@ -992,12 +996,16 @@ fn funt_to_funt_check_params_bivariant<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
+    lower: &Type,
+    upper: &Type,
     lreason: &Reason,
     ureason: &Reason,
     ft1: &flow_typing_type::type_::FunType,
     ft2: &flow_typing_type::type_::FunType,
     use_op: &UseOp,
 ) -> Result<(), FlowJsException> {
+    let lower_t = flow_js_utils::type_or_type_desc_for_error(lower);
+    let upper_t = flow_js_utils::type_or_type_desc_for_error(upper);
     let mut n: i32 = 1;
     let mut params1: &[flow_typing_type::type_::FunParam] = &ft1.params;
     let mut params2: &[flow_typing_type::type_::FunParam] = &ft2.params;
@@ -1035,6 +1043,8 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                                 name: name1.dupe(),
                                 lower: lreason.dupe(),
                                 upper: ureason.dupe(),
+                                lower_t: lower_t.clone(),
+                                upper_t: upper_t.clone(),
                             }))),
                             Arc::new(use_op.dupe()),
                         );
@@ -1075,6 +1085,8 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                         name: name2.dupe(),
                         lower: lreason.dupe(),
                         upper: ureason.dupe(),
+                        lower_t: lower_t.clone(),
+                        upper_t: upper_t.clone(),
                     }))),
                     Arc::new(use_op.dupe()),
                 );
@@ -1125,11 +1137,13 @@ fn funt_to_funt_method_bivariant<'cx>(
         ft2,
         &|cx, use_op| {
             funt_to_funt_check_this_contravariant(
-                cx, env, trace, lreason, ft1, ureason, ft2, use_op,
+                cx, env, trace, lower, upper, lreason, ft1, ureason, ft2, use_op,
             )
         },
         &|cx, use_op| {
-            funt_to_funt_check_params_bivariant(cx, env, trace, lreason, ureason, ft1, ft2, use_op)
+            funt_to_funt_check_params_bivariant(
+                cx, env, trace, lower, upper, lreason, ureason, ft1, ft2, use_op,
+            )
         },
     )
 }
@@ -5248,7 +5262,7 @@ pub fn rec_sub_t<'cx>(
                 ft2,
                 &|cx, use_op| {
                     funt_to_funt_check_this_contravariant(
-                        cx, env, trace, lreason, ft1, ureason, ft2, use_op,
+                        cx, env, trace, l, u, lreason, ft1, ureason, ft2, use_op,
                     )
                 },
                 &|cx, use_op| {
