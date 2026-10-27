@@ -256,7 +256,7 @@ fn run_inspect_types(args: &arg_spec::Values) {
 }
 
 fn unpack_docs_spec() -> flow_command_spec::Spec {
-    flow_command_spec::Spec::new(
+    let spec = flow_command_spec::Spec::new(
         "unpack-docs",
         UNPACK_DOCS_DOC,
         flow_command_spec::Visibility::Public,
@@ -264,8 +264,9 @@ fn unpack_docs_spec() -> flow_command_spec::Spec {
             "Usage: {} agent-helper unpack-docs [OPTION]... DIR\n\nCreates DIR if needed and overwrites any docs already in it.\n",
             flow_command_utils::exe_name()
         ),
-    )
-    .anon("DIR", &arg_spec::string())
+    );
+    let spec = flow_command_utils::add_from_flag(spec);
+    spec.anon("DIR", &arg_spec::string())
 }
 
 fn run_unpack_docs(args: &arg_spec::Values) {
