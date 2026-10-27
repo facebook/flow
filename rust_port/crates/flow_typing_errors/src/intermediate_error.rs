@@ -4191,7 +4191,7 @@ where
                     &flow_common_ty::ty_printer::PrinterOptions::default(),
                 );
                 let ty_str = if ty_str.len() > 100 {
-                    format!("{}...", &ty_str[..100])
+                    format!("{}...", flow_common::string_utils::truncate(100, &ty_str))
                 } else {
                     ty_str
                 };
