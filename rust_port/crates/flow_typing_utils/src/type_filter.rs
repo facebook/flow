@@ -7,7 +7,6 @@
 
 // Port of type_filter.rs
 
-use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -39,11 +38,9 @@ use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::PolyTData;
-use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::TupleATData;
-use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TupleView;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
@@ -57,7 +54,6 @@ use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::null;
 use flow_typing_type::type_::num_module_t;
-use flow_typing_type::type_::properties;
 use flow_typing_type::type_::str_module_t;
 use flow_typing_type::type_::symbol_t;
 use flow_typing_type::type_::union_rep;
@@ -1834,27 +1830,7 @@ pub fn sentinel_refinement(
 //   with both the ObjTag and the FunTag.
 // - Interfaces can be objects, class instances, arrays, functions and symbols
 pub mod type_tag {
-    use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-
-    use super::*;
-
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-    pub(super) enum SentinelVal {
-        Str(FlowSmolStr),
-        Num(NumberLiteral),
-        Bool(bool),
-    }
-
-    pub(super) type SentinelMap = BTreeMap<FlowSmolStr, SentinelVal>;
-
-    // Compare sentinel maps on their common keys.
-    fn compare_sentinel_map(s1: &SentinelMap, s2: &SentinelMap) -> std::cmp::Ordering {
-        let s1_filtered: BTreeMap<_, _> = s1.iter().filter(|(k, _)| s2.contains_key(*k)).collect();
-        let s2_filtered: BTreeMap<_, _> = s2.iter().filter(|(k, _)| s1.contains_key(*k)).collect();
-        s1_filtered.cmp(&s2_filtered)
-    }
-
-    #[derive(Debug, Clone, PartialEq, Eq)]
     pub(super) enum TypeTagInner {
         BoolTag,
         StringTag,
@@ -1862,54 +1838,13 @@ pub mod type_tag {
         NullTag,
         VoidTag,
         SymbolTag,
-        ObjTag { sentinel: SentinelMap },
+        ObjTag,
         FunTag,
         BigIntTag,
         ClassInstanceTag,
-        ArrTag { sentinel: SentinelMap },
+        ArrTag,
         EnumTag,
         RendersTag,
-    }
-
-    impl PartialOrd for TypeTagInner {
-        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-            Some(self.cmp(other))
-        }
-    }
-
-    impl Ord for TypeTagInner {
-        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-            fn discriminant(t: &TypeTagInner) -> u8 {
-                match t {
-                    TypeTagInner::BoolTag => 0,
-                    TypeTagInner::StringTag => 1,
-                    TypeTagInner::NumberTag => 2,
-                    TypeTagInner::NullTag => 3,
-                    TypeTagInner::VoidTag => 4,
-                    TypeTagInner::SymbolTag => 5,
-                    TypeTagInner::ObjTag { .. } => 6,
-                    TypeTagInner::FunTag => 7,
-                    TypeTagInner::BigIntTag => 8,
-                    TypeTagInner::ClassInstanceTag => 9,
-                    TypeTagInner::ArrTag { .. } => 10,
-                    TypeTagInner::EnumTag => 11,
-                    TypeTagInner::RendersTag => 12,
-                }
-            }
-            let d = discriminant(self).cmp(&discriminant(other));
-            if d != std::cmp::Ordering::Equal {
-                return d;
-            }
-            match (self, other) {
-                (TypeTagInner::ObjTag { sentinel: s1 }, TypeTagInner::ObjTag { sentinel: s2 }) => {
-                    compare_sentinel_map(s1, s2)
-                }
-                (TypeTagInner::ArrTag { sentinel: s1 }, TypeTagInner::ArrTag { sentinel: s2 }) => {
-                    compare_sentinel_map(s1, s2)
-                }
-                _ => std::cmp::Ordering::Equal,
-            }
-        }
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -1917,73 +1852,6 @@ pub mod type_tag {
 }
 
 pub type TypeTagSet = BTreeSet<type_tag::TypeTag>;
-
-fn tag_of_value<'cx>(cx: &mut Context<'cx>, type_: &Type) -> Option<type_tag::SentinelVal> {
-    match cx.find_resolved(type_) {
-        Some(t) => match t.deref() {
-            TypeInner::DefT(_, d) => match d.deref() {
-                DefTInner::NumericStrKeyT(NumberLiteral(_, s)) => {
-                    Some(type_tag::SentinelVal::Str(s.dupe()))
-                }
-                DefTInner::SingletonStrT { value, .. } => {
-                    Some(type_tag::SentinelVal::Str(value.dupe()))
-                }
-                DefTInner::SingletonNumT { value, .. } => {
-                    Some(type_tag::SentinelVal::Num(value.clone()))
-                }
-                DefTInner::SingletonBoolT { value, .. } => {
-                    Some(type_tag::SentinelVal::Bool(*value))
-                }
-                _ => None,
-            },
-            _ => None,
-        },
-        None => None,
-    }
-}
-
-fn sentinel_of_obj<'cx>(cx: &mut Context<'cx>, id: properties::Id) -> type_tag::SentinelMap {
-    cx.find_props(id).iter().fold(
-        BTreeMap::new(),
-        |acc: type_tag::SentinelMap, (name, prop)| {
-            // Sentinel keys are string-keyed; a symbol-typed key has no string
-            // spelling, so skip it rather than collapse distinct symbols to a
-            // shared placeholder (which would refine unsoundly).
-            let flow_common::reason::Name::Str(key) = name else {
-                return acc;
-            };
-            match prop.deref() {
-                PropertyInner::Field(fd) => match tag_of_value(cx, &fd.type_) {
-                    Some(v) => {
-                        let mut acc = acc;
-                        acc.insert(key.dupe(), v);
-                        acc
-                    }
-                    None => acc,
-                },
-                _ => acc,
-            }
-        },
-    )
-}
-
-fn sentinel_of_tuple<'cx>(
-    cx: &mut Context<'cx>,
-    elements: &[TupleElement],
-) -> type_tag::SentinelMap {
-    elements
-        .iter()
-        .enumerate()
-        .fold(BTreeMap::new(), |mut acc, (i, elem)| {
-            match tag_of_value(cx, &elem.t) {
-                Some(v) => {
-                    acc.insert(FlowSmolStr::new(i.to_string()), v);
-                    acc
-                }
-                None => acc,
-            }
-        })
-}
 
 fn tag_of_def_t<'cx>(cx: &mut Context<'cx>, d: &DefTInner) -> Option<TypeTagSet> {
     use type_tag::TypeTag;
@@ -2010,31 +1878,15 @@ fn tag_of_def_t<'cx>(cx: &mut Context<'cx>, d: &DefTInner) -> Option<TypeTagSet>
         DefTInner::ObjT(obj) => {
             if obj.call_t.is_some() {
                 Some(BTreeSet::from([
-                    TypeTag(TypeTagInner::ObjTag {
-                        sentinel: sentinel_of_obj(cx, obj.props_tmap.dupe()),
-                    }),
+                    TypeTag(TypeTagInner::ObjTag),
                     TypeTag(TypeTagInner::FunTag),
                 ]))
             } else {
-                Some(BTreeSet::from([TypeTag(TypeTagInner::ObjTag {
-                    sentinel: sentinel_of_obj(cx, obj.props_tmap.dupe()),
-                })]))
+                Some(BTreeSet::from([TypeTag(TypeTagInner::ObjTag)]))
             }
         }
         DefTInner::InstanceT(instance_t) => tag_of_inst(&instance_t.inst),
-        DefTInner::ArrT(arr) => match &**arr {
-            ArrType::TupleAT(box TupleATData { elements, .. }) => {
-                Some(BTreeSet::from([TypeTag(TypeTagInner::ArrTag {
-                    sentinel: sentinel_of_tuple(cx, elements),
-                })]))
-            }
-            ArrType::ArrayAT(box ArrayATData { .. })
-            | ArrType::ROArrayAT(box ROArrayATData { .. }) => {
-                Some(BTreeSet::from([TypeTag(TypeTagInner::ArrTag {
-                    sentinel: BTreeMap::new(),
-                })]))
-            }
-        },
+        DefTInner::ArrT(_) => Some(BTreeSet::from([TypeTag(TypeTagInner::ArrTag)])),
         DefTInner::PolyT(box PolyTData { t_out, .. }) => tag_of_t(cx, t_out),
         DefTInner::EnumValueT(_) => Some(BTreeSet::from([TypeTag(TypeTagInner::EnumTag)])),
         DefTInner::EmptyT => Some(BTreeSet::new()),
@@ -2069,12 +1921,8 @@ fn tag_of_inst(inst: &InstType) -> Option<TypeTagSet> {
         }
         InstanceKind::InterfaceKind { .. } => {
             tags.insert(TypeTag(TypeTagInner::ClassInstanceTag));
-            tags.insert(TypeTag(TypeTagInner::ObjTag {
-                sentinel: BTreeMap::new(),
-            }));
-            tags.insert(TypeTag(TypeTagInner::ArrTag {
-                sentinel: BTreeMap::new(),
-            }));
+            tags.insert(TypeTag(TypeTagInner::ObjTag));
+            tags.insert(TypeTag(TypeTagInner::ArrTag));
             tags.insert(TypeTag(TypeTagInner::SymbolTag));
             tags.insert(TypeTag(TypeTagInner::FunTag));
         }
