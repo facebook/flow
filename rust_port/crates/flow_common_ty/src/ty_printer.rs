@@ -1679,6 +1679,7 @@ fn type_alias<L: Dupe>(
     name: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
     t_opt: &Option<Arc<Ty<L>>>,
+    opaque: Option<&OpaqueBounds<L>>,
     size: &mut PrintState<L>,
 ) -> LayoutNode {
     let name = symbol_identifier(size, name);
@@ -1686,6 +1687,25 @@ fn type_alias<L: Dupe>(
         |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
         tparams,
     );
+    let bound = |keyword: &str, t: &Option<Arc<Ty<L>>>, size: &mut PrintState<L>| match t {
+        Some(t) => layout::fuse(vec![
+            layout::space(),
+            LayoutNode::atom(keyword.to_string()),
+            layout::space(),
+            type_(opts, depth, t, size),
+        ]),
+        None => LayoutNode::empty(),
+    };
+    let (keyword, bounds) = match opaque {
+        None => ("type", LayoutNode::empty()),
+        Some(OpaqueBounds { lower, upper }) => (
+            "opaque type",
+            layout::fuse(vec![
+                bound("super", lower, size),
+                bound("extends", upper, size),
+            ]),
+        ),
+    };
     let body = match t_opt {
         Some(t) => layout::fuse(vec![
             layout::pretty_space(),
@@ -1696,10 +1716,11 @@ fn type_alias<L: Dupe>(
     };
 
     layout::fuse(vec![
-        LayoutNode::atom("type".to_string()),
+        LayoutNode::atom(keyword.to_string()),
         layout::space(),
         name,
         tparams_node,
+        bounds,
         body,
     ])
 }
@@ -1844,8 +1865,9 @@ fn decl<L: Dupe>(
             name,
             tparams,
             type_,
+            opaque,
             ..
-        }) => type_alias(opts, depth, name, tparams, type_, size),
+        }) => type_alias(opts, depth, name, tparams, type_, opaque.as_ref(), size),
         Decl::ClassDecl(box (s, ps)) => class_decl(opts, depth, s, ps, size),
         Decl::InterfaceDecl(box (s, ps)) => interface_decl(opts, depth, s, ps, size),
         Decl::RecordDecl(box (s, ps)) => record_decl(opts, depth, s, ps, size),
@@ -2085,9 +2107,15 @@ fn layout_of_binder(
                     t,
                     state,
                 ),
-                Elt::Decl(Decl::TypeAliasDecl(data)) => {
-                    type_alias(opts, 0, &data.name, &data.tparams, &None, state)
-                }
+                Elt::Decl(Decl::TypeAliasDecl(data)) => type_alias(
+                    opts,
+                    0,
+                    &data.name,
+                    &data.tparams,
+                    &None,
+                    data.opaque.as_ref(),
+                    state,
+                ),
                 Elt::Decl(d) => decl(opts, 0, d, state),
             };
             layout::fuse(vec![

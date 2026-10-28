@@ -3874,11 +3874,8 @@ pub mod element_converter {
 
     use super::*;
 
-    // We are being a bit lax here with opaque types so that we don't have to
-    // introduce a new constructor in Ty.t to support all kinds of NominalT.
-    // If an underlying type is available, then we use that as the alias body.
-    // If not, we check for a super type and use that if there is one.
-    // Otherwise, we fall back to a bodyless TypeAlias.
+    // An opaque type is a TypeAlias marked opaque. Its underlying type, when
+    // available, is the alias body; its bounds are kept apart from the body.
     fn nominal_type_t<'cx, I: NormalizerInput>(
         env: &mut Env<'_, 'cx>,
         state: &mut State,
@@ -3914,39 +3911,39 @@ pub mod element_converter {
         let current_source = env.cx.file().dupe();
         let opaque_source = reason.def_loc().source();
         let name = symbol_from_reason(env, reason, name_str.dupe())?;
-        let t_opt: Option<&Type> = match &nominal_type.underlying_t {
+        // Compare the current file (of the query) and the file that the opaque
+        // type is defined. If they differ, then hide the underlying type and the
+        // bounds.
+        let same_file = Some(&current_source) == opaque_source;
+        let impl_t: Option<&Type> = match &nominal_type.underlying_t {
             // opaque type A = number;
-            nominal::UnderlyingT::OpaqueWithLocal { t }
-                if Some(&current_source) == opaque_source =>
-            {
-                // Compare the current file (of the query) and the file that the opaque
-                // type is defined. If they differ, then hide the underlying/super type.
-                // Otherwise, display the underlying/super type.
-                Some(t)
-            }
+            nominal::UnderlyingT::OpaqueWithLocal { t } if same_file => Some(t),
             nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. }) => Some(t),
-            _ => {
-                if Some(&current_source) == opaque_source {
-                    // declare opaque type B: number;
-                    // TODO: This will potentially report a remote name.
-                    // The same fix for T25963804 should be applied here as well.
-                    nominal_type.upper_t.as_ref()
-                } else {
-                    None
-                }
-            }
+            _ => None,
+        };
+        // declare opaque type B extends number;
+        // TODO: This will potentially report a remote name.
+        // The same fix for T25963804 should be applied here as well.
+        let (lower_t, upper_t) = if same_file {
+            (nominal_type.lower_t.as_ref(), nominal_type.upper_t.as_ref())
+        } else {
+            (None, None)
         };
 
-        let type_ = match t_opt {
-            Some(t) => Some(type_converter::convert_t::<I>(env, state, false, t)?),
-            None => None,
+        let mut convert = |t: Option<&Type>| match t {
+            Some(t) => type_converter::convert_t::<I>(env, state, false, t).map(Some),
+            None => Ok(None),
         };
+        let type_ = convert(impl_t)?;
+        let lower = convert(lower_t)?;
+        let upper = convert(upper_t)?;
         Ok(ty::Decl::TypeAliasDecl(Box::new(
             ty::DeclTypeAliasDeclData {
                 import: false,
                 name,
                 tparams: tparams.map(Into::into),
                 type_,
+                opaque: Some(ty::OpaqueBounds { lower, upper }),
             },
         )))
     }
@@ -3977,6 +3974,7 @@ pub mod element_converter {
                             name,
                             tparams: tparams.map(Into::into),
                             type_: Some(ty),
+                            opaque: None,
                         },
                     ))))
                 }
@@ -4005,6 +4003,7 @@ pub mod element_converter {
                     name,
                     tparams: tparams.map(Into::into),
                     type_: Some(ty),
+                    opaque: None,
                 },
             ))))
         }

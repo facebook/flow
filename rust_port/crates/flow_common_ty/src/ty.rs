@@ -704,6 +704,26 @@ pub struct DeclTypeAliasDeclData<L> {
     pub name: Symbol<L>,
     pub tparams: Option<Arc<[TypeParam<L>]>>,
     pub type_: Option<Arc<Ty<L>>>,
+    /// Set for an opaque type alias. `type_` is then its underlying type, when
+    /// visible from where the alias is printed.
+    pub opaque: Option<OpaqueBounds<L>>,
+}
+
+/// The bounds of an opaque type alias: `opaque type T super L extends U`.
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct OpaqueBounds<L> {
+    pub lower: Option<Arc<Ty<L>>>,
+    pub upper: Option<Arc<Ty<L>>>,
 }
 
 #[derive(
@@ -1307,6 +1327,7 @@ where
                 name,
                 tparams,
                 type_,
+                opaque,
             }) => {
                 self.on_bool(env, *import);
                 self.on_symbol(env, name);
@@ -1317,6 +1338,11 @@ where
                 }
                 if let Some(t) = type_ {
                     self.on_t(env, t);
+                }
+                if let Some(OpaqueBounds { lower, upper }) = opaque {
+                    for t in [lower, upper].into_iter().flatten() {
+                        self.on_t(env, t);
+                    }
                 }
             }
             Decl::ClassDecl(box (sym, tparams))
@@ -1852,18 +1878,29 @@ where
                     name: n1,
                     tparams: tp1,
                     type_: ty1,
+                    opaque: o1,
                 }),
                 Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
                     import: i2,
                     name: n2,
                     tparams: tp2,
                     type_: ty2,
+                    opaque: o2,
                 }),
             ) => {
                 self.on_bool(env, *i1, *i2)?;
                 self.on_symbol(env, n1, n2)?;
                 self.on_option_vec_type_param(env, tp1, tp2)?;
-                self.on_option(|s, e, t1, t2| s.on_t(e, t1, t2), env, ty1, ty2)
+                self.on_option(|s, e, t1, t2| s.on_t(e, t1, t2), env, ty1, ty2)?;
+                self.on_option(
+                    |s, e, b1: &OpaqueBounds<L>, b2: &OpaqueBounds<L>| {
+                        s.on_option(|s, e, t1, t2| s.on_t(e, t1, t2), e, &b1.lower, &b2.lower)?;
+                        s.on_option(|s, e, t1, t2| s.on_t(e, t1, t2), e, &b1.upper, &b2.upper)
+                    },
+                    env,
+                    o1,
+                    o2,
+                )
             }
             (Decl::ClassDecl(box (s1, tp1)), Decl::ClassDecl(box (s2, tp2)))
             | (Decl::InterfaceDecl(box (s1, tp1)), Decl::InterfaceDecl(box (s2, tp2)))
@@ -2892,6 +2929,7 @@ where
                 name,
                 tparams,
                 type_,
+                opaque,
             }) => {
                 let mut acc = self.on_bool(env, *import);
                 acc = Self::Acc::plus(acc, self.on_symbol(env, name));
@@ -2902,6 +2940,11 @@ where
                 }
                 if let Some(t) = type_ {
                     acc = Self::Acc::plus(acc, self.on_t(env, t));
+                }
+                if let Some(OpaqueBounds { lower, upper }) = opaque {
+                    for t in [lower, upper].into_iter().flatten() {
+                        acc = Self::Acc::plus(acc, self.on_t(env, t));
+                    }
                 }
                 acc
             }
@@ -3428,6 +3471,7 @@ where
                 name,
                 tparams,
                 type_,
+                opaque,
             }) => {
                 let import_new = self.on_bool(env, import);
                 let name_new = self.on_symbol(env, name);
@@ -3436,11 +3480,16 @@ where
                         .into()
                 });
                 let type_new = self.on_option(|s, e, t| s.on_t(e, t), env, type_);
+                let opaque_new = opaque.map(|OpaqueBounds { lower, upper }| OpaqueBounds {
+                    lower: self.on_option(|s, e, t| s.on_t(e, t), env, lower),
+                    upper: self.on_option(|s, e, t| s.on_t(e, t), env, upper),
+                });
                 Decl::TypeAliasDecl(Box::new(DeclTypeAliasDeclData {
                     import: import_new,
                     name: name_new,
                     tparams: tparams_new,
                     type_: type_new,
+                    opaque: opaque_new,
                 }))
             }
             Decl::ClassDecl(box (sym, tparams)) => {

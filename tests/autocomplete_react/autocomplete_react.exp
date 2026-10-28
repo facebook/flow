@@ -202,7 +202,7 @@ Flags: --pretty
       "name":"Consumer",
       "type":"type Consumer<T> = component(children: (value: T) => React$Node)"
     },
-    {"name":"Context","type":"type Context<T>"},
+    {"name":"Context","type":"opaque type Context<T>"},
     {
       "name":"Defaultize",
       "type":"type Defaultize<P, D> = P extends any ? string extends keyof P ? P : {...Pick<P, Exclude<keyof P, keyof D>>, ...InexactPartial<Pick<P, Extract<keyof P, keyof D>>>, ...InexactPartial<Pick<D, Exclude<keyof D, keyof P>>>} : empty"

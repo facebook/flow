@@ -37,6 +37,7 @@ use crate::ty::MappedTypeVariance;
 use crate::ty::NamedProp;
 use crate::ty::ObjKind;
 use crate::ty::ObjT;
+use crate::ty::OpaqueBounds;
 use crate::ty::Polarity;
 use crate::ty::Prop;
 use crate::ty::ReturnT;
@@ -755,17 +756,33 @@ fn dump_decl<L: Debug + Clone + Dupe>(depth: i32, d: &Decl<L>) -> String {
             name,
             tparams,
             type_,
+            opaque,
         }) => {
             let type_str = match type_ {
                 Some(t) => cut_off(&dump_t(depth, t), 1000),
                 None => String::new(),
             };
+            let dump_bound = |t: &Option<Arc<Ty<L>>>| match t {
+                Some(t) => cut_off(&dump_t(depth, t), 1000),
+                None => String::new(),
+            };
+            let opaque_str = match opaque {
+                Some(OpaqueBounds { lower, upper }) => {
+                    format!(
+                        ", opaque (super={}, extends={})",
+                        dump_bound(lower),
+                        dump_bound(upper)
+                    )
+                }
+                None => String::new(),
+            };
             format!(
-                "TypeAlias (import={}, {}, {}, {})",
+                "TypeAlias (import={}, {}, {}, {}{})",
                 import,
                 dump_symbol(name),
                 dump_type_params(depth, tparams.as_deref()),
-                type_str
+                type_str,
+                opaque_str
             )
         }
         Decl::ClassDecl(box (s, ps)) => format!(

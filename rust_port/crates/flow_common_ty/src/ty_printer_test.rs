@@ -374,6 +374,7 @@ mod tests {
             },
             tparams: None,
             type_: Some(Arc::new(union)),
+            opaque: None,
         })));
 
         let (type_str, _) = string_of_type_at_pos_result(

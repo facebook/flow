@@ -457,8 +457,8 @@ Found exact match 'Comparable' defined at complex_types.js:95:11,95:20 with type
 Found exact match 'Printable' defined at complex_types.js:99:11,99:19 with type `interface Printable` 
 
 === Opaque Types ===
-Found exact match 'UserID' defined at complex_types.js:105:13,105:18 with type `type UserID = string` 
-Found exact match 'Timestamp' defined at complex_types.js:106:13,106:21 with type `type Timestamp = number` 
+Found exact match 'UserID' defined at complex_types.js:105:13,105:18 with type `opaque type UserID = string` 
+Found exact match 'Timestamp' defined at complex_types.js:106:13,106:21 with type `opaque type Timestamp extends number = number` 
 
 === Complex Generics ===
 Found exact match 'Result' defined at complex_types.js:110:6,110:11 with type `type Result<T, E> = {ok: true, value: T} | {error: E, ok: false}` 

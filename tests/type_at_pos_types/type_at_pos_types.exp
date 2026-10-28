@@ -394,11 +394,11 @@ callable-object.js:35:6,35:9
 
 opaque.js
 At opaque.js:3:20
-type Foo = number
+opaque type Foo = number
 opaque.js:3:20,3:22
 
 At opaque.js:6:21
-type Foo = number
+opaque type Foo = number
 
 'Foo' defined at opaque.js:3:19
 
@@ -412,11 +412,11 @@ Foo
 opaque.js:8:1,8:3
 
 At opaque.js:11:22
-type Bar = number
+opaque type Bar extends number
 opaque.js:11:21,11:23
 
 At opaque.js:14:20
-type Bar = number
+opaque type Bar extends number
 
 'Bar' defined at opaque.js:11:20
 
@@ -430,11 +430,11 @@ Bar
 opaque.js:16:1,16:3
 
 At opaque.js:19:22
-type Baz
+opaque type Baz
 opaque.js:19:21,19:23
 
 At opaque.js:22:20
-type Baz
+opaque type Baz
 
 'Baz' defined at opaque.js:19:20
 
@@ -448,11 +448,11 @@ Baz
 opaque.js:24:1,24:3
 
 At opaque.js:27:14
-type Bak<A> = number | A
+opaque type Bak<A> = number | A
 opaque.js:27:13,27:15
 
 At opaque.js:30:21
-type Bak<A> = number | A
+opaque type Bak<A> = number | A
 
 'Bak' defined at opaque.js:27:12
 
@@ -466,11 +466,11 @@ Bak<string>
 opaque.js:32:1,32:3
 
 At opaque.js:35:22
-type Bam<A>
+opaque type Bam<A>
 opaque.js:35:21,35:23
 
 At opaque.js:38:21
-type Bam<A>
+opaque type Bam<A>
 
 'Bam' defined at opaque.js:35:20
 
@@ -484,7 +484,7 @@ Bam<string>
 opaque.js:40:1,40:3
 
 At opaque.js:45:24
-type Opaque
+opaque type Opaque
 
 'Opaque' defined at opaque-lib.js:6:19
 
@@ -513,7 +513,7 @@ PolyTransparent<string>
 opaque.js:52:1,52:15
 
 At opaque.js:55:29
-type PolyOpaque<A>
+opaque type PolyOpaque<A>
 
 'PolyOpaque' defined at opaque-lib.js:7:19
 
@@ -560,6 +560,10 @@ MixedElement
 'MixedElement' defined at (lib) react.js:451:22
 
 opaque.js:80:7,80:20
+
+At opaque.js:83:13
+opaque type Bounded super 1 extends number = 1
+opaque.js:83:13,83:19
 
 optional.js
 At optional.js:4:10

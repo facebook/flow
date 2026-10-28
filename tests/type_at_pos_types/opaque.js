@@ -79,3 +79,6 @@ const polyElement = <PolyComponent prop={""}/>;
 
 const conditionalJsx = true ? <div /> : <span />;
 //    ^?
+
+opaque type Bounded super 1 extends number = 1;
+//          ^?

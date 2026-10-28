@@ -594,7 +594,7 @@ types.js:18:6,18:10
 types.js:20:7
 Flags: --strip-root
  this is myOpaque
-type myOpaque<T> = [T, T]
+opaque type myOpaque<T> = [T, T]
 
 'myOpaque' defined at types.js:8:12
 
@@ -641,7 +641,7 @@ types.js:28:6,28:14
 types.js:30:7
 Flags: --strip-root
  this is ExportOpaque
-(alias) type ExportOpaque<T>
+(alias) opaque type ExportOpaque<T>
 import type {ExportOpaque} from "./type-exports"
 
 'ExportOpaque' defined at type-exports.js:8:19

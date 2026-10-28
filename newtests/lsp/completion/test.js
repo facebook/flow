@@ -7224,7 +7224,7 @@ b.te
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     title: '',
                   },
-                  detail: 'type Tympanic = number',
+                  detail: 'opaque type Tympanic = number',
                   insertTextFormat: 1,
                   kind: 6,
                   label: 'Tympanic',

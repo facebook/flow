@@ -1380,7 +1380,7 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"type Tympanic = number",
+  "detail":"opaque type Tympanic = number",
   "insertTextFormat":1,
   "kind":6,
   "label":"Tympanic",
