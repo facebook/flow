@@ -1,0 +1,98 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   3|   value!; // ERROR
+        ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:4:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   4|   value?.prop!; // ERROR
+        ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   5|   value?.child!.prop; // ERROR
+        ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   6|   value?.prop! < 1; // ERROR
+        ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   7|   value?.prop!! < 1; // ERROR
+        ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   7|   value?.prop!! < 1; // ERROR
+        ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   8|   value?.method!(); // ERROR
+        ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   9|   value!.prop! = 1; // ERROR
+        ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   9|   value!.prop! = 1; // ERROR
+        ^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   10|   value!.prop! += 1; // ERROR
+         ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:3
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   10|   value!.prop! += 1; // ERROR
+         ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:11:10
+
+Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
+
+   11|   delete value!.prop; // ERROR
+                ^^^^^^
+
+
+
+Found 12 errors

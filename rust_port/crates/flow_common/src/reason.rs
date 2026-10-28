@@ -1548,7 +1548,7 @@ pub fn code_desc_of_expression<M: Dupe, T: Dupe>(
             let optional_str = match inner.optional {
                 ast::expression::OptionalCallKind::NonOptional => "",
                 ast::expression::OptionalCallKind::Optional => "?.",
-                ast::expression::OptionalCallKind::AssertNonnull => "!",
+                ast::expression::OptionalCallKind::AssertNonnull { .. } => "!",
             };
             format!(
                 "{}{}{}{}",
@@ -1560,7 +1560,7 @@ pub fn code_desc_of_expression<M: Dupe, T: Dupe>(
         }
         ExpressionInner::OptionalMember { inner, .. } => {
             let o = code_desc_of_expression(true, &inner.member.object);
-            let p = code_desc_of_property(inner.optional, &inner.member.property);
+            let p = code_desc_of_property(inner.optional.dupe(), &inner.member.property);
             format!("{}{}", o, p)
         }
         ExpressionInner::Sequence { inner, .. } => {
@@ -1767,7 +1767,7 @@ fn code_desc_of_jsx_element<M: Dupe, T: Dupe>(elem: &ast::jsx::Element<M, T>) ->
 }
 
 fn code_desc_of_property<M: Dupe, T: Dupe>(
-    optional: ast::expression::OptionalMemberKind,
+    optional: ast::expression::OptionalMemberKind<M>,
     property: &ast::expression::member::Property<M, T>,
 ) -> String {
     use ast::expression::OptionalMemberKind;
@@ -1778,7 +1778,7 @@ fn code_desc_of_property<M: Dupe, T: Dupe>(
             let prefix = match optional {
                 OptionalMemberKind::Optional => "?.",
                 OptionalMemberKind::NonOptional => ".",
-                OptionalMemberKind::AssertNonnull => "!.",
+                OptionalMemberKind::AssertNonnull { .. } => "!.",
             };
             format!("{}{}", prefix, id.name)
         }
@@ -1786,7 +1786,7 @@ fn code_desc_of_property<M: Dupe, T: Dupe>(
             let prefix = match optional {
                 OptionalMemberKind::Optional => "?.#",
                 OptionalMemberKind::NonOptional => ".#",
-                OptionalMemberKind::AssertNonnull => "!.#",
+                OptionalMemberKind::AssertNonnull { .. } => "!.#",
             };
             format!("{}{}", prefix, priv_name.name)
         }
@@ -1794,7 +1794,7 @@ fn code_desc_of_property<M: Dupe, T: Dupe>(
             let prefix = match optional {
                 OptionalMemberKind::Optional => "?.[",
                 OptionalMemberKind::NonOptional => "[",
-                OptionalMemberKind::AssertNonnull => "![",
+                OptionalMemberKind::AssertNonnull { .. } => "![",
             };
             format!("{}{}]", prefix, code_desc_of_expression(false, expr))
         }

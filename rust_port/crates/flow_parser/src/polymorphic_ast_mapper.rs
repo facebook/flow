@@ -2497,10 +2497,21 @@ pub fn optional_call<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     } = expr;
     let call__ = call(mapper, annot, call_)?;
     let filtered_out_ = mapper.on_type_annot(filtered_out)?;
+    let optional_ = match optional {
+        ast::expression::OptionalCallKind::Optional => ast::expression::OptionalCallKind::Optional,
+        ast::expression::OptionalCallKind::NonOptional => {
+            ast::expression::OptionalCallKind::NonOptional
+        }
+        ast::expression::OptionalCallKind::AssertNonnull { assertion_loc } => {
+            ast::expression::OptionalCallKind::AssertNonnull {
+                assertion_loc: mapper.on_loc_annot(assertion_loc)?,
+            }
+        }
+    };
     Ok(ast::expression::OptionalCall {
         call: call__,
         filtered_out: filtered_out_,
-        optional: *optional,
+        optional: optional_,
     })
 }
 
@@ -2516,10 +2527,23 @@ pub fn optional_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     } = expr;
     let member__ = member(mapper, annot, member_)?;
     let filtered_out_ = mapper.on_type_annot(filtered_out)?;
+    let optional_ = match optional {
+        ast::expression::OptionalMemberKind::Optional => {
+            ast::expression::OptionalMemberKind::Optional
+        }
+        ast::expression::OptionalMemberKind::NonOptional => {
+            ast::expression::OptionalMemberKind::NonOptional
+        }
+        ast::expression::OptionalMemberKind::AssertNonnull { assertion_loc } => {
+            ast::expression::OptionalMemberKind::AssertNonnull {
+                assertion_loc: mapper.on_loc_annot(assertion_loc)?,
+            }
+        }
+    };
     Ok(ast::expression::OptionalMember {
         member: member__,
         filtered_out: filtered_out_,
-        optional: *optional,
+        optional: optional_,
     })
 }
 
@@ -7013,4 +7037,146 @@ pub fn declare_opaque_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     otype: &ast::statement::OpaqueType<M, T>,
 ) -> Result<ast::statement::OpaqueType<N, U>, E> {
     opaque_type(mapper, loc, otype)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ast::expression;
+    use crate::ast_visitor::AstVisitor;
+    use crate::loc::Loc;
+    use crate::loc::Position;
+
+    fn span(start: i32, end: i32) -> Loc {
+        Loc {
+            source: None,
+            start: Position {
+                line: 1,
+                column: start,
+            },
+            end: Position {
+                line: 1,
+                column: end,
+            },
+        }
+    }
+
+    fn operand() -> expression::Expression<Loc, Loc> {
+        expression::Expression::new(expression::ExpressionInner::This {
+            loc: span(2, 6),
+            inner: Arc::new(expression::This { comments: None }),
+        })
+    }
+
+    fn asserted_call() -> expression::OptionalCall<Loc, Loc> {
+        expression::OptionalCall {
+            call: expression::Call {
+                callee: operand(),
+                targs: None,
+                arguments: expression::ArgList {
+                    loc: span(8, 10),
+                    arguments: Arc::from([]),
+                    comments: None,
+                },
+                comments: None,
+            },
+            optional: expression::OptionalCallKind::AssertNonnull {
+                assertion_loc: span(0, 8),
+            },
+            filtered_out: span(0, 10),
+        }
+    }
+
+    fn asserted_member() -> expression::OptionalMember<Loc, Loc> {
+        expression::OptionalMember {
+            member: expression::Member {
+                object: operand(),
+                property: expression::member::Property::PropertyExpression(operand()),
+                comments: None,
+            },
+            optional: expression::OptionalMemberKind::AssertNonnull {
+                assertion_loc: span(0, 8),
+            },
+            filtered_out: span(0, 16),
+        }
+    }
+
+    struct ToTypedAnnotations;
+
+    impl LocMapper<Loc, Loc, Arc<Loc>, (Loc, u8)> for ToTypedAnnotations {
+        fn on_loc_annot(&mut self, loc: &Loc) -> Result<Arc<Loc>, !> {
+            Ok(Arc::new(loc.dupe()))
+        }
+
+        fn on_type_annot(&mut self, loc: &Loc) -> Result<(Loc, u8), !> {
+            Ok((loc.dupe(), 1))
+        }
+    }
+
+    #[test]
+    fn optional_call_assertion_loc_maps_as_syntax() {
+        let call = asserted_call();
+        let Ok(mapped) = optional_call(&mut ToTypedAnnotations, &span(0, 10), &call);
+        assert_eq!(
+            mapped.optional,
+            expression::OptionalCallKind::AssertNonnull {
+                assertion_loc: Arc::new(span(0, 8)),
+            }
+        );
+        assert_eq!(mapped.call.callee.loc(), &(span(2, 6), 1));
+        assert_eq!(mapped.filtered_out, (span(0, 10), 1));
+    }
+
+    #[test]
+    fn optional_member_assertion_loc_maps_as_syntax() {
+        let member = asserted_member();
+        let Ok(mapped) = optional_member(&mut ToTypedAnnotations, &span(0, 16), &member);
+        assert_eq!(
+            mapped.optional,
+            expression::OptionalMemberKind::AssertNonnull {
+                assertion_loc: Arc::new(span(0, 8)),
+            }
+        );
+        assert_eq!(mapped.member.object.loc(), &(span(2, 6), 1));
+        assert_eq!(mapped.filtered_out, (span(0, 16), 1));
+    }
+
+    struct ShiftAssertionLoc;
+
+    impl AstVisitor<'_, Loc> for ShiftAssertionLoc {
+        fn normalize_loc(loc: &Loc) -> &Loc {
+            loc
+        }
+
+        fn normalize_type(loc: &Loc) -> &Loc {
+            loc
+        }
+
+        fn map_loc_annot(&mut self, loc: &Loc) -> Loc {
+            span(loc.start.column + 20, loc.end.column + 20)
+        }
+    }
+
+    #[test]
+    fn homogeneous_mapping_maps_assertion_loc_and_preserves_filtered_out() {
+        let call = asserted_call();
+        let member = asserted_member();
+        let loc = span(0, 16);
+        let mapped_call = ShiftAssertionLoc.map_optional_call(&loc, &call);
+        let mapped_member = ShiftAssertionLoc.map_optional_member(&loc, &member);
+        assert_eq!(
+            mapped_call.optional,
+            expression::OptionalCallKind::AssertNonnull {
+                assertion_loc: span(20, 28),
+            }
+        );
+        assert_eq!(
+            mapped_member.optional,
+            expression::OptionalMemberKind::AssertNonnull {
+                assertion_loc: span(20, 28),
+            }
+        );
+        assert_eq!(mapped_call.filtered_out, call.filtered_out);
+        assert_eq!(mapped_member.filtered_out, member.filtered_out);
+    }
 }

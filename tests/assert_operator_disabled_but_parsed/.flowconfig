@@ -1,3 +1,5 @@
 [options]
 all=true
 experimental.assert_operator=false
+module.file_ext=.js
+module.file_ext=.ts

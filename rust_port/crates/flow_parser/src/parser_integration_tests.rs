@@ -114,11 +114,6 @@ mod common {
                         .as_bool()
                         .ok_or_else(|| format!("invalid value for {:?}, expected bool", key))?;
                 }
-                "assert_operator" => {
-                    parse_opts.assert_operator = value
-                        .as_bool()
-                        .ok_or_else(|| format!("invalid value for {:?}, expected bool", key))?;
-                }
                 "enums" => {
                     parse_opts.enums = value
                         .as_bool()

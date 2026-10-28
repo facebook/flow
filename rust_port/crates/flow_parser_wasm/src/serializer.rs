@@ -17,6 +17,7 @@ use std::borrow::Cow;
 use flow_parser::TokenSinkResult;
 use flow_parser::ast;
 use flow_parser::ast::CommentKind;
+use flow_parser::estree_translator::is_optional_chain;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::parse_error::ParseError;
@@ -727,39 +728,32 @@ impl<'a> Serializer<'a> {
         // sub-expressions such as call arguments, computed keys, array elements,
         // and logical operands keep their own ChainExpression wrappers.
         use ast::expression::ExpressionInner;
+        if !self.is_babel() && is_optional_chain(expr) {
+            self.write_node_header(NodeKind::ChainExpression, expr.loc());
+            self.serialize_optional_chain_child(expr, expr.loc());
+            return;
+        }
         match &**expr {
             ExpressionInner::OptionalMember { loc, inner }
-                if !self.is_babel()
-                    || !matches!(
-                        inner.optional,
-                        ast::expression::OptionalMemberKind::AssertNonnull
-                    ) =>
+                if !matches!(
+                    inner.optional,
+                    ast::expression::OptionalMemberKind::AssertNonnull { .. }
+                ) =>
             {
-                if self.is_babel() {
-                    self.serialize_babel_optional_member(loc, inner);
-                } else {
-                    self.write_node_header(NodeKind::ChainExpression, loc);
-                    self.serialize_optional_member_as_member_expression(loc, inner);
-                }
+                self.serialize_babel_optional_member(loc, inner);
             }
             ExpressionInner::OptionalCall { loc, inner }
-                if !self.is_babel()
-                    || !matches!(
-                        inner.optional,
-                        ast::expression::OptionalCallKind::AssertNonnull
-                    ) =>
+                if !matches!(
+                    inner.optional,
+                    ast::expression::OptionalCallKind::AssertNonnull { .. }
+                ) =>
             {
-                if self.is_babel() {
-                    self.serialize_babel_optional_call(loc, inner);
-                } else {
-                    self.write_node_header(NodeKind::ChainExpression, loc);
-                    self.serialize_optional_call_as_call_expression(loc, inner);
-                }
+                self.serialize_babel_optional_call(loc, inner);
             }
-            ExpressionInner::OptionalMember { loc, inner } => {
-                // AssertNonnull (`expr!.foo`): emit MemberExpression with
-                // `optional: false` and the object wrapped in NonNullExpression
-                // (chain: true) in Babel output.
+            ExpressionInner::OptionalMember { loc, inner }
+                if let ast::expression::OptionalMemberKind::AssertNonnull { assertion_loc } =
+                    &inner.optional =>
+            {
                 self.write_node_header(
                     if self.is_babel() {
                         NodeKind::BabelMemberExpression
@@ -768,9 +762,8 @@ impl<'a> Serializer<'a> {
                     },
                     loc,
                 );
-                self.write_node_header(NodeKind::NonNullExpression, loc);
+                self.write_node_header(NodeKind::NonNullExpression, assertion_loc);
                 self.serialize_expression(&inner.member.object);
-                self.write_bool(true);
                 self.serialize_member_property(&inner.member.property);
                 self.write_bool(matches!(
                     &inner.member.property,
@@ -780,8 +773,10 @@ impl<'a> Serializer<'a> {
                     self.write_bool(false);
                 }
             }
-            ExpressionInner::OptionalCall { loc, inner } => {
-                // AssertNonnull for calls — same shape as for members.
+            ExpressionInner::OptionalCall { loc, inner }
+                if let ast::expression::OptionalCallKind::AssertNonnull { assertion_loc } =
+                    &inner.optional =>
+            {
                 self.write_node_header(
                     if self.is_babel() {
                         NodeKind::BabelCallExpression
@@ -790,9 +785,8 @@ impl<'a> Serializer<'a> {
                     },
                     loc,
                 );
-                self.write_node_header(NodeKind::NonNullExpression, loc);
+                self.write_node_header(NodeKind::NonNullExpression, assertion_loc);
                 self.serialize_expression(&inner.call.callee);
-                self.write_bool(true);
                 self.serialize_call_type_args_opt(&inner.call.targs);
                 self.serialize_arg_list(&inner.call.arguments);
                 self.write_bool(false);
@@ -801,8 +795,16 @@ impl<'a> Serializer<'a> {
         }
     }
 
-    fn serialize_optional_chain_child(&mut self, expr: &ast::expression::Expression<Loc, Loc>) {
+    fn serialize_optional_chain_child(
+        &mut self,
+        expr: &ast::expression::Expression<Loc, Loc>,
+        parent_loc: &Loc,
+    ) {
         use ast::expression::ExpressionInner;
+        if expr.loc().start != parent_loc.start {
+            self.serialize_expression(expr);
+            return;
+        }
         match &**expr {
             ExpressionInner::OptionalMember { loc, inner } => {
                 self.serialize_optional_member_as_member_expression(loc, inner);
@@ -810,20 +812,14 @@ impl<'a> Serializer<'a> {
             ExpressionInner::OptionalCall { loc, inner } => {
                 self.serialize_optional_call_as_call_expression(loc, inner);
             }
+            ExpressionInner::Unary { loc, inner }
+                if inner.operator == ast::expression::UnaryOperator::Nonnull
+                    && is_optional_chain(expr) =>
+            {
+                self.write_node_header(NodeKind::NonNullExpression, loc);
+                self.serialize_optional_chain_child(&inner.argument, loc);
+            }
             _ => self.serialize_expression(expr),
-        }
-    }
-
-    fn serialize_asserted_chain_child(&mut self, expr: &ast::expression::Expression<Loc, Loc>) {
-        use ast::expression::ExpressionInner;
-        if let ExpressionInner::Unary { loc, inner } = &**expr
-            && inner.operator == ast::expression::UnaryOperator::Nonnull
-        {
-            self.write_node_header(NodeKind::NonNullExpression, loc);
-            self.serialize_asserted_chain_child(&inner.argument);
-            self.write_bool(false);
-        } else {
-            self.serialize_optional_chain_child(expr);
         }
     }
 
@@ -838,12 +834,13 @@ impl<'a> Serializer<'a> {
     ) {
         // 55: MemberExpression — object(Node) property(Node) computed(Bool) optional(Bool)
         self.write_node_header(NodeKind::MemberExpression, loc);
-        if inner.optional == ast::expression::OptionalMemberKind::AssertNonnull {
-            self.write_node_header(NodeKind::NonNullExpression, loc);
-            self.serialize_asserted_chain_child(&inner.member.object);
-            self.write_bool(true);
+        if let ast::expression::OptionalMemberKind::AssertNonnull { assertion_loc } =
+            &inner.optional
+        {
+            self.write_node_header(NodeKind::NonNullExpression, assertion_loc);
+            self.serialize_optional_chain_child(&inner.member.object, loc);
         } else {
-            self.serialize_optional_chain_child(&inner.member.object);
+            self.serialize_optional_chain_child(&inner.member.object, loc);
         }
         self.serialize_member_property(&inner.member.property);
         self.write_bool(matches!(
@@ -907,12 +904,12 @@ impl<'a> Serializer<'a> {
             },
             loc,
         );
-        if inner.optional == ast::expression::OptionalCallKind::AssertNonnull {
-            self.write_node_header(NodeKind::NonNullExpression, loc);
-            self.serialize_asserted_chain_child(&inner.call.callee);
-            self.write_bool(true);
+        if let ast::expression::OptionalCallKind::AssertNonnull { assertion_loc } = &inner.optional
+        {
+            self.write_node_header(NodeKind::NonNullExpression, assertion_loc);
+            self.serialize_optional_chain_child(&inner.call.callee, loc);
         } else {
-            self.serialize_optional_chain_child(&inner.call.callee);
+            self.serialize_optional_chain_child(&inner.call.callee, loc);
         }
         self.serialize_call_type_args_opt(&inner.call.targs);
         self.serialize_arg_list(&inner.call.arguments);
@@ -4448,10 +4445,9 @@ impl<'a> Serializer<'a> {
                 self.serialize_expression(&inner.argument);
             }
             ast::expression::UnaryOperator::Nonnull => {
-                // 71: NonNullExpression — argument(Node) chain(Bool)
+                // 71: NonNullExpression — expression(Node)
                 self.write_node_header(NodeKind::NonNullExpression, loc);
                 self.serialize_expression(&inner.argument);
-                self.write_bool(false);
             }
             _ => {
                 // 49: UnaryExpression — operator(String) argument(Node) prefix(Bool)
@@ -5235,7 +5231,6 @@ mod tests {
             ambiguous_types: true,
             enable_types_in_comments: false,
             use_strict: false,
-            assert_operator: false,
             module_ref_prefix: None,
             ambient: false,
             allow_return_outside_function: false,

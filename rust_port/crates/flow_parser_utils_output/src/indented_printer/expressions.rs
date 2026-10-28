@@ -348,6 +348,14 @@ impl Writer {
     }
 
     fn chain(&mut self, expr: &Expr) -> Printed {
+        if expr.loc().start != self.location.start
+            && matches!(
+                &**expr,
+                ExpressionInner::OptionalMember { .. } | ExpressionInner::OptionalCall { .. }
+            )
+        {
+            return self.fenced_expression(expr);
+        }
         self.at(expr.loc(), |writer| match &**expr {
             ExpressionInner::OptionalMember { inner, .. } => match inner.optional {
                 expression::OptionalMemberKind::Optional => {
@@ -356,14 +364,14 @@ impl Writer {
                 expression::OptionalMemberKind::NonOptional => {
                     writer.member(&inner.member, false, true)
                 }
-                expression::OptionalMemberKind::AssertNonnull => {
+                expression::OptionalMemberKind::AssertNonnull { .. } => {
                     Err(PrintError::UnloweredExpression(expr.loc().dupe()))
                 }
             },
             ExpressionInner::OptionalCall { inner, .. } => match inner.optional {
                 expression::OptionalCallKind::Optional => writer.call(&inner.call, true, true),
                 expression::OptionalCallKind::NonOptional => writer.call(&inner.call, false, true),
-                expression::OptionalCallKind::AssertNonnull => {
+                expression::OptionalCallKind::AssertNonnull { .. } => {
                     Err(PrintError::UnloweredExpression(expr.loc().dupe()))
                 }
             },

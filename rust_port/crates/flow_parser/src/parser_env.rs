@@ -282,7 +282,6 @@ pub struct ParseOptions {
     pub enable_types_in_comments: bool,
     /// treat the file as strict, without needing a "use strict" directive
     pub use_strict: bool,
-    pub assert_operator: bool,
     pub module_ref_prefix: Option<FlowSmolStr>,
     /// treat the file as ambient context (e.g. .js.flow or .d.ts)
     pub ambient: bool,
@@ -296,7 +295,6 @@ impl Default for ParseOptions {
         ParseOptions {
             components: false,
             enums: false,
-            assert_operator: false,
             pattern_matching: false,
             records: false,
             esproposal_decorators: false,
@@ -314,7 +312,6 @@ impl Default for ParseOptions {
 pub const PERMISSIVE_PARSE_OPTIONS: ParseOptions = ParseOptions {
     components: true,
     enums: true,
-    assert_operator: false,
     pattern_matching: true,
     records: true,
     esproposal_decorators: true,
@@ -1280,8 +1277,11 @@ pub(crate) mod peek {
         match env.last_loc() {
             None => false,
             Some(loc_prev) => {
-                let loc_prev_start_line = loc_prev.start.line;
-                loc(env).start.line > loc_prev_start_line
+                // Only newlines between tokens count, not newlines within the previous
+                // token (e.g. a multiline template or a continued string). A postfix `!`
+                // on that token's ending line must not be separated by ASI.
+                let loc_prev_end_line = loc_prev.end.line;
+                loc(env).start.line > loc_prev_end_line
             }
         }
     }

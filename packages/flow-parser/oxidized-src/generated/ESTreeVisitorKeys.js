@@ -574,7 +574,7 @@ module.exports = {
     'arguments',
   ],
   NonNullExpression: [
-    'argument',
+    'expression',
   ],
   NullLiteralTypeAnnotation: [],
   NullableTypeAnnotation: [

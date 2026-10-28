@@ -440,10 +440,8 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
                 } else {
                     let use_strict = options.modules_are_use_strict;
                     let module_ref_prefix = options.haste_module_ref_prefix.clone();
-                    let assert_operator = options.assert_operator.parse();
                     let parse_options = flow_parser::ParseOptions {
                         use_strict,
-                        assert_operator,
                         module_ref_prefix,
                         ..flow_parser::PERMISSIVE_PARSE_OPTIONS
                     };
@@ -529,10 +527,8 @@ fn insert_inferred_type_as_cast_code_actions<'a>(
         Some(ref file) => {
             let use_strict = options.modules_are_use_strict;
             let module_ref_prefix = options.haste_module_ref_prefix.clone();
-            let assert_operator = options.assert_operator.parse();
             let parse_options = flow_parser::ParseOptions {
                 use_strict,
-                assert_operator,
                 module_ref_prefix,
                 ..flow_parser::PERMISSIVE_PARSE_OPTIONS
             };

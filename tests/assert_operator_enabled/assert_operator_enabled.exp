@@ -767,5 +767,20 @@ References:
        ^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- useful_check.js:31:1
 
-Found 48 errors
+`nonnullableMethod?.method` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can
+only be applied to values with nullable types. [illegal-assert-operator]
+
+   useful_check.js:31:1
+   31| nonnullableMethod?.method!(); // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   useful_check.js:31:1
+   31| nonnullableMethod?.method!(); // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 49 errors

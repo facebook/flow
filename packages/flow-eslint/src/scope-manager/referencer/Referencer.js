@@ -222,7 +222,7 @@ class Referencer extends Visitor {
   visitExpressionTarget(node: ESNode): ESNode {
     let target = node;
     while (target.type === 'NonNullExpression') {
-      target = target.argument;
+      target = target.expression;
     }
     return target;
   }

@@ -139,10 +139,8 @@ fn parse_source_file(
     } else {
         options.modules_are_use_strict
     };
-    let assert_operator = options.assert_operator.parse();
     let parse_options = Some(ParseOptions {
         use_strict,
-        assert_operator,
         module_ref_prefix: options.haste_module_ref_prefix.dupe(),
         ..PERMISSIVE_PARSE_OPTIONS
     });

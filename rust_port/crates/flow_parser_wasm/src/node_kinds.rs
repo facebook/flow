@@ -894,8 +894,7 @@ define_nodes! {
     } from Expression::AsConstExpression { loc, inner }
         {=> self.serialize_as_const_expression(loc, inner)},
     NonNullExpression = 71 {
-        argument: Node,
-        chain: Boolean,
+        expression: Node,
     },
     MatchExpression = 72 {
         argument: Node,

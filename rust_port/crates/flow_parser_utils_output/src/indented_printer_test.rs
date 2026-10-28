@@ -175,6 +175,8 @@ fn preserves_optional_chains_and_explicit_boundaries() {
     for source in [
         "object?.a.b(); object?.a().b; object.a?.(value).b; object?.[key]?.(value)?.[other];",
         "(object?.a).b; (object?.a)(); (object?.a()).b; (object?.a)?.b;",
+        // Parentheses separate nested chains even when both continuations are optional.
+        "(object?.a)?.(); (object?.a())?.(); ((object?.a)?.b)?.c;",
         "(object?.a).b?.c; (object?.a())?.b(); object?.a.b?.c.d();",
         "new Factory; new Factory(); new (factory())(value); (new Factory()).method();",
         "eval('value'); (0, eval)('value'); object.method(); (object.method)();",

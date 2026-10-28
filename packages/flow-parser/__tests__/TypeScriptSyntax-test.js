@@ -10,6 +10,8 @@
 
 'use strict';
 
+import type {ESNode} from 'flow-estree';
+
 import {
   isAbstractMethodDefinition,
   isAbstractPropertyDefinition,
@@ -32,6 +34,7 @@ import {
   isTupleTypeElement,
 } from 'flow-estree';
 import {parse, printForSnapshotBabel} from '../__test_utils__/parse';
+import {SimpleTraverser} from '../oxidized-src/traverse/SimpleTraverser';
 
 describe('TypeScript-compatible syntax', () => {
   test('template literal type annotations', () => {
@@ -396,14 +399,22 @@ describe('TypeScript-compatible syntax', () => {
   });
 
   test('non-null expressions', () => {
-    const ast = parse('value!;', {assertOperator: true});
+    // Non-null assertions expose the same expression child as TSNonNullExpression.
+    const ast = parse('value!;');
     const [statement] = ast.body;
     if (statement.type !== 'ExpressionStatement') {
       throw new Error('expected an expression statement');
     }
 
-    expect(isNonNullExpression(statement.expression)).toBe(true);
-    expect(isExpression(statement.expression)).toBe(true);
+    expect(isNonNullExpression(statement.expression)).toBe(true); // OK
+    expect(isExpression(statement.expression)).toBe(true); // OK
+    expect(statement.expression).toMatchObject({
+      type: 'NonNullExpression',
+      range: [0, 6],
+      expression: {type: 'Identifier', name: 'value', range: [0, 5]},
+    }); // OK
+    expect(statement.expression).not.toHaveProperty('argument'); // OK
+    expect(statement.expression).not.toHaveProperty('chain'); // OK
   });
 
   test('parameter properties', () => {
@@ -516,6 +527,200 @@ describe('TypeScript-compatible syntax', () => {
 
     expect(declaration.specifiers.some(isExportNamespaceSpecifier)).toBe(true);
   });
+});
+
+describe('non-null expression AST', () => {
+  // Match TS ESLint's chain nesting, including repeated assertions and parentheses.
+  test.each([
+    ['value!!;', ['NonNullExpression', 'NonNullExpression', 'Identifier']],
+    [
+      'foo?.bar!;',
+      [
+        'ChainExpression',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      'foo?.bar!!;',
+      [
+        'ChainExpression',
+        'NonNullExpression',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      'foo?.bar!();',
+      [
+        'ChainExpression',
+        'CallExpression:false',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      'foo?.bar!.baz;',
+      [
+        'ChainExpression',
+        'MemberExpression:false',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      'foo?.bar!!();',
+      [
+        'ChainExpression',
+        'CallExpression:false',
+        'NonNullExpression',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      'foo?.bar!?.baz;',
+      [
+        'ChainExpression',
+        'MemberExpression:true',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      'foo?.bar!.baz!();',
+      [
+        'ChainExpression',
+        'CallExpression:false',
+        'NonNullExpression',
+        'MemberExpression:false',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      '(foo?.bar)!();',
+      [
+        'CallExpression:false',
+        'NonNullExpression',
+        'ChainExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      '(foo?.bar)!.baz;',
+      [
+        'MemberExpression:false',
+        'NonNullExpression',
+        'ChainExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      '(foo?.bar!)!();',
+      [
+        'CallExpression:false',
+        'NonNullExpression',
+        'ChainExpression',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      '(foo?.bar!)?.baz;',
+      [
+        'ChainExpression',
+        'MemberExpression:true',
+        'ChainExpression',
+        'NonNullExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+    [
+      '(foo?.bar)!?.baz;',
+      [
+        'ChainExpression',
+        'MemberExpression:true',
+        'NonNullExpression',
+        'ChainExpression',
+        'MemberExpression:true',
+        'Identifier',
+      ],
+    ],
+  ])('preserves the expression path for %s', (code, expected) => {
+    const [statement] = parse(code).body;
+    if (statement.type !== 'ExpressionStatement') {
+      throw new Error('expected an expression statement');
+    }
+    const path = [];
+    let expression: ESNode = statement.expression;
+    for (;;) {
+      switch (expression.type) {
+        case 'ChainExpression':
+        case 'NonNullExpression':
+          path.push(expression.type);
+          expression = expression.expression;
+          break;
+        case 'CallExpression':
+          path.push(`${expression.type}:${String(expression.optional)}`);
+          expression = expression.callee;
+          break;
+        case 'MemberExpression':
+          path.push(`${expression.type}:${String(expression.optional)}`);
+          expression = expression.object;
+          break;
+        default:
+          path.push(expression.type);
+          expect(path).toEqual(expected); // OK
+          return;
+      }
+    }
+  });
+
+  // A synthesized assertion ends at its bang, not at a following call or member.
+  test.each([
+    ['foo?.bar!();', ['foo?.bar!']],
+    ['foo?.bar!.baz;', ['foo?.bar!']],
+    ['foo?.bar!!();', ['foo?.bar!!', 'foo?.bar!']],
+    ['foo?.bar!.baz!();', ['foo?.bar!.baz!', 'foo?.bar!']],
+    ['foo?.bar /* before */ ! /* after */ .baz;', ['foo?.bar /* before */ !']],
+    ['foo?.bar /* before */ !\n  (argument);', ['foo?.bar /* before */ !']],
+    ['/* 😀 */ foo?.bar!();', ['foo?.bar!']],
+  ])(
+    'preserves assertion fields, traversal, and locations for %s',
+    (code, expected) => {
+      const assertions = [];
+      SimpleTraverser.traverse(parse(code), {
+        enter(node) {
+          if (isNonNullExpression(node)) {
+            expect(node).not.toHaveProperty('argument'); // OK
+            expect(node).not.toHaveProperty('chain'); // OK
+            expect(node.expression.range[1]).toBeLessThan(node.range[1]); // OK
+            assertions.push(code.slice(...node.range));
+            const prefix = code.slice(0, node.range[1]);
+            const lines = prefix.split(/\r\n|[\n\r\u2028\u2029]/u);
+            expect(node.loc.end).toEqual({
+              line: lines.length,
+              column: lines[lines.length - 1].length,
+            }); // OK
+          }
+        },
+        leave() {},
+      });
+      expect(assertions).toEqual(expected); // OK
+    },
+  );
 });
 
 test('Babel output treats `satisfies` like an `as` cast', async () => {

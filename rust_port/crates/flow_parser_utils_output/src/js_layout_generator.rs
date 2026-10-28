@@ -1772,9 +1772,14 @@ pub fn expression(
                 inner,
                 loc,
             ),
-            ExpressionInner::OptionalCall { loc, inner } => {
-                call_expr(inner.optional, precedence, &ctxt, opts, &inner.call, loc)
-            }
+            ExpressionInner::OptionalCall { loc, inner } => call_expr(
+                inner.optional.dupe(),
+                precedence,
+                &ctxt,
+                opts,
+                &inner.call,
+                loc,
+            ),
             ExpressionInner::Conditional { loc, inner } => {
                 // increase precedence since conditionals are right-associative
                 let test_layout = expression_with_parens(opts, precedence + 1, &ctxt, &inner.test);
@@ -1855,9 +1860,14 @@ pub fn expression(
                 inner,
                 loc,
             ),
-            ExpressionInner::OptionalMember { loc, inner } => {
-                member(inner.optional, precedence, &ctxt, opts, &inner.member, loc)
-            }
+            ExpressionInner::OptionalMember { loc, inner } => member(
+                inner.optional.dupe(),
+                precedence,
+                &ctxt,
+                opts,
+                &inner.member,
+                loc,
+            ),
             ExpressionInner::New { loc, inner } => {
                 let callee_layout = if definitely_needs_parens(precedence, ctxt, &inner.callee)
                     || contains_call_expression(&inner.callee)
@@ -2376,7 +2386,7 @@ fn object_(opts: &Opts, loc: &Loc, obj: &ast::expression::Object<Loc, Loc>) -> L
 }
 
 fn call_expr(
-    optional: ast::expression::OptionalCallKind,
+    optional: ast::expression::OptionalCallKind<Loc>,
     precedence: i32,
     ctxt: &ExpressionContext,
     opts: &Opts,
@@ -2392,7 +2402,7 @@ fn call_expr(
             let lparen = match optional {
                 ast::expression::OptionalCallKind::NonOptional => "(",
                 ast::expression::OptionalCallKind::Optional => "?.(",
-                ast::expression::OptionalCallKind::AssertNonnull => "!(",
+                ast::expression::OptionalCallKind::AssertNonnull { .. } => "!(",
             };
             (LayoutNode::empty(), lparen)
         }
@@ -2400,7 +2410,7 @@ fn call_expr(
             let less_than = match optional {
                 ast::expression::OptionalCallKind::NonOptional => "<",
                 ast::expression::OptionalCallKind::Optional => "?.<",
-                ast::expression::OptionalCallKind::AssertNonnull => "!<",
+                ast::expression::OptionalCallKind::AssertNonnull { .. } => "!<",
             };
             (call_type_args(opts, less_than, targs), "(")
         }
@@ -2417,7 +2427,7 @@ fn call_expr(
 }
 
 fn member(
-    optional: ast::expression::OptionalMemberKind,
+    optional: ast::expression::OptionalMemberKind<Loc>,
     precedence: i32,
     ctxt: &ExpressionContext,
     opts: &Opts,
@@ -2437,12 +2447,14 @@ fn member(
             (atom("."), LayoutNode::empty())
         }
         (false, ast::expression::OptionalMemberKind::Optional) => (atom("?."), LayoutNode::empty()),
-        (false, ast::expression::OptionalMemberKind::AssertNonnull) => {
+        (false, ast::expression::OptionalMemberKind::AssertNonnull { .. }) => {
             (atom("!."), LayoutNode::empty())
         }
         (true, ast::expression::OptionalMemberKind::NonOptional) => (atom("["), atom("]")),
         (true, ast::expression::OptionalMemberKind::Optional) => (atom("?.["), atom("]")),
-        (true, ast::expression::OptionalMemberKind::AssertNonnull) => (atom("!["), atom("]")),
+        (true, ast::expression::OptionalMemberKind::AssertNonnull { .. }) => {
+            (atom("!["), atom("]"))
+        }
     };
     let property_layout = match property {
         ast::expression::member::Property::PropertyIdentifier(ident) => {

@@ -1,0 +1,106 @@
+Error ---------------------------------------------------------------------------------------------------- test.ts:12:25
+
+Cannot assign `value!` to `wrong` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.ts:12:25
+   12|   const wrong: string = value!; // ERROR
+                               ^^^^^
+
+References:
+   test.ts:9:24
+    9| function values(value: number | null | undefined, present: number): void {
+                              ^^^^^^ [1]
+   test.ts:12:16
+   12|   const wrong: string = value!; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:13:33
+
+Cannot assign `value` to `stillNullable` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.ts:13:33
+   13|   const stillNullable: number = value; // ERROR: assertion does not refine value
+                                       ^^^^^
+
+References:
+   test.ts:9:33
+    9| function values(value: number | null | undefined, present: number): void {
+                                       ^^^^ [1]
+   test.ts:13:24
+   13|   const stillNullable: number = value; // ERROR: assertion does not refine value
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:13:33
+
+Cannot assign `value` to `stillNullable` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.ts:13:33
+   13|   const stillNullable: number = value; // ERROR: assertion does not refine value
+                                       ^^^^^
+
+References:
+   test.ts:9:40
+    9| function values(value: number | null | undefined, present: number): void {
+                                              ^^^^^^^^^ [1]
+   test.ts:13:24
+   13|   const stillNullable: number = value; // ERROR: assertion does not refine value
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:27:27
+
+Cannot assign `value?.method!()` to `missing` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.ts:27:27
+   27|   const missing: number = value?.method!(); // ERROR: optional chain can short-circuit
+                                 ^^^^^
+
+References:
+   test.ts:18:95
+   18|   value: {prop: number | null, method: (() => number) | null, child: {prop: number} | null} | null,
+                                                                                                     ^^^^ [1]
+   test.ts:27:18
+   27|   const missing: number = value?.method!(); // ERROR: optional chain can short-circuit
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:30:35
+
+Cannot assign `(value?.method!)!()` to `repeatedMissing` because `void` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   test.ts:30:35
+   30|   const repeatedMissing: number = value?.method!!(); // ERROR: chain can short-circuit
+                                         ^^^^^
+
+References:
+   test.ts:18:95
+   18|   value: {prop: number | null, method: (() => number) | null, child: {prop: number} | null} | null,
+                                                                                                     ^^^^ [1]
+   test.ts:30:26
+   30|   const repeatedMissing: number = value?.method!!(); // ERROR: chain can short-circuit
+                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:33:40
+
+Cannot assign `(value?.child!)?.prop` to `optionalAgainMissing` because `void` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   test.ts:33:40
+   33|   const optionalAgainMissing: number = value?.child!?.prop; // ERROR: original chain can short-circuit
+                                              ^^^^^
+
+References:
+   test.ts:18:95
+   18|   value: {prop: number | null, method: (() => number) | null, child: {prop: number} | null} | null,
+                                                                                                     ^^^^ [1]
+   test.ts:33:31
+   33|   const optionalAgainMissing: number = value?.child!?.prop; // ERROR: original chain can short-circuit
+                                     ^^^^^^ [2]
+
+
+
+Found 6 errors

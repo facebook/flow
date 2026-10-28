@@ -16,16 +16,20 @@ import {transformProgram as stripFlowTypes} from '../../oxidized-src/estree/Stri
 
 describe('StripFlowTypes', () => {
   test('strips non-null expressions', () => {
-    const ast = parse('value!;', {assertOperator: true});
+    // Removing the assertion preserves the expression and its original location.
+    const ast = parse('value!;');
     const stripped = stripFlowTypes(ast, {});
 
     expect(stripped.body[0]).toMatchObject({
       type: 'ExpressionStatement',
-      expression: {type: 'Identifier', name: 'value'},
-    });
+      expression: {type: 'Identifier', name: 'value', range: [0, 5]},
+    }); // OK
   });
 
   test.each([
+    ['foo?.bar!;', 'foo?.bar;'],
+    ['foo?.bar!!;', 'foo?.bar;'],
+    ['value!!;', 'value;'],
     ['foo?.bar!();', 'foo?.bar();'],
     ['foo?.bar!.baz;', 'foo?.bar.baz;'],
     ['foo?.bar![key];', 'foo?.bar[key];'],
@@ -38,13 +42,35 @@ describe('StripFlowTypes', () => {
     ['(foo?.bar)!();', '(foo?.bar)();'],
     ['(foo?.bar)!.baz;', '(foo?.bar).baz;'],
     ['(foo?.bar!)!();', '(foo?.bar)();'],
+    ['(foo?.bar!)?.baz;', 'foo?.bar?.baz;'],
+    ['(foo?.bar)!?.baz;', 'foo?.bar?.baz;'],
+    ['foo?.[key!]!(value!);', 'foo?.[key](value);'],
     ['(foo?.bar!.baz).qux;', '(foo?.bar.baz).qux;'],
   ])(
     'preserves optional-chain boundaries when stripping %s',
     async (code, result) => {
-      const stripped = stripFlowTypes(parse(code, {assertOperator: true}), {});
+      // Assertions do not end a chain; parentheses still do.
+      const stripped = stripFlowTypes(parse(code), {});
 
-      expect((await print(stripped, code)).trim()).toBe(result);
+      expect((await print(stripped, code)).trim()).toBe(result); // OK
+    },
+  );
+
+  // Nested chains survive erasure, even if the printer can omit redundant parentheses.
+  test.each(['(foo?.bar!)?.baz;', '(foo?.bar)!?.baz;'])(
+    'retains the parenthesized receiver AST for %s',
+    code => {
+      const stripped = stripFlowTypes(parse(code), {});
+      expect(stripped.body[0]).toMatchObject({
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'ChainExpression',
+          expression: {
+            type: 'MemberExpression',
+            object: {type: 'ChainExpression'},
+          },
+        },
+      }); // OK
     },
   );
 

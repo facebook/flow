@@ -1994,11 +1994,9 @@ fn parse_and_cache(
     let flowconfig = get_flowconfig(state);
     let use_strict = flowconfig.options.modules_are_use_strict;
     let module_ref_prefix = flowconfig.options.haste_module_ref_prefix.clone();
-    let assert_operator = flowconfig.options.assert_operator;
     let parse_options = Some(flow_parser::ParseOptions {
         use_strict,
         module_ref_prefix: module_ref_prefix.map(|s| s.into()),
-        assert_operator: assert_operator.parse(),
         ..flow_parser::PERMISSIVE_PARSE_OPTIONS
     });
 

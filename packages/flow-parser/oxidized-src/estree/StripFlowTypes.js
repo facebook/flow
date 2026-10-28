@@ -34,12 +34,9 @@ export function transformProgram(
       switch (node.type) {
         case 'AsExpression':
         case 'AsConstExpression':
-        case 'TypeCastExpression': {
-          return node.expression;
-        }
-
+        case 'TypeCastExpression':
         case 'NonNullExpression': {
-          return node.argument;
+          return node.expression;
         }
 
         case 'CallExpression':

@@ -384,7 +384,10 @@ impl<'ast> AstVisitor<'ast, Loc> for StripFlow {
         call: &'ast expression::OptionalCall<Loc, Loc>,
     ) -> expression::OptionalCall<Loc, Loc> {
         let mut call = ast_visitor::map_optional_call_default(self, loc, call);
-        if call.optional == expression::OptionalCallKind::AssertNonnull {
+        if matches!(
+            call.optional,
+            expression::OptionalCallKind::AssertNonnull { .. }
+        ) {
             call.optional = expression::OptionalCallKind::NonOptional;
         }
         call
@@ -396,7 +399,10 @@ impl<'ast> AstVisitor<'ast, Loc> for StripFlow {
         member: &'ast expression::OptionalMember<Loc, Loc>,
     ) -> expression::OptionalMember<Loc, Loc> {
         let mut member = ast_visitor::map_optional_member_default(self, loc, member);
-        if member.optional == expression::OptionalMemberKind::AssertNonnull {
+        if matches!(
+            member.optional,
+            expression::OptionalMemberKind::AssertNonnull { .. }
+        ) {
             member.optional = expression::OptionalMemberKind::NonOptional;
         }
         member

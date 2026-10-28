@@ -101,7 +101,6 @@ pub fn flow_to_runnable_js_with_source_map(
         ambiguous_types: true,
         enable_types_in_comments: false,
         use_strict: matches!(options.source_type, SourceType::Module),
-        assert_operator: true,
         module_ref_prefix: None,
         ambient: false,
         allow_return_outside_function: options.allow_return_outside_function,

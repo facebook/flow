@@ -1227,6 +1227,20 @@ fn statement(
     }
 }
 
+/// Whether an expression continues an optional chain through non-null assertions.
+pub fn is_optional_chain(expr: &ast::expression::Expression<Loc, Loc>) -> bool {
+    use ast::expression::ExpressionInner;
+    match &**expr {
+        ExpressionInner::OptionalMember { .. } | ExpressionInner::OptionalCall { .. } => true,
+        ExpressionInner::Unary { loc, inner }
+            if inner.operator == ast::expression::UnaryOperator::Nonnull =>
+        {
+            loc.start == inner.argument.loc().start && is_optional_chain(&inner.argument)
+        }
+        _ => false,
+    }
+}
+
 pub fn expression(
     offset_table: &OffsetTable,
     config: &Config,
@@ -1234,6 +1248,17 @@ pub fn expression(
     expr: &ast::expression::Expression<Loc, Loc>,
 ) -> Value {
     use ast::expression::ExpressionInner;
+
+    if !in_optional_chain && is_optional_chain(expr) {
+        return node(
+            offset_table,
+            config,
+            "ChainExpression",
+            expr.loc(),
+            None,
+            vec![("expression", expression(offset_table, config, true, expr))],
+        );
+    }
 
     match &**expr {
         ExpressionInner::This { loc, inner } => node(
@@ -1405,13 +1430,15 @@ pub fn expression(
                     "NonNullExpression",
                     loc,
                     unary.comments.as_ref(),
-                    vec![
-                        (
-                            "argument",
-                            expression(offset_table, config, false, &unary.argument),
+                    vec![(
+                        "expression",
+                        expression(
+                            offset_table,
+                            config,
+                            is_optional_chain(expr),
+                            &unary.argument,
                         ),
-                        ("chain", bool_value(false)),
-                    ],
+                    )],
                 ),
                 _ => {
                     let operator = match unary.operator {
@@ -1642,7 +1669,7 @@ pub fn expression(
             // boundary: reset chain state for children so an inner optional
             // access starts a new chain. Otherwise, normal call. Either way
             // emit CallExpression with optional=false.
-            let mut props = call_node_properties(offset_table, config, false, None, call);
+            let mut props = call_node_properties(offset_table, config, false, None, loc, call);
             props.push(("optional", bool_value(false)));
             node(
                 offset_table,
@@ -1663,76 +1690,36 @@ pub fn expression(
                 call.comments.dupe(),
             );
 
-            match optional_call.optional {
-                ast::expression::OptionalCallKind::AssertNonnull => {
-                    // AssertNonnull (`expr!()`): emit CallExpression with
-                    // optional=false and the callee wrapped in
-                    // NonNullExpression (chain: true). Not part of the
-                    // optional-chain rewrite — no ChainExpression wrap.
-                    let loc_outer = loc.dupe();
-                    let wrap_callee: Box<dyn Fn(&OffsetTable, &Config, Value) -> Value> =
-                        Box::new(move |offset_table, config, callee| {
-                            node(
-                                offset_table,
-                                config,
-                                "NonNullExpression",
-                                &loc_outer,
-                                None,
-                                vec![("argument", callee), ("chain", bool_value(true))],
-                            )
-                        });
-                    let mut props =
-                        call_node_properties(offset_table, config, false, Some(wrap_callee), call);
-                    props.push(("optional", bool_value(false)));
-                    node(
-                        offset_table,
-                        config,
-                        "CallExpression",
-                        loc,
-                        comments.as_ref(),
-                        props,
-                    )
+            let assertion_loc = match &optional_call.optional {
+                ast::expression::OptionalCallKind::AssertNonnull { assertion_loc } => {
+                    Some(assertion_loc)
                 }
-                ast::expression::OptionalCallKind::Optional
-                | ast::expression::OptionalCallKind::NonOptional => {
-                    let optional_value = bool_value(matches!(
-                        optional_call.optional,
-                        ast::expression::OptionalCallKind::Optional
-                    ));
-                    let emit_inner = |offset_table: &OffsetTable, config: &Config| {
-                        let mut props =
-                            call_node_properties(offset_table, config, true, None, call);
-                        props.push(("optional", optional_value.clone()));
-                        node(
-                            offset_table,
-                            config,
-                            "CallExpression",
-                            loc,
-                            comments.as_ref(),
-                            props,
-                        )
-                    };
-                    if in_optional_chain {
-                        emit_inner(offset_table, config)
-                    } else {
-                        node(
-                            offset_table,
-                            config,
-                            "ChainExpression",
-                            loc,
-                            None,
-                            vec![("expression", emit_inner(offset_table, config))],
-                        )
-                    }
-                }
-            }
+                _ => None,
+            };
+            let mut props =
+                call_node_properties(offset_table, config, true, assertion_loc, loc, call);
+            props.push((
+                "optional",
+                bool_value(matches!(
+                    optional_call.optional,
+                    ast::expression::OptionalCallKind::Optional
+                )),
+            ));
+            node(
+                offset_table,
+                config,
+                "CallExpression",
+                loc,
+                comments.as_ref(),
+                props,
+            )
         }
         ExpressionInner::Member { loc, inner } => {
             // Plain Member inside an optional chain marks a parenthesis
             // boundary; reset chain state for children so an inner optional
             // access starts a new chain. Either way emit MemberExpression
             // with optional=false.
-            let mut props = member_node_properties(offset_table, config, false, None, inner);
+            let mut props = member_node_properties(offset_table, config, false, None, loc, inner);
             props.push(("optional", bool_value(false)));
             node(
                 offset_table,
@@ -1746,70 +1733,29 @@ pub fn expression(
         ExpressionInner::OptionalMember { loc, inner } => {
             let member = &inner.member;
 
-            match inner.optional {
-                ast::expression::OptionalMemberKind::AssertNonnull => {
-                    let loc_outer = loc.dupe();
-                    let wrap_receiver: Box<dyn Fn(&OffsetTable, &Config, Value) -> Value> =
-                        Box::new(move |offset_table, config, receiver| {
-                            node(
-                                offset_table,
-                                config,
-                                "NonNullExpression",
-                                &loc_outer,
-                                None,
-                                vec![("argument", receiver), ("chain", bool_value(true))],
-                            )
-                        });
-                    let mut props = member_node_properties(
-                        offset_table,
-                        config,
-                        false,
-                        Some(wrap_receiver),
-                        member,
-                    );
-                    props.push(("optional", bool_value(false)));
-                    node(
-                        offset_table,
-                        config,
-                        "MemberExpression",
-                        loc,
-                        member.comments.as_ref(),
-                        props,
-                    )
+            let assertion_loc = match &inner.optional {
+                ast::expression::OptionalMemberKind::AssertNonnull { assertion_loc } => {
+                    Some(assertion_loc)
                 }
-                ast::expression::OptionalMemberKind::Optional
-                | ast::expression::OptionalMemberKind::NonOptional => {
-                    let optional_value = bool_value(matches!(
-                        inner.optional,
-                        ast::expression::OptionalMemberKind::Optional
-                    ));
-                    let emit_inner = |offset_table: &OffsetTable, config: &Config| {
-                        let mut props =
-                            member_node_properties(offset_table, config, true, None, member);
-                        props.push(("optional", optional_value.clone()));
-                        node(
-                            offset_table,
-                            config,
-                            "MemberExpression",
-                            loc,
-                            member.comments.as_ref(),
-                            props,
-                        )
-                    };
-                    if in_optional_chain {
-                        emit_inner(offset_table, config)
-                    } else {
-                        node(
-                            offset_table,
-                            config,
-                            "ChainExpression",
-                            loc,
-                            None,
-                            vec![("expression", emit_inner(offset_table, config))],
-                        )
-                    }
-                }
-            }
+                _ => None,
+            };
+            let mut props =
+                member_node_properties(offset_table, config, true, assertion_loc, loc, member);
+            props.push((
+                "optional",
+                bool_value(matches!(
+                    inner.optional,
+                    ast::expression::OptionalMemberKind::Optional
+                )),
+            ));
+            node(
+                offset_table,
+                config,
+                "MemberExpression",
+                loc,
+                member.comments.as_ref(),
+                props,
+            )
         }
         ExpressionInner::Yield { loc, inner } => node(
             offset_table,
@@ -6793,15 +6739,25 @@ fn call_node_properties(
     offset_table: &OffsetTable,
     config: &Config,
     in_optional_chain: bool,
-    wrap_callee: Option<Box<dyn Fn(&OffsetTable, &Config, Value) -> Value>>,
+    assertion_loc: Option<&Loc>,
+    loc: &Loc,
     call: &ast::expression::Call<Loc, Loc>,
 ) -> Vec<(&'static str, Value)> {
-    let callee = match wrap_callee {
-        None => expression(offset_table, config, in_optional_chain, &call.callee),
-        Some(wrap) => wrap(
+    let callee = expression(
+        offset_table,
+        config,
+        in_optional_chain && loc.start == call.callee.loc().start,
+        &call.callee,
+    );
+    let callee = match assertion_loc {
+        None => callee,
+        Some(assertion_loc) => node(
             offset_table,
             config,
-            expression(offset_table, config, in_optional_chain, &call.callee),
+            "NonNullExpression",
+            assertion_loc,
+            None,
+            vec![("expression", callee)],
         ),
     };
 
@@ -6813,7 +6769,7 @@ fn call_node_properties(
         ),
         (
             "arguments",
-            arg_list(offset_table, config, in_optional_chain, &call.arguments),
+            arg_list(offset_table, config, false, &call.arguments),
         ),
     ]
 }
@@ -6822,7 +6778,8 @@ fn member_node_properties(
     offset_table: &OffsetTable,
     config: &Config,
     in_optional_chain: bool,
-    wrap_receiver: Option<Box<dyn Fn(&OffsetTable, &Config, Value) -> Value>>,
+    assertion_loc: Option<&Loc>,
+    loc: &Loc,
     member: &ast::expression::Member<Loc, Loc>,
 ) -> Vec<(&'static str, Value)> {
     let (property, computed) = match &member.property {
@@ -6832,18 +6789,26 @@ fn member_node_properties(
         ast::expression::member::Property::PropertyPrivateName(name) => {
             (private_identifier(offset_table, config, name), false)
         }
-        ast::expression::member::Property::PropertyExpression(expr) => (
-            expression(offset_table, config, in_optional_chain, expr),
-            true,
-        ),
+        ast::expression::member::Property::PropertyExpression(expr) => {
+            (expression(offset_table, config, false, expr), true)
+        }
     };
 
-    let object = match wrap_receiver {
-        None => expression(offset_table, config, in_optional_chain, &member.object),
-        Some(wrap) => wrap(
+    let object = expression(
+        offset_table,
+        config,
+        in_optional_chain && loc.start == member.object.loc().start,
+        &member.object,
+    );
+    let object = match assertion_loc {
+        None => object,
+        Some(assertion_loc) => node(
             offset_table,
             config,
-            expression(offset_table, config, in_optional_chain, &member.object),
+            "NonNullExpression",
+            assertion_loc,
+            None,
+            vec![("expression", object)],
         ),
     };
 

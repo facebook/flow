@@ -14,7 +14,6 @@ import type {Expression} from 'flow-estree';
 
 export type ParserOptions = {
   allowReturnOutsideFunction?: boolean,
-  assertOperator?: boolean,
   babel?: boolean,
   flow?: 'all' | 'detect',
   enableExperimentalComponentSyntax?: boolean,
@@ -40,7 +39,6 @@ export type ParserOptions = {
 
 export const ParserOptionsKeys /*: ReadonlySet<keyof ParserOptions> */ = new Set([
   'allowReturnOutsideFunction',
-  'assertOperator',
   'babel',
   'flow',
   'enableExperimentalComponentSyntax',

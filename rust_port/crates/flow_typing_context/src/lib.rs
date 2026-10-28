@@ -1676,12 +1676,16 @@ impl<'a> Context<'a> {
         self.inner().metadata.overridable.is_ts_global_augmentation
     }
 
+    pub fn is_ts_file(&self) -> bool {
+        files::has_ts_ext(self.file())
+    }
+
     pub fn assert_operator_enabled(&self) -> bool {
-        self.inner().metadata.frozen.assert_operator.usable()
+        self.is_ts_file() || self.inner().metadata.frozen.assert_operator.usable()
     }
 
     pub fn assert_operator_specialized(&self) -> bool {
-        self.inner().metadata.frozen.assert_operator.specialized()
+        !self.is_ts_file() && self.inner().metadata.frozen.assert_operator.specialized()
     }
 
     pub fn type_expansion_recursion_limit(&self) -> i32 {

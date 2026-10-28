@@ -3,3 +3,5 @@ all=true
 experimental.assert_operator=specialized
 experimental.ts_syntax=true
 builtin_lib=core-only
+module.file_ext=.js
+module.file_ext=.ts

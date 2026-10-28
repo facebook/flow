@@ -1211,7 +1211,7 @@ pub fn push_toplevel_type<M: Dupe, A: Dupe, B: Dupe>(
             inner: Arc::new(expression::OptionalMember {
                 member: push_to_member(&inner.member, &t),
                 filtered_out: inner.filtered_out.dupe(),
-                optional: inner.optional,
+                optional: inner.optional.dupe(),
             }),
         },
         other => {

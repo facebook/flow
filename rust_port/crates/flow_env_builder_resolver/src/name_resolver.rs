@@ -8041,7 +8041,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         let optional = match expr.deref() {
             ExpressionInner::OptionalMember { inner, .. } => matches!(
                 inner.optional,
-                OptionalMemberKind::AssertNonnull | OptionalMemberKind::Optional
+                OptionalMemberKind::AssertNonnull { .. } | OptionalMemberKind::Optional
             ),
             _ => false,
         };

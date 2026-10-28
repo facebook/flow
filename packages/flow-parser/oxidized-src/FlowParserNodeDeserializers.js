@@ -814,8 +814,7 @@ module.exports = [
     return {
       type: 'NonNullExpression',
       loc: this.addEmptyLoc(),
-      argument: this.deserializeNode(),
-      chain: this.deserializeBoolean(),
+      expression: this.deserializeNode(),
     };
   },
 

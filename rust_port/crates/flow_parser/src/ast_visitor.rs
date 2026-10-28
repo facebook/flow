@@ -137,6 +137,12 @@ pub trait AstVisitor<'ast, Loc: Dupe, Type: Dupe = Loc, C = &'ast Loc, E = !> {
 
     fn normalize_type(type_: &'ast Type) -> C;
 
+    /// Maps a syntactic location carried by an optional-chain assertion.
+    /// Overrides must also map enclosing expression locations consistently.
+    fn map_loc_annot(&mut self, loc: &'ast Loc) -> Loc {
+        loc.dupe()
+    }
+
     fn program(&mut self, program: &'ast ast::Program<Loc, Type>) -> Result<(), E> {
         program_default(self, program)
     }
@@ -7189,10 +7195,21 @@ pub fn map_optional_call_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         optional,
     } = expr;
     let call_ = visitor.map_call(loc, call);
+    let optional_ = match optional {
+        ast::expression::OptionalCallKind::Optional => ast::expression::OptionalCallKind::Optional,
+        ast::expression::OptionalCallKind::NonOptional => {
+            ast::expression::OptionalCallKind::NonOptional
+        }
+        ast::expression::OptionalCallKind::AssertNonnull { assertion_loc } => {
+            ast::expression::OptionalCallKind::AssertNonnull {
+                assertion_loc: visitor.map_loc_annot(assertion_loc),
+            }
+        }
+    };
     ast::expression::OptionalCall {
         call: call_,
-        filtered_out: filtered_out.clone(),
-        optional: *optional,
+        filtered_out: filtered_out.dupe(),
+        optional: optional_,
     }
 }
 
@@ -16297,10 +16314,23 @@ pub fn map_optional_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         optional,
     } = expr;
     let member_ = visitor.map_member(loc, member);
+    let optional_ = match optional {
+        ast::expression::OptionalMemberKind::Optional => {
+            ast::expression::OptionalMemberKind::Optional
+        }
+        ast::expression::OptionalMemberKind::NonOptional => {
+            ast::expression::OptionalMemberKind::NonOptional
+        }
+        ast::expression::OptionalMemberKind::AssertNonnull { assertion_loc } => {
+            ast::expression::OptionalMemberKind::AssertNonnull {
+                assertion_loc: visitor.map_loc_annot(assertion_loc),
+            }
+        }
+    };
     ast::expression::OptionalMember {
         member: member_,
-        filtered_out: filtered_out.clone(),
-        optional: *optional,
+        filtered_out: filtered_out.dupe(),
+        optional: optional_,
     }
 }
 

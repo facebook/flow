@@ -79,22 +79,12 @@ pub enum AssertOperator {
     Specialized,
     #[default]
     Disabled,
-    Unparsed,
 }
 
 impl AssertOperator {
-    pub fn parse(self) -> bool {
-        match self {
-            AssertOperator::Unparsed => false,
-            AssertOperator::Enabled | AssertOperator::Specialized | AssertOperator::Disabled => {
-                true
-            }
-        }
-    }
-
     pub fn usable(self) -> bool {
         match self {
-            AssertOperator::Unparsed | AssertOperator::Disabled => false,
+            AssertOperator::Disabled => false,
             AssertOperator::Enabled | AssertOperator::Specialized => true,
         }
     }

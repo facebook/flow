@@ -1,62 +1,197 @@
 {
-  "errors":[
+  "body": [
     {
-      "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":5}},
-      "message":"Unexpected token ILLEGAL"
+      "directive": null,
+      "expression": {
+        "loc": {
+          "end": {
+            "column": 0,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 0,
+            "line": 1
+          }
+        },
+        "range": [
+          0,
+          5
+        ],
+        "raw": "\"foo\n",
+        "type": "Literal",
+        "value": "foo\n"
+      },
+      "loc": {
+        "end": {
+          "column": 0,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        5
+      ],
+      "type": "ExpressionStatement"
     },
     {
-      "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":5}},
-      "message":"Unexpected token ILLEGAL"
+      "directive": null,
+      "expression": {
+        "loc": {
+          "end": {
+            "column": 3,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 0,
+            "line": 2
+          }
+        },
+        "name": "bar",
+        "optional": false,
+        "range": [
+          5,
+          8
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 3,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        5,
+        8
+      ],
+      "type": "ExpressionStatement"
     },
     {
-      "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":3,"column":0}},
-      "message":"Unexpected string, expected the end of an expression statement (`;`)"
+      "directive": null,
+      "expression": {
+        "loc": {
+          "end": {
+            "column": 0,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 3,
+            "line": 2
+          }
+        },
+        "range": [
+          8,
+          10
+        ],
+        "raw": "\"\n",
+        "type": "Literal",
+        "value": "\n"
+      },
+      "loc": {
+        "end": {
+          "column": 0,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 3,
+          "line": 2
+        }
+      },
+      "range": [
+        8,
+        10
+      ],
+      "type": "ExpressionStatement"
     }
   ],
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":0}},
-  "range":[0,10],
-  "body":[
+  "comments": [],
+  "errors": [
     {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-      "range":[0,5],
-      "expression":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-        "range":[0,5],
-        "value":"foo\n",
-        "raw":"\"foo\n"
+      "loc": {
+        "end": {
+          "column": 5,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 4,
+          "line": 1
+        }
       },
-      "directive":null
+      "message": "Unexpected token ILLEGAL"
     },
     {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":3}},
-      "range":[5,8],
-      "expression":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":3}},
-        "range":[5,8],
-        "name":"bar",
-        "typeAnnotation":null,
-        "optional":false
+      "loc": {
+        "end": {
+          "column": 3,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
       },
-      "directive":null
+      "message": "Unexpected identifier, expected the end of an expression statement (`;`)"
     },
     {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":3,"column":0}},
-      "range":[8,10],
-      "expression":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":3,"column":0}},
-        "range":[8,10],
-        "value":"\n",
-        "raw":"\"\n"
+      "loc": {
+        "end": {
+          "column": 5,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 4,
+          "line": 2
+        }
       },
-      "directive":null
+      "message": "Unexpected token ILLEGAL"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 0,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 3,
+          "line": 2
+        }
+      },
+      "message": "Unexpected string, expected the end of an expression statement (`;`)"
     }
   ],
-  "comments":[]
+  "loc": {
+    "end": {
+      "column": 0,
+      "line": 3
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    10
+  ],
+  "type": "Program"
 }

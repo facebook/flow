@@ -388,12 +388,6 @@ function translateFixtureOptions(fixtureOptions) {
         // unexpected-`@` error path.
         out.enableExperimentalDecorators = v;
         break;
-      case 'assert_operator':
-        // Flow's `expr!` non-null assertion. Off by default; fixtures opt in
-        // via `assert_operator: true`. Plumbed through the WASM C ABI into
-        // the parser's `assert_operator` flag.
-        out.assertOperator = v;
-        break;
       case 'enums':
         // OCaml's `default_parse_options` sets `enums = false`; fixtures
         // that exercise enum syntax opt in via `enums: true` in their

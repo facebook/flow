@@ -14,3 +14,7 @@ indexer.a!; // ok
 indexer.foo!; // error
 indexer['a']; // ok
 indexer['foo']!; // error
+
+// Specialized assertions on named chain properties report the exact assertion span.
+declare const nullableObject: ?{child: ?{prop: number}};
+nullableObject?.child!.prop; // ERROR

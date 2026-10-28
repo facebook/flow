@@ -1177,7 +1177,7 @@ pub(super) fn call_cover(
     start_loc: Loc,
     left: PatternCover,
 ) -> Result<PatternCover, Rollback> {
-    let left = member_cover(
+    let (left, pending_call) = member_cover(
         env,
         allow_optional_chain,
         in_optional_chain,
@@ -1244,25 +1244,14 @@ pub(super) fn call_cover(
         )))
     }
 
-    let optional = match env.last_token() {
-        Some(TokenKind::TPlingPeriod) => Some(expression::OptionalCallKind::Optional),
-        Some(TokenKind::TNot) if in_optional_chain && env.parse_options().assert_operator => {
-            Some(expression::OptionalCallKind::AssertNonnull)
-        }
-        _ => {
-            if in_optional_chain {
-                Some(expression::OptionalCallKind::NonOptional)
-            } else {
-                None
-            }
-        }
-    };
+    let optional = pending_call
+        .or_else(|| in_optional_chain.then_some(expression::OptionalCallKind::NonOptional));
 
     fn arguments_helper(
         env: &mut ParserEnv,
         targs: Option<expression::CallTypeArgs<Loc, Loc>>,
         callee: expression::Expression<Loc, Loc>,
-        optional: Option<expression::OptionalCallKind>,
+        optional: Option<expression::OptionalCallKind<Loc>>,
         allow_optional_chain: bool,
         start_loc: Loc,
     ) -> Result<PatternCover, Rollback> {
@@ -1274,6 +1263,7 @@ pub(super) fn call_cover(
             arguments: args,
             comments: None,
         };
+        let in_optional_chain = optional.is_some();
         let call = if let Some(optional) = optional {
             expression::Expression::new(ExpressionInner::OptionalCall {
                 loc: loc.dupe(),
@@ -1289,7 +1279,6 @@ pub(super) fn call_cover(
                 inner: Arc::new(call),
             })
         };
-        let in_optional_chain = optional.is_some();
         call_cover(
             env,
             allow_optional_chain,
@@ -1323,6 +1312,24 @@ pub(super) fn call_cover(
             }
         }
         TokenKind::TLshift | TokenKind::TLessThan => {
+            let fallback = if peek::token(env) == &TokenKind::TLessThan
+                && let Some(expression::OptionalCallKind::AssertNonnull { assertion_loc }) =
+                    &optional
+                && let PatternCover::CoverExpr(argument) = &left
+            {
+                let loc = assertion_loc.dupe();
+                let argument = argument.dupe();
+                PatternCover::CoverExpr(expression::Expression::new(ExpressionInner::Unary {
+                    loc,
+                    inner: Arc::new(expression::Unary {
+                        operator: expression::UnaryOperator::Nonnull,
+                        argument,
+                        comments: None,
+                    }),
+                }))
+            } else {
+                left.clone()
+            };
             let is_optional_type_call =
                 matches!(optional, Some(expression::OptionalCallKind::Optional));
             if env.should_parse_ambiguous_types()
@@ -1332,7 +1339,6 @@ pub(super) fn call_cover(
                 // type application. If we aren't, it's a nested binary expression.
                 // Parameterized call syntax is ambiguous, so we fall back to
                 // standard parsing if it fails.
-                let fallback = left.clone();
                 Ok(env.with_error_callback(
                     |_| Err(Rollback),
                     |env| {
@@ -1379,7 +1385,7 @@ pub(super) fn call_cover(
                     },
                 ))
             } else {
-                Ok(left)
+                Ok(fallback)
             }
         }
         _ => Ok(left),
@@ -1651,11 +1657,11 @@ fn member_cover(
     in_optional_chain: bool,
     start_loc: Loc,
     left: PatternCover,
-) -> Result<PatternCover, Rollback> {
+) -> Result<(PatternCover, Option<expression::OptionalCallKind<Loc>>), Rollback> {
     fn dynamic(
         env: &mut ParserEnv,
         allow_optional_chain: bool,
-        optional: Option<expression::OptionalMemberKind>,
+        optional: Option<expression::OptionalMemberKind<Loc>>,
         start_loc: Loc,
         left: PatternCover,
     ) -> Result<PatternCover, Rollback> {
@@ -1670,6 +1676,7 @@ fn member_cover(
             comments: mk_comments_opt(None, Some(trailing.into())),
         };
 
+        let in_optional_chain = optional.is_some();
         let member_expr = match optional {
             Some(optional) => expression::Expression::new(ExpressionInner::OptionalMember {
                 loc: loc.dupe(),
@@ -1688,7 +1695,7 @@ fn member_cover(
         call_cover(
             env,
             allow_optional_chain,
-            optional.is_some(),
+            in_optional_chain,
             start_loc,
             PatternCover::CoverExpr(member_expr),
         )
@@ -1697,7 +1704,7 @@ fn member_cover(
     fn static_member(
         env: &mut ParserEnv,
         allow_optional_chain: bool,
-        optional: Option<expression::OptionalMemberKind>,
+        optional: Option<expression::OptionalMemberKind<Loc>>,
         start_loc: Loc,
         left: PatternCover,
     ) -> Result<PatternCover, Rollback> {
@@ -1737,6 +1744,7 @@ fn member_cover(
             comments: None,
         };
 
+        let in_optional_chain = optional.is_some();
         let member_expr = match optional {
             Some(optional) => expression::Expression::new(ExpressionInner::OptionalMember {
                 loc: loc.dupe(),
@@ -1755,7 +1763,7 @@ fn member_cover(
         call_cover(
             env,
             allow_optional_chain,
-            optional.is_some(),
+            in_optional_chain,
             start_loc,
             PatternCover::CoverExpr(member_expr),
         )
@@ -1769,7 +1777,8 @@ fn member_cover(
 
     let left = assert_operator_cover(env, in_optional_chain, start_loc.dupe(), left)?;
 
-    match peek::token(env) {
+    let mut pending_call = None;
+    let left = match peek::token(env) {
         TokenKind::TPlingPeriod => {
             if !allow_optional_chain {
                 env.error(ParseError::OptionalChainNew)?;
@@ -1780,9 +1789,13 @@ fn member_cover(
                     env.error(ParseError::OptionalChainTemplate)?;
                     Ok(left)
                 }
-                TokenKind::TLparen => Ok(left),
+                TokenKind::TLparen => {
+                    pending_call = Some(expression::OptionalCallKind::Optional);
+                    Ok(left)
+                }
                 TokenKind::TLessThan => {
                     if env.should_parse_types() {
+                        pending_call = Some(expression::OptionalCallKind::Optional);
                         Ok(left)
                     } else {
                         static_member(
@@ -1822,21 +1835,18 @@ fn member_cover(
             static_member(env, allow_optional_chain, default_optional, start_loc, left)
         }
         TokenKind::TNot if in_optional_chain => {
-            if env.parse_options().assert_operator {
+            if env.should_parse_types() && !peek::is_line_terminator(env) {
+                let assertion_loc = Loc::between(&start_loc, peek::loc(env));
                 match peek::optional_chain_bang_continuation(env) {
                     TokenKind::TTemplatePart(_) => {
                         env.error(ParseError::OptionalChainTemplate)?;
                         eat::token(env)?;
                         Ok(left)
                     }
-                    TokenKind::TLparen => {
+                    TokenKind::TLparen | TokenKind::TLessThan => {
                         eat::token(env)?;
-                        Ok(left)
-                    }
-                    TokenKind::TLessThan => {
-                        if env.should_parse_types() {
-                            eat::token(env)?;
-                        }
+                        pending_call =
+                            Some(expression::OptionalCallKind::AssertNonnull { assertion_loc });
                         Ok(left)
                     }
                     TokenKind::TLbracket => {
@@ -1845,7 +1855,7 @@ fn member_cover(
                         dynamic(
                             env,
                             allow_optional_chain,
-                            Some(expression::OptionalMemberKind::AssertNonnull),
+                            Some(expression::OptionalMemberKind::AssertNonnull { assertion_loc }),
                             start_loc,
                             left,
                         )
@@ -1856,7 +1866,7 @@ fn member_cover(
                         static_member(
                             env,
                             allow_optional_chain,
-                            Some(expression::OptionalMemberKind::AssertNonnull),
+                            Some(expression::OptionalMemberKind::AssertNonnull { assertion_loc }),
                             start_loc,
                             left,
                         )
@@ -1877,7 +1887,8 @@ fn member_cover(
             call_cover(env, true, false, start_loc, PatternCover::CoverExpr(expr))
         }
         _ => Ok(left),
-    }
+    }?;
+    Ok((left, pending_call))
 }
 
 fn assert_operator_cover(
@@ -1886,7 +1897,10 @@ fn assert_operator_cover(
     start_loc: Loc,
     left: PatternCover,
 ) -> Result<PatternCover, Rollback> {
-    if peek::token(env) != &TokenKind::TNot {
+    if !env.should_parse_types()
+        || peek::token(env) != &TokenKind::TNot
+        || peek::is_line_terminator(env)
+    {
         return Ok(left);
     }
 
@@ -1894,29 +1908,27 @@ fn assert_operator_cover(
 
     match &next_token {
         TokenKind::TPeriod | TokenKind::TLbracket | TokenKind::TLessThan | TokenKind::TLparen
-            if in_optional_chain
-                && (next_token != TokenKind::TLparen || env.should_parse_types()) =>
+            if in_optional_chain =>
         {
             Ok(left)
         }
-        _ if env.parse_options().assert_operator => {
+        _ => {
             let argument = as_expression(env, left)?;
             let end_loc = peek::loc(env).dupe();
             eat::token(env)?;
             let trailing = eat::trailing_comments(env);
             let loc = Loc::between(&start_loc, &end_loc);
-            Ok(PatternCover::CoverExpr(expression::Expression::new(
-                ExpressionInner::Unary {
+            let left =
+                PatternCover::CoverExpr(expression::Expression::new(ExpressionInner::Unary {
                     loc,
                     inner: Arc::new(expression::Unary {
                         operator: expression::UnaryOperator::Nonnull,
                         argument,
                         comments: mk_comments_opt(None, Some(trailing.into())),
                     }),
-                },
-            )))
+                }));
+            assert_operator_cover(env, in_optional_chain, start_loc, left)
         }
-        _ => Ok(left),
     }
 }
 
@@ -1926,7 +1938,7 @@ fn member(
     start_loc: Loc,
     left: expression::Expression<Loc, Loc>,
 ) -> Result<expression::Expression<Loc, Loc>, Rollback> {
-    let cover = member_cover(
+    let (cover, _) = member_cover(
         env,
         allow_optional_chain,
         false,

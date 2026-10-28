@@ -56,13 +56,6 @@ type AnalyzeOptions = Readonly<{
   fbt: boolean,
 
   /**
-   * Support postfix non-null assertions
-   *
-   * Defaults to `false`.
-   */
-  assertOperator?: boolean,
-
-  /**
    * Support experimental component syntax
    *
    * Defaults to `true`.

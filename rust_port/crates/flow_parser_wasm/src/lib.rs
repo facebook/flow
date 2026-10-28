@@ -80,7 +80,6 @@ fn nonneg_u32(v: i32) -> u32 {
 /// - allow_return_outside: when non-zero, suppress the `IllegalReturn`
 ///   diagnostic for top-level `return` statements. Mirrors hermes-parser
 ///   `allowReturnOutsideFunction`.
-/// - assert_operator: enable Flow `expr!` non-null assertion
 /// - enable_enums: enable Flow enum syntax (off by default per OCaml `default_parse_options`)
 /// - enable_records: enable Flow record syntax (`#{ ... }`); off by default
 /// - enable_types: enable Flow/TS type-grammar (on by default; fixtures opt out via `types: false`)
@@ -117,7 +116,6 @@ pub extern "C" fn hermesParse(
     enable_decorators: i32,
     tokens: i32,
     allow_return_outside: i32,
-    assert_operator: i32,
     enable_enums: i32,
     enable_records: i32,
     enable_types: i32,
@@ -277,7 +275,6 @@ pub extern "C" fn hermesParse(
         ambiguous_types: resolved_enable_ambiguous_types,
         enable_types_in_comments: false,
         use_strict: false,
-        assert_operator: assert_operator != 0,
         module_ref_prefix: None,
         ambient: false,
         allow_return_outside_function: allow_return_outside != 0,
@@ -538,7 +535,6 @@ pub extern "C" fn flow_to_runnable_js_with_source_map(
         1,
         1,
         1,
-        1,
         source_type,
         0,
         0,
@@ -692,7 +688,6 @@ mod tests {
             ambiguous_types: true,
             enable_types_in_comments: false,
             use_strict: false,
-            assert_operator: false,
             module_ref_prefix: None,
             ambient: false,
             allow_return_outside_function: false,
@@ -1233,7 +1228,6 @@ mod tests {
             1, // enable_decorators
             0, // tokens
             0, // allow_return_outside
-            0, // assert_operator
             1, // enable_enums
             1, // enable_records
             1, // enable_types

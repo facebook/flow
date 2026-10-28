@@ -41,7 +41,6 @@ type FlowParse = (
   number,
   number,
   number,
-  number,
 ) => number;
 
 let FlowParserWASM: FlowParserWASMType;
@@ -77,8 +76,7 @@ function initFlowParserWASM(): void {
   // lets the parser switch on file extension (.flow / .d.ts / .d.cts /
   // .d.mts) for ambient-context handling, plus an explicit
   // `enableDecorators` flag (Stage-1 decorator syntax) so fixtures that
-  // disable decorators can exercise the unexpected-`@` error path, an
-  // `assertOperator` flag to enable Flow's `expr!` non-null assertion,
+  // disable decorators can exercise the unexpected-`@` error path,
   // `enableEnums` / `enableRecords` flags that mirror OCaml's
   // `default_parse_options` (both off by default; fixtures that use enum
   // or record syntax opt in via their `.options.json`), an `enableTypes`
@@ -90,7 +88,6 @@ function initFlowParserWASM(): void {
   // `enableTypesPragmaDetection` is set; the JS adapter `parse()` resolves
   // `flow: 'detect'` to that flag.
   flowParse = FlowParserWASM.cwrap('hermesParse', 'number', [
-    'number',
     'number',
     'number',
     'number',
@@ -246,8 +243,6 @@ function parse(source: string, options: ParserOptions): Program | BabelFile {
       flag(options.enableExperimentalDecorators),
       flag(options.tokens),
       flag(options.allowReturnOutsideFunction),
-      // `assertOperator` enables Flow's `expr!` non-null assertion.
-      flag(options.assertOperator),
       // `enableEnums` / `enableRecords` mirror OCaml's `default_parse_options`
       // (both default to false; fixtures opt in via their `.options.json`).
       flag(options.enableEnums),

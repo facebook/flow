@@ -1707,7 +1707,7 @@ fn check_assert_operator<'cx>(
     cx: &mut Context<'cx>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Result<(), JobError> {
-    if !cx.assert_operator_enabled() {
+    if !cx.assert_operator_enabled() || cx.is_ts_file() {
         return Ok(());
     }
     fn check_specialized_assert_operator<'cx>(
@@ -1859,17 +1859,21 @@ fn check_assert_operator<'cx>(
                     check(self.cx, &op_reason, &inner.argument)?;
                 }
                 ast::expression::ExpressionInner::OptionalCall { loc: _, inner }
-                    if inner.optional == ast::expression::OptionalCallKind::AssertNonnull =>
+                    if let ast::expression::OptionalCallKind::AssertNonnull { assertion_loc } =
+                        &inner.optional =>
                 {
                     let target = &inner.call.callee;
-                    let op_reason = reason::mk_typed_expression_reason(target);
+                    let op_reason =
+                        reason::mk_typed_expression_reason(target).reposition(assertion_loc.dupe());
                     check(self.cx, &op_reason, target)?;
                 }
                 ast::expression::ExpressionInner::OptionalMember { loc: _, inner }
-                    if inner.optional == ast::expression::OptionalMemberKind::AssertNonnull =>
+                    if let ast::expression::OptionalMemberKind::AssertNonnull { assertion_loc } =
+                        &inner.optional =>
                 {
                     let target = &inner.member.object;
-                    let op_reason = reason::mk_typed_expression_reason(target);
+                    let op_reason =
+                        reason::mk_typed_expression_reason(target).reposition(assertion_loc.dupe());
                     check(self.cx, &op_reason, target)?;
                 }
                 _ => {}

@@ -795,71 +795,71 @@ describe('OptionalCallExpression', () => {
         (one?.())?.();
         one?.()?.();
       `,
-      espree: {
-        // unfortunately the hermes AST doesn't let us differentiate between
-        // these two code cases, so we can't create the proper ESTree AST here :(
-        expectToFail: 'ast-diff',
-      },
+      // Parentheses end the inner chain, even when the outer call is optional.
+      espree: {expectToFail: false},
       babel: {expectToFail: false},
     };
 
     test('ESTree', () => {
       expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-        {
-          "body": [
-            {
-              "directive": null,
-              "expression": {
-                "expression": {
-                  "arguments": [],
-                  "callee": {
-                    "arguments": [],
-                    "callee": {
-                      "name": "one",
-                      "optional": false,
-                      "type": "Identifier",
-                      "typeAnnotation": null,
-                    },
-                    "optional": true,
-                    "type": "CallExpression",
-                    "typeArguments": null,
-                  },
-                  "optional": true,
-                  "type": "CallExpression",
-                  "typeArguments": null,
-                },
-                "type": "ChainExpression",
-              },
-              "type": "ExpressionStatement",
-            },
-            {
-              "directive": null,
-              "expression": {
-                "expression": {
-                  "arguments": [],
-                  "callee": {
-                    "arguments": [],
-                    "callee": {
-                      "name": "one",
-                      "optional": false,
-                      "type": "Identifier",
-                      "typeAnnotation": null,
-                    },
-                    "optional": true,
-                    "type": "CallExpression",
-                    "typeArguments": null,
-                  },
-                  "optional": true,
-                  "type": "CallExpression",
-                  "typeArguments": null,
-                },
-                "type": "ChainExpression",
-              },
-              "type": "ExpressionStatement",
-            },
-          ],
-          "type": "Program",
-        }
+       {
+         "body": [
+           {
+             "directive": null,
+             "expression": {
+               "expression": {
+                 "arguments": [],
+                 "callee": {
+                   "expression": {
+                     "arguments": [],
+                     "callee": {
+                       "name": "one",
+                       "optional": false,
+                       "type": "Identifier",
+                       "typeAnnotation": null,
+                     },
+                     "optional": true,
+                     "type": "CallExpression",
+                     "typeArguments": null,
+                   },
+                   "type": "ChainExpression",
+                 },
+                 "optional": true,
+                 "type": "CallExpression",
+                 "typeArguments": null,
+               },
+               "type": "ChainExpression",
+             },
+             "type": "ExpressionStatement",
+           },
+           {
+             "directive": null,
+             "expression": {
+               "expression": {
+                 "arguments": [],
+                 "callee": {
+                   "arguments": [],
+                   "callee": {
+                     "name": "one",
+                     "optional": false,
+                     "type": "Identifier",
+                     "typeAnnotation": null,
+                   },
+                   "optional": true,
+                   "type": "CallExpression",
+                   "typeArguments": null,
+                 },
+                 "optional": true,
+                 "type": "CallExpression",
+                 "typeArguments": null,
+               },
+               "type": "ChainExpression",
+             },
+             "type": "ExpressionStatement",
+           },
+         ],
+         "type": "Program",
+       }
       `);
       expectEspreeAlignment(testCase);
     });

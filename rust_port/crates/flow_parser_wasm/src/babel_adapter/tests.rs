@@ -63,7 +63,6 @@ fn parse(source: &str) -> Program {
         ambiguous_types: true,
         enable_types_in_comments: false,
         use_strict: false,
-        assert_operator: false,
         module_ref_prefix: None,
         ambient: false,
         allow_return_outside_function: false,

@@ -4512,7 +4512,7 @@ pub mod expression {
     #[derive(
         Debug,
         Clone,
-        Copy,
+        Dupe,
         PartialEq,
         Eq,
         Hash,
@@ -4521,10 +4521,10 @@ pub mod expression {
         serde::Serialize,
         serde::Deserialize
     )]
-    pub enum OptionalCallKind {
+    pub enum OptionalCallKind<M: Dupe> {
         Optional,
         NonOptional,
-        AssertNonnull,
+        AssertNonnull { assertion_loc: M },
     }
 
     #[derive(
@@ -4541,7 +4541,7 @@ pub mod expression {
     pub struct OptionalCall<M: Dupe, T: Dupe> {
         pub call: Call<M, T>,
         pub filtered_out: T,
-        pub optional: OptionalCallKind,
+        pub optional: OptionalCallKind<M>,
     }
 
     pub mod member {
@@ -4585,7 +4585,7 @@ pub mod expression {
     #[derive(
         Debug,
         Clone,
-        Copy,
+        Dupe,
         PartialEq,
         Eq,
         Hash,
@@ -4594,10 +4594,10 @@ pub mod expression {
         serde::Serialize,
         serde::Deserialize
     )]
-    pub enum OptionalMemberKind {
+    pub enum OptionalMemberKind<M: Dupe> {
         Optional,
         NonOptional,
-        AssertNonnull,
+        AssertNonnull { assertion_loc: M },
     }
 
     #[derive(
@@ -4614,7 +4614,7 @@ pub mod expression {
     pub struct OptionalMember<M: Dupe, T: Dupe> {
         pub member: Member<M, T>,
         pub filtered_out: T,
-        pub optional: OptionalMemberKind,
+        pub optional: OptionalMemberKind<M>,
     }
 
     #[derive(

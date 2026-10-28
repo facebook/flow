@@ -106,14 +106,12 @@ describe('TypeScript-compatible syntax', () => {
   });
 
   test('classifies non-null expression targets as writes', () => {
-    const {scopeManager} = parseForESLint(
-      `
-        value! = source;
-        value! += source;
-        value!++;
-      `,
-      {assertOperator: true},
-    );
+    // Nested assertions remain transparent when classifying assignment targets.
+    const {scopeManager} = parseForESLint(`
+      value!! = source;
+      value!! += source;
+      value!!++;
+    `);
 
     expect(
       scopeManager.scopes[1].through.map(reference => ({
@@ -128,6 +126,17 @@ describe('TypeScript-compatible syntax', () => {
       {name: 'source', read: true, write: false},
       {name: 'value', read: true, write: true},
     ]);
+  });
+
+  test('visits non-null expression children as value references', () => {
+    // Chain receivers, computed keys, and call arguments are all traversed once.
+    const {scopeManager} = parseForESLint('object?.[key!]!(argument!!);');
+
+    expect(references(scopeManager.scopes[1])).toEqual([
+      {name: 'object', type: false, value: true},
+      {name: 'key', type: false, value: true},
+      {name: 'argument', type: false, value: true},
+    ]); // OK
   });
 
   test('handles parameter properties as parameters', () => {

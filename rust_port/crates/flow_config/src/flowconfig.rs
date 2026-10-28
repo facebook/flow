@@ -1797,7 +1797,6 @@ pub mod opts {
                 ("disabled", AssertOperator::Disabled),
                 ("true", AssertOperator::Enabled),
                 ("enabled", AssertOperator::Enabled),
-                ("unparsed", AssertOperator::Unparsed),
                 ("specialized", AssertOperator::Specialized),
             ],
             |opts, v| {
@@ -3464,6 +3463,86 @@ pub fn get_with_ignored_version(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn assert_operator_defaults_to_disabled() {
+        // Omitting the option preserves parsing while disabling Flow assertion use.
+        let mut config = empty_config();
+        match parse(&mut config, vec![(1, "[options]".to_owned())], true) {
+            Ok(warnings) => {
+                assert!(warnings.is_empty()); // OK
+                assert_eq!(config.options.assert_operator, AssertOperator::Disabled); // OK
+                assert!(!config.options.assert_operator.usable()); // OK
+                assert!(!config.options.assert_operator.specialized()); // OK
+            }
+            Err(Error(line, message)) => {
+                panic!("default assertion config errored at line {line}: {message}")
+            }
+        }
+    }
+
+    #[test]
+    fn assert_operator_supported_spellings() {
+        // Boolean spellings and existing enum aliases retain their distinct modes.
+        for (value, expected) in [
+            ("false", AssertOperator::Disabled),
+            ("disabled", AssertOperator::Disabled),
+            ("true", AssertOperator::Enabled),
+            ("enabled", AssertOperator::Enabled),
+            ("specialized", AssertOperator::Specialized),
+        ] {
+            let mut config = empty_config();
+            let result = parse(
+                &mut config,
+                vec![
+                    (1, "[options]".to_owned()),
+                    (2, format!("experimental.assert_operator={value}")),
+                ],
+                true,
+            );
+            match result {
+                Ok(warnings) => {
+                    assert!(warnings.is_empty(), "unexpected warning for {value}"); // OK
+                    assert_eq!(config.options.assert_operator, expected, "{value}"); // OK
+                    assert_eq!(
+                        config.options.assert_operator.usable(),
+                        value != "false" && value != "disabled"
+                    ); // OK
+                    assert_eq!(
+                        config.options.assert_operator.specialized(),
+                        value == "specialized"
+                    ); // OK
+                }
+                Err(Error(line, message)) => {
+                    panic!("assertion config {value} errored at line {line}: {message}")
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn assert_operator_unparsed_is_invalid() {
+        // The removed spelling must produce a config error, not a warning or alias.
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[options]".to_owned()),
+                (2, "experimental.assert_operator=unparsed".to_owned()),
+            ],
+            true,
+        );
+        match result {
+            Ok(_) => panic!("unparsed assertion config must be rejected"),
+            Err(Error(line, message)) => {
+                assert_eq!(line, 2); // OK
+                assert_eq!(
+                    message,
+                    "Error parsing value for \"experimental.assert_operator\". Unsupported value: \"unparsed\". Supported values are: false, disabled, true, enabled, specialized"
+                ); // OK
+            }
+        }
+    }
 
     #[cfg(fbcode_build)]
     #[test]

@@ -25,3 +25,7 @@ o1['a']!; // ok
 o1.a!; // ok;
 o2.e!; // error
 o3.e!; // error
+
+// A redundant assertion in a chain highlights the assertion separately from its operand.
+declare const nonnullableMethod: ?{method: () => {prop: number}};
+nonnullableMethod?.method!(); // ERROR

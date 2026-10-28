@@ -7,6 +7,8 @@
 
 #![feature(never_type)]
 
+#[cfg(test)]
+mod assertion_loc_test;
 pub mod ast;
 pub mod ast_utils;
 pub mod ast_visitor;

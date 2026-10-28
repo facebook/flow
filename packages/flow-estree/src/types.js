@@ -712,7 +712,8 @@ export interface MemberExpressionWithNonComputedName extends BaseNode {
   readonly optional: boolean;
 }
 
-export type ChainElement = CallExpression | MemberExpression;
+export type ChainElement =
+  CallExpression | MemberExpression | NonNullExpression;
 
 export interface ChainExpression extends BaseNode {
   readonly type: 'ChainExpression';
@@ -1787,8 +1788,7 @@ export interface SatisfiesExpression extends BaseNode {
 }
 export interface NonNullExpression extends BaseNode {
   readonly type: 'NonNullExpression';
-  readonly argument: Expression;
-  readonly chain: boolean;
+  readonly expression: Expression;
 }
 
 interface BaseInterfaceNode extends BaseNode {

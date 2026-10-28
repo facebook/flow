@@ -8615,7 +8615,6 @@ pub fn optional_chain<'a>(
     };
 
     let factor_out_optional = |cx: &mut Context<'a>,
-                               factored_loc: ALoc,
                                e: &ExpressionInner<ALoc, ALoc>|
      -> (
         ExpressionInner<ALoc, ALoc>,
@@ -8645,12 +8644,12 @@ pub fn optional_chain<'a>(
                 let opt_state = match optional {
                     expression::OptionalCallKind::Optional => OptState::NewChain,
                     expression::OptionalCallKind::NonOptional => OptState::ContinueChain,
-                    expression::OptionalCallKind::AssertNonnull => {
+                    expression::OptionalCallKind::AssertNonnull { assertion_loc } => {
                         if !cx.assert_operator_enabled() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EUnsupportedSyntax(Box::new((
-                                    factored_loc.dupe(),
+                                    assertion_loc.dupe(),
                                     UnsupportedSyntax::NonnullAssertion,
                                 ))),
                             );
@@ -8674,12 +8673,12 @@ pub fn optional_chain<'a>(
                 let opt_state = match optional {
                     expression::OptionalMemberKind::Optional => OptState::NewChain,
                     expression::OptionalMemberKind::NonOptional => OptState::ContinueChain,
-                    expression::OptionalMemberKind::AssertNonnull => {
+                    expression::OptionalMemberKind::AssertNonnull { assertion_loc } => {
                         if !cx.assert_operator_enabled() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EUnsupportedSyntax(Box::new((
-                                    factored_loc.dupe(),
+                                    assertion_loc.dupe(),
                                     UnsupportedSyntax::NonnullAssertion,
                                 ))),
                             );
@@ -8700,7 +8699,10 @@ pub fn optional_chain<'a>(
         };
         let call_ast = {
             let filtered_out_loc = filtered_out_loc.dupe();
-            let opt_state = opt_state.clone();
+            let optional = match e {
+                ExpressionInner::OptionalCall { inner, .. } => Some(inner.optional.dupe()),
+                _ => None,
+            };
             Box::new(
                 move |cx: &mut Context<'a>,
                       ty: Type,
@@ -8709,35 +8711,17 @@ pub fn optional_chain<'a>(
                       -> ExpressionInner<ALoc, (ALoc, Type)> {
                     let loc = call.callee.loc().0.dupe();
                     cx.set_signature_help_callee(loc.dupe(), sig_help);
-                    match opt_state {
-                        OptState::NewChain => ExpressionInner::OptionalCall {
+                    match &optional {
+                        Some(optional) => ExpressionInner::OptionalCall {
                             loc: (loc.dupe(), ty.dupe()),
                             inner: (expression::OptionalCall {
                                 call,
-                                optional: expression::OptionalCallKind::Optional,
+                                optional: optional.dupe(),
                                 filtered_out: (filtered_out_loc.dupe(), ty),
                             })
                             .into(),
                         },
-                        OptState::ContinueChain => ExpressionInner::OptionalCall {
-                            loc: (loc.dupe(), ty.dupe()),
-                            inner: (expression::OptionalCall {
-                                call,
-                                optional: expression::OptionalCallKind::NonOptional,
-                                filtered_out: (filtered_out_loc.dupe(), ty),
-                            })
-                            .into(),
-                        },
-                        OptState::AssertChain => ExpressionInner::OptionalCall {
-                            loc: (loc.dupe(), ty.dupe()),
-                            inner: (expression::OptionalCall {
-                                call,
-                                optional: expression::OptionalCallKind::AssertNonnull,
-                                filtered_out: (filtered_out_loc.dupe(), ty),
-                            })
-                            .into(),
-                        },
-                        OptState::NonOptional => ExpressionInner::Call {
+                        None => ExpressionInner::Call {
                             loc: (loc.dupe(), ty),
                             inner: call.into(),
                         },
@@ -8748,40 +8732,25 @@ pub fn optional_chain<'a>(
         let member_ast = {
             let loc = loc.dupe();
             let filtered_out_loc = filtered_out_loc.dupe();
-            let opt_state = opt_state.clone();
+            let optional = match e {
+                ExpressionInner::OptionalMember { inner, .. } => Some(inner.optional.dupe()),
+                _ => None,
+            };
             Box::new(
                 move |member: expression::Member<ALoc, (ALoc, Type)>,
                       ty: Type|
                       -> ExpressionInner<ALoc, (ALoc, Type)> {
-                    match opt_state {
-                        OptState::NewChain => ExpressionInner::OptionalMember {
+                    match &optional {
+                        Some(optional) => ExpressionInner::OptionalMember {
                             loc: (loc.dupe(), ty.dupe()),
                             inner: (expression::OptionalMember {
                                 member,
-                                optional: expression::OptionalMemberKind::Optional,
+                                optional: optional.dupe(),
                                 filtered_out: (filtered_out_loc.dupe(), ty),
                             })
                             .into(),
                         },
-                        OptState::ContinueChain => ExpressionInner::OptionalMember {
-                            loc: (loc.dupe(), ty.dupe()),
-                            inner: (expression::OptionalMember {
-                                member,
-                                optional: expression::OptionalMemberKind::NonOptional,
-                                filtered_out: (filtered_out_loc.dupe(), ty),
-                            })
-                            .into(),
-                        },
-                        OptState::AssertChain => ExpressionInner::OptionalMember {
-                            loc: (loc.dupe(), ty.dupe()),
-                            inner: (expression::OptionalMember {
-                                member,
-                                optional: expression::OptionalMemberKind::AssertNonnull,
-                                filtered_out: (filtered_out_loc.dupe(), ty),
-                            })
-                            .into(),
-                        },
-                        OptState::NonOptional => ExpressionInner::Member {
+                        None => ExpressionInner::Member {
                             loc: (loc.dupe(), ty),
                             inner: member.into(),
                         },
@@ -9369,7 +9338,7 @@ pub fn optional_chain<'a>(
         })
     };
 
-    let (e_prime, opt_state, call_ast, member_ast) = factor_out_optional(cx, loc.dupe(), e);
+    let (e_prime, opt_state, call_ast, member_ast) = factor_out_optional(cx, e);
     let bare_assertion_always_throws = match (&opt_state, &e_prime) {
         // Explicit type arguments are fine: assertion functions can be generic.
         (OptState::NonOptional, ExpressionInner::Call { inner, .. }) => {
@@ -9748,10 +9717,13 @@ pub fn optional_chain<'a>(
             let callee_loc = inner.callee.loc().dupe();
             let call = inner.as_ref().clone();
             let orig_receiver = inner.callee.clone();
-            let (optional, member, filtered_out) =
-                (om.optional, om.member.clone(), om.filtered_out.dupe());
+            let (optional, member, filtered_out) = (
+                om.optional.dupe(),
+                om.member.clone(),
+                om.filtered_out.dupe(),
+            );
             let receiver_ast: ReceiverAstFn = {
-                let optional = optional.clone();
+                let optional = optional.dupe();
                 let filtered_out = filtered_out.dupe();
                 Box::new(
                     move |member: expression::Member<ALoc, (ALoc, Type)>, ty: Type| {
@@ -9759,7 +9731,7 @@ pub fn optional_chain<'a>(
                             loc: (filtered_out.dupe(), ty.dupe()),
                             inner: (expression::OptionalMember {
                                 member,
-                                optional: optional.clone(),
+                                optional: optional.dupe(),
                                 filtered_out: (filtered_out.dupe(), ty),
                             })
                             .into(),
@@ -9780,12 +9752,12 @@ pub fn optional_chain<'a>(
                 // to meth() may be optional itself (e.g. obj?.meth?.()) -- this has already been
                 // factored out.
                 expression::OptionalMemberKind::Optional => OptState::NewChain,
-                expression::OptionalMemberKind::AssertNonnull => {
+                expression::OptionalMemberKind::AssertNonnull { assertion_loc } => {
                     if !cx.assert_operator_enabled() {
                         flow_js_utils::add_output_non_speculating(
                             cx,
                             ErrorMessage::EUnsupportedSyntax(Box::new((
-                                callee_loc.dupe(),
+                                assertion_loc.dupe(),
                                 UnsupportedSyntax::NonnullAssertion,
                             ))),
                         );
@@ -10708,6 +10680,41 @@ pub fn optional_chain<'a>(
                 *ast_inner.loc_mut() = (loc, lhs_t);
                 expression::Expression::new(ast_inner)
             })
+        }
+        (ExpressionInner::Unary { inner, .. }, _)
+            if inner.operator == expression::UnaryOperator::Nonnull
+                && loc.to_loc_with_tables(cx.aloc_tables()).start
+                    == inner
+                        .argument
+                        .loc()
+                        .to_loc_with_tables(cx.aloc_tables())
+                        .start =>
+        {
+            if !cx.assert_operator_enabled() {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        loc.dupe(),
+                        UnsupportedSyntax::NonnullAssertion,
+                    ))),
+                );
+            }
+            let (argument_t, voided_out, argument_ast) =
+                optional_chain(encl_ctx, cx, &inner.argument)?;
+            let reason = mk_reason(None, loc.dupe());
+            let filtered_out =
+                type_operation_utils::operators::non_maybe(cx, &reason, &argument_t)?;
+            let result_t = join_optional_branches(&voided_out, &filtered_out);
+            let ast = expression::Expression::new(ExpressionInner::Unary {
+                loc: (loc, result_t),
+                inner: expression::Unary {
+                    operator: expression::UnaryOperator::Nonnull,
+                    argument: argument_ast,
+                    comments: inner.comments.dupe(),
+                }
+                .into(),
+            });
+            (filtered_out, voided_out, ast)
         }
         _ => {
             let res = expression_inner(
@@ -12521,7 +12528,7 @@ fn delete<'a>(
             let make_op = |lhs: Reason, prop: Reason| -> UseOp {
                 UseOp::Op(Arc::new(type_::RootUseOp::DeleteProperty { lhs, prop }))
             };
-            let optional_clone = optional.clone();
+            let optional_clone = optional.dupe();
             let filtered_out_loc = filtered_out.dupe();
             let lhs_loc_clone = lhs_loc.dupe();
             let reconstruct_ast = move |mem: expression::Member<ALoc, (ALoc, Type)>, ty: Type| {
@@ -12529,7 +12536,7 @@ fn delete<'a>(
                     loc: (lhs_loc_clone.dupe(), ty.dupe()),
                     inner: (expression::OptionalMember {
                         member: mem,
-                        optional: optional_clone,
+                        optional: optional_clone.dupe(),
                         filtered_out: (filtered_out_loc.dupe(), ty),
                     })
                     .into(),
@@ -12537,12 +12544,12 @@ fn delete<'a>(
             };
             let opt_state = match optional {
                 expression::OptionalMemberKind::Optional => OptState::NewChain,
-                expression::OptionalMemberKind::AssertNonnull => {
+                expression::OptionalMemberKind::AssertNonnull { assertion_loc } => {
                     if !cx.assert_operator_enabled() {
                         flow_js_utils::add_output_non_speculating(
                             cx,
                             ErrorMessage::EUnsupportedSyntax(Box::new((
-                                lhs_loc.dupe(),
+                                assertion_loc.dupe(),
                                 UnsupportedSyntax::NonnullAssertion,
                             ))),
                         );

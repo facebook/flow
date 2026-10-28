@@ -861,113 +861,113 @@ describe('OptionalMemberExpression', () => {
           (one?.two)?.three?.four
           one?.two?.three?.four
         `,
-        espree: {
-          // unfortunately the hermes AST doesn't let us differentiate between
-          // these two code cases, so we can't create the proper ESTree AST here :(
-          expectToFail: 'ast-diff',
-        },
+        // Parentheses end the inner chain, even when the outer member is optional.
+        espree: {expectToFail: false},
         babel: {expectToFail: false},
       };
 
       test('ESTree', () => {
         expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-          {
-            "body": [
-              {
-                "directive": null,
-                "expression": {
-                  "expression": {
-                    "computed": false,
-                    "object": {
-                      "computed": false,
-                      "object": {
-                        "computed": false,
-                        "object": {
-                          "name": "one",
-                          "optional": false,
-                          "type": "Identifier",
-                          "typeAnnotation": null,
-                        },
-                        "optional": true,
-                        "property": {
-                          "name": "two",
-                          "optional": false,
-                          "type": "Identifier",
-                          "typeAnnotation": null,
-                        },
-                        "type": "MemberExpression",
-                      },
-                      "optional": true,
-                      "property": {
-                        "name": "three",
-                        "optional": false,
-                        "type": "Identifier",
-                        "typeAnnotation": null,
-                      },
-                      "type": "MemberExpression",
-                    },
-                    "optional": true,
-                    "property": {
-                      "name": "four",
-                      "optional": false,
-                      "type": "Identifier",
-                      "typeAnnotation": null,
-                    },
-                    "type": "MemberExpression",
-                  },
-                  "type": "ChainExpression",
-                },
-                "type": "ExpressionStatement",
-              },
-              {
-                "directive": null,
-                "expression": {
-                  "expression": {
-                    "computed": false,
-                    "object": {
-                      "computed": false,
-                      "object": {
-                        "computed": false,
-                        "object": {
-                          "name": "one",
-                          "optional": false,
-                          "type": "Identifier",
-                          "typeAnnotation": null,
-                        },
-                        "optional": true,
-                        "property": {
-                          "name": "two",
-                          "optional": false,
-                          "type": "Identifier",
-                          "typeAnnotation": null,
-                        },
-                        "type": "MemberExpression",
-                      },
-                      "optional": true,
-                      "property": {
-                        "name": "three",
-                        "optional": false,
-                        "type": "Identifier",
-                        "typeAnnotation": null,
-                      },
-                      "type": "MemberExpression",
-                    },
-                    "optional": true,
-                    "property": {
-                      "name": "four",
-                      "optional": false,
-                      "type": "Identifier",
-                      "typeAnnotation": null,
-                    },
-                    "type": "MemberExpression",
-                  },
-                  "type": "ChainExpression",
-                },
-                "type": "ExpressionStatement",
-              },
-            ],
-            "type": "Program",
-          }
+         {
+           "body": [
+             {
+               "directive": null,
+               "expression": {
+                 "expression": {
+                   "computed": false,
+                   "object": {
+                     "computed": false,
+                     "object": {
+                       "expression": {
+                         "computed": false,
+                         "object": {
+                           "name": "one",
+                           "optional": false,
+                           "type": "Identifier",
+                           "typeAnnotation": null,
+                         },
+                         "optional": true,
+                         "property": {
+                           "name": "two",
+                           "optional": false,
+                           "type": "Identifier",
+                           "typeAnnotation": null,
+                         },
+                         "type": "MemberExpression",
+                       },
+                       "type": "ChainExpression",
+                     },
+                     "optional": true,
+                     "property": {
+                       "name": "three",
+                       "optional": false,
+                       "type": "Identifier",
+                       "typeAnnotation": null,
+                     },
+                     "type": "MemberExpression",
+                   },
+                   "optional": true,
+                   "property": {
+                     "name": "four",
+                     "optional": false,
+                     "type": "Identifier",
+                     "typeAnnotation": null,
+                   },
+                   "type": "MemberExpression",
+                 },
+                 "type": "ChainExpression",
+               },
+               "type": "ExpressionStatement",
+             },
+             {
+               "directive": null,
+               "expression": {
+                 "expression": {
+                   "computed": false,
+                   "object": {
+                     "computed": false,
+                     "object": {
+                       "computed": false,
+                       "object": {
+                         "name": "one",
+                         "optional": false,
+                         "type": "Identifier",
+                         "typeAnnotation": null,
+                       },
+                       "optional": true,
+                       "property": {
+                         "name": "two",
+                         "optional": false,
+                         "type": "Identifier",
+                         "typeAnnotation": null,
+                       },
+                       "type": "MemberExpression",
+                     },
+                     "optional": true,
+                     "property": {
+                       "name": "three",
+                       "optional": false,
+                       "type": "Identifier",
+                       "typeAnnotation": null,
+                     },
+                     "type": "MemberExpression",
+                   },
+                   "optional": true,
+                   "property": {
+                     "name": "four",
+                     "optional": false,
+                     "type": "Identifier",
+                     "typeAnnotation": null,
+                   },
+                   "type": "MemberExpression",
+                 },
+                 "type": "ChainExpression",
+               },
+               "type": "ExpressionStatement",
+             },
+           ],
+           "type": "Program",
+         }
         `);
         expectEspreeAlignment(testCase);
       });

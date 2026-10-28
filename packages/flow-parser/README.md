@@ -14,7 +14,6 @@ The Flow Parser is a JavaScript parser for Flow syntax. It produces an AST that 
 The Flow parser exposes a single `parse(code, [options])` function, where `code` is the source code to parse as a string, and `options` is an optional object that may contain the following properties:
 - **babel**: `boolean`, defaults to `false`. If `true`, output an AST conforming to Babel's AST format. If `false`, output an AST conforming to the ESTree AST format.
 - **allowReturnOutsideFunction**: `boolean`, defaults to `false`. If `true`, do not error on return statements found outside functions.
-- **assertOperator**: `boolean`, defaults to `false`. If `true`, enable Flow's postfix non-null assertion syntax (`value!`).
 - **flow**: `"all"` or `"detect"`, defaults to `"detect"`. If `"detect"`, only parse syntax as Flow syntax where it is ambiguous whether it is a Flow feature or regular JavaScript when the `@flow` pragma is present in the file. Otherwise if `"all"`, always parse ambiguous syntax as Flow syntax regardless of the presence of an `@flow` pragma. For example `foo<T>(x)` in a file without an `@flow` pragma will be parsed as two comparisons if set to `"detect"`, otherwise if set to `"all"` or the `@flow` pragma is included it will be parsed as a call expression with a type argument.
 - **enableExperimentalComponentSyntax**: `boolean`, defaults to `true`. Controls parsing of Flow component syntax.
 - **enableExperimentalFlowMatchSyntax**: `boolean`, defaults to `true`. Controls parsing of Flow match syntax.
