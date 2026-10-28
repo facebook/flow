@@ -19,9 +19,13 @@ impl<'a> SourceLocationTable<'a> {
     pub fn new(source: &'a str) -> Self {
         let mut line_starts = Vec::with_capacity(source.len() / 40 + 1);
         line_starts.push(0);
-        for (offset, byte) in source.bytes().enumerate() {
-            if byte == b'\n' {
-                line_starts.push(offset + 1);
+        for (offset, ch) in source.char_indices() {
+            match ch {
+                '\r' if source.as_bytes().get(offset + 1) == Some(&b'\n') => {}
+                '\n' | '\r' | '\u{2028}' | '\u{2029}' => {
+                    line_starts.push(offset + ch.len_utf8());
+                }
+                _ => {}
             }
         }
         Self {
@@ -103,8 +107,11 @@ impl<'a> SourceLocationTable<'a> {
                 b' ' | b'\t' | b'\n' | b'\r' | 0x0b | 0x0c => offset += 1,
                 b'/' if offset + 1 < bytes.len() && bytes[offset + 1] == b'/' => {
                     offset += 2;
-                    while offset < bytes.len() && bytes[offset] != b'\n' && bytes[offset] != b'\r' {
-                        offset += 1;
+                    while let Some(ch) = self.source[offset..].chars().next() {
+                        if matches!(ch, '\n' | '\r' | '\u{2028}' | '\u{2029}') {
+                            break;
+                        }
+                        offset += ch.len_utf8();
                     }
                 }
                 b'/' if offset + 1 < bytes.len() && bytes[offset + 1] == b'*' => {
@@ -116,7 +123,26 @@ impl<'a> SourceLocationTable<'a> {
                     }
                     offset = (offset + 2).min(bytes.len());
                 }
-                _ => break,
+                _ => {
+                    let Some(ch) = self.source[offset..].chars().next() else {
+                        break;
+                    };
+                    if matches!(
+                        ch,
+                        '\u{a0}' | '\u{1680}' | '\u{2000}'
+                            ..='\u{200a}'
+                                | '\u{2028}'
+                                | '\u{2029}'
+                                | '\u{202f}'
+                                | '\u{205f}'
+                                | '\u{3000}'
+                                | '\u{feff}'
+                    ) {
+                        offset += ch.len_utf8();
+                    } else {
+                        break;
+                    }
+                }
             }
         }
         offset
@@ -161,6 +187,34 @@ mod tests {
             table.next_token_loc_after(&loc(position(1, 0), position(1, 1))),
             loc(position(2, 2), position(2, 5)),
         );
+    }
+
+    #[test]
+    fn recognizes_all_javascript_line_terminators() {
+        for separator in ["\n", "\r", "\r\n", "\u{2028}", "\u{2029}"] {
+            let source = format!("x{separator}y");
+            let table = SourceLocationTable::new(&source);
+            let offset = 1 + separator.len();
+            assert_eq!(table.position_at_byte_offset(offset), position(2, 0));
+            assert_eq!(table.byte_offset_at_position(position(2, 0)), Some(offset));
+            assert_eq!(
+                table.next_token_loc_after(&loc(position(1, 0), position(1, 1))),
+                loc(position(2, 0), position(2, 1)),
+            );
+        }
+    }
+
+    #[test]
+    fn skips_unicode_whitespace_before_assertions() {
+        for trivia in ["\u{a0}", "\u{feff}", "\u{2003}", " /* ! */ "] {
+            let source = format!("x{trivia}!");
+            let table = SourceLocationTable::new(&source);
+            let bang = (1 + trivia.len()) as i32;
+            assert_eq!(
+                table.next_token_loc_after(&loc(position(1, 0), position(1, 1))),
+                loc(position(1, bang), position(1, bang + 1)),
+            );
+        }
     }
 
     #[test]
