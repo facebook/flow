@@ -2788,7 +2788,7 @@ pub fn normalize_jsx_children_prop(
         // If we have two or more known arguments then we want to create a tuple array type for our children.
         _ => {
             // Create a reason where the location is between our first and last known argument.
-            let r = mk_reason(None, loc_children);
+            let r = mk_reason(VirtualReasonDesc::RReactChildren, loc_children);
             let arity = jsx_children.len() as i32;
             let elements: Vec<TupleElement> = jsx_children
                 .iter()

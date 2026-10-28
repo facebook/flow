@@ -302,6 +302,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RObjectPatternRestProp,
     RArrayPatternRestProp,
     RReactProps,
+    RReactChildren,
     RUninitialized,
     RPossiblyUninitialized,
     RRendersNothing,
@@ -442,6 +443,7 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 name_opt: name_opt.dupe(),
                 from_component_syntax: *from_component_syntax,
             },
+            RReactChildren => RReactChildren,
 
             // Recursive variants
             RUnknownUnspecifiedProperty(d) => RUnknownUnspecifiedProperty(Arc::new(d.map_locs(f))),
@@ -1270,6 +1272,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
             Some(name) => format!("`{}` element", name),
             None => "React element".to_string(),
         },
+        RReactChildren => "children array".to_string(),
         RPossiblyMissingPropFromObj(propname, desc) => {
             format!(
                 "possibly missing property `{}` in {}",
