@@ -64,6 +64,7 @@ use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrType::*;
 use flow_typing_type::type_::ArrayATData;
+use flow_typing_type::type_::ArrayElementCompatibilityData;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::CanonicalRendersForm;
 use flow_typing_type::type_::ComponentKind;
@@ -5654,10 +5655,14 @@ pub fn rec_sub_t<'cx>(
             }))))),
         ) => {
             let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::ArrayElementCompatibility {
-                    lower: r1.dupe(),
-                    upper: r2.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::ArrayElementCompatibility(Box::new(
+                    ArrayElementCompatibilityData {
+                        lower: r1.dupe(),
+                        upper: r2.dupe(),
+                        lower_t: flow_js_utils::type_or_type_desc_for_error(l),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(u),
+                    },
+                ))),
                 Arc::new(use_op),
             );
             let ts1 = tv1
@@ -5906,10 +5911,14 @@ pub fn rec_sub_t<'cx>(
                     .is_typescript_loose() =>
         {
             let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::ArrayElementCompatibility {
-                    lower: r1.dupe(),
-                    upper: r2.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::ArrayElementCompatibility(Box::new(
+                    ArrayElementCompatibilityData {
+                        lower: r1.dupe(),
+                        upper: r2.dupe(),
+                        lower_t: flow_js_utils::type_or_type_desc_for_error(l),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(u),
+                    },
+                ))),
                 Arc::new(use_op),
             );
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t1, t2)
@@ -5970,10 +5979,14 @@ pub fn rec_sub_t<'cx>(
             DefT(r2, deref!(ArrT(deref!(ROArrayAT(box ROArrayATData { elem_t: t2, .. }))))),
         ) => {
             let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::ArrayElementCompatibility {
-                    lower: r1.dupe(),
-                    upper: r2.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::ArrayElementCompatibility(Box::new(
+                    ArrayElementCompatibilityData {
+                        lower: r1.dupe(),
+                        upper: r2.dupe(),
+                        lower_t: flow_js_utils::type_or_type_desc_for_error(l),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(u),
+                    },
+                ))),
                 Arc::new(use_op),
             );
             FlowJs::rec_flow_with_env(

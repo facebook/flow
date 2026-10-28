@@ -1387,6 +1387,45 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for FunReturnData<L> {
     }
 }
 
+/// Compared without `lower_t` and `upper_t`: the types are what the error prints, and must not
+/// tell apart errors or constraints that are otherwise the same.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ArrayElementCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for ArrayElementCompatibilityData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.lower == other.lower && self.upper == other.upper
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for ArrayElementCompatibilityData<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Hash> Hash for ArrayElementCompatibilityData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.lower.hash(state);
+        self.upper.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for ArrayElementCompatibilityData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for ArrayElementCompatibilityData<L> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.lower
+            .cmp(&other.lower)
+            .then_with(|| self.upper.cmp(&other.upper))
+    }
+}
+
 #[derive(
     Debug,
     Clone,
@@ -1636,10 +1675,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
 pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     ConstrainedAssignment(Box<ConstrainedAssignmentData<L>>),
     ReactDeepReadOnly(Box<(L, DroType)>),
-    ArrayElementCompatibility {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
+    ArrayElementCompatibility(Box<ArrayElementCompatibilityData<L>>),
     FunCompatibility {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
@@ -11887,7 +11923,7 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
     match op {
         VirtualFrameUseOp::ConstrainedAssignment(..) => "ConstrainedAssignment",
         VirtualFrameUseOp::ReactDeepReadOnly { .. } => "ReactDeepReadOnly",
-        VirtualFrameUseOp::ArrayElementCompatibility { .. } => "ArrayElementCompatibility",
+        VirtualFrameUseOp::ArrayElementCompatibility(..) => "ArrayElementCompatibility",
         VirtualFrameUseOp::FunCompatibility { .. } => "FunCompatibility",
         VirtualFrameUseOp::StandaloneCallThis(..) => "StandaloneCallThis",
         VirtualFrameUseOp::FunMissingArg(..) => "FunMissingArg",

@@ -26,6 +26,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_lazy::ContextFamily;
 
 use crate::type_::ArrRestTData;
+use crate::type_::ArrayElementCompatibilityData;
 use crate::type_::AssertionFunctionConsistencyData;
 use crate::type_::AssignVarDefaultData;
 use crate::type_::AssignVarInit;
@@ -1366,10 +1367,17 @@ where
                 providers: providers.iter().map(|p| f(p.dupe())).collect(),
             })),
             ReactDeepReadOnly(box (loc, l)) => ReactDeepReadOnly(Box::new((f(loc), l))),
-            ArrayElementCompatibility { lower, upper } => ArrayElementCompatibility {
+            ArrayElementCompatibility(box ArrayElementCompatibilityData {
+                lower,
+                upper,
+                lower_t,
+                upper_t,
+            }) => ArrayElementCompatibility(Box::new(ArrayElementCompatibilityData {
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
-            },
+                lower_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_t),
+                upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
+            })),
             FunCompatibility { lower, upper } => FunCompatibility {
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),

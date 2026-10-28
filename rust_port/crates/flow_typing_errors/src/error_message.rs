@@ -45,6 +45,7 @@ use flow_parser::parse_error::ParseError;
 use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
+use flow_typing_type::type_::ArrayElementCompatibilityData;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
 use flow_typing_type::type_::AssignVarDefaultData;
 use flow_typing_type::type_::AssignVarInit;
@@ -7154,6 +7155,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             lower_t: f(lower_t.clone()),
                             upper_t: f(upper_t.clone()),
                         }))),
+                        VirtualFrameUseOp::ArrayElementCompatibility(
+                            box ArrayElementCompatibilityData {
+                                lower,
+                                upper,
+                                lower_t,
+                                upper_t,
+                            },
+                        ) => Arc::new(VirtualFrameUseOp::ArrayElementCompatibility(Box::new(
+                            ArrayElementCompatibilityData {
+                                lower: lower.dupe(),
+                                upper: upper.dupe(),
+                                lower_t: f(lower_t.clone()),
+                                upper_t: f(upper_t.clone()),
+                            },
+                        ))),
                         VirtualFrameUseOp::UnionRepresentative(box UnionRepresentativeData {
                             loc,
                             reference_loc,

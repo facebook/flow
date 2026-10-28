@@ -29,6 +29,7 @@ use flow_parser::file_key::FileKey;
 use flow_parser::jsdoc;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
+use flow_typing_type::type_::ArrayElementCompatibilityData;
 use flow_typing_type::type_::AssertionFunctionConsistencyData;
 use flow_typing_type::type_::AssignVarDefaultData;
 use flow_typing_type::type_::AssignVarInit;
@@ -249,7 +250,7 @@ fn score_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(use_op: &Virtual
                 VirtualFrameUseOp::FunMissingArg(..) => 0,
                 // Higher signal then PropertyCompatibility, for example.
                 VirtualFrameUseOp::TypeArgCompatibility(..) => TYPE_ARG_FRAME_SCORE,
-                VirtualFrameUseOp::ArrayElementCompatibility { .. } => TYPE_ARG_FRAME_SCORE,
+                VirtualFrameUseOp::ArrayElementCompatibility(..) => TYPE_ARG_FRAME_SCORE,
                 // Higher signal then TypeArgCompatibility.
                 VirtualFrameUseOp::TupleElementCompatibility(..) => TUPLE_ELEMENT_FRAME_SCORE,
                 // ImplicitTypeParam is an internal marker use_op that doesn't get
@@ -440,10 +441,17 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
     use VirtualFrameUseOp::*;
 
     match frame {
-        ArrayElementCompatibility { lower, upper } => ArrayElementCompatibility {
+        ArrayElementCompatibility(box ArrayElementCompatibilityData {
+            lower,
+            upper,
+            lower_t,
+            upper_t,
+        }) => ArrayElementCompatibility(Box::new(ArrayElementCompatibilityData {
             lower: upper,
             upper: lower,
-        },
+            lower_t: upper_t,
+            upper_t: lower_t,
+        })),
         FunCompatibility { lower, upper } => FunCompatibility {
             lower: upper,
             upper: lower,
@@ -2407,7 +2415,7 @@ where
                             if let VirtualUseOp::Frame(inner_frame, _) = inner.as_ref() {
                                 if matches!(
                                     inner_frame.as_ref(),
-                                    VirtualFrameUseOp::ArrayElementCompatibility { .. }
+                                    VirtualFrameUseOp::ArrayElementCompatibility(..)
                                 ) {
                                     let (all_frames, mut explanations) = frames;
                                     explanations.push(Explanation::ExplanationArrayInvariantTyping);
@@ -2707,7 +2715,14 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::ArrayElementCompatibility { lower, upper } => {
+                        VirtualFrameUseOp::ArrayElementCompatibility(
+                            box ArrayElementCompatibilityData {
+                                lower,
+                                upper,
+                                lower_t,
+                                upper_t,
+                            },
+                        ) => {
                             let frame_loc = loc_of_aloc(&lower.loc);
                             let final_loc = if frame_loc.contains(&loc) {
                                 loc
@@ -2719,7 +2734,13 @@ where
                             let incompatibility_pair = opt_incompatibility_pair(
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
-                            );
+                            )
+                            .map(|(lower, upper)| {
+                                (
+                                    printed_type_reference(&lower, lower_t),
+                                    printed_type_reference(&upper, upper_t),
+                                )
+                            });
                             all_frames.push(ErrorFrame::FrameArrayElement {
                                 incompatibility_pair,
                             });
@@ -4944,7 +4965,7 @@ where
             FrameArrayElement {
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("array element")]),
             ),
             FrameCallableSignature {

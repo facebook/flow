@@ -1205,7 +1205,7 @@ pub enum Frame<L: Dupe> {
         incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
     },
     FrameArrayElement {
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, MessageTypeReferenceData<L>)>,
     },
     FrameCallableSignature {
         incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
