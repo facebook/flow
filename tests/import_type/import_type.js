@@ -71,7 +71,7 @@ var e3: typeof AliasFoo3 = givesAFoo3Obj(); // Error: Can't typeof a type alias
 import type {numValue} from './ExportsANumber'; // Error: Cannot import-type a number value
 
 ////////////////////////////////////////////////////////////////////////
-// == Regression Test: https://github.com/facebook/flow/issues/359 == //
+// == Regression Test: https://github.com/meta/flow/issues/359 == //
 // Ensure that type bindings stay type bindings across function body  //
 // env contexts.                                                      //
 ////////////////////////////////////////////////////////////////////////

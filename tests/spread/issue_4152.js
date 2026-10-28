@@ -1,6 +1,6 @@
 /**
  * This regression test exercises a bug reported
- * in https://github.com/facebook/flow/issues/4152
+ * in https://github.com/meta/flow/issues/4152
  */
 
 export function wrapAndFlatten<T>(arr: Array<T>): unknown {

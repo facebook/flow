@@ -1,7 +1,7 @@
 /* @flow */
 
 async function testAll() {
-  /* This is a test case from https://github.com/facebook/flow/issues/1143
+  /* This is a test case from https://github.com/meta/flow/issues/1143
    * which was previously an error due to Array's invariance and an improper
    * definition of Promise.all */
     const x: Array<Promise<?string>> = [];

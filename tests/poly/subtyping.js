@@ -32,7 +32,7 @@
 // Test issue #8766, round 3 -- this time also testing for a subtle
 // pitfall in implementing the rule ∀-local / S-All-Loc from the
 // polymorphic-subtyping literature:
-//   https://github.com/facebook/flow/pull/8767#issuecomment-949402649
+//   https://github.com/meta/flow/pull/8767#issuecomment-949402649
 {
   const g = (f: <S, T extends S>(T) => T): <S, T>(T) => S => f; // should error
   const coerce: <B, A>(A) => B = g(<S, T extends S>(x: T): T => x);

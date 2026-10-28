@@ -410,7 +410,7 @@ pub fn parse_and_pack_module<'arena: 'ast, 'ast>(
         // Therefore, we should also generate an empty type sig for libdef files, so that
         // both will consistently report that there are no imports and exports in libdef files.
         // If they are inconsistent, we can potentially crash like what's reported in
-        // https://github.com/facebook/flow/issues/9262
+        // https://github.com/meta/flow/issues/9262
         parse_libdef_file_as_empty_module(
             arenas,
             TypeStrictnessKind::from_is_typescript(opts.is_ts_file || opts.is_dts_file),

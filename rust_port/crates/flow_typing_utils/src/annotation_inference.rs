@@ -505,7 +505,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
     ) -> Result<Type, FlowJsException> {
         // We could have just returned `t` here. The OpenT indirection is for compatibility
         // with Flow_js. Specifically, without the OpenT the transformation in
-        // https://github.com/facebook/flow/blob/8c3825a1be188e9ade4ad4ed515361bb28c65d8a/src/typing/flow_js.ml#L1744-L1755
+        // https://github.com/meta/flow/blob/8c3825a1be188e9ade4ad4ed515361bb28c65d8a/src/typing/flow_js.ml#L1744-L1755
         // would fire, causing a divergence in the behavior of this module and Flow_js.
         match t.deref() {
             TypeInner::OpenT(_) => Ok(t),

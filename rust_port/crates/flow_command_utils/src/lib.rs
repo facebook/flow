@@ -2018,7 +2018,7 @@ fn exec_in_cgroup_if_systemd_available() {
     // Sometimes systemd-run is available but we can't use it. For example, the systemd might not have
     // a proper working user session, so we might not be able to run commands via systemd-run as a
     // user process. Notably, `--user --scope` is broken under cgroupv2 in systemd < 238, and exits
-    // code 1 (https://github.com/facebook/flow/issues/8012).
+    // code 1 (https://github.com/meta/flow/issues/8012).
     if !can_run_systemd() {
         return;
     }

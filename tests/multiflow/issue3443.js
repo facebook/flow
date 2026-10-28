@@ -1,4 +1,4 @@
-// Adapted from https://github.com/facebook/flow/issues/3443
+// Adapted from https://github.com/meta/flow/issues/3443
 
 class A {
     f(...args: any[]) {}

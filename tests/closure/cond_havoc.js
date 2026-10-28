@@ -1,4 +1,4 @@
-// from sam, https://github.com/facebook/flow/issues/780
+// from sam, https://github.com/meta/flow/issues/780
 // call to f() within if should properly havoc x.
 //
 function example(b: boolean): number {

@@ -1,16 +1,16 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":33}},
-  "range":[66,99],
+  "range":[62,95],
   "body":[
     {
       "type":"DeclareOpaqueType",
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":33}},
-      "range":[66,99],
+      "range":[62,95],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":24}},
-        "range":[86,90],
+        "range":[82,86],
         "name":"Type",
         "typeAnnotation":null,
         "optional":false
@@ -20,16 +20,16 @@
       "supertype":{
         "type":"StringTypeAnnotation",
         "loc":{"source":null,"start":{"line":2,"column":26},"end":{"line":2,"column":32}},
-        "range":[92,98]
+        "range":[88,94]
       }
     }
   ],
   "comments":[
     {
       "type":"Line",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":65}},
-      "range":[0,65],
-      "value":" regression test (https://github.com/facebook/flow/issues/8942)"
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":61}},
+      "range":[0,61],
+      "value":" regression test (https://github.com/meta/flow/issues/8942)"
     }
   ]
 }

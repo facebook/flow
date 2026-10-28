@@ -32,7 +32,7 @@ async function main() {
     throw 'configSchema literal is not valid JSON: ' + e?.message;
   }
 
-  // Regression test for https://github.com/facebook/flow/issues/9024
+  // Regression test for https://github.com/meta/flow/issues/9024
   if (
     JSON.stringify(
       flow.parse('#!/usr/bin/env node\n', {tokens: true}).tokens,

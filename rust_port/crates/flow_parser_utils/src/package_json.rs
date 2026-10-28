@@ -145,7 +145,7 @@ fn extract_property(
 // we treat the "foo" property like the main property if it exists. If not, we fall back to the
 // "bar" property
 //
-// Spec'd on https://github.com/facebook/flow/issues/5725
+// Spec'd on https://github.com/meta/flow/issues/5725
 fn find_main_property(
     prop_map: &HashMap<FlowSmolStr, ast::expression::Expression<Loc, Loc>>,
     node_main_fields: &[FlowSmolStr],
