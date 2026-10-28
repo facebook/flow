@@ -2437,7 +2437,7 @@ fn __flow_impl<'cx>(
                 Some(trace),
                 use_op.dupe(),
                 UnifyCause::Uncategorized,
-                None,
+                Some(true),
                 &t,
                 &tout_t,
             )?;
