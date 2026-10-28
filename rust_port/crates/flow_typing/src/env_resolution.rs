@@ -721,6 +721,7 @@ fn resolve_hint<'cx>(
                     move |cx: &mut Context<'_>| {
                         acc.mk_object_from_spread_acc(
                             cx,
+                            obj_reason.dupe(),
                             obj_reason,
                             false,
                             false,
@@ -1714,7 +1715,15 @@ fn resolve_binding<'cx>(
                         })
                     },
                 )?;
-                Ok(acc.mk_object_from_spread_acc(cx, obj_reason, false, false, obj_proto, false)?)
+                Ok(acc.mk_object_from_spread_acc(
+                    cx,
+                    obj_reason.dupe(),
+                    obj_reason,
+                    false,
+                    false,
+                    obj_proto,
+                    false,
+                )?)
             }
 
             mk_obj(

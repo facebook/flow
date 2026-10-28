@@ -578,6 +578,7 @@ pub mod object_expression_acc {
             self,
             cx: &mut Context<'a>,
             reason: Reason,
+            spread_op: Reason,
             as_const: bool,
             frozen: bool,
             default_proto: Type,
@@ -723,7 +724,7 @@ pub mod object_expression_acc {
                     >(cx, reason.dupe(), |cx, tout| {
                         let use_op =
                             UseOp::Op(std::sync::Arc::new(type_::RootUseOp::ObjectSpread {
-                                op: reason.dupe(),
+                                op: spread_op.dupe(),
                             }));
                         flow_js::flow_non_speculating(
                             cx,
@@ -6125,7 +6126,15 @@ fn object_<'a>(
             }
         },
     )?;
-    let t = acc.mk_object_from_spread_acc(cx, reason, as_const, frozen, obj_proto, literal)?;
+    let t = acc.mk_object_from_spread_acc(
+        cx,
+        reason.dupe(),
+        reason,
+        as_const,
+        frozen,
+        obj_proto,
+        literal,
+    )?;
     Ok((t, prop_asts))
 }
 
@@ -13584,7 +13593,7 @@ pub fn jsx_mk_props<'a>(
         }
         _ => acc,
     };
-    let t = acc.mk_object_from_spread_acc(cx, reason_props, false, false, proto, true)?;
+    let t = acc.mk_object_from_spread_acc(cx, reason_props, reason, false, false, proto, true)?;
     Ok((t, attributes, unresolved_params, children))
 }
 
