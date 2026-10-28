@@ -5275,5 +5275,249 @@ References:
                 ^^^^^^^^^^^^^^^ [4]
 
 
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:13:5
 
-Found 293 errors
+Cannot cast `x` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+
+   unrelated_classes.js:13:5
+   13|     x as B; // error A ~> B
+           ^
+
+References:
+   unrelated_classes.js:10:26
+   10| function union_member(x: A | B) {
+                                ^ [1]
+   unrelated_classes.js:13:10
+   13|     x as B; // error A ~> B
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:42:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `D` [1] is incompatible with `empty` [2].
+ - Or `A` [3] is incompatible with `empty` [2].
+
+   unrelated_classes.js:42:5
+   42|     x as empty; // error (D & A) | (D & B) ~> empty
+           ^
+
+References:
+   unrelated_classes.js:39:42
+   39|   declare function isD(x: unknown): x is D;
+                                                ^ [1]
+   unrelated_classes.js:42:10
+   42|     x as empty; // error (D & A) | (D & B) ~> empty
+                ^^^^^ [2]
+   unrelated_classes.js:38:27
+   38| function all_unrelated(x: A | B) {
+                                 ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:42:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `D` [1] is incompatible with `empty` [2].
+ - Or `B` [3] is incompatible with `empty` [2].
+
+   unrelated_classes.js:42:5
+   42|     x as empty; // error (D & A) | (D & B) ~> empty
+           ^
+
+References:
+   unrelated_classes.js:39:42
+   39|   declare function isD(x: unknown): x is D;
+                                                ^ [1]
+   unrelated_classes.js:42:10
+   42|     x as empty; // error (D & A) | (D & B) ~> empty
+                ^^^^^ [2]
+   unrelated_classes.js:38:31
+   38| function all_unrelated(x: A | B) {
+                                     ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:58:5
+
+Cannot cast `x` to `A` because: [incompatible-type]
+ - Either `HasA` [1] is incompatible with `A` [2].
+ - Or `B` [3] is incompatible with `A` [2].
+
+   unrelated_classes.js:58:5
+   58|     x as A; // error HasA & B ~> A, an instance of B may have `a`
+           ^
+
+References:
+   unrelated_classes.js:56:45
+   56|   declare function isHasA(x: unknown): x is HasA;
+                                                   ^^^^ [1]
+   unrelated_classes.js:58:10
+   58|     x as A; // error HasA & B ~> A, an instance of B may have `a`
+                ^ [2]
+   unrelated_classes.js:54:33
+   54| function interface_guard(x: A | B) {
+                                       ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:70:5
+
+Cannot cast `x` to `Right` because `Left` [1] is incompatible with `Right` [2]. [incompatible-type]
+
+   unrelated_classes.js:70:5
+   70|     x as Right; // error Left ~> Right
+           ^
+
+References:
+   unrelated_classes.js:66:20
+   66|   declare const x: Left | Right;
+                          ^^^^ [1]
+   unrelated_classes.js:70:10
+   70|     x as Right; // error Left ~> Right
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:78:5
+
+Cannot cast `x` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+
+   unrelated_classes.js:78:5
+   78|     x as B; // error A ~> B
+           ^
+
+References:
+   unrelated_classes.js:74:42
+   74| function union_guard_partly_unrelated(x: A | B) {
+                                                ^ [1]
+   unrelated_classes.js:78:10
+   78|     x as B; // error A ~> B
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:96:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `D` [1] is incompatible with `empty` [2].
+ - Or `A` [3] is incompatible with `empty` [2].
+
+   unrelated_classes.js:96:5
+   96|     x as empty; // error (D & A) | (E & A) | (D & B) | (E & B) ~> empty
+           ^
+
+References:
+   unrelated_classes.js:93:45
+   93|   declare function isDorE(x: unknown): x is D | E;
+                                                   ^ [1]
+   unrelated_classes.js:96:10
+   96|     x as empty; // error (D & A) | (E & A) | (D & B) | (E & B) ~> empty
+                ^^^^^ [2]
+   unrelated_classes.js:91:39
+   91| function union_guard_all_unrelated(x: A | B) {
+                                             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:96:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `E` [1] is incompatible with `empty` [2].
+ - Or `A` [3] is incompatible with `empty` [2].
+
+   unrelated_classes.js:96:5
+   96|     x as empty; // error (D & A) | (E & A) | (D & B) | (E & B) ~> empty
+           ^
+
+References:
+   unrelated_classes.js:93:49
+   93|   declare function isDorE(x: unknown): x is D | E;
+                                                       ^ [1]
+   unrelated_classes.js:96:10
+   96|     x as empty; // error (D & A) | (E & A) | (D & B) | (E & B) ~> empty
+                ^^^^^ [2]
+   unrelated_classes.js:91:39
+   91| function union_guard_all_unrelated(x: A | B) {
+                                             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:96:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `D` [1] is incompatible with `empty` [2].
+ - Or `B` [3] is incompatible with `empty` [2].
+
+   unrelated_classes.js:96:5
+   96|     x as empty; // error (D & A) | (E & A) | (D & B) | (E & B) ~> empty
+           ^
+
+References:
+   unrelated_classes.js:93:45
+   93|   declare function isDorE(x: unknown): x is D | E;
+                                                   ^ [1]
+   unrelated_classes.js:96:10
+   96|     x as empty; // error (D & A) | (E & A) | (D & B) | (E & B) ~> empty
+                ^^^^^ [2]
+   unrelated_classes.js:91:43
+   91| function union_guard_all_unrelated(x: A | B) {
+                                                 ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- unrelated_classes.js:96:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `E` [1] is incompatible with `empty` [2].
+ - Or `B` [3] is incompatible with `empty` [2].
+
+   unrelated_classes.js:96:5
+   96|     x as empty; // error (D & A) | (E & A) | (D & B) | (E & B) ~> empty
+           ^
+
+References:
+   unrelated_classes.js:93:49
+   93|   declare function isDorE(x: unknown): x is D | E;
+                                                       ^ [1]
+   unrelated_classes.js:96:10
+   96|     x as empty; // error (D & A) | (E & A) | (D & B) | (E & B) ~> empty
+                ^^^^^ [2]
+   unrelated_classes.js:91:43
+   91| function union_guard_all_unrelated(x: A | B) {
+                                                 ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- unrelated_classes.js:109:5
+
+Cannot cast `x` to `empty` because `A` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   unrelated_classes.js:109:5
+   109|     x as empty; // error A ~> empty, I & B ~> empty
+            ^
+
+References:
+   unrelated_classes.js:100:37
+   100| function interface_extends_class(x: A | B) {
+                                            ^ [1]
+   unrelated_classes.js:109:10
+   109|     x as empty; // error A ~> empty, I & B ~> empty
+                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- unrelated_classes.js:109:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `I` [1] is incompatible with `empty` [2].
+ - Or `B` [3] is incompatible with `empty` [2].
+
+   unrelated_classes.js:109:5
+   109|     x as empty; // error A ~> empty, I & B ~> empty
+            ^
+
+References:
+   unrelated_classes.js:106:42
+   106|   declare function isI(x: unknown): x is I;
+                                                 ^ [1]
+   unrelated_classes.js:109:10
+   109|     x as empty; // error A ~> empty, I & B ~> empty
+                 ^^^^^ [2]
+   unrelated_classes.js:100:41
+   100| function interface_extends_class(x: A | B) {
+                                                ^ [3]
+
+
+
+Found 305 errors

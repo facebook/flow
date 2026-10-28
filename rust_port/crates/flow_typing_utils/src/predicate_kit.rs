@@ -1099,9 +1099,32 @@ fn call_latent_pred<'cx>(
                                             None,
                                             type_guard,
                                         )?;
-                                        let type_ = intersect(cx, env, tin.dupe(), repositioned)?;
-                                        let changed = !Type::ptr_eq(&type_, tin);
-                                        FilterResult { type_, changed }
+                                        match intersect_type_guard(
+                                            cx,
+                                            env,
+                                            tin.dupe(),
+                                            repositioned,
+                                        )? {
+                                            GuardIntersection::Refined(type_) => {
+                                                let changed = !Type::ptr_eq(&type_, tin);
+                                                FilterResult { type_, changed }
+                                            }
+                                            // Prune this union member, but keep the intersection
+                                            // in case every member prunes.
+                                            GuardIntersection::UnrelatedClasses(type_)
+                                                if result_collector.from_union.get() =>
+                                            {
+                                                result_collector.disjoint_fallback.add(type_);
+                                                report_changes_to_input(result_collector);
+                                                continue;
+                                            }
+                                            GuardIntersection::UnrelatedClasses(type_) => {
+                                                FilterResult {
+                                                    type_,
+                                                    changed: true,
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             } else if let Some(type_guard) = type_guard
@@ -1301,12 +1324,117 @@ fn is_empty_t(t: &Type) -> bool {
     matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT))
 }
 
-fn intersect<'cx>(
+/// The refinement of a type by a type guard.
+enum GuardIntersection {
+    Refined(Type),
+    /// The type is an instance of a class unrelated to the guard's (see `unrelated_classes`).
+    /// Holds the intersection of the two, to use if nothing else survives the refinement.
+    UnrelatedClasses(Type),
+}
+
+impl GuardIntersection {
+    fn into_type(self) -> Type {
+        match self {
+            GuardIntersection::Refined(t) | GuardIntersection::UnrelatedClasses(t) => t,
+        }
+    }
+}
+
+/// An instance of a class that is checked nominally. Classes checked under TypeScript's rules are
+/// structural, so another class may have the same instances.
+fn class_instance(t: &Type) -> Option<&InstanceT> {
+    match t.deref() {
+        TypeInner::DefT(_, d) => match d.deref() {
+            DefTInner::InstanceT(instance)
+                if matches!(
+                    instance.inst.inst_kind,
+                    InstanceKind::ClassKind | InstanceKind::RecordKind { .. }
+                ) && instance.inst.class_id != ALocId::none()
+                    && !instance.inst.strictness_kind.is_typescript_loose() =>
+            {
+                Some(instance)
+            }
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// Whether `i1` and `i2` are instances of the same class, including two declarations of one
+/// logical module, which `InstanceT ~> InstanceT` also treats as one class.
+fn same_class(cx: &Context<'_>, i1: &InstanceT, i2: &InstanceT) -> bool {
+    i1.inst.class_id == i2.inst.class_id
+        || type_util::nominal_id_have_same_logical_module(
+            &cx.file_options(),
+            cx.projects_options(),
+            (&i1.inst.class_id, i1.inst.class_name.as_deref()),
+            (&i2.inst.class_id, i2.inst.class_name.as_deref()),
+        )
+}
+
+/// Whether the class of `instance` extends the class of `target`, or `None` when its superclass
+/// chain cannot be followed to the root (e.g. it extends `any`, mixes in other classes, or loops
+/// back on itself).
+fn class_extends<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    instance: &InstanceT,
+    target: &InstanceT,
+) -> Result<Option<bool>, JobError> {
+    let Some(mut seen) = visit_class(&SeenClasses::new(), instance) else {
+        return Ok(None);
+    };
+    let mut super_ = instance.super_.dupe();
+    loop {
+        let supers = concrete_types_for_inspection(cx, env, reason_of_t(&super_), &super_)?;
+        let [t] = supers.as_slice() else {
+            return Ok(None);
+        };
+        match t.deref() {
+            TypeInner::ObjProtoT(_) | TypeInner::NullProtoT(_) => return Ok(Some(false)),
+            _ => match class_instance(t) {
+                Some(instance) if same_class(cx, instance, target) => return Ok(Some(true)),
+                Some(instance) => match visit_class(&seen, instance) {
+                    Some(next) => {
+                        seen = next;
+                        super_ = instance.super_.dupe();
+                    }
+                    None => return Ok(None),
+                },
+                None => return Ok(None),
+            },
+        }
+    }
+}
+
+/// Whether `t1` and `t2` are instances of two classes neither of which extends the other. With
+/// single inheritance no value is an instance of both, unless a declared class mixes in both,
+/// which `instanceof` refinements also ignore.
+fn unrelated_classes<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    t1: &Type,
+    t2: &Type,
+) -> Result<bool, JobError> {
+    let (Some(i1), Some(i2)) = (class_instance(t1), class_instance(t2)) else {
+        return Ok(false);
+    };
+    if same_class(cx, i1, i2) {
+        return Ok(false);
+    }
+    Ok(class_extends(cx, env, i1, i2)? == Some(false)
+        && class_extends(cx, env, i2, i1)? == Some(false))
+}
+
+/// Refines `t1` by the type guard `t2`. A member of `t1` that is an instance of a class unrelated
+/// to the guard's is dropped when another member survives; otherwise the refinement is reported as
+/// `UnrelatedClasses`, so that the caller can drop it in favor of other members of a union.
+fn intersect_type_guard<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     t1: Type,
     t2: Type,
-) -> Result<Type, JobError> {
+) -> Result<GuardIntersection, JobError> {
     fn is_any<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t: &Type) -> Result<bool, JobError> {
         let ts = concrete_types_for_inspection(cx, env, reason_of_t(t), t)?;
         Ok(ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..))))
@@ -1545,7 +1673,9 @@ fn intersect<'cx>(
                     // Apply the refinement on super and underlying type of opaque type.
                     // Preserve nominal_id to retain compatibility with original type.
                     let upper_t = Some(match &nominal_type.upper_t {
-                        Some(upper) => intersect(cx, env, upper.dupe(), t2.dupe())?,
+                        Some(upper) => {
+                            intersect_type_guard(cx, env, upper.dupe(), t2.dupe())?.into_type()
+                        }
                         None => t2.dupe(),
                     });
                     let underlying_t = match &nominal_type.underlying_t {
@@ -1556,12 +1686,14 @@ fn intersect<'cx>(
                         }) => {
                             nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
                                 custom_error_loc: custom_error_loc.dupe(),
-                                t: intersect(cx, env, inner_t.dupe(), t2.dupe())?,
+                                t: intersect_type_guard(cx, env, inner_t.dupe(), t2.dupe())?
+                                    .into_type(),
                             }))
                         }
                         nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
                             nominal::UnderlyingT::OpaqueWithLocal {
-                                t: intersect(cx, env, inner_t.dupe(), t2.dupe())?,
+                                t: intersect_type_guard(cx, env, inner_t.dupe(), t2.dupe())?
+                                    .into_type(),
                             }
                         }
                     };
@@ -1592,7 +1724,7 @@ fn intersect<'cx>(
         t1: &Type,
         t2: &Type,
         t2s: &[Type],
-    ) -> Result<Type, JobError> {
+    ) -> Result<GuardIntersection, JobError> {
         let r = reason1
             .dupe()
             .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
@@ -1603,11 +1735,18 @@ fn intersect<'cx>(
             ))
         };
         if t2s.len() < 2 {
-            return Ok(mk_intersection(t2));
+            let intersection = mk_intersection(t2);
+            return Ok(match t2s {
+                [t2_member] if unrelated_classes(cx, env, t1, t2_member)? => {
+                    GuardIntersection::UnrelatedClasses(intersection)
+                }
+                _ => GuardIntersection::Refined(intersection),
+            });
         }
         let t1_conc = ConcretizedType::wrap_unsafe(t1.dupe());
         let mut simplified = false;
         let mut parts = Vec::new();
+        let mut unrelated = Vec::new();
         for t2_member in t2s {
             // `try_intersect` has already ruled out `any` in `t1` and `t2`.
             let t2_conc = ConcretizedType::wrap_unsafe(t2_member.dupe());
@@ -1622,13 +1761,23 @@ fn intersect<'cx>(
                         parts.push(t);
                     }
                 }
+                None if unrelated_classes(cx, env, t1, t2_member)? => {
+                    simplified = true;
+                    unrelated.push(mk_intersection(t2_member));
+                }
                 None => parts.push(mk_intersection(t2_member)),
             }
         }
-        if simplified {
-            Ok(type_util::union_of_ts(r, parts, None))
+        if !simplified {
+            Ok(GuardIntersection::Refined(mk_intersection(t2)))
+        } else if parts.is_empty() && !unrelated.is_empty() {
+            Ok(GuardIntersection::UnrelatedClasses(type_util::union_of_ts(
+                r, unrelated, None,
+            )))
         } else {
-            Ok(mk_intersection(t2))
+            Ok(GuardIntersection::Refined(type_util::union_of_ts(
+                r, parts, None,
+            )))
         }
     }
 
@@ -1640,23 +1789,24 @@ fn intersect<'cx>(
         &ConcretizedType::wrap_unsafe(t1.dupe()),
         &t2,
     )? {
-        Some(t) => Ok(t),
+        Some(t) => Ok(GuardIntersection::Refined(t)),
         None => {
             // No definitive refinement found. We fall back to more expensive
             //  concretization that breaks up all unions (including optimized ones)
             let ts = concrete_types_for_inspection(cx, env, reason1, &t1)?;
             let mut t2s: Option<Vec<Type>> = None;
             let mut mapped: Vec<Type> = Vec::new();
+            let mut unrelated: Vec<Type> = Vec::new();
             for t1_inner in ts {
                 // t1 was just concretized
-                let item = match try_intersect(
+                match try_intersect(
                     cx,
                     env,
                     reason1,
                     &ConcretizedType::wrap_unsafe(t1_inner.dupe()),
                     &t2,
                 )? {
-                    Some(t) => t,
+                    Some(t) => mapped.push(t),
                     None => {
                         let t2s: &[Type] = match &mut t2s {
                             Some(t2s) => t2s,
@@ -1667,15 +1817,25 @@ fn intersect<'cx>(
                                 &t2,
                             )?),
                         };
-                        intersect_guard_members(cx, env, reason1, &t1_inner, &t2, t2s)?
+                        match intersect_guard_members(cx, env, reason1, &t1_inner, &t2, t2s)? {
+                            GuardIntersection::Refined(t) => mapped.push(t),
+                            GuardIntersection::UnrelatedClasses(t) => unrelated.push(t),
+                        }
                     }
-                };
-                mapped.push(item);
+                }
             }
             let r = reason1
                 .dupe()
                 .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
-            Ok(type_util::union_of_ts(r, mapped, None))
+            if unrelated.is_empty() || mapped.iter().any(|t| !is_empty_t(t)) {
+                Ok(GuardIntersection::Refined(type_util::union_of_ts(
+                    r, mapped, None,
+                )))
+            } else {
+                Ok(GuardIntersection::UnrelatedClasses(type_util::union_of_ts(
+                    r, unrelated, None,
+                )))
+            }
         }
     }
 }

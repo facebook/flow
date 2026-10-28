@@ -1,0 +1,68 @@
+Error ----------------------------------------------------------------------------------------------------- test.ts:28:5
+
+Cannot cast `x` to `B` because: [incompatible-type]
+ - Either property `b` is missing in `L` [1] but exists in `B` [2].
+ - Or property `b` is missing in `C` [3] but exists in `B` [2].
+
+   test.ts:28:5
+   28|     x as B; // error L & C ~> B, `new C2()` reaches here
+           ^
+
+References:
+   test.ts:23:40
+   23| declare function isL(x: unknown): x is L;
+                                              ^ [1]
+   test.ts:28:10
+   28|     x as B; // error L & C ~> B, `new C2()` reaches here
+                ^ [2]
+   test.ts:25:19
+   25| function f(x: B | C) {
+                         ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:35:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `L` [1] is incompatible with `empty` [2].
+ - Or `C` [3] is incompatible with `empty` [2].
+
+   test.ts:35:5
+   35|     x as never; // error L & C ~> never, L & D ~> never
+           ^
+
+References:
+   test.ts:23:40
+   23| declare function isL(x: unknown): x is L;
+                                              ^ [1]
+   test.ts:35:10
+   35|     x as never; // error L & C ~> never, L & D ~> never
+                ^^^^^ [2]
+   test.ts:33:15
+   33| function g(x: C | D) {
+                     ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:35:5
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `L` [1] is incompatible with `empty` [2].
+ - Or `D` [3] is incompatible with `empty` [2].
+
+   test.ts:35:5
+   35|     x as never; // error L & C ~> never, L & D ~> never
+           ^
+
+References:
+   test.ts:23:40
+   23| declare function isL(x: unknown): x is L;
+                                              ^ [1]
+   test.ts:35:10
+   35|     x as never; // error L & C ~> never, L & D ~> never
+                ^^^^^ [2]
+   test.ts:33:19
+   33| function g(x: C | D) {
+                         ^ [3]
+
+
+
+Found 3 errors
