@@ -775,7 +775,7 @@ pub(super) fn eval_destructor<'cx>(
             let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
                 cx,
                 env,
-                type_app_expansion::Bound::Lower,
+                type_app_expansion::Bound::Destructed,
                 c,
                 targs,
             ) else {

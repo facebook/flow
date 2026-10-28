@@ -88,6 +88,10 @@ pub mod type_app_expansion {
     pub enum Bound {
         Lower,
         Upper,
+        /// Specialized for a type destructor. A spread specializes its first operand this way
+        /// but its later operands as lower bounds, within the continuation of the first one, so
+        /// these expansions are counted apart from the lower bound ones.
+        Destructed,
     }
 
     #[derive(Debug, Clone)]
