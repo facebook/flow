@@ -179,7 +179,7 @@ map(x => x + 1, [1, 2, 3]);
 Here Flow infers that the type of `x` is `number`.
 
 Some other common examples of generic calls are calling the constructor of the generic
-[`Set` class](https://github.com/facebook/flow/blob/82f88520f2bfe0fa13748b5ead711432941f4cb9/lib/core.js#L1799-L1801)
+[`Set` class](https://github.com/meta/flow/blob/82f88520f2bfe0fa13748b5ead711432941f4cb9/lib/core.js#L1799-L1801)
 or calling `useState` from the React library:
 ```js flow-check
 import {useState} from 'react';
@@ -233,7 +233,7 @@ There are two reasons why this process could fail:
 
 There are cases where Flow might not have enough information to decide the type of a type parameter.
 Let's examine again a call to the builtin generic
-[`Set` class](https://github.com/facebook/flow/blob/82f88520f2bfe0fa13748b5ead711432941f4cb9/lib/core.js#L1799-L1801)
+[`Set` class](https://github.com/meta/flow/blob/82f88520f2bfe0fa13748b5ead711432941f4cb9/lib/core.js#L1799-L1801)
 constructor, this time without passing any arguments:
 ```js flow-check
 const set = new Set(); // Error

@@ -28,7 +28,7 @@ module.exports = async () => {
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
     favicon: 'img/favicon.png',
-    organizationName: 'facebook', // Usually your GitHub org/user name.
+    organizationName: 'meta', // Usually your GitHub org/user name.
     projectName: 'flow', // Usually your repo name.
     trailingSlash: true,
     markdown: {
@@ -155,7 +155,7 @@ module.exports = async () => {
             position: 'left',
           },
           {
-            href: `https://github.com/facebook/flow/releases/tag/${defaultFlowVersion}`,
+            href: `https://github.com/meta/flow/releases/tag/${defaultFlowVersion}`,
             // `defaultFlowVersion` falls back to 'master' when past releases
             // aren't included in the build; show it as 'main' to match the
             // renamed GitHub branch (and the Try Flow version selector).
@@ -171,7 +171,7 @@ module.exports = async () => {
           },
           // Please keep GitHub link to the right for consistency.
           {
-            href: 'https://github.com/facebook/flow',
+            href: 'https://github.com/meta/flow',
             'aria-label': 'GitHub',
             position: 'right',
             className: 'navbar__icon github__link',
@@ -216,7 +216,7 @@ module.exports = async () => {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/flow',
+                href: 'https://github.com/meta/flow',
               },
             ],
           },
@@ -273,7 +273,7 @@ module.exports = async () => {
             editUrl: fbContent({
               internal:
                 'https://www.internalfb.com/code/fbsource/fbcode/flow/website/',
-              external: 'https://github.com/facebook/flow/edit/main/website/',
+              external: 'https://github.com/meta/flow/edit/main/website/',
             }),
             remarkPlugins: [
               [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],

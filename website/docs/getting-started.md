@@ -32,7 +32,7 @@ Flow adds first-class language constructs of its own, such as
 
 First you'll need to setup a compiler to strip away Flow types. You can
 choose between [Babel](https://babeljs.io/) and
-[flow-remove-types](https://github.com/facebook/flow/tree/main/packages/flow-remove-types).
+[flow-remove-types](https://github.com/meta/flow/tree/main/packages/flow-remove-types).
 
 <Tabs
   defaultValue="babel"
@@ -89,7 +89,7 @@ You can add this to your `package.json` scripts easily, alongside your `"devDepe
 </TabItem>
 <TabItem value="flow-remove-types">
 
-[flow-remove-types](https://github.com/facebook/flow/tree/main/packages/flow-remove-types) is a small
+[flow-remove-types](https://github.com/meta/flow/tree/main/packages/flow-remove-types) is a small
 CLI tool for stripping Flow type annotations from files. It's a lighter-weight
 alternative to Babel for projects that don't need everything Babel provides.
 

@@ -11,12 +11,12 @@ This post announced Windows support when it was introduced. For current syntax a
 
 We are excited to announce that Flow is now officially available on 64-bit
 Windows! Starting with
-[Flow v0.30.0](https://github.com/facebook/flow/releases/tag/v0.30.0), we will
+[Flow v0.30.0](https://github.com/meta/flow/releases/tag/v0.30.0), we will
 publish a Windows binary with each release. You can download the Windows binary
 in a .zip file directly from the
-[GitHub releases page](https://github.com/facebook/flow/releases) or install it
+[GitHub releases page](https://github.com/meta/flow/releases) or install it
 using the [flow-bin npm package](https://www.npmjs.com/package/flow-bin). Try
-it out and [report any issues](https://github.com/facebook/flow/issues) you
+it out and [report any issues](https://github.com/meta/flow/issues) you
 come across!
 
 Getting Flow working on Windows was not easy, and it was made possible by the
@@ -95,10 +95,10 @@ You can also install `flow-bin` globally with
 
 #### Getting Started with flow.exe
 
-Each [GitHub release of Flow](https://github.com/facebook/flow/releases)
+Each [GitHub release of Flow](https://github.com/meta/flow/releases)
 starting with v0.30.0 will have a zipped Windows binary. For example, the
-[v0.30.0 release](https://github.com/facebook/flow/releases/tag/v0.30.0)
-includes [flow-win64-v0.30.0.zip](https://github.com/facebook/flow/releases/download/v0.30.0/flow-win64-v0.30.0.zip).
+[v0.30.0 release](https://github.com/meta/flow/releases/tag/v0.30.0)
+includes [flow-win64-v0.30.0.zip](https://github.com/meta/flow/releases/download/v0.30.0/flow-win64-v0.30.0.zip).
 If you download and unzip that, you will find a `flow/` directory, which
 contains `flow.exe`. `flow.exe` is the Flow binary, so if you put that
 somewhere in your path, and you should be good to go.

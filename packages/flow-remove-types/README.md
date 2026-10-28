@@ -125,7 +125,7 @@ and characters and that all character offsets remain the same. This removes the
 need for sourcemaps, maintains legible output, and ensures that it is super easy
 to include `flow-remove-types` at any point in your existing build tools.
 
-Built atop the official Flow [parser](https://github.com/facebook/flow/tree/master/packages/flow-parser),
+Built atop the official Flow [parser](https://github.com/meta/flow/tree/master/packages/flow-parser),
 `flow-remove-types` is designed to operate on the same syntax Flow itself understands.
 It also passes through other common non-standard syntax such as [JSX](https://facebook.github.io/jsx/)
 and experimental ECMAScript proposals that Flow supports.

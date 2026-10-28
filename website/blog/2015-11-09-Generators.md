@@ -99,7 +99,7 @@ for (let i = 0; i < 10; i++) {
 }
 ```
 
-There is an [open issue](https://github.com/facebook/flow/issues/577) which would make the dynamic type test above unnecessary, by using the `done` value as a sentinel to refine a tagged union. That is, when `done` is `true`, Flow would know that `value` is always of type `Yield` and otherwise of type `Return | void`.
+There is an [open issue](https://github.com/meta/flow/issues/577) which would make the dynamic type test above unnecessary, by using the `done` value as a sentinel to refine a tagged union. That is, when `done` is `true`, Flow would know that `value` is always of type `Yield` and otherwise of type `Return | void`.
 
 Even without the dynamic type test, this code is quite verbose and it's hard to see the intent. Because generators are also iterable, we can also use `for...of` loops:
 

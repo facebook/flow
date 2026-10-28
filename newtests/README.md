@@ -11,7 +11,7 @@ To make it work: run `yarn install` in the flow directory. This is needed both f
 
 ## Example test
 
-Check out [tool_test_example](https://github.com/facebook/flow/blob/master/newtests/tool_test_example/test.js), which is an example test.
+Check out [tool_test_example](https://github.com/meta/flow/blob/master/newtests/tool_test_example/test.js), which is an example test.
 
 ## Structure of a test
 

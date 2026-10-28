@@ -1,19 +1,19 @@
 # Flow
 <p align="center">
-  <a href="https://circleci.com/gh/facebook/flow/tree/main">
-    <img src="https://circleci.com/gh/facebook/flow/tree/main.svg?style=shield" alt="CircleCI" />
+  <a href="https://circleci.com/gh/meta/flow/tree/main">
+    <img src="https://circleci.com/gh/meta/flow/tree/main.svg?style=shield" alt="CircleCI" />
   </a>
   <a href="https://twitter.com/flowtype">
    <img src="https://img.shields.io/twitter/follow/flowtype?style=shield&logo=twitter&color=blue" alt="Follow @flowtype" />
   </a>
-  <a href="https://github.com/facebook/flow/blob/main/LICENSE">
-    <img alt="MIT License" src="https://img.shields.io/github/license/facebook/flow">
+  <a href="https://github.com/meta/flow/blob/main/LICENSE">
+    <img alt="MIT License" src="https://img.shields.io/github/license/meta/flow">
   </a>
-  <a href="https://github.com/facebook/flow/graphs/contributors">
-   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/facebook/flow">
+  <a href="https://github.com/meta/flow/graphs/contributors">
+   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/meta/flow">
   </a>
   <a href="">
-    <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/facebook/flow">
+    <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/meta/flow">
   </a>
   <a href="https://discordapp.com/invite/8ezwRUK">
      <img alt="Join Discord Chat" src="https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white">
@@ -41,7 +41,7 @@ Flow works with:
 * Linux (x86_64 and arm64)
 * Windows (x86_64, Windows 10 recommended)
 
-There are [binary distributions](https://github.com/facebook/flow/releases) for each of these platforms and you can also build it from source on any of them as well.
+There are [binary distributions](https://github.com/meta/flow/releases) for each of these platforms and you can also build it from source on any of them as well.
 
 ## Using Flow
 
@@ -116,4 +116,4 @@ See [tests/README.md](tests/README.md) for detailed testing documentation.
 * Stack Overflow: Ask a question with the [flowtype tag](https://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
-Flow is MIT-licensed ([LICENSE](https://github.com/facebook/flow/blob/main/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/main/website/LICENSE-DOCUMENTATION)).
+Flow is MIT-licensed ([LICENSE](https://github.com/meta/flow/blob/main/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/meta/flow/blob/main/website/LICENSE-DOCUMENTATION)).

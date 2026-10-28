@@ -102,13 +102,13 @@ select. Overall, this means that (1) we never commit to a branch that might
 turn out to be incorrect and (2) can always select a correct branch (if such
 exists) given enough annotations.
 
-[gh1759]: https://github.com/facebook/flow/issues/1759
-[gh1664]: https://github.com/facebook/flow/issues/1664
-[gh1663]: https://github.com/facebook/flow/issues/1663
-[gh1462]: https://github.com/facebook/flow/issues/1462
-[gh1455]: https://github.com/facebook/flow/issues/1455
-[gh1371]: https://github.com/facebook/flow/issues/1371
-[gh1349]: https://github.com/facebook/flow/issues/1349
-[gh842]: https://github.com/facebook/flow/issues/824
-[gh815]: https://github.com/facebook/flow/issues/815
-[fotu]: https://github.com/facebook/flow/commit/2df7671e7bda770b95e6b1eaede96d7a8ab1f2ac
+[gh1759]: https://github.com/meta/flow/issues/1759
+[gh1664]: https://github.com/meta/flow/issues/1664
+[gh1663]: https://github.com/meta/flow/issues/1663
+[gh1462]: https://github.com/meta/flow/issues/1462
+[gh1455]: https://github.com/meta/flow/issues/1455
+[gh1371]: https://github.com/meta/flow/issues/1371
+[gh1349]: https://github.com/meta/flow/issues/1349
+[gh842]: https://github.com/meta/flow/issues/824
+[gh815]: https://github.com/meta/flow/issues/815
+[fotu]: https://github.com/meta/flow/commit/2df7671e7bda770b95e6b1eaede96d7a8ab1f2ac

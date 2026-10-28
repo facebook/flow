@@ -522,7 +522,7 @@ Flow will use `bar.js` to provide the `"kittens"` module.
 If this option is unspecified, Flow will always use the `"main"` field.
 
 See
-[this GitHub issue for the original motivation](https://github.com/facebook/flow/issues/5725)
+[this GitHub issue for the original motivation](https://github.com/meta/flow/issues/5725)
 
 ### module.system.node.package_export_condition {#toc-module-system-node-package-export-condition}
 

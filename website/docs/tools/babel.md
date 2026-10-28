@@ -28,7 +28,7 @@ Then add the `@babel/preset-flow` preset and `flow-parser/babel-plugin` plugin t
 }
 ```
 
-You can read the [flow-parser Babel plugin documentation](https://github.com/facebook/flow/tree/main/packages/flow-parser#babel-plugin) to see how to configure it, including custom parser options.
+You can read the [flow-parser Babel plugin documentation](https://github.com/meta/flow/tree/main/packages/flow-parser#babel-plugin) to see how to configure it, including custom parser options.
 
 ## See Also {#toc-see-also}
 

@@ -251,7 +251,7 @@ Likely to cause new Flow errors:
 * `[untyped]` section of flowconfig will use the glob system. See https://flow.org/en/docs/config/untyped/
 
 Notable bug fixes:
-* Fixed https://github.com/facebook/flow/issues/9407.
+* Fixed https://github.com/meta/flow/issues/9407.
 * Support `instanceof` refinement of constructor objects.
 * Operations like `Partial` no longer strip readonly-ness of dictionaries. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sAD0bZKcEYIncAdJCgkJ+RlQxjO3PgMXLV6rRJINaUDfMnTZIFhjATN0p9ZQQDCEJCBEMCTgwEH4hMnwhKABrKAgAdyh8OEywCLAAC3wANyo4LFxscWQuHnc2bCL8aFxaTQlaJXwWZlNa-nrmbFyJbDYAWnalXvMSJOwJAtox4VxcafdZ+cXl0RxKddioMAqqCY7sA5BEqCHKkiol7JKVDCdL69uSe8oliEZI6DcMYFDDZd66DAwbBjBDzEaUEhjMgSeFVGrmRJxUZjZhhOBkS4KJQqNROLQYL7KfR-ZQRCD7apmbAAX34kHqgXqxyo2AABDo9LyYMRkLzgMKIKK9CooAhmQBuAA6sGIvIpvIAClRItwADzATxsZq0XkAbSSUqk2QQAF1RYkUukoMyAHzy3kAeg9vMGRTgEDivOUlHpvF5qTSvIgSWVXNwPP50EFmEooq1lB1uH1huNZotvOl1rtvIdEedbt5ypTpoA5BgazbeQBeXkAZndXp9LD9AZIUaSYYjQeo9OVMRARWUJH9UEC4T0yhAzKAA))
 
@@ -346,7 +346,7 @@ No behavioral changes in this release
 ### 0.322.0
 
 Notable bug fixes:
-* Fixed https://github.com/facebook/flow/issues/9448
+* Fixed https://github.com/meta/flow/issues/9448
 * Fixed a crash in pattern matching. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sAD0bZKcEYIncAdJCgkJ+RlQxjO3PgMXLV6rRJINaUDfMnTZIFhjATN0p9ZQQDCEJCBEMCTgwEH4hMnwhKABrKAgAdyh8OEywCLAAC3wANyo4LFxscWQuHnc2bCL8aFxaTQlaJXwWZlNa-nrmbFyJbDYAWnalXvMSJOwJAtox4VxcafdZ+cXl0RxKddioMAqqCY7sA5BEqCHKkiol7JKVDCdL69uSe8oliEZI6DcMYFDDZd66DAwbBjBDzEaUEhjMgSeFVGrmRJxUZjZhhOBkS4KJQqNROLQYL7KfR-ZQRCD7apmbAAX34kHqgRgiW8cGgAAIRnp8AghFQ2Pg0nAJIUsNJ-vg0BA2LQABQlXDIPmJFLpKAASk1RQgcDYfOAAB0oHy+eEFvk+WruHqzZbrdaAOQwYjuvlwGAOgCC1DomnxQZoqvVeudAF4AHxmvkAeiTfJI+QgQlwptSEj5YBo6ddbutLAkQkoUAA3MXrcza3z8Hz42b61a+W22zEQEVlCReVBAkUAAyaADMACYAIyaYcgZlAA))
 * Refining a union by `instanceof` no longer leaks `any` from members that cannot match the guard (e.g. `Foo<string> | Bar<number>` refined by `instanceof Foo` now yields `Foo<string>` instead of `Foo<string> | Foo<any>`). This may surface real errors that were previously masked.
 
@@ -521,14 +521,14 @@ New Features:
 ### 0.302.0
 
 Notable bug fixes:
-* Fix https://github.com/facebook/flow/issues/9357
+* Fix https://github.com/meta/flow/issues/9357
 
 Misc:
 * Flow no longer errors on colon-style extends and now supports extends by default, previously gated by the ts_syntax option.
 * Add format, and test commands to LLM rules
 
 IDE:
-* Fixed https://github.com/facebook/flow/issues/9350
+* Fixed https://github.com/meta/flow/issues/9350
 
 ### 0.301.0
 
@@ -757,7 +757,7 @@ Likely to cause new Flow errors:
 * We have fixed more source of object literal unsoundness. More errors will be exposed. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiStnsAAIYMQJQBeCXATCUZASgDkqoFAG4ADqwGWshVKlX2UxQBASgA+EuEIhuWolAHoHRLZg04BB8oNrRAJSZKLzeN6AO6+6i88T8BomEjuqBJDL2EwgAVAA))
 * For most of the common invariant subtyping errors (arrays, objects with mutable fields), we will now emit a single subtyping error with explanation how to fix. Error locations might change. See https://flow.org/en/docs/lang/variance/#toc-invariance to learn more about variance of types
 * Suppressions without error code will now be an error instead of a warning.
-* Suppressions without error code will no longer apply. You can download and use [this script](https://github.com/facebook/flow/blob/7551ae4431f17b0ed93657ed7b3c73d7e8654486/scripts/add-specific-error-code.js#L12) to automatically migrate most of the suppressions.
+* Suppressions without error code will no longer apply. You can download and use [this script](https://github.com/meta/flow/blob/7551ae4431f17b0ed93657ed7b3c73d7e8654486/scripts/add-specific-error-code.js#L12) to automatically migrate most of the suppressions.
 * Only `$FlowFixMe` and `$FlowExpectedError` are supported suppression comments. Existing `$FlowIgnore` and `$FlowIssue` will no longer suppress anything.
 
 New Features:
@@ -1660,7 +1660,7 @@ This release is used to test the release automation powered by GitHub Actions. N
 
 Likely to cause new Flow errors:
 * In v0.237.2, we shipped the flag `react.disable_function_components_default_props` that will make Flow ignore `defaultProps` on function components for React component typing purposes. This flag is now on by default. If this is too disruptive for your codebase, you can turn this off for now. Note that we do not intend to keep this flag forever, so you should try to turn this flag on as soon as possible.
-* We made `React.createElement` have an opaque type, which means calling this function directly will be an error. This will be helpful to prepare for [React 19 changes](https://react.dev/blog/2024/04/25/react-19-upgrade-guide#new-jsx-transform-is-now-required). Note that JSX typing is unaffected. If you are not ready for this change, you can override your library definition like [this](https://github.com/facebook/flow/blob/194f63ebb7829f404d9c445c12921ae7a258b0f8/tests/react_create_element/lib.js#L1-L38) to approximate the previous behavior as much as possible.
+* We made `React.createElement` have an opaque type, which means calling this function directly will be an error. This will be helpful to prepare for [React 19 changes](https://react.dev/blog/2024/04/25/react-19-upgrade-guide#new-jsx-transform-is-now-required). Note that JSX typing is unaffected. If you are not ready for this change, you can override your library definition like [this](https://github.com/meta/flow/blob/194f63ebb7829f404d9c445c12921ae7a258b0f8/tests/react_create_element/lib.js#L1-L38) to approximate the previous behavior as much as possible.
 * When there is an `invalid-component-prop` error, Flow will no longer make the entire props to be any type. Instead, Flow will create a Props type as if these invalid props do not exist. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SUgIkY0AsAAIAMIAChgxGQXPspigCF4XKs0vwwuAgogwuEIhu9IAlFzgAAdKBcvVclgSISUKAAbh19J1OoAPDyuQqALzAKQyelcgD0AD5TR73VyoBAAO5ckyUCD43IgBomEhwaBJBoABisACYAMwAdlTIHpQA)
 * We are making the typing of the exported object of a module more strict. If you see errors when casting the exported type of a module to a writable object, try either casting it to a readonly version instead, or casting the exported object to the writable object type.
 * We now infer the type for `Object.freeze({ A: "a", B: "b" })` as `{+A: "a", +B: "b"}`, ie we use readonly properties and singleton types for literal initializers. Casts like [this example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SVs9gABBA0AArdkAXnZAHkeXMYjAWNgAF7YAAUwHZAB0QABBJXIRUqpXs+kASgA3AqoFzeRgSOz5cr1fZTFAENqDVBciAGiYSHBoEkGgAGKwAJgAzAB2P0gelAA) will now be an error.
@@ -2722,7 +2722,7 @@ Parser:
 * Add custom parse error for abstract classes.
 * Add custom parse error when attempting to use template literal types in Flow.
 * Add custom parse errors for TS class visibility modifiers public/private/protected.
-* Remove `function` as an alias to `Function`, and don't allow `function` as a type name in general. (closes [issue #9000](https://github.com/facebook/flow/issues/9000)).
+* Remove `function` as an alias to `Function`, and don't allow `function` as a type name in general. (closes [issue #9000](https://github.com/meta/flow/issues/9000)).
 
 ### 0.199.1
 
@@ -3103,7 +3103,7 @@ Likely to cause new Flow errors:
 * Referencing `this` in object getters and setters are now banned. Referencing `this` in object methods are already banned, and this change makes Flow's behavior more consistent.
 
 Notable bug fixes:
-* Fixed a regression in destructuring checking with computed properties ([issue](https://github.com/facebook/flow/issues/8921)).
+* Fixed a regression in destructuring checking with computed properties ([issue](https://github.com/meta/flow/issues/8921)).
 
 Library Definitions:
 * Added `PerformanceServerTiming` definition and the `serverTiming` attribute to `PerformanceResourceTiming`.
@@ -3991,7 +3991,7 @@ Notable bug fixes:
 ### 0.143.1
 
 Notable bug fixes:
-- Fixed [crash on Windows](https://github.com/facebook/flow/issues/8574) and [crash on Linux](https://github.com/facebook/flow/issues/8577) introduced in 0.143.0
+- Fixed [crash on Windows](https://github.com/meta/flow/issues/8574) and [crash on Linux](https://github.com/meta/flow/issues/8577) introduced in 0.143.0
 
 ### 0.143.0
 
@@ -4239,12 +4239,12 @@ Config:
 Misc:
 
 * Improvements to editor in flow.org/try, including syntax highlighting
-* [Fix broken links in docs](https://github.com/facebook/flow/pull/8388)
+* [Fix broken links in docs](https://github.com/meta/flow/pull/8388)
 * Standardized error suppression syntax, added ability to suppress errors based on error codes
 
 Library Definitions:
 
-* [Add KD functions](https://github.com/facebook/flow/pull/7376)
+* [Add KD functions](https://github.com/meta/flow/pull/7376)
 * Add onended callback to OscillatorNode
 * Make 3rd parameter of node.js symlinkSync optional
 
@@ -4602,7 +4602,7 @@ New features:
 
 Notable bug fixes:
 * Fixed a bug where the ocaml representation of union types caused crashes in rare scenarios
-* Fixed a bug in node module resolution which allowed `module.system.node.resolve_dirname=.`. For those who relied on this bug to import modules using root-relative paths, you can now use `module.system.node.allow_root_relative=true`. See [#8156](https://github.com/facebook/flow/issues/8156) for more details.
+* Fixed a bug in node module resolution which allowed `module.system.node.resolve_dirname=.`. For those who relied on this bug to import modules using root-relative paths, you can now use `module.system.node.allow_root_relative=true`. See [#8156](https://github.com/meta/flow/issues/8156) for more details.
 
 Misc:
 * Add getElementById to DocumentFragment
@@ -4713,7 +4713,7 @@ We found and fixed a bug introduced in 0.105.0. Some internal code was using a h
 
 ### 0.106.2
 
-Fixed the stack overflow reported by [#8037](https://github.com/facebook/flow/issues/8037). Thanks [@lukeapage](https://github.com/lukeapage) for isolating the repro!
+Fixed the stack overflow reported by [#8037](https://github.com/meta/flow/issues/8037). Thanks [@lukeapage](https://github.com/lukeapage) for isolating the repro!
 
 ### 0.106.1
 
@@ -5228,7 +5228,7 @@ New Features:
 
 Notable bug fixes:
 
-* Fix a crash when using private class fields (fixes https://github.com/facebook/flow/issues/7355)
+* Fix a crash when using private class fields (fixes https://github.com/meta/flow/issues/7355)
 
 Misc:
 
@@ -5357,7 +5357,7 @@ New Features:
 * `type-at-pos` now supports implicit instantiation with `_`.
 * Added core types `$ReadOnlyMap`, `$ReadOnlyWeakMap`, `$ReadOnlySet`, and `$ReadOnlyWeakSet`. These types and their mutable counterparts mostly follow the pattern of `$ReadOnlyArray` and `Array`: the read-only parent class provides non-mutating methods, and the usual mutable class extends it. **Unlike `$ReadOnlyArray`, the new types are _invariant_ in their type parameters.**
 * Added the `React.StrictMode` type.
-* Added the [`flowtest` package](https://github.com/facebook/flow/tree/master/packages/flowtest). `flowtest` is a CLI tool for running tests on Flow types.
+* Added the [`flowtest` package](https://github.com/meta/flow/tree/master/packages/flowtest). `flowtest` is a CLI tool for running tests on Flow types.
 * Added the `sharedmemory.heap_size` option.
 
 Notable bug fixes:
@@ -5643,7 +5643,7 @@ Likely to cause new Flow errors:
 * Flow now only allows subtyping polymorphic types with the same number of type parameters. This added strictness lets Flow avoid some slow typing code and shouldn't cause too many problems.
 
 New Features:
-* New `[declarations]` section in the `.flowconfig` which can suppress all errors in 1 or more files. Thanks [@LegNeato](https://github.com/LegNeato)! ([#4916](https://github.com/facebook/flow/pull/4916))
+* New `[declarations]` section in the `.flowconfig` which can suppress all errors in 1 or more files. Thanks [@LegNeato](https://github.com/LegNeato)! ([#4916](https://github.com/meta/flow/pull/4916))
 * Added `flow server --file-watcher watchman` flag which uses [Watchman](https://facebook.github.io/watchman/) for file watching instead of the builtin file-watcher, dfind
 * Added a `--expand-type-aliases` flag to `type-at-pos`. It replaces type aliases with their bodies in the returned type.
 * Added `flow save-state` command to generate a saved state file (experimental & loading a saved state isn't ready yet)
@@ -5968,7 +5968,7 @@ Restore accidentally-deleted Object.setPrototypeOf library definition.
 ### 0.67.0
 
 Likely to cause new Flow errors:
-* [Replace](https://github.com/facebook/flow/commit/8e8f9ffc7f82b7fcb1e9fc01860845905767ac9a) some `any`-typed API definitions with actual types. This may cause errors in code that uses those APIs.
+* [Replace](https://github.com/meta/flow/commit/8e8f9ffc7f82b7fcb1e9fc01860845905767ac9a) some `any`-typed API definitions with actual types. This may cause errors in code that uses those APIs.
 
 New Features:
 * `find-refs` now has support for object type properties.
@@ -6359,7 +6359,7 @@ Misc:
 ### 0.57.0
 
 Likely to cause new Flow errors:
-* We've [manually enumerated](https://github.com/facebook/flow/blob/1c9d9486c07dd51853107621c686b7b30b7134f8/lib/react-dom.js#L172) all the JSX intrinsics, so Flow might notice if you're misusing an intrinsic.
+* We've [manually enumerated](https://github.com/meta/flow/blob/1c9d9486c07dd51853107621c686b7b30b7134f8/lib/react-dom.js#L172) all the JSX intrinsics, so Flow might notice if you're misusing an intrinsic.
 * `$Diff`'s implementation was rewritten. It should behave mostly the same, but will error on `$Diff<ObjA, {x: string}>` if `ObjA` doesn't have a property `x`
 
 New Features:
@@ -6849,7 +6849,7 @@ Parser:
 Misc:
 * Lots of updates to the builtin flow libs! Many thanks to all our contributors!
 * Some tweaks to error messages to make them easier to understand.
-* We are NOT removing weak mode in this release. See the discussion on [#3316](https://github.com/facebook/flow/issues/3316)
+* We are NOT removing weak mode in this release. See the discussion on [#3316](https://github.com/meta/flow/issues/3316)
 
 ### v0.39.0
 
@@ -6866,15 +6866,15 @@ New Features:
 Notable bug fixes:
 * Fixed several issues where Flow might not terminate while typechecking complex code patterns
 * Fixed an issue where a return type on a class constructor wouldn't properly define the type of objects the class generates if the type was too complex
-* Fixed an issue where [Flow wasn't properly invalidating refinements after a `yield` expression](https://github.com/facebook/flow/issues/2778)
+* Fixed an issue where [Flow wasn't properly invalidating refinements after a `yield` expression](https://github.com/meta/flow/issues/2778)
 * Fixed an issue where `Function.prototype.bind()` wasn't working properly on variables typed as "callable objects" in Flow
-* Fixed [some issues where `implements` could cause a `"Did not expect BoundT"` error](https://github.com/facebook/flow/issues/3243)
-* Fixed an issue where [Flow would previously give a cryptic error if the `TERM` environment variable wasn't set](https://github.com/facebook/flow/pull/3305) (Thanks @SamirTalwar!)
+* Fixed [some issues where `implements` could cause a `"Did not expect BoundT"` error](https://github.com/meta/flow/issues/3243)
+* Fixed an issue where [Flow would previously give a cryptic error if the `TERM` environment variable wasn't set](https://github.com/meta/flow/pull/3305) (Thanks @SamirTalwar!)
 
 Parser:
-* Fixed an issue where [the parser previously couldn't handle numbers greater than 2^32-1](https://github.com/facebook/flow/issues/3238)
+* Fixed an issue where [the parser previously couldn't handle numbers greater than 2^32-1](https://github.com/meta/flow/issues/3238)
 * The parser now errors on invalid variance `+` tokens in object types (like it already did for object literals)
-* Fixed an issue where [the parser was incorrectly parsing JS directives (like `"use strict"`)](https://github.com/facebook/flow/issues/3234)
+* Fixed an issue where [the parser was incorrectly parsing JS directives (like `"use strict"`)](https://github.com/meta/flow/issues/3234)
 
 
 Misc:
@@ -7024,9 +7024,9 @@ Likely to cause new Flow errors:
 * Object *method* types are now covariant by default. So this: `type T = {covariantMethod(): string}` is the same as `type T = {+covariantMethod: () => string}`. Please see this [blog post](https://flowtype.org/blog/2016/10/04/Property-Variance.html) for more information on variance.
 
 New features:
-* New `empty` type annotation. This is the ["bottom type"](https://en.wikipedia.org/wiki/Bottom_type) which is the type that has no possible values. This is mostly useful for asserting impossible types right now (see [the commit description](https://github.com/facebook/flow/commit/c603505583993aa953904005f91c350f4b65d6bd) for more details).
+* New `empty` type annotation. This is the ["bottom type"](https://en.wikipedia.org/wiki/Bottom_type) which is the type that has no possible values. This is mostly useful for asserting impossible types right now (see [the commit description](https://github.com/meta/flow/commit/c603505583993aa953904005f91c350f4b65d6bd) for more details).
 * All server commands now have a `--quiet` flag to suppress server-status information that would otherwise be printed to stderr.
-* It's now possible to specify an "@jsx" pragma to override the implicit default of `React.createElement`. See [the commit](https://github.com/facebook/flow/commit/d2930e135f9c34a89a226c2ca36eb4bcab7b59db) message for more details.
+* It's now possible to specify an "@jsx" pragma to override the implicit default of `React.createElement`. See [the commit](https://github.com/meta/flow/commit/d2930e135f9c34a89a226c2ca36eb4bcab7b59db) message for more details.
 * [async iteration](https://github.com/tc39/proposal-async-iteration) is now Stage 3, so Flow now supports async generators and `for-await-of` statements.
 
 Notable bug fixes:
@@ -7210,7 +7210,7 @@ Misc:
 ### v0.28.0
 
 Likely to cause new Flow errors:
-- [Significant fix](https://github.com/facebook/flow/commit/2df7671e7bda770b95e6b1eaede96d7a8ab1f2ac) to matching members of union types. This fix very likely surfaces typechecking issues that were missed before. [Check out the blog post for more details](https://flowtype.org/blog/2016/07/01/New-Unions-Intersections.html)
+- [Significant fix](https://github.com/meta/flow/commit/2df7671e7bda770b95e6b1eaede96d7a8ab1f2ac) to matching members of union types. This fix very likely surfaces typechecking issues that were missed before. [Check out the blog post for more details](https://flowtype.org/blog/2016/07/01/New-Unions-Intersections.html)
 - Variables in template literals are now subject to the same rules as variables being concatenated with a string using `+`. This may surface template strings with variables that may not safely coerce to a string.
 - Type arguments are now required to be specified for type annotations that have type arguments. Previously they were implicitly filled in as `any` -- but now this must be explicit. This behavior is toggleable via `experimental.strict_type_args=false`, but this config option will be removed in a near-term future release. [There is also a codemod to help you automatically update old code.](https://github.com/flowtype/flow-codemod/blob/master/transforms/strict-type-args/README.md)
 
@@ -7219,7 +7219,7 @@ New Features:
 
 Notable bug fixes:
 - Fixed a bug on OSX where Flow might crash in rare circumstances
-- Fixed an issue where automatic semicolon insertion for class properties [wasn't behaving properly in some circumstances](https://github.com/facebook/flow/issues/1682).
+- Fixed an issue where automatic semicolon insertion for class properties [wasn't behaving properly in some circumstances](https://github.com/meta/flow/issues/1682).
 - It is no longer required to annotate a property on an exported class if an initializer value is present. Instead, the initializer value itself can be directly annotated. This makes annotation of class properties that are functions much less cumbersome.
 - Fixed a race-condition where Flow may not properly error when it encounters two modules with the same name (using the "haste" module system)
 
@@ -7288,7 +7288,7 @@ Misc:
 ### v0.24.0
 
 New features:
-- Many common errors now have more contextual error messages. [Check out the test file changes](https://github.com/facebook/flow/commit/7b8c3aed5d852ad9b8290076508658168d0d5fde#diff-839cf9ce7d26ef86255e179b8a539fc7) to see what this looks like!
+- Many common errors now have more contextual error messages. [Check out the test file changes](https://github.com/meta/flow/commit/7b8c3aed5d852ad9b8290076508658168d0d5fde#diff-839cf9ce7d26ef86255e179b8a539fc7) to see what this looks like!
 - If a `<PROJECT_ROOT>/flow-typed/` directory exists, Flow will now assume it is a [libs] directory by default to help reduce the amount of out-of-the-box configuration that is necessary. (Thanks @splodingsocks!)
 - Support for specifying a default on a type parameter declaration. For example: `type Iterator<Yield, Return=void, Next=void> = ...`.
   - NOTE: [The pull request to add syntax support for this is pending](https://github.com/babel/babylon/pull/25), so it may be necessary to wait on that to ship before using this feature
@@ -7383,9 +7383,9 @@ type MyDisjointUnion =
 ```
 
 Bug fixes:
-- Fixed an issue where an intersection of two object types did not always properly combine to match objects with members on both sides (https://github.com/facebook/flow/issues/1327)
-- Fixed an issue where an object of some intersection type could not be used with the spread operator (https://github.com/facebook/flow/issues/1329)
-- Fixed an issue where refinement-testing on an object of an intersection type wouldn't always work (https://github.com/facebook/flow/issues/1366)
+- Fixed an issue where an intersection of two object types did not always properly combine to match objects with members on both sides (https://github.com/meta/flow/issues/1327)
+- Fixed an issue where an object of some intersection type could not be used with the spread operator (https://github.com/meta/flow/issues/1329)
+- Fixed an issue where refinement-testing on an object of an intersection type wouldn't always work (https://github.com/meta/flow/issues/1366)
 - Fixed an issue where an intersection of function types with a common return type should type check against function types with union of param types
 - Fixed an issue where refining `obj['abc']` didn't behave quite the same as refining `obj.abc`
 - Fixed an issue where usage of `flow get-def` on the left-hand side of a `require()` wouldn't hop through the `require()` and to the actual location of the definition
@@ -7403,7 +7403,7 @@ Likely to cause new Flow errors:
 
 New features:
 - Autocomplete for jsx properties
-- [Typed JSX intrinsics](https://github.com/facebook/flow/commit/e0e44d392d6fa2bff36ea6aee87f965c66ee5b7e). This means you can list which jsx intrinsics exist (like `div`, `span`, etc) and specify which properties they have.
+- [Typed JSX intrinsics](https://github.com/meta/flow/commit/e0e44d392d6fa2bff36ea6aee87f965c66ee5b7e). This means you can list which jsx intrinsics exist (like `div`, `span`, etc) and specify which properties they have.
 - Syntax for declaring variance at definition. For example, `interface Generator<+Yield,+Return,-Next> {...}`. Still pending transpiler support though.
 - Refining `string` and union types with string equality now properly refines the types.
 - Support for `export * as` from @leebyron's [Stage1 proposal](https://github.com/leebyron/ecmascript-more-export-from). Babel support [here](http://babeljs.io/docs/plugins/transform-export-extensions/)
@@ -7563,7 +7563,7 @@ Misc:
 - Improved `flow find-module`
 - More error location improvements
 - `Object` can now be called as a function to cast things to objects
-- We've tried to standardize the error codes with which Flow exits. Some exit codes have changed, but the ones you probably use should be the same. At the moment they're [only documented in the code](https://github.com/facebook/flow/blob/b352b4c41283c1cb109ee2e8f6ef604ad4ac381b/src/common/flowExitStatus.ml#L63-L86)
+- We've tried to standardize the error codes with which Flow exits. Some exit codes have changed, but the ones you probably use should be the same. At the moment they're [only documented in the code](https://github.com/meta/flow/blob/b352b4c41283c1cb109ee2e8f6ef604ad4ac381b/src/common/flowExitStatus.ml#L63-L86)
 - Flow understands the value of a negated number literal
 
 ### v0.16.0
@@ -7705,7 +7705,7 @@ Misc:
 
 ### v0.11.0
 
-- We are now syncing Flow's [commit history](https://github.com/facebook/flow/commits/master) to GitHub. No more huge updating diffs. We'll also filter the changelog to the most important things.
+- We are now syncing Flow's [commit history](https://github.com/meta/flow/commits/master) to GitHub. No more huge updating diffs. We'll also filter the changelog to the most important things.
 - Big React refactoring to support ES6 React classes
 - Do you use `any` to workaround things that you want to fix later? Well, now you can use `$FixMe` instead of `any` and easily grep for these workarounds later.
 - We now report parsing errors in non-@flow files that you are `require()`'ing/`import`'ing

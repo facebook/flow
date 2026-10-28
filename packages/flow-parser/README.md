@@ -4,7 +4,7 @@ A JavaScript parser built from the Flow's parser compiled to WebAssembly. Can pa
 
 ## What is Flow
 
-See [flow.org](https://flow.org/). The code for the Flow parser [lives on GitHub](https://github.com/facebook/flow/tree/master/src/parser).
+See [flow.org](https://flow.org/). The code for the Flow parser [lives on GitHub](https://github.com/meta/flow/tree/master/src/parser).
 
 ## What is the Flow Parser
 
