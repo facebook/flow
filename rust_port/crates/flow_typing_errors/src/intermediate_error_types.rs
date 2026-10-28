@@ -1284,6 +1284,22 @@ pub enum ValueDesc<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub enum CalleeDesc<L: Dupe> {
+    Reason(Option<VirtualReasonDesc<L>>),
+    Method(FlowSmolStr),
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RootMessage<L: Dupe> {
     RootCannotAccessIndex {
         index: ErrorTypeDesc<L>,
@@ -1294,15 +1310,15 @@ pub enum RootMessage<L: Dupe> {
         init: ValueDesc<L>,
         target: Option<AssignTargetDesc<L>>,
     },
-    RootCannotCall(Option<VirtualReasonDesc<L>>),
+    RootCannotCall(CalleeDesc<L>),
     RootCannotCallStandalone(Option<VirtualReasonDesc<L>>),
     RootCannotCallWithNamedParam {
-        fn_: Option<VirtualReasonDesc<L>>,
+        fn_: CalleeDesc<L>,
         lower: ValueDesc<L>,
         name: FlowSmolStr,
     },
     RootCannotCallWithNthParam {
-        fn_: Option<VirtualReasonDesc<L>>,
+        fn_: CalleeDesc<L>,
         lower: ValueDesc<L>,
         n: i32,
     },

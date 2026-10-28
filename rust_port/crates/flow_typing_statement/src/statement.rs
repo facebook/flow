@@ -8984,7 +8984,6 @@ pub fn optional_chain<'a>(
                 let (lhs_t, targs, arguments) = static_method_call_object(
                     cx,
                     loc.dupe(),
-                    callee_loc.dupe(),
                     prop_loc.dupe(),
                     &inner.callee,
                     obj_t,
@@ -9065,7 +9064,9 @@ pub fn optional_chain<'a>(
                         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(
                             Box::new(FunCallMethodData {
                                 op: mk_expression_reason(ex),
-                                fn_: mk_expression_reason(&inner.callee),
+                                fn_: FunCallMethodCallee::Reason(mk_expression_reason(
+                                    &inner.callee,
+                                )),
                                 prop: reason_prop.dupe(),
                                 args: mk_initial_arguments_reason(&inner.arguments).into(),
                                 implicit_instantiation_reference:
@@ -10154,7 +10155,7 @@ pub fn optional_chain<'a>(
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
                         FunCallMethodData {
                             op: expr_reason.dupe(),
-                            fn_: mk_expression_reason(orig_receiver),
+                            fn_: FunCallMethodCallee::Reason(mk_expression_reason(orig_receiver)),
                             prop: reason_prop.dupe(),
                             args: mk_initial_arguments_reason(arguments).into(),
                             implicit_instantiation_reference:
@@ -10407,7 +10408,7 @@ pub fn optional_chain<'a>(
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
                         FunCallMethodData {
                             op: expr_reason.dupe(),
-                            fn_: mk_expression_reason(orig_receiver),
+                            fn_: FunCallMethodCallee::Reason(mk_expression_reason(orig_receiver)),
                             prop: mk_expression_reason(prop_expr),
                             args: mk_initial_arguments_reason(arguments).into(),
                             implicit_instantiation_reference:
@@ -14276,7 +14277,6 @@ pub fn get_prop<'a>(
 fn static_method_call_object<'a>(
     cx: &mut Context<'a>,
     loc: ALoc,
-    callee_loc: ALoc,
     prop_loc: ALoc,
     expr: &expression::Expression<ALoc, ALoc>,
     obj_t: Type,
@@ -14296,7 +14296,7 @@ fn static_method_call_object<'a>(
     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
         FunCallMethodData {
             op: reason.dupe(),
-            fn_: mk_reason(RMethod(Some(m.dupe())), callee_loc.dupe()),
+            fn_: FunCallMethodCallee::Method(m.dupe()),
             prop: mk_reason(RProperty(Some(Name::new(m.dupe()))), prop_loc.dupe()),
             args: mk_initial_arguments_reason(args).into(),
             implicit_instantiation_reference: ImplicitInstantiationReferenceKind::Method(Some(
@@ -15028,7 +15028,7 @@ fn static_method_call_object<'a>(
             let default_use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
                 FunCallMethodData {
                     op: method_reason.dupe(),
-                    fn_: mk_reason(RMethod(Some(m.dupe())), callee_loc.dupe()),
+                    fn_: FunCallMethodCallee::Method(m.dupe()),
                     prop: mk_reason(RProperty(Some(Name::new(m.dupe()))), prop_loc.dupe()),
                     args: mk_initial_arguments_reason(args).into(),
                     implicit_instantiation_reference: ImplicitInstantiationReferenceKind::Method(

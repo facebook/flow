@@ -44,6 +44,7 @@ use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::EvalMappedTypeData;
 use flow_typing_type::type_::FunCallData;
+use flow_typing_type::type_::FunCallMethodCallee;
 use flow_typing_type::type_::FunCallMethodData;
 use flow_typing_type::type_::FunImplicitReturnData;
 use flow_typing_type::type_::FunMissingArgData;
@@ -88,6 +89,7 @@ use super::flow_error::ErrorSet;
 use super::flow_error::FlowError;
 use super::intermediate_error_types::AccessChainSegment;
 use super::intermediate_error_types::AssignTargetDesc;
+use super::intermediate_error_types::CalleeDesc;
 use super::intermediate_error_types::ErrorMessage;
 use super::intermediate_error_types::Explanation;
 use super::intermediate_error_types::ExplanationAdditionalUnionMembersData;
@@ -827,6 +829,15 @@ fn printed_type_desc<L: Dupe>(type_desc: &TypeOrTypeDescT<L>) -> ErrorTypeDesc<L
     match type_desc {
         TypeOrTypeDescT::Type(_) => ErrorTypeDesc::Unknown,
         TypeOrTypeDescT::TypeDesc(desc) => desc.clone(),
+    }
+}
+
+fn method_callee_desc<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+    fn_: &FunCallMethodCallee<L>,
+) -> CalleeDesc<L> {
+    match fn_ {
+        FunCallMethodCallee::Reason(reason) => CalleeDesc::Reason(reason.desc.clone()),
+        FunCallMethodCallee::Method(name) => CalleeDesc::Method(name.dupe()),
     }
 }
 
@@ -1865,7 +1876,12 @@ where
 
                                 let (all_frames, explanations) = frames;
                                 (
-                                    Some((root_loc, RootMessage::RootCannotCall(fn_.desc.clone()))),
+                                    Some((
+                                        root_loc,
+                                        RootMessage::RootCannotCall(CalleeDesc::Reason(
+                                            fn_.desc.clone(),
+                                        )),
+                                    )),
                                     custom_error_message,
                                     final_loc,
                                     all_frames,
@@ -1890,7 +1906,10 @@ where
 
                                 let (all_frames, explanations) = frames;
                                 (
-                                    Some((root_loc, RootMessage::RootCannotCall(fn_.desc.clone()))),
+                                    Some((
+                                        root_loc,
+                                        RootMessage::RootCannotCall(method_callee_desc(fn_)),
+                                    )),
                                     custom_error_message,
                                     final_loc,
                                     all_frames,
@@ -2312,13 +2331,11 @@ where
                                     | VirtualRootUseOp::RecordCreate(..)
                             ) =>
                     {
-                        match op_rc.as_ref() {
-                            VirtualRootUseOp::FunCall(box FunCallData { args, fn_, .. })
-                            | VirtualRootUseOp::FunCallMethod(box FunCallMethodData {
-                                args,
-                                fn_,
-                                ..
-                            }) => {
+                        let fun_param_root =
+                            |args: &[VirtualReason<L>],
+                             fn_: CalleeDesc<L>,
+                             frames: (Vec<ErrorFrame<L>>, Vec<Explanation<L>>),
+                             custom_error_message: Option<Message<L>>| {
                                 // Get the actual argument at position n-1, or fallback to the
                                 // type of lower_prime
                                 let (lower, lower_desc) = if (*n as usize) <= args.len() {
@@ -2330,18 +2347,37 @@ where
 
                                 let root_msg = match name {
                                     Some(name_str) => RootMessage::RootCannotCallWithNamedParam {
-                                        fn_: fn_.desc.clone(),
+                                        fn_,
                                         lower: lower_desc,
                                         name: name_str.clone(),
                                     },
                                     None => RootMessage::RootCannotCallWithNthParam {
-                                        fn_: fn_.desc.clone(),
+                                        fn_,
                                         lower: lower_desc,
                                         n: *n,
                                     },
                                 };
-                                root(loc, frames, lower, root_msg, custom_error_message)
+                                root(loc.dupe(), frames, lower, root_msg, custom_error_message)
+                            };
+                        match op_rc.as_ref() {
+                            VirtualRootUseOp::FunCall(box FunCallData { args, fn_, .. }) => {
+                                fun_param_root(
+                                    args,
+                                    CalleeDesc::Reason(fn_.desc.clone()),
+                                    frames,
+                                    custom_error_message,
+                                )
                             }
+                            VirtualRootUseOp::FunCallMethod(box FunCallMethodData {
+                                args,
+                                fn_,
+                                ..
+                            }) => fun_param_root(
+                                args,
+                                method_callee_desc(fn_),
+                                frames,
+                                custom_error_message,
+                            ),
                             VirtualRootUseOp::JSXCreateElement(box JSXCreateElementData {
                                 op,
                                 component,
@@ -4377,6 +4413,13 @@ where
         ValueDesc::Type(desc) => desc_of_type_desc(desc),
     };
 
+    let desc_of_callee_desc = |fn_: &CalleeDesc<L>| match fn_ {
+        CalleeDesc::Reason(desc) => friendly::desc_of_reason_desc(desc.as_ref()),
+        CalleeDesc::Method(name) => friendly::MessageFeature::Inline(
+            friendly::message_inlines_of_string(&format!("method `{name}`")),
+        ),
+    };
+
     let desc_of_value_as_type_reference =
         |reference: Option<&ValueAsTypeReference>, value: &MessageTypeReferenceData<L>| {
             match reference {
@@ -5318,10 +5361,7 @@ where
                 },
                 RootMessage::RootCannotCall(fn_) => (
                     RootKind::OperationRoot,
-                    friendly::Message(vec![
-                        text("Cannot call "),
-                        friendly::desc_of_reason_desc(fn_.as_ref()),
-                    ]),
+                    friendly::Message(vec![text("Cannot call "), desc_of_callee_desc(fn_)]),
                 ),
                 RootMessage::RootCannotCallStandalone(fn_) => (
                     RootKind::OperationRoot,
@@ -5335,7 +5375,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot call "),
-                        friendly::desc_of_reason_desc(fn_.as_ref()),
+                        desc_of_callee_desc(fn_),
                         text(" with "),
                         desc_of_value_desc(lower),
                         text(" bound to "),
@@ -5346,7 +5386,7 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot call "),
-                        friendly::desc_of_reason_desc(fn_.as_ref()),
+                        desc_of_callee_desc(fn_),
                         text(" with "),
                         desc_of_value_desc(lower),
                         text(" bound to "),

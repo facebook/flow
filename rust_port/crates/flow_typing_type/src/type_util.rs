@@ -45,6 +45,7 @@ use crate::type_::ElemTData;
 use crate::type_::EvalMappedTypeData;
 use crate::type_::ExtendsUseTData;
 use crate::type_::FunCallData;
+use crate::type_::FunCallMethodCallee;
 use crate::type_::FunCallMethodData;
 use crate::type_::FunImplicitReturnData;
 use crate::type_::FunMissingArgData;
@@ -1195,7 +1196,12 @@ where
             }) => FunCallMethod(Box::new(FunCallMethodData {
                 local,
                 op: mod_reason(op),
-                fn_: mod_reason(fn_),
+                fn_: match fn_ {
+                    FunCallMethodCallee::Reason(reason) => {
+                        FunCallMethodCallee::Reason(mod_reason(reason))
+                    }
+                    FunCallMethodCallee::Method(name) => FunCallMethodCallee::Method(name),
+                },
                 prop: mod_reason(prop),
                 args: args.iter().map(|a| mod_reason(a.dupe())).collect(),
                 implicit_instantiation_reference,

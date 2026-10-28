@@ -1033,9 +1033,25 @@ pub struct StandaloneCallThisData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub enum FunCallMethodCallee<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    Reason(VirtualReason<L>),
+    Method(FlowSmolStr),
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FunCallMethodData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub op: VirtualReason<L>,
-    pub fn_: VirtualReason<L>,
+    pub fn_: FunCallMethodCallee<L>,
     pub prop: VirtualReason<L>,
     pub args: Arc<[VirtualReason<L>]>,
     pub implicit_instantiation_reference: ImplicitInstantiationReferenceKind,
