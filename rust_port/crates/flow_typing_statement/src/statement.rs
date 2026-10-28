@@ -12751,7 +12751,7 @@ fn jsx_fragment<'a>(
         {
             None => type_::null::at(expr_loc.dupe()),
             Some(fragment_children_prop) => {
-                let reason_props = mk_reason(VirtualReasonDesc::RReactProps, loc_children.dupe());
+                let reason_props = mk_reason(None, loc_children.dupe());
                 let props_map = properties::PropertiesMap::from_btree_map(BTreeMap::from([(
                     Name::new(FlowSmolStr::from("children")),
                     type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
@@ -13118,9 +13118,8 @@ fn jsx_title<'a>(
         loc: closing.loc.dupe(),
         name: jsx_match_closing_element(&typed_name, &closing.name),
     });
-    let props = inferred_props.unwrap_or_else(|| {
-        type_::any_t::error(mk_reason(VirtualReasonDesc::RReactProps, props_loc.dupe()))
-    });
+    let props =
+        inferred_props.unwrap_or_else(|| type_::any_t::error(mk_reason(None, props_loc.dupe())));
     let typed_opening = ast::jsx::Opening {
         loc: loc.dupe(),
         name: typed_name,
@@ -13251,7 +13250,7 @@ pub fn jsx_mk_props<'a>(
 > {
     let is_builtin_react = matches!(cx.jsx(), flow_common::options::JsxMode::JsxReact)
         && !cx.react_custom_jsx_typing();
-    let reason_props = reason.dupe().replace_desc(VirtualReasonDesc::RReactProps);
+    let reason_props = reason.dupe().replace_desc(None);
     // Use the same reason for proto and the ObjT so we can walk the proto chain
     // and use the root proto reason to build an error.
     let proto = type_::obj_proto::make(reason_props.dupe());

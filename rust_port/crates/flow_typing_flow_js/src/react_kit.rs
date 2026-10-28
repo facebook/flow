@@ -1110,7 +1110,7 @@ pub(super) fn run_with_env<'cx>(
 
         let reason = type_util::reason_of_t(jsx_props)
             .dupe()
-            .replace_desc_new(VirtualReasonDesc::RReactProps);
+            .replace_desc_new(None);
         let use_op = VirtualUseOp::Frame(
             Arc::new(VirtualFrameUseOp::ReactConfigCheck),
             Arc::new(use_op),

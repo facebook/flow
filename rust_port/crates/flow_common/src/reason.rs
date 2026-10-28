@@ -299,7 +299,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RDummyThis,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
-    RReactProps,
     RReactChildren,
     RUninitialized,
     RPossiblyUninitialized,
@@ -428,7 +427,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RObjectPatternRestProp => RObjectPatternRestProp,
             RArrayPatternRestProp => RArrayPatternRestProp,
             RModule(u) => RModule(u.clone()),
-            RReactProps => RReactProps,
             RReactElement {
                 name_opt,
                 from_component_syntax,
@@ -1253,7 +1251,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RModule(module_name) => format!("module `{}`", module_name.display()),
 
         // React
-        RReactProps => "props".to_string(),
         RReactElement { name_opt, .. } => match name_opt {
             Some(name) => format!("`{}` element", name),
             None => "React element".to_string(),
