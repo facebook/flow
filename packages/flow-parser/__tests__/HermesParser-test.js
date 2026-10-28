@@ -233,6 +233,48 @@ describe('Program source type', () => {
       }
     }
   });
+
+  test('specifier-level type modifiers in Babel', () => {
+    // All-type specifier lists retain script metadata in both detection modes.
+    for (const sourceOptions of [{}, {sourceType: 'unambiguous'}]) {
+      for (const code of typeOnlySpecifiers) {
+        expect(
+          parse(code, {...sourceOptions, babel: true}).program.sourceType,
+        ).toBe('script'); // OK
+      }
+    }
+
+    // Runtime specifiers and empty markers still select module metadata.
+    for (const code of runtimeSpecifiers) {
+      expect(parse(code, {babel: true}).program.sourceType).toBe('module'); // OK
+    }
+  });
+
+  test('default interface exports in Babel', () => {
+    const source = 'export default interface I {value: number;}';
+
+    // Type-only default exports retain script metadata during content detection.
+    for (const sourceOptions of [{}, {sourceType: 'unambiguous'}]) {
+      const ast = parse(source, {...sourceOptions, babel: true}).program;
+      expect(ast.sourceType).toBe('script'); // OK
+    }
+
+    // An explicit module option takes precedence over type-only content.
+    expect(
+      parse(source, {sourceType: 'module', babel: true}).program.sourceType,
+    ).toBe('module'); // OK
+
+    // Runtime imports or exports still select module metadata alongside type exports.
+    for (const runtimeDeclaration of [
+      "import value from './value';",
+      'export const value = 1;',
+      'export default 1;',
+    ]) {
+      const code = `${source}\n${runtimeDeclaration}`;
+      const ast = parse(code, {babel: true}).program;
+      expect(ast.sourceType).toBe('module'); // OK
+    }
+  });
 });
 
 test('Semantic validation', () => {

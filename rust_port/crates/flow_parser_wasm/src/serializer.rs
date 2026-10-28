@@ -533,23 +533,7 @@ impl<'a> Serializer<'a> {
         match self.babel_source_type {
             SourceType::Script => false,
             SourceType::Module => true,
-            SourceType::Unspecified => {
-                program
-                    .statements
-                    .iter()
-                    .any(|statement| match &**statement {
-                        ast::statement::StatementInner::ImportDeclaration { inner, .. } => {
-                            matches!(inner.import_kind, ast::statement::ImportKind::ImportValue)
-                        }
-                        ast::statement::StatementInner::ExportDefaultDeclaration { .. } => true,
-                        ast::statement::StatementInner::ExportNamedDeclaration {
-                            inner, ..
-                        } => {
-                            matches!(inner.export_kind, ast::statement::ExportKind::ExportValue)
-                        }
-                        _ => false,
-                    })
-            }
+            SourceType::Unspecified => crate::is_module(program),
         }
     }
 

@@ -29,6 +29,14 @@ pub mod strip_flow;
 
 use std::ffi::CString;
 
+use flow_parser::ast;
+use flow_parser::ast::statement::ExportKind;
+use flow_parser::ast::statement::ImportKind;
+use flow_parser::ast::statement::StatementInner;
+use flow_parser::ast::statement::export_default_declaration::Declaration as DefaultExportDeclaration;
+use flow_parser::ast::statement::export_named_declaration::Specifier as ExportSpecifier;
+use flow_parser::ast::statement::import_declaration::Specifier as ImportSpecifier;
+use flow_parser::loc::Loc;
 use position::PositionResult;
 #[cfg(not(target_arch = "wasm32"))]
 pub use runnable_js::flow_to_runnable_js_with_source_map;
@@ -644,6 +652,47 @@ fn has_flow_pragma(code: &str) -> bool {
     false
 }
 
+pub(crate) fn is_module(program: &ast::Program<Loc, Loc>) -> bool {
+    program
+        .statements
+        .iter()
+        .any(|statement| match &**statement {
+            StatementInner::ImportDeclaration { inner, .. } => {
+                matches!(inner.import_kind, ImportKind::ImportValue)
+                    && (inner.default.is_some()
+                        || match &inner.specifiers {
+                            Some(ImportSpecifier::ImportNamedSpecifiers(specifiers)) => {
+                                specifiers.is_empty()
+                                    || specifiers.iter().any(|specifier| {
+                                        specifier.kind.is_none_or(|kind| {
+                                            matches!(kind, ImportKind::ImportValue)
+                                        })
+                                    })
+                            }
+                            _ => true,
+                        })
+            }
+            StatementInner::ExportDefaultDeclaration { inner, .. } => !matches!(
+                &inner.declaration,
+                DefaultExportDeclaration::Declaration(declaration)
+                    if matches!(&**declaration, StatementInner::InterfaceDeclaration { .. })
+            ),
+            StatementInner::ExportNamedDeclaration { inner, .. } => {
+                matches!(inner.export_kind, ExportKind::ExportValue)
+                    && match &inner.specifiers {
+                        Some(ExportSpecifier::ExportSpecifiers(specifiers)) => {
+                            specifiers.is_empty()
+                                || specifiers.iter().any(|specifier| {
+                                    matches!(specifier.export_kind, ExportKind::ExportValue)
+                                })
+                        }
+                        _ => true,
+                    }
+            }
+            _ => false,
+        })
+}
+
 fn comment_has_flow_pragma(bytes: &[u8], start: usize, end: usize) -> bool {
     let needle = b"@flow";
     let mut from = start;
@@ -682,6 +731,68 @@ mod tests {
     use crate::node_kinds::PropType;
     use crate::node_kinds::SCHEMA;
     use crate::serializer::Serializer;
+
+    #[test]
+    fn default_interface_exports_do_not_select_module_source_type() {
+        // A type-only default export leaves module detection in script mode.
+        let (program, errors) = flow_parser::parse_program_without_file(
+            false,
+            None,
+            None,
+            Ok("export default interface I {}"),
+        );
+        assert!(errors.is_empty(), "parse errors: {errors:?}"); // OK
+        assert!(!super::is_module(&program)); // OK
+
+        // Value exports still select modules alongside a default interface export.
+        for source in [
+            "export default interface I {} export const value = 1;",
+            "export default interface I {} export default 1;",
+        ] {
+            let (program, errors) =
+                flow_parser::parse_program_without_file(false, None, None, Ok(source));
+            assert!(errors.is_empty(), "parse errors for {source}: {errors:?}"); // OK
+            assert!(super::is_module(&program)); // OK
+        }
+    }
+
+    #[test]
+    fn module_detection_respects_specifier_kinds() {
+        // Specifier-level type modifiers do not select module source type.
+        for source in [
+            "import {type T} from './types';",
+            "import {typeof T} from './types';",
+            "import {type T, typeof U} from './types';",
+            "export {type T};",
+            "export {type T as default};",
+            "export {type T, type U} from './types';",
+        ] {
+            let (program, errors) =
+                flow_parser::parse_program_without_file(false, None, None, Ok(source));
+            assert!(errors.is_empty(), "parse errors for {source}: {errors:?}"); // OK
+            assert!(!super::is_module(&program), "{source}"); // OK
+        }
+
+        // Runtime specifiers, side effects, and empty export markers select modules.
+        for source in [
+            "import './value';",
+            "import {} from './value';",
+            "import value, {type T} from './value';",
+            "import * as value from './value';",
+            "import {type T, value} from './value';",
+            "import {type} from './value';",
+            "export {};",
+            "export {} from './value';",
+            "export {type T, value};",
+            "export {type};",
+            "export * as value from './value';",
+        ] {
+            let (program, errors) =
+                flow_parser::parse_program_without_file(false, None, None, Ok(source));
+            assert!(errors.is_empty(), "parse errors for {source}: {errors:?}"); // OK
+            assert!(super::is_module(&program), "{source}"); // OK
+        }
+    }
 
     /// Parse `source`, serialize it, and return the program_buffer.
     fn parse_and_serialize(source: &str) -> Vec<u32> {
