@@ -3889,7 +3889,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 // Use super member to visit sub-expressions to avoid record a read of the member.
                 ast_visitor::member_default(self, &loc, inner)?;
                 self.expression(rhs)?;
-                let reason = VirtualReason::new(VirtualReasonDesc::RSomeProperty, loc.dupe());
+                let reason = VirtualReason::new(None, loc.dupe());
                 let assigned_val = ssa_val::one(&mut *self.cache.borrow_mut(), reason.dupe());
                 self.assign_member(
                     false,
@@ -9169,10 +9169,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 match &*left {
                     Pattern::Expression { loc, inner } => {
                         if let ExpressionInner::Member { inner: mem, .. } = &***inner {
-                            let reason = flow_common::reason::VirtualReason::new(
-                                flow_common::reason::VirtualReasonDesc::RSomeProperty,
-                                loc.dupe(),
-                            );
+                            let reason = flow_common::reason::VirtualReason::new(None, loc.dupe());
                             let assigned_val =
                                 ssa_val::one(&mut *self.cache.borrow_mut(), reason.dupe());
                             self.assign_member(
@@ -9438,10 +9435,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 // given `o.x++`, read o.x then write o.x
                 self.expression(argument)?;
                 self.pattern_expression(argument)?;
-                let val_reason = flow_common::reason::VirtualReason::new(
-                    flow_common::reason::VirtualReasonDesc::RSomeProperty,
-                    loc.dupe(),
-                );
+                let val_reason = flow_common::reason::VirtualReason::new(None, loc.dupe());
                 let assigned_val = ssa_val::number(&mut *self.cache.borrow_mut(), val_reason);
                 match refinement_key::Lookup::of_member(member, false) {
                     Some(lookup) => {

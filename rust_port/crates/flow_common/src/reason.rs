@@ -299,7 +299,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RDefaultValue,
     RConstructor,
     RDummyThis,
-    RSomeProperty,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
     RReactProps,
@@ -424,7 +423,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 object_: object_.dupe(),
                 property: property.dupe(),
             },
-            RSomeProperty => RSomeProperty,
             RNamedImportedType(u, s) => RNamedImportedType(u.clone(), s.dupe()),
             RImportStarType(s) => RImportStarType(s.dupe()),
             RImportStarTypeOf(s) => RImportStarTypeOf(s.dupe()),
@@ -1242,7 +1240,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
                 string_of_desc(d)
             )
         }
-        RSomeProperty => "some property".to_string(),
 
         // Imports
         RNamedImportedType(module_name, _) => {

@@ -5807,7 +5807,7 @@ foo;
     (2, 4) to (2, 5): (`x`)
   };
   (4, 8) to (4, 11) => {
-    (3, 0) to (3, 5): (some property)
+    (3, 0) to (3, 5): ()
   };
   (4, 16) to (4, 17) => {
     (2, 4) to (2, 5): (`x`)
@@ -5875,7 +5875,7 @@ hi;
     (2, 4) to (2, 5): (`x`)
   };
   (4, 30) to (4, 35) => {
-    (3, 0) to (3, 21): (some property)
+    (3, 0) to (3, 21): ()
   };
   (4, 49) to (4, 50) => {
     (2, 4) to (2, 5): (`x`)
@@ -6258,7 +6258,7 @@ x.foo;
     (2, 4) to (2, 5): (`x`)
   };
   (4, 0) to (4, 5) => {
-    (3, 0) to (3, 5): (some property)
+    (3, 0) to (3, 5): ()
   }]"#
     );
 }
@@ -6298,7 +6298,7 @@ y.foo;
     (4, 4) to (4, 5): (`y`)
   };
   (7, 0) to (7, 5) => {
-    (5, 0) to (5, 5): (some property)
+    (5, 0) to (5, 5): ()
   };
   (6, 0) to (6, 5) => invalidated refinement by {
     property assignment at (5, 0) to (5, 9)
@@ -6381,7 +6381,7 @@ x.foo;
     (2, 4) to (2, 5): (`x`)
   };
   (4, 0) to (4, 5) => {
-    (3, 0) to (3, 5): (some property)
+    (3, 0) to (3, 5): ()
   };
   (6, 0) to (6, 1) => {
     (5, 0) to (5, 1): (`x`)
@@ -7664,7 +7664,7 @@ x.a;
     (2, 4) to (2, 5): (`x`)
   };
   (4, 0) to (4, 3) => {
-    (3, 0) to (3, 3): (some property)
+    (3, 0) to (3, 3): ()
   }]"#
     );
 }
@@ -9230,7 +9230,7 @@ x.a;
     Global x
   };
   (4, 0) to (4, 3) => {
-    (3, 4) to (3, 7): (some property),
+    (3, 4) to (3, 7): (),
     {refinement = Not (Truthy); writes = projection at (2, 4) to (2, 7)}
   }]"#
     );
@@ -9702,7 +9702,7 @@ foo.bar;
     Global foo
   };
   (7, 0) to (7, 7) => {
-    (6, 0) to (6, 7): (some property)
+    (6, 0) to (6, 7): ()
   }]"#
     );
 }
@@ -9882,13 +9882,13 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
     (2, 44) to (2, 45): (`o`)
   };
   (4, 2) to (4, 5) => {
-    (3, 2) to (3, 5): (some property)
+    (3, 2) to (3, 5): ()
   };
   (5, 2) to (5, 3) => {
     (2, 44) to (2, 45): (`o`)
   };
   (5, 2) to (5, 5) => {
-    (4, 2) to (4, 5): (some property)
+    (4, 2) to (4, 5): ()
   }]"#
     );
 }
@@ -9926,25 +9926,25 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
     {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}
   };
   (5, 4) to (5, 7) => {
-    (4, 4) to (4, 7): (some property)
+    (4, 4) to (4, 7): ()
   };
   (5, 13) to (5, 14) => {
     {refinement = PropTruthyR (p); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
   };
   (5, 13) to (5, 16) => {
-    {refinement = Truthy; writes = (4, 4) to (4, 7): (some property)}
+    {refinement = Truthy; writes = (4, 4) to (4, 7): ()}
   };
   (6, 4) to (6, 5) => {
     {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}
   };
   (6, 4) to (6, 7) => {
-    (5, 4) to (5, 7): (some property)
+    (5, 4) to (5, 7): ()
   };
   (6, 13) to (6, 14) => {
     {refinement = Not (PropTruthyR (p)); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
   };
   (6, 13) to (6, 16) => {
-    {refinement = Not (Truthy); writes = (5, 4) to (5, 7): (some property)}
+    {refinement = Not (Truthy); writes = (5, 4) to (5, 7): ()}
   }]"#
     );
 }
@@ -9974,13 +9974,13 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
     (2, 44) to (2, 45): (`o`)
   };
   (4, 2) to (4, 5) => {
-    (3, 2) to (3, 5): (some property)
+    (3, 2) to (3, 5): ()
   };
   (5, 2) to (5, 3) => {
     (2, 44) to (2, 45): (`o`)
   };
   (5, 2) to (5, 5) => {
-    (4, 2) to (4, 5): (some property)
+    (4, 2) to (4, 5): ()
   }]"#
     );
 }
@@ -10018,25 +10018,25 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
     {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}
   };
   (5, 4) to (5, 7) => {
-    (4, 4) to (4, 7): (some property)
+    (4, 4) to (4, 7): ()
   };
   (5, 13) to (5, 14) => {
     {refinement = PropTruthyR (p); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
   };
   (5, 13) to (5, 16) => {
-    {refinement = Truthy; writes = (4, 4) to (4, 7): (some property)}
+    {refinement = Truthy; writes = (4, 4) to (4, 7): ()}
   };
   (6, 4) to (6, 5) => {
     {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}
   };
   (6, 4) to (6, 7) => {
-    (5, 4) to (5, 7): (some property)
+    (5, 4) to (5, 7): ()
   };
   (6, 13) to (6, 14) => {
     {refinement = Not (PropTruthyR (p)); writes = {refinement = SentinelR p; writes = (2, 44) to (2, 45): (`o`)}}
   };
   (6, 13) to (6, 16) => {
-    {refinement = Not (Truthy); writes = (5, 4) to (5, 7): (some property)}
+    {refinement = Not (Truthy); writes = (5, 4) to (5, 7): ()}
   }]"#
     );
 }
@@ -10545,7 +10545,7 @@ component Component() {
     (6, 8) to (6, 12): (`ref1`)
   };
   (10, 2) to (10, 14) => {
-    (8, 4) to (8, 16): (some property),
+    (8, 4) to (8, 16): (),
     {refinement = Not (Null); writes = projection at (7, 6) to (7, 18)}
   };
   (12, 15) to (12, 21) => {
