@@ -1109,6 +1109,12 @@ pub struct SwitchRefinementCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord
 pub enum AssignVarTarget<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     Variable(VirtualReason<L>),
     Annotation(type_or_type_desc::TypeOrTypeDescT<L>),
+    /// The annotation of a destructuring declaration, printed as its type. The pattern has no
+    /// binding of its own; its reason is the reason of the operation.
+    Pattern {
+        reason: VirtualReason<L>,
+        annot: type_or_type_desc::TypeOrTypeDescT<L>,
+    },
 }
 
 /// What an `AssignVar` assigns: a value referenced by its reason, or a default value, which is

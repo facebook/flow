@@ -1698,7 +1698,9 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         | RootUseOp::RenderTypeInstantiation { render_type: op } => Some(op),
         RootUseOp::JSXCreateElement(box JSXCreateElementData { op, .. }) => Some(op),
         RootUseOp::AssignVar { var, init } => match var.as_deref() {
-            Some(AssignVarTarget::Variable(reason)) => Some(reason),
+            Some(AssignVarTarget::Variable(reason) | AssignVarTarget::Pattern { reason, .. }) => {
+                Some(reason)
+            }
             Some(AssignVarTarget::Annotation(TypeOrTypeDescT::Type(t))) => Some(reason_of_t(t)),
             Some(AssignVarTarget::Annotation(TypeOrTypeDescT::TypeDesc(_))) => None,
             None => match init {

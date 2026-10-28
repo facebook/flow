@@ -518,8 +518,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:65:52
 
-Cannot assign array literal to destructuring because in index `0`: `123` [1] is incompatible with `boolean` [2].
-[incompatible-type]
+Cannot assign array literal to `RestParams<(a: number, b: boolean, c: string, d: number) => void>` because in index `0`:
+`123` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    extraction.js:65:52
    65|   const [b2, s2, n2]: RestParams<typeof foobar> = [123, true, 'hello']; // error
@@ -533,8 +533,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:65:57
 
-Cannot assign array literal to destructuring because in index `1`: `true` [1] is incompatible with `string` [2].
-[incompatible-type]
+Cannot assign array literal to `RestParams<(a: number, b: boolean, c: string, d: number) => void>` because in index `1`:
+`true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    extraction.js:65:57
    65|   const [b2, s2, n2]: RestParams<typeof foobar> = [123, true, 'hello']; // error
@@ -548,8 +548,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:65:63
 
-Cannot assign array literal to destructuring because in index `2`: `"hello"` [1] is incompatible with `number` [2].
-[incompatible-type]
+Cannot assign array literal to `RestParams<(a: number, b: boolean, c: string, d: number) => void>` because in index `2`:
+`"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    extraction.js:65:63
    65|   const [b2, s2, n2]: RestParams<typeof foobar> = [123, true, 'hello']; // error

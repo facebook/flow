@@ -536,7 +536,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:55:6
 
-Cannot assign object literal to destructuring because in property `p`: `0` [1] is incompatible with `string` [2].
+Cannot assign object literal to `{p: string, ...}` because in property `p`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    defaults.js:55:6
@@ -941,7 +941,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:35:32
 
-Cannot assign object literal to destructuring because in property `n`: `""` [1] is incompatible with `number` [2].
+Cannot assign object literal to `{n: number, ...}` because in property `n`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    destructuring.js:35:32
@@ -1597,7 +1597,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- poly_concretize.js:64:11
 
-Cannot assign `item` to destructuring because: [incompatible-type]
+Cannot assign `item` to `{...Item, name?: string, ...}` because: [incompatible-type]
  - Either in property `name`: `void` [1] is incompatible with `string` [2].
     - This property is invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
@@ -1627,7 +1627,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- poly_concretize.js:64:11
 
-Cannot assign `item` to destructuring because: [incompatible-type]
+Cannot assign `item` to `{...Item, name?: string, ...}` because: [incompatible-type]
  - Either in property `name`: `void` [1] is incompatible with `string` [2].
     - This property is invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
@@ -1657,8 +1657,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- poly_concretize.js:64:11
 
-Cannot assign `item` to destructuring because in property `name`: `void` [1] is incompatible with `string` [2].
-[incompatible-type]
+Cannot assign `item` to `{...Item, name?: string, ...}` because in property `name`: `void` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
 This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.

@@ -1646,7 +1646,8 @@ where
                                             AssignVarTarget::Variable(reason) => {
                                                 AssignTargetDesc::Variable(reason.desc.clone())
                                             }
-                                            AssignVarTarget::Annotation(t) => {
+                                            AssignVarTarget::Annotation(t)
+                                            | AssignVarTarget::Pattern { annot: t, .. } => {
                                                 AssignTargetDesc::Annotation(printed_type_desc(t))
                                             }
                                         }),

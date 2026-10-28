@@ -1078,6 +1078,10 @@ where
                         AssignVarTarget::Annotation(t) => AssignVarTarget::Annotation(
                             type_or_type_desc::map_loc(|l: &L| f(l.dupe()), t),
                         ),
+                        AssignVarTarget::Pattern { reason, annot } => AssignVarTarget::Pattern {
+                            reason: mod_reason(reason),
+                            annot: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), annot),
+                        },
                     })
                 }),
                 init: match init {

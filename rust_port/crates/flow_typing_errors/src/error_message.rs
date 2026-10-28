@@ -6978,6 +6978,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                 AssignVarTarget::Annotation(t) => {
                                     AssignVarTarget::Annotation(f(t.clone()))
                                 }
+                                AssignVarTarget::Pattern { reason, annot } => {
+                                    AssignVarTarget::Pattern {
+                                        reason: reason.dupe(),
+                                        annot: f(annot.clone()),
+                                    }
+                                }
                             })
                         });
                         let init = match init {

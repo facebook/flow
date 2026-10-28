@@ -6288,7 +6288,10 @@ fn variable<'a>(
                     )?;
                     if let Some((ref init_t, ref init_reason)) = init_opt {
                         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-                            var: Some(Box::new(type_::AssignVarTarget::Variable(id_reason.dupe()))),
+                            var: Some(Box::new(type_::AssignVarTarget::Pattern {
+                                reason: id_reason.dupe(),
+                                annot: flow_js_utils::type_or_type_desc_for_error(&annot_t),
+                            })),
                             init: type_::AssignVarInit::Reason(init_reason.dupe()),
                         }));
                         flow_js::flow_non_speculating(
