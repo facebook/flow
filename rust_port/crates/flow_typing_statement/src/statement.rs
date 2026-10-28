@@ -16134,7 +16134,7 @@ pub fn mk_class_sig<'a>(
                             has_anno: false,
                         };
                         Ok(func_class_sig_types::func::Func {
-                            reason: mk_reason(VirtualReasonDesc::RConstructor, name_loc.dupe()),
+                            reason: mk_reason(None, name_loc.dupe()),
                             function_reference_kind:
                                 flow_common::error_ref::FunctionReferenceKind::FunctionType,
                             kind: func_class_sig_types::func::Kind::Ctor,
@@ -18939,7 +18939,7 @@ pub fn mk_record_sig<'a>(
                             has_anno: false,
                         };
                         Ok(func::Func {
-                            reason: mk_reason(VirtualReasonDesc::RConstructor, name_loc.dupe()),
+                            reason: mk_reason(None, name_loc.dupe()),
                             function_reference_kind:
                                 flow_common::error_ref::FunctionReferenceKind::FunctionType,
                             kind: func::Kind::Ctor,

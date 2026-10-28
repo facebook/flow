@@ -297,7 +297,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RImplicitInstantiation,
     RDestructuring,
     RDefaultValue,
-    RConstructor,
     RDummyThis,
     RObjectPatternRestProp,
     RArrayPatternRestProp,
@@ -410,7 +409,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RImplicitInstantiation => RImplicitInstantiation,
             RDestructuring => RDestructuring,
             RDefaultValue => RDefaultValue,
-            RConstructor => RConstructor,
             RRecordType(s) => RRecordType(s.dupe()),
             RDummyThis => RDummyThis,
             RType(n) => RType(n.dupe()),
@@ -1207,9 +1205,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // Destructuring and defaults
         RDestructuring => "destructuring".to_string(),
         RDefaultValue => "default value".to_string(),
-
-        // Constructors
-        RConstructor => "constructor".to_string(),
 
         // Records
         RRecordType(name) => format!("record `{}`", name),
