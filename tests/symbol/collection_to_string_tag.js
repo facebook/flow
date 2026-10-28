@@ -11,10 +11,8 @@ roSet[Symbol.toStringTag] as string; // OK
 map[Symbol.toStringTag] as 'Set'; // ERROR
 roSet[Symbol.toStringTag] as 'Map'; // ERROR
 
-// The read-only bases declare `[Symbol.toStringTag]`, so a read-only view still
-// satisfies `Readonly` of the mutable class.
-roMap as Readonly<Map<string, number>>; // OK
-roSet as Readonly<Set<string>>; // OK
+roMap as Readonly<Map<string, number>>; // ERROR: missing mutating methods
+roSet as Readonly<Set<string>>; // ERROR: missing mutating methods
 
 interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
 map as TaggedMap; // ERROR: the tag is `string`

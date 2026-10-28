@@ -576,9 +576,9 @@ References:
    type_instance.js:6:11
    6| o1 as {p?:number, ...}; // Error
                 ^^^^^^ [2]
-   type_instance.js:2:7
-   2| class B extends A {p: number}
-            ^ [3]
+   type_instance.js:4:11
+   4| type O1 = {...B, ...};
+                ^^^^^^^^^^^ [3]
    type_instance.js:6:7
    6| o1 as {p?:number, ...}; // Error
             ^^^^^^^^^^^^^^^^ [4]

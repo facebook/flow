@@ -1146,8 +1146,14 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
             type_::object::ResolveTool::Resolve(r) => {
                 format!("Resolve {}", resolve(tvars, r))
             }
-            type_::object::ResolveTool::Super(s, r) => {
-                format!("Super ({}, {})", slice(s), resolve(tvars, r))
+            type_::object::ResolveTool::Super(s, pending, r) => {
+                let kids: Vec<String> = pending.iter().map(|t| kid(tvars, t)).collect();
+                format!(
+                    "Super ({}, [{}], {})",
+                    slice(s),
+                    kids.join("; "),
+                    resolve(tvars, r)
+                )
             }
         };
         let acc_element = |elem: &type_::object::spread::AccElement| -> String {

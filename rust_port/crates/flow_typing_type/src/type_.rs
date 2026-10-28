@@ -9228,7 +9228,7 @@ pub mod object {
         Resolve(Resolve),
         // In order to resolve an InstanceT, all supers must also be resolved to
         // collect class properties, which are own.
-        Super(Slice, Rc<Resolve>),
+        Super(Slice, Vec<Type>, Rc<Resolve>),
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -126,8 +126,16 @@ pub fn mk_object_type<'cx>(
                 ObjKind::Indexed(dict) => Some(dict.clone()),
                 _ => None,
             };
+            // The slice of an interface already includes its proto props.
+            let proto_props = match inst.inst_kind {
+                InstanceKind::InterfaceKind { .. } => {
+                    cx.generate_property_map(properties::PropertiesMap::new())
+                }
+                _ => inst.proto_props.dupe(),
+            };
             let inst = InstType::new(InstTypeInner {
                 own_props: id,
+                proto_props,
                 inst_dict,
                 class_id: flow_aloc::ALocId::none(),
                 inst_kind: InstanceKind::InterfaceKind {
@@ -2378,8 +2386,20 @@ fn resolve_with_env<'cx, A>(
                         tool,
                         object::Tool::Spread(box (object::spread::Target::Value { .. }, _))
                     ) && inst.strictness_kind.is_typescript_loose();
+                let is_type_operation = matches!(
+                    tool,
+                    object::Tool::MakeExact
+                        | object::Tool::ReadOnly
+                        | object::Tool::Partial
+                        | object::Tool::Required
+                        | object::Tool::Rest(box (object::rest::MergeMode::Omit, _))
+                        | object::Tool::ObjectRep
+                        | object::Tool::ObjectMap(_)
+                );
                 let include_proto_props = matches!(inst_kind, InstanceKind::InterfaceKind { .. })
-                    && (is_type_spread || is_typescript_interface_value_spread);
+                    && (is_type_operation
+                        || is_type_spread
+                        || is_typescript_interface_value_spread);
                 let resolve_tool_inner = object::ResolveTool::Super(
                     interface_slice(
                         cx,
@@ -2391,6 +2411,7 @@ fn resolve_with_env<'cx, A>(
                         dict_polarity_override,
                         t_generic_id,
                     ),
+                    Vec::new(),
                     Rc::new(resolve_tool.clone()),
                 );
                 return match (tool, inst_kind) {
@@ -2927,73 +2948,115 @@ pub fn super_<'cx, A>(
     resolve_tool: object::Resolve,
     tool: &object::Tool,
     acc: object::Slice,
+    mut pending: Vec<Type>,
     t: &Type,
 ) -> Result<A, FlowJsException> {
-    match t.deref() {
-        TypeInner::DefT(r, def_t) => {
-            let inst_t = match &**def_t {
-                DefTInner::InstanceT(inst_t) => inst_t,
-                _ => {
-                    return resolved(
-                        next,
-                        recurse,
-                        cx,
-                        env,
-                        use_op,
-                        reason,
-                        resolve_tool,
-                        tool,
-                        Vec1::new(acc),
-                    );
-                }
-            };
-            let static_ = &inst_t.static_;
-            let super_t = &inst_t.super_;
-            let inst = &inst_t.inst;
-            let own_props = inst.own_props.dupe();
-            let reason = &acc.reason;
-            let include_proto_props = matches!(tool, object::Tool::Spread(_))
-                && matches!(inst.inst_kind, InstanceKind::InterfaceKind { .. });
-            let slice = interface_slice(
-                cx,
-                r,
-                static_,
-                inst.clone(),
-                own_props,
-                include_proto_props,
-                object_tool_dict_polarity_override(tool),
-                flow_typing_generics::spread_empty(),
-            );
-            let (props, flags, frozen, generics, reachable_targs) =
-                intersect2(cx, env, reason, &acc, &slice);
-            let acc = object::Slice {
-                reason: reason.dupe(),
-                strictness_kind: acc.strictness_kind.join(slice.strictness_kind),
-                props,
-                flags,
-                frozen,
-                generics,
-                interface: Some((static_.dupe(), inst.clone())),
-                reachable_targs,
-                literal: acc.literal,
-            };
-            let resolve_tool = object::ResolveTool::Super(acc, Rc::new(resolve_tool));
-            recurse(cx, env, use_op, reason, resolve_tool, tool, super_t.dupe())
-        }
-        TypeInner::AnyT(_, src) => {
-            return_(cx, use_op, Type::new(TypeInner::AnyT(reason.dupe(), *src)))
-        }
-        _ => resolved(
+    let finish = |cx: &mut Context<'cx>, use_op, acc, mut pending: Vec<Type>| match pending.pop() {
+        Some(base) => recurse(
+            cx,
+            env,
+            use_op,
+            reason,
+            object::ResolveTool::Super(acc, pending, Rc::new(resolve_tool.clone())),
+            tool,
+            base,
+        ),
+        None => resolved(
             next,
             recurse,
             cx,
             env,
             use_op,
             reason,
-            resolve_tool,
+            resolve_tool.clone(),
             tool,
             Vec1::new(acc),
         ),
+    };
+    match t.deref() {
+        TypeInner::IntersectionT(_, rep) => {
+            let bases: Vec<Type> = rep.members_iter().duped().collect();
+            pending.extend(bases.into_iter().rev());
+            finish(cx, use_op, acc, pending)
+        }
+        TypeInner::DefT(r, def_t) => {
+            let (slice, super_t) = match def_t.deref() {
+                DefTInner::InstanceT(inst_t) => {
+                    let inst = &inst_t.inst;
+                    let include_proto_props =
+                        matches!(
+                            tool,
+                            object::Tool::Spread(_)
+                                | object::Tool::MakeExact
+                                | object::Tool::ReadOnly
+                                | object::Tool::Partial
+                                | object::Tool::Required
+                                | object::Tool::Rest(box (object::rest::MergeMode::Omit, _))
+                                | object::Tool::ObjectRep
+                                | object::Tool::ObjectMap(_)
+                        ) && matches!(inst.inst_kind, InstanceKind::InterfaceKind { .. });
+                    (
+                        interface_slice(
+                            cx,
+                            r,
+                            &inst_t.static_,
+                            inst.clone(),
+                            inst.own_props.dupe(),
+                            include_proto_props,
+                            object_tool_dict_polarity_override(tool),
+                            flow_typing_generics::spread_empty(),
+                        ),
+                        Some(inst_t.super_.dupe()),
+                    )
+                }
+                DefTInner::ObjT(obj) => (
+                    object_slice(
+                        cx,
+                        None,
+                        r,
+                        obj.props_tmap.dupe(),
+                        &obj.flags,
+                        object_tool_dict_polarity_override(tool),
+                        false,
+                        obj.reachable_targs.dupe(),
+                        flow_typing_generics::spread_empty(),
+                        obj.strictness_kind,
+                        obj.literal,
+                    ),
+                    None,
+                ),
+                _ => return finish(cx, use_op, acc, pending),
+            };
+            let (props, flags, frozen, generics, reachable_targs) =
+                intersect2(cx, env, &acc.reason, &acc, &slice);
+            let acc = object::Slice {
+                reason: acc.reason.dupe(),
+                strictness_kind: acc.strictness_kind.join(slice.strictness_kind),
+                props,
+                flags,
+                frozen,
+                generics,
+                interface: slice.interface.or(acc.interface),
+                reachable_targs,
+                literal: acc.literal,
+            };
+            match super_t {
+                Some(base) => recurse(
+                    cx,
+                    env,
+                    use_op,
+                    reason,
+                    object::ResolveTool::Super(acc, pending, Rc::new(resolve_tool)),
+                    tool,
+                    base,
+                ),
+                None => finish(cx, use_op, acc, pending),
+            }
+        }
+        TypeInner::AnyT(_, src) => {
+            return_(cx, use_op, Type::new(TypeInner::AnyT(reason.dupe(), *src)))
+        }
+        _ => finish(cx, use_op, acc, pending),
     }
 }
 
@@ -3627,7 +3690,7 @@ pub fn run_with_env<'cx, A>(
         object::ResolveTool::Resolve(rt) => resolve_with_env(
             add_output, return_, next, recurse, statics, cx, env, use_op, reason, rt, tool, l,
         ),
-        object::ResolveTool::Super(acc, rt) => super_(
+        object::ResolveTool::Super(acc, pending, rt) => super_(
             return_,
             next,
             recurse,
@@ -3638,6 +3701,7 @@ pub fn run_with_env<'cx, A>(
             (*rt).clone(),
             tool,
             acc,
+            pending,
             l,
         ),
     }
