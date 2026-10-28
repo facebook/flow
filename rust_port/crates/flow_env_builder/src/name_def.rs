@@ -6558,10 +6558,9 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
             ast::statement::declare_namespace::Id::Global(_) => {}
             ast::statement::declare_namespace::Id::Local(ident) => {
                 let name_loc = ident.loc.dupe();
-                let name = &ident.name;
                 self.add_ordinary_binding(
                     name_loc.dupe(),
-                    mk_reason(VirtualReasonDesc::RNamespace(name.dupe()), name_loc),
+                    mk_reason(None, name_loc),
                     Def::DeclaredNamespace(loc.dupe(), n.clone()),
                 );
             }

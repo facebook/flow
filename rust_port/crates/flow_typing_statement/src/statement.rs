@@ -5229,7 +5229,7 @@ pub fn declare_namespace<'a>(
                 name,
                 ..
             } = &**ident;
-            let reason = mk_reason(VirtualReasonDesc::RNamespace(name.dupe()), name_loc.dupe());
+            let reason = mk_reason(None, name_loc.dupe());
             let namespace_symbol =
                 flow_common::flow_symbol::Symbol::mk_namespace_symbol(name.dupe(), name_loc.dupe());
             let t = crate::module_info_analyzer::analyze_declare_namespace(
@@ -5247,7 +5247,7 @@ pub fn declare_namespace<'a>(
                 name,
                 comments: id_comments,
             } = &**ident;
-            let reason = mk_reason(VirtualReasonDesc::RNamespace(name.dupe()), name_loc.dupe());
+            let reason = mk_reason(None, name_loc.dupe());
             let namespace_symbol =
                 flow_common::flow_symbol::Symbol::mk_namespace_symbol(name.dupe(), name_loc.dupe());
             let t = crate::module_info_analyzer::analyze_declare_namespace(

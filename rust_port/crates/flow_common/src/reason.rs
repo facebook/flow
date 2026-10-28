@@ -352,7 +352,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RPartialOf(Arc<VirtualReasonDesc<L>>),
     RRequiredOf(Arc<VirtualReasonDesc<L>>),
     RModule(Userland),
-    RNamespace(FlowSmolStr),
     // TODO React element names should not allow internal names
     RReactElement {
         name_opt: Option<Name>,
@@ -443,7 +442,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RObjectPatternRestProp => RObjectPatternRestProp,
             RArrayPatternRestProp => RArrayPatternRestProp,
             RModule(u) => RModule(u.clone()),
-            RNamespace(s) => RNamespace(s.dupe()),
             RReactProps => RReactProps,
             RReactElement {
                 name_opt,
@@ -1283,7 +1281,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Modules and namespaces
         RModule(module_name) => format!("module `{}`", module_name.display()),
-        RNamespace(name) => format!("namespace {}", name),
 
         // React
         RReactProps => "props".to_string(),

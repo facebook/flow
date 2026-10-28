@@ -339,7 +339,7 @@ pub fn def_reason<T>(def: &Def<ALoc, T>) -> Reason {
             },
             def.id_loc(),
         ),
-        Def::NamespaceBinding(_) => reason::mk_reason(RNamespace(def.name().dupe()), def.id_loc()),
+        Def::NamespaceBinding(_) => reason::mk_reason(None, def.id_loc()),
     }
 }
 
