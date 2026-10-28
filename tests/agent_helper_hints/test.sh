@@ -19,6 +19,7 @@ printf "const y: string = 1;\\n" | assert_errors "$FLOW" check-contents
 for i in 1 2 3 4 5; do
   printf "// %s\\n" "$i" > b.js
   assert_ok "$FLOW" force-recheck b.js
+  assert_errors "$FLOW" status --no-auto-start > /dev/null
 done
 printf "\\n===== status: errors persisted through 5 rechecks, no inspect-types hint yet =====\\n"
 assert_errors "$FLOW" status --no-auto-start
