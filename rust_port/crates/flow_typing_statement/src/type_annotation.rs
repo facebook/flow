@@ -4309,9 +4309,7 @@ fn convert_object<'a>(
     use flow_parser::ast::types::object::Property;
     use flow_typing_type::type_::*;
 
-    let obj_proto_t = obj_proto::make(reason::locationless_reason(
-        reason::VirtualReasonDesc::RObjectPrototype,
-    ));
+    let obj_proto_t = obj_proto::make(reason::locationless_reason(None));
     let fun_proto_t = Type::new(type_::TypeInner::FunProtoT(reason::locationless_reason(
         None,
     )));

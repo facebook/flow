@@ -5494,11 +5494,7 @@ fn __flow_impl<'cx>(
                     env,
                     flow_js_utils::invalid_prototype_error(reason_op.loc().dupe(), l),
                 )?;
-                Type::new(ObjProtoT(
-                    reason_op
-                        .dupe()
-                        .replace_desc(VirtualReasonDesc::RObjectPrototype),
-                ))
+                Type::new(ObjProtoT(reason_op.dupe().replace_desc(None)))
             };
             u_inner.add(proto);
         }
