@@ -941,6 +941,74 @@ References:
                ^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------- generic_unions.js:13:5
+
+Cannot cast `x` to `First` because `{bar: string}` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   generic_unions.js:13:5
+   13|     x as First; // error Second ~> First
+           ^
+
+References:
+   generic_unions.js:8:25
+    8| >(x: First | SubFirst | Second, isFirst: (value: First | Second) => value is First) {
+                               ^^^^^^ [1]
+   generic_unions.js:13:10
+   13|     x as First; // error Second ~> First
+                ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- generic_unions.js:22:5
+
+Cannot cast `x` to `T` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   generic_unions.js:22:5
+   22|     x as T; // error number ~> T
+           ^
+
+References:
+   generic_unions.js:17:40
+   17| function guard_is_type_param<T>(x: T | number, isT: (x: unknown) => x is T) {
+                                              ^^^^^^ [1]
+   generic_unions.js:22:10
+   22|     x as T; // error number ~> T
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- generic_unions.js:30:5
+
+Cannot cast `x.length` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   generic_unions.js:30:5
+     30|     x.length as empty; // error number ~> empty
+             ^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1039:22
+   1039|     readonly length: number;
+                              ^^^^^^ [1]
+   generic_unions.js:30:17
+     30|     x.length as empty; // error number ~> empty
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- generic_unions.js:36:5
+
+Cannot cast `x.length` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   generic_unions.js:36:5
+     36|     x.length as empty; // error number ~> empty
+             ^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1039:22
+   1039|     readonly length: number;
+                              ^^^^^^ [1]
+   generic_unions.js:36:17
+     36|     x.length as empty; // error number ~> empty
+                         ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ inferred.js:18:23
 
 Cannot call `takesGuard` with function bound to `fn` because in the type predicate: `string` [1] is incompatible with
@@ -5520,4 +5588,4 @@ References:
 
 
 
-Found 305 errors
+Found 309 errors

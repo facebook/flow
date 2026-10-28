@@ -147,6 +147,16 @@ struct PredicateResultCollector {
     // Shared across a union's members: the guard a pruned member would have produced,
     // used as the fallback if every member prunes (avoids a bare `empty`).
     disjoint_fallback: TypeCollector,
+    // Set while refining the bound of a generic.
+    refined_generic: Option<RefinedGeneric>,
+}
+
+#[derive(Clone, Dupe)]
+struct RefinedGeneric {
+    generic: Type,
+    // Whether `generic` is a subtype of each type guard checked so far, shared across the members
+    // of a union bound so that the check runs once per guard rather than once per member.
+    subsumed_by_guard: Rc<RefCell<Vec<(Type, bool)>>>,
 }
 
 // The concretized right-hand sides of the binary tests in one predicate run. A right-hand side
@@ -266,6 +276,7 @@ fn run_predicate_over_union_members(
             changed: Rc::new(RefCell::new(false)),
             from_union: Cell::new(true),
             disjoint_fallback: disjoint_fallback.dupe(),
+            refined_generic: result_collector.refined_generic.dupe(),
         };
         process_one(t, &sub)?;
         if *sub.changed.borrow() {
@@ -324,6 +335,10 @@ fn concretize_and_run_predicate<'cx>(
                         changed: changed.dupe(),
                         from_union: Cell::new(rc.from_union.get()),
                         disjoint_fallback: rc.disjoint_fallback.dupe(),
+                        refined_generic: Some(RefinedGeneric {
+                            generic: t.dupe(),
+                            subsumed_by_guard: Rc::new(RefCell::new(Vec::new())),
+                        }),
                     };
                     let repositioned_bound =
                         FlowJs::reposition_reason(cx, env, Some(trace), reason, None, bound)?;
@@ -425,6 +440,7 @@ fn predicate_no_concretization<'cx>(
                 changed: changed.dupe(),
                 from_union: Cell::new(result_collector.from_union.get()),
                 disjoint_fallback: result_collector.disjoint_fallback.dupe(),
+                refined_generic: result_collector.refined_generic.dupe(),
             };
             let p1_clone = p1.dupe();
             concretize_and_run_predicate(
@@ -1099,29 +1115,46 @@ fn call_latent_pred<'cx>(
                                             None,
                                             type_guard,
                                         )?;
-                                        match intersect_type_guard(
+                                        // An `any` in the bound trivially satisfies the guard, but
+                                        // `intersect_type_guard` narrows it to the guard.
+                                        if refined_generic_subsumed(
                                             cx,
                                             env,
-                                            tin.dupe(),
-                                            repositioned,
-                                        )? {
-                                            GuardIntersection::Refined(type_) => {
-                                                let changed = !Type::ptr_eq(&type_, tin);
-                                                FilterResult { type_, changed }
+                                            result_collector,
+                                            type_guard,
+                                            &repositioned,
+                                        )? && !is_any(cx, env, tin)?
+                                        {
+                                            // The generic already satisfies the guard.
+                                            FilterResult {
+                                                type_: tin.dupe(),
+                                                changed: false,
                                             }
-                                            // Prune this union member, but keep the intersection
-                                            // in case every member prunes.
-                                            GuardIntersection::UnrelatedClasses(type_)
-                                                if result_collector.from_union.get() =>
-                                            {
-                                                result_collector.disjoint_fallback.add(type_);
-                                                report_changes_to_input(result_collector);
-                                                continue;
-                                            }
-                                            GuardIntersection::UnrelatedClasses(type_) => {
-                                                FilterResult {
-                                                    type_,
-                                                    changed: true,
+                                        } else {
+                                            match intersect_type_guard(
+                                                cx,
+                                                env,
+                                                tin.dupe(),
+                                                repositioned,
+                                            )? {
+                                                GuardIntersection::Refined(type_) => {
+                                                    let changed = !Type::ptr_eq(&type_, tin);
+                                                    FilterResult { type_, changed }
+                                                }
+                                                // Prune this union member, but keep the intersection
+                                                // in case every member prunes.
+                                                GuardIntersection::UnrelatedClasses(type_)
+                                                    if result_collector.from_union.get() =>
+                                                {
+                                                    result_collector.disjoint_fallback.add(type_);
+                                                    report_changes_to_input(result_collector);
+                                                    continue;
+                                                }
+                                                GuardIntersection::UnrelatedClasses(type_) => {
+                                                    FilterResult {
+                                                        type_,
+                                                        changed: true,
+                                                    }
                                                 }
                                             }
                                         }
@@ -1138,7 +1171,20 @@ fn call_latent_pred<'cx>(
                                     None,
                                     type_guard,
                                 )?;
-                                type_guard_diff(cx, env, tin, &repositioned)?
+                                // As above, leave an `any` in the bound to `type_guard_diff`.
+                                if refined_generic_subsumed(
+                                    cx,
+                                    env,
+                                    result_collector,
+                                    type_guard,
+                                    &repositioned,
+                                )? && !is_any(cx, env, tin)?
+                                {
+                                    // The generic always satisfies the guard.
+                                    type_filter::empty(tin.dupe())
+                                } else {
+                                    type_guard_diff(cx, env, tin, &repositioned)?
+                                }
                             } else {
                                 // Do not refine else branch on one-sided type-guard
                                 FilterResult {
@@ -1236,6 +1282,38 @@ fn call_latent_pred<'cx>(
         }
     }
     Ok(())
+}
+
+/// Whether the generic whose bound is being refined is a subtype of the type guard `type_guard`
+/// (`repositioned` is the same guard with the reason of the call). The bound alone can miss this,
+/// e.g. when the guard mentions the generic itself.
+fn refined_generic_subsumed<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    result_collector: &PredicateResultCollector,
+    type_guard: &Type,
+    repositioned: &Type,
+) -> Result<bool, JobError> {
+    let Some(RefinedGeneric {
+        generic,
+        subsumed_by_guard,
+    }) = &result_collector.refined_generic
+    else {
+        return Ok(false);
+    };
+    if let Some((_, subsumed)) = subsumed_by_guard
+        .borrow()
+        .iter()
+        .find(|(guard, _)| Type::ptr_eq(guard, type_guard))
+    {
+        return Ok(*subsumed);
+    }
+    let subsumed = type_util::quick_subtype(None::<&mut fn(&Type)>, generic, repositioned)
+        || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, generic, repositioned)?;
+    subsumed_by_guard
+        .borrow_mut()
+        .push((type_guard.dupe(), subsumed));
+    Ok(subsumed)
 }
 
 fn call_latent_param_pred<'cx>(
@@ -1426,6 +1504,11 @@ fn unrelated_classes<'cx>(
         && class_extends(cx, env, i2, i1)? == Some(false))
 }
 
+fn is_any<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t: &Type) -> Result<bool, JobError> {
+    let ts = concrete_types_for_inspection(cx, env, reason_of_t(t), t)?;
+    Ok(ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..))))
+}
+
 /// Refines `t1` by the type guard `t2`. A member of `t1` that is an instance of a class unrelated
 /// to the guard's is dropped when another member survives; otherwise the refinement is reported as
 /// `UnrelatedClasses`, so that the caller can drop it in favor of other members of a union.
@@ -1435,11 +1518,6 @@ fn intersect_type_guard<'cx>(
     t1: Type,
     t2: Type,
 ) -> Result<GuardIntersection, JobError> {
-    fn is_any<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t: &Type) -> Result<bool, JobError> {
-        let ts = concrete_types_for_inspection(cx, env, reason_of_t(t), t)?;
-        Ok(ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..))))
-    }
-
     fn is_null(t: &ConcretizedType) -> bool {
         match t.unwrap().deref() {
             TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::NullT),
@@ -2418,6 +2496,7 @@ fn refine_away_construct_returns<'cx>(
                 changed: Rc::new(RefCell::new(false)),
                 from_union: Cell::new(result_collector.from_union.get()),
                 disjoint_fallback: result_collector.disjoint_fallback.dupe(),
+                refined_generic: result_collector.refined_generic.dupe(),
             };
             instanceof_test(cx, env, trace, &sub, false, survivor, class_t)?;
             changed = changed || *sub.changed.borrow();
@@ -3453,6 +3532,7 @@ fn run_predicate_track_changes_with_env<'cx>(
         changed: changed.dupe(),
         from_union: Cell::new(false),
         disjoint_fallback: TypeCollector::create(),
+        refined_generic: None,
     };
     let p_clone = p.dupe();
     let rhs_concretizations = RhsConcretizations::default();
@@ -3525,6 +3605,7 @@ pub(super) fn collect_predicate_for_filtering_with_env<'cx>(
         changed: changed.dupe(),
         from_union: Cell::new(false),
         disjoint_fallback: TypeCollector::create(),
+        refined_generic: None,
     };
     let p_clone = p.dupe();
     let rhs_concretizations = RhsConcretizations::default();
