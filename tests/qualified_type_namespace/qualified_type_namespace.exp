@@ -22,7 +22,7 @@ Cannot resolve module `./does-not-exist`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `'s'` to `A1` because `"s"` [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot cast `'s'` to `A1` because `"s"` [1] is incompatible with `NS.T` [2]. [incompatible-type]
 
    test.js:8:1
    8| 's' as A1; // error
@@ -45,7 +45,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:14
 
-Cannot get `NS.nope` because property `nope` is missing in `{readonly C: typeof C, readonly v: number}` [1].
+Cannot get `NS.nope` because property `nope` is missing in `{readonly C: typeof NS.C, readonly v: number}` [1].
 [prop-missing]
 
    test.js:14:14
@@ -155,7 +155,7 @@ it as an annotation. [value-as-type]
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:1
 
-Cannot cast `true` to `S` because `true` [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot cast `true` to `S` because `true` [1] is incompatible with `NS.T` [2]. [incompatible-type]
 
    union.js:9:1
    9| true as S; // error

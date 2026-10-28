@@ -11,11 +11,13 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_aloc::ALocFuzzy;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty_printer;
+use flow_common_ty::ty_symbol::ImportedIdent;
 use flow_parser::ast;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
@@ -270,13 +272,22 @@ pub fn mk_genv<'a, 'cx: 'a>(
             .into_iter()
             .map(|(name, loc, mode, t)| (name.to_string(), loc, mode, t))
             .collect();
-        Ok(FlowNormalizer::normalize_imports(
+        let mut imported_names = FlowNormalizer::normalize_imports(
             cx,
             file_sig_for_lazy.dupe(),
             typed_ast_opt,
             &options_for_lazy,
             import_types,
-        ))
+        );
+        // A declaration imported under a name of its own keeps that name.
+        for (name, loc, mode, def_loc) in
+            ty_normalizer_imports::namespace_members(cx, &file_sig_for_lazy)?
+        {
+            imported_names
+                .entry(ALocFuzzy(def_loc))
+                .or_insert(ImportedIdent(loc, name.to_string(), mode));
+        }
+        Ok(imported_names)
     });
 
     Genv {

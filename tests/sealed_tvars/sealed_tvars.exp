@@ -154,7 +154,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:4:14
 
-Cannot assign `10` to `x` because `10` [1] is incompatible with `C` [2]. [incompatible-type]
+Cannot assign `10` to `x` because `10` [1] is incompatible with `E.C` [2]. [incompatible-type]
 
    import.js:4:14
    4| var x: E.C = 10;

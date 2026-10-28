@@ -240,9 +240,9 @@ import-rec-export.js:3:10,3:10
 
 import-star.js:5:7
 Flags:
-const SpreadTypeExports: {foo: () => MyUnionType}
+const SpreadTypeExports: {foo: () => TypeExports.MyUnionType}
 
-'MyUnionType' defined at exports-type.js:3:12
+'TypeExports.MyUnionType' defined at exports-type.js:3:12
 
 import-star.js:5:7,5:23
 
@@ -769,9 +769,9 @@ import-rec-export.js:3:10,3:10
 
 import-star.js:5:7
 Flags: --do_not_use_typed_AST_for_imports
-const SpreadTypeExports: {foo: () => MyUnionType}
+const SpreadTypeExports: {foo: () => TypeExports.MyUnionType}
 
-'MyUnionType' defined at exports-type.js:3:12
+'TypeExports.MyUnionType' defined at exports-type.js:3:12
 
 import-star.js:5:7,5:23
 

@@ -146,7 +146,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- importer_namespace.ts:20:1
 
-Cannot cast `t` to `string` because `MyType` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `t` to `string` because `NS.MyType` [1] is incompatible with `string` [2]. [incompatible-type]
 
    importer_namespace.ts:20:1
    20| t satisfies string; // ERROR: number ~> string (proves the type resolved)
@@ -198,7 +198,7 @@ References:
 Error -------------------------------------------------------------------------------------- importer_namespace.ts:30:20
 
 Cannot get `NS.MyType` because property `MyType` is missing in
-`{readonly MyClass: typeof MyClass, readonly MyEnum: {readonly A: "a", readonly B: "b"}, readonly myV...` [1].
+`{readonly MyClass: typeof NS.MyClass, readonly MyEnum: {readonly A: "a", readonly B: "b"}, readonly ...` [1].
 [missing-export]
 
    importer_namespace.ts:30:20

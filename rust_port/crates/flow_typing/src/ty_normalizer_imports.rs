@@ -7,6 +7,7 @@
 
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
+use std::ops::Deref;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
@@ -26,8 +27,12 @@ use flow_parser_utils::file_sig::RequireBindings;
 use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
+use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::ModuleType;
+use flow_typing_type::type_::PolyTData;
+use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeInner;
 use flow_utils_concurrency::job_error::JobError;
 
 fn import_mode_to_import_kind(mode: ImportMode) -> AstImportKind {
@@ -266,6 +271,142 @@ fn add_require_bindings<'a>(
     }
 }
 
+/// A member of a namespace import: the qualified local name an export is
+/// reachable under (`React.Node` for `import * as React from 'react'`), the
+/// location of the namespace binding, the import mode, and where the export is
+/// defined.
+pub type NamespaceMember = (FlowSmolStr, ALoc, ImportMode, ALoc);
+
+/// Where the class a value export holds is declared, when it holds one: a class
+/// is printed by the symbol of its declaration, which a re-export such as
+/// `declare export const Component: typeof React.Component` does not share.
+fn class_def_loc(cx: &mut Context<'_>, t: &Type) -> Option<ALoc> {
+    let t = cx.find_resolved(t).unwrap_or_else(|| t.dupe());
+    let TypeInner::DefT(_, def_t) = t.deref() else {
+        return None;
+    };
+    match def_t.deref() {
+        DefTInner::PolyT(box PolyTData { t_out, .. }) => class_def_loc(cx, t_out),
+        DefTInner::ClassT(instance) => {
+            let instance = cx
+                .find_resolved(instance)
+                .unwrap_or_else(|| instance.dupe());
+            let inst = match instance.deref() {
+                TypeInner::DefT(_, def_t) => match def_t.deref() {
+                    DefTInner::InstanceT(instance_t) => &instance_t.inst,
+                    _ => return None,
+                },
+                TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => &instance.inst,
+                _ => return None,
+            };
+            inst.class_name.as_ref().map(|_| inst.class_id.0.dupe())
+        }
+        _ => None,
+    }
+}
+
+/// The exports of a namespace import, each under its qualified local name. A
+/// `typeof` namespace import only reaches value exports, and a `type` namespace
+/// import reaches both kinds, as a value namespace import does. Exports are keyed
+/// by where they are defined, as the export table records it, so nothing is
+/// normalized: a module can have hundreds of exports.
+fn add_namespace_members<'a>(
+    cx: &mut Context<'a>,
+    import_mode: ImportMode,
+    source: &(Loc, FlowSmolStr),
+    ns: &file_sig::Identifier,
+    acc: &mut Vec<NamespaceMember>,
+) -> Result<(), JobError> {
+    let (source_loc, module_name) = source;
+    let file_sig::Identifier(local_loc, local_name) = ns;
+    let local_loc = ALoc::of_loc(local_loc.dupe());
+    let source_module = flow_js_utils::flow_js_result_to_job_error(
+        flow_js_utils::import_export_utils::get_module_type_or_any(
+            cx,
+            false,
+            None,
+            ALoc::of_loc(source_loc.dupe()),
+            Userland::from_smol_str(module_name.dupe()),
+        ),
+    )?;
+    let Ok(module) = source_module else {
+        return Ok(());
+    };
+    let value_exports = cx.find_exports(module.module_export_types.value_exports_tmap.dupe());
+    let type_exports = match import_mode {
+        ImportMode::TypeofMode => None,
+        ImportMode::ValueMode | ImportMode::TypeMode => {
+            Some(cx.find_exports(module.module_export_types.type_exports_tmap.dupe()))
+        }
+    };
+    let value_mode = match import_mode {
+        ImportMode::TypeofMode => ImportMode::TypeofMode,
+        ImportMode::ValueMode | ImportMode::TypeMode => ImportMode::ValueMode,
+    };
+    let exports = value_exports
+        .iter()
+        .map(|export| (export, value_mode))
+        .chain(
+            type_exports
+                .iter()
+                .flat_map(|exports| exports.iter())
+                .map(|export| (export, ImportMode::TypeMode)),
+        );
+    let exports: Vec<_> = exports.collect();
+    for ((name, named_symbol), mode) in exports {
+        let class_loc = match mode {
+            ImportMode::ValueMode | ImportMode::TypeofMode => {
+                class_def_loc(cx, &named_symbol.type_)
+            }
+            ImportMode::TypeMode => None,
+        };
+        let def_loc = class_loc.or_else(|| match &named_symbol.preferred_def_locs {
+            Some(def_locs) => Some(def_locs.first().dupe()),
+            None => named_symbol.name_loc.dupe(),
+        });
+        if let Some(def_loc) = def_loc {
+            acc.push((
+                FlowSmolStr::from(format!("{local_name}.{name}")),
+                local_loc.dupe(),
+                mode,
+                def_loc,
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// The members of every namespace import in the file.
+pub fn namespace_members<'a>(
+    cx: &mut Context<'a>,
+    file_sig: &FileSig,
+) -> Result<Vec<NamespaceMember>, JobError> {
+    let mut members = Vec::new();
+    for require in file_sig.requires() {
+        let Require::Import {
+            source,
+            ns,
+            type_ns,
+            typesof_ns,
+            ..
+        } = require
+        else {
+            continue;
+        };
+        let source = (source.0.dupe(), source.1.dupe());
+        for (ns, import_mode) in [
+            (ns, ImportMode::ValueMode),
+            (type_ns, ImportMode::TypeMode),
+            (typesof_ns, ImportMode::TypeofMode),
+        ] {
+            if let Some(ns) = ns {
+                add_namespace_members(cx, import_mode, &source, ns, &mut members)?;
+            }
+        }
+    }
+    Ok(members)
+}
+
 fn add_import_bindings<'a>(
     cx: &mut Context<'a>,
     typed_ast: &Option<&ast::Program<ALoc, (ALoc, Type)>>,
@@ -299,7 +440,6 @@ fn add_import_bindings<'a>(
             typesof_ns: _,
             type_ns: _,
         } => {
-            // TODO import namespaces (`ns`) as modules that might contain imported types
             let source_tuple = (source.0.dupe(), source.1.dupe());
             acc = add_imported_loc_map_bindings(
                 cx,

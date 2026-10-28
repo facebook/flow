@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------- import_type_star.js:6:13
 
-Cannot assign `42` to `a2` because `42` [1] is incompatible with `MyType` [2]. [incompatible-type]
+Cannot assign `42` to `a2` because `42` [1] is incompatible with `Foo.MyType` [2]. [incompatible-type]
 
    import_type_star.js:6:13
    6| var a2: A = 42; // Error: number ~> string
@@ -58,7 +58,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- import_type_star.js:24:13
 
-Cannot assign `42` to `e2` because `42` [1] is incompatible with `MyClass` [2]. [incompatible-type]
+Cannot assign `42` to `e2` because `42` [1] is incompatible with `Foo.MyClass` [2]. [incompatible-type]
 
    import_type_star.js:24:13
    24| var e2: E = 42; // Error: number ~> MyClass

@@ -602,8 +602,8 @@ Cannot assign `'hello'` to `ro_obj.b` because property `b` is not writable. [can
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:36:1
 
-Cannot cast `imported_covariant` to `Covariant<"bar">` because in type argument `T` [1]: `"foo"` [2] is incompatible
-with `"bar"` [3]. [incompatible-type]
+Cannot cast `imported_covariant` to `exported.Covariant<"bar">` because in type argument `T` [1]: `"foo"` [2] is
+incompatible with `"bar"` [3]. [incompatible-type]
 
    polarity.js:36:1
    36| imported_covariant as exported.Covariant<'bar'>; // error
@@ -631,8 +631,8 @@ Cannot assign `'foo'` to `imported_covariant.prop` because property `prop` is no
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:42:1
 
-Cannot cast `imported_contravariant` to `Contravariant<unknown>` because in type argument `T` [1]: `string` [2] is
-incompatible with `unknown` [3]. [incompatible-type]
+Cannot cast `imported_contravariant` to `exported.Contravariant<unknown>` because in type argument `T` [1]: `string` [2]
+is incompatible with `unknown` [3]. [incompatible-type]
 
    polarity.js:42:1
    42| imported_contravariant as exported.Contravariant<unknown>; // error
@@ -652,8 +652,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:46:1
 
-Cannot cast `imported_invariant` to `Invariant<string>` because in type argument `T` [1]: `string` [2] is incompatible
-with `"foo"` [3]. [incompatible-type]
+Cannot cast `imported_invariant` to `exported.Invariant<string>` because in type argument `T` [1]: `string` [2] is
+incompatible with `"foo"` [3]. [incompatible-type]
 
    polarity.js:46:1
    46| imported_invariant as exported.Invariant<string>; // error

@@ -187,7 +187,7 @@ References:
 Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:6:1
 
 Cannot call `Foo` because a call signature declaring the expected parameter / return type is missing in
-`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1].
+`{readonly ClassExport: typeof Foo.ClassExport, readonly ComponentExport: () => string, readonly defa...` [1].
 [prop-missing]
 
    import_star_invalid_use.js:6:1
@@ -241,7 +241,7 @@ References:
 Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2
 
 Cannot create `Foo` element because
-`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] is not a
+`{readonly ClassExport: typeof Foo.ClassExport, readonly ComponentExport: () => string, readonly defa...` [1] is not a
 React component. [not-a-component]
 
    import_star_invalid_use.js:9:2
@@ -286,7 +286,7 @@ References:
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:29:12
 
 Cannot assign `module "./foo"` to `y` because
-`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] is
+`{readonly ClassExport: typeof Foo.ClassExport, readonly ComponentExport: () => string, readonly defa...` [1] is
 incompatible with `empty` [2]. [incompatible-type]
 
    import_star_invalid_use.js:29:12
@@ -349,7 +349,7 @@ References:
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:37:27
 
 Cannot access
-`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] with
+`{readonly ClassExport: typeof Foo.ClassExport, readonly ComponentExport: () => string, readonly defa...` [1] with
 computed property using `number` [2]. [invalid-computed-prop]
 
    import_star_invalid_use.js:37:27
@@ -379,7 +379,7 @@ References:
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:38:15
 
 Cannot access
-`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] with
+`{readonly ClassExport: typeof Foo.ClassExport, readonly ComponentExport: () => string, readonly defa...` [1] with
 computed property using `number` [2]. [invalid-computed-prop]
 
    import_star_invalid_use.js:38:15

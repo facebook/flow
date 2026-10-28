@@ -134,19 +134,19 @@ exact.js:34:15,34:15
 
 react-component.js:12:6
 Flags:
-type ReactA = ComponentProps<typeof MyComponent>
+type ReactA = React.ComponentProps<typeof MyComponent>
 
-'ComponentProps' defined at (lib) react.js:770:22
 'MyComponent' defined at react-component.js:5:6
+'React.ComponentProps' defined at (lib) react.js:770:22
 
 react-component.js:12:6,12:11
 
 react-component.js:14:6
 Flags:
-type ReactAP<X extends ElementType> = ComponentProps<X>
+type ReactAP<X extends React.ElementType> = React.ComponentProps<X>
 
-'ComponentProps' defined at (lib) react.js:770:22
-'ElementType' defined at (lib) react.js:452:22
+'React.ComponentProps' defined at (lib) react.js:770:22
+'React.ElementType' defined at (lib) react.js:452:22
 
 react-component.js:14:6,14:12
 

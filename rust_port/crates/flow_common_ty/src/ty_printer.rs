@@ -151,6 +151,24 @@ fn symbol_identifier<L: Dupe>(state: &mut PrintState<L>, symbol: &Symbol<L>) -> 
     identifier(&local_name_of_symbol(symbol))
 }
 
+/// The name in the head of a declaration (`type X = …`, `class X`). A name the
+/// declaration is imported under on its own is used, as for references. A
+/// qualified name reached through a namespace import (`Types.X`) is not: the
+/// head names the declaration itself, so it reads `class X`.
+fn head_name_of_symbol<L>(symbol: &Symbol<L>) -> FlowSmolStr {
+    let name = local_name_of_symbol(symbol);
+    if name.contains('.') {
+        symbol.sym_name.dupe()
+    } else {
+        name
+    }
+}
+
+fn declaration_identifier<L: Dupe>(state: &mut PrintState<L>, symbol: &Symbol<L>) -> LayoutNode {
+    record_symbol(state, symbol);
+    identifier(&head_name_of_symbol(symbol))
+}
+
 fn in_quotes(prefer_single_quotes: bool, s: &str) -> Vec<LayoutNode> {
     let quote = better_quote(prefer_single_quotes, s);
     let escaped = utf8_escape(&quote, s);
@@ -203,6 +221,9 @@ fn local_name_of_symbol<L>(symbol: &Symbol<L>) -> FlowSmolStr {
     // If the type is imported use the local name
     match &symbol.sym_provenance {
         Provenance::Remote(RemoteInfo {
+            imported_as: Some(ImportedIdent(_, name, _)),
+        })
+        | Provenance::Library(RemoteInfo {
             imported_as: Some(ImportedIdent(_, name, _)),
         }) => FlowSmolStr::new(name.as_str()),
         _ => symbol.sym_name.dupe(),
@@ -1554,7 +1575,7 @@ fn class_decl<L: Dupe>(
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
     size: &mut PrintState<L>,
 ) -> LayoutNode {
-    let name = symbol_identifier(size, s);
+    let name = declaration_identifier(size, s);
     layout::fuse(vec![
         LayoutNode::atom("class".to_string()),
         layout::space(),
@@ -1573,7 +1594,7 @@ fn interface_decl<L: Dupe>(
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
     size: &mut PrintState<L>,
 ) -> LayoutNode {
-    let name = symbol_identifier(size, s);
+    let name = declaration_identifier(size, s);
     layout::fuse(vec![
         LayoutNode::atom("interface".to_string()),
         layout::space(),
@@ -1592,7 +1613,7 @@ fn record_decl<L: Dupe>(
     tparams: &Option<Arc<[TypeParam<L>]>>,
     size: &mut PrintState<L>,
 ) -> LayoutNode {
-    let name = symbol_identifier(size, s);
+    let name = declaration_identifier(size, s);
     layout::fuse(vec![
         LayoutNode::atom("record".to_string()),
         layout::space(),
@@ -1615,8 +1636,8 @@ fn nominal_component_decl<L: Dupe>(
     is_type: bool,
     size: &mut PrintState<L>,
 ) -> LayoutNode {
-    let name = symbol_identifier(size, s);
     if is_type {
+        let name = symbol_identifier(size, s);
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
             Some(ts) => type_args(opts, depth, ts, size),
@@ -1647,6 +1668,7 @@ fn nominal_component_decl<L: Dupe>(
             ),
         ])
     } else {
+        let name = declaration_identifier(size, s);
         // component ComponentName<...>(props) renders Type
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
@@ -1682,7 +1704,7 @@ fn type_alias<L: Dupe>(
     opaque: Option<&OpaqueBounds<L>>,
     size: &mut PrintState<L>,
 ) -> LayoutNode {
-    let name = symbol_identifier(size, name);
+    let name = declaration_identifier(size, name);
     let tparams_node = option(
         |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
         tparams,
@@ -1781,7 +1803,7 @@ fn enum_decl<L: Dupe>(
     let base = layout::fuse(vec![
         LayoutNode::atom("enum".to_string()),
         layout::space(),
-        symbol_identifier(state, s),
+        declaration_identifier(state, s),
     ]);
     match members {
         None => base,
@@ -1944,9 +1966,25 @@ pub fn string_of_decl_single_line<L: Dupe>(d: &Decl<L>, opts: &PrinterOptions) -
 pub fn string_of_symbol_set<L: Clone + Ord>(
     syms: &std::collections::BTreeSet<Symbol<L>>,
 ) -> Vec<(String, L)> {
+    string_of_symbol_set_with_head(syms, None)
+}
+
+/// Like [string_of_symbol_set], but cites `head`, the symbol printed as the head
+/// of a declaration, under the name the head prints.
+fn string_of_symbol_set_with_head<L: Clone + Ord>(
+    syms: &std::collections::BTreeSet<Symbol<L>>,
+    head: Option<&Symbol<L>>,
+) -> Vec<(String, L)> {
     let mut elems: Vec<_> = syms
         .iter()
-        .map(|sym| (local_name_of_symbol(sym), sym))
+        .map(|sym| {
+            let name = if head == Some(sym) {
+                head_name_of_symbol(sym)
+            } else {
+                local_name_of_symbol(sym)
+            };
+            (name, sym)
+        })
         .collect();
     elems.sort_by(|(n1, _), (n2, _)| n1.cmp(n2));
     elems
@@ -1995,9 +2033,19 @@ pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
         Some(alias) => layout::fuse(vec![body, layout_of_alias_statement(opts, alias)]),
     };
     let type_str = pretty_printer::print(true, &layout).contents();
+    let head = match result.ty {
+        Elt::Decl(Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
+            is_type: true,
+            ..
+        }))
+        | Elt::Type(_) => None,
+        Elt::Decl(d) => {
+            head_symbol_of_decl(d).map(|symbol| symbol.map_locs(&|aloc| loc_of_aloc(aloc)))
+        }
+    };
     let refs = result.refs.map(|refs| {
         if !state.truncated {
-            return string_of_symbol_set(refs);
+            return string_of_symbol_set_with_head(refs, head.as_ref());
         }
 
         let printed_refs: std::collections::BTreeSet<_> = printed_symbols
@@ -2005,7 +2053,7 @@ pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
             .map(|symbol| symbol.map_locs(&|aloc| loc_of_aloc(aloc)))
             .collect();
         let visible_refs = refs.intersection(&printed_refs).cloned().collect();
-        string_of_symbol_set(&visible_refs)
+        string_of_symbol_set_with_head(&visible_refs, head.as_ref())
     });
     (type_str, refs)
 }

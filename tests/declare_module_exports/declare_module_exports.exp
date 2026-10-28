@@ -125,7 +125,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:38:1
 
-Cannot cast `42` to `Def` because `42` [1] is incompatible with `Def` [2]. [incompatible-type]
+Cannot cast `42` to `BDefault` because `42` [1] is incompatible with `BDefault` [2]. [incompatible-type]
 
    main.js:38:1
    38| 42 as BDefault; // Error: number ~> Def
@@ -139,7 +139,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:54:1
 
-Cannot cast `new E()` to `empty` because `Def` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `new E()` to `empty` because `BDefault` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    main.js:54:1
    54| new E() as empty; // error

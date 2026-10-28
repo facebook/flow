@@ -1245,7 +1245,7 @@ Cannot assign `123` to `DefaultA.numberValue1` because property `numberValue1` i
 Error --------------------------------------------------------------------------------- test_imports_are_frozen.js:41:14
 
 Cannot assign `123` to `ES6_Named1.numberValue` because property `numberValue` is missing in
-`{readonly NumberGenerator: typeof NumberGenerator, readonly destructuredArrNumber: number, readonly ...` [1].
+`{readonly NumberGenerator: typeof ES6_Named1.NumberGenerator, readonly destructuredArrNumber: number...` [1].
 [prop-missing]
 
    test_imports_are_frozen.js:41:14
