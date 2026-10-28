@@ -299,7 +299,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RThisType,
     RImplicitInstantiation,
     RObjectPrototype,
-    RFunctionPrototype,
     RDestructuring,
     RDefaultValue,
     RConstructor,
@@ -418,7 +417,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RThisType => RThisType,
             RImplicitInstantiation => RImplicitInstantiation,
             RObjectPrototype => RObjectPrototype,
-            RFunctionPrototype => RFunctionPrototype,
             RDestructuring => RDestructuring,
             RDefaultValue => RDefaultValue,
             RConstructor => RConstructor,
@@ -1227,7 +1225,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Prototypes
         RObjectPrototype => "object prototype".to_string(),
-        RFunctionPrototype => "function prototype".to_string(),
 
         // Destructuring and defaults
         RDestructuring => "destructuring".to_string(),

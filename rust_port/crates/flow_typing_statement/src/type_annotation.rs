@@ -4313,7 +4313,7 @@ fn convert_object<'a>(
         reason::VirtualReasonDesc::RObjectPrototype,
     ));
     let fun_proto_t = Type::new(type_::TypeInner::FunProtoT(reason::locationless_reason(
-        reason::VirtualReasonDesc::RFunctionPrototype,
+        None,
     )));
 
     #[derive(Clone)]
