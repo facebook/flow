@@ -941,6 +941,136 @@ References:
                ^^^^^ [3]
 
 
+Error -------------------------------------------------------------------------------------- disjoint_properties.js:10:5
+
+Cannot cast `x` to `B` because property `b` is missing in `A` [1] but exists in `B` [2]. [incompatible-type]
+
+   disjoint_properties.js:10:5
+   10|     x as B; // error A ~> B
+           ^
+
+References:
+   disjoint_properties.js:6:24
+    6| function interfaces(x: A | B) {
+                              ^ [1]
+   disjoint_properties.js:10:10
+   10|     x as B; // error A ~> B
+                ^ [2]
+
+
+Error -------------------------------------------------------------------------------------- disjoint_properties.js:10:5
+
+Cannot cast `x` to `B` because in property `type`: `"A"` [1] is incompatible with `"B"` [2]. [incompatible-type]
+
+   disjoint_properties.js:10:5
+   10|     x as B; // error A ~> B
+           ^
+
+References:
+   disjoint_properties.js:3:29
+    3| declare interface A { type: 'A'; a: number }
+                                   ^^^ [1]
+   disjoint_properties.js:4:29
+    4| declare interface B { type: 'B'; b: string }
+                                   ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- disjoint_properties.js:18:5
+
+Cannot cast `x` to `{val: string}` because in property `val`: `number` [1] is not exactly the same as `string` [2].
+[incompatible-type]
+
+The above-mentioned two types must be the same because property `val` is invariantly typed. To fix the error,
+- Either make `{val: number}` [3] and `{val: string}` [4] exactly the same
+- Or make property `val` in `{val: string}` [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   disjoint_properties.js:18:5
+   18|     x as {val: string}; // error number ~> string
+           ^
+
+References:
+   disjoint_properties.js:14:37
+   14| function non_literal_props(x: {val: number} | {val: string}) {
+                                           ^^^^^^ [1]
+   disjoint_properties.js:18:16
+   18|     x as {val: string}; // error number ~> string
+                      ^^^^^^ [2]
+   disjoint_properties.js:14:31
+   14| function non_literal_props(x: {val: number} | {val: string}) {
+                                     ^^^^^^^^^^^^^ [3]
+   disjoint_properties.js:18:10
+   18|     x as {val: string}; // error number ~> string
+                ^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- disjoint_properties.js:29:5
+
+Cannot cast `x` to `C` because `HasKindD` [1] is incompatible with `C` [2]. [incompatible-type]
+
+   disjoint_properties.js:29:5
+   29|     x as C; // error HasKindD ~> C
+           ^
+
+References:
+   disjoint_properties.js:25:24
+   25|   declare const x: C | HasKindD;
+                              ^^^^^^^^ [1]
+   disjoint_properties.js:29:10
+   29|     x as C; // error HasKindD ~> C
+                ^ [2]
+
+
+Error -------------------------------------------------------------------------------------- disjoint_properties.js:36:5
+
+Cannot cast `x` to `{val?: number}` because: [incompatible-type]
+ - Either in property `val`: `string` [1] is incompatible with `number` [2].
+ - Or inexact `{val?: number, ...}` [3] is incompatible with exact `{val?: number}` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   disjoint_properties.js:36:5
+   36|     x as {val?: number}; // error {val?: number, ...} & {val: string} ~> {val?: number}
+           ^
+
+References:
+   disjoint_properties.js:33:51
+   33| function optional_props(x: {val?: number} | {val: string}) {
+                                                         ^^^^^^ [1]
+   disjoint_properties.js:36:17
+   36|     x as {val?: number}; // error {val?: number, ...} & {val: string} ~> {val?: number}
+                       ^^^^^^ [2]
+   disjoint_properties.js:34:44
+   34|   declare function isNum(x: unknown): x is {val?: number, ...};
+                                                  ^^^^^^^^^^^^^^^^^^^ [3]
+   disjoint_properties.js:36:10
+   36|     x as {val?: number}; // error {val?: number, ...} & {val: string} ~> {val?: number}
+                ^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- disjoint_properties.js:44:5
+
+Cannot cast `x` to `{val: number}` because: [incompatible-type]
+ - Either inexact `{val: number, ...}` [1] is incompatible with exact `{val: number}` [2].
+ - Or inexact `{writeonly val: string, ...}` [3] is incompatible with exact `{val: number}` [2].
+
+   disjoint_properties.js:44:5
+   44|     x as {val: number}; // error {writeonly val: string, ...} & {val: number, ...} ~> {val: number}
+           ^
+
+References:
+   disjoint_properties.js:42:44
+   42|   declare function isNum(x: unknown): x is {val: number, ...};
+                                                  ^^^^^^^^^^^^^^^^^^ [1]
+   disjoint_properties.js:44:10
+   44|     x as {val: number}; // error {writeonly val: string, ...} & {val: number, ...} ~> {val: number}
+                ^^^^^^^^^^^^^ [2]
+   disjoint_properties.js:41:30
+   41| function write_only_props(x: {writeonly val: string, ...} | {val: number}) {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------- generic_unions.js:13:5
 
 Cannot cast `x` to `First` because `{bar: string}` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -5732,4 +5862,4 @@ References:
 
 
 
-Found 316 errors
+Found 322 errors

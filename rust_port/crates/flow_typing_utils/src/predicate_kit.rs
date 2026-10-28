@@ -30,6 +30,7 @@ use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
+use flow_typing_flow_js::slice_utils::is_prop_optional;
 use flow_typing_flow_js::speculation_kit;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrType;
@@ -68,6 +69,8 @@ use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::properties;
+use flow_typing_type::type_::properties::PropertiesMap;
+use flow_typing_type::type_::property;
 use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::QuickMemResult;
@@ -1736,6 +1739,50 @@ fn intersect_type_guard<'cx>(
         }
     }
 
+    // Objects, interfaces and instances with a property of disjoint types have no overlap. Only
+    // properties that are present (not optional) and readable count.
+    fn props_differ<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        depth: i32,
+        t1: &ConcretizedType,
+        t2: &ConcretizedType,
+    ) -> bool {
+        fn props_of(t: &Type) -> Option<Vec<properties::Id>> {
+            match t.deref() {
+                TypeInner::DefT(_, d) => match d.deref() {
+                    DefTInner::ObjT(obj) => Some(vec![obj.props_tmap.dupe()]),
+                    DefTInner::InstanceT(instance) => Some(vec![
+                        instance.inst.own_props.dupe(),
+                        instance.inst.proto_props.dupe(),
+                    ]),
+                    _ => None,
+                },
+                _ => None,
+            }
+        }
+        // Own properties shadow those of the prototype.
+        fn present_read_t(maps: &[PropertiesMap], name: &Name) -> Option<Type> {
+            let t = maps
+                .iter()
+                .find_map(|map| property::read_t(map.get(name)?))?;
+            (!is_prop_optional(&t)).then_some(t)
+        }
+        let (Some(ids1), Some(ids2)) = (props_of(t1.unwrap()), props_of(t2.unwrap())) else {
+            return false;
+        };
+        if ids1 == ids2 {
+            return false;
+        }
+        let maps1: Vec<PropertiesMap> = ids1.into_iter().map(|id| cx.find_props(id)).collect();
+        let maps2: Vec<PropertiesMap> = ids2.into_iter().map(|id| cx.find_props(id)).collect();
+        maps1
+            .iter()
+            .flat_map(|map| map.iter().map(|(name, _)| name))
+            .filter_map(|name| Some((present_read_t(&maps1, name)?, present_read_t(&maps2, name)?)))
+            .any(|(t1, t2)| inhabited_types_differ(cx, env, depth, &t1, &t2))
+    }
+
     fn types_differ<'cx>(
         cx: &mut Context<'cx>,
         env: &FlowJsEnv,
@@ -1764,6 +1811,7 @@ fn intersect_type_guard<'cx>(
             || ground_types_differ(t1, t2)
             || instance_tags_differ(cx, env, depth, t1, t2)
             || arr_tags_differ(cx, env, depth, t1, t2)
+            || props_differ(cx, env, depth, t1, t2)
     }
 
     fn try_intersect<'cx>(
@@ -2178,13 +2226,7 @@ fn has_prop<'cx>(
                     .iter()
                     .map(|props| match cx.get_prop(props.dupe(), key) {
                         Some(prop) => match prop.deref() {
-                            PropertyInner::Field(fd)
-                                if flow_typing_flow_js::slice_utils::is_prop_optional(
-                                    &fd.type_,
-                                ) =>
-                            {
-                                None
-                            }
+                            PropertyInner::Field(fd) if is_prop_optional(&fd.type_) => None,
                             _ => Some(true),
                         },
                         None => Some(false),
