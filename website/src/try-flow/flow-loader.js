@@ -160,6 +160,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
 
 const TSLIB_SOURCED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
   ...TSLIB_SOURCED_FLOWLIB_FILES,
+  'lib.es2015.generator.js',
   'lib.es2018.asyncgenerator.js',
   'lib.es2018.asynciterable.js',
 ];
@@ -168,7 +169,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
 // adapted `.d.ts` file in `tslib_patches/`.
 const TSLIB_PATCHED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
   'lib.es2015.collection.js',
-  'lib.es2015.generator.js',
+  'lib.es2015.iterable.js',
   'lib.es2015.promise.js',
   'lib.es2016.array.include.js',
   'lib.es2019.array.js',

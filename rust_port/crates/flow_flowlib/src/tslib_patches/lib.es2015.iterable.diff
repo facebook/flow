@@ -1,0 +1,51 @@
+--- tslib/lib.es2015.iterable.d.ts
++++ rust_port/crates/flow_flowlib/src/tslib_patches/lib.es2015.iterable.d.ts
+@@ -180,14 +180,11 @@
+ }
+ 
+ interface MapConstructor {
+-    new (): Map<any, any>;
+-    new <K, V>(iterable?: Iterable<readonly [K, V]> | null): Map<K, V>;
+ }
+ 
+ interface WeakMap<K extends WeakKey, V> {}
+ 
+ interface WeakMapConstructor {
+-    new <K extends WeakKey, V>(iterable: Iterable<readonly [K, V]>): WeakMap<K, V>;
+ }
+ 
+ interface SetIterator<T> extends IteratorObject<T, BuiltinIteratorReturn, unknown> {
+@@ -235,33 +232,16 @@
+ }
+ 
+ interface SetConstructor {
+-    new <T>(iterable?: Iterable<T> | null): Set<T>;
+ }
+ 
+ interface WeakSet<T extends WeakKey> {}
+ 
+ interface WeakSetConstructor {
+-    new <T extends WeakKey = WeakKey>(iterable: Iterable<T>): WeakSet<T>;
+ }
+ 
+ interface Promise<T> {}
+ 
+ interface PromiseConstructor {
+-    /**
+-     * Creates a Promise that is resolved with an array of results when all of the provided Promises
+-     * resolve, or rejected when any Promise is rejected.
+-     * @param values An iterable of Promises.
+-     * @returns A new Promise.
+-     */
+-    all<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>;
+-
+-    /**
+-     * Creates a Promise that is resolved or rejected when any of the provided Promises are resolved
+-     * or rejected.
+-     * @param values An iterable of Promises.
+-     * @returns A new Promise.
+-     */
+-    race<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>>;
+ }
+ 
+ interface StringIterator<T> extends IteratorObject<T, BuiltinIteratorReturn, unknown> {

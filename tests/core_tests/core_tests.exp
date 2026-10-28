@@ -44,32 +44,32 @@ Cannot call `Map` with array literal bound to `entries` because: [incompatible-t
  - array literal [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `ArrayIterator<"foo" | 123>` [3] is incompatible with
       `Iterator<Readonly<[key: any, value: any]>, void, void>` [4]
-       - in the return value > type argument `Yield` [5]: `"foo"` [6] is incompatible with
+       - in the return value > type argument `T` [5]: `"foo"` [6] is incompatible with
          `Readonly<[key: any, value: any]>` [7]
 
    map.js:28:21
-   28|     let x = new Map(['foo', 123]); // error
-                           ^^^^^^^^^^^^ [1]
+    28|     let x = new Map(['foo', 123]); // error
+                            ^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/lib.es2015.collection.js:50:27
-   50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:89:19
-   89|     @@iterator(): ArrayIterator<T>;
-                         ^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es2015.iterable.js:64:19
-   64|     @@iterator(): Iterator<Yield,Return,Next>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es2015.iterable.js:41:24
-   41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [5]
+    50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:79:26
+    79|     [Symbol.iterator](): ArrayIterator<T>;
+                                 ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:50:26
+    50|     [Symbol.iterator](): Iterator<T, TReturn, TNext>;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/misc.js:309:24
+   309| interface Iterator<out T, out TReturn = void, in TNext = void> {}
+                               ^ [5]
    map.js:28:22
-   28|     let x = new Map(['foo', 123]); // error
-                            ^^^^^ [6]
+    28|     let x = new Map(['foo', 123]); // error
+                             ^^^^^ [6]
    <BUILTINS>/lib.es2015.collection.js:50:36
-   50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
+    50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:28:21
@@ -78,32 +78,32 @@ Cannot call `Map` with array literal bound to `entries` because: [incompatible-t
  - array literal [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `ArrayIterator<"foo" | 123>` [3] is incompatible with
       `Iterator<Readonly<[key: any, value: any]>, void, void>` [4]
-       - in the return value > type argument `Yield` [5]: `123` [6] is incompatible with
+       - in the return value > type argument `T` [5]: `123` [6] is incompatible with
          `Readonly<[key: any, value: any]>` [7]
 
    map.js:28:21
-   28|     let x = new Map(['foo', 123]); // error
-                           ^^^^^^^^^^^^ [1]
+    28|     let x = new Map(['foo', 123]); // error
+                            ^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/lib.es2015.collection.js:50:27
-   50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:89:19
-   89|     @@iterator(): ArrayIterator<T>;
-                         ^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es2015.iterable.js:64:19
-   64|     @@iterator(): Iterator<Yield,Return,Next>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es2015.iterable.js:41:24
-   41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [5]
+    50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:79:26
+    79|     [Symbol.iterator](): ArrayIterator<T>;
+                                 ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:50:26
+    50|     [Symbol.iterator](): Iterator<T, TReturn, TNext>;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/misc.js:309:24
+   309| interface Iterator<out T, out TReturn = void, in TNext = void> {}
+                               ^ [5]
    map.js:28:29
-   28|     let x = new Map(['foo', 123]); // error
-                                   ^^^ [6]
+    28|     let x = new Map(['foo', 123]); // error
+                                    ^^^ [6]
    <BUILTINS>/lib.es2015.collection.js:50:36
-   50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
+    50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:29:42
@@ -112,31 +112,31 @@ Cannot call `Map` with array literal bound to `entries` because: [incompatible-t
  - array literal [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `ArrayIterator<Array<"foo" | 123>>` [3] is incompatible with
       `Iterator<Readonly<[key: number, value: string]>, void, void>` [4]
-       - in the return value > type argument `Yield` [5] > index `0`: `"foo"` [6] is incompatible with `number` [7]
+       - in the return value > type argument `T` [5] > index `0`: `"foo"` [6] is incompatible with `number` [7]
 
    map.js:29:42
-   29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                ^^^^^^^^^^^^^^ [1]
+    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                                 ^^^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/lib.es2015.collection.js:50:27
-   50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:89:19
-   89|     @@iterator(): ArrayIterator<T>;
-                         ^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es2015.iterable.js:64:19
-   64|     @@iterator(): Iterator<Yield,Return,Next>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es2015.iterable.js:41:24
-   41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [5]
+    50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:79:26
+    79|     [Symbol.iterator](): ArrayIterator<T>;
+                                 ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:50:26
+    50|     [Symbol.iterator](): Iterator<T, TReturn, TNext>;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/misc.js:309:24
+   309| interface Iterator<out T, out TReturn = void, in TNext = void> {}
+                               ^ [5]
    map.js:29:44
-   29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                  ^^^^^ [6]
+    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                                   ^^^^^ [6]
    map.js:29:16
-   29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                      ^^^^^^ [7]
+    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                       ^^^^^^ [7]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:29:42
@@ -145,31 +145,31 @@ Cannot call `Map` with array literal bound to `entries` because: [incompatible-t
  - array literal [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `ArrayIterator<Array<"foo" | 123>>` [3] is incompatible with
       `Iterator<Readonly<[key: number, value: string]>, void, void>` [4]
-       - in the return value > type argument `Yield` [5] > index `1`: `123` [6] is incompatible with `string` [7]
+       - in the return value > type argument `T` [5] > index `1`: `123` [6] is incompatible with `string` [7]
 
    map.js:29:42
-   29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                ^^^^^^^^^^^^^^ [1]
+    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                                 ^^^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/lib.es2015.collection.js:50:27
-   50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:89:19
-   89|     @@iterator(): ArrayIterator<T>;
-                         ^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es2015.iterable.js:64:19
-   64|     @@iterator(): Iterator<Yield,Return,Next>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es2015.iterable.js:41:24
-   41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [5]
+    50|     new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:79:26
+    79|     [Symbol.iterator](): ArrayIterator<T>;
+                                 ^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:50:26
+    50|     [Symbol.iterator](): Iterator<T, TReturn, TNext>;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/misc.js:309:24
+   309| interface Iterator<out T, out TReturn = void, in TNext = void> {}
+                               ^ [5]
    map.js:29:51
-   29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                         ^^^ [6]
+    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                                                          ^^^ [6]
    map.js:29:24
-   29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                              ^^^^^^ [7]
+    29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+                               ^^^^^^ [7]
 
 
 Error ------------------------------------------------------------------------------------------------------ map.js:34:5

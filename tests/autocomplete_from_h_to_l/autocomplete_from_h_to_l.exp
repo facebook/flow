@@ -49,7 +49,7 @@ if.js:3:7
 Flags: --pretty
 {
   "result":[
-    {"name":"[Symbol.iterator]","type":"(this: String) => StringIterator"},
+    {"name":"[Symbol.iterator]","type":"(this: String) => StringIterator<string>"},
     {"name":"anchor","type":"(this: String, name: string) => string"},
     {"name":"at","type":"(this: String, index: number) => string | void"},
     {"name":"big","type":"(this: String) => string"},
@@ -3082,6 +3082,7 @@ Flags: --lsp
     "title":""
   },
   "detail":"(this: Map<number, string>) => MapIterator<[number, string]>",
+  "documentation":{"kind":"markdown","value":"Returns an iterable of entries in the map."},
   "insertTextFormat":1,
   "kind":3,
   "label":"[Symbol.iterator]",
@@ -3143,6 +3144,7 @@ Flags: --lsp
     "title":""
   },
   "detail":"(this: Map<number, string>) => MapIterator<[number, string]>",
+  "documentation":{"kind":"markdown","value":"Returns an iterable of entries in the map."},
   "insertTextFormat":1,
   "kind":3,
   "label":"[Symbol.iterator]",

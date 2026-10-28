@@ -237,13 +237,13 @@ You can wrap it in `new Number(...))` to turn it into an object and attempt to u
 [incompatible-type]
 
    generator.js:26:12
-   26|     yield* 1; // error non iterable
-                  ^ [1]
+    26|     yield* 1; // error non iterable
+                   ^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:63:11
-   63| interface Iterable<out Yield,out Return=void,in Next=void> {
-                 ^^^^^^^^ [2]
+   <BUILTINS>/misc.js:311:11
+   311| interface Iterable<out T, out TReturn = void, in TNext = void> {}
+                  ^^^^^^^^ [2]
 
 
 

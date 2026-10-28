@@ -195,9 +195,9 @@ References:
    misc.js:5:32
     5| export const c = {['a' + 'b']: 42};
                                       ^^ [1]
-   <BUILTINS>/lib.es2015.iterable.js:64:5
-   64|     @@iterator(): Iterator<Yield,Return,Next>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:50:5
+   50|     [Symbol.iterator](): Iterator<T, TReturn, TNext>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:9:19

@@ -226,23 +226,6 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:5
 
-Cannot cast `result.value` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
-
-   return.js:20:5
-   20|     result.value as string; // error: number | void ~> string
-           ^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es2015.iterable.js:25:35
-   25| type IteratorResult<out Yield,out Return> =
-                                         ^^^^^^ [1]
-   return.js:20:21
-   20|     result.value as string; // error: number | void ~> string
-                           ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- return.js:20:5
-
 Cannot cast `result.value` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    return.js:20:5
@@ -473,23 +456,6 @@ References:
 
 Error -------------------------------------------------------------------------------------- typescript_iterator.js:44:5
 
-Cannot cast `result.value` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
-
-   typescript_iterator.js:44:5
-   44|     result.value as string; // ERROR: unknown default return
-           ^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es2015.iterable.js:25:35
-   25| type IteratorResult<out Yield,out Return> =
-                                         ^^^^^^ [1]
-   typescript_iterator.js:44:21
-   44|     result.value as string; // ERROR: unknown default return
-                           ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- typescript_iterator.js:44:5
-
 Cannot cast `result.value` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    typescript_iterator.js:44:5
@@ -506,4 +472,4 @@ References:
 
 
 
-Found 26 errors
+Found 24 errors

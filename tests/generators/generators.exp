@@ -115,41 +115,6 @@ References:
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:72:12
-
-Cannot yield `xs` because: [incompatible-type]
- - `Array<number>` [1] is incompatible with `Iterable` [2]
-    - in property `@@iterator`: `ArrayIterator<number>` [3] is incompatible with `Iterator<number, void, string>` [4]
-       - in the return value > type argument `Next` [5]: `void` [6] is incompatible with `string` [7]
-
-   class.js:72:12
-   72|     yield *xs;
-                  ^^
-
-References:
-   class.js:71:31
-   71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                     ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.iterable.js:63:11
-   63| interface Iterable<out Yield,out Return=void,in Next=void> {
-                 ^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:89:19
-   89|     @@iterator(): ArrayIterator<T>;
-                         ^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es2015.iterable.js:64:19
-   64|     @@iterator(): Iterator<Yield,Return,Next>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es2015.iterable.js:41:49
-   41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                                                       ^^^^ [5]
-   <BUILTINS>/lib.esnext.iterator.js:23:60
-   23| interface IteratorObject<out Yield,out Return=void,in Next=void> {
-                                                                  ^^^^ [6]
-   class.js:71:71
-   71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                                                             ^^^^^^ [7]
-
-
 Error --------------------------------------------------------------------------------------------------- class.js:98:40
 
 Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -167,19 +132,32 @@ References:
                                                    ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- class.js:100:50
+Error -------------------------------------------------------------------------------------------------- class.js:100:45
 
-Cannot call `examples.infer_stmt().next` with `0` bound to `value` because `0` [1] is incompatible with `void` [2].
-[incompatible-type]
+Cannot call `examples.infer_stmt().next` because: [incompatible-type]
+ - Either in index `0`: `0` [1] is incompatible with `void` [2].
+ - Or `[0]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   class.js:100:45
+   100| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
+                                                    ^^^^
+
+References:
    class.js:100:50
    100| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
                                                          ^ [1]
-
-References:
    class.js:27:44
     27|   *infer_stmt(): Generator<number, string, void> {
                                                    ^^^^ [2]
+   class.js:100:23
+   100| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.generator.js:24:22
+    24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                             ^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:104:3
@@ -199,49 +177,88 @@ References:
                              ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- class.js:107:28
+Error -------------------------------------------------------------------------------------------------- class.js:107:23
 
-Cannot call `examples.widen_next().next` with `0` bound to `value` because `0` [1] is incompatible with `void` [2].
-[incompatible-type]
+Cannot call `examples.widen_next().next` because: [incompatible-type]
+ - Either in index `0`: `0` [1] is incompatible with `void` [2].
+ - Or `[0]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   class.js:107:23
+   107| examples.widen_next().next(0) // err number -> void
+                              ^^^^
+
+References:
    class.js:107:28
    107| examples.widen_next().next(0) // err number -> void
                                    ^ [1]
-
-References:
    class.js:32:42
     32|   *widen_next(): Generator<number, void, void> {
                                                  ^^^^ [2]
+   class.js:107:1
+   107| examples.widen_next().next(0) // err number -> void
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.generator.js:24:22
+    24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                             ^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------- class.js:108:28
+Error -------------------------------------------------------------------------------------------------- class.js:108:23
 
-Cannot call `examples.widen_next().next` with empty string bound to `value` because `""` [1] is incompatible with
-`void` [2]. [incompatible-type]
+Cannot call `examples.widen_next().next` because: [incompatible-type]
+ - Either in index `0`: `""` [1] is incompatible with `void` [2].
+ - Or `[""]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   class.js:108:23
+   108| examples.widen_next().next("") // err number -> void
+                              ^^^^
+
+References:
    class.js:108:28
    108| examples.widen_next().next("") // err number -> void
                                    ^^ [1]
-
-References:
    class.js:32:42
     32|   *widen_next(): Generator<number, void, void> {
                                                  ^^^^ [2]
+   class.js:108:1
+   108| examples.widen_next().next("") // err number -> void
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.generator.js:24:22
+    24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                             ^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------- class.js:109:28
+Error -------------------------------------------------------------------------------------------------- class.js:109:23
 
-Cannot call `examples.widen_next().next` with `true` bound to `value` because `true` [1] is incompatible with
-`void` [2]. [incompatible-type]
+Cannot call `examples.widen_next().next` because: [incompatible-type]
+ - Either in index `0`: `true` [1] is incompatible with `void` [2].
+ - Or `[true]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   class.js:109:23
+   109| examples.widen_next().next(true) // err number -> void
+                              ^^^^
+
+References:
    class.js:109:28
    109| examples.widen_next().next(true) // err number -> void
                                    ^^^^ [1]
-
-References:
    class.js:32:42
     32|   *widen_next(): Generator<number, void, void> {
                                                  ^^^^ [2]
+   class.js:109:1
+   109| examples.widen_next().next(true) // err number -> void
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.generator.js:24:22
+    24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                             ^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:122:3
@@ -312,19 +329,32 @@ References:
                                                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- class_failure.js:14:50
+Error ------------------------------------------------------------------------------------------- class_failure.js:14:45
 
-Cannot call `examples.infer_stmt().next` with `0` bound to `value` because `0` [1] is incompatible with `void` [2].
-[incompatible-type]
+Cannot call `examples.infer_stmt().next` because: [incompatible-type]
+ - Either in index `0`: `0` [1] is incompatible with `void` [2].
+ - Or `[0]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   class_failure.js:14:45
+   14| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
+                                                   ^^^^
+
+References:
    class_failure.js:14:50
    14| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
                                                         ^ [1]
-
-References:
    class_failure.js:4:44
     4|   *infer_stmt(): Generator<number, string, void> {
                                                   ^^^^ [2]
+   class_failure.js:14:23
+   14| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.generator.js:24:22
+   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                            ^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- class_failure.js:19:3
@@ -431,16 +461,23 @@ References:
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- generators.js:31:41
+Error ---------------------------------------------------------------------------------------------- generators.js:31:36
 
-Cannot call `infer_stmt().next` with `0` bound to `value` because `0` [1] is incompatible with `void` [2].
-[incompatible-type]
+Cannot call `infer_stmt().next` because: [incompatible-type]
+ - Either in index `0`: `0` [1] is incompatible with `void` [2].
+ - Or `[0]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   generators.js:31:36
+   31| var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> void
+                                          ^^^^
+
+References:
    generators.js:31:41
    31| var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> void
                                                ^ [1]
-
-References:
    generators.js:26:24
                               v
    26| function *infer_stmt() {
@@ -448,6 +485,12 @@ References:
    28|   return "";
    29| }
        ^ [2]
+   generators.js:31:23
+   31| var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> void
+                             ^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.generator.js:24:22
+   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                            ^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- generators.js:35:3
@@ -487,16 +530,23 @@ References:
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- generators.js:69:32
+Error ---------------------------------------------------------------------------------------------- generators.js:69:27
 
-Cannot call `delegate_next_generator().next` with empty string bound to `value` because `""` [1] is incompatible with
-`void` [2]. [incompatible-type]
+Cannot call `delegate_next_generator().next` because: [incompatible-type]
+ - Either in index `0`: `""` [1] is incompatible with `void` [2].
+ - Or `[""]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   generators.js:69:27
+   69| delegate_next_generator().next(""); // err string -> void
+                                 ^^^^
+
+References:
    generators.js:69:32
    69| delegate_next_generator().next(""); // err string -> void
                                       ^^ [1]
-
-References:
    generators.js:63:37
                                            v
    63| function *delegate_next_generator() {
@@ -506,6 +556,12 @@ References:
    67|   yield *inner();
    68| }
        ^ [2]
+   generators.js:69:1
+   69| delegate_next_generator().next(""); // err string -> void
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.generator.js:24:22
+   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                            ^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- generators.js:79:3
@@ -542,22 +598,35 @@ References:
                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- generators.js:94:33
+Error ---------------------------------------------------------------------------------------------- generators.js:94:28
 
-Cannot call `delegate_next_iterable(...).next` with empty string bound to `value` because `""` [1] is incompatible with
-`void` [2]. [incompatible-type]
+Cannot call `delegate_next_iterable(...).next` because: [incompatible-type]
+ - Either in index `0`: `""` [1] is incompatible with `void` [2].
+ - Or `[""]` [3] has 1 element but `Readonly<[]>` [4] has 0 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   generators.js:94:28
+   94| delegate_next_iterable([]).next(""); // error: Iterator has no next value
+                                  ^^^^
+
+References:
    generators.js:94:33
    94| delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                        ^^ [1]
-
-References:
    generators.js:91:53
                                                            v
    91| function *delegate_next_iterable(xs: Array<number>) {
    92|   yield *xs;
    93| }
        ^ [2]
+   generators.js:94:1
+   94| delegate_next_iterable([]).next(""); // error: Iterator has no next value
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es2015.generator.js:24:22
+   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                            ^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:100:3
@@ -696,24 +765,6 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:3
 
-Cannot cast `refuse_return_result.value` to `string` because `void` [1] is incompatible with `string` [2].
-[incompatible-type]
-
-   return.js:20:3
-   20|   refuse_return_result.value as string; // error: number | void ~> string
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es2015.iterable.js:25:35
-   25| type IteratorResult<out Yield,out Return> =
-                                         ^^^^^^ [1]
-   return.js:20:33
-   20|   refuse_return_result.value as string; // error: number | void ~> string
-                                       ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- return.js:20:3
-
 Cannot cast `refuse_return_result.value` to `string` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
@@ -765,4 +816,4 @@ References:
 
 
 
-Found 44 errors
+Found 42 errors
