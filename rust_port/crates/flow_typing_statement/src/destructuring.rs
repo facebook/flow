@@ -434,15 +434,11 @@ fn current_type<'a>(cx: &mut Context<'a>, p: &pattern::Pattern<ALoc, ALoc>) -> T
         pattern::Pattern::Expression { .. } => {
             // Expression in pattern destructuring is unsupported syntax,
             // so we shouldn't read the environment.
-            any_t::untyped(mk_reason(VirtualReasonDesc::RDestructuring, loc))
+            any_t::untyped(mk_reason(None, loc))
         }
         _ => {
             if ast_utils::pattern_has_binding(p) {
-                type_env::find_write(
-                    cx,
-                    DefLocType::PatternLoc,
-                    mk_reason(VirtualReasonDesc::RDestructuring, loc),
-                )
+                type_env::find_write(cx, DefLocType::PatternLoc, mk_reason(None, loc))
             } else {
                 type_::unsoundness::at(type_::UnsoundnessKind::NonBindingPattern, loc)
             }

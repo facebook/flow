@@ -628,8 +628,7 @@ fn resolve_hint<'cx>(
             }
             HintNode::AnyErrorHint(reason) => type_::any_t::error(reason),
             HintNode::ComposedArrayPatternHint(hint_loc, elements) => {
-                let array_reason =
-                    reason::mk_reason(reason::VirtualReasonDesc::RDestructuring, hint_loc.dupe());
+                let array_reason = reason::mk_reason(None, hint_loc.dupe());
                 let is_empty = elements.is_empty();
                 let elem_spread_list: flow_data_structure_wrapper::list::FlowOcamlList<
                     type_::UnresolvedParam,
@@ -713,8 +712,7 @@ fn resolve_hint<'cx>(
                         })
                     },
                 )?;
-                let obj_reason =
-                    reason::mk_reason(reason::VirtualReasonDesc::RDestructuring, hint_loc.dupe());
+                let obj_reason = reason::mk_reason(None, hint_loc.dupe());
                 let default_proto = Type::new(TypeInner::ObjProtoT(obj_reason.dupe()));
                 flow_typing_tvar::mk_fully_resolved_lazy(
                     cx,

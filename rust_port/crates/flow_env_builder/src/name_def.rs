@@ -1870,7 +1870,7 @@ impl<'a> DefFinder<'a> {
     fn add_destructure_binding(&mut self, loc: ALoc, binding: Binding) {
         self.add_binding_with_kind(
             EnvKey::new(DefLocType::PatternLoc, loc.dupe()),
-            mk_reason(VirtualReasonDesc::RDestructuring, loc),
+            mk_reason(None, loc),
             DefinitionReferenceKind::Destructuring,
             Def::Binding(Box::new(binding)),
         );
@@ -2027,7 +2027,7 @@ impl<'a> DefFinder<'a> {
                             param_loc.dupe(),
                         )
                     }
-                    _ => mk_reason(VirtualReasonDesc::RDestructuring, param_loc.dupe()),
+                    _ => mk_reason(None, param_loc.dupe()),
                 };
                 self.record_hint(param_loc.dupe(), hints.clone());
                 Root::Contextual(Box::new(ContextualData {
@@ -2092,7 +2092,7 @@ impl<'a> DefFinder<'a> {
         if !found && annot.is_none() {
             self.add_binding_with_kind(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
-                mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
+                mk_reason(None, loc.dupe()),
                 DefinitionReferenceKind::Destructuring,
                 Def::Binding(Box::new(Binding::Root(source))),
             );
@@ -2283,7 +2283,7 @@ impl<'a> DefFinder<'a> {
                             param_loc.dupe(),
                         )
                     }
-                    _ => mk_reason(VirtualReasonDesc::RDestructuring, param_loc.dupe()),
+                    _ => mk_reason(None, param_loc.dupe()),
                 };
                 Root::UnannotatedParameter(reason)
             }
@@ -2340,7 +2340,7 @@ impl<'a> DefFinder<'a> {
         if !found && annot.is_none() {
             self.add_binding_with_kind(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
-                mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
+                mk_reason(None, loc.dupe()),
                 DefinitionReferenceKind::Destructuring,
                 Def::Binding(Box::new(Binding::Root(source))),
             );
@@ -2392,7 +2392,7 @@ impl<'a> DefFinder<'a> {
                             param_loc.dupe(),
                         )
                     }
-                    _ => mk_reason(VirtualReasonDesc::RDestructuring, param_loc.dupe()),
+                    _ => mk_reason(None, param_loc.dupe()),
                 };
                 Root::UnannotatedParameter(reason)
             }
@@ -2449,7 +2449,7 @@ impl<'a> DefFinder<'a> {
         if !found && annot.is_none() {
             self.add_binding_with_kind(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
-                mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
+                mk_reason(None, loc.dupe()),
                 DefinitionReferenceKind::Destructuring,
                 Def::Binding(Box::new(Binding::Root(source))),
             );

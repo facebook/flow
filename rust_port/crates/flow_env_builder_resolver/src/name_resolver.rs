@@ -3260,7 +3260,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         expr: &flow_parser::ast::pattern::Pattern<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
         use flow_common::reason::VirtualReason;
-        use flow_common::reason::VirtualReasonDesc;
         use flow_parser::ast::pattern::Pattern;
         use flow_parser::ast::pattern::object::Property;
 
@@ -3270,10 +3269,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             Pattern::Object { inner, .. } => {
                 self.env_state.write_entries.insert(
                     env_api::EnvKey::new(env_api::DefLocType::PatternLoc, ploc.dupe()),
-                    env_api::EnvEntry::AssigningWrite(VirtualReason::new(
-                        VirtualReasonDesc::RDestructuring,
-                        ploc.dupe(),
-                    )),
+                    env_api::EnvEntry::AssigningWrite(VirtualReason::new(None, ploc.dupe())),
                 );
 
                 for prop in inner.properties.iter() {
@@ -3420,12 +3416,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
     fn record_pattern_loc_writes(&mut self, expr: &flow_parser::ast::pattern::Pattern<ALoc, ALoc>) {
         use flow_common::reason::VirtualReason;
-        use flow_common::reason::VirtualReasonDesc;
         use flow_parser::ast::pattern::Pattern;
 
         let ploc = expr.loc().dupe();
 
-        let reason = VirtualReason::new(VirtualReasonDesc::RDestructuring, ploc.dupe());
+        let reason = VirtualReason::new(None, ploc.dupe());
         self.env_state.write_entries.insert(
             env_api::EnvKey::new(env_api::DefLocType::PatternLoc, ploc),
             env_api::EnvEntry::AssigningWrite(reason),
@@ -3472,9 +3467,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         annot: &flow_parser::ast::types::AnnotationOrHint<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
         use flow_common::reason::VirtualReason;
-        use flow_common::reason::VirtualReasonDesc;
 
-        let reason = VirtualReason::new(VirtualReasonDesc::RDestructuring, ploc.dupe());
+        let reason = VirtualReason::new(None, ploc.dupe());
         self.env_state.write_entries.insert(
             env_api::EnvKey::new(env_api::DefLocType::PatternLoc, ploc),
             env_api::EnvEntry::AssigningWrite(reason),
@@ -4292,10 +4286,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             ) -> Result<(), AbruptCompletion> {
                 {
                     let loc = pattern.loc().dupe();
-                    let reason = flow_common::reason::mk_reason(
-                        flow_common::reason::VirtualReasonDesc::RDestructuring,
-                        loc.dupe(),
-                    );
+                    let reason = flow_common::reason::mk_reason(None, loc.dupe());
                     let key = env_api::EnvKey::new(env_api::DefLocType::PatternLoc, loc);
                     self.resolver
                         .env_state
@@ -5723,7 +5714,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     VirtualReason::new(VirtualReasonDesc::RParameter(name), ploc.dupe())
                 }
             }
-            _ => VirtualReason::new(VirtualReasonDesc::RDestructuring, ploc.dupe()),
+            _ => VirtualReason::new(None, ploc.dupe()),
         };
         self.env_state.write_entries.insert(
             env_api::EnvKey::new(env_api::DefLocType::FunctionParamLoc, ploc),
@@ -8940,11 +8931,10 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         pattern: &flow_parser::ast::pattern::Pattern<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
         use flow_common::reason::VirtualReason;
-        use flow_common::reason::VirtualReasonDesc;
 
         let ploc = pattern.loc().dupe();
         if flow_parser::ast_utils::pattern_has_binding(pattern) {
-            let reason = VirtualReason::new(VirtualReasonDesc::RDestructuring, ploc.dupe());
+            let reason = VirtualReason::new(None, ploc.dupe());
             self.env_state.write_entries.insert(
                 env_api::EnvKey::new(env_api::DefLocType::PatternLoc, ploc),
                 env_api::EnvEntry::AssigningWrite(reason),

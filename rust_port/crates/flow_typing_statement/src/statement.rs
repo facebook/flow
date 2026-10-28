@@ -6181,7 +6181,7 @@ fn variable<'a>(
         }
         _ => {
             let ploc = id.loc().dupe();
-            mk_reason(VirtualReasonDesc::RDestructuring, ploc)
+            mk_reason(None, ploc)
         }
     };
     // Identifiers do not need to be initialized at the declaration site as long
@@ -19540,7 +19540,7 @@ pub fn mk_component_sig<'a>(
                 (t, declaration_param_config::Pattern::Id(typed_id))
             }
             ast::pattern::Pattern::Object { inner, .. } => {
-                let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
+                let reason = mk_reason(None, ploc.dupe());
                 let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                 (
                     t,
@@ -19553,7 +19553,7 @@ pub fn mk_component_sig<'a>(
                 )
             }
             ast::pattern::Pattern::Array { inner, .. } => {
-                let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
+                let reason = mk_reason(None, ploc.dupe());
                 let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                 (
                     t,
@@ -19613,7 +19613,7 @@ pub fn mk_component_sig<'a>(
                 })
             }
             ast::pattern::Pattern::Object { inner, .. } => {
-                let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
+                let reason = mk_reason(None, ploc.dupe());
                 let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                 let pattern = declaration_param_config::Pattern::Object {
                     annot: typed_annot,
@@ -19635,7 +19635,7 @@ pub fn mk_component_sig<'a>(
                     cx,
                     ErrorMessage::EInvalidComponentRestParam(ploc.dupe()),
                 );
-                let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
+                let reason = mk_reason(None, ploc.dupe());
                 let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                 let pattern = declaration_param_config::Pattern::Array {
                     annot: typed_annot,
@@ -19987,7 +19987,7 @@ pub fn mk_func_sig<'a>(
                         (t, func_stmt_config_types::Pattern::Id(typed_id))
                     }
                     ast::pattern::Pattern::Object { inner, .. } => {
-                        let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
+                        let reason = mk_reason(None, ploc.dupe());
                         let (t, typed_annot) =
                             mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                         (
@@ -20001,7 +20001,7 @@ pub fn mk_func_sig<'a>(
                         )
                     }
                     ast::pattern::Pattern::Array { inner, .. } => {
-                        let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
+                        let reason = mk_reason(None, ploc.dupe());
                         let (t, typed_annot) =
                             mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                         (
