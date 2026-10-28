@@ -6449,7 +6449,7 @@ fn array_elements<'a>(
 }
 
 pub fn empty_array<'a>(cx: &mut Context<'a>, loc: ALoc) -> Result<(Reason, Type), JobError> {
-    let reason = mk_reason(VirtualReasonDesc::REmptyArrayLit, loc.dupe());
+    let reason = mk_reason(None, loc.dupe());
     let element_reason = mk_reason(None, loc.dupe());
     let type_::LazyHintT(has_hint, lazy_hint) = type_env::get_hint(cx, loc.dupe());
     // empty array, analogous to object with implicit properties
@@ -7206,7 +7206,7 @@ fn expression_<'a>(
                     flow_typing_context::TypingMode::CheckingMode
                 ) =>
                 {
-                    let reason = mk_reason(VirtualReasonDesc::REmptyArrayLit, loc.dupe());
+                    let reason = mk_reason(None, loc.dupe());
                     let element_reason = mk_reason(None, loc.dupe());
                     let elem_t = cx.mk_placeholder(element_reason);
                     let arrtype = type_::ArrType::ArrayAT(Box::new(ArrayATData {

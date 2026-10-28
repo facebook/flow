@@ -286,7 +286,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RObjectLit,
     RObjectType,
     RArrayLit,
-    REmptyArrayLit,
     RArrayType,
     RROArrayType,
     RTupleType,
@@ -387,7 +386,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RObjectLit => RObjectLit,
             RObjectType => RObjectType,
             RArrayLit => RArrayLit,
-            REmptyArrayLit => REmptyArrayLit,
             RArrayType => RArrayType,
             RROArrayType => RROArrayType,
             RTupleType => RTupleType,
@@ -496,14 +494,9 @@ impl<L: Dupe> VirtualReasonDesc<L> {
                 RVoid | RNull | RVoidedNull | RUninitialized | RPossiblyUninitialized | RNullOrVoid,
             ) => Nullish,
 
-            Some(
-                RArrayLit
-                | REmptyArrayLit
-                | RArrayType
-                | RROArrayType
-                | RTupleType
-                | RArrayPatternRestProp,
-            ) => Array,
+            Some(RArrayLit | RArrayType | RROArrayType | RTupleType | RArrayPatternRestProp) => {
+                Array
+            }
 
             _ => Unclassified,
         }
@@ -1164,7 +1157,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
 
         // Arrays
         RArrayLit => "array literal".to_string(),
-        REmptyArrayLit => "empty array literal".to_string(),
         RArrayType => "array type".to_string(),
         RInferredUnionElemArray { .. } => "inferred union of array element types \
 (alternatively, provide an annotation to summarize the array element type)"

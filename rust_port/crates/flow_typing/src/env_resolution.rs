@@ -1891,9 +1891,7 @@ fn resolve_binding<'cx>(
                 (
                     elem_t,
                     Some(type_::empty_tuple_view()),
-                    reason
-                        .dupe()
-                        .replace_desc(reason::VirtualReasonDesc::REmptyArrayLit),
+                    reason.dupe().replace_desc(None),
                 )
             };
             let t = Type::new(TypeInner::DefT(
