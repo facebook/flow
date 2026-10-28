@@ -303,7 +303,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RDestructuring,
     RDefaultValue,
     RConstructor,
-    RDummyPrototype,
     RDummyThis,
     RSomeProperty,
     RObjectPatternRestProp,
@@ -424,7 +423,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RDefaultValue => RDefaultValue,
             RConstructor => RConstructor,
             RRecordType(s) => RRecordType(s.dupe()),
-            RDummyPrototype => RDummyPrototype,
             RDummyThis => RDummyThis,
             RType(n) => RType(n.dupe()),
             RTypeof(s) => RTypeof(s.dupe()),
@@ -1242,7 +1240,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RRecordType(name) => format!("record `{}`", name),
 
         // Misc
-        RDummyPrototype => "empty prototype object".to_string(),
         RDummyThis => "bound `this` in method".to_string(),
 
         // Type aliases and params

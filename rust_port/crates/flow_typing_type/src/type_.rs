@@ -11624,26 +11624,22 @@ pub mod null {
 pub mod obj_proto {
     use super::*;
 
-    pub fn desc() -> flow_common::reason::ReasonDesc {
-        flow_common::reason::VirtualReasonDesc::RDummyPrototype
-    }
-
     pub fn make(reason: Reason) -> Type {
         Type::new(TypeInner::ObjProtoT(reason))
     }
 
     pub fn at(tok: ALoc) -> Type {
-        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        let reason = flow_common::reason::mk_annot_reason(None, tok);
         make(reason)
     }
 
     pub fn why(reason: Reason) -> Type {
-        let reason = reason.replace_desc(desc());
+        let reason = reason.replace_desc(None);
         make(reason)
     }
 
     pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
-        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        let r = if use_desc { r } else { r.replace_desc(None) };
         make(r)
     }
 }
@@ -12410,9 +12406,7 @@ pub fn dummy_static(reason: Reason) -> Type {
 
 pub fn dummy_prototype() -> Type {
     use flow_common::reason::locationless_reason;
-    Type::new(TypeInner::ObjProtoT(locationless_reason(
-        VirtualReasonDesc::RDummyPrototype,
-    )))
+    Type::new(TypeInner::ObjProtoT(locationless_reason(None)))
 }
 
 pub fn bound_function_dummy_this(loc: ALoc) -> Type {
