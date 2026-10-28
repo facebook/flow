@@ -1429,7 +1429,7 @@ pub fn object_<'cx>(cx: &mut Context<'cx>, t: Type) -> FilterResult {
         }
         TypeInner::DefT(r, d) => match d.deref() {
             DefTInner::MixedT(flavor) => {
-                let reason = r.dupe().replace_desc_new(VirtualReasonDesc::RObject);
+                let reason = r.dupe().replace_desc_new(None);
                 let dict = DictType {
                     key: str_module_t::why(r.dupe()),
                     value: Type::new(TypeInner::DefT(

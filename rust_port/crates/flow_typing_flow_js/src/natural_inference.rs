@@ -762,10 +762,7 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
             TypeInner::DefT(r, def_t) if let DefTInner::ObjT(o) = def_t.deref() => {
                 if o.literal && self.reason_def_loc_within_call(r) {
                     let t = self.type_as_literal_type_mapper(cx, map_cx, t);
-                    non_literal_of_t(&mod_reason_of_t(
-                        &|r| r.replace_desc(VirtualReasonDesc::RObject),
-                        &t,
-                    ))
+                    non_literal_of_t(&mod_reason_of_t(&|r| r.replace_desc(None), &t))
                 } else {
                     t
                 }

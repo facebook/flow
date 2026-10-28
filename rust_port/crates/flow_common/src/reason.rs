@@ -283,7 +283,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RUniqueSymbol,
     RExports,
     RNullOrVoid,
-    RObject,
     RObjectLit,
     RObjectType,
     RArray,
@@ -386,7 +385,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RNumberLit(s) => RNumberLit(s.dupe()),
             RBigIntLit(s) => RBigIntLit(s.dupe()),
             RBooleanLit(b) => RBooleanLit(*b),
-            RObject => RObject,
             RObjectLit => RObjectLit,
             RObjectType => RObjectType,
             RArray => RArray,
@@ -1120,9 +1118,9 @@ pub fn func_reason(async_: bool, generator: bool, loc: ALoc) -> Reason {
 
 pub fn mk_obj_lit_reason(as_const: bool, frozen: bool, loc: ALoc) -> Reason {
     let desc = if frozen || as_const {
-        VirtualReasonDesc::RObject
+        None
     } else {
-        VirtualReasonDesc::RObjectLit
+        Some(VirtualReasonDesc::RObjectLit)
     };
     mk_reason(desc, loc)
 }
@@ -1164,7 +1162,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RBooleanLit(b) => format!("boolean literal `{}`", b),
 
         // Objects
-        RObject => "object".to_string(),
         RObjectLit => "object literal".to_string(),
         RObjectType => "object type".to_string(),
 
