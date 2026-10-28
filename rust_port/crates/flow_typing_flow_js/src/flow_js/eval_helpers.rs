@@ -769,6 +769,28 @@ pub(super) fn eval_destructor<'cx>(
             }),
             _,
         ) => {
+            // A type alias that keeps expanding within its own evaluation, like `FlatArray`
+            // whose depth argument stays unresolved in an implicit instantiation, would
+            // otherwise be expanded until the recursion limit.
+            let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
+                cx,
+                env,
+                type_app_expansion::Bound::Lower,
+                c,
+                targs,
+            ) else {
+                return rec_flow_t(
+                    cx,
+                    env,
+                    trace,
+                    unknown_use(),
+                    (
+                        &any_t::error(reason.dupe()),
+                        &Type::new(TypeInner::OpenT(tout.dupe())),
+                    ),
+                );
+            };
+            let env = &env;
             let destructor = TypeDestructorT::new(TypeDestructorTInner(
                 use_op.dupe(),
                 reason.dupe(),
