@@ -1708,6 +1708,40 @@ Cannot resolve name `Missing`. [cannot-resolve-name]
                                                             ^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- negation.js:30:5
+
+Cannot cast `x` to `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+
+   negation.js:30:5
+   30|     x as true; // error false ~> true
+           ^
+
+References:
+   negation.js:24:27
+   24| function boolean_input(x: boolean) {
+                                 ^^^^^^^ [1]
+   negation.js:30:10
+   30|     x as true; // error false ~> true
+                ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- negation.js:45:5
+
+Cannot cast `x` to `?true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
+
+   negation.js:45:5
+   45|     x as ?true; // error false ~> true
+           ^
+
+References:
+   negation.js:41:34
+   41| function maybe_boolean_input(x: ?boolean) {
+                                        ^^^^^^^ [1]
+   negation.js:45:11
+   45|     x as ?true; // error false ~> true
+                 ^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- objects.js:14:14
 
 Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
@@ -5588,4 +5622,4 @@ References:
 
 
 
-Found 309 errors
+Found 311 errors

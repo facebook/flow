@@ -309,3 +309,21 @@ Flags:
 const no8: (x: unknown) => boolean
 inferred.js:44:7,44:9
 
+negation.js:5:5
+Flags:
+(parameter) x: any (explicit)
+negation.js:5:5,5:5
+
+negation.js:12:5
+Flags:
+(parameter) x: number | any
+
+Refined at negation.js:11:7
+
+negation.js:12:5,12:5
+
+negation.js:19:5
+Flags:
+(parameter) x: T
+negation.js:19:5,19:5
+

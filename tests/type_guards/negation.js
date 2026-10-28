@@ -20,3 +20,35 @@ function test1() {
   }
   x as string; // okay (all LatentP/LatentThisPs refinements are negated together)
 }
+
+function boolean_input(x: boolean) {
+  declare function isTrue(value: unknown): value is true;
+  if (isTrue(x)) {
+    x as true; // okay
+  } else {
+    x as false; // okay
+    x as true; // error false ~> true
+  }
+}
+
+function boolean_union_input(x: boolean | string) {
+  declare function isFalse(value: unknown): value is false;
+  if (!isFalse(x)) {
+    x as true | string; // okay
+  }
+}
+
+function maybe_boolean_input(x: ?boolean) {
+  declare function isTrue(value: unknown): value is true;
+  if (!isTrue(x)) {
+    x as ?false; // okay
+    x as ?true; // error false ~> true
+  }
+}
+
+function boolean_bound<T extends boolean>(x: T) {
+  declare function isTrue(value: unknown): value is true;
+  if (!isTrue(x)) {
+    x as false; // okay
+  }
+}

@@ -1918,10 +1918,19 @@ fn intersect_type_guard<'cx>(
     }
 }
 
+fn is_any_t(t: &Type) -> bool {
+    matches!(t.deref(), TypeInner::AnyT(..))
+}
+
+fn is_bool_general_t(t: &Type) -> bool {
+    matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::BoolGeneralT))
+}
+
 /// This utility is expected to be used when negating the refinement of a type [t1]
-/// with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
-/// This means that the positive branch will always be taken, and so we are left with
-/// `empty` in the negated case.
+/// with a type guard `x is t2`. It removes the members of t1 that are subtypes of t2,
+/// since for those the positive branch is always taken; if t1 <: t2, we are left with
+/// `empty` in the negated case. `any` may or may not satisfy the guard, so it is kept,
+/// and `boolean` is split into `true | false`.
 fn type_guard_diff<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
@@ -1929,9 +1938,16 @@ fn type_guard_diff<'cx>(
     t2: &Type,
 ) -> Result<FilterResult, JobError> {
     let reason1 = reason_of_t(t1);
-    if type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2)
-        || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t1, t2)?
-    {
+    let satisfies_guard = |cx: &mut Context<'cx>, t: &Type| -> Result<bool, JobError> {
+        Ok(type_util::quick_subtype(None::<&mut fn(&Type)>, t, t2)
+            || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t, t2)?)
+    };
+    if is_any_t(t1) {
+        Ok(FilterResult {
+            type_: t1.dupe(),
+            changed: false,
+        })
+    } else if satisfies_guard(cx, t1)? {
         let r = reason1
             .dupe()
             .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
@@ -1944,9 +1960,22 @@ fn type_guard_diff<'cx>(
         let mut ts: Vec<Type> = Vec::new();
         let mut changed = false;
         for t1_inner in t1s_conc {
-            if type_util::quick_subtype(None::<&mut fn(&Type)>, &t1_inner, t2)
-                || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, &t1_inner, t2)?
-            {
+            if !is_any_t(&t1_inner) && satisfies_guard(cx, &t1_inner)? {
+                continue;
+            }
+            if is_bool_general_t(&t1_inner) {
+                let true_t = type_filter::true_(t1_inner.dupe()).type_;
+                let false_t = type_filter::false_(t1_inner.dupe()).type_;
+                match (
+                    satisfies_guard(cx, &true_t)?,
+                    satisfies_guard(cx, &false_t)?,
+                ) {
+                    (true, true) => continue,
+                    (true, false) => ts.push(false_t),
+                    (false, true) => ts.push(true_t),
+                    (false, false) => ts.push(t1_inner),
+                }
+                changed = true;
                 continue;
             }
             ts.push(t1_inner);
