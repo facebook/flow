@@ -3053,6 +3053,7 @@ Flags: --lsp
     "title":""
   },
   "detail":"number",
+  "documentation":{"kind":"markdown","value":"**@returns**  the number of elements in the Map."},
   "insertTextFormat":1,
   "kind":6,
   "label":"size",
@@ -3112,6 +3113,7 @@ Flags: --lsp
     "title":""
   },
   "detail":"number",
+  "documentation":{"kind":"markdown","value":"**@returns**  the number of elements in the Map."},
   "insertTextFormat":1,
   "kind":6,
   "label":"size",

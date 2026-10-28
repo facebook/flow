@@ -1,0 +1,71 @@
+--- tslib/lib.es2015.collection.d.ts
++++ rust_port/crates/flow_flowlib/src/tslib_patches/lib.es2015.collection.d.ts
+@@ -26,7 +26,7 @@
+     /**
+      * Executes a provided function once per each key/value pair in the Map, in insertion order.
+      */
+-    forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void;
++    forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
+     /**
+      * Returns a specified element from the Map object. If the value that is associated to the provided key is an object, then you will get a reference to that object and any change made to that object will effectively modify it inside the Map.
+      * @returns Returns the element associated with the specified key. If no element is associated with the specified key, undefined is returned.
+@@ -47,14 +47,13 @@
+ }
+ 
+ interface MapConstructor {
+-    new (): Map<any, any>;
+-    new <K, V>(entries?: readonly (readonly [K, V])[] | null): Map<K, V>;
++    new <K, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+     readonly prototype: Map<any, any>;
+ }
+ declare var Map: MapConstructor;
+ 
+ interface ReadonlyMap<K, V> {
+-    forEach(callbackfn: (value: V, key: K, map: ReadonlyMap<K, V>) => void, thisArg?: any): void;
++    forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
+     get(key: K): V | undefined;
+     has(key: K): boolean;
+     readonly size: number;
+@@ -82,7 +81,7 @@
+ }
+ 
+ interface WeakMapConstructor {
+-    new <K extends WeakKey = WeakKey, V = any>(entries?: readonly (readonly [K, V])[] | null): WeakMap<K, V>;
++    new <K extends WeakKey, V>(entries?: ?Iterable<[readonly key: K, readonly value: V]>): WeakMap<K, V>;
+     readonly prototype: WeakMap<WeakKey, any>;
+ }
+ declare var WeakMap: WeakMapConstructor;
+@@ -102,7 +101,7 @@
+     /**
+      * Executes a provided function once per each value in the Set object, in insertion order.
+      */
+-    forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void;
++    forEach<This>(callbackfn: (this: This, value: T, value2: T, set: Set<T>) => unknown, thisArg: This): void;
+     /**
+      * @returns a boolean indicating whether an element with the specified value exists in the Set or not.
+      */
+@@ -114,13 +113,13 @@
+ }
+ 
+ interface SetConstructor {
+-    new <T = any>(values?: readonly T[] | null): Set<T>;
++    new <T>(values?: ?Iterable<T>): Set<T>;
+     readonly prototype: Set<any>;
+ }
+ declare var Set: SetConstructor;
+ 
+ interface ReadonlySet<T> {
+-    forEach(callbackfn: (value: T, value2: T, set: ReadonlySet<T>) => void, thisArg?: any): void;
++    forEach<This>(callbackfn: (this: This, value: T, value2: T, set: ReadonlySet<T>) => unknown, thisArg: This): void;
+     has(value: T): boolean;
+     readonly size: number;
+ }
+@@ -142,7 +141,7 @@
+ }
+ 
+ interface WeakSetConstructor {
+-    new <T extends WeakKey = WeakKey>(values?: readonly T[] | null): WeakSet<T>;
++    new <T extends WeakKey = WeakKey>(values?: ?Iterable<T>): WeakSet<T>;
+     readonly prototype: WeakSet<WeakKey>;
+ }
+ declare var WeakSet: WeakSetConstructor;

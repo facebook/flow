@@ -29,6 +29,7 @@ pub(super) const LIB_DECORATORS_LEGACY_D_TS: &str = include_tslib!("lib.decorato
 pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asynciterable.d.ts");
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
 pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
+pub(super) const LIB_ES2015_COLLECTION_D_TS: &str = include_tslib!("lib.es2015.collection.d.ts");
 pub(super) const LIB_ES2015_GENERATOR_D_TS: &str = include_tslib!("lib.es2015.generator.d.ts");
 pub(super) const LIB_ES2015_PROMISE_D_TS: &str = include_tslib!("lib.es2015.promise.d.ts");
 pub(super) const LIB_ES2015_PROXY_D_TS: &str = include_tslib!("lib.es2015.proxy.d.ts");
@@ -116,10 +117,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.dom.asynciterable.d.ts", LIB_DOM_ASYNCITERABLE_D_TS),
     ("lib.dom.d.ts", LIB_DOM_D_TS),
     ("lib.dom.iterable.d.ts", LIB_DOM_ITERABLE_D_TS),
-    (
-        "lib.es2015.collection.d.ts",
-        include_tslib!("lib.es2015.collection.d.ts"),
-    ),
+    ("lib.es2015.collection.d.ts", LIB_ES2015_COLLECTION_D_TS),
     (
         "lib.es2015.core.d.ts",
         include_tslib!("lib.es2015.core.d.ts"),

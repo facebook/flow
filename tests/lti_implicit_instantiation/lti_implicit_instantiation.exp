@@ -275,16 +275,16 @@ Cannot call `Set` because `T` [1] is underconstrained by new `Set` [2]. Either a
 expression to your expected type. [underconstrained-implicit-instantiation]
 
    partial_return_hint.js:34:14
-   34| useState(new Set()); // ERROR: T is underconstrained
-                    ^^^
+    34| useState(new Set()); // ERROR: T is underconstrained
+                     ^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:78:10
-   78|     new <T>(iterable?: ?Iterable<T>): Set<T>;
-                ^ [1]
+   <BUILTINS>/lib.es2015.collection.js:116:10
+   116|     new <T>(values?: ?Iterable<T>): Set<T>;
+                 ^ [1]
    partial_return_hint.js:34:10
-   34| useState(new Set()); // ERROR: T is underconstrained
-                ^^^^^^^^^ [2]
+    34| useState(new Set()); // ERROR: T is underconstrained
+                 ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:2:7

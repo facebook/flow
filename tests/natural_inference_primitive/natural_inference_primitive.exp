@@ -2645,7 +2645,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:658:20
 
-Cannot call `Set` with array literal bound to `iterable` because: [incompatible-type]
+Cannot call `Set` with array literal bound to `values` because: [incompatible-type]
  - array literal [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `ArrayIterator<"C">` [3] is incompatible with `Iterator<"A" | "B", void, void>` [4]
        - in the return value > type argument `Yield` [5]: `"C"` [6] is incompatible with `"A" | "B"` [7]
@@ -2655,9 +2655,9 @@ Cannot call `Set` with array literal bound to `iterable` because: [incompatible-
                            ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:78:25
-    78|     new <T>(iterable?: ?Iterable<T>): Set<T>;
-                                ^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.collection.js:116:23
+   116|     new <T>(values?: ?Iterable<T>): Set<T>;
+                              ^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:89:19
     89|     @@iterator(): ArrayIterator<T>;
                           ^^^^^^^^^^^^^^^^ [3]
