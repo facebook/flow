@@ -749,8 +749,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:32:33
 
-Cannot assign template string to `x` because `string` [1] is incompatible with ``${string}${"px"}`` [2].
-[incompatible-type]
+Cannot assign ``...`` to `x` because `string` [1] is incompatible with ``${string}${"px"}`` [2]. [incompatible-type]
 
    template.js:32:33
    32|   const x: StringSuffix<'px'> = `${n}dp`; // ERROR
@@ -764,8 +763,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:37:34
 
-Cannot assign template string to `x` because `string` [1] is incompatible with ``${"foo"}${string}`` [2].
-[incompatible-type]
+Cannot assign ``...`` to `x` because `string` [1] is incompatible with ``${"foo"}${string}`` [2]. [incompatible-type]
 
    template.js:37:34
    37|   const x: StringPrefix<'foo'> = `bar${n}`; // ERROR
@@ -779,8 +777,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:42:33
 
-Cannot assign template string to `x` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
-[incompatible-type]
+Cannot assign ``...`` to `x` because `string` [1] is incompatible with ``${string}${"dp"}`` [2]. [incompatible-type]
 
    template.js:42:33
    42|   const x: StringSuffix<'dp'> = `${n}`; // ERROR
@@ -794,8 +791,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:43:34
 
-Cannot assign template string to `y` because `string` [1] is incompatible with ``${"abc"}${string}`` [2].
-[incompatible-type]
+Cannot assign ``...`` to `y` because `string` [1] is incompatible with ``${"abc"}${string}`` [2]. [incompatible-type]
 
    template.js:43:34
    43|   const y: StringPrefix<'abc'> = `${n}`; // ERROR
@@ -1055,7 +1051,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:233:3
 
-Cannot cast template string to `StringSuffix<"dp">` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
+Cannot cast ``...`` to `StringSuffix<"dp">` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
 [incompatible-type]
 
    template.js:233:3

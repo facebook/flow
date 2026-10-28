@@ -951,7 +951,7 @@ pub fn resolve_for_value<'cx>(
     from_annot: bool,
 ) -> Type {
     let unresolved = || {
-        let reason = reason::mk_reason(VirtualReasonDesc::RTemplateString, loc.dupe());
+        let reason = reason::mk_reason(None, loc.dupe());
         Type::new(TypeInner::TemplateLiteralT {
             reason,
             from_annot,
@@ -989,7 +989,7 @@ pub fn resolve_for_value<'cx>(
             }),
         ))
     };
-    let union_reason = reason::mk_reason(VirtualReasonDesc::RTemplateString, loc.dupe());
+    let union_reason = reason::mk_reason(None, loc.dupe());
     let union_aloc = cx.make_aloc_id(&loc);
     match mk_singleton_or_union(&union_reason, union_aloc, mk_str, &strings) {
         Some(t) => t,

@@ -110,7 +110,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- template.js:3:1
 
-Cannot cast template string to `number` because `"baz"` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast ``...`` to `number` because `"baz"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    template.js:3:1
    3| `baz` as number; // ERROR

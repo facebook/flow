@@ -291,7 +291,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RTupleType,
     RTupleUnknownElementFromInexact,
     RFunctionType,
-    RTemplateString,
     RThis,
     RThisType,
     RImplicitInstantiation,
@@ -400,7 +399,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
                 instantiable: *instantiable,
                 is_empty: *is_empty,
             },
-            RTemplateString => RTemplateString,
             REnum { name } => REnum { name: name.dupe() },
             RThis => RThis,
             RThisType => RThisType,
@@ -481,7 +479,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         match self.unwrap() {
             Some(
                 RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
-                | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RTemplateString,
+                | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_),
             ) => Scalar,
 
             Some(
@@ -1170,8 +1168,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RFunction(func) => format!("{}function", func.prefix()),
         RFunctionType => "function type".to_string(),
 
-        // Template strings and enums
-        RTemplateString => "template string".to_string(),
+        // Enums
         REnum { name } => match name {
             Some(n) => format!("enum `{}`", n),
             None => "enum".to_string(),
@@ -1824,10 +1821,6 @@ pub fn mk_expression_reason<M: Dupe + PartialEq, T: Dupe + PartialEq>(
         ExpressionInner::StringLiteral { loc, inner } if inner.value.is_empty() => {
             mk_reason(VirtualReasonDesc::RStringLit("".into()), loc.dupe())
         }
-        ExpressionInner::TaggedTemplate { loc, .. }
-        | ExpressionInner::TemplateLiteral { loc, .. } => {
-            mk_reason(VirtualReasonDesc::RTemplateString, loc.dupe())
-        }
         ExpressionInner::Member { loc, inner } => {
             let object_ = code_desc_of_expression(true, &inner.object).into();
             let property = code_desc_of_property(
@@ -1882,10 +1875,6 @@ pub fn mk_typed_expression_reason<M: Dupe + PartialEq, T: Dupe>(
         }
         ExpressionInner::StringLiteral { loc, inner } if inner.value.is_empty() => {
             mk_reason(VirtualReasonDesc::RStringLit("".into()), loc.0.dupe())
-        }
-        ExpressionInner::TaggedTemplate { loc, .. }
-        | ExpressionInner::TemplateLiteral { loc, .. } => {
-            mk_reason(VirtualReasonDesc::RTemplateString, loc.0.dupe())
         }
         ExpressionInner::Member { loc, inner } => {
             let object_ = code_desc_of_expression(true, &inner.object).into();

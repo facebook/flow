@@ -191,7 +191,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- as_const.js:117:38
 
-Cannot assign template string to `bad` because `string` [1] is incompatible with ``pre-${string}-other`` [2].
+Cannot assign ``...`` to `bad` because `string` [1] is incompatible with ``pre-${string}-other`` [2].
 [incompatible-type]
 
    as_const.js:117:38
