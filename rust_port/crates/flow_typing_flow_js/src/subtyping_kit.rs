@@ -80,6 +80,7 @@ use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::FunReturnData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::HasOwnPropTData;
+use flow_typing_type::type_::IndexerKeyCompatibilityData;
 use flow_typing_type::type_::InstType;
 use flow_typing_type::type_::InstTypeInner;
 use flow_typing_type::type_::InstanceKind;
@@ -1697,10 +1698,14 @@ impl PropsToIndexerContext<'_> {
                 &keys,
                 &UseT::new(UseT(
                     VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
-                            lower: lreason.dupe(),
-                            upper: ureason.dupe(),
-                        }),
+                        Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility(Box::new(
+                            IndexerKeyCompatibilityData {
+                                lower: lreason.dupe(),
+                                upper: ureason.dupe(),
+                                lower_t: flow_js_utils::type_or_type_desc_for_error(&self.lower),
+                                upper_t: flow_js_utils::type_or_type_desc_for_error(&self.upper),
+                            },
+                        ))),
                         Arc::new(use_op.dupe()),
                     ),
                     key.dupe(),
@@ -1765,10 +1770,14 @@ fn flow_obj_to_obj<'cx>(
                 ..
             } = ud;
             let use_op_k = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
-                    lower: lreason.dupe(),
-                    upper: ureason.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility(Box::new(
+                    IndexerKeyCompatibilityData {
+                        lower: lreason.dupe(),
+                        upper: ureason.dupe(),
+                        lower_t: flow_js_utils::type_or_type_desc_for_error(l),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(u),
+                    },
+                ))),
                 Arc::new(use_op.dupe()),
             );
             if lit {
@@ -2252,10 +2261,18 @@ fn flow_obj_to_obj<'cx>(
                                 &key_type,
                                 &UseT::new(UseT(
                                     VirtualUseOp::Frame(
-                                        Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
-                                            lower: lreason.dupe(),
-                                            upper: ureason.dupe(),
-                                        }),
+                                        Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility(
+                                            Box::new(IndexerKeyCompatibilityData {
+                                                lower: lreason.dupe(),
+                                                upper: ureason.dupe(),
+                                                lower_t: flow_js_utils::type_or_type_desc_for_error(
+                                                    l,
+                                                ),
+                                                upper_t: flow_js_utils::type_or_type_desc_for_error(
+                                                    u,
+                                                ),
+                                            }),
+                                        )),
                                         Arc::new(use_op.dupe()),
                                     ),
                                     key.dupe(),

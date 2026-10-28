@@ -1426,6 +1426,45 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for ArrayElementCompatibil
     }
 }
 
+/// Compared without `lower_t` and `upper_t`: the types are what the error prints, and must not
+/// tell apart errors or constraints that are otherwise the same.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct IndexerKeyCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for IndexerKeyCompatibilityData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.lower == other.lower && self.upper == other.upper
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for IndexerKeyCompatibilityData<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Hash> Hash for IndexerKeyCompatibilityData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.lower.hash(state);
+        self.upper.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for IndexerKeyCompatibilityData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for IndexerKeyCompatibilityData<L> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.lower
+            .cmp(&other.lower)
+            .then_with(|| self.upper.cmp(&other.upper))
+    }
+}
+
 #[derive(
     Debug,
     Clone,
@@ -1689,10 +1728,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     },
     FunReturn(Box<FunReturnData<L>>),
     ImplicitTypeParam,
-    IndexerKeyCompatibility {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
+    IndexerKeyCompatibility(Box<IndexerKeyCompatibilityData<L>>),
     OpaqueTypeLowerBoundCompatibility {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
@@ -11931,7 +11967,7 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualFrameUseOp::FunRestParam { .. } => "FunRestParam",
         VirtualFrameUseOp::FunReturn(..) => "FunReturn",
         VirtualFrameUseOp::ImplicitTypeParam => "ImplicitTypeParam",
-        VirtualFrameUseOp::IndexerKeyCompatibility { .. } => "IndexerKeyCompatibility",
+        VirtualFrameUseOp::IndexerKeyCompatibility(..) => "IndexerKeyCompatibility",
         VirtualFrameUseOp::OpaqueTypeLowerBoundCompatibility { .. } => {
             "OpaqueTypeLowerBoundCompatibility"
         }

@@ -51,6 +51,7 @@ use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::FunReturnData;
 use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
 use flow_typing_type::type_::IndexedTypeAccessData;
+use flow_typing_type::type_::IndexerKeyCompatibilityData;
 use flow_typing_type::type_::JSXCreateElementData;
 use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
 use flow_typing_type::type_::MergedDeclarationConflict;
@@ -486,10 +487,17 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             lower_t: upper_t,
             upper_t: lower_t,
         })),
-        IndexerKeyCompatibility { lower, upper } => IndexerKeyCompatibility {
+        IndexerKeyCompatibility(box IndexerKeyCompatibilityData {
+            lower,
+            upper,
+            lower_t,
+            upper_t,
+        }) => IndexerKeyCompatibility(Box::new(IndexerKeyCompatibilityData {
             lower: upper,
             upper: lower,
-        },
+            lower_t: upper_t,
+            upper_t: lower_t,
+        })),
         OpaqueTypeLowerBoundCompatibility { lower, upper } => OpaqueTypeLowerBoundCompatibility {
             lower: upper,
             upper: lower,
@@ -2757,7 +2765,14 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::IndexerKeyCompatibility { lower, upper } => {
+                        VirtualFrameUseOp::IndexerKeyCompatibility(
+                            box IndexerKeyCompatibilityData {
+                                lower,
+                                upper,
+                                lower_t,
+                                ..
+                            },
+                        ) => {
                             let frame_loc = loc_of_aloc(&lower.loc);
                             let final_loc = if frame_loc.contains(&loc) {
                                 loc
@@ -2769,7 +2784,8 @@ where
                             let incompatibility_pair = opt_incompatibility_pair(
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
-                            );
+                            )
+                            .map(|(lower, upper)| (printed_type_reference(&lower, lower_t), upper));
                             all_frames.push(ErrorFrame::FrameIndexerPropertyKey {
                                 incompatibility_pair,
                             });
@@ -4924,6 +4940,24 @@ where
                 None
             }
         };
+        // The upper of a pair is always named, so it is referenced by its name.
+        let map_lower_typed_incompatibility = |pair: &Option<(
+            MessageTypeReferenceData<L>,
+            VirtualReason<L>,
+        )>|
+         -> Option<friendly::Message<Loc>> {
+            if include_incompatibility_pair {
+                pair.as_ref().map(|(l, u)| {
+                    friendly::Message(vec![
+                        ref_of_type_desc(&l.loc, &l.desc),
+                        text(" is incompatible with "),
+                        ref_(u),
+                    ])
+                })
+            } else {
+                None
+            }
+        };
 
         match frame {
             FrameAnonymous => (None, friendly::Message(vec![])),
@@ -5013,7 +5047,7 @@ where
             FrameIndexerPropertyKey {
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_lower_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the indexer property's key")]),
             ),
             FrameTypeArgument(targ) => (

@@ -14,6 +14,7 @@ use flow_typing_errors::error_message::ETupleArityMismatchData;
 use flow_typing_errors::error_message::ETupleElementPolarityMismatchData;
 use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_type::type_::IndexerKeyCompatibilityData;
 use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeStrictnessKind;
@@ -389,10 +390,14 @@ fn __unify_inner<'cx>(
                                 env,
                                 trace,
                                 UseOp::Frame(
-                                    Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
-                                        lower: lreason.dupe(),
-                                        upper: ureason.dupe(),
-                                    }),
+                                    Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility(Box::new(
+                                        IndexerKeyCompatibilityData {
+                                            lower: lreason.dupe(),
+                                            upper: ureason.dupe(),
+                                            lower_t: flow_js_utils::type_or_type_desc_for_error(t1),
+                                            upper_t: flow_js_utils::type_or_type_desc_for_error(t2),
+                                        },
+                                    ))),
                                     Arc::new(use_op.dupe()),
                                 ),
                                 UnifyCause::Uncategorized,
@@ -816,10 +821,14 @@ pub(super) fn unify_prop_with_dict<'cx>(
                 None => flow_js_utils::type_of_key_name_with_env(env, x.dupe(), &prop_reason),
             };
             let indexer_use_op = UseOp::Frame(
-                Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
-                    lower: dict_reason.dupe(),
-                    upper: prop_obj_reason.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility(Box::new(
+                    IndexerKeyCompatibilityData {
+                        lower: dict_reason.dupe(),
+                        upper: prop_obj_reason.dupe(),
+                        lower_t: flow_js_utils::type_or_type_desc_for_error(dict_obj),
+                        upper_t: flow_js_utils::type_or_type_desc_for_error(prop_obj),
+                    },
+                ))),
                 Arc::new(use_op.dupe()),
             );
             rec_flow(

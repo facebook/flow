@@ -58,6 +58,7 @@ use flow_typing_type::type_::FunImplicitReturnData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::FunReturnData;
 use flow_typing_type::type_::IndexedTypeAccessData;
+use flow_typing_type::type_::IndexerKeyCompatibilityData;
 use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
 use flow_typing_type::type_::MergedDeclarationData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
@@ -7164,6 +7165,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             },
                         ) => Arc::new(VirtualFrameUseOp::ArrayElementCompatibility(Box::new(
                             ArrayElementCompatibilityData {
+                                lower: lower.dupe(),
+                                upper: upper.dupe(),
+                                lower_t: f(lower_t.clone()),
+                                upper_t: f(upper_t.clone()),
+                            },
+                        ))),
+                        VirtualFrameUseOp::IndexerKeyCompatibility(
+                            box IndexerKeyCompatibilityData {
+                                lower,
+                                upper,
+                                lower_t,
+                                upper_t,
+                            },
+                        ) => Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility(Box::new(
+                            IndexerKeyCompatibilityData {
                                 lower: lower.dupe(),
                                 upper: upper.dupe(),
                                 lower_t: f(lower_t.clone()),

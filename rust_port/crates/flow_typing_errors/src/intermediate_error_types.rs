@@ -1229,7 +1229,7 @@ pub enum Frame<L: Dupe> {
         incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
     },
     FrameIndexerPropertyKey {
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, VirtualReason<L>)>,
     },
     FrameTypeArgument(VirtualReason<L>),
     FrameTypeParameterBound(FlowSmolStr),

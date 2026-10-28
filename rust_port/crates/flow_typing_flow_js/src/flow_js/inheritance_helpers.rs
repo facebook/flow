@@ -16,6 +16,7 @@ use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::DerivedReference;
+use flow_typing_type::type_::IndexerKeyCompatibilityData;
 use flow_typing_type::type_::LookupDefaultResult;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::NonstrictReturningData;
@@ -340,10 +341,18 @@ pub(super) fn inst_structural_subtype<'cx>(
                             env,
                             Some(trace),
                             UseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
-                                    lower: lreason.dupe(),
-                                    upper: reason_struct.dupe(),
-                                }),
+                                Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility(Box::new(
+                                    IndexerKeyCompatibilityData {
+                                        lower: lreason.dupe(),
+                                        upper: reason_struct.dupe(),
+                                        lower_t: flow_js_utils::type_or_type_desc_for_error(
+                                            &indexer_subtyping.lower,
+                                        ),
+                                        upper_t: flow_js_utils::type_or_type_desc_for_error(
+                                            &indexer_subtyping.upper,
+                                        ),
+                                    },
+                                ))),
                                 Arc::new(use_op.dupe()),
                             ),
                             false,

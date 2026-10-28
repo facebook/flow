@@ -57,6 +57,7 @@ use crate::type_::GetPropTData;
 use crate::type_::HasOwnPropTData;
 use crate::type_::ImplicitInstantiationTvarData;
 use crate::type_::IndexedTypeAccessData;
+use crate::type_::IndexerKeyCompatibilityData;
 use crate::type_::JSXCreateElementData;
 use crate::type_::MapTypeTData;
 use crate::type_::MappedTypeKeyCompatibilityData;
@@ -1431,10 +1432,17 @@ where
                 upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
             })),
             ImplicitTypeParam => ImplicitTypeParam,
-            IndexerKeyCompatibility { lower, upper } => IndexerKeyCompatibility {
+            IndexerKeyCompatibility(box IndexerKeyCompatibilityData {
+                lower,
+                upper,
+                lower_t,
+                upper_t,
+            }) => IndexerKeyCompatibility(Box::new(IndexerKeyCompatibilityData {
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
-            },
+                lower_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_t),
+                upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
+            })),
             OpaqueTypeLowerBoundCompatibility { lower, upper } => {
                 OpaqueTypeLowerBoundCompatibility {
                     lower: mod_reason(lower),
