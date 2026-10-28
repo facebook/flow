@@ -1060,7 +1060,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:98:3
 
-Cannot call `assertWithMessage` because function [1] requires another argument. [incompatible-type]
+Cannot call `assertWithMessage` because `(condition: boolean, message: string) => asserts condition` [1] requires
+another argument. [incompatible-type]
 
    local.js:98:3
    98|   assertWithMessage(false); // error: missing required argument

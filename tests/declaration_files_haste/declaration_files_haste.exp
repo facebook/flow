@@ -111,7 +111,9 @@ References:
 
 Error --------------------------------------------------------------------------------- generic_record_operations.js:4:5
 
-Cannot call `GenericRecord` because function [1] requires another argument. [incompatible-type]
+Cannot call `GenericRecord` because
+`(value: {readonly bar: string, readonly baz?: ?List<string>, readonly fn?: ?GenericFn, readonly foo:...` [1] requires
+another argument. [incompatible-type]
 
    generic_record_operations.js:4:5
     4| new GenericRecord(); // ERROR

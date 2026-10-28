@@ -102,7 +102,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ all.js:22:9
 
-Cannot call `Promise.all` because function [1] requires another argument. [incompatible-type]
+Cannot call `Promise.all` because
+`(values: Array<unknown>) => Promise<Array<unknown> extends ReadonlyArray<unknown> ? {-readonly [P in...` [1] requires
+another argument. [incompatible-type]
 
    all.js:22:9
    22| Promise.all<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
@@ -132,8 +134,10 @@ References:
 Error ------------------------------------------------------------------------------------------------ allSettled.js:2:9
 
 Cannot call `Promise.allSettled` because: [incompatible-type]
- - Either function type [1] requires another argument from call of method `allSettled` [2].
- - Or function type [3] requires another argument from call of method `allSettled` [2].
+ - Either `(values: Array<unknown>) => Promise<{-readonly [P in keyof Array<unknown>]: PromiseSettledResult<$Al...` [1]
+   requires another argument from call of method `allSettled` [2].
+ - Or `(values: Iterable<Array<unknown> | PromiseLike<Array<unknown>>>) => Promise<Array<PromiseSettledResu...` [3]
+   requires another argument from call of method `allSettled` [2].
 
    allSettled.js:2:9
     2| Promise.allSettled<Array<unknown>>(); // Error: expected $Iterable instead of undefined (too few arguments)
@@ -212,8 +216,10 @@ References:
 Error ------------------------------------------------------------------------------------------------------- any.js:2:9
 
 Cannot call `Promise.any` because: [incompatible-type]
- - Either function type [1] requires another argument from call of method `any` [2].
- - Or function type [3] requires another argument from call of method `any` [2].
+ - Either `(values: Array<unknown>) => Promise<Awaited<Array<unknown>[number]>>` [1] requires another argument from call
+   of method `any` [2].
+ - Or `(values: Iterable<Array<unknown> | PromiseLike<Array<unknown>>>) => Promise<Awaited<Array<unknown>>>` [3]
+   requires another argument from call of method `any` [2].
 
    any.js:2:9
     2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)

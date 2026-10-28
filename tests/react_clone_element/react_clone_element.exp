@@ -1,10 +1,14 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:19:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either function type [1] requires another argument from call of method `cloneElement` [2].
- - Or function type [3] requires another argument from call of method `cloneElement` [2].
- - Or function type [4] requires another argument from call of method `cloneElement` [2].
- - Or function type [5] requires another argument from call of method `cloneElement` [2].
+ - Either `(element: void, props?: ?Partial<$JSXIntrinsics[empty]["props"]>, ...children: ReadonlyArray<React.N...` [1]
+   requires another argument from call of method `cloneElement` [2].
+ - Or `(element: void, props?: ?Partial<Readonly<{...$Exact<any>, key: React.Key}>>) => void` [3] requires another
+   argument from call of method `cloneElement` [2].
+ - Or `(element: void, props: ?Partial<Readonly<{...$Exact<any>, key: React.Key}>>, children: any["children...` [4]
+   requires another argument from call of method `cloneElement` [2].
+ - Or `(element: void, props: ?Partial<Readonly<{...$Exact<any>, key: React.Key}>>, firstChild: any["childr...` [5]
+   requires another argument from call of method `cloneElement` [2].
 
    test.js:19:7
     19| React.cloneElement(); // Error: Needs a minimum of two arguments.

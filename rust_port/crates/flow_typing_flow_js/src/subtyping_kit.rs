@@ -1064,6 +1064,7 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                                     n,
                                     op: ureason.dupe(),
                                     def: lreason.dupe(),
+                                    def_t: lower_t.clone(),
                                 },
                             ))),
                             Arc::new(use_op.dupe()),

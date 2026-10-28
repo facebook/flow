@@ -703,7 +703,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- private_constructor.js:13:5
 
-Cannot call `Singleton` because function [1] requires another argument. [incompatible-type]
+Cannot call `Singleton` because `(x: number) => void` [1] requires another argument. [incompatible-type]
 
    private_constructor.js:13:5
    13| new Singleton(); // ERROR: requires `x` arg

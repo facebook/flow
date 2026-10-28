@@ -106,6 +106,16 @@ pub(super) fn multiflow_full<'cx>(
         arglist,
         parlist,
     )?;
+    if unused_parameters.is_empty() {
+        return Ok(());
+    }
+    let def_t = flow_js_utils::type_or_type_desc_for_error(&Type::new(TypeInner::DefT(
+        def_reason.dupe(),
+        DefT::new(DefTInner::FunT(
+            dummy_static(def_reason.dupe()),
+            Rc::new(ft.clone()),
+        )),
+    )));
     for (n, (_, param)) in ((parlist_len as i32) - (unused_parameters.len() as i32) + 1..)
         .zip(unused_parameters.iter())
     {
@@ -115,6 +125,7 @@ pub(super) fn multiflow_full<'cx>(
                     n,
                     op: reason_op.dupe(),
                     def: def_reason.dupe(),
+                    def_t: def_t.clone(),
                 },
             ))),
             Arc::new(use_op.dupe()),

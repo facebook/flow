@@ -212,7 +212,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- globals.js:5:13
 
-Cannot call `Promise` because function [1] requires another argument. [incompatible-type]
+Cannot call `Promise` because
+`(executor: (resolve: (value: Promise<string> | string) => void, reject: (reason: any) => void) => un...` [1] requires
+another argument. [incompatible-type]
 
    globals.js:5:13
     5| var y = new Promise<string>();
@@ -632,7 +634,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:1
 
-Cannot call `f` because function [1] requires another argument. [incompatible-type]
+Cannot call `f` because `(x: number) => string` [1] requires another argument. [incompatible-type]
 
    test.js:34:1
    34| f() as string;

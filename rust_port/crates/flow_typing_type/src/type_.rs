@@ -814,21 +814,45 @@ pub struct ClassImplementsCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord>
     pub implements: VirtualReason<L>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
+/// Compared without `def_t`: the type is what the error prints, and must not tell apart errors or
+/// constraints that are otherwise the same.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FunMissingArgData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub n: i32,
     pub op: VirtualReason<L>,
     pub def: VirtualReason<L>,
+    pub def_t: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for FunMissingArgData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.n == other.n && self.op == other.op && self.def == other.def
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for FunMissingArgData<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Hash> Hash for FunMissingArgData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.n.hash(state);
+        self.op.hash(state);
+        self.def.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for FunMissingArgData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for FunMissingArgData<L> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.n
+            .cmp(&other.n)
+            .then_with(|| self.op.cmp(&other.op))
+            .then_with(|| self.def.cmp(&other.def))
+    }
 }
 
 /// Compared without `upper_t`: the type is what the error prints, and must not tell apart errors

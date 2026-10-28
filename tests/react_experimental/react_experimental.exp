@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------- startTransition.js:8:7
 
-Cannot call `React.startTransition` because function [1] requires another argument. [incompatible-type]
+Cannot call `React.startTransition` because `(callback: () => void | Promise<void>) => void` [1] requires another
+argument. [incompatible-type]
 
    startTransition.js:8:7
       8| React.startTransition(); // Error: function requires another argument
@@ -64,7 +65,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:16:1
 
-Cannot call `startTransition` because function [1] requires another argument. [incompatible-type]
+Cannot call `startTransition` because `(() => void | Promise<void>) => void` [1] requires another argument.
+[incompatible-type]
 
    useTransition_hook.js:16:1
      16| startTransition(); // Error: function requires another argument

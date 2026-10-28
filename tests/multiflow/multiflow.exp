@@ -18,8 +18,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:11:7
 
-Cannot call `apply` with `noRest1` bound to `fn` because function [1] requires another argument from function type [2].
-[incompatible-type]
+Cannot call `apply` with `noRest1` bound to `fn` because `(x: "hi", y: 123) => true` [1] requires another argument from
+function type [2]. [incompatible-type]
 
    apply.js:11:7
    11| apply(noRest1, ['hi']); // Error - too few args
@@ -108,8 +108,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:30:11
 
-Cannot call `applyType` with `noRest2` bound to `fn` because function [1] requires another argument from function
-type [2]. [incompatible-type]
+Cannot call `applyType` with `noRest2` bound to `fn` because `(x: "hi", y: 123) => true` [1] requires another argument
+from function type [2]. [incompatible-type]
 
    apply.js:30:11
    30| applyType(noRest2, ['hi']); // Error - too few args

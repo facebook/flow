@@ -279,7 +279,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:15:1
 
-Cannot call `test.apply` because function [1] requires another argument from function type [2]. [incompatible-type]
+Cannot call `test.apply` because `(this: number | string, a: string, b: number) => number` [1] requires another argument
+from function type [2]. [incompatible-type]
 
    apply.js:15:1
     15| test.apply("", [""]); // error: void ~> number
@@ -681,7 +682,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:12:1
 
-Cannot call `test.call` because function [1] requires another argument from function type [2]. [incompatible-type]
+Cannot call `test.call` because `(this: number | string, a: string, b: number) => number` [1] requires another argument
+from function type [2]. [incompatible-type]
 
    call.js:12:1
     12| test.call("", ""); // error: void ~> number
@@ -1196,7 +1198,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:64:1
 
-Cannot call `requires_first_param` because function [1] requires another argument. [incompatible-type]
+Cannot call `requires_first_param` because `(x: number, ...rest: Array<number>) => void` [1] requires another argument.
+[incompatible-type]
 
    rest.js:64:1
    64| requires_first_param(); // Error: missing first arg

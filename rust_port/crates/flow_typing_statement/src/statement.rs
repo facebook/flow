@@ -14357,6 +14357,12 @@ fn static_method_call_object<'a>(
                     def: reason.dupe(),
                     op: reason.dupe(),
                     n: 0,
+                    def_t: TypeOrTypeDescT::TypeDesc(
+                        reason
+                            .desc(true)
+                            .cloned()
+                            .map_or(ErrorTypeDesc::Unknown, ErrorTypeDesc::ReasonDesc),
+                    ),
                 }))),
                 Arc::new(use_op),
             );

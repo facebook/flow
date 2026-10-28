@@ -63,8 +63,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- method_bivariance.ts:78:3
 
-Cannot assign object literal to `tooManyParams` because in property `cb`: function [1] requires another argument from
-function type [2]. [incompatible-type]
+Cannot assign object literal to `tooManyParams` because in property `cb`: `(x: Dog, y: number) => void` [1] requires
+another argument from function type [2]. [incompatible-type]
 
    method_bivariance.ts:78:3
    78|   cb(x: Dog, y: number): void {}, // ERROR: missing arg `y` when called with the target's arity
@@ -245,8 +245,8 @@ References:
 Error ---------------------------------------------------------------------------------------- optional_methods.ts:63:39
 
 Cannot assign `extraArgument` to `arityMismatch` because `{cb(value: Dog, extra: number): void}` [1] is incompatible
-with `OptionalMethod` [2]. For example, function type [3] requires another argument from function type [4].
-[incompatible-type]
+with `OptionalMethod` [2]. For example, `(value: Dog, extra: number) => void` [3] requires another argument from
+function type [4]. [incompatible-type]
 
    optional_methods.ts:63:39
    63| const arityMismatch: OptionalMethod = extraArgument; // ERROR

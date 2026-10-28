@@ -220,7 +220,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `genericOverloaded` because: [incompatible-type]
  - Either `1` [1] is incompatible with `string` [2].
- - Or function type [3] requires another argument from call of `genericOverloaded` [4].
+ - Or `(fn: (any | 1) => any | 1, x: any | 1, y: boolean) => any | 1` [3] requires another argument from call of
+   `genericOverloaded` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

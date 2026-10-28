@@ -409,8 +409,8 @@
 [0m[0m
 [0m[31mError ------------------------------------------------------------------------------------- function-primary-loc.js:31:8[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0;1m{fn2: () => void}[0m[0m[0m[0m [0m[0mbecause[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mfn2[0m[0m:[0m[0m [0m[0m[0m[0;4mfunction[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mrequires[0m[0m [0m[0manother[0m[0m [0m[0margument[0m[0m
-[0m[0mfrom[0m[0m [0m[0m[0m[0;4mfunction[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0;1m{fn2: () => void}[0m[0m[0m[0m [0m[0mbecause[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mfn2[0m[0m:[0m[0m [0m[0m[0m[0;4m[0m[0;1;4m(x: number) => void[0m[0;4m[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mrequires[0m[0m [0m[0manother[0m[0m
+[0m[0margument[0m[0m [0m[0mfrom[0m[0m [0m[0m[0m[0;4mfunction[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
 [0m[0m
 [0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m [0m[0m[0m[0;2m16[0m[0;2m|[0m[0m [0m[0;2mdeclare function myFn2[0m[36m(x: number): void[0m[0;2m;[0m[0m
 [0m[0m       [0m[0;2m:[0m[0m
@@ -4637,8 +4637,8 @@ References:
 [0m[0m
 [0m[31mError ------------------------------------------------------------------------------------- function-primary-loc.js:31:8[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0;1m{fn2: () => void}[0m[0m[0m[0m [0m[0mbecause[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mfn2[0m[0m:[0m[0m [0m[0m[0m[0;4mfunction[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mrequires[0m[0m [0m[0manother[0m[0m [0m[0margument[0m[0m
-[0m[0mfrom[0m[0m [0m[0m[0m[0;4mfunction[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0;1m{fn2: () => void}[0m[0m[0m[0m [0m[0mbecause[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mfn2[0m[0m:[0m[0m [0m[0m[0m[0;4m[0m[0;1;4m(x: number) => void[0m[0;4m[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mrequires[0m[0m [0m[0manother[0m[0m
+[0m[0margument[0m[0m [0m[0mfrom[0m[0m [0m[0m[0m[0;4mfunction[0m[0;4m [0m[0;4mtype[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
 [0m[0m
 [0m[0m   [0m[0mfunction-primary-loc.js:31:8[0m[0m
 [0m[0m   [0m[0;2m31[0m[0;2m|[0m[0m [0m[0;2m  fn2: [0m[31mmyFn2[0m[0;2m, // Error: We should point to just the `myFn1` property.[0m[0m

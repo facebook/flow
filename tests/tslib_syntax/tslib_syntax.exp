@@ -1135,7 +1135,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:26:5
 
-Cannot call `BarCtor` because function [1] requires another argument. [incompatible-type]
+Cannot call `BarCtor` because `(x: string) => Bar` [1] requires another argument. [incompatible-type]
 
    object_construct_sig_usage.js:26:5
    26| new BarCtor(); // ERROR — too few arguments

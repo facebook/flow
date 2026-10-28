@@ -12,7 +12,6 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
-use flow_common::reason::ReasonDescFunction;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
@@ -3531,25 +3530,21 @@ where
     };
 
     let missing_argument_message =
-        |def: &VirtualReason<L>, op: &VirtualReason<L>, inner_use_op: &VirtualUseOp<L>| {
+        |def: MessageTypeReferenceData<L>,
+         op: &VirtualReason<L>,
+         inner_use_op: &VirtualUseOp<L>| {
             if let VirtualUseOp::Op(inner_root) = inner_use_op
                 && matches!(
                     inner_root.as_ref(),
                     VirtualRootUseOp::FunCall(..) | VirtualRootUseOp::FunCallMethod(..)
                 )
             {
-                let def = def.dupe().update_desc(|desc| match desc {
-                    Some(VirtualReasonDesc::RFunctionType) => {
-                        Some(VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal))
-                    }
-                    _ => desc,
-                });
                 Message::MessageFunctionRequiresAnotherArgument { def, from: None }
             } else if op.desc(false).is_none()
                 && let Some(kind) = implicit_instantiation_reference_kind(inner_use_op)
             {
                 Message::MessageFunctionRequiresAnotherArgumentFromCall {
-                    def: def.dupe(),
+                    def,
                     call: ImplicitInstantiationReferenceData {
                         loc: op.loc().dupe(),
                         kind: kind.dupe(),
@@ -3557,7 +3552,7 @@ where
                 }
             } else {
                 Message::MessageFunctionRequiresAnotherArgument {
-                    def: def.dupe(),
+                    def,
                     from: Some(op.dupe()),
                 }
             }
@@ -3623,8 +3618,14 @@ where
             },
 
             VirtualUseOp::Frame(frame, inner_use_op) => match frame.as_ref() {
-                VirtualFrameUseOp::FunMissingArg(box FunMissingArgData { def, op, .. }) => {
-                    let message = missing_argument_message(def, op, inner_use_op);
+                VirtualFrameUseOp::FunMissingArg(box FunMissingArgData {
+                    def, op, def_t, ..
+                }) => {
+                    let message = missing_argument_message(
+                        printed_type_reference(def, def_t),
+                        op,
+                        inner_use_op,
+                    );
                     mk_use_op_error_reason(
                         op,
                         use_op.clone(),
@@ -3884,10 +3885,15 @@ where
                     }),
                 )
             } else if let VirtualUseOp::Frame(frame, inner_use_op) = &use_op
-                && let VirtualFrameUseOp::FunMissingArg(box FunMissingArgData { def, op, .. }) =
-                    frame.as_ref()
+                && let VirtualFrameUseOp::FunMissingArg(box FunMissingArgData {
+                    def,
+                    op,
+                    def_t,
+                    ..
+                }) = frame.as_ref()
             {
-                let message = missing_argument_message(def, op, inner_use_op);
+                let message =
+                    missing_argument_message(printed_type_reference(def, def_t), op, inner_use_op);
                 mk_use_op_error_reason(op, use_op.clone(), explanation, message)
             } else {
                 let (((lower_loc, lower_desc), (upper_loc, upper_desc)), use_op) =
@@ -10892,16 +10898,19 @@ where
                 ref_of_type_desc(upper_loc, &rendered_type_desc(upper_desc)),
             ]),
             MessageFunctionRequiresAnotherArgument { def, from } => match from {
-                None => friendly::Message(vec![ref_(def), text(" requires another argument")]),
+                None => friendly::Message(vec![
+                    ref_of_type_desc(&def.loc, &def.desc),
+                    text(" requires another argument"),
+                ]),
                 Some(from) => friendly::Message(vec![
-                    ref_(def),
+                    ref_of_type_desc(&def.loc, &def.desc),
                     text(" requires another argument from "),
                     ref_(from),
                 ]),
             },
             MessageFunctionRequiresAnotherArgumentFromCall { def, call } => {
                 friendly::Message(vec![
-                    ref_(def),
+                    ref_of_type_desc(&def.loc, &def.desc),
                     text(" requires another argument from "),
                     render_implicit_instantiation_reference(call),
                 ])

@@ -180,7 +180,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_declare_methods.js:26:21
 
-Cannot call `WithConstructor` because function [1] requires another argument. [incompatible-type]
+Cannot call `WithConstructor` because `(x: string) => any` [1] requires another argument. [incompatible-type]
 
    use_declare_methods.js:26:21
    26| const badCtor = new WithConstructor(); // ERROR: missing argument
@@ -195,8 +195,8 @@ References:
 Error ------------------------------------------------------------------------------------- use_declare_methods.js:31:25
 
 Cannot call `WithOverloadedConstructor` because: [incompatible-type]
- - Either function [1] requires another argument from new `WithOverloadedConstructor` [2].
- - Or function [3] requires another argument from new `WithOverloadedConstructor` [2].
+ - Either `(x: string) => any` [1] requires another argument from new `WithOverloadedConstructor` [2].
+ - Or `(x: number) => any` [3] requires another argument from new `WithOverloadedConstructor` [2].
 
    use_declare_methods.js:31:25
    31| const badOverCtor = new WithOverloadedConstructor(); // ERROR: missing argument (both overloads require one)

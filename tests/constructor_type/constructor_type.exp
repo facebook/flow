@@ -86,8 +86,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- constructor_type.js:81:36
 
-Cannot assign `NeedsArg` to `fNeeds` because function [1] requires another argument from function type [2].
-[incompatible-type]
+Cannot assign `NeedsArg` to `fNeeds` because `(x: number) => NeedsArg` [1] requires another argument from function
+type [2]. [incompatible-type]
 
    constructor_type.js:81:36
    81| const fNeeds: new () => NeedsArg = NeedsArg;  // ERROR — arity mismatch

@@ -2432,12 +2432,12 @@ pub enum Message<L: Dupe> {
     MessageExportValueAsType(FlowSmolStr),
 
     MessageFunctionRequiresAnotherArgument {
-        def: VirtualReason<L>,
+        def: MessageTypeReferenceData<L>,
         from: Option<VirtualReason<L>>,
     },
 
     MessageFunctionRequiresAnotherArgumentFromCall {
-        def: VirtualReason<L>,
+        def: MessageTypeReferenceData<L>,
         call: ImplicitInstantiationReferenceData<L>,
     },
 

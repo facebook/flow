@@ -31,7 +31,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:18:10
 
-Cannot call `f` because function [1] requires another argument. [incompatible-type]
+Cannot call `f` because `(x: number) => number` [1] requires another argument. [incompatible-type]
 
    A.js:18:10
    18|   return f();
@@ -105,7 +105,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- B.js:11:30
 
-Cannot assign function to `d` because function [1] requires another argument from function type [2]. [incompatible-type]
+Cannot assign function to `d` because `(x: number) => string` [1] requires another argument from function type [2].
+[incompatible-type]
 
    B.js:11:30
    11| var d: { (): string, ... } = function (x: number): string { return "hi"; };
@@ -153,7 +154,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:18:10
 
-Cannot return `x` because function type [1] requires another argument from function type [2]. [incompatible-type]
+Cannot return `x` because `(z: number) => string` [1] requires another argument from function type [2].
+[incompatible-type]
 
    C.js:18:10
    18|   return x;
@@ -187,7 +189,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- D.js:12:3
 
-Cannot assign function to `c` because function [1] requires another argument from function type [2]. [incompatible-type]
+Cannot assign function to `c` because `(x: number) => string` [1] requires another argument from function type [2].
+[incompatible-type]
 
    D.js:12:3
    12|   function (x: number): string { return "hi"; };
@@ -203,7 +206,7 @@ Error --------------------------------------------------------------------------
 
 Cannot return `x` because: [incompatible-type]
  - Either in the return value: `string` [1] is incompatible with `number` [2].
- - Or function type [3] requires another argument from function type [4].
+ - Or `(x: number) => string` [3] requires another argument from function type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

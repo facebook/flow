@@ -266,7 +266,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:12:1
 
-Cannot call `o.m.call` because function type [1] requires another argument from function type [2]. [incompatible-type]
+Cannot call `o.m.call` because `(this: {x: number, ...}, y: number) => void` [1] requires another argument from function
+type [2]. [incompatible-type]
 
    rejected.js:12:1
     12| o.m.call(); // error: no first argument
@@ -318,8 +319,10 @@ References:
 Error ------------------------------------------------------------------------------------------------- rejected.js:13:5
 
 Cannot call `o.m.bind` because: [incompatible-type]
- - Either function type [1] requires another argument from call of method `bind` [2].
- - Or function type [3] requires another argument from call of method `bind` [2].
+ - Either `(this: (this: {x: number, ...}, y: number) => void, thisArg: ThisParameterType<(this: {x: number, .....` [1]
+   requires another argument from call of method `bind` [2].
+ - Or `(this: (this: void, ...args: [...Readonly<[]>, ...empty]) => void, thisArg: void, ...args: Readonly<...` [3]
+   requires another argument from call of method `bind` [2].
 
    rejected.js:13:5
     13| o.m.bind(); // error: no first argument

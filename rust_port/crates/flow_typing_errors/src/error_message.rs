@@ -55,6 +55,7 @@ use flow_typing_type::type_::ComponentRestParamCompatibilityData;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::EvalMappedTypeData;
 use flow_typing_type::type_::FunImplicitReturnData;
+use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::FunReturnData;
 use flow_typing_type::type_::IndexedTypeAccessData;
@@ -7147,6 +7148,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             lower_t: f(lower_t.clone()),
                             upper_t: f(upper_t.clone()),
                         }))),
+                        VirtualFrameUseOp::FunMissingArg(box FunMissingArgData {
+                            n,
+                            op,
+                            def,
+                            def_t,
+                        }) => Arc::new(VirtualFrameUseOp::FunMissingArg(Box::new(
+                            FunMissingArgData {
+                                n: *n,
+                                op: op.dupe(),
+                                def: def.dupe(),
+                                def_t: f(def_t.clone()),
+                            },
+                        ))),
                         VirtualFrameUseOp::FunReturn(box FunReturnData {
                             lower,
                             upper,

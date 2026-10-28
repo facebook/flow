@@ -1394,11 +1394,12 @@ where
                 receiver_loc: f(receiver_loc),
                 receiver: Box::new(type_or_type_desc::map_loc(|l: &L| f(l.dupe()), receiver)),
             })),
-            FunMissingArg(box FunMissingArgData { n, op, def }) => {
+            FunMissingArg(box FunMissingArgData { n, op, def, def_t }) => {
                 FunMissingArg(Box::new(FunMissingArgData {
                     n,
                     op: mod_reason(op),
                     def: mod_reason(def),
+                    def_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), def_t),
                 }))
             }
             FunParam(box FunParamData {

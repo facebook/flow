@@ -1763,7 +1763,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- useCallback_hook.js:19:3
 
-Cannot call `callback` because function [1] requires another argument. [incompatible-type]
+Cannot call `callback` because `(num: number, str: string) => void` [1] requires another argument. [incompatible-type]
 
    useCallback_hook.js:19:3
    19|   callback(true); // Error: function requires another argument.
@@ -1935,7 +1935,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- useEffect_hook.js:4:9
 
-Cannot call `React.useEffect` because function [1] requires another argument. [incompatible-type]
+Cannot call `React.useEffect` because `(create: () => MaybeCleanUpFn, inputs?: ?ReadonlyArray<unknown>) => void` [1]
+requires another argument. [incompatible-type]
 
    useEffect_hook.js:4:9
       4|   React.useEffect(); // Error: function requires another argument.
@@ -2030,7 +2031,9 @@ References:
 
 Error ---------------------------------------------------------------------------------- useImperativeHandle_hook.js:4:9
 
-Cannot call `React.useImperativeHandle` because function [1] requires another argument. [incompatible-type]
+Cannot call `React.useImperativeHandle` because
+`(ref: ?React.RefSetter<unknown>, create: () => unknown, inputs: ?ReadonlyArray<unknown>) => void` [1] requires another
+argument. [incompatible-type]
 
    useImperativeHandle_hook.js:4:9
       4|   React.useImperativeHandle(); // Error: function requires another argument.
@@ -2099,7 +2102,9 @@ References:
 
 Error -------------------------------------------------------------------------------------- useLayoutEffect_hook.js:4:9
 
-Cannot call `React.useLayoutEffect` because function [1] requires another argument. [incompatible-type]
+Cannot call `React.useLayoutEffect` because
+`(create: () => MaybeCleanUpFn, inputs?: ?ReadonlyArray<unknown>) => void` [1] requires another argument.
+[incompatible-type]
 
    useLayoutEffect_hook.js:4:9
       4|   React.useLayoutEffect(); // Error: function requires another argument.
@@ -2195,7 +2200,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- useMemo_hook.js:4:9
 
-Cannot call `React.useMemo` because function [1] requires another argument. [incompatible-type]
+Cannot call `React.useMemo` because `(create: () => any, inputs: ?ReadonlyArray<unknown>) => any` [1] requires another
+argument. [incompatible-type]
 
    useMemo_hook.js:4:9
       4|   React.useMemo(); // Error: function requires another argument.
@@ -2358,9 +2364,12 @@ References:
 Error ------------------------------------------------------------------------------------------- useReducer_hook.js:4:9
 
 Cannot call `React.useReducer` because: [incompatible-type]
- - Either function type [1] requires another argument from call of method `useReducer` [2].
- - Or function type [3] requires another argument from call of method `useReducer` [2].
- - Or function type [4] requires another argument from call of method `useReducer` [2].
+ - Either `(reducer: (empty, empty) => empty, initialState: empty) => [empty, Dispatch<empty>]` [1] requires another
+   argument from call of method `useReducer` [2].
+ - Or `(reducer: (empty, empty) => empty, initialState: empty, init: void) => [empty, Dispatch<empty>]` [3] requires
+   another argument from call of method `useReducer` [2].
+ - Or `(reducer: (empty, empty) => empty, initialArg: empty, init: (empty) => empty) => [empty, Dispatch<em...` [4]
+   requires another argument from call of method `useReducer` [2].
 
    useReducer_hook.js:4:9
       4|   React.useReducer(); // Error: function requires another argument.
