@@ -91,6 +91,29 @@ describe('Parse errors', () => {
 });
 
 describe('Program source type', () => {
+  const typeOnlySpecifiers = [
+    "import {type T} from './types';",
+    "import {typeof T} from './types';",
+    "import {type T, typeof U} from './types';",
+    'export {type T};',
+    'export {type T as default};',
+    "export {type T, type U} from './types';",
+    'export type {};',
+  ];
+  const runtimeSpecifiers = [
+    "import './value';",
+    "import {} from './value';",
+    "import value, {type T} from './value';",
+    "import * as value from './value';",
+    "import {type T, value} from './value';",
+    "import {type} from './value';",
+    'export {};',
+    "export {} from './value';",
+    'export {type T, value};',
+    'export {type};',
+    "export * as value from './value';",
+  ];
+
   const moduleProgram = {
     type: 'Program',
     sourceType: 'module',
@@ -144,6 +167,71 @@ describe('Program source type', () => {
     expect(parse(scriptSource, {sourceType: 'unambiguous'})).toMatchObject(
       scriptProgram,
     );
+  });
+
+  test('specifier-level type modifiers in ESTree', () => {
+    // All-type specifier lists retain script metadata in both detection modes.
+    for (const sourceOptions of [{}, {sourceType: 'unambiguous'}]) {
+      for (const code of typeOnlySpecifiers) {
+        expect(parse(code, sourceOptions).sourceType).toBe('script'); // OK
+      }
+    }
+
+    // Runtime specifiers and empty markers still select module metadata.
+    for (const code of runtimeSpecifiers) {
+      expect(parse(code).sourceType).toBe('module'); // OK
+    }
+  });
+
+  test('default interface exports in ESTree', () => {
+    const source = 'export default interface I {value: number;}';
+
+    // Type-only default exports retain script metadata during content detection.
+    for (const sourceOptions of [{}, {sourceType: 'unambiguous'}]) {
+      expect(parse(source, sourceOptions).sourceType).toBe('script'); // OK
+    }
+
+    // An explicit module option takes precedence over type-only content.
+    expect(parse(source, {sourceType: 'module'}).sourceType).toBe('module'); // OK
+
+    // Runtime declarations still select module metadata alongside type exports.
+    for (const runtimeDeclaration of [
+      "import value from './value';",
+      'export const value = 1;',
+      'export default 1;',
+    ]) {
+      expect(parse(`${source}\n${runtimeDeclaration}`).sourceType).toBe(
+        'module',
+      ); // OK
+    }
+  });
+
+  test('exported import aliases in ESTree', () => {
+    for (const sourceFilename of ['aliases.ts', 'aliases.d.ts']) {
+      const options = {sourceFilename};
+
+      // Exported value aliases select modules in both AST formats.
+      for (const source of [
+        'export import Alias = Namespace.Alias;',
+        "export import Alias = require('./value');",
+      ]) {
+        expect(parse(source, options).sourceType).toBe('module'); // OK
+        expect(
+          parse(source, {...options, babel: true}).program.sourceType,
+        ).toBe('module'); // OK
+      }
+
+      // Ordinary aliases and type-only aliases retain script metadata.
+      for (const source of [
+        'import Alias = Namespace.Alias;',
+        "import type Alias = require('./types');",
+      ]) {
+        expect(parse(source, options).sourceType).toBe('script'); // OK
+        expect(
+          parse(source, {...options, babel: true}).program.sourceType,
+        ).toBe('script'); // OK
+      }
+    }
   });
 });
 

@@ -402,14 +402,47 @@ function detectSourceType(program: FlowParserProgram): 'script' | 'module' {
       continue;
     }
     switch (stmt.type) {
+      case 'ImportEqualsDeclaration':
+        if (
+          stmt.isExport &&
+          (stmt.importKind === 'value' || stmt.importKind == null)
+        ) {
+          return 'module';
+        }
+        break;
       case 'ImportDeclaration':
-        if (stmt.importKind === 'value' || stmt.importKind == null) {
+        if (
+          (stmt.importKind === 'value' || stmt.importKind == null) &&
+          (stmt.specifiers.length === 0 ||
+            stmt.specifiers.some(
+              specifier =>
+                specifier.type !== 'ImportSpecifier' ||
+                specifier.importKind == null ||
+                specifier.importKind === 'value',
+            ))
+        ) {
           return 'module';
         }
         break;
       case 'ExportDefaultDeclaration':
-        return 'module';
+        if (stmt.declaration?.type !== 'InterfaceDeclaration') {
+          return 'module';
+        }
+        break;
       case 'ExportNamedDeclaration':
+        if (
+          (stmt.exportKind === 'value' || stmt.exportKind == null) &&
+          (stmt.declaration != null ||
+            stmt.specifiers.length === 0 ||
+            stmt.specifiers.some(
+              specifier =>
+                specifier.exportKind == null ||
+                specifier.exportKind === 'value',
+            ))
+        ) {
+          return 'module';
+        }
+        break;
       case 'ExportAllDeclaration':
         if (stmt.exportKind === 'value' || stmt.exportKind == null) {
           return 'module';
