@@ -81,7 +81,7 @@ fn extract_cursor(
 }
 
 fn file_input_from_stdin(filename: Option<&str>) -> flow_server_utils::file_input::FileInput {
-    flow_command_utils::get_file_from_filename_or_stdin(spec().name.as_str(), filename, None)
+    flow_command_utils::get_file_from_filename_or_stdin(spec().name.as_str(), None, filename)
 }
 
 fn parse_args(

@@ -13,6 +13,13 @@ assert_ok "$FLOW" get-def bar.js 7 6 --strip-root --pretty
 printf "Autocomplete class property:\n"
 assert_ok "$FLOW" autocomplete bar.js 7 5 --strip-root --pretty < bar.js.txt
 
+printf "Autocomplete uses stdin contents, not FILE on disk:\n"
+assert_ok "$FLOW" autocomplete bar.js 3 11 --strip-root --pretty <<'EOF'
+// @flow
+const stdinOnly = {stdinOnlyProp: 1};
+stdinOnly.
+EOF
+
 printf "dump types:\n"
 assert_ok "$FLOW" dump-types bar.js --strip-root --pretty
 

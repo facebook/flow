@@ -4,6 +4,8 @@ Get-def class member:
 {"end":5,"endline":4,"line":4,"path":"foo.js","start":3}
 Autocomplete class property:
 {"result":[{"name":"foo","type":"(this: Foo) => void"}]}
+Autocomplete uses stdin contents, not FILE on disk:
+{"result":[{"name":"stdinOnlyProp","type":"number"}]}
 dump types:
 [
   {

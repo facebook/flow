@@ -82,8 +82,8 @@ fn main(args: &arg_spec::Values) {
 
     let file = flow_command_utils::get_file_from_filename_or_stdin(
         spec().name.as_str(),
-        file.as_deref(),
         None,
+        file.as_deref(),
     );
     let flowconfig_name = base_flags.flowconfig_name;
     let root = flow_command_utils::guess_root(

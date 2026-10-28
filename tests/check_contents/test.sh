@@ -47,3 +47,10 @@ assert_errors \
 printf "\n\njson.json\n\n"
 assert_ok \
   $FLOW check-contents --strip-root json.json < json.json
+
+printf "\n\nstdin contents are checked as FILE, not FILE on disk\n\n"
+assert_errors \
+  $FLOW check-contents --strip-root foo.js <<'EOF'
+// @flow
+const x: number = "s";
+EOF

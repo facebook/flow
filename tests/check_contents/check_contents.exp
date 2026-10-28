@@ -135,3 +135,23 @@ Found 1 error
 json.json
 
 File is not @flow!
+
+
+stdin contents are checked as FILE, not FILE on disk
+
+Error ------------------------------------------------------------------------------------------------------ foo.js:2:19
+
+Cannot assign `"s"` to `x` because `"s"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   foo.js:2:19
+   2| const x: number = "s";
+                        ^^^ [1]
+
+References:
+   foo.js:2:10
+   2| const x: number = "s";
+               ^^^^^^ [2]
+
+
+
+Found 1 error
