@@ -1,0 +1,200 @@
+{
+  "body": [
+    {
+      "declaration": {
+        "body": {
+          "callProperties": [],
+          "exact": false,
+          "indexers": [],
+          "internalSlots": [],
+          "loc": {
+            "end": {
+              "column": 59,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 41,
+              "line": 1
+            }
+          },
+          "properties": [
+            {
+              "abstract": false,
+              "init": null,
+              "key": {
+                "loc": {
+                  "end": {
+                    "column": 49,
+                    "line": 1
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 43,
+                    "line": 1
+                  }
+                },
+                "name": "extent",
+                "optional": false,
+                "range": [
+                  43,
+                  49
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "kind": "init",
+              "loc": {
+                "end": {
+                  "column": 57,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 43,
+                  "line": 1
+                }
+              },
+              "method": false,
+              "optional": false,
+              "proto": false,
+              "range": [
+                43,
+                57
+              ],
+              "static": false,
+              "type": "ObjectTypeProperty",
+              "value": {
+                "loc": {
+                  "end": {
+                    "column": 57,
+                    "line": 1
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 51,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  51,
+                  57
+                ],
+                "type": "NumberTypeAnnotation"
+              },
+              "variance": null
+            }
+          ],
+          "range": [
+            41,
+            59
+          ],
+          "type": "ObjectTypeAnnotation"
+        },
+        "extends": [],
+        "id": {
+          "loc": {
+            "end": {
+              "column": 40,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 25,
+              "line": 1
+            }
+          },
+          "name": "GeometryScaling",
+          "optional": false,
+          "range": [
+            25,
+            40
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 59,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 1
+          }
+        },
+        "range": [
+          15,
+          59
+        ],
+        "type": "InterfaceDeclaration",
+        "typeParameters": null
+      },
+      "exportKind": "value",
+      "loc": {
+        "end": {
+          "column": 59,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        59
+      ],
+      "type": "ExportDefaultDeclaration"
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 24,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 15,
+          "line": 1
+        }
+      },
+      "message": "Interfaces are not allowed in untyped mode"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 50,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 49,
+          "line": 1
+        }
+      },
+      "message": "Type annotations are not allowed in untyped mode"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 59,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    59
+  ],
+  "type": "Program"
+}

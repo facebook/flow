@@ -10126,6 +10126,11 @@ where
                             ])
                         }
                     }
+                    ExportDefaultInterface => friendly::Message(vec![
+                        text("Flow doesn't support "),
+                        code("export default interface"),
+                        text(" declarations."),
+                    ]),
                     WithStatement => friendly::Message(vec![
                         text("Flow doesn't support "),
                         code("with"),

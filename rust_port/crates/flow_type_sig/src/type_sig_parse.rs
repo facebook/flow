@@ -14194,6 +14194,9 @@ fn export_default_decl<'arena: 'ast, 'ast>(
 
     match declaration {
         D::Declaration(stmt) => match stmt.deref() {
+            S::InterfaceDeclaration { inner: decl, .. } => {
+                interface_decl(opts, scope, scopes, tbls, decl, &|_, _, _| {});
+            }
             S::ClassDeclaration { loc, inner: decl } => {
                 let loc_node = tbls.push_loc(loc.dupe());
                 match &decl.id {

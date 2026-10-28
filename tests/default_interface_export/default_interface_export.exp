@@ -1,0 +1,21 @@
+Error -------------------------------------------------------------------------------------------- flow_interface.js:1:1
+
+Flow doesn't support `export default interface` declarations. [unsupported-syntax]
+
+   1| export default interface Interface<T = number> { value: T }
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- interface.d.ts:9:1
+
+Flow doesn't support `export default interface` declarations. [unsupported-syntax]
+
+       v------------------------------------------------------------------
+    9| export default interface GeometryScaling<T = number> extends Base {
+   10|   value: T;
+   11| }
+       ^
+
+
+
+Found 2 errors

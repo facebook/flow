@@ -328,13 +328,15 @@ fn check_for_duplicate_exports(env: &mut ParserEnv, stmts: &[ast::statement::Sta
     for stmt in stmts {
         match stmt.deref() {
             StatementInner::ExportDefaultDeclaration { inner, .. } => {
-                record_export(
-                    env,
-                    &mut seen,
-                    ExportKind::ExportValue,
-                    &inner.default,
-                    "default",
-                );
+                let export_kind = match &inner.declaration {
+                    ast::statement::export_default_declaration::Declaration::Declaration(decl)
+                        if matches!(decl.deref(), StatementInner::InterfaceDeclaration { .. }) =>
+                    {
+                        ExportKind::ExportType
+                    }
+                    _ => ExportKind::ExportValue,
+                };
+                record_export(env, &mut seen, export_kind, &inner.default, "default");
             }
             StatementInner::ExportNamedDeclaration { inner, .. } => {
                 if inner.declaration.is_none() {

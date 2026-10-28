@@ -279,6 +279,7 @@ pub enum UnsupportedSyntax {
     TSLibSyntax(TsLibSyntaxKind),
     NamespaceExportDeclaration(NamespaceExportDeclarationKind),
     ExportTypeSpecifierInExportType,
+    ExportDefaultInterface,
     UniqueSymbolPosition,
     UniqueSymbolNotConst,
     UniqueSymbolNotReadOnly,

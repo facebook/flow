@@ -4067,6 +4067,21 @@ fn statement_<'a>(
             })
         }
         StatementInner::ExportDefaultDeclaration { inner, .. } => {
+            if let statement::export_default_declaration::Declaration::Declaration(decl) =
+                &inner.declaration
+                && matches!(decl.deref(), StatementInner::InterfaceDeclaration { .. })
+            {
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        loc.dupe(),
+                        UnsupportedSyntax::ExportDefaultInterface,
+                    ))),
+                );
+                let Ok(stmt_ast) =
+                    polymorphic_ast_mapper::statement(&mut typed_ast_utils::ErrorMapper, stmt);
+                return Ok(stmt_ast);
+            }
             let (t, declaration) = match &inner.declaration {
                 statement::export_default_declaration::Declaration::Declaration(decl_stmt) => {
                     match &**decl_stmt {

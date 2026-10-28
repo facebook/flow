@@ -3127,6 +3127,21 @@ fn export_declaration(
                                     ),
                                     Vec::new(),
                                 ))
+                            } else if peek::token(env) == &TokenKind::TInterface {
+                                let (loc, iface) =
+                                    with_loc(None, env, |env| interface_helper(env, Vec::new()))?;
+                                let interface = statement::Statement::new(
+                                    StatementInner::InterfaceDeclaration {
+                                        loc,
+                                        inner: Arc::new(iface),
+                                    },
+                                );
+                                Ok((
+                                    statement::export_default_declaration::Declaration::Declaration(
+                                        interface,
+                                    ),
+                                    Vec::new(),
+                                ))
                             } else {
                                 // export default [assignment expression];
                                 let mut expr = expression_parser::assignment(env)?;

@@ -1,0 +1,6 @@
+[options]
+all=true
+builtin_lib=core-only
+experimental.tslib_syntax=true
+module.file_ext=.js
+module.file_ext=.d.ts
