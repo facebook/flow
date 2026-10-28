@@ -273,9 +273,7 @@ pub fn subtype_class_component_render<'cx>(
     upper_render: &Type,
 ) -> Result<(), FlowJsException> {
     let name = FlowSmolStr::new_inline("render");
-    let reason_prop = reason_op
-        .dupe()
-        .replace_desc(VirtualReasonDesc::RMethod(Some(name.dupe())));
+    let reason_prop = reason_op.dupe().replace_desc(None);
     let propref = mk_named_prop(reason_prop, false, Name::new(name));
     let tvar = flow_typing_tvar::mk_no_wrap(cx, reason_op);
     let action = MethodAction::CallM(Box::new(CallMData {
