@@ -1280,6 +1280,27 @@ fn call_latent_this_pred<'cx>(
     )
 }
 
+/// The concrete types of `t`, or none when concretizing it fails for a reason other than
+/// cancellation, a timeout or a debug throw.
+fn concrete_types_for_inspection<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    reason: &Reason,
+    t: &Type,
+) -> Result<Vec<Type>, JobError> {
+    match FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason, t) {
+        Ok(ts) => Ok(ts),
+        Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
+        Err(FlowJsException::TimedOut(t)) => Err(JobError::TimedOut(t)),
+        Err(FlowJsException::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
+        Err(_) => Ok(Vec::new()),
+    }
+}
+
+fn is_empty_t(t: &Type) -> bool {
+    matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT))
+}
+
 fn intersect<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
@@ -1287,15 +1308,8 @@ fn intersect<'cx>(
     t2: Type,
 ) -> Result<Type, JobError> {
     fn is_any<'cx>(cx: &mut Context<'cx>, env: &FlowJsEnv, t: &Type) -> Result<bool, JobError> {
-        let ts =
-            FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason_of_t(t), t);
-        match ts {
-            Ok(ts) => Ok(ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..)))),
-            Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
-            Err(FlowJsException::TimedOut(t)) => Err(JobError::TimedOut(t)),
-            Err(FlowJsException::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
-            Err(_) => Ok(false),
-        }
+        let ts = concrete_types_for_inspection(cx, env, reason_of_t(t), t)?;
+        Ok(ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..))))
     }
 
     fn is_null(t: &ConcretizedType) -> bool {
@@ -1428,13 +1442,22 @@ fn intersect<'cx>(
         if depth > 2 {
             return false;
         }
-        let depth = depth + 1;
         ConcretizedType::for_all_concrete_ts(cx, env, t2, &|cx, ct2| {
-            tags_differ(cx, t1, ct2)
-                || ground_types_differ(t1, ct2)
-                || instance_tags_differ(cx, env, depth, t1, ct2)
+            concrete_types_differ(cx, env, depth + 1, t1, ct2)
         })
         .unwrap_or(false)
+    }
+
+    fn concrete_types_differ<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        depth: i32,
+        t1: &ConcretizedType,
+        t2: &ConcretizedType,
+    ) -> bool {
+        tags_differ(cx, t1, t2)
+            || ground_types_differ(t1, t2)
+            || instance_tags_differ(cx, env, depth, t1, t2)
     }
 
     fn try_intersect<'cx>(
@@ -1486,6 +1509,25 @@ fn intersect<'cx>(
             } else {
                 Ok(Some(t1.dupe()))
             }
+        } else {
+            try_intersect_related(cx, env, t1, t2)
+        }
+    }
+
+    // `t1` and `t2` are concrete, neither is `any`, and they are not known to be disjoint.
+    fn try_intersect_related<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<Option<Type>, JobError> {
+        // Only `t2` itself, `empty` and `any` are below a literal, `null` or `void`, so if `t2`
+        // is below `t1` but not equal to it, the speculative check of `t1 <: t2` would fail.
+        if is_literal_value(t2)
+            && !type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2)
+            && type_util::quick_subtype(None::<&mut fn(&Type)>, t2, t1)
+        {
+            Ok(Some(t2.dupe()))
         } else if type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2)
             || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t1, t2)?
         {
@@ -1539,6 +1581,57 @@ fn intersect<'cx>(
         }
     }
 
+    // `t1` is concrete and neither a subtype nor a supertype of the guard `t2` as a whole. Since
+    // `(A | B) & t1 = (A & t1) | (B & t1)`, a union guard is intersected with `t1` one member at a
+    // time, so that members disjoint from `t1` drop out and members comparable with `t1` keep the
+    // more specific type.
+    fn intersect_guard_members<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        reason1: &Reason,
+        t1: &Type,
+        t2: &Type,
+        t2s: &[Type],
+    ) -> Result<Type, JobError> {
+        let r = reason1
+            .dupe()
+            .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
+        let mk_intersection = |t2: &Type| {
+            Type::new(TypeInner::IntersectionT(
+                r.dupe(),
+                inter_rep::make(t2.dupe(), t1.dupe(), Rc::from([])),
+            ))
+        };
+        if t2s.len() < 2 {
+            return Ok(mk_intersection(t2));
+        }
+        let t1_conc = ConcretizedType::wrap_unsafe(t1.dupe());
+        let mut simplified = false;
+        let mut parts = Vec::new();
+        for t2_member in t2s {
+            // `try_intersect` has already ruled out `any` in `t1` and `t2`.
+            let t2_conc = ConcretizedType::wrap_unsafe(t2_member.dupe());
+            if concrete_types_differ(cx, env, 1, &t1_conc, &t2_conc) {
+                simplified = true;
+                continue;
+            }
+            match try_intersect_related(cx, env, t1, t2_member)? {
+                Some(t) => {
+                    simplified = true;
+                    if !is_empty_t(&t) {
+                        parts.push(t);
+                    }
+                }
+                None => parts.push(mk_intersection(t2_member)),
+            }
+        }
+        if simplified {
+            Ok(type_util::union_of_ts(r, parts, None))
+        } else {
+            Ok(mk_intersection(t2))
+        }
+    }
+
     let reason1 = reason_of_t(&t1);
     match try_intersect(
         cx,
@@ -1551,21 +1644,8 @@ fn intersect<'cx>(
         None => {
             // No definitive refinement found. We fall back to more expensive
             //  concretization that breaks up all unions (including optimized ones)
-            let ts = match FlowJs::possible_concrete_types_for_inspection_with_env(
-                cx, env, reason1, &t1,
-            ) {
-                Ok(ts) => ts,
-                Err(FlowJsException::WorkerCanceled(c)) => {
-                    return Err(JobError::Canceled(c));
-                }
-                Err(FlowJsException::TimedOut(t)) => {
-                    return Err(JobError::TimedOut(t));
-                }
-                Err(FlowJsException::DebugThrow { loc }) => {
-                    return Err(JobError::DebugThrow { loc });
-                }
-                Err(_) => Vec::new(),
-            };
+            let ts = concrete_types_for_inspection(cx, env, reason1, &t1)?;
+            let mut t2s: Option<Vec<Type>> = None;
             let mut mapped: Vec<Type> = Vec::new();
             for t1_inner in ts {
                 // t1 was just concretized
@@ -1578,13 +1658,16 @@ fn intersect<'cx>(
                 )? {
                     Some(t) => t,
                     None => {
-                        let r = reason1
-                            .dupe()
-                            .update_desc(|d| d.map(VirtualReasonDesc::invalidate_rtype_alias));
-                        Type::new(TypeInner::IntersectionT(
-                            r,
-                            inter_rep::make(t2.dupe(), t1_inner, Rc::from([])),
-                        ))
+                        let t2s: &[Type] = match &mut t2s {
+                            Some(t2s) => t2s,
+                            slot => slot.insert(concrete_types_for_inspection(
+                                cx,
+                                env,
+                                reason_of_t(&t2),
+                                &t2,
+                            )?),
+                        };
+                        intersect_guard_members(cx, env, reason1, &t1_inner, &t2, t2s)?
                     }
                 };
                 mapped.push(item);
@@ -1619,20 +1702,7 @@ fn type_guard_diff<'cx>(
             changed: true,
         })
     } else {
-        let t1s_conc =
-            match FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason1, t1) {
-                Ok(ts) => ts,
-                Err(FlowJsException::WorkerCanceled(c)) => {
-                    return Err(JobError::Canceled(c));
-                }
-                Err(FlowJsException::TimedOut(t)) => {
-                    return Err(JobError::TimedOut(t));
-                }
-                Err(FlowJsException::DebugThrow { loc }) => {
-                    return Err(JobError::DebugThrow { loc });
-                }
-                Err(_) => Vec::new(),
-            };
+        let t1s_conc = concrete_types_for_inspection(cx, env, reason1, t1)?;
         let mut ts: Vec<Type> = Vec::new();
         let mut changed = false;
         for t1_inner in t1s_conc {

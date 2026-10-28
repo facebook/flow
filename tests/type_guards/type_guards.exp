@@ -2483,31 +2483,6 @@ References:
                  ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:214:5
-
-Cannot cast `x` to `OpaqueOrString` because: [incompatible-type]
- - Either `string` [1] is incompatible with `OpaqueT` [2].
- - Or `OpaqueT` [1] is incompatible with `string` [3].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   refinement.js:214:5
-   214|     x as OpaqueOrString; // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
-            ^
-
-References:
-   refinement.js:211:27
-   211|   declare const x: void | OpaqueOrString;
-                                  ^^^^^^^^^^^^^^ [1]
-   opaque_exports.js:17:30
-    17| export type OpaqueOrString = OpaqueT | string;
-                                     ^^^^^^^ [2]
-   opaque_exports.js:17:40
-    17| export type OpaqueOrString = OpaqueT | string;
-                                               ^^^^^^ [3]
-
-
 Error ---------------------------------------------------------------------------------------------- refinement.js:225:5
 
 Cannot cast `x` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -5221,5 +5196,84 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
                                         ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- union_guard.js:9:5
 
-Found 290 errors
+Cannot cast `x` to `"a"` because `1` [1] is incompatible with `"a"` [2]. [incompatible-type]
+
+   union_guard.js:9:5
+   9|     x as 'a'; // error 1 ~> 'a'
+          ^
+
+References:
+   union_guard.js:6:50
+   6|   declare function isLit(x: unknown): x is 'a' | 1 | true;
+                                                       ^ [1]
+   union_guard.js:9:10
+   9|     x as 'a'; // error 1 ~> 'a'
+               ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- union_guard.js:19:5
+
+Cannot cast `x` to `"" | 0` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   union_guard.js:19:5
+   19|     x as '' | 0; // error void ~> '' | 0
+           ^
+
+References:
+   union_guard.js:15:37
+   15| function falsy(x: string | number | void) {
+                                           ^^^^ [1]
+   union_guard.js:19:10
+   19|     x as '' | 0; // error void ~> '' | 0
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- union_guard.js:36:5
+
+Cannot cast `x` to `string` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   union_guard.js:36:5
+   36|     x as string; // error 1 ~> string
+           ^
+
+References:
+   union_guard.js:33:56
+   33|   declare function isStrOr1(x: unknown): x is string | 1;
+                                                              ^ [1]
+   union_guard.js:36:10
+   36|     x as string; // error 1 ~> string
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- union_guard.js:53:5
+
+Cannot cast `x` to `{readonly b: 0}` because: [incompatible-type]
+ - Either in property `b`: `number` [1] is incompatible with `0` [2].
+ - Or inexact `{readonly a: false, ...}` [3] is incompatible with exact `{readonly b: 0}` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   union_guard.js:53:5
+   53|     x as {readonly b: 0}; // error {readonly a: false, ...} & {readonly b: number} ~> {readonly b: 0}
+           ^
+
+References:
+   union_guard.js:50:34
+   50| function objects(x: {readonly b: number}) {
+                                        ^^^^^^ [1]
+   union_guard.js:53:23
+   53|     x as {readonly b: 0}; // error {readonly a: false, ...} & {readonly b: number} ~> {readonly b: 0}
+                             ^ [2]
+   union_guard.js:51:43
+   51|   declare function isB0(x: unknown): x is {readonly a: false, ...} | {readonly b: 0};
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   union_guard.js:53:10
+   53|     x as {readonly b: 0}; // error {readonly a: false, ...} & {readonly b: number} ~> {readonly b: 0}
+                ^^^^^^^^^^^^^^^ [4]
+
+
+
+Found 293 errors

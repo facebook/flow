@@ -211,7 +211,7 @@ function opaque_types_imported() {
   declare const x: void | OpaqueOrString;
 
   if (isTruthy(x)) {
-    x as OpaqueOrString; // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
+    x as OpaqueOrString; // okay
   }
 }
 
