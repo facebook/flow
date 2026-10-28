@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- combo.js:3:1
 
 Cannot cast `'bar(--color)'` to `CSSVarInter` because `"bar(--color)"` [1] is incompatible with
-``${"var(--"}${string}`` [2]. [incompatible-type]
+`` `${"var(--"}${string}` `` [2]. [incompatible-type]
 
    combo.js:3:1
    3| 'bar(--color)' as CSSVarInter; // ERROR
@@ -15,8 +15,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- combo.js:4:1
 
-Cannot cast `'var(--color'` to `CSSVarInter` because `"var(--color"` [1] is incompatible with ``${string}${")"}`` [2].
-[incompatible-type]
+Cannot cast `'var(--color'` to `CSSVarInter` because `"var(--color"` [1] is incompatible with
+`` `${string}${")"}` `` [2]. [incompatible-type]
 
    combo.js:4:1
    4| 'var(--color' as CSSVarInter; // ERROR
@@ -31,7 +31,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- combo.js:8:1
 
 Cannot cast `'bar(--color)'` to `CSSVarRemainder` because `"bar(--color)"` [1] is incompatible with
-``${"var(--"}${StringSuffix<")">}`` [2]. [incompatible-type]
+`` `${"var(--"}${StringSuffix<")">}` `` [2]. [incompatible-type]
 
    combo.js:8:1
    8| 'bar(--color)' as CSSVarRemainder; // ERROR
@@ -45,7 +45,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- combo.js:9:1
 
-Cannot cast `'var(--color'` to `CSSVarRemainder` because `"color"` [1] is incompatible with ``${string}${")"}`` [2].
+Cannot cast `'var(--color'` to `CSSVarRemainder` because `"color"` [1] is incompatible with `` `${string}${")"}` `` [2].
 [incompatible-type]
 
    combo.js:9:1
@@ -171,7 +171,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- prefix.js:6:1
 
-Cannot cast `'data'` to `DataProp` because `"data"` [1] is incompatible with ``${"data-"}${string}`` [2].
+Cannot cast `'data'` to `DataProp` because `"data"` [1] is incompatible with `` `${"data-"}${string}` `` [2].
 [incompatible-type]
 
    prefix.js:6:1
@@ -186,7 +186,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- prefix.js:7:1
 
-Cannot cast `'x-data-x'` to `DataProp` because `"x-data-x"` [1] is incompatible with ``${"data-"}${string}`` [2].
+Cannot cast `'x-data-x'` to `DataProp` because `"x-data-x"` [1] is incompatible with `` `${"data-"}${string}` `` [2].
 [incompatible-type]
 
    prefix.js:7:1
@@ -201,7 +201,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:12:3
 
-Cannot cast `x` to `DataProp` because `string` [1] is incompatible with ``${"data-"}${string}`` [2]. [incompatible-type]
+Cannot cast `x` to `DataProp` because `string` [1] is incompatible with `` `${"data-"}${string}` `` [2].
+[incompatible-type]
 
    prefix.js:12:3
    12|   x as DataProp; // ERROR
@@ -284,7 +285,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:70:3
 
-Cannot cast `dataProp` to `DataFooProp` because `string` [1] is incompatible with ``${"data-foo-"}${string}`` [2].
+Cannot cast `dataProp` to `DataFooProp` because `string` [1] is incompatible with `` `${"data-foo-"}${string}` `` [2].
 [incompatible-type]
 
    prefix.js:70:3
@@ -344,7 +345,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:84:1
 
-Cannot cast `'$'` to `Price` because `"$"` [1] is incompatible with ``${"$"}${"1" | "2"}`` [2]. [incompatible-type]
+Cannot cast `'$'` to `Price` because `"$"` [1] is incompatible with `` `${"$"}${"1" | "2"}` `` [2]. [incompatible-type]
 
    prefix.js:84:1
    84| '$' as Price; // ERROR
@@ -358,7 +359,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:85:1
 
-Cannot cast `'1'` to `Price` because `"1"` [1] is incompatible with ``${"$"}${"1" | "2"}`` [2]. [incompatible-type]
+Cannot cast `'1'` to `Price` because `"1"` [1] is incompatible with `` `${"$"}${"1" | "2"}` `` [2]. [incompatible-type]
 
    prefix.js:85:1
    85| '1' as Price; // ERROR
@@ -372,7 +373,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:98:3
 
-Cannot cast `x` to `StringPrefix<"foo", "xxx">` because `string` [1] is incompatible with ``${"foo"}${"xxx"}`` [2].
+Cannot cast `x` to `StringPrefix<"foo", "xxx">` because `string` [1] is incompatible with `` `${"foo"}${"xxx"}` `` [2].
 [incompatible-type]
 
    prefix.js:98:3
@@ -390,8 +391,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:106:3
 
-Cannot cast `x` to `StringPrefix<"foo", "xxx">` because `"foobar"` [1] is incompatible with ``${"foo"}${"xxx"}`` [2].
-[incompatible-type]
+Cannot cast `x` to `StringPrefix<"foo", "xxx">` because `"foobar"` [1] is incompatible with
+`` `${"foo"}${"xxx"}` `` [2]. [incompatible-type]
 
    prefix.js:106:3
    106|   x as StringPrefix<'foo', 'xxx'>; // ERROR
@@ -408,7 +409,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:109:3
 
-Cannot cast `x` to `StringPrefix<"f", "bar">` because `"foobar"` [1] is incompatible with ``${"f"}${"bar"}`` [2].
+Cannot cast `x` to `StringPrefix<"f", "bar">` because `"foobar"` [1] is incompatible with `` `${"f"}${"bar"}` `` [2].
 [incompatible-type]
 
    prefix.js:109:3
@@ -459,7 +460,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- prefix.js:130:5
 
 Cannot assign `obj` to `noCopyReadWrite` because in the indexer property's key: `"bar"` [1] is incompatible with
-``${"foo"}${string}`` [2]. [incompatible-type]
+`` `${"foo"}${string}` `` [2]. [incompatible-type]
 
    prefix.js:130:5
    130|     obj; // ERROR
@@ -494,7 +495,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1
 
-Cannot cast empty string to `Percent` because `""` [1] is incompatible with ``${string}${"%"}`` [2]. [incompatible-type]
+Cannot cast empty string to `Percent` because `""` [1] is incompatible with `` `${string}${"%"}` `` [2].
+[incompatible-type]
 
    suffix.js:6:1
    6| '' as Percent; // ERROR
@@ -508,7 +510,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:7:1
 
-Cannot cast `'%6'` to `Percent` because `"%6"` [1] is incompatible with ``${string}${"%"}`` [2]. [incompatible-type]
+Cannot cast `'%6'` to `Percent` because `"%6"` [1] is incompatible with `` `${string}${"%"}` `` [2]. [incompatible-type]
 
    suffix.js:7:1
    7| '%6' as Percent; // ERROR
@@ -522,7 +524,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:12:3
 
-Cannot cast `x` to `Percent` because `string` [1] is incompatible with ``${string}${"%"}`` [2]. [incompatible-type]
+Cannot cast `x` to `Percent` because `string` [1] is incompatible with `` `${string}${"%"}` `` [2]. [incompatible-type]
 
    suffix.js:12:3
    12|   x as Percent; // ERROR
@@ -573,7 +575,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:55:3
 
-Cannot cast `bar` to `FooBar` because `string` [1] is incompatible with ``${string}${"foobar"}`` [2].
+Cannot cast `bar` to `FooBar` because `string` [1] is incompatible with `` `${string}${"foobar"}` `` [2].
 [incompatible-type]
 
    suffix.js:55:3
@@ -633,7 +635,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:69:1
 
-Cannot cast `'!'` to `Exclamation` because `"!"` [1] is incompatible with ``${"woo" | "yay"}${"!"}`` [2].
+Cannot cast `'!'` to `Exclamation` because `"!"` [1] is incompatible with `` `${"woo" | "yay"}${"!"}` `` [2].
 [incompatible-type]
 
    suffix.js:69:1
@@ -648,7 +650,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:70:1
 
-Cannot cast `'yay'` to `Exclamation` because `"yay"` [1] is incompatible with ``${"woo" | "yay"}${"!"}`` [2].
+Cannot cast `'yay'` to `Exclamation` because `"yay"` [1] is incompatible with `` `${"woo" | "yay"}${"!"}` `` [2].
 [incompatible-type]
 
    suffix.js:70:1
@@ -663,7 +665,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:83:3
 
-Cannot cast `x` to `StringSuffix<"!", "xxx">` because `string` [1] is incompatible with ``${"xxx"}${"!"}`` [2].
+Cannot cast `x` to `StringSuffix<"!", "xxx">` because `string` [1] is incompatible with `` `${"xxx"}${"!"}` `` [2].
 [incompatible-type]
 
    suffix.js:83:3
@@ -681,8 +683,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:91:3
 
-Cannot cast `x` to `StringSuffix<"foo", "xxx">` because `"barfoo"` [1] is incompatible with ``${"xxx"}${"foo"}`` [2].
-[incompatible-type]
+Cannot cast `x` to `StringSuffix<"foo", "xxx">` because `"barfoo"` [1] is incompatible with
+`` `${"xxx"}${"foo"}` `` [2]. [incompatible-type]
 
    suffix.js:91:3
    91|   x as StringSuffix<'foo', 'xxx'>; // ERROR
@@ -699,7 +701,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:94:3
 
-Cannot cast `x` to `StringSuffix<"o", "bar">` because `"barfoo"` [1] is incompatible with ``${"bar"}${"o"}`` [2].
+Cannot cast `x` to `StringSuffix<"o", "bar">` because `"barfoo"` [1] is incompatible with `` `${"bar"}${"o"}` `` [2].
 [incompatible-type]
 
    suffix.js:94:3
@@ -749,7 +751,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:32:33
 
-Cannot assign ``...`` to `x` because `string` [1] is incompatible with ``${string}${"px"}`` [2]. [incompatible-type]
+Cannot assign `` `...` `` to `x` because `string` [1] is incompatible with `` `${string}${"px"}` `` [2].
+[incompatible-type]
 
    template.js:32:33
    32|   const x: StringSuffix<'px'> = `${n}dp`; // ERROR
@@ -763,7 +766,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:37:34
 
-Cannot assign ``...`` to `x` because `string` [1] is incompatible with ``${"foo"}${string}`` [2]. [incompatible-type]
+Cannot assign `` `...` `` to `x` because `string` [1] is incompatible with `` `${"foo"}${string}` `` [2].
+[incompatible-type]
 
    template.js:37:34
    37|   const x: StringPrefix<'foo'> = `bar${n}`; // ERROR
@@ -777,7 +781,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:42:33
 
-Cannot assign ``...`` to `x` because `string` [1] is incompatible with ``${string}${"dp"}`` [2]. [incompatible-type]
+Cannot assign `` `...` `` to `x` because `string` [1] is incompatible with `` `${string}${"dp"}` `` [2].
+[incompatible-type]
 
    template.js:42:33
    42|   const x: StringSuffix<'dp'> = `${n}`; // ERROR
@@ -791,7 +796,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:43:34
 
-Cannot assign ``...`` to `y` because `string` [1] is incompatible with ``${"abc"}${string}`` [2]. [incompatible-type]
+Cannot assign `` `...` `` to `y` because `string` [1] is incompatible with `` `${"abc"}${string}` `` [2].
+[incompatible-type]
 
    template.js:43:34
    43|   const y: StringPrefix<'abc'> = `${n}`; // ERROR
@@ -805,7 +811,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- template.js:59:4
 
-Cannot cast `y` to ``${string}px`` because `string` [1] is incompatible with ``${string}px`` [2]. [incompatible-type]
+Cannot cast `y` to `` `${string}px` `` because `string` [1] is incompatible with `` `${string}px` `` [2].
+[incompatible-type]
 
    template.js:59:4
    59|   (y as `${string}px`); // ERROR
@@ -822,7 +829,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- template.js:65:4
 
-Cannot cast `z` to ``${string}dp`` because `string` [1] is incompatible with ``${string}dp`` [2]. [incompatible-type]
+Cannot cast `z` to `` `${string}dp` `` because `string` [1] is incompatible with `` `${string}dp` `` [2].
+[incompatible-type]
 
    template.js:65:4
    65|   (z as `${string}dp`); // ERROR - let widens to string
@@ -839,7 +847,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- template.js:73:3
 
-Cannot cast `w` to ``${string}dp`` because `string` [1] is incompatible with ``${string}dp`` [2]. [incompatible-type]
+Cannot cast `w` to `` `${string}dp` `` because `string` [1] is incompatible with `` `${string}dp` `` [2].
+[incompatible-type]
 
    template.js:73:3
    73|   w as `${string}dp`; // ERROR - let generalizes on read
@@ -856,7 +865,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- template.js:90:3
 
-Cannot cast `value` to `StringSuffix<"dp">` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
+Cannot cast `value` to `StringSuffix<"dp">` because `string` [1] is incompatible with `` `${string}${"dp"}` `` [2].
 [incompatible-type]
 
    template.js:90:3
@@ -874,8 +883,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:100:3
 
-Cannot cast `wrapped.value` to `StringSuffix<"dp">` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
-[incompatible-type]
+Cannot cast `wrapped.value` to `StringSuffix<"dp">` because `string` [1] is incompatible with
+`` `${string}${"dp"}` `` [2]. [incompatible-type]
 
    template.js:100:3
    100|   wrapped.value as StringSuffix<'dp'>; // ERROR - T generalizes to string
@@ -892,8 +901,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:108:3
 
-Cannot cast `value` to ``pre-${string}-suf`` because `string` [1] is incompatible with ``pre-${string}-suf`` [2].
-[incompatible-type]
+Cannot cast `value` to `` `pre-${string}-suf` `` because `string` [1] is incompatible with
+`` `pre-${string}-suf` `` [2]. [incompatible-type]
 
    template.js:108:3
    108|   value as `pre-${string}-suf`; // ERROR - T generalizes to string
@@ -910,7 +919,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:109:3
 
-Cannot cast `value` to `StringPrefix<"pre-">` because `string` [1] is incompatible with ``${"pre-"}${string}`` [2].
+Cannot cast `value` to `StringPrefix<"pre-">` because `string` [1] is incompatible with `` `${"pre-"}${string}` `` [2].
 [incompatible-type]
 
    template.js:109:3
@@ -928,7 +937,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:110:3
 
-Cannot cast `value` to `StringSuffix<"-suf">` because `string` [1] is incompatible with ``${string}${"-suf"}`` [2].
+Cannot cast `value` to `StringSuffix<"-suf">` because `string` [1] is incompatible with `` `${string}${"-suf"}` `` [2].
 [incompatible-type]
 
    template.js:110:3
@@ -946,8 +955,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:111:3
 
-Cannot cast `value` to ``other-${string}-suf`` because `string` [1] is incompatible with ``other-${string}-suf`` [2].
-[incompatible-type]
+Cannot cast `value` to `` `other-${string}-suf` `` because `string` [1] is incompatible with
+`` `other-${string}-suf` `` [2]. [incompatible-type]
 
    template.js:111:3
    111|   value as `other-${string}-suf`; // ERROR
@@ -964,8 +973,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:112:3
 
-Cannot cast `value` to ``pre-${string}-other`` because `string` [1] is incompatible with ``pre-${string}-other`` [2].
-[incompatible-type]
+Cannot cast `value` to `` `pre-${string}-other` `` because `string` [1] is incompatible with
+`` `pre-${string}-other` `` [2]. [incompatible-type]
 
    template.js:112:3
    112|   value as `pre-${string}-other`; // ERROR
@@ -999,7 +1008,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- template.js:142:39
 
-Cannot assign `identity(...)` to `invalid` because `string` [1] is incompatible with ``${string}${"px"}`` [2].
+Cannot assign `identity(...)` to `invalid` because `string` [1] is incompatible with `` `${string}${"px"}` `` [2].
 [incompatible-type]
 
    template.js:142:39
@@ -1017,7 +1026,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:166:3
 
-Cannot cast `v` to ``${string}px`` because `string` [1] is incompatible with ``${string}px`` [2]. [incompatible-type]
+Cannot cast `v` to `` `${string}px` `` because `string` [1] is incompatible with `` `${string}px` `` [2].
+[incompatible-type]
 
    template.js:166:3
    166|   v as `${string}px`; // ERROR
@@ -1051,7 +1061,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:233:3
 
-Cannot cast ``...`` to `StringSuffix<"dp">` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
+Cannot cast `` `...` `` to `StringSuffix<"dp">` because `string` [1] is incompatible with `` `${string}${"dp"}` `` [2].
 [incompatible-type]
 
    template.js:233:3

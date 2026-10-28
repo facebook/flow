@@ -87,8 +87,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- capitalize.js:56:1
 
 Cannot cast `'abc'` to `C9` because: [incompatible-type]
- - Either `"abc"` [1] is incompatible with ``Abc`` [2].
- - Or `"abc"` [1] is incompatible with ``${Capitalize<string>}abc`` [2].
+ - Either `"abc"` [1] is incompatible with `` `Abc` `` [2].
+ - Or `"abc"` [1] is incompatible with `` `${Capitalize<string>}abc` `` [2].
 
    capitalize.js:56:1
    56| 'abc' as C9; // ERROR (first char is lowercase)
@@ -103,8 +103,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- capitalize.js:58:1
 
 Cannot cast `'xYZabc'` to `C9` because: [incompatible-type]
- - Either `"xYZabc"` [1] is incompatible with ``Abc`` [2].
- - Or `"xYZabc"` [1] is incompatible with ``${Capitalize<string>}abc`` [2].
+ - Either `"xYZabc"` [1] is incompatible with `` `Abc` `` [2].
+ - Or `"xYZabc"` [1] is incompatible with `` `${Capitalize<string>}abc` `` [2].
 
    capitalize.js:58:1
    58| 'xYZabc' as C9; // ERROR (first char of inner is lowercase)
@@ -661,8 +661,8 @@ References:
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:64:1
 
 Cannot cast `'ABC'` to `U8b` because: [incompatible-type]
- - Either `"ABC"` [1] is incompatible with ``aBC`` [2].
- - Or `"ABC"` [1] is incompatible with ``${Uncapitalize<string>}ABC`` [2].
+ - Either `"ABC"` [1] is incompatible with `` `aBC` `` [2].
+ - Or `"ABC"` [1] is incompatible with `` `${Uncapitalize<string>}ABC` `` [2].
 
    uncapitalize.js:64:1
    64| 'ABC' as U8b; // ERROR (first char must be lowercase)
@@ -677,8 +677,8 @@ References:
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:66:1
 
 Cannot cast `'XABC'` to `U8b` because: [incompatible-type]
- - Either `"XABC"` [1] is incompatible with ``aBC`` [2].
- - Or `"XABC"` [1] is incompatible with ``${Uncapitalize<string>}ABC`` [2].
+ - Either `"XABC"` [1] is incompatible with `` `aBC` `` [2].
+ - Or `"XABC"` [1] is incompatible with `` `${Uncapitalize<string>}ABC` `` [2].
 
    uncapitalize.js:66:1
    66| 'XABC' as U8b; // ERROR (first char of inner is uppercase)

@@ -824,7 +824,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- generic_tagged_template.js:4:1
 
-Cannot cast `tag`...`` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `` tag`...` `` to `empty` because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    generic_tagged_template.js:4:1
    4| tag<number>`hello` as empty; // ERROR

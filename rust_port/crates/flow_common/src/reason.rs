@@ -54,6 +54,7 @@ use flow_parser::offset_utils::OffsetTable;
 
 use crate::error_ref::ErrorReference;
 use crate::flow_import_specifier::Userland;
+use crate::string_utils::code_span;
 use crate::subst_name::SubstName;
 
 static NEXT_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -1220,7 +1221,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RProperty(Some(x)) => format!("property `{}`", x),
         RProperty(None) => "computed property".to_string(),
         RPrivateProperty(x) => format!("property `#{}`", x),
-        RMember { object_, property } => format!("`{}{}`", object_, property),
+        RMember { object_, property } => code_span(&format!("{}{}", object_, property)),
         RUnknownUnspecifiedProperty(d) => {
             format!(
                 "an unknown property that may exist on the inexact {}",
@@ -1238,7 +1239,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RDefaultImportedType(_, module_name) => {
             format!("Default import from `{}`", module_name.display())
         }
-        RCode(x) => format!("`{}`", x),
+        RCode(x) => code_span(x),
 
         // Type wrappers
         RPartialOf(d) => format!("partial {}", string_of_desc(d)),

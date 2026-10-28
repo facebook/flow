@@ -1,6 +1,7 @@
 Error -------------------------------------------------------------------------------------------------- as_const.js:9:3
 
-Cannot cast `x` to ``${string}px`` because `string` [1] is incompatible with ``${string}px`` [2]. [incompatible-type]
+Cannot cast `x` to `` `${string}px` `` because `string` [1] is incompatible with `` `${string}px` `` [2].
+[incompatible-type]
 
    as_const.js:9:3
    9|   x as `${string}px`; // ERROR
@@ -17,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- as_const.js:18:3
 
-Cannot cast `x` to ``info-${string}`` because `string` [1] is incompatible with ``info-${string}`` [2].
+Cannot cast `x` to `` `info-${string}` `` because `string` [1] is incompatible with `` `info-${string}` `` [2].
 [incompatible-type]
 
    as_const.js:18:3
@@ -35,8 +36,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- as_const.js:26:3
 
-Cannot cast `x` to ``pre-${string}-other`` because `string` [1] is incompatible with ``pre-${string}-other`` [2].
-[incompatible-type]
+Cannot cast `x` to `` `pre-${string}-other` `` because `string` [1] is incompatible with
+`` `pre-${string}-other` `` [2]. [incompatible-type]
 
    as_const.js:26:3
    26|   x as `pre-${string}-other`; // ERROR
@@ -53,8 +54,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- as_const.js:27:3
 
-Cannot cast `x` to ``other-${string}-suf`` because `string` [1] is incompatible with ``other-${string}-suf`` [2].
-[incompatible-type]
+Cannot cast `x` to `` `other-${string}-suf` `` because `string` [1] is incompatible with
+`` `other-${string}-suf` `` [2]. [incompatible-type]
 
    as_const.js:27:3
    27|   x as `other-${string}-suf`; // ERROR
@@ -71,7 +72,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- as_const.js:36:3
 
-Cannot cast `x` to ``a${number}b${number}c`` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `x` to `` `a${number}b${number}c` `` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    as_const.js:36:3
    36|   x as `a${number}b${number}c`; // ERROR - string is not number
@@ -157,7 +159,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ as_const.js:106:3
 
-Cannot cast `y` to ``${string}px`` because `string` [1] is incompatible with ``${string}px`` [2]. [incompatible-type]
+Cannot cast `y` to `` `${string}px` `` because `string` [1] is incompatible with `` `${string}px` `` [2].
+[incompatible-type]
 
    as_const.js:106:3
    106|   y as `${string}px`; // ERROR
@@ -174,7 +177,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ as_const.js:111:3
 
-Cannot cast `z` to ``${string}dp`` because `string` [1] is incompatible with ``${string}dp`` [2]. [incompatible-type]
+Cannot cast `z` to `` `${string}dp` `` because `string` [1] is incompatible with `` `${string}dp` `` [2].
+[incompatible-type]
 
    as_const.js:111:3
    111|   z as `${string}dp`; // ERROR - let widens to string
@@ -191,7 +195,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- as_const.js:117:38
 
-Cannot assign ``...`` to `bad` because `string` [1] is incompatible with ``pre-${string}-other`` [2].
+Cannot assign `` `...` `` to `bad` because `string` [1] is incompatible with `` `pre-${string}-other` `` [2].
 [incompatible-type]
 
    as_const.js:117:38
@@ -258,7 +262,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- as_const_import.js:5:1
 
-Cannot cast `exported_suffix` to ``${string}px`` because `string` [1] is incompatible with ``${string}px`` [2].
+Cannot cast `exported_suffix` to `` `${string}px` `` because `string` [1] is incompatible with `` `${string}px` `` [2].
 [incompatible-type]
 
    as_const_import.js:5:1
@@ -294,8 +298,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ as_const_import.js:13:1
 
-Cannot cast `exported_const_suffix` to ``${string}px`` because `string` [1] is incompatible with ``${string}px`` [2].
-[incompatible-type]
+Cannot cast `exported_const_suffix` to `` `${string}px` `` because `string` [1] is incompatible with
+`` `${string}px` `` [2]. [incompatible-type]
 
    as_const_import.js:13:1
     13| exported_const_suffix as `${string}px`; // ERROR
@@ -668,7 +672,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:166:1
 
-Cannot cast `'axybxyc'` to `TL3` because `"axybxyc"` [1] is incompatible with ``a${`x${"o"}y`}b${`x${"o"}y`}c`` [2].
+Cannot cast `'axybxyc'` to `TL3` because `"axybxyc"` [1] is incompatible with `` `a${`x${"o"}y`}b${`x${"o"}y`}c` `` [2].
 [incompatible-type]
 
    basic.js:166:1
@@ -683,7 +687,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:167:1
 
-Cannot cast `'aobyoc'` to `TL3` because `"aobyoc"` [1] is incompatible with ``a${`x${"o"}y`}b${`x${"o"}y`}c`` [2].
+Cannot cast `'aobyoc'` to `TL3` because `"aobyoc"` [1] is incompatible with `` `a${`x${"o"}y`}b${`x${"o"}y`}c` `` [2].
 [incompatible-type]
 
    basic.js:167:1
@@ -1135,7 +1139,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'1'` to `Spacing` because: [incompatible-type]
  - Either `"1"` [1] is incompatible with `"0"` [2].
- - Or `"1"` [1] is incompatible with ``${number}px`` [3].
+ - Or `"1"` [1] is incompatible with `` `${number}px` `` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1157,7 +1161,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'px'` to `Spacing` because: [incompatible-type]
  - Either `"px"` [1] is incompatible with `"0"` [2].
- - Or `"px"` [1] is incompatible with ``${number}px`` [3].
+ - Or `"px"` [1] is incompatible with `` `${number}px` `` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1179,7 +1183,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'12em'` to `Spacing` because: [incompatible-type]
  - Either `"12em"` [1] is incompatible with `"0"` [2].
- - Or `"12em"` [1] is incompatible with ``${number}px`` [3].
+ - Or `"12em"` [1] is incompatible with `` `${number}px` `` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1201,7 +1205,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'s0'` to `Spacing` because: [incompatible-type]
  - Either `"s0"` [1] is incompatible with `"0"` [2].
- - Or `"s0"` [1] is incompatible with ``${number}px`` [3].
+ - Or `"s0"` [1] is incompatible with `` `${number}px` `` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1223,7 +1227,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'s21'` to `Spacing` because: [incompatible-type]
  - Either `"s21"` [1] is incompatible with `"0"` [2].
- - Or `"s21"` [1] is incompatible with ``${number}px`` [3].
+ - Or `"s21"` [1] is incompatible with `` `${number}px` `` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1245,7 +1249,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'red'` to `Spacing` because: [incompatible-type]
  - Either `"red"` [1] is incompatible with `"0"` [2].
- - Or `"red"` [1] is incompatible with ``${number}px`` [3].
+ - Or `"red"` [1] is incompatible with `` `${number}px` `` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1266,9 +1270,9 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:425:1
 
 Cannot cast `'0'` to `SpacingShorthand` because: [incompatible-type]
- - Either `"0"` [1] is incompatible with ``${Spacing} ${Spacing}`` [2].
- - Or `"0"` [1] is incompatible with ``${Spacing} ${Spacing} ${Spacing}`` [3].
- - Or `"0"` [1] is incompatible with ``${Spacing} ${Spacing} ${Spacing} ${Spacing}`` [4].
+ - Either `"0"` [1] is incompatible with `` `${Spacing} ${Spacing}` `` [2].
+ - Or `"0"` [1] is incompatible with `` `${Spacing} ${Spacing} ${Spacing}` `` [3].
+ - Or `"0"` [1] is incompatible with `` `${Spacing} ${Spacing} ${Spacing} ${Spacing}` `` [4].
 
    basic.js:425:1
    425| '0' as SpacingShorthand; // ERROR: 1-tuple not allowed
@@ -1309,9 +1313,9 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:427:1
 
 Cannot cast `'0,0,0'` to `SpacingShorthand` because: [incompatible-type]
- - Either `"0,0,0"` [1] is incompatible with ``${Spacing} ${Spacing}`` [2].
- - Or `"0,0,0"` [1] is incompatible with ``${Spacing} ${Spacing} ${Spacing}`` [3].
- - Or `"0,0,0"` [1] is incompatible with ``${Spacing} ${Spacing} ${Spacing} ${Spacing}`` [4].
+ - Either `"0,0,0"` [1] is incompatible with `` `${Spacing} ${Spacing}` `` [2].
+ - Or `"0,0,0"` [1] is incompatible with `` `${Spacing} ${Spacing} ${Spacing}` `` [3].
+ - Or `"0,0,0"` [1] is incompatible with `` `${Spacing} ${Spacing} ${Spacing} ${Spacing}` `` [4].
 
    basic.js:427:1
    427| '0,0,0' as SpacingShorthand; // ERROR: wrong delimiter
@@ -1333,7 +1337,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'foo bar'` to `SpacingShorthand` because: [incompatible-type]
  - Either `"foo"` [1] is incompatible with `"0"` [2].
- - Or `"foo"` [1] is incompatible with ``${number}px`` [3].
+ - Or `"foo"` [1] is incompatible with `` `${number}px` `` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1355,7 +1359,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'s21 0'` to `SpacingShorthand` because: [incompatible-type]
  - Either `"s21"` [1] is incompatible with `"0"` [2].
- - Or `"s21"` [1] is incompatible with ``${number}px`` [3].
+ - Or `"s21"` [1] is incompatible with `` `${number}px` `` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1500,7 +1504,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- basic.js:498:29
 
-Cannot assign `c` to `d` because `string` [1] is incompatible with ``data-${string}`` [2]. [incompatible-type]
+Cannot assign `c` to `d` because `string` [1] is incompatible with `` `data-${string}` `` [2]. [incompatible-type]
 
    basic.js:498:29
    498| const d: `data-${string}` = c; // ERROR
@@ -1973,8 +1977,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:185:1
 
-Cannot cast `'hello world'` to `REP1` because `"hello world"` [1] is incompatible with ``${"hello
-"}${"there"}${""}`` [2]. [incompatible-type]
+Cannot cast `'hello world'` to `REP1` because `"hello world"` [1] is incompatible with
+`` `${"hello "}${"there"}${""}` `` [2]. [incompatible-type]
 
    inference.js:185:1
    185| 'hello world' as REP1; // ERROR
@@ -2022,7 +2026,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:205:1
 
-Cannot cast `t27` to `string` because `[`${"a"}${""}`, ""]` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `t27` to `string` because ``[`${"a"}${""}`, ""]`` [1] is incompatible with `string` [2]. [incompatible-type]
 
    inference.js:205:1
    205| t27 as string; // ERROR (unknown </: string)
@@ -2193,9 +2197,9 @@ References:
 Error ----------------------------------------------------------------------------------------------- inference.js:306:1
 
 Cannot cast `'[d]'` to `W1` because: [incompatible-type]
- - Either `"[d]"` [1] is incompatible with ``[${"a"}]`` [2].
- - Or `"[d]"` [1] is incompatible with ``[${"b"}]`` [2].
- - Or `"[d]"` [1] is incompatible with ``[${"c"}]`` [2].
+ - Either `"[d]"` [1] is incompatible with `` `[${"a"}]` `` [2].
+ - Or `"[d]"` [1] is incompatible with `` `[${"b"}]` `` [2].
+ - Or `"[d]"` [1] is incompatible with `` `[${"c"}]` `` [2].
 
    inference.js:306:1
    306| '[d]' as W1; // ERROR
@@ -2305,7 +2309,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:383:1
 
-Cannot cast `'a.b.d'` to `J1` because `"d"` [1] is incompatible with ``${["c"][0]}`` [2]. [incompatible-type]
+Cannot cast `'a.b.d'` to `J1` because `"d"` [1] is incompatible with `` `${["c"][0]}` `` [2]. [incompatible-type]
 
    inference.js:383:1
    383| 'a.b.d' as J1; // ERROR
@@ -2319,8 +2323,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:387:1
 
-Cannot cast `'wrong'` to `J2` because `"wrong"` [1] is incompatible with ``${[1, 2, 3][0]}${"-"}${Join<[2, 3],
-"-">}`` [2]. [incompatible-type]
+Cannot cast `'wrong'` to `J2` because `"wrong"` [1] is incompatible with
+`` `${[1, 2, 3][0]}${"-"}${Join<[2, 3], "-">}` `` [2]. [incompatible-type]
 
    inference.js:387:1
    387| 'wrong' as J2; // ERROR
@@ -2334,7 +2338,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:406:1
 
-Cannot cast `'wrong'` to `RA1` because `"wrong"` [1] is incompatible with ``${"a/b/c"}${"/"}${"d"}`` [2].
+Cannot cast `'wrong'` to `RA1` because `"wrong"` [1] is incompatible with `` `${"a/b/c"}${"/"}${"d"}` `` [2].
 [incompatible-type]
 
    inference.js:406:1
@@ -2349,7 +2353,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:410:1
 
-Cannot cast `'hello'` to `RA2` because `"hello"` [1] is incompatible with ``${"her"}${"r"}${"o"}`` [2].
+Cannot cast `'hello'` to `RA2` because `"hello"` [1] is incompatible with `` `${"her"}${"r"}${"o"}` `` [2].
 [incompatible-type]
 
    inference.js:410:1
@@ -2378,7 +2382,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:422:1
 
-Cannot cast `'ade'` to `Backtrack<"c">` because `"ade"` [1] is incompatible with ``${"a" | "ab"}${"c"}`` [2].
+Cannot cast `'ade'` to `Backtrack<"c">` because `"ade"` [1] is incompatible with `` `${"a" | "ab"}${"c"}` `` [2].
 [incompatible-type]
 
    inference.js:422:1
@@ -2459,10 +2463,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------- literal_precision.js:40:7
 
-Cannot compare ``${number}:${number}`` [1] to `""` [2], because ``${number}:${number}`` [3] is not a subtype of `""` [2]
-and `""` [2] is not a subtype of ``${number}:${number}`` [3]. In **rare** cases, these types may have overlapping values
-but lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow
-check.  [invalid-compare]
+Cannot compare `` `${number}:${number}` `` [1] to `""` [2], because `` `${number}:${number}` `` [3] is not a subtype of
+`""` [2] and `""` [2] is not a subtype of `` `${number}:${number}` `` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
    literal_precision.js:40:7
    40|   if (key === '') {} // error
@@ -2483,8 +2487,8 @@ References:
 Error --------------------------------------------------------------------------------------- literal_precision.js:47:14
 
 Cannot call `lines.push` because in array element: [incompatible-type]
- - Either `""` [1] is incompatible with ``Processed: ${string}`` [2].
- - Or `""` [1] is incompatible with ``Updated: ${string}`` [3].
+ - Either `""` [1] is incompatible with `` `Processed: ${string}` `` [2].
+ - Or `""` [1] is incompatible with `` `Updated: ${string}` `` [3].
 
    literal_precision.js:47:14
    47|   lines.push(''); // TODO error '' ~> `Processed: ${string}` | `Updated: ${string}`
@@ -2501,7 +2505,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- literal_precision.js:53:9
 
-Cannot access object literal [1] with computed property using ``size${number}`` [2]. [invalid-computed-prop]
+Cannot access object literal [1] with computed property using `` `size${number}` `` [2]. [invalid-computed-prop]
 
    literal_precision.js:53:9
    53|   SIZES[`size${n}`]; // error
@@ -2515,7 +2519,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- literal_precision.js:57:11
 
-Cannot get `metrics[`...`]` because property `favorited_28d` is missing in
+Cannot get ``metrics[`...`]`` because property `favorited_28d` is missing in
 `{views_28d?: number, views_7d?: number}` [1]. [prop-missing]
 
    literal_precision.js:57:11
@@ -2530,8 +2534,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- literal_precision.js:57:11
 
-Cannot get `metrics[`...`]` because property `favorited_7d` is missing in `{views_28d?: number, views_7d?: number}` [1].
-[prop-missing]
+Cannot get ``metrics[`...`]`` because property `favorited_7d` is missing in
+`{views_28d?: number, views_7d?: number}` [1]. [prop-missing]
 
    literal_precision.js:57:11
    57|   metrics[`favorited_${period}`]; // error property missing
@@ -2579,10 +2583,10 @@ References:
 
 Error --------------------------------------------------------------------------------------- literal_precision.js:116:7
 
-Cannot compare ``H${number | 1}`` [1] to `"Hx"` [2], because ``H${number | 1}`` [1] is not a subtype of `"Hx"` [2] and
-`"Hx"` [2] is not a subtype of ``H${number | 1}`` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `` `H${number | 1}` `` [1] to `"Hx"` [2], because `` `H${number | 1}` `` [1] is not a subtype of
+`"Hx"` [2] and `"Hx"` [2] is not a subtype of `` `H${number | 1}` `` [1]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
    literal_precision.js:116:7
    116|   if (`H${x}` !== 'Hx') {} // error: neither number text nor '1' is 'x'

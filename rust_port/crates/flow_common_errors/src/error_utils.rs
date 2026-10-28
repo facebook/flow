@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 
 use dupe::Dupe;
 use flow_common::files;
+use flow_common::string_utils::code_span;
 use flow_common_utils::list_utils;
 use flow_lint_settings::lints::LintKind;
 use flow_parser::file_key::FileKey;
@@ -355,18 +356,51 @@ pub mod friendly {
     /// Converts a string into a message_inline list. e.g.:
     /// "hello `world`" becomes: [Text("hello "), Code("world")].
     ///
+    /// Code is a markdown code span: it opens with a run of backticks and closes
+    /// with the next run of the same length, so "`` `...` ``" is Code("`...`").
+    /// A run without a closing run is text.
+    ///
     /// The inverse of string_of_message_inlines.
     pub fn message_inlines_of_string(s: &str) -> Vec<MessageInline> {
-        s.split('`')
-            .enumerate()
-            .map(|(i, s)| {
-                if i % 2 == 0 {
-                    MessageInline::Text(s.to_owned())
-                } else {
-                    MessageInline::Code(s.to_owned())
+        let backtick_run = |s: &str| s.len() - s.trim_start_matches('`').len();
+        let mut inlines = vec![];
+        let mut text = String::new();
+        let mut rest = s;
+        while let Some(start) = rest.find('`') {
+            text.push_str(&rest[..start]);
+            let fence = backtick_run(&rest[start..]);
+            let after_fence = &rest[start + fence..];
+            let mut pos = 0;
+            let close = loop {
+                let Some(i) = after_fence[pos..].find('`') else {
+                    break None;
+                };
+                let run = backtick_run(&after_fence[pos + i..]);
+                if run == fence {
+                    break Some(pos + i);
                 }
-            })
-            .collect()
+                pos += i + run;
+            };
+            match close {
+                Some(close) => {
+                    let code = &after_fence[..close];
+                    let code = match code.strip_prefix(' ').and_then(|c| c.strip_suffix(' ')) {
+                        Some(unpadded) if code.contains(|c| c != ' ') => unpadded,
+                        _ => code,
+                    };
+                    inlines.push(MessageInline::Text(std::mem::take(&mut text)));
+                    inlines.push(MessageInline::Code(code.to_owned()));
+                    rest = &after_fence[close + fence..];
+                }
+                None => {
+                    text.push_str(&rest[start..start + fence]);
+                    rest = after_fence;
+                }
+            }
+        }
+        text.push_str(rest);
+        inlines.push(MessageInline::Text(text));
+        inlines
     }
 
     /// Converts a string into a message. e.g.:
@@ -384,11 +418,7 @@ pub mod friendly {
         for inline in inlines {
             match inline {
                 MessageInline::Text(text) => message.push_str(text),
-                MessageInline::Code(text) => {
-                    message.push('`');
-                    message.push_str(text);
-                    message.push('`');
-                }
+                MessageInline::Code(text) => message.push_str(&code_span(text)),
             }
         }
         message
@@ -3200,7 +3230,7 @@ pub mod cli_output {
                 friendly::MessageInline::Code(s) if !should_color(flags.rendering_mode) => (
                     false,
                     tty::Style::Normal(tty::RawColor::Default),
-                    format!("`{}`", s),
+                    code_span(&s),
                 ),
                 friendly::MessageInline::Text(s) if reference => {
                     (true, tty::Style::Underline(tty::RawColor::Default), s)

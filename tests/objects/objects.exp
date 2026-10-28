@@ -353,7 +353,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:12:3
 
-Cannot get `x[`...`]` because property `foo` is missing in `{"123": string, bar: string, ...}` [1]. [prop-missing]
+Cannot get ``x[`...`]`` because property `foo` is missing in `{"123": string, bar: string, ...}` [1]. [prop-missing]
 
    objects.js:12:3
    12| x[`foo`] as string; // error, key doesn't exist

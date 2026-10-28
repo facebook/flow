@@ -21,6 +21,26 @@ pub fn filename_escape(path: &str) -> String {
     buf
 }
 
+/// Wraps code in backticks as a markdown code span. e.g.:
+/// "world" becomes "`world`", and "`...`" becomes "`` `...` ``"
+///
+/// The fence is one backtick longer than the longest run of backticks in the
+/// code, and a space separates it from a backtick at either end of the code.
+pub fn code_span(code: &str) -> String {
+    let longest_run = code
+        .split(|c| c != '`')
+        .map(str::len)
+        .max()
+        .unwrap_or_default();
+    let fence = "`".repeat(longest_run + 1);
+    let padding = if code.starts_with('`') || code.ends_with('`') {
+        " "
+    } else {
+        ""
+    };
+    format!("{fence}{padding}{code}{padding}{fence}")
+}
+
 pub fn truncate(len: usize, s: &str) -> &str {
     if s.len() <= len {
         s

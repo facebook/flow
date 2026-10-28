@@ -15,7 +15,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:7:12
 
 Cannot create `div` element because in the indexer property's key: `"id"` [1] is incompatible with
-``${"data-"}${string}`` [2]. [incompatible-type]
+`` `${"data-"}${string}` `` [2]. [incompatible-type]
 
    main.js:7:12
    7| const d = <div {...dataProps} />; // OK with data props, but missing id

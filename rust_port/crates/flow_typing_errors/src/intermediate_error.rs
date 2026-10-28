@@ -4343,12 +4343,11 @@ where
             Decl::VariableDecl(_)
             | Decl::RecordDecl(_)
             | Decl::NamespaceDecl(_)
-            | Decl::ModuleDecl(_) => format!(
-                "`{}`",
-                flow_common_ty::ty_printer::string_of_decl_single_line(
+            | Decl::ModuleDecl(_) => flow_common::string_utils::code_span(
+                &flow_common_ty::ty_printer::string_of_decl_single_line(
                     decl,
                     &flow_common_ty::ty_printer::PrinterOptions::default(),
-                )
+                ),
             ),
         }
     }
@@ -4371,7 +4370,7 @@ where
                 } else {
                     ty_str
                 };
-                let desc = format!("`{}`", ty_str);
+                let desc = flow_common::string_utils::code_span(&ty_str);
                 friendly::hardcoded_string_desc_ref(&desc, loc_of_aloc(loc))
             }
             ErrorTypeDesc::ReasonDesc(desc) => {
@@ -5224,7 +5223,7 @@ where
 
     let render_expression_reference = |reference: &ExpressionReferenceData<L>| {
         let description = match &reference.kind {
-            ExpressionReferenceKind::Code(code) => format!("`{code}`"),
+            ExpressionReferenceKind::Code(code) => flow_common::string_utils::code_span(code),
             ExpressionReferenceKind::ObjectLiteral => "object literal".to_string(),
             ExpressionReferenceKind::ArrayLiteral => "array literal".to_string(),
             ExpressionReferenceKind::Function(kind) => match kind {
@@ -5254,7 +5253,7 @@ where
         |reference: &ImplicitInstantiationReferenceData<L>| {
             let description = match &reference.kind {
                 ImplicitInstantiationReferenceKind::Call(Some(name)) => {
-                    format!("call of `{name}`")
+                    format!("call of {}", flow_common::string_utils::code_span(name))
                 }
                 ImplicitInstantiationReferenceKind::Call(None) => "function call".to_string(),
                 ImplicitInstantiationReferenceKind::Method(Some(name)) => {
@@ -5264,7 +5263,7 @@ where
                     "call of computed property".to_string()
                 }
                 ImplicitInstantiationReferenceKind::Constructor(Some(name)) => {
-                    format!("new `{name}`")
+                    format!("new {}", flow_common::string_utils::code_span(name))
                 }
                 ImplicitInstantiationReferenceKind::Constructor(None) => {
                     "constructor call".to_string()

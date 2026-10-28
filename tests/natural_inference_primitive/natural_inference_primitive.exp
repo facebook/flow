@@ -2617,7 +2617,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:612:3
 
-Cannot cast ``...`` to `"b"` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
+Cannot cast `` `...` `` to `"b"` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    local.js:612:3
    612|   `a` as 'b'; // error
