@@ -44,7 +44,7 @@ SHASUM256.txt: $(FLOW_BINS)
 	shasum -a 256 $^ > $@
 
 get-flow = \
-	curl -O -L https://github.com/facebook/flow/releases/download/v$(*F)/$(@D).zip; \
+	curl -O -L https://github.com/meta/flow/releases/download/v$(*F)/$(@D).zip; \
 	unzip $(@D).zip flow/$(@F); \
 	mv flow $(@D); \
 	rm $(@D).zip; \

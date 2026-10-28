@@ -563,7 +563,7 @@ jobs:
     - uses: actions/checkout@v3.6.0
     - name: Deploy flow-bin
       run: .circleci/deploy_flow_bin.sh
-    - uses: facebook/dotslash-publish-release@v1
+    - uses: meta/dotslash-publish-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
