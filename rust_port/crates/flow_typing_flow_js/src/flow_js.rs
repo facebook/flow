@@ -143,6 +143,7 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeMap;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::TypeParamInner;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::TypeTKind;
 use flow_typing_type::type_::UnifyCause;
 use flow_typing_type::type_::UnresolvedParam;
@@ -580,9 +581,18 @@ impl FlowJs {
         reason2: &Reason,
         targs1: Rc<[(SubstName, Reason, Type, Polarity)]>,
         targs2: Rc<[(SubstName, Reason, Type, Polarity)]>,
+        strictness_kind: TypeStrictnessKind,
     ) -> Result<(), FlowJsException> {
         inheritance_helpers::flow_type_args(
-            cx, env, trace, use_op, reason1, reason2, targs1, targs2,
+            cx,
+            env,
+            trace,
+            use_op,
+            reason1,
+            reason2,
+            targs1,
+            targs2,
+            strictness_kind,
         )
     }
 

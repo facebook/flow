@@ -3295,7 +3295,15 @@ pub fn rec_sub_t<'cx>(
                             let utargs = unom.nominal_type_args.dupe();
                             move |cx: &mut Context, env: &FlowJsEnv| {
                                 FlowJs::flow_type_args_with_env(
-                                    cx, env, trace, use_op, &lreason, &ureason, ltargs, utargs,
+                                    cx,
+                                    env,
+                                    trace,
+                                    use_op,
+                                    &lreason,
+                                    &ureason,
+                                    ltargs,
+                                    utargs,
+                                    TypeStrictnessKind::Flow,
                                 )
                             }
                         }),
@@ -3319,6 +3327,7 @@ pub fn rec_sub_t<'cx>(
                         ureason,
                         lnom.nominal_type_args.dupe(),
                         unom.nominal_type_args.dupe(),
+                        TypeStrictnessKind::Flow,
                     )?;
                 }
             }
@@ -3421,6 +3430,7 @@ pub fn rec_sub_t<'cx>(
                 ureason,
                 lnom.nominal_type_args.dupe(),
                 unom.nominal_type_args.dupe(),
+                TypeStrictnessKind::Flow,
             )
         }
         // If the type is still in the same file it was defined, we allow it to

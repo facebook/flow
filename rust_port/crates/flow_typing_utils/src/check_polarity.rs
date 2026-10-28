@@ -48,6 +48,7 @@ use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::TypeParamInner;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnresolvedArgData;
 use flow_typing_type::type_::UnresolvedParam;
 use flow_typing_type::type_::eval;
@@ -197,10 +198,21 @@ fn check_polarity_impl<'cx>(
                     match l.deref() {
                         TypeInner::AnyT(..) => return Ok(()),
                         TypeInner::DefT(_, d) => {
-                            if let DefTInner::PolyT(box PolyTData { tparams: tps, .. }) = d.deref()
+                            if let DefTInner::PolyT(box PolyTData {
+                                tparams: tps,
+                                strictness_kind,
+                                ..
+                            }) = d.deref()
                             {
                                 return variance_check(
-                                    cx, env, trace, tparams, polarity, tps, targs,
+                                    cx,
+                                    env,
+                                    trace,
+                                    tparams,
+                                    polarity,
+                                    tps,
+                                    targs,
+                                    *strictness_kind,
                                 );
                             }
                             if matches!(d.deref(), DefTInner::InstanceT(_)) {
@@ -222,11 +234,21 @@ fn check_polarity_impl<'cx>(
                                 .next()
                                 .or_else(|| flow_js_utils::combine_construct_ts(construct_ts))
                                     && let TypeInner::DefT(_, construct_def) = construct_t.deref()
-                                    && let DefTInner::PolyT(box PolyTData { tparams: tps, .. }) =
-                                        construct_def.deref()
+                                    && let DefTInner::PolyT(box PolyTData {
+                                        tparams: tps,
+                                        strictness_kind,
+                                        ..
+                                    }) = construct_def.deref()
                                 {
                                     return variance_check(
-                                        cx, env, trace, tparams, polarity, tps, targs,
+                                        cx,
+                                        env,
+                                        trace,
+                                        tparams,
+                                        polarity,
+                                        tps,
+                                        targs,
+                                        *strictness_kind,
                                     );
                                 }
                             }
@@ -335,7 +357,16 @@ fn check_polarity_impl<'cx>(
                 }));
                 targs_list.push(arg_t.dupe());
             }
-            variance_check(cx, env, trace, tparams, polarity, &tps_list, &targs_list)?;
+            variance_check(
+                cx,
+                env,
+                trace,
+                tparams,
+                polarity,
+                &tps_list,
+                &targs_list,
+                TypeStrictnessKind::Flow,
+            )?;
         }
         // TODO
         TypeInner::EvalT { .. } => {}
@@ -856,16 +887,22 @@ fn variance_check<'cx>(
     polarity: Polarity,
     tps: &[TypeParam],
     targs: &[Type],
+    strictness_kind: TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
     // ignore typeapp arity mismatch, since it's handled elsewhere
     for (tp, targ) in tps.iter().zip(targs.iter()) {
+        // As in `type_app_variance_check`, TS treats Neutral tparam slots as covariant.
+        let tp_polarity = match tp.polarity {
+            Polarity::Neutral if strictness_kind.is_typescript_loose() => Polarity::Positive,
+            tp_polarity => tp_polarity,
+        };
         check_polarity_impl(
             cx,
             env,
             trace,
             &mut HashSet::new(),
             tparams,
-            Polarity::mult(polarity, tp.polarity),
+            Polarity::mult(polarity, tp_polarity),
             targ,
         )?;
     }

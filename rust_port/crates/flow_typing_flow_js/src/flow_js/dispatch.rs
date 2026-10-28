@@ -5533,6 +5533,7 @@ fn __flow_impl<'cx>(
                     &ureason,
                     tmap1,
                     tmap2,
+                    inst.strictness_kind,
                 )?;
             } else if type_util::nominal_id_have_same_logical_module(
                 &cx.file_options(),
@@ -5626,6 +5627,7 @@ fn __flow_impl<'cx>(
                     reason_u,
                     inst.type_args.dupe(),
                     inst_super.type_args.dupe(),
+                    inst.strictness_kind.join(inst_super.strictness_kind),
                 )?;
             } else {
                 // If this instance type has declared implementations, any structural

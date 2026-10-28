@@ -37,6 +37,7 @@ pub(super) fn flow_type_args<'cx>(
     ureason: &Reason,
     targs1: Rc<[(SubstName, Reason, Type, Polarity)]>,
     targs2: Rc<[(SubstName, Reason, Type, Polarity)]>,
+    strictness_kind: TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
     use flow_typing_type::type_::TypeArgCompatibilityData;
     use flow_typing_type::type_::VirtualFrameUseOp;
@@ -70,6 +71,16 @@ pub(super) fn flow_type_args<'cx>(
                 )?;
             }
             Polarity::Positive => {
+                rec_flow(
+                    cx,
+                    env,
+                    trace,
+                    (&t1, &UseT::new(UseTInner::UseT(use_op, t2))),
+                )?;
+            }
+            // As in `type_app_variance_check`, TS treats Neutral (read-write) tparam slots
+            // as covariant in instantiation, not invariant.
+            Polarity::Neutral if strictness_kind.is_typescript_loose() => {
                 rec_flow(
                     cx,
                     env,
