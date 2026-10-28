@@ -173,11 +173,11 @@ parameter: property `clear` is missing in `ReadonlyMap<string, number>` [1] but 
        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:44:67
-   44|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:56:67
+   56|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:28:67
-   28|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:29:67
+   29|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^ [2]
 
 
@@ -192,11 +192,11 @@ parameter: property `delete` is missing in `ReadonlyMap<string, number>` [1] but
        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:44:67
-   44|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:56:67
+   56|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:28:67
-   28|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:29:67
+   29|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^ [2]
 
 
@@ -211,11 +211,11 @@ parameter: property `getOrInsert` is missing in `ReadonlyMap<string, number>` [1
        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:44:67
-   44|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:56:67
+   56|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:28:67
-   28|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:29:67
+   29|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^ [2]
 
 
@@ -230,11 +230,11 @@ parameter: property `getOrInsertComputed` is missing in `ReadonlyMap<string, num
        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:44:67
-   44|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:56:67
+   56|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:28:67
-   28|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:29:67
+   29|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^ [2]
 
 
@@ -249,11 +249,11 @@ parameter: property `set` (did you mean `get`?) is missing in `ReadonlyMap<strin
        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:44:67
-   44|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:56:67
+   56|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: ReadonlyMap<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:28:67
-   28|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
+   <BUILTINS>/lib.es2015.collection.js:29:67
+   29|     forEach<This>(callbackfn: (this: This, value: V, key: K, map: Map<K, V>) => unknown, thisArg: This): void;
                                                                          ^^^^^^^^^ [2]
 
 
@@ -317,16 +317,16 @@ Cannot cast `roSet` to `Readonly<Set<string>>` because in property `forEach` > t
 parameter: property `add` is missing in `ReadonlySet<string>` [1] but exists in `Set<string>` [2]. [incompatible-type]
 
    collection_to_string_tag.js:15:1
-   15| roSet as Readonly<Set<string>>; // ERROR: missing mutating methods
-       ^^^^^
+    15| roSet as Readonly<Set<string>>; // ERROR: missing mutating methods
+        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:84:70
-   84|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: ReadonlySet<T>) => unknown, thisArg: This): void;
-                                                                            ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:72:70
-   72|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: Set<T>) => unknown, thisArg: This): void;
-                                                                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.collection.js:122:70
+   122|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: ReadonlySet<T>) => unknown, thisArg: This): void;
+                                                                             ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.collection.js:104:70
+   104|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: Set<T>) => unknown, thisArg: This): void;
+                                                                             ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:15:1
@@ -335,16 +335,16 @@ Cannot cast `roSet` to `Readonly<Set<string>>` because in property `forEach` > t
 parameter: property `clear` is missing in `ReadonlySet<string>` [1] but exists in `Set<string>` [2]. [incompatible-type]
 
    collection_to_string_tag.js:15:1
-   15| roSet as Readonly<Set<string>>; // ERROR: missing mutating methods
-       ^^^^^
+    15| roSet as Readonly<Set<string>>; // ERROR: missing mutating methods
+        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:84:70
-   84|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: ReadonlySet<T>) => unknown, thisArg: This): void;
-                                                                            ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:72:70
-   72|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: Set<T>) => unknown, thisArg: This): void;
-                                                                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.collection.js:122:70
+   122|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: ReadonlySet<T>) => unknown, thisArg: This): void;
+                                                                             ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.collection.js:104:70
+   104|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: Set<T>) => unknown, thisArg: This): void;
+                                                                             ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:15:1
@@ -354,16 +354,16 @@ parameter: property `delete` is missing in `ReadonlySet<string>` [1] but exists 
 [incompatible-type]
 
    collection_to_string_tag.js:15:1
-   15| roSet as Readonly<Set<string>>; // ERROR: missing mutating methods
-       ^^^^^
+    15| roSet as Readonly<Set<string>>; // ERROR: missing mutating methods
+        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:84:70
-   84|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: ReadonlySet<T>) => unknown, thisArg: This): void;
-                                                                            ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:72:70
-   72|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: Set<T>) => unknown, thisArg: This): void;
-                                                                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.collection.js:122:70
+   122|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: ReadonlySet<T>) => unknown, thisArg: This): void;
+                                                                             ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.collection.js:104:70
+   104|     forEach<This>(callbackfn: (this: This, value: T, value2: T, set: Set<T>) => unknown, thisArg: This): void;
+                                                                             ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:18:1
