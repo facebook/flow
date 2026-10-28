@@ -5150,6 +5150,116 @@ References:
                                     ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- tuple_refinement.js:62:7
+
+Cannot cast `x` to `[number]` because: [incompatible-type]
+ - Either `[unknown, unknown]` [1] has 2 elements but `[number]` [2] has 1 element.
+ - Or `[number, string]` [3] has 2 elements but `[number]` [2] has 1 element.
+
+   tuple_refinement.js:62:7
+   62|       x as [number]; // ERROR: [unknown, unknown] & [number, string] ~> [number]
+             ^
+
+References:
+   tuple_refinement.js:59:45
+   59|   declare function isPair(x: unknown): x is [unknown, unknown];
+                                                   ^^^^^^^^^^^^^^^^^^ [1]
+   tuple_refinement.js:62:12
+   62|       x as [number]; // ERROR: [unknown, unknown] & [number, string] ~> [number]
+                  ^^^^^^^^ [2]
+   tuple_refinement.js:57:31
+   57|   declare const x: [number] | [number, string];
+                                     ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- tuple_refinement.js:108:7
+
+Cannot cast `y` to `empty` because: [incompatible-type]
+ - Either `[unknown, unknown, unknown]` [1] is incompatible with `empty` [2].
+ - Or `[number, ...Array<string>]` [3] is incompatible with `empty` [2].
+
+   tuple_refinement.js:108:7
+   108|       y as empty; // ERROR: any number of elements
+              ^
+
+References:
+   tuple_refinement.js:99:47
+    99|   declare function isTriple(x: unknown): x is [unknown, unknown, unknown];
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tuple_refinement.js:108:12
+   108|       y as empty; // ERROR: any number of elements
+                   ^^^^^ [2]
+   tuple_refinement.js:106:20
+   106|   declare const y: [number, ...Array<string>];
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- tuple_refinement.js:120:7
+
+Cannot cast `w` to `empty` because: [incompatible-type]
+ - Either `[a: number, b?: string]` [1] is incompatible with `empty` [2].
+ - Or `[a: number, b?: number]` [3] is incompatible with `empty` [2].
+
+   tuple_refinement.js:120:7
+   120|       w as empty; // ERROR: [1] is both, optional elements are not compared
+              ^
+
+References:
+   tuple_refinement.js:117:53
+   117|   declare function isNumberString(x: unknown): x is [a: number, b?: string];
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tuple_refinement.js:120:12
+   120|       w as empty; // ERROR: [1] is both, optional elements are not compared
+                   ^^^^^ [2]
+   tuple_refinement.js:118:20
+   118|   declare const w: [a: number, b?: number];
+                           ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- tuple_refinement.js:129:7
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `[number]` [1] is incompatible with `empty` [2].
+ - Or `[writeonly a: string]` [3] is incompatible with `empty` [2].
+
+   tuple_refinement.js:129:7
+   129|       x as empty; // ERROR: a write-only element can hold any value
+              ^
+
+References:
+   tuple_refinement.js:126:48
+   126|   declare function isNumber1(x: unknown): x is [number];
+                                                       ^^^^^^^^ [1]
+   tuple_refinement.js:129:12
+   129|       x as empty; // ERROR: a write-only element can hold any value
+                   ^^^^^ [2]
+   tuple_refinement.js:127:20
+   127|   declare const x: [writeonly a: string];
+                           ^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- tuple_refinement.js:138:7
+
+Cannot cast `x` to `empty` because: [incompatible-type]
+ - Either `Array<number>` [1] is incompatible with `empty` [2].
+ - Or `Array<empty>` [3] is incompatible with `empty` [2].
+
+   tuple_refinement.js:138:7
+   138|       x as empty; // ERROR: [] is both
+              ^
+
+References:
+   tuple_refinement.js:135:48
+   135|   declare function isNumbers(x: unknown): x is Array<number>;
+                                                       ^^^^^^^^^^^^^ [1]
+   tuple_refinement.js:138:12
+   138|       x as empty; // ERROR: [] is both
+                   ^^^^^ [2]
+   tuple_refinement.js:136:20
+   136|   declare const x: Array<empty>;
+                           ^^^^^^^^^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:15:30
 
 The type predicate `B` [1] needs to be compatible with parameter `x`'s type: `B` [1] is incompatible with `A` [2].
@@ -5622,4 +5732,4 @@ References:
 
 
 
-Found 311 errors
+Found 316 errors

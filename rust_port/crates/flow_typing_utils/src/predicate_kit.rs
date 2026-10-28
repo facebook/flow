@@ -33,6 +33,7 @@ use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::speculation_kit;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::BinaryTest;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::DefT;
@@ -50,6 +51,7 @@ use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateConcretetizerVariant;
 use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ROArrayATData;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
@@ -1532,18 +1534,12 @@ fn intersect_type_guard<'cx>(
         }
     }
 
-    fn tags_of_t<'cx>(
-        cx: &mut Context<'cx>,
-        t: &ConcretizedType,
-    ) -> Option<crate::type_filter::TypeTagSet> {
-        crate::type_filter::tag_of_t(cx, t.unwrap())
-    }
-
     fn tags_differ<'cx>(cx: &mut Context<'cx>, t1: &ConcretizedType, t2: &ConcretizedType) -> bool {
-        match (tags_of_t(cx, t1), tags_of_t(cx, t2)) {
-            (Some(ref t1_tags), Some(ref t2_tags)) => {
-                !crate::type_filter::tags_overlap(t1_tags, t2_tags)
-            }
+        match (
+            type_filter::tag_of_t(cx, t1.unwrap()),
+            type_filter::tag_of_t(cx, t2.unwrap()),
+        ) {
+            (Some(ref t1_tags), Some(ref t2_tags)) => !type_filter::tags_overlap(t1_tags, t2_tags),
             _ => false,
         }
     }
@@ -1637,6 +1633,109 @@ fn intersect_type_guard<'cx>(
         }
     }
 
+    // Whether `t` and `u` have no overlap. Types without values, such as `empty` or an opaque type
+    // whose supertype is `empty`, are disjoint from every type, even from themselves, so a
+    // component of such a type does not make its container disjoint from another.
+    fn inhabited_types_differ<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        depth: i32,
+        t: &Type,
+        u: &Type,
+    ) -> bool {
+        // To prevent infinite recursion, we use a simple depth mechanism.
+        if depth > 2 || Type::ptr_eq(t, u) {
+            return false;
+        }
+        let uninhabited = |cx: &mut Context<'cx>, ts: &[Type]| {
+            ts.is_empty()
+                || ts
+                    .iter()
+                    .any(|t| type_filter::tag_of_t(cx, t).is_some_and(|tags| tags.is_empty()))
+        };
+        let (Ok(ts), Ok(us)) = (
+            concrete_types_for_inspection(cx, env, reason_of_t(t), t),
+            concrete_types_for_inspection(cx, env, reason_of_t(u), u),
+        ) else {
+            return false;
+        };
+        if uninhabited(cx, &ts) || uninhabited(cx, &us) {
+            return false;
+        }
+        ts.iter().all(|t| {
+            us.iter().all(|u| {
+                concrete_types_differ(
+                    cx,
+                    env,
+                    depth + 1,
+                    &ConcretizedType(t.dupe()),
+                    &ConcretizedType(u.dupe()),
+                )
+            })
+        })
+    }
+
+    // Tuples whose lengths cannot be equal have no overlap, and neither do tuples with elements at
+    // the same index that have no overlap. As with `C<T>` above, `Array<T>` has no overlap with
+    // `Array<S>` iff T and S have no overlap, and the same goes for `ReadonlyArray`.
+    fn arr_tags_differ<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        depth: i32,
+        t1: &ConcretizedType,
+        t2: &ConcretizedType,
+    ) -> bool {
+        fn arr_of(t: &Type) -> Option<&ArrType> {
+            match t.deref() {
+                TypeInner::DefT(_, d) => match d.deref() {
+                    DefTInner::ArrT(arr) => Some(arr),
+                    _ => None,
+                },
+                _ => None,
+            }
+        }
+        fn max_arity(tuple: &TupleATData) -> i32 {
+            if tuple.inexact || tuple.rest.is_some() {
+                i32::MAX
+            } else {
+                tuple.arity.1
+            }
+        }
+        // The types of the elements that are present at the start of every value of `tuple`.
+        fn required_elements(tuple: &TupleATData) -> impl Iterator<Item = Option<&Type>> {
+            tuple
+                .elements
+                .iter()
+                .take_while(|elem| !elem.optional)
+                .map(|elem| match elem.polarity {
+                    Polarity::Negative => None,
+                    _ => Some(&elem.t),
+                })
+        }
+        let (Some(a1), Some(a2)) = (arr_of(t1.unwrap()), arr_of(t2.unwrap())) else {
+            return false;
+        };
+        match (a1, a2) {
+            (ArrType::TupleAT(tup1), ArrType::TupleAT(tup2)) => {
+                max_arity(tup1) < tup2.arity.0
+                    || max_arity(tup2) < tup1.arity.0
+                    || required_elements(tup1)
+                        .zip(required_elements(tup2))
+                        .filter_map(|(t1, t2)| Some((t1?, t2?)))
+                        .any(|(t1, t2)| inhabited_types_differ(cx, env, depth, t1, t2))
+            }
+            (
+                ArrType::ArrayAT(box ArrayATData { elem_t: e1, .. }),
+                ArrType::ArrayAT(box ArrayATData { elem_t: e2, .. }),
+            )
+            | (
+                ArrType::ROArrayAT(box ROArrayATData { elem_t: e1, .. }),
+                ArrType::ROArrayAT(box ROArrayATData { elem_t: e2, .. }),
+            ) => inhabited_types_differ(cx, env, depth, e1, e2),
+            _ => false,
+        }
+    }
+
     fn types_differ<'cx>(
         cx: &mut Context<'cx>,
         env: &FlowJsEnv,
@@ -1664,6 +1763,7 @@ fn intersect_type_guard<'cx>(
         tags_differ(cx, t1, t2)
             || ground_types_differ(t1, t2)
             || instance_tags_differ(cx, env, depth, t1, t2)
+            || arr_tags_differ(cx, env, depth, t1, t2)
     }
 
     fn try_intersect<'cx>(
