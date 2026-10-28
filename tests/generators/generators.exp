@@ -118,7 +118,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- class.js:72:12
 
 Cannot yield `xs` because: [incompatible-type]
- - array type [1] is incompatible with `Iterable` [2]
+ - `Array<number>` [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `ArrayIterator<number>` [3] is incompatible with `Iterator<number, void, string>` [4]
        - in the return value > type argument `Next` [5]: `void` [6] is incompatible with `string` [7]
 

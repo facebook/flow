@@ -1202,13 +1202,13 @@ pub enum Frame<L: Dupe> {
     FrameAnonymous,
     FrameAccessChain {
         chain: Vec1<AccessChainSegment>,
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, VirtualReason<L>)>,
     },
     FrameArrayElement {
         incompatibility_pair: Option<(MessageTypeReferenceData<L>, MessageTypeReferenceData<L>)>,
     },
     FrameCallableSignature {
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, VirtualReason<L>)>,
     },
     FrameEnumRepresentationType,
     FrameFunNthArgument {
@@ -1226,7 +1226,7 @@ pub enum Frame<L: Dupe> {
         incompatibility_pair: Option<(MessageTypeReferenceData<L>, MessageTypeReferenceData<L>)>,
     },
     FrameIndexerProperty {
-        incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
+        incompatibility_pair: Option<(MessageTypeReferenceData<L>, VirtualReason<L>)>,
     },
     FrameIndexerPropertyKey {
         incompatibility_pair: Option<(MessageTypeReferenceData<L>, VirtualReason<L>)>,

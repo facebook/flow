@@ -307,6 +307,12 @@ pub(super) fn inst_structural_subtype<'cx>(
                                     prop: None,
                                     lower: lreason.dupe(),
                                     upper: reason_struct.dupe(),
+                                    lower_t: flow_js_utils::type_or_type_desc_for_error(
+                                        &indexer_subtyping.lower,
+                                    ),
+                                    upper_t: flow_js_utils::type_or_type_desc_for_error(
+                                        &indexer_subtyping.upper,
+                                    ),
                                 },
                             ))),
                             Arc::new(use_op.dupe()),
@@ -378,6 +384,12 @@ pub(super) fn inst_structural_subtype<'cx>(
                                         prop: None,
                                         lower: lreason.dupe(),
                                         upper: reason_struct.dupe(),
+                                        lower_t: flow_js_utils::type_or_type_desc_for_error(
+                                            &indexer_subtyping.lower,
+                                        ),
+                                        upper_t: flow_js_utils::type_or_type_desc_for_error(
+                                            &indexer_subtyping.upper,
+                                        ),
                                     },
                                 ))),
                                 Arc::new(use_op.dupe()),
@@ -691,6 +703,7 @@ pub(super) fn check_super<'cx>(
     lreason: &Reason,
     ureason: &Reason,
     reference: &DerivedReference,
+    instance: &Type,
     t: &Type,
     x: &Name,
     p: &Property,
@@ -702,6 +715,8 @@ pub(super) fn check_super<'cx>(
                 prop: Some(x.dupe()),
                 lower: lreason.dupe(),
                 upper: ureason.dupe(),
+                lower_t: flow_js_utils::type_or_type_desc_for_error(instance),
+                upper_t: flow_js_utils::type_or_type_desc_for_error(t),
             },
         ))),
         Arc::new(use_op),

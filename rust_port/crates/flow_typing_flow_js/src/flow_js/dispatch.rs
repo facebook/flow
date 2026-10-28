@@ -8351,6 +8351,7 @@ fn __flow_impl<'cx>(
                 static_: static_props,
                 strictness_kind,
                 reference,
+                instance,
             } = derived;
             for (x, p) in own.iter() {
                 check_super(
@@ -8361,6 +8362,7 @@ fn __flow_impl<'cx>(
                     reason,
                     ureason,
                     reference,
+                    instance,
                     l,
                     x,
                     p,
@@ -8377,6 +8379,7 @@ fn __flow_impl<'cx>(
                         reason,
                         ureason,
                         reference,
+                        instance,
                         l,
                         x,
                         p,
@@ -8398,6 +8401,7 @@ fn __flow_impl<'cx>(
                         reason,
                         ureason,
                         reference,
+                        instance,
                         st,
                         x,
                         p,
@@ -8428,6 +8432,7 @@ fn __flow_impl<'cx>(
                 static_: _,
                 strictness_kind,
                 reference,
+                instance,
             } = derived;
             for (x, p) in own.iter() {
                 check_super(
@@ -8438,6 +8443,7 @@ fn __flow_impl<'cx>(
                     reason,
                     ureason,
                     reference,
+                    instance,
                     l,
                     x,
                     p,
@@ -8454,6 +8460,7 @@ fn __flow_impl<'cx>(
                         reason,
                         ureason,
                         reference,
+                        instance,
                         l,
                         x,
                         p,

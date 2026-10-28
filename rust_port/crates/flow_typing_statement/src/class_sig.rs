@@ -1727,7 +1727,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     let use_op = UseOp::Op(Arc::new(RootUseOp::ClassExtendsCheck(Box::new(
         ClassExtendsCheckData {
             def_loc: def_reason.loc().dupe(),
-            def: TypeOrTypeDescT::Type(derived_t),
+            def: TypeOrTypeDescT::Type(derived_t.dupe()),
             extends_loc: type_util::loc_of_t(&super_).dupe(),
             extends: TypeOrTypeDescT::Type(super_.dupe()),
         },
@@ -1761,6 +1761,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
                     cx.type_strictness_kind()
                 },
                 reference,
+                instance: derived_t,
             },
         }))),
     );

@@ -1502,38 +1502,88 @@ pub struct UnionRepresentativeData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> 
     pub union: type_or_type_desc::TypeOrTypeDescT<L>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
+/// Compared without `lower_t` and `upper_t`: the types are what the error prints, and must not
+/// tell apart errors or constraints that are otherwise the same.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PropertyCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub prop: Option<Name>,
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
+    pub lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for PropertyCompatibilityData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.prop == other.prop && self.lower == other.lower && self.upper == other.upper
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for PropertyCompatibilityData<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Hash> Hash for PropertyCompatibilityData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.prop.hash(state);
+        self.lower.hash(state);
+        self.upper.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for PropertyCompatibilityData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for PropertyCompatibilityData<L> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.prop
+            .cmp(&other.prop)
+            .then_with(|| self.lower.cmp(&other.lower))
+            .then_with(|| self.upper.cmp(&other.upper))
+    }
+}
+
+/// Compared without `lower_t` and `upper_t`: the types are what the error prints, and must not
+/// tell apart errors or constraints that are otherwise the same.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TupleElementCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub n: i32,
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
+    pub lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for TupleElementCompatibilityData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.n == other.n && self.lower == other.lower && self.upper == other.upper
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for TupleElementCompatibilityData<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Hash> Hash for TupleElementCompatibilityData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.n.hash(state);
+        self.lower.hash(state);
+        self.upper.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for TupleElementCompatibilityData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for TupleElementCompatibilityData<L> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.n
+            .cmp(&other.n)
+            .then_with(|| self.lower.cmp(&other.lower))
+            .then_with(|| self.upper.cmp(&other.upper))
+    }
 }
 
 #[derive(
@@ -5624,6 +5674,8 @@ pub struct DerivedType {
     pub static_: FlowOrdMap<Name, Property>,
     pub strictness_kind: TypeStrictnessKind,
     pub reference: DerivedReference,
+    /// The instance type of the class or interface whose members are checked.
+    pub instance: Type,
 }
 
 /// How errors refer to the class or interface whose members are checked.

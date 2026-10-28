@@ -57,7 +57,7 @@ References:
 Error --------------------------------------------------------------------------------------------- caching_bug.js:21:79
 
 Cannot return `x` because: [incompatible-type]
- - array type [1] is incompatible with `Iterable` [2]
+ - `Array<string | number>` [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `ArrayIterator<string | number>` [3] is incompatible with
       `Iterator<string, void, void>` [4]
        - in the return value > type argument `Yield` [5]: `number` [6] is incompatible with `string` [7]
@@ -128,7 +128,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:14:10
 
 Cannot return `map` because: [incompatible-type]
- - `Map` [1] is incompatible with `Iterable` [2]
+ - `Map<number, string>` [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `MapIterator<[number, string]>` [3] is incompatible with
       `Iterator<string, void, void>` [4]
        - in the return value > type argument `Yield` [5]: `[number, string]` [6] is incompatible with `string` [7]
@@ -164,7 +164,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- set.js:14:10
 
 Cannot return `set` because: [incompatible-type]
- - `Set` [1] is incompatible with `Iterable` [2]
+ - `Set<string>` [1] is incompatible with `Iterable` [2]
     - in property `@@iterator`: `SetIterator<string>` [3] is incompatible with `Iterator<number, void, void>` [4]
        - in the return value > type argument `Yield` [5]: `string` [6] is incompatible with `number` [7]
 

@@ -63,7 +63,9 @@ use flow_typing_type::type_::MappedTypeKeyCompatibilityData;
 use flow_typing_type::type_::MergedDeclarationData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
+use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::StandaloneCallThisData;
+use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::TypeGuardIncompatibilityData;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::UnionRepresentativeData;
@@ -7180,6 +7182,40 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             },
                         ) => Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility(Box::new(
                             IndexerKeyCompatibilityData {
+                                lower: lower.dupe(),
+                                upper: upper.dupe(),
+                                lower_t: f(lower_t.clone()),
+                                upper_t: f(upper_t.clone()),
+                            },
+                        ))),
+                        VirtualFrameUseOp::PropertyCompatibility(
+                            box PropertyCompatibilityData {
+                                prop,
+                                lower,
+                                upper,
+                                lower_t,
+                                upper_t,
+                            },
+                        ) => Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                            PropertyCompatibilityData {
+                                prop: prop.dupe(),
+                                lower: lower.dupe(),
+                                upper: upper.dupe(),
+                                lower_t: f(lower_t.clone()),
+                                upper_t: f(upper_t.clone()),
+                            },
+                        ))),
+                        VirtualFrameUseOp::TupleElementCompatibility(
+                            box TupleElementCompatibilityData {
+                                n,
+                                lower,
+                                upper,
+                                lower_t,
+                                upper_t,
+                            },
+                        ) => Arc::new(VirtualFrameUseOp::TupleElementCompatibility(Box::new(
+                            TupleElementCompatibilityData {
+                                n: *n,
                                 lower: lower.dupe(),
                                 upper: upper.dupe(),
                                 lower_t: f(lower_t.clone()),

@@ -506,21 +506,33 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             lower: upper,
             upper: lower,
         },
-        PropertyCompatibility(box PropertyCompatibilityData { prop, lower, upper }) => {
-            PropertyCompatibility(Box::new(PropertyCompatibilityData {
-                prop,
-                lower: upper,
-                upper: lower,
-            }))
-        }
+        PropertyCompatibility(box PropertyCompatibilityData {
+            prop,
+            lower,
+            upper,
+            lower_t,
+            upper_t,
+        }) => PropertyCompatibility(Box::new(PropertyCompatibilityData {
+            prop,
+            lower: upper,
+            upper: lower,
+            lower_t: upper_t,
+            upper_t: lower_t,
+        })),
         ReactConfigCheck => ReactConfigCheck,
-        TupleElementCompatibility(box TupleElementCompatibilityData { n, lower, upper }) => {
-            TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
-                n,
-                lower: upper,
-                upper: lower,
-            }))
-        }
+        TupleElementCompatibility(box TupleElementCompatibilityData {
+            n,
+            lower,
+            upper,
+            lower_t,
+            upper_t,
+        }) => TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
+            n,
+            lower: upper,
+            upper: lower,
+            lower_t: upper_t,
+            upper_t: lower_t,
+        })),
         TypeArgCompatibility(box TypeArgCompatibilityData {
             name,
             targ,
@@ -1322,6 +1334,7 @@ where
                                     prop: Some(prop),
                                     lower,
                                     upper,
+                                    ..
                                 },
                             ) if !prop.matches_str("$call")
                                 && opt_incompatibility_pair(
@@ -2970,6 +2983,8 @@ where
                                 prop: None,
                                 lower,
                                 upper,
+                                lower_t,
+                                ..
                             },
                         ) => {
                             let frame_loc = loc_of_aloc(&lower.loc);
@@ -2983,7 +2998,8 @@ where
                             let incompatibility_pair = opt_incompatibility_pair(
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
-                            );
+                            )
+                            .map(|(lower, upper)| (printed_type_reference(&lower, lower_t), upper));
 
                             all_frames.push(ErrorFrame::FrameIndexerProperty {
                                 incompatibility_pair,
@@ -3006,6 +3022,8 @@ where
                                 prop: Some(name),
                                 lower,
                                 upper,
+                                lower_t,
+                                ..
                             },
                         ) if name.matches_str("$call") => {
                             let frame_loc = loc_of_aloc(&lower.loc);
@@ -3019,7 +3037,8 @@ where
                             let incompatibility_pair = opt_incompatibility_pair(
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
-                            );
+                            )
+                            .map(|(lower, upper)| (printed_type_reference(&lower, lower_t), upper));
 
                             all_frames.push(ErrorFrame::FrameCallableSignature {
                                 incompatibility_pair,
@@ -3128,6 +3147,8 @@ where
                                 prop: Some(prop),
                                 lower,
                                 upper,
+                                lower_t,
+                                ..
                             },
                         ) => {
                             let lower_loc =
@@ -3145,7 +3166,10 @@ where
 
                             let (mut all_frames, explanations) = frames;
                             let incompatibility_pair =
-                                opt_incompatibility_pair(&use_op, &(lower.dupe(), upper.dupe()));
+                                opt_incompatibility_pair(&use_op, &(lower.dupe(), upper.dupe()))
+                                    .map(|(lower, upper)| {
+                                        (printed_type_reference(&lower, lower_t), upper)
+                                    });
 
                             let mut chain_vec = vec![AccessChainSegment::PropSegment(prop.dupe())];
                             chain_vec.extend(props);
@@ -3172,7 +3196,11 @@ where
 
                         VirtualFrameUseOp::TupleElementCompatibility(
                             box TupleElementCompatibilityData {
-                                n, lower, upper, ..
+                                n,
+                                lower,
+                                upper,
+                                lower_t,
+                                ..
                             },
                         ) => {
                             let lower_loc = loc_of_aloc(&lower.loc);
@@ -3189,7 +3217,10 @@ where
 
                             let (mut all_frames, explanations) = frames;
                             let incompatibility_pair =
-                                opt_incompatibility_pair(&use_op, &(lower.dupe(), upper.dupe()));
+                                opt_incompatibility_pair(&use_op, &(lower.dupe(), upper.dupe()))
+                                    .map(|(lower, upper)| {
+                                        (printed_type_reference(&lower, lower_t), upper)
+                                    });
 
                             let mut chain_vec = vec![AccessChainSegment::TupleIndexSegment(*n)];
                             chain_vec.extend(props);
@@ -4908,21 +4939,6 @@ where
         use super::intermediate_error_types::Frame::*;
 
         // Helper to convert incompatibility_pair to message if include_incompatibility_pair is true
-        let map_incompatibility =
-            |pair: &Option<(VirtualReason<L>, VirtualReason<L>)>|
-             -> Option<friendly::Message<Loc>> {
-                if include_incompatibility_pair {
-                    pair.as_ref().map(|(l, u)| {
-                        friendly::Message(vec![
-                            ref_(l),
-                            text(" is incompatible with "),
-                            ref_(u),
-                        ])
-                    })
-                } else {
-                    None
-                }
-            };
         let map_typed_incompatibility = |pair: &Option<(
             MessageTypeReferenceData<L>,
             MessageTypeReferenceData<L>,
@@ -4992,7 +5008,7 @@ where
                             }
                         });
                 (
-                    map_incompatibility(incompatibility_pair),
+                    map_lower_typed_incompatibility(incompatibility_pair),
                     friendly::Message(vec![text(kind), code(&chain_str)]),
                 )
             }
@@ -5005,7 +5021,7 @@ where
             FrameCallableSignature {
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_lower_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the callable signature")]),
             ),
             FrameEnumRepresentationType => (
@@ -5041,7 +5057,7 @@ where
             FrameIndexerProperty {
                 incompatibility_pair,
             } => (
-                map_incompatibility(incompatibility_pair),
+                map_lower_typed_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the indexer property")]),
             ),
             FrameIndexerPropertyKey {

@@ -179,6 +179,8 @@ pub(super) fn perform_lookup_action<'cx>(
                             prop: name_of_propref(propref),
                             lower: reason_of_t(lower).dupe(),
                             upper: reason_of_t(upper).dupe(),
+                            lower_t: flow_js_utils::type_or_type_desc_for_error(lower),
+                            upper_t: flow_js_utils::type_or_type_desc_for_error(upper),
                         },
                     ))),
                     Arc::new(use_op.dupe()),

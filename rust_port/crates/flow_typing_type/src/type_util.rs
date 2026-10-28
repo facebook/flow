@@ -1483,22 +1483,34 @@ where
                 mapped_type_loc: f(mapped_type_loc),
                 mapped_type: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), mapped_type),
             })),
-            PropertyCompatibility(box PropertyCompatibilityData { prop, lower, upper }) => {
-                PropertyCompatibility(Box::new(PropertyCompatibilityData {
-                    prop,
-                    lower: mod_reason(lower),
-                    upper: mod_reason(upper),
-                }))
-            }
+            PropertyCompatibility(box PropertyCompatibilityData {
+                prop,
+                lower,
+                upper,
+                lower_t,
+                upper_t,
+            }) => PropertyCompatibility(Box::new(PropertyCompatibilityData {
+                prop,
+                lower: mod_reason(lower),
+                upper: mod_reason(upper),
+                lower_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_t),
+                upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
+            })),
             ReactConfigCheck => ReactConfigCheck,
             ReactGetConfig { polarity } => ReactGetConfig { polarity },
-            TupleElementCompatibility(box TupleElementCompatibilityData { n, lower, upper }) => {
-                TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
-                    n,
-                    lower: mod_reason(lower),
-                    upper: mod_reason(upper),
-                }))
-            }
+            TupleElementCompatibility(box TupleElementCompatibilityData {
+                n,
+                lower,
+                upper,
+                lower_t,
+                upper_t,
+            }) => TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
+                n,
+                lower: mod_reason(lower),
+                upper: mod_reason(upper),
+                lower_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_t),
+                upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
+            })),
             TupleAssignment => TupleAssignment,
             TypeArgCompatibility(box TypeArgCompatibilityData {
                 name,
