@@ -90,39 +90,62 @@ References:
                                                                     ^^^^^^ [7]
 
 
-Error ----------------------------------------------------------------------------------------- iterator_result.js:23:31
+Error ----------------------------------------------------------------------------------------- iterator_result.js:23:16
 
-Cannot return object literal because in property `value`: `"still going..."` [1] is incompatible with `void` [2].
-[incompatible-type]
+Cannot return object literal because: [incompatible-type]
+ - Either in property `done`: `true` [1] is incompatible with `false` [2].
+ - Or in property `value`: `"still going..."` [3] is incompatible with `void` [4].
 
-   iterator_result.js:23:31
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   iterator_result.js:23:16
    23|         return { done, value: "still going..." }; // Error string ~> void
-                                     ^^^^^^^^^^^^^^^^ [1]
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   iterator_result.js:17:41
+   17| function makeIterator2(coin_flip: () => boolean ): $IteratorProtocol<string> {
+                                               ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:32:12
+   32|     done?: false,
+                  ^^^^^ [2]
+   iterator_result.js:23:31
+   23|         return { done, value: "still going..." }; // Error string ~> void
+                                     ^^^^^^^^^^^^^^^^ [3]
    iterator_result.js:20:36
    20|     next(): IteratorResult<string, void> {
-                                          ^^^^ [2]
+                                          ^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------- iterator_result.js:25:16
 
-Cannot return object literal because property `value` is missing in object literal [1] but exists in
-`{done: false, readonly value: string, ...}` [2]. [incompatible-type]
+Cannot return object literal because: [incompatible-type]
+ - Either in property `done`: `false` [1] is incompatible with `true` [2].
+ - Or property `value` is missing in object literal [3] but exists in `{done?: false, readonly value: string, ...}` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    iterator_result.js:25:16
    25|         return { done }; // Error void ~> string, LTI: prop-missing of value
-                      ^^^^^^^^ [1]
+                      ^^^^^^^^ [3]
 
 References:
+   iterator_result.js:17:41
+   17| function makeIterator2(coin_flip: () => boolean ): $IteratorProtocol<string> {
+                                               ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:27:11
+   27|     done: true,
+                 ^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:31:5
            v
    31|   | {
-   32|     done: false,
+   32|     done?: false,
    33|     readonly value: Yield,
    34|     ...
    35|   };
-         ^ [2]
+         ^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:14:10
