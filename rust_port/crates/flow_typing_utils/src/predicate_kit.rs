@@ -47,6 +47,7 @@ use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
+use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateConcretetizerVariant;
@@ -1403,6 +1404,50 @@ fn concrete_types_for_inspection<'cx>(
     }
 }
 
+/// Whether `t` has `any` as an element type, a type argument or the type of a property.
+fn has_shallow_any<'cx>(cx: &mut Context<'cx>, t: &Type) -> bool {
+    fn resolves_to_any<'cx>(cx: &mut Context<'cx>, t: &Type) -> bool {
+        match cx.find_resolved(t) {
+            Some(t) => is_any_t(&t),
+            None => is_any_t(t),
+        }
+    }
+    match t.deref() {
+        TypeInner::DefT(_, d) => match d.deref() {
+            DefTInner::ArrT(arr) => match arr.deref() {
+                ArrType::ArrayAT(box ArrayATData { elem_t, .. })
+                | ArrType::ROArrayAT(box ROArrayATData { elem_t, .. }) => {
+                    resolves_to_any(cx, elem_t)
+                }
+                ArrType::TupleAT(box TupleATData { elements, .. }) => {
+                    elements.iter().any(|elem| resolves_to_any(cx, &elem.t))
+                }
+            },
+            DefTInner::InstanceT(instance) => instance
+                .inst
+                .type_args
+                .iter()
+                .any(|(_, _, t, _)| resolves_to_any(cx, t)),
+            DefTInner::ObjT(obj) => {
+                let dict_any = match &obj.flags.obj_kind {
+                    ObjKind::Indexed(dict) => resolves_to_any(cx, &dict.value),
+                    _ => false,
+                };
+                dict_any
+                    || cx
+                        .find_props(obj.props_tmap.dupe())
+                        .iter()
+                        .any(|(_, prop)| match prop.deref() {
+                            PropertyInner::Field(fd) => resolves_to_any(cx, &fd.type_),
+                            _ => false,
+                        })
+            }
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
 fn is_empty_t(t: &Type) -> bool {
     matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT))
 }
@@ -1885,7 +1930,16 @@ fn intersect_type_guard<'cx>(
         } else if type_util::quick_subtype(None::<&mut fn(&Type)>, t1, t2)
             || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t1, t2)?
         {
-            Ok(Some(t1.dupe()))
+            // `any` inside `t1` makes it a subtype of the guard. When the guard is a subtype of
+            // `t1` as well, it is the more precise of the two.
+            if has_shallow_any(cx, t1)
+                && (type_util::quick_subtype(None::<&mut fn(&Type)>, t2, t1)
+                    || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t2, t1)?)
+            {
+                Ok(Some(t2.dupe()))
+            } else {
+                Ok(Some(t1.dupe()))
+            }
         } else if type_util::quick_subtype(None::<&mut fn(&Type)>, t2, t1)
             || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t2, t1)?
         {

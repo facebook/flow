@@ -317,3 +317,42 @@ function negation3() {
 
   foo([]); // triggrers union optimization
 }
+
+function refine_any_elements(
+  arr: Array<any> | string,
+  obj: {data: any},
+  map: Map<string, any>,
+) {
+  declare function isStrings(value: unknown): value is Array<string>;
+  if (isStrings(arr)) {
+    arr as Array<string>; // okay
+    arr as Array<number>; // error string ~> number
+  }
+
+  declare function hasStringData(value: unknown): value is {data: string};
+  if (hasStringData(obj)) {
+    obj.data as string; // okay
+    obj.data as number; // error string ~> number
+  }
+
+  declare function isStringMap(value: unknown): value is Map<string, string>;
+  if (isStringMap(map)) {
+    map.get('a') as ?string; // okay
+    map.get('a') as ?number; // error string ~> number
+  }
+}
+
+type AnyAlias = any;
+declare const anyVal: any;
+
+function refine_resolved_any_props(obj: {data: AnyAlias}) {
+  declare function hasStringData(value: unknown): value is {data: string};
+  if (hasStringData(obj)) {
+    obj.data as number; // error string ~> number
+  }
+
+  const lit = {data: anyVal};
+  if (hasStringData(lit)) {
+    lit.data as number; // error string ~> number
+  }
+}
