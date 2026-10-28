@@ -1335,7 +1335,7 @@ pub enum RootMessage<L: Dupe> {
         fn_: VirtualReason<L>,
     },
     RootCannotDefineClassMethod {
-        method_: VirtualReason<L>,
+        method_: NamedReferenceData<L>,
         name: Option<VirtualReasonDesc<L>>,
     },
     RootCannotDefineShadowedProtoProperty,

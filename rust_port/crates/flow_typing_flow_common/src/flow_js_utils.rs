@@ -1732,7 +1732,7 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
         RootUseOp::ClassImplementsCheck(data) => Some(&data.implements),
         RootUseOp::ClassOwnProtoCheck(_) => None,
         RootUseOp::MakeReadOnly { .. } => None,
-        RootUseOp::ClassMethodDefinition { name, .. } => Some(name),
+        RootUseOp::ClassMethodDefinition(data) => Some(&data.name),
         RootUseOp::Coercion { target, .. } => Some(target),
         RootUseOp::ConformToCommonInterface(_) => None,
         RootUseOp::MergedDeclaration(box MergedDeclarationData { current_decl, .. }) => {

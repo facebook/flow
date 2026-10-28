@@ -20,7 +20,6 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
-use flow_common::reason::mk_reason;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -1507,14 +1506,13 @@ fn check_methods<'a, C: crate::func_params_intf::Config>(
                 } else {
                     self_.dupe()
                 };
-                let reason = mk_reason(
-                    VirtualReasonDesc::RMethod(Some(FlowSmolStr::new(name))),
-                    id_loc,
-                );
-                let use_op = UseOp::Op(Arc::new(RootUseOp::ClassMethodDefinition {
-                    def: reason.dupe(),
-                    name: def_reason.dupe(),
-                }));
+                let use_op = UseOp::Op(Arc::new(RootUseOp::ClassMethodDefinition(Box::new(
+                    ClassMethodDefinitionData {
+                        def_loc: id_loc,
+                        method_name: FlowSmolStr::new(name),
+                        name: def_reason.dupe(),
+                    },
+                ))));
                 cx.add_post_inference_subtyping_check(self_val, use_op, this_param);
             }
         };

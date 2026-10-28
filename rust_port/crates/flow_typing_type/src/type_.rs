@@ -941,6 +941,23 @@ pub struct ClassOwnProtoCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct ClassMethodDefinitionData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub def_loc: L,
+    pub method_name: FlowSmolStr,
+    pub name: VirtualReason<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ConformToCommonInterfaceData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub self_sig_loc: L,
     pub self_module_loc: L,
@@ -1706,10 +1723,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     ClassExtendsCheck(Box<ClassExtendsCheckData<L>>),
     ClassImplementsCheck(Box<ClassImplementsCheckData<L>>),
     ClassOwnProtoCheck(Box<ClassOwnProtoCheckData<L>>),
-    ClassMethodDefinition {
-        def: VirtualReason<L>,
-        name: VirtualReason<L>,
-    },
+    ClassMethodDefinition(Box<ClassMethodDefinitionData<L>>),
     Coercion {
         from: VirtualReason<L>,
         target: VirtualReason<L>,

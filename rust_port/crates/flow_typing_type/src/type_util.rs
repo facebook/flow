@@ -34,6 +34,7 @@ use crate::type_::AssignVarTarget;
 use crate::type_::CallTData;
 use crate::type_::ClassExtendsCheckData;
 use crate::type_::ClassImplementsCheckData;
+use crate::type_::ClassMethodDefinitionData;
 use crate::type_::ClassOwnProtoCheckData;
 use crate::type_::ComponentRestParamCompatibilityData;
 use crate::type_::ConditionalTData;
@@ -1112,10 +1113,15 @@ where
                 extends_loc: f(extends_loc),
                 extends: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), extends),
             })),
-            ClassMethodDefinition { def, name } => ClassMethodDefinition {
-                def: mod_reason(def),
+            ClassMethodDefinition(box ClassMethodDefinitionData {
+                def_loc,
+                method_name,
+                name,
+            }) => ClassMethodDefinition(Box::new(ClassMethodDefinitionData {
+                def_loc: f(def_loc),
+                method_name,
                 name: mod_reason(name),
-            },
+            })),
             ClassImplementsCheck(box ClassImplementsCheckData {
                 def,
                 name,

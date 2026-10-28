@@ -35,6 +35,7 @@ use flow_typing_type::type_::AssignVarInit;
 use flow_typing_type::type_::AssignVarTarget;
 use flow_typing_type::type_::ClassExtendsCheckData;
 use flow_typing_type::type_::ClassImplementsCheckData;
+use flow_typing_type::type_::ClassMethodDefinitionData;
 use flow_typing_type::type_::ClassOwnProtoCheckData;
 use flow_typing_type::type_::ComponentRestParamCompatibilityData;
 use flow_typing_type::type_::ConformToCommonInterfaceData;
@@ -1709,12 +1710,21 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::ClassMethodDefinition { name, def } => root(
+                            VirtualRootUseOp::ClassMethodDefinition(
+                                box ClassMethodDefinitionData {
+                                    def_loc,
+                                    method_name,
+                                    name,
+                                },
+                            ) => root_at_loc(
                                 loc,
                                 frames,
-                                def,
+                                loc_of_aloc(def_loc),
                                 RootMessage::RootCannotDefineClassMethod {
-                                    method_: def.dupe(),
+                                    method_: NamedReferenceData {
+                                        loc: def_loc.dupe(),
+                                        name: method_name.dupe(),
+                                    },
                                     name: name.desc.clone(),
                                 },
                                 custom_error_message,
@@ -5461,7 +5471,10 @@ where
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot define "),
-                        ref_(method_),
+                        hardcoded_string_desc_ref(
+                            &format!("method `{}`", method_.name),
+                            &method_.loc,
+                        ),
                         text(" on "),
                         friendly::desc_of_reason_desc(name.as_ref()),
                     ]),
