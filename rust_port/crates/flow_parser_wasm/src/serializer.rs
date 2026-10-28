@@ -24,6 +24,7 @@ use flow_parser::parse_error::ParseError;
 use flow_parser::source_location::SourceLocationTable;
 use flow_parser::token::TokenKind;
 
+use crate::SourceType;
 use crate::babel_adapter::BabelMetadata;
 use crate::babel_adapter::COMPONENT_FUNCTION_FLAG;
 use crate::babel_adapter::COMPONENT_PATTERN_OPTIONAL_FLAG;
@@ -57,7 +58,7 @@ pub struct Serializer<'a> {
     source: &'a str,
     source_locations: SourceLocationTable<'a>,
     babel: bool,
-    babel_source_type: i32,
+    babel_source_type: SourceType,
     babel_metadata: Option<&'a BabelMetadata>,
     buf: Vec<u32>,
     positions: Vec<PositionInfo>,
@@ -71,7 +72,7 @@ impl<'a> Serializer<'a> {
             source,
             source_locations: SourceLocationTable::new(source),
             babel: false,
-            babel_source_type: 0,
+            babel_source_type: SourceType::Unspecified,
             babel_metadata: None,
             buf: Vec::with_capacity(4096),
             positions: Vec::with_capacity(1024),
@@ -80,7 +81,11 @@ impl<'a> Serializer<'a> {
         }
     }
 
-    pub fn new_babel(source: &'a str, babel_metadata: &'a BabelMetadata, source_type: i32) -> Self {
+    pub fn new_babel(
+        source: &'a str,
+        babel_metadata: &'a BabelMetadata,
+        source_type: SourceType,
+    ) -> Self {
         Serializer {
             babel: true,
             babel_source_type: source_type,
@@ -525,25 +530,27 @@ impl<'a> Serializer<'a> {
     }
 
     fn babel_source_type(&self, program: &ast::Program<Loc, Loc>) -> bool {
-        if self.babel_source_type == 1 {
-            return false;
+        match self.babel_source_type {
+            SourceType::Script => false,
+            SourceType::Module => true,
+            SourceType::Unspecified => {
+                program
+                    .statements
+                    .iter()
+                    .any(|statement| match &**statement {
+                        ast::statement::StatementInner::ImportDeclaration { inner, .. } => {
+                            matches!(inner.import_kind, ast::statement::ImportKind::ImportValue)
+                        }
+                        ast::statement::StatementInner::ExportDefaultDeclaration { .. } => true,
+                        ast::statement::StatementInner::ExportNamedDeclaration {
+                            inner, ..
+                        } => {
+                            matches!(inner.export_kind, ast::statement::ExportKind::ExportValue)
+                        }
+                        _ => false,
+                    })
+            }
         }
-        if self.babel_source_type == 2 {
-            return true;
-        }
-        program
-            .statements
-            .iter()
-            .any(|statement| match &**statement {
-                ast::statement::StatementInner::ImportDeclaration { inner, .. } => {
-                    matches!(inner.import_kind, ast::statement::ImportKind::ImportValue)
-                }
-                ast::statement::StatementInner::ExportDefaultDeclaration { .. } => true,
-                ast::statement::StatementInner::ExportNamedDeclaration { inner, .. } => {
-                    matches!(inner.export_kind, ast::statement::ExportKind::ExportValue)
-                }
-                _ => false,
-            })
     }
 
     // ---------------------------------------------------------------

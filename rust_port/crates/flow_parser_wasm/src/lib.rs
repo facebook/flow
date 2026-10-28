@@ -33,6 +33,28 @@ use position::PositionResult;
 #[cfg(not(target_arch = "wasm32"))]
 pub use runnable_js::flow_to_runnable_js_with_source_map;
 
+/// Source type encoded by the JavaScript parser's integer ABI.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(i32)]
+pub enum SourceType {
+    Unspecified = 0,
+    Script = 1,
+    Module = 2,
+}
+
+impl TryFrom<i32> for SourceType {
+    type Error = i32;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Unspecified),
+            1 => Ok(Self::Script),
+            2 => Ok(Self::Module),
+            other => Err(other),
+        }
+    }
+}
+
 /// Opaque parse result stored in WASM memory.
 pub struct ParseResult {
     error: Option<CString>,
@@ -94,17 +116,8 @@ fn nonneg_u32(v: i32) -> u32 {
 /// - enable_types_in_comments: ignored compatibility slot. This Hermes-compatible
 ///   entry point always treats Flow's legacy comment syntax (`/*: T */`,
 ///   `/*:: ... */`) as plain JavaScript comments.
-/// - source_type: 0 = unspecified, 1 = script, 2 = module. flow_parser has
-///   no script/module gate (parser_env.rs:218): `init_env` pins
-///   `allow_yield: false, allow_await: false` at the top level
-///   (parser_env.rs:392-393), while `parse_module_body_with_directives`
-///   (statement_parser.rs:5106) unconditionally accepts top-level
-///   `import`/`export`. All three values map to the same parse: imports
-///   and exports are accepted regardless, and top-level `await` is
-///   rejected with the same `Parse_error.AwaitAsIdentifierReference` that
-///   the OCaml flow_parser raises (parser_common.ml:481-491) — OCaml has
-///   no top-level-await gate either, so accepting `module` here matches
-///   OCaml semantics rather than diverging from it.
+/// - source_type: integer encoding of [`SourceType`].
+///   Selects source-type metadata; ESTree parsing uses the same grammar for all values.
 #[unsafe(no_mangle)]
 pub extern "C" fn hermesParse(
     source: *const u8,
@@ -128,13 +141,13 @@ pub extern "C" fn hermesParse(
     react_runtime_target: i32,
     throw_on_parse_errors: i32,
 ) -> *mut ParseResult {
-    match source_type {
-        0..=2 => {}
-        other => panic!(
+    let source_type = match SourceType::try_from(source_type) {
+        Ok(source_type) => source_type,
+        Err(other) => panic!(
             "hermesParse: invalid source_type={other}; expected 0 (unspecified), \
              1 (script), or 2 (module)."
         ),
-    }
+    };
 
     // SAFETY: The JS bridge in flow-parser/oxidized-src/FlowParser.js wraps
     // every call to `hermesParse` in a try/finally that allocates `source`
@@ -196,10 +209,11 @@ pub extern "C" fn hermesParse(
                     &metadata.source_filename,
                     &runnable_js::RunnableOptions {
                         enum_runtime_module: metadata.enum_runtime_module,
-                        source_type: if source_type == 2 {
-                            runnable_js::SourceType::Module
-                        } else {
-                            runnable_js::SourceType::CommonJs
+                        source_type: match source_type {
+                            SourceType::Module => runnable_js::SourceType::Module,
+                            SourceType::Unspecified | SourceType::Script => {
+                                runnable_js::SourceType::CommonJs
+                            }
                         },
                         react_runtime_target: if react_runtime_target == 19 {
                             runnable_js::ReactRuntimeTarget::React19
@@ -1211,7 +1225,10 @@ mod tests {
     /// Exercise the FFI `hermesParse` entry point with the supplied
     /// `source_type` and return the resulting `ParseResult`. Test callers
     /// own the returned pointer and must call `hermesParseResult_free`.
-    fn ffi_parse_with_source_type(source: &str, source_type: i32) -> *mut super::ParseResult {
+    fn ffi_parse_with_source_type(
+        source: &str,
+        source_type: super::SourceType,
+    ) -> *mut super::ParseResult {
         // The C ABI expects a null-terminated UTF-8 buffer; mirror the JS
         // bridge which appends `\0` and passes `Buffer.length + 1`.
         let mut bytes = source.as_bytes().to_vec();
@@ -1231,7 +1248,7 @@ mod tests {
             1, // enable_enums
             1, // enable_records
             1, // enable_types
-            source_type,
+            source_type as i32,
             0,  // enable_types_pragma_detection
             0,  // enable_types_in_comments
             0,  // babel
@@ -1256,7 +1273,7 @@ mod tests {
         // OCaml flow_parser, which also pins `allow_await:false` and
         // therefore treats `await` as a valid identifier outside async
         // function bodies — see parser_common.ml:481-491).
-        let result = ffi_parse_with_source_type("export const x = 1;", 2);
+        let result = ffi_parse_with_source_type("export const x = 1;", super::SourceType::Module);
         assert!(!result.is_null(), "ParseResult pointer should be non-null");
         let buf_ptr = super::hermesParseResult_getProgramBuffer(result);
         assert!(
