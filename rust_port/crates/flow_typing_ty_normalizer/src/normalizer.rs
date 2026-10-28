@@ -441,6 +441,17 @@ fn get_run_id() -> i32 {
     RUN_ID.with(|id| id.get())
 }
 
+/// The prototype properties to show for an inline interface: its methods and
+/// accessors. An interface the object kit builds by slicing another type (`Omit`,
+/// `Pick`, mapped types) has no class id and has already folded every member it
+/// keeps into its own properties; its prototype is the source's, so showing it
+/// would bring back members the slice dropped.
+fn inline_interface_proto_props(
+    inst: &flow_typing_type::type_::InstType,
+) -> Option<flow_typing_type::type_::properties::Id> {
+    (inst.class_id != ALocId::none()).then(|| inst.proto_props.dupe())
+}
+
 fn terr(kind: ErrorKind, msg: Option<&str>, t: Option<&Type>) -> Error {
     let t_str = t.map(|t| {
         format!(
@@ -2179,6 +2190,7 @@ mod type_converter {
                 state,
                 super_,
                 inst.own_props.dupe(),
+                inline_interface_proto_props(inst),
                 inst.inst_call_t,
                 inst.inst_construct_t,
                 &inst.inst_dict,
@@ -2200,10 +2212,35 @@ mod type_converter {
         state: &mut State,
         super_: &Type,
         own_props: flow_typing_type::type_::properties::Id,
+        proto_props: Option<flow_typing_type::type_::properties::Id>,
         inst_call_t: Option<i32>,
         inst_construct_t: Option<i32>,
         inst_dict: &flow_typing_type::type_::object::Dict,
     ) -> Result<ALocTy, Error> {
+        use flow_typing_type::type_::PropertyInner;
+
+        /// Whether a method type takes the receiver it is called on rather than
+        /// an explicitly annotated `this`.
+        fn has_implicit_receiver(cx: &mut Context<'_>, t: &Type) -> bool {
+            let t = cx.find_resolved(t).unwrap_or_else(|| t.dupe());
+            match t.deref() {
+                TypeInner::OptionalT { type_, .. } => has_implicit_receiver(cx, type_),
+                TypeInner::DefT(_, def_t) => match def_t.deref() {
+                    DefTInner::FunT(_, ft) => {
+                        matches!(ft.this_t.1, flow_typing_type::type_::ThisStatus::ThisMethod)
+                    }
+                    _ => false,
+                },
+                TypeInner::IntersectionT(_, rep) => rep
+                    .members_iter()
+                    .map(|t| t.dupe())
+                    .collect::<Vec<_>>()
+                    .iter()
+                    .all(|t| has_implicit_receiver(cx, t)),
+                _ => false,
+            }
+        }
+
         fn extends(ty: &ALocTy) -> Result<Vec<ty::GenericT<ALoc>>, Error> {
             match ty.as_ref() {
                 ty::Ty::Generic(g) => Ok(vec![*g.clone()]),
@@ -2270,12 +2307,57 @@ mod type_converter {
         let call_and_named = obj_props_t::<I>(
             env,
             state,
-            own_props,
+            own_props.dupe(),
             inst_call_t,
             false,
             ty::PropSource::Other,
             None,
         )?;
+        // Methods and accessors of an interface body live on the prototype. A
+        // name already among the own properties shadows its prototype entry.
+        let proto = match proto_props {
+            None => Vec::new(),
+            Some(proto_props) => {
+                let own_map = env.cx.find_props(own_props.dupe());
+                let proto_map = env.cx.find_props(proto_props.dupe());
+                let proto_names: Vec<Name> = proto_map
+                    .keys()
+                    .filter(|name| !own_map.contains_key(name))
+                    .map(|name| name.dupe())
+                    .collect();
+                let implicit_receiver: Vec<Name> = proto_map
+                    .iter()
+                    .filter(|(_, prop)| match &***prop {
+                        PropertyInner::Method { type_, .. } => has_implicit_receiver(env.cx, type_),
+                        _ => false,
+                    })
+                    .map(|(name, _)| name.dupe())
+                    .collect();
+                let mut proto = obj_props_t::<I>(
+                    env,
+                    state,
+                    proto_props,
+                    None,
+                    false,
+                    ty::PropSource::Other,
+                    Some(&proto_names),
+                )?;
+                // The implicit receiver of an interface method is the interface
+                // itself, which would print the whole interface again.
+                for prop in &mut proto {
+                    if let ty::Prop::NamedProp {
+                        name,
+                        prop: ty::NamedProp::Method { fun, .. },
+                        ..
+                    } = prop
+                        && implicit_receiver.contains(name)
+                    {
+                        fun.fun_this_param = None;
+                    }
+                }
+                proto
+            }
+        };
         let construct = construct_props::<I>(env, state, inst_construct_t)?;
         // Print order: construct signatures first, then call signature +
         // regular properties. Multiple overloads at the [inst_construct_t]
@@ -2283,6 +2365,7 @@ mod type_converter {
         // [construct_props]), all of which print before the rest.
         let mut if_props = construct;
         if_props.extend(call_and_named);
+        if_props.extend(proto);
         let if_dict = match inst_dict {
             Some(dict_type) => {
                 let dict_polarity = type_polarity(dict_type.dict_polarity);
@@ -3708,6 +3791,7 @@ mod type_converter {
         state: &mut State,
         super_: &Type,
         own_props: flow_typing_type::type_::properties::Id,
+        proto_props: Option<flow_typing_type::type_::properties::Id>,
         inst_call_t: Option<i32>,
         inst_construct_t: Option<i32>,
         inst_dict: &flow_typing_type::type_::object::Dict,
@@ -3719,6 +3803,7 @@ mod type_converter {
             state,
             super_,
             own_props,
+            proto_props,
             inst_call_t,
             inst_construct_t,
             inst_dict,
@@ -4050,6 +4135,7 @@ pub mod element_converter {
                         state,
                         super_,
                         own_props,
+                        inline_interface_proto_props(inst),
                         inst_call_t,
                         inst_construct_t,
                         inst_dict,

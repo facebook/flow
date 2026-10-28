@@ -3442,7 +3442,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- this.js:181:6
 
 Cannot call `fn` with `new B` bound to `cb` because in property `m`: `(this: B) => boolean` [1], a non-type-guard
-function, is incompatible with `(this: interface {}) => this is D` [2], which is a type-guard function.
+function, is incompatible with `(this: interface {m(): this is D}) => this is D` [2], which is a type-guard function.
 [function-predicate]
 
    this.js:181:6
@@ -4230,8 +4230,8 @@ References:
 Error -------------------------------------------------------------------------------------------- this_classes.js:291:8
 
 Cannot call `want` with `new NoGuard()` bound to `x` because in property `isB`: `(this: NoGuard) => boolean` [1], a
-non-type-guard function, is incompatible with `(this: interface {}) => this is B` [2], which is a type-guard function.
-[function-predicate]
+non-type-guard function, is incompatible with `(this: interface {isB(): this is B}) => this is B` [2], which is a
+type-guard function. [function-predicate]
 
    this_classes.js:291:8
    291|   want(new NoGuard()); // error no type-guard

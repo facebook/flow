@@ -187,7 +187,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ array_lib.js:80:3
 
 Cannot cast `arrayLike` to `$ArrayLike<string>` because property `@@iterator` is missing in `ArrayLike<string>` [1] but
-exists in `interface {readonly length: number; readonly [indexer: number]: string}` [2]. [incompatible-type]
+exists in `interface {readonly length: number; "@@iterator"(): IteratorObject<string>; readonly [indexer: numbe...` [2].
+[incompatible-type]
 
    array_lib.js:80:3
    80|   arrayLike as $ArrayLike<string>; // ERROR

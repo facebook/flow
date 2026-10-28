@@ -123,7 +123,7 @@ References:
 Error ----------------------------------------------------------------------------------------- lib_construct_sig.js:4:9
 
 Cannot call `LibCtor.new` because property `new` is missing in
-`interface {new(x: number): {x: number}; prototype: {x: number}}` [1]. [prop-missing]
+`interface {new(x: number): {x: number}; prototype: {x: number}; helper(): string}` [1]. [prop-missing]
 
    lib_construct_sig.js:4:9
    4| LibCtor.new(1); // ERROR: not a method named `new`

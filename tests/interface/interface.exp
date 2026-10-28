@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- array.js:4:1
 
-Cannot cast `a` to `interface {}` because in the return value of property `pop`: [incompatible-type]
+Cannot cast `a` to `interface {pop(): boolean | void}` because in the return value of property `pop`:
+[incompatible-type]
  - Either `number` [1] is incompatible with `boolean` [2].
  - Or `number` [1] is incompatible with `void` [3].
 
@@ -1586,9 +1587,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:4:1
 
-Cannot cast `s` to `interface {}` because `string` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
-You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
-[incompatible-type]
+Cannot cast `s` to `interface {charAt(pos: number): string}` because `string` [1], a primitive, cannot be used as a
+subtype of `interface {charAt(pos: number): string}` [2]. You can wrap it in `new String(...))` to turn it into an
+object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    string.js:4:1
    4| s as interface {charAt(pos: number): string}; // ERROR

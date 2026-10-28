@@ -2064,8 +2064,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:76:1
 
-Cannot call `unboundInlineM` as a standalone function because its `this` parameter requires `interface {}` [1] as the
-receiver. Call it as a method, or bind it to its receiver before calling it. [incompatible-type]
+Cannot call `unboundInlineM` as a standalone function because its `this` parameter requires `interface {m(): void}` [1]
+as the receiver. Call it as a method, or bind it to its receiver before calling it. [incompatible-type]
 
    mixed_inference.js:76:1
    76| unboundInlineM(); // error: a standalone call does not provide the required receiver
@@ -2079,8 +2079,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:80:1
 
-Cannot call `unboundImportedInlineM` as a standalone function because its `this` parameter requires `interface {}` [1]
-as the receiver. Call it as a method, or bind it to its receiver before calling it. [incompatible-type]
+Cannot call `unboundImportedInlineM` as a standalone function because its `this` parameter requires
+`interface {m(): void}` [1] as the receiver. Call it as a method, or bind it to its receiver before calling it.
+[incompatible-type]
 
    mixed_inference.js:80:1
    80| unboundImportedInlineM(); // error: imported inline interfaces preserve their receiver too
