@@ -16,11 +16,14 @@ mod tests {
     use flow_parser::loc::Loc;
     use flow_parser::loc_sig::LocSig;
 
+    use crate::ty::Binder;
+    use crate::ty::BinderKind;
     use crate::ty::Decl;
     use crate::ty::DeclTypeAliasDeclData;
     use crate::ty::Dict;
     use crate::ty::Elt;
     use crate::ty::FunEffect;
+    use crate::ty::FunParam;
     use crate::ty::FunT;
     use crate::ty::GenKind;
     use crate::ty::NamedProp;
@@ -258,6 +261,46 @@ mod tests {
             "(() => void)[\"a\"]"
         );
         assert_eq!(string_of_t(&index(Ty::Str), &opts), "string[\"a\"]");
+    }
+
+    #[test]
+    fn test_hook_binder_uses_hook_keyword() {
+        let hook = Elt::Type(Arc::new(Ty::<ALoc>::Fun(Box::new(FunT {
+            fun_this_param: None,
+            fun_params: vec![(
+                Some(FlowSmolStr::new("x")),
+                Arc::new(Ty::Num),
+                FunParam {
+                    prm_optional: false,
+                },
+            )]
+            .into(),
+            fun_rest_param: None,
+            fun_return: ReturnT::ReturnType(Arc::new(Ty::Void)),
+            fun_type_params: None,
+            fun_static: Arc::new(Ty::Top),
+            fun_effect: FunEffect::Hook,
+        }))));
+        let binder = Binder {
+            kind: BinderKind::Function,
+            name: FlowSmolStr::new("useFoo"),
+            owner: None,
+            type_parameter_context: None,
+            overloads: 0,
+        };
+
+        let (type_str, _) = string_of_type_at_pos_result::<Loc>(
+            TypeAtPosPrint {
+                ty: &hook,
+                refs: None,
+                binder: Some(&binder),
+                alias: None,
+            },
+            &|_| Loc::none(),
+            &test_options(),
+        );
+
+        assert_eq!(type_str, "hook useFoo(x: number): void");
     }
 
     #[test]

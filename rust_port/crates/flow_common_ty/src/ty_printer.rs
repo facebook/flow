@@ -529,6 +529,27 @@ fn type_function<L: Dupe>(
     func: &FunT<L>,
     size: &mut PrintState<L>,
 ) -> LayoutNode {
+    let signature = function_signature(opts, depth, sep, func, size);
+    if matches!(func.fun_effect, FunEffect::Hook) {
+        layout::fuse(vec![
+            LayoutNode::atom("hook".to_string()),
+            layout::pretty_space(),
+            signature,
+        ])
+    } else {
+        signature
+    }
+}
+
+/// A function type without its `hook` keyword: type parameters, parameters,
+/// `sep`, and the return type.
+fn function_signature<L: Dupe>(
+    opts: &PrinterOptions,
+    depth: usize,
+    sep: &LayoutNode,
+    func: &FunT<L>,
+    size: &mut PrintState<L>,
+) -> LayoutNode {
     let mut params = Vec::new();
     let mut limit_reached = false;
     if let Some(t) = &func.fun_this_param {
@@ -594,12 +615,6 @@ fn type_function<L: Dupe>(
         ]));
     }
 
-    let hook_prefix = if matches!(func.fun_effect, FunEffect::Hook) {
-        vec![LayoutNode::atom("hook".to_string()), layout::pretty_space()]
-    } else {
-        vec![]
-    };
-
     let type_params = match &func.fun_type_params {
         Some(tparams) => type_parameter(opts, depth, tparams, size),
         _ => LayoutNode::empty(),
@@ -620,14 +635,13 @@ fn type_function<L: Dupe>(
 
     let return_type = return_t(opts, depth, &func.fun_return, size);
 
-    let mut elements = hook_prefix;
-    elements.push(type_params);
-    elements.push(params_list);
-    elements.push(sep.clone());
-    elements.push(layout::pretty_space());
-    elements.push(return_type);
-
-    layout::fuse(elements)
+    layout::fuse(vec![
+        type_params,
+        params_list,
+        sep.clone(),
+        layout::pretty_space(),
+        return_type,
+    ])
 }
 
 fn type_function_param<L: Dupe>(
@@ -1977,7 +1991,14 @@ pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
 /// The declaration head hover shows before the type. Kinds with no JavaScript
 /// keyword of their own are parenthesized.
 fn layout_of_binder_head(binder: &Binder) -> LayoutNode {
+    layout_of_binder_head_with_effect(binder, &FunEffect::Arbitrary)
+}
+
+/// The head of a callable binder spliced into a signature. A hook is declared
+/// with `hook` in place of `function`.
+fn layout_of_binder_head_with_effect(binder: &Binder, effect: &FunEffect) -> LayoutNode {
     let prefix = match binder.kind {
+        BinderKind::Function if matches!(effect, FunEffect::Hook) => "hook",
         BinderKind::Var => "var",
         BinderKind::Let => "let",
         BinderKind::Const => "const",
@@ -2084,8 +2105,8 @@ fn layout_of_binder(
             ) =>
         {
             layout::fuse(vec![
-                head,
-                type_function(opts, 0, &LayoutNode::atom(":".to_string()), func, state),
+                layout_of_binder_head_with_effect(binder, &func.fun_effect),
+                function_signature(opts, 0, &LayoutNode::atom(":".to_string()), func, state),
                 layout_of_overload_count(binder.overloads),
             ])
         }
@@ -2099,8 +2120,8 @@ fn layout_of_binder(
                 if i > 0 {
                     parts.push(layout::hardline());
                 }
-                parts.push(layout_of_binder_head(binder));
-                parts.push(type_function(
+                parts.push(layout_of_binder_head_with_effect(binder, &func.fun_effect));
+                parts.push(function_signature(
                     opts,
                     0,
                     &LayoutNode::atom(":".to_string()),
