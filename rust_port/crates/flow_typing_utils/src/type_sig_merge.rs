@@ -3277,7 +3277,7 @@ fn merge_value<'cx>(
             inner.strictness_kind,
         ),
         Value::EmptyConstArrayLit(inner) => {
-            let reason = reason::mk_reason(RArray, inner.loc.dupe());
+            let reason = reason::mk_reason(None, inner.loc.dupe());
             let elem_t = type_::empty_t::make(reason::mk_reason(None, inner.loc.dupe()));
             let arrtype = type_::ArrType::TupleAT(Box::new(TupleATData {
                 elem_t,
@@ -3298,7 +3298,7 @@ fn merge_value<'cx>(
         Value::ArrayLit(inner) => {
             let loc = &inner.loc;
             let reason = if as_const {
-                reason::mk_reason(RArray, loc.dupe())
+                reason::mk_reason(None, loc.dupe())
             } else {
                 reason::mk_reason(RArrayLit, loc.dupe())
             };

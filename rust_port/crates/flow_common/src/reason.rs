@@ -285,7 +285,6 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RNullOrVoid,
     RObjectLit,
     RObjectType,
-    RArray,
     RArrayLit,
     REmptyArrayLit,
     RArrayType,
@@ -387,7 +386,6 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RBooleanLit(b) => RBooleanLit(*b),
             RObjectLit => RObjectLit,
             RObjectType => RObjectType,
-            RArray => RArray,
             RArrayLit => RArrayLit,
             REmptyArrayLit => REmptyArrayLit,
             RArrayType => RArrayType,
@@ -499,8 +497,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
             ) => Nullish,
 
             Some(
-                RArray
-                | RArrayLit
+                RArrayLit
                 | REmptyArrayLit
                 | RArrayType
                 | RROArrayType
@@ -1166,7 +1163,6 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RObjectType => "object type".to_string(),
 
         // Arrays
-        RArray => "array".to_string(),
         RArrayLit => "array literal".to_string(),
         REmptyArrayLit => "empty array literal".to_string(),
         RArrayType => "array type".to_string(),

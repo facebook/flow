@@ -735,7 +735,7 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
                                 polarity: Polarity::Positive,
                                 ..el.clone()
                             });
-                            let r = r.dupe().replace_desc(VirtualReasonDesc::RArray);
+                            let r = r.dupe().replace_desc(None);
                             Type::new(TypeInner::DefT(
                                 r,
                                 DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(

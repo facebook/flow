@@ -7174,7 +7174,7 @@ fn expression_<'a>(
             let as_const = *as_const;
             match inner.elements.as_ref() {
                 [] if as_const => {
-                    let reason = mk_reason(VirtualReasonDesc::RArray, loc.dupe());
+                    let reason = mk_reason(None, loc.dupe());
                     let elem_t = empty_t::make(mk_reason(None, loc.dupe()));
                     let arrtype = type_::ArrType::TupleAT(Box::new(TupleATData {
                         elem_t,
@@ -7266,7 +7266,7 @@ fn expression_<'a>(
                     };
                     let literal = !as_const && *has_hint.get_forced(cx);
                     let reason = if as_const {
-                        mk_reason(VirtualReasonDesc::RArray, loc.dupe())
+                        mk_reason(None, loc.dupe())
                     } else {
                         mk_reason(VirtualReasonDesc::RArrayLit, loc.dupe())
                     };
@@ -7949,7 +7949,7 @@ fn expression_<'a>(
             let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
             let t = tag_ast.loc().1.dupe();
             let reason = mk_reason(None, loc.dupe());
-            let reason_array = mk_reason(VirtualReasonDesc::RArray, reason.loc().dupe());
+            let reason_array = mk_reason(None, reason.loc().dupe());
             let ret_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
             let ret_tvar = Tvar::new(reason.dupe(), ret_id as u32);
             let quasi_t = flow_js::get_builtin_type_non_speculating(

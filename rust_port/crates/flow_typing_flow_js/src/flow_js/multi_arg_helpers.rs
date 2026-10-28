@@ -1403,7 +1403,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         let (args, spread) = flatten(cx, Vec::new(), None, resolved);
         let spread = if let Some((tset, last_inexact_tuple, generic)) = spread {
             let generic = array_spread::to_option(&generic).cloned();
-            let r = flow_common::reason::mk_reason(VirtualReasonDesc::RArray, r.loc().dupe());
+            let r = flow_common::reason::mk_reason(None, r.loc().dupe());
             let arrtype = match last_inexact_tuple {
                 Some(arrtype) => arrtype,
                 None => {

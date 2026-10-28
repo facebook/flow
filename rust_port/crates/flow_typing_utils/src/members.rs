@@ -367,7 +367,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                             })
                             .collect();
                         Type::new(TypeInner::DefT(
-                            locationless_reason(VirtualReasonDesc::RArray),
+                            locationless_reason(None),
                             DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
                                 ArrayATData {
                                     elem_t: merge_type(cx, (et1.dupe(), et2.dupe())),
@@ -408,7 +408,7 @@ fn merge_type<'cx>(cx: &mut Context<'cx>, pair: (Type, Type)) -> Type {
                             ..
                         }),
                     ) => Type::new(TypeInner::DefT(
-                        locationless_reason(VirtualReasonDesc::RArray),
+                        locationless_reason(None),
                         DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
                             ArrayATData {
                                 elem_t: merge_type(cx, (et1.dupe(), et2.dupe())),
