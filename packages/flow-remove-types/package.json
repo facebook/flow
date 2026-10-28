@@ -29,11 +29,11 @@
   ],
   "homepage": "https://flow.org",
   "bugs": {
-    "url": "https://github.com/facebook/flow/issues"
+    "url": "https://github.com/meta/flow/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/flow.git",
+    "url": "git+https://github.com/meta/flow.git",
     "directory": "packages/flow-remove-types"
   },
   "scripts": {

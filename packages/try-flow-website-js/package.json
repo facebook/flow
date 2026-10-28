@@ -3,7 +3,7 @@
   "version": "0.337.0",
   "description": "An NPM package to hold compiled `flow.js` and libdefs for every Flow version.",
   "license": "MIT",
-  "repository": "facebook/flow",
+  "repository": "meta/flow",
   "files": [
     "flowlib",
     "tslib",

@@ -22,13 +22,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/flow.git",
+    "url": "git+https://github.com/meta/flow.git",
     "directory": "packages/flow-upgrade"
   },
   "bugs": {
-    "url": "https://github.com/facebook/flow/issues"
+    "url": "https://github.com/meta/flow/issues"
   },
-  "homepage": "https://github.com/facebook/flow/tree/master/packages/flow-upgrade#readme",
+  "homepage": "https://github.com/meta/flow/tree/master/packages/flow-upgrade#readme",
   "dependencies": {
     "@babel/highlight": "^7.18.6",
     "chalk": "^2.0.1",
