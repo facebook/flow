@@ -1111,13 +1111,7 @@ fn type_of_hint_decomposition<'cx>(
                         let env = &env.solving_implicit_instantiation();
                         speculation_flow::flow_t_unsafe(cx, env, (arr_t, t.dupe()))
                     }?;
-                    Ok(implicit_instantiation::pin_types::pin_type(
-                        cx,
-                        env,
-                        unknown_use(),
-                        reason,
-                        &elem_t,
-                    )?)
+                    Ok(implicit_instantiation::pin_tvar(cx, env, &elem_t)?)
                 }
             }
             ConcrHintDecompositionInner::DecompAwait => {

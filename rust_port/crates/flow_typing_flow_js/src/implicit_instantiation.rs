@@ -195,18 +195,6 @@ pub(crate) fn generalize_singletons<'cx>(
 }
 
 #[derive(Debug, Clone)]
-pub struct InferredTarg {
-    pub tparam: TypeParam,
-    pub inferred: Type,
-}
-
-impl InferredTarg {
-    pub fn to_type(&self) -> Type {
-        self.inferred.dupe()
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct GeneralizedTarg {
     pub tparam: TypeParam,
     pub inferred: Type,
@@ -219,34 +207,11 @@ impl GeneralizedTarg {
     }
 }
 
-trait Observer {
-    fn on_pinned_tparam<'cx>(
-        cx: &mut Context<'cx>,
-        tparam: &TypeParam,
-        inferred: Type,
-    ) -> InferredTarg;
-    fn on_constant_tparam_missing_bounds<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        tparam: &TypeParam,
-    ) -> Result<InferredTarg, FlowJsException>;
-    fn on_missing_bounds<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        use_op: &UseOp,
-        tparam: &TypeParam,
-        tparam_binder_reason: &Reason,
-        instantiation_reason: &Reason,
-    ) -> Result<InferredTarg, FlowJsException>;
-    fn on_upper_non_t<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        use_op: &UseOp,
-        u: &UseT<Cx>,
-        tparam: &TypeParam,
-        tparam_binder_reason: &Reason,
-        instantiation_reason: &Reason,
-    ) -> Result<InferredTarg, FlowJsException>;
+/// A type argument of a solve: an explicit one, or the tvar the solve infers it with.
+struct SolveTarg {
+    tparam: TypeParam,
+    t: Type,
+    inferred: bool,
 }
 
 fn get_t<'cx>(cx: &mut Context<'cx>, t: &Type) -> Type {
@@ -1376,31 +1341,26 @@ fn merge_upper_bounds<'cx>(
 
                     let mut acc = UseTResult::UpperEmpty;
                     for (u, _) in sorted_uppers {
-                        let result = t_of_use_t(cx, env, seen, tvar, &u)?;
+                        // Pinning ignores a bound that mentions a placeholder.
+                        let result = match t_of_use_t(cx, env, seen, tvar, &u)? {
+                            UseTResult::UpperT(t)
+                                if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) =>
+                            {
+                                UseTResult::UpperEmpty
+                            }
+                            result => result,
+                        };
                         acc = match (acc, result) {
-                            (UseTResult::UpperNonT(u), _) => UseTResult::UpperNonT(u),
-                            (_, UseTResult::UpperNonT(u)) => UseTResult::UpperNonT(u),
-                            (UseTResult::UpperEmpty, UseTResult::UpperPlaceholder(t)) => {
+                            (UseTResult::UpperNonT(u), _) | (_, UseTResult::UpperNonT(u)) => {
+                                UseTResult::UpperNonT(u)
+                            }
+                            (acc, UseTResult::UpperEmpty) | (UseTResult::UpperEmpty, acc) => acc,
+                            (UseTResult::UpperPlaceholder(t), UseTResult::UpperPlaceholder(_)) => {
                                 UseTResult::UpperPlaceholder(t)
                             }
-                            (UseTResult::UpperEmpty, UseTResult::UpperT(t)) => {
-                                filter_placeholder(cx, t)
-                            }
-                            (UseTResult::UpperPlaceholder(old_t), UseTResult::UpperT(t))
-                                if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) =>
-                            {
-                                UseTResult::UpperPlaceholder(old_t)
-                            }
-                            (UseTResult::UpperPlaceholder(_), UseTResult::UpperT(t)) => {
+                            (UseTResult::UpperPlaceholder(_), UseTResult::UpperT(t))
+                            | (UseTResult::UpperT(t), UseTResult::UpperPlaceholder(_)) => {
                                 UseTResult::UpperT(t)
-                            }
-                            (UseTResult::UpperT(t), UseTResult::UpperPlaceholder(_)) => {
-                                UseTResult::UpperT(t)
-                            }
-                            (UseTResult::UpperT(old_t), UseTResult::UpperT(t))
-                                if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) =>
-                            {
-                                UseTResult::UpperT(old_t)
                             }
                             (UseTResult::UpperT(t_prime), UseTResult::UpperT(t)) => {
                                 if equal(cx, &t_prime, &t)
@@ -1422,14 +1382,6 @@ fn merge_upper_bounds<'cx>(
                                 } else {
                                     UseTResult::UpperT(t_prime)
                                 }
-                            }
-                            (acc @ UseTResult::UpperT(_), UseTResult::UpperEmpty) => acc,
-                            (
-                                acc @ UseTResult::UpperPlaceholder(_),
-                                UseTResult::UpperEmpty | UseTResult::UpperPlaceholder(_),
-                            ) => acc,
-                            (UseTResult::UpperEmpty, UseTResult::UpperEmpty) => {
-                                UseTResult::UpperEmpty
                             }
                         };
                     }
@@ -1525,10 +1477,10 @@ fn merge_lower_bounds<'cx>(
 fn placeholders_leaked_into_bounds<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
-    inferred_targ_list: &[(SubstName, Type, Type, bool)],
+    targs: &[SolveTarg],
 ) -> bool {
-    for (_, t, _, is_inferred) in inferred_targ_list {
-        if !*is_inferred {
+    for SolveTarg { t, inferred, .. } in targs {
+        if !*inferred {
             continue;
         }
         let bounds = match pinning_source(cx, env, t) {
@@ -1583,78 +1535,198 @@ fn placeholders_leaked_into_bounds<'cx>(
     false
 }
 
-fn on_missing_bounds<'cx, Obs: Observer>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    use_op: &UseOp,
-    tparam: &TypeParam,
-    default_bound: &Option<Type>,
-    tparam_binder_reason: &Reason,
-    instantiation_reason: &Reason,
-) -> Result<InferredTarg, FlowJsException> {
-    match default_bound {
-        Some(t) => Ok(Obs::on_pinned_tparam(cx, tparam, t.dupe())),
-        None => Obs::on_missing_bounds(
-            cx,
-            env,
-            use_op,
-            tparam,
-            tparam_binder_reason,
-            instantiation_reason,
-        ),
-    }
+/// What a solve pins an unmarked type parameter to when it has neither usable bounds nor a
+/// default.
+///
+/// A type parameter is *marked* with its polarity when the result of the operation mentions it,
+/// and the solve does not allow underconstrained type parameters. Nothing observes the solution
+/// of an unmarked one. A marked type parameter without usable bounds or a default is always
+/// underconstrained (see `underconstrained`).
+#[derive(Clone, Copy)]
+enum UnmarkedFallback {
+    /// Its bound.
+    Bound,
+    /// Underconstrained, like a marked one. This is what the hint round of `solve_targs` uses,
+    /// which runs in hint evaluation mode, so it gives a placeholder.
+    ///
+    /// The hint round's solution is the type that a generic value is checked against. In
+    ///
+    ///   declare function on<T>(make: () => T): void;
+    ///   declare function create<U>(): Array<U>;
+    ///   on(create);
+    ///
+    /// `create` still has placeholder type arguments in the hint round, so `T` only gets
+    /// `Array<placeholder>`, which pinning ignores. Pinned to its bound, `T` would make `create`
+    /// get checked against `() => mixed`, even though nothing said `mixed`. As a placeholder, `T`
+    /// makes it get checked against `() => <placeholder>`, which says nothing about what it
+    /// returns.
+    Underconstrained,
 }
 
-fn use_upper_bounds<'cx, Obs: Observer>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    use_op: &UseOp,
-    tparam: &TypeParam,
-    tvar: &Type,
-    default_bound: &Option<Type>,
-    on_upper_empty: Option<
-        &dyn Fn(
-            &mut Context<'cx>,
-            &FlowJsEnv,
-            &TypeParam,
-            &Reason,
-            &Reason,
-        ) -> Result<InferredTarg, FlowJsException>,
-    >,
-    tparam_binder_reason: &Reason,
-    instantiation_reason: &Reason,
-) -> Result<InferredTarg, FlowJsException> {
-    let upper_t = merge_upper_bounds(cx, env, &mut BTreeSet::new(), tvar)?;
-    match upper_t {
-        UseTResult::UpperEmpty => match on_upper_empty {
-            Some(f) => f(cx, env, tparam, tparam_binder_reason, instantiation_reason),
-            None => on_missing_bounds::<Obs>(
+impl UnmarkedFallback {
+    /// The solution for a type parameter without usable bounds.
+    fn without_bounds<'cx>(
+        self,
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: &UseOp,
+        tparam: &TypeParam,
+        marked: bool,
+        tparam_binder_reason: &Reason,
+        instantiation_reason: &Reason,
+    ) -> Result<Type, FlowJsException> {
+        match (self, marked, &tparam.default) {
+            (UnmarkedFallback::Bound, false, default) => {
+                let inferred = default.as_ref().unwrap_or(&tparam.bound).dupe();
+                flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
+                    vec![format!(
+                        "Constant type parameter {} is pinned to {}",
+                        tparam.name.string_of_subst_name(),
+                        flow_typing_debug::dump_t(Some(3), cx, &inferred),
+                    )]
+                });
+                Ok(inferred)
+            }
+            (_, _, Some(default)) => Ok(default.dupe()),
+            (_, _, None) => underconstrained(
                 cx,
                 env,
                 use_op,
                 tparam,
-                default_bound,
                 tparam_binder_reason,
                 instantiation_reason,
             ),
+        }
+    }
+}
+
+/// A type parameter that a solve can't determine: a placeholder outside checking mode, and an
+/// `underconstrained-implicit-instantiation` error in checking mode.
+fn underconstrained<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: &UseOp,
+    tparam: &TypeParam,
+    tparam_binder_reason: &Reason,
+    instantiation_reason: &Reason,
+) -> Result<Type, FlowJsException> {
+    if !matches!(*cx.typing_mode(), TypingMode::CheckingMode) {
+        return Ok(cx.mk_placeholder(tparam_binder_reason.dupe()));
+    }
+    flow_js_utils::add_output_with_env(
+        cx,
+        env,
+        ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
+            EImplicitInstantiationUnderconstrainedErrorData {
+                call: ImplicitInstantiationReferenceData {
+                    loc: instantiation_reason.loc().dupe(),
+                    kind: implicit_instantiation_reference_kind(use_op)
+                        .map(|kind| kind.dupe())
+                        .unwrap_or(ImplicitInstantiationReferenceKind::Call(None)),
+                },
+                type_param_loc: tparam_binder_reason.def_loc().dupe(),
+                type_param_name: tparam.name.string_of_subst_name().dupe(),
+                use_op: use_op.dupe(),
+            },
+        )),
+    )?;
+    Ok(any_t::why(
+        AnySource::AnyError(None),
+        tparam_binder_reason.dupe(),
+    ))
+}
+
+fn log_pinned(cx: &mut Context<'_>, tparam: &TypeParam, inferred: &Type) {
+    flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
+        vec![format!(
+            "Type parameter {} is pinned to {}",
+            tparam.name.string_of_subst_name(),
+            flow_typing_debug::dump_t(Some(3), cx, inferred),
+        )]
+    });
+}
+
+/// Pins `t`, the tvar a solve instantiated `tparam` with, to the merge of its bounds.
+///
+/// `polarity` is the mark of `tparam` (see `UnmarkedFallback`). A negatively marked type parameter
+/// prefers its upper bounds, any other its lower bounds. Without usable bounds, a marked one is
+/// pinned to `error_fallback` if there is one, then to its default, and otherwise it is
+/// underconstrained. An unmarked one is pinned to its default, and otherwise as
+/// `unmarked_fallback` says. An upper bound that can't be merged makes a marked type parameter
+/// underconstrained.
+fn pin_type<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    unmarked_fallback: UnmarkedFallback,
+    use_op: &UseOp,
+    tparam: &TypeParam,
+    polarity: Option<Polarity>,
+    error_fallback: Option<Type>,
+    instantiation_reason: &Reason,
+    t: &Type,
+) -> Result<Type, FlowJsException> {
+    let tparam_binder_reason = type_util::reason_of_t(t);
+    // An `empty` lower bound carries no values, e.g. the one an omitted optional argument gives
+    // `T` in `(x?: T)`. It is not evidence against a default, so a tparam with a default falls
+    // back to it as if it had no lower bounds. Without a default, `empty` is still the solution.
+    let filter_empty = tparam.default.is_some();
+    // The merged lower bounds, in the form of merged upper bounds.
+    let lower = |cx: &mut Context<'cx>| {
+        Ok::<_, FlowJsException>(match merge_lower_bounds(cx, env, filter_empty, t)? {
+            Some(t) => UseTResult::UpperT(t),
+            None => UseTResult::UpperEmpty,
+        })
+    };
+    let upper = |cx: &mut Context<'cx>| merge_upper_bounds(cx, env, &mut BTreeSet::new(), t);
+    let bounds = match polarity {
+        Some(Polarity::Negative) => match upper(cx)? {
+            UseTResult::UpperEmpty => lower(cx)?,
+            bounds => bounds,
         },
+        None | Some(Polarity::Positive | Polarity::Neutral) => match lower(cx)? {
+            UseTResult::UpperEmpty => upper(cx)?,
+            bounds => bounds,
+        },
+    };
+    let marked = polarity.is_some();
+    match bounds {
+        UseTResult::UpperT(inferred) => {
+            log_pinned(cx, tparam, &inferred);
+            Ok(inferred)
+        }
         UseTResult::UpperPlaceholder(inferred) => {
             cx.set_synthesis_produced_uncacheable_result();
-            Ok(InferredTarg {
-                tparam: tparam.dupe(),
-                inferred,
-            })
+            Ok(inferred)
         }
-        UseTResult::UpperNonT(u) => Obs::on_upper_non_t(
+        UseTResult::UpperEmpty if marked && let Some(inferred) = &error_fallback => {
+            log_pinned(cx, tparam, inferred);
+            Ok(inferred.dupe())
+        }
+        UseTResult::UpperNonT(u) if marked => {
+            flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
+                vec![
+                    "Underconstrained due to upper_non_t".to_string(),
+                    string_of_use_ctor(&u),
+                ]
+            });
+            underconstrained(
+                cx,
+                env,
+                use_op,
+                tparam,
+                tparam_binder_reason,
+                instantiation_reason,
+            )
+        }
+        UseTResult::UpperEmpty | UseTResult::UpperNonT(_) => unmarked_fallback.without_bounds(
             cx,
             env,
             use_op,
-            &u,
             tparam,
+            marked,
             tparam_binder_reason,
             instantiation_reason,
         ),
-        UseTResult::UpperT(inferred) => Ok(Obs::on_pinned_tparam(cx, tparam, inferred)),
     }
 }
 
@@ -1737,151 +1809,124 @@ fn force_type_arguments(cx: &mut Context<'_>, targs: &[Targ]) {
     }
 }
 
-fn check_instantiation<'cx, Obs: Observer>(
+// Checks the operation of `check` with the poly type instantiated with its explicit type
+// arguments, and with new tvars for the others. Returns its type arguments and the result of the
+// operation, if it has one.
+fn check_instantiation<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
-    tparams: &[TypeParam],
-    marked_tparams: Marked<SubstName>,
     check: &ImplicitInstantiationCheck,
-) -> Result<
-    (
-        Vec<(SubstName, Type, Type, bool)>,
-        Marked<SubstName>,
-        Option<Type>,
-    ),
-    FlowJsException,
-> {
+) -> Result<(Vec<SolveTarg>, Option<Type>), FlowJsException> {
     let (ref use_op, ref reason_op, ref op) = check.operation;
     let reason_tapp = type_util::reason_of_t(&check.lhs);
-    let (ref tparams_loc, _, _) = check.poly_t;
+    let (ref tparams_loc, ref tparams, _) = check.poly_t;
 
     let merge_targs = |cx: &mut Context<'cx>,
-                       explicit_targs: &Option<Rc<[Targ]>>|
-     -> Result<
-        (Vec<Targ>, Vec<(SubstName, Type, Type, bool)>),
-        FlowJsException,
-    > {
-        match explicit_targs {
-            None => {
-                let mut targs: Vec<Targ> = Vec::new();
-                let mut inferred_targ_and_bound_list: Vec<(SubstName, Type, Type, bool)> =
-                    Vec::new();
-                for tparam in tparams.iter() {
-                    let targ = mk_inference_targ(cx, env, tparam, reason_op, reason_tapp);
-                    targs.push(Targ::ExplicitArg(targ.dupe()));
-                    inferred_targ_and_bound_list.push((
-                        tparam.name.dupe(),
-                        targ,
-                        tparam.bound.dupe(),
-                        true,
-                    ));
-                }
-                Ok((targs, inferred_targ_and_bound_list))
-            }
-            Some(explicit_targs) => {
-                let maximum_arity = tparams.len();
-                let arity_loc = tparams_loc;
-                let minimum_arity = flow_js_utils::poly_minimum_arity(
-                    &Vec1::try_from_vec(tparams.to_vec()).unwrap(),
-                );
-                if explicit_targs.len() > maximum_arity {
-                    flow_js_utils::add_output_with_env(
-                        cx,
-                        env,
-                        ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
-                            reason_tapp: reason_tapp.to_error_reference(),
-                            arity_loc: arity_loc.dupe(),
-                            maximum_arity: maximum_arity as i32,
-                        })),
-                    )?;
-                }
-
-                let mut targs = Vec::new();
-                let mut inferred_targ_and_bound_list = Vec::new();
-                let mut tparams_iter = tparams.iter();
-                let mut explicit_targs_iter = explicit_targs.iter();
-                loop {
-                    match (tparams_iter.next(), explicit_targs_iter.next()) {
-                        (None, _) => {
-                            break;
-                        }
-                        (Some(tparam), None) => {
-                            let targ = mk_inference_targ(cx, env, tparam, reason_op, reason_tapp);
-                            if tparam.default.is_none() {
-                                flow_js_utils::add_output_with_env(
-                                    cx,
-                                    env,
-                                    ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
-                                        reason_tapp: reason_tapp.to_error_reference(),
-                                        arity_loc: arity_loc.dupe(),
-                                        minimum_arity: minimum_arity as i32,
-                                    })),
-                                )?;
-                            }
-                            targs.push(Targ::ExplicitArg(targ.dupe()));
-                            inferred_targ_and_bound_list.push((
-                                tparam.name.dupe(),
-                                targ,
-                                tparam.bound.dupe(),
-                                true,
-                            ));
-                        }
-                        (Some(tparam), Some(explicit_targ)) => {
-                            match explicit_targ {
-                                Targ::ExplicitArg(targ) => {
-                                    targs.push(Targ::ExplicitArg(targ.dupe()));
-                                    inferred_targ_and_bound_list.push((
-                                        tparam.name.dupe(),
-                                        targ.dupe(),
-                                        tparam.bound.dupe(),
-                                        false,
-                                    ));
-                                }
-                                Targ::ImplicitArg(tvar) => {
-                                    let r = tvar.reason();
-                                    let reason = flow_common::reason::mk_reason(
-                                        VirtualReasonDesc::RImplicitInstantiation,
-                                        r.loc().dupe(),
-                                    );
-                                    let targ =
-                                        mk_inference_targ(cx, env, tparam, &reason, reason_tapp);
-                                    FlowJs::flow_with_env(
-                                        cx,
-                                        env,
-                                        &targ,
-                                        &UseT::new(UseTInner::UseT(
-                                            use_op.dupe(),
-                                            Type::new(TypeInner::OpenT(tvar.dupe())),
-                                        )),
-                                    )?;
-                                    // It is important to convert implicit args to explicit args so there won't be
-                                    // infinite loops between this module and flow_js.
-                                    targs.push(Targ::ExplicitArg(targ.dupe()));
-                                    inferred_targ_and_bound_list.push((
-                                        tparam.name.dupe(),
-                                        targ,
-                                        tparam.bound.dupe(),
-                                        true,
-                                    ));
-                                }
-                            }
-                        }
+                       explicit_targs: Option<&[Targ]>|
+     -> Result<Vec<SolveTarg>, FlowJsException> {
+        if let Some(explicit_targs) = explicit_targs
+            && explicit_targs.len() > tparams.len()
+        {
+            flow_js_utils::add_output_with_env(
+                cx,
+                env,
+                ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
+                    reason_tapp: reason_tapp.to_error_reference(),
+                    arity_loc: tparams_loc.dupe(),
+                    maximum_arity: tparams.len() as i32,
+                })),
+            )?;
+        }
+        let mut targs = Vec::with_capacity(tparams.len());
+        for (i, tparam) in tparams.iter().enumerate() {
+            let targ = match explicit_targs.map(|explicit_targs| explicit_targs.get(i)) {
+                None => SolveTarg {
+                    tparam: tparam.dupe(),
+                    t: mk_inference_targ(cx, env, tparam, reason_op, reason_tapp),
+                    inferred: true,
+                },
+                Some(None) => {
+                    let t = mk_inference_targ(cx, env, tparam, reason_op, reason_tapp);
+                    if tparam.default.is_none() {
+                        flow_js_utils::add_output_with_env(
+                            cx,
+                            env,
+                            ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
+                                reason_tapp: reason_tapp.to_error_reference(),
+                                arity_loc: tparams_loc.dupe(),
+                                minimum_arity: flow_js_utils::poly_minimum_arity(tparams) as i32,
+                            })),
+                        )?;
+                    }
+                    SolveTarg {
+                        tparam: tparam.dupe(),
+                        t,
+                        inferred: true,
                     }
                 }
-                Ok((targs, inferred_targ_and_bound_list))
-            }
+                Some(Some(Targ::ExplicitArg(t))) => SolveTarg {
+                    tparam: tparam.dupe(),
+                    t: t.dupe(),
+                    inferred: false,
+                },
+                Some(Some(Targ::ImplicitArg(tvar))) => {
+                    let reason = flow_common::reason::mk_reason(
+                        VirtualReasonDesc::RImplicitInstantiation,
+                        tvar.reason().loc().dupe(),
+                    );
+                    let t = mk_inference_targ(cx, env, tparam, &reason, reason_tapp);
+                    FlowJs::flow_with_env(
+                        cx,
+                        env,
+                        &t,
+                        &UseT::new(UseTInner::UseT(
+                            use_op.dupe(),
+                            Type::new(TypeInner::OpenT(tvar.dupe())),
+                        )),
+                    )?;
+                    // It is important to convert implicit args to explicit args so there won't be
+                    // infinite loops between this module and flow_js.
+                    SolveTarg {
+                        tparam: tparam.dupe(),
+                        t,
+                        inferred: true,
+                    }
+                }
+            };
+            targs.push(targ);
         }
+        Ok(targs)
+    };
+    let explicit_targs = |targs: &[SolveTarg]| -> Rc<[Targ]> {
+        targs
+            .iter()
+            .map(|targ| Targ::ExplicitArg(targ.t.dupe()))
+            .collect()
+    };
+    let instance = |cx: &mut Context<'cx>, targs: &[SolveTarg]| {
+        FlowJs::mk_typeapp_instance_annot_with_env(
+            cx,
+            env,
+            None,
+            use_op.dupe(),
+            reason_op,
+            reason_tapp,
+            true,
+            None,
+            &check.lhs,
+            targs.iter().map(|targ| targ.t.dupe()).collect(),
+        )
     };
 
-    let (inferred_targ_list, lower_t, use_t, tout) = match op {
-        flow_typing_implicit_instantiation_check::Operation::Call(calltype) => {
+    let (targs, lower_t, use_t, tout) = match op {
+        Operation::Call(calltype) => {
             let new_tout = flow_typing_tvar::mk_no_wrap(cx, reason_op);
-            let (call_targs, inferred_targ_list) = merge_targs(cx, &calltype.call_targs)?;
+            let targs = merge_targs(cx, calltype.call_targs.as_deref())?;
             let call_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
                 call_action: Box::new(CallAction::Funcalltype(Box::new(FuncallType {
-                    call_targs: Some(call_targs.into()),
+                    call_targs: Some(explicit_targs(&targs)),
                     call_tout: Tvar::new(reason_op.dupe(), new_tout as u32),
                     call_this_t: calltype.call_this_t.dupe(),
                     call_args_tlist: calltype.call_args_tlist.dupe(),
@@ -1891,39 +1936,17 @@ fn check_instantiation<'cx, Obs: Observer>(
                 }))),
                 return_hint: hint_unavailable(),
             })));
-            (
-                inferred_targ_list,
-                check.lhs.dupe(),
-                call_t,
-                Some(Type::new(TypeInner::OpenT(Tvar::new(
-                    reason_op.dupe(),
-                    new_tout as u32,
-                )))),
-            )
+            let tout = Type::new(TypeInner::OpenT(Tvar::new(
+                reason_op.dupe(),
+                new_tout as u32,
+            )));
+            (targs, check.lhs.dupe(), call_t, Some(tout))
         }
-        flow_typing_implicit_instantiation_check::Operation::SubtypeLowerPoly(u) => {
-            let (_, inferred_targ_list) = merge_targs(cx, &None)?;
-            let targs: Rc<[Type]> = inferred_targ_list
-                .iter()
-                .map(|(_, t, _, _)| t.dupe())
-                .collect();
-            (
-                inferred_targ_list,
-                FlowJs::mk_typeapp_instance_annot_with_env(
-                    cx,
-                    env,
-                    None,
-                    use_op.dupe(),
-                    reason_op,
-                    reason_tapp,
-                    true,
-                    None,
-                    &check.lhs,
-                    targs,
-                )?,
-                UseT::new(UseTInner::UseT(use_op.dupe(), u.dupe())),
-                None,
-            )
+        Operation::SubtypeLowerPoly(u) => {
+            let targs = merge_targs(cx, None)?;
+            let lower_t = instance(cx, &targs)?;
+            let use_t = UseT::new(UseTInner::UseT(use_op.dupe(), u.dupe()));
+            (targs, lower_t, use_t, None)
         }
         Operation::Method {
             prop_reason,
@@ -1931,11 +1954,7 @@ fn check_instantiation<'cx, Obs: Observer>(
             call,
             optional_chain,
         } => {
-            let (_, inferred_targ_list) = merge_targs(cx, &None)?;
-            let targs: Rc<[Type]> = inferred_targ_list
-                .iter()
-                .map(|(_, t, _, _)| t.dupe())
-                .collect();
+            let targs = merge_targs(cx, None)?;
             let new_tout = flow_typing_tvar::mk(cx, reason_op.dupe());
             let methodcalltype = MethodCallType {
                 meth_tout: open_tvar(&new_tout).dupe(),
@@ -1957,73 +1976,37 @@ fn check_instantiation<'cx, Obs: Observer>(
                     specialized_callee: None,
                 })),
             };
-            (
-                inferred_targ_list,
-                FlowJs::mk_typeapp_instance_annot_with_env(
-                    cx,
-                    env,
-                    None,
-                    use_op.dupe(),
-                    reason_op,
-                    reason_tapp,
-                    true,
-                    None,
-                    &check.lhs,
-                    targs,
-                )?,
-                UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-                    use_op: use_op.dupe(),
-                    reason: reason_op.dupe(),
-                    prop_reason: prop_reason.dupe(),
-                    propref: Box::new(propref.clone()),
-                    method_action: Box::new(method_action),
-                }))),
-                Some(new_tout),
-            )
+            let lower_t = instance(cx, &targs)?;
+            let method_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                use_op: use_op.dupe(),
+                reason: reason_op.dupe(),
+                prop_reason: prop_reason.dupe(),
+                propref: Box::new(propref.clone()),
+                method_action: Box::new(method_action),
+            })));
+            (targs, lower_t, method_t, Some(new_tout))
         }
-        flow_typing_implicit_instantiation_check::Operation::Constructor(
-            explicit_targs,
-            call_args,
-        ) => {
+        Operation::Constructor(explicit, call_args) => {
             let new_tout = flow_typing_tvar::mk(cx, reason_op.dupe());
-            let explicit_targs_rc: Option<Rc<[Targ]>> = explicit_targs.dupe();
-            let (call_targs, inferred_targ_list) = merge_targs(cx, &explicit_targs_rc)?;
+            let targs = merge_targs(cx, explicit.as_deref())?;
             let constructor_t = UseT::new(UseTInner::ConstructorT(Box::new(ConstructorTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
-                targs: Some(call_targs.into()),
+                targs: Some(explicit_targs(&targs)),
                 args: call_args.dupe(),
                 tout: new_tout.dupe(),
                 return_hint: hint_unavailable(),
                 specialized_ctor: None,
             })));
-            (
-                inferred_targ_list,
-                check.lhs.dupe(),
-                constructor_t,
-                Some(new_tout),
-            )
+            (targs, check.lhs.dupe(), constructor_t, Some(new_tout))
         }
-        flow_typing_implicit_instantiation_check::Operation::ReactJSX { jsx_props, targs } => {
+        Operation::ReactJSX {
+            jsx_props,
+            targs: explicit,
+        } => {
             let new_tout = flow_typing_tvar::mk(cx, reason_op.dupe());
-            let targs_rc: Option<Rc<[Targ]>> = targs.dupe();
-            let (_, inferred_targ_list) = merge_targs(cx, &targs_rc)?;
-            let new_tout_tvar = open_tvar(&new_tout).dupe();
-            let lower = FlowJs::mk_typeapp_instance_annot_with_env(
-                cx,
-                env,
-                None,
-                use_op.dupe(),
-                reason_op,
-                reason_tapp,
-                true,
-                None,
-                &check.lhs,
-                inferred_targ_list
-                    .iter()
-                    .map(|(_, t, _, _)| t.dupe())
-                    .collect::<Rc<[_]>>(),
-            )?;
+            let targs = merge_targs(cx, explicit.as_deref())?;
+            let lower = instance(cx, &targs)?;
             let react_kit_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
@@ -2032,7 +2015,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                         component: lower.dupe(),
                         jsx_props: jsx_props.dupe(),
                         targs: None,
-                        tout: new_tout_tvar,
+                        tout: open_tvar(&new_tout).dupe(),
                         return_hint: hint_unavailable(),
                         inferred_targs: None,
                         specialized_component: None,
@@ -2040,114 +2023,11 @@ fn check_instantiation<'cx, Obs: Observer>(
                     },
                 ))),
             })));
-            (inferred_targ_list, lower, react_kit_t, Some(new_tout))
+            (targs, lower, react_kit_t, Some(new_tout))
         }
     };
     FlowJs::flow_with_env(cx, env, &lower_t, &use_t)?;
-    Ok((inferred_targ_list, marked_tparams, tout))
-}
-
-fn make_pin_type<'cx, Obs: Observer>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    use_op: &UseOp,
-    tparam: &TypeParam,
-    polarity: Option<Polarity>,
-    default_bound: &Option<Type>,
-    instantiation_reason: &Reason,
-    t: &Type,
-) -> Result<InferredTarg, FlowJsException> {
-    let tparam_binder_reason = type_util::reason_of_t(t);
-    let pin_tparam =
-        |cx: &mut Context<'cx>, inferred: Type| Ok(Obs::on_pinned_tparam(cx, tparam, inferred));
-    // An `empty` lower bound carries no values, e.g. the one an omitted optional argument gives
-    // `T` in `(x?: T)`. It is not evidence against a default, so a tparam with a default falls
-    // back to it as if it had no lower bounds. Without a default, `empty` is still the solution.
-    let filter_empty = tparam.default.is_some();
-
-    match polarity {
-        // Nothing observes an unmarked tparam's solution, so it is never underconstrained.
-        None => match merge_lower_bounds(cx, env, filter_empty, t)? {
-            None => match merge_upper_bounds(cx, env, &mut BTreeSet::new(), t)? {
-                UseTResult::UpperEmpty | UseTResult::UpperNonT(_) => {
-                    Obs::on_constant_tparam_missing_bounds(cx, env, tparam)
-                }
-                UseTResult::UpperPlaceholder(inferred) => {
-                    cx.set_synthesis_produced_uncacheable_result();
-                    Ok(InferredTarg {
-                        tparam: tparam.dupe(),
-                        inferred,
-                    })
-                }
-                UseTResult::UpperT(inferred) => pin_tparam(cx, inferred),
-            },
-            Some(inferred) => pin_tparam(cx, inferred),
-        },
-        // TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
-        // to avoid cluttering the output we are actually interested in from this module,
-        // I'm not going to start doing that until we need error diff information for
-        // switching to Pierce's algorithm for implicit instantiation
-        Some(Polarity::Neutral) => match merge_lower_bounds(cx, env, filter_empty, t)? {
-            None => use_upper_bounds::<Obs>(
-                cx,
-                env,
-                use_op,
-                tparam,
-                t,
-                default_bound,
-                None,
-                tparam_binder_reason,
-                instantiation_reason,
-            ),
-            Some(inferred) => pin_tparam(cx, inferred),
-        },
-        Some(Polarity::Positive) => match merge_lower_bounds(cx, env, filter_empty, t)? {
-            None => use_upper_bounds::<Obs>(
-                cx,
-                env,
-                use_op,
-                tparam,
-                t,
-                default_bound,
-                None,
-                tparam_binder_reason,
-                instantiation_reason,
-            ),
-            Some(inferred) => pin_tparam(cx, inferred),
-        },
-        Some(Polarity::Negative) => {
-            let on_upper_empty = |cx: &mut Context<'_>,
-                                  env: &FlowJsEnv,
-                                  tparam: &TypeParam,
-                                  tparam_binder_reason: &Reason,
-                                  instantiation_reason: &Reason|
-             -> Result<InferredTarg, FlowJsException> {
-                match merge_lower_bounds(cx, env, filter_empty, t)? {
-                    None => on_missing_bounds::<Obs>(
-                        cx,
-                        env,
-                        use_op,
-                        tparam,
-                        default_bound,
-                        tparam_binder_reason,
-                        instantiation_reason,
-                    ),
-                    Some(inferred) => Ok(Obs::on_pinned_tparam(cx, tparam, inferred)),
-                }
-            };
-            use_upper_bounds::<Obs>(
-                cx,
-                env,
-                use_op,
-                tparam,
-                t,
-                default_bound,
-                Some(&on_upper_empty),
-                tparam_binder_reason,
-                instantiation_reason,
-            )
-        }
-    }
+    Ok((targs, tout))
 }
 
 fn type_param_pin_order<'cx>(cx: &mut Context<'cx>, tparams: &[TypeParam]) -> Vec<usize> {
@@ -2196,83 +2076,65 @@ fn type_param_pin_order<'cx>(cx: &mut Context<'cx>, tparams: &[TypeParam]) -> Ve
     order
 }
 
-fn pin_types<'cx, Obs: Observer>(
+fn pin_types<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
+    unmarked_fallback: UnmarkedFallback,
     use_op: &UseOp,
     has_new_errors: bool,
-    allow_underconstrained: bool,
     has_syntactic_hint: bool,
-    inferred_targ_list: &[(SubstName, Type, Type, bool)],
+    targs: &[SolveTarg],
     marked_tparams: &Marked<SubstName>,
-    tparams_map: &BTreeMap<SubstName, TypeParam>,
     check: &ImplicitInstantiationCheck,
 ) -> Result<(BTreeMap<SubstName, GeneralizedTarg>, Vec<(Type, SubstName)>), FlowJsException> {
     let (_, ref instantiation_reason, ref op) = check.operation;
 
-    let subst_map: FlowOrdMap<SubstName, Type> =
-        inferred_targ_list
-            .iter()
-            .fold(FlowOrdMap::new(), |mut acc, (name, t, _, _)| {
-                acc.insert(name.dupe(), t.dupe());
-                acc
-            });
+    // Implicit instantiation can bail out early (e.g. a non-`DefT` lower bound or a static call
+    // through a `this` instance) without any type arguments, even though the poly type still
+    // declares tparams.
+    if targs.is_empty() {
+        return Ok((BTreeMap::new(), Vec::new()));
+    }
+
+    let subst_map: FlowOrdMap<SubstName, Type> = targs
+        .iter()
+        .map(|targ| (targ.tparam.name.dupe(), targ.t.dupe()))
+        .collect();
 
     let mut result_map = BTreeMap::new();
-    let mut result_list = vec![None; inferred_targ_list.len()];
-
-    // Implicit instantiation can bail out early (e.g. a non-`DefT` lower bound or
-    // a static call through a `this` instance) and return an empty
-    // `inferred_targ_list` even though the poly type still declares tparams. The
-    // dependency order is indexed into `inferred_targ_list`, so only use it when
-    // the two line up; otherwise iterate whatever inferred entries exist.
-    let pin_order = if inferred_targ_list.len() == check.poly_t.1.len() {
-        type_param_pin_order(cx, &check.poly_t.1)
-    } else {
-        (0..inferred_targ_list.len()).rev().collect::<Vec<usize>>()
-    };
-
-    for index in pin_order {
-        let (name, t, bound, is_inferred) = &inferred_targ_list[index];
-        let tparam = match tparams_map.get(name) {
-            Some(tp) => tp,
-            None => continue,
-        };
-        let polarity = if allow_underconstrained {
-            None
-        } else {
-            marked_tparams.get(name)
-        };
-
-        let InferredTarg {
-            tparam: result_tparam,
+    let mut result_list = vec![None; targs.len()];
+    for index in type_param_pin_order(cx, &check.poly_t.1) {
+        let SolveTarg {
+            tparam,
+            t,
             inferred,
-        } = if *is_inferred {
-            let default_bound = if has_new_errors {
+        } = &targs[index];
+        let inferred = if *inferred {
+            // If the operation failed, a type parameter without usable bounds is not reported as
+            // underconstrained.
+            let error_fallback = has_new_errors.then(|| {
+                let reason = type_util::reason_of_t(t).dupe();
                 match *cx.typing_mode() {
-                    flow_typing_context::TypingMode::CheckingMode => {
-                        Some(any_t::error(type_util::reason_of_t(t).dupe()))
-                    }
-                    flow_typing_context::TypingMode::SynthesisMode { .. }
-                    | flow_typing_context::TypingMode::HintEvaluationMode => {
-                        Some(any_t::placeholder(type_util::reason_of_t(t).dupe()))
+                    TypingMode::CheckingMode => any_t::error(reason),
+                    TypingMode::SynthesisMode { .. } | TypingMode::HintEvaluationMode => {
+                        any_t::placeholder(reason)
                     }
                 }
-            } else {
-                None
-            };
-            make_pin_type::<Obs>(
+            });
+            pin_type(
                 cx,
                 env,
+                unmarked_fallback,
                 use_op,
                 tparam,
-                polarity,
-                &default_bound,
+                marked_tparams.get(&tparam.name),
+                error_fallback,
                 instantiation_reason,
                 t,
             )?
         } else {
-            Obs::on_pinned_tparam(cx, tparam, t.dupe())
+            log_pinned(cx, tparam, t);
+            t.dupe()
         };
 
         let bound_t = type_subst::subst(
@@ -2282,16 +2144,14 @@ fn pin_types<'cx, Obs: Observer>(
             false,
             type_subst::Purpose::Normal,
             &subst_map,
-            bound.dupe(),
+            tparam.bound.dupe(),
         );
         FlowJs::flow_t_with_env(cx, env, t, &bound_t)?;
 
         let call_loc = instantiation_reason.loc().dupe();
         let generalized = match op {
-            flow_typing_implicit_instantiation_check::Operation::Call(_)
-            | flow_typing_implicit_instantiation_check::Operation::Constructor(_, _)
-            | Operation::Method { .. }
-                if result_tparam.is_const =>
+            Operation::Call(_) | Operation::Constructor(_, _) | Operation::Method { .. }
+                if tparam.is_const =>
             {
                 // Adjust 'const' type parameters. Keeping container reasons for
                 // compatibility with existing code.
@@ -2305,457 +2165,112 @@ fn pin_types<'cx, Obs: Observer>(
                 generalize_singletons(cx, &call_loc, has_syntactic_hint, inferred.dupe())
             }
         };
-        let result = GeneralizedTarg {
-            tparam: result_tparam,
-            inferred,
-            generalized: generalized.dupe(),
-        };
-        result_map.insert(name.dupe(), result);
-        result_list[index] = Some((generalized, name.dupe()));
+        result_map.insert(
+            tparam.name.dupe(),
+            GeneralizedTarg {
+                tparam: tparam.dupe(),
+                inferred,
+                generalized: generalized.dupe(),
+            },
+        );
+        result_list[index] = Some((generalized, tparam.name.dupe()));
     }
 
     let result_list = result_list.into_iter().flatten().collect();
     Ok((result_map, result_list))
 }
 
-fn check_fun<'cx, Obs: Observer>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    tparams: &[TypeParam],
-    tparams_map: &BTreeMap<SubstName, TypeParam>,
-    return_t: &Type,
-    check: &ImplicitInstantiationCheck,
-) -> Result<
-    (
-        Vec<(SubstName, Type, Type, bool)>,
-        Marked<SubstName>,
-        Option<Type>,
-    ),
-    FlowJsException,
-> {
-    let mut visitor = ImplicitInstantiationVisitor { tparams_map };
-    let tparam_names: FlowOrdSet<SubstName> =
-        tparams.iter().fold(FlowOrdSet::new(), |mut set, tparam| {
-            set.insert(tparam.name.dupe());
-            set
-        });
-    let (marked_tparams, _) = visitor.type_(
-        cx,
-        Polarity::Positive,
-        (Marked::new(), tparam_names),
-        return_t,
-    );
-    check_instantiation::<Obs>(cx, env, tparams, marked_tparams, check)
-}
-
-fn check_react_fun<'cx, Obs: Observer>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    tparams: &[TypeParam],
-    check: &ImplicitInstantiationCheck,
-) -> Result<
-    (
-        Vec<(SubstName, Type, Type, bool)>,
-        Marked<SubstName>,
-        Option<Type>,
-    ),
-    FlowJsException,
-> {
-    // A JSX element is typed by its component's render type, which does not expose the props, so
-    // no type parameter is observable in the result and an unconstrained one can take its bound.
-    let marked_tparams = Marked::new();
-    check_instantiation::<Obs>(cx, env, tparams, marked_tparams, check)
-}
-
-fn check_instance<'cx, Obs: Observer>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    tparams: &[TypeParam],
-    check: &ImplicitInstantiationCheck,
-) -> Result<
-    (
-        Vec<(SubstName, Type, Type, bool)>,
-        Marked<SubstName>,
-        Option<Type>,
-    ),
-    FlowJsException,
-> {
-    let marked_tparams = tparams.iter().fold(Marked::new(), |mut marked, tparam| {
-        match marked.add(tparam.name.dupe(), tparam.polarity) {
-            None => {}
-            Some(_) => {}
-        }
-        marked
-    });
-    check_instantiation::<Obs>(cx, env, tparams, marked_tparams, check)
-}
-
-fn implicitly_instantiate<'cx, Obs: Observer>(
+// The type arguments of `check`'s operation and its result, as `check_instantiation` gives them,
+// and the polarity of each type parameter that the result mentions.
+fn implicitly_instantiate<'cx>(
     cx: &mut Context<'cx>,
     env: &FlowJsEnv,
     check: &ImplicitInstantiationCheck,
-) -> Result<
-    (
-        Vec<(SubstName, Type, Type, bool)>,
-        Marked<SubstName>,
-        BTreeMap<SubstName, TypeParam>,
-        Option<Type>,
-    ),
-    FlowJsException,
-> {
+) -> Result<(Vec<SolveTarg>, Marked<SubstName>, Option<Type>), FlowJsException> {
     let (_, ref tparams, ref t) = check.poly_t;
-    let tparams_list: Vec<TypeParam> = tparams.iter().duped().collect();
-    let tparams_map: BTreeMap<SubstName, TypeParam> =
-        tparams_list.iter().fold(BTreeMap::new(), |mut map, x| {
-            map.insert(x.name.dupe(), x.dupe());
-            map
-        });
-
     let (_, _, ref op) = check.operation;
     let resolved_t = get_t(cx, t);
-
-    if matches!(
-        op,
-        Operation::SubtypeLowerPoly(_) | Operation::Method { .. }
-    ) {
-        let marked_tparams = Marked::new();
-        let (inferred_targ_list, marked_tparams, tout) =
-            check_instantiation::<Obs>(cx, env, &tparams_list, marked_tparams, check)?;
-        return Ok((inferred_targ_list, marked_tparams, tparams_map, tout));
-    }
-    let TypeInner::DefT(_, def_t) = resolved_t.deref() else {
-        // There are no other valid cases of implicit instantiation, but it is still possible
-        // reach this case via non-sensical cases that usually are downstream of some other error.
-        // Since there's no reasonable thing to do in these cases we just ignore it.
-        return Ok((Vec::new(), Marked::new(), tparams_map, None));
-    };
-    let (inferred_targ_list, marked_tparams, tout) = match (def_t.deref(), op) {
-        (DefTInner::ReactAbstractComponentT(_), _) => {
-            check_react_fun::<Obs>(cx, env, &tparams_list, check)?
-        }
-        (
-            DefTInner::FunT(..),
-            flow_typing_implicit_instantiation_check::Operation::ReactJSX { .. },
-        ) => check_react_fun::<Obs>(cx, env, &tparams_list, check)?,
-        (DefTInner::FunT(_, funtype), _) => check_fun::<Obs>(
-            cx,
-            env,
-            &tparams_list,
-            &tparams_map,
-            &funtype.return_t,
-            check,
-        )?,
-        (
-            DefTInner::ClassT(inner),
-            flow_typing_implicit_instantiation_check::Operation::Call(_),
-        ) if matches!(inner.deref(), TypeInner::ThisInstanceT(..)) => {
+    // There are no other valid cases of implicit instantiation, but it is still possible
+    // reach them via non-sensical cases that usually are downstream of some other error.
+    // Since there's no reasonable thing to do in these cases we just ignore them.
+    let bail_out = Ok((Vec::new(), Marked::new(), None));
+    let marked_tparams = match (resolved_t.deref(), op) {
+        (_, Operation::SubtypeLowerPoly(_) | Operation::Method { .. }) => Marked::new(),
+        (TypeInner::DefT(_, def_t), _) => match (def_t.deref(), op) {
+            // A JSX element is typed by its component's render type, which does not expose the
+            // props, so no type parameter is observable in the result and an unconstrained one
+            // can take its bound.
+            (DefTInner::ReactAbstractComponentT(_), _)
+            | (DefTInner::FunT(..), Operation::ReactJSX { .. }) => Marked::new(),
+            (DefTInner::FunT(_, funtype), _) => {
+                let tparams_map: BTreeMap<SubstName, TypeParam> = tparams
+                    .iter()
+                    .map(|tparam| (tparam.name.dupe(), tparam.dupe()))
+                    .collect();
+                let tparam_names: FlowOrdSet<SubstName> =
+                    tparams.iter().map(|tparam| tparam.name.dupe()).collect();
+                let mut visitor = ImplicitInstantiationVisitor {
+                    tparams_map: &tparams_map,
+                };
+                let (marked_tparams, _) = visitor.type_(
+                    cx,
+                    Polarity::Positive,
+                    (Marked::new(), tparam_names),
+                    &funtype.return_t,
+                );
+                marked_tparams
+            }
             // This case is hit when calling a static function. We will implicitly
             // instantiate the type variables on the class, but using an instance's
             // type params in a static method does not make sense. We ignore this case
             // intentionally
-            (Vec::new(), Marked::new(), None)
-        }
-        (DefTInner::ClassT(inner), _) if matches!(inner.deref(), TypeInner::ThisInstanceT(..)) => {
-            check_instance::<Obs>(cx, env, &tparams_list, check)?
-        }
-        // There are no other valid cases of implicit instantiation, but it is still possible
-        // reach this case via non-sensical cases that usually are downstream of some other error.
-        // Since there's no reasonable thing to do in these cases we just ignore it.
-        _ => (Vec::new(), Marked::new(), None),
+            (DefTInner::ClassT(inner), Operation::Call(_))
+                if matches!(inner.deref(), TypeInner::ThisInstanceT(..)) =>
+            {
+                return bail_out;
+            }
+            (DefTInner::ClassT(inner), _)
+                if matches!(inner.deref(), TypeInner::ThisInstanceT(..)) =>
+            {
+                tparams.iter().fold(Marked::new(), |mut marked, tparam| {
+                    marked.add(tparam.name.dupe(), tparam.polarity);
+                    marked
+                })
+            }
+            _ => return bail_out,
+        },
+        _ => return bail_out,
     };
-
-    Ok((inferred_targ_list, marked_tparams, tparams_map, tout))
+    let (targs, tout) = check_instantiation(cx, env, check)?;
+    Ok((targs, marked_tparams, tout))
 }
 
-pub mod pin_types {
-
-    use super::*;
-
-    struct PinTypesObserver;
-
-    impl Observer for PinTypesObserver {
-        fn on_constant_tparam_missing_bounds<'cx>(
-            cx: &mut Context<'cx>,
-            env: &FlowJsEnv,
-            tparam: &TypeParam,
-        ) -> Result<InferredTarg, FlowJsException> {
-            flow_js_utils::add_output_with_env(
-                cx,env,
-                ErrorMessage::EInternal(Box::new((
-                    tparam.reason.loc().dupe(),
-                    flow_typing_errors::error_message::InternalError::ImplicitInstantiationInvariant(
-                        "Constant tparam is unsupported.".into(),
-                    ),
-                ))),
-            )?;
-            Ok(InferredTarg {
-                tparam: tparam.dupe(),
-                inferred: any_t::error(tparam.reason.dupe()),
-            })
+/// Pins `t`, the element type of an empty array literal decomposed from its hint, to the merge of
+/// its bounds, or to a fresh tvar if it has none.
+pub fn pin_tvar<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    t: &Type,
+) -> Result<Type, FlowJsException> {
+    let bounds = match merge_lower_bounds(cx, env, false, t)? {
+        Some(t) => UseTResult::UpperT(t),
+        None => merge_upper_bounds(cx, env, &mut BTreeSet::new(), t)?,
+    };
+    match bounds {
+        UseTResult::UpperT(inferred) => Ok(inferred),
+        UseTResult::UpperPlaceholder(inferred) => {
+            cx.set_synthesis_produced_uncacheable_result();
+            Ok(inferred)
         }
-
-        fn on_pinned_tparam<'cx>(
-            _cx: &mut Context<'cx>,
-            tparam: &TypeParam,
-            inferred: Type,
-        ) -> InferredTarg {
-            InferredTarg {
-                tparam: tparam.dupe(),
-                inferred,
-            }
-        }
-
-        fn on_missing_bounds<'cx>(
-            cx: &mut Context<'cx>,
-            _env: &FlowJsEnv,
-            _use_op: &UseOp,
-            tparam: &TypeParam,
-            tparam_binder_reason: &Reason,
-            _instantiation_reason: &Reason,
-        ) -> Result<InferredTarg, FlowJsException> {
-            Ok(InferredTarg {
-                tparam: tparam.dupe(),
-                inferred: flow_typing_tvar::mk(cx, tparam_binder_reason.dupe()),
-            })
-        }
-
-        fn on_upper_non_t<'cx>(
-            cx: &mut Context<'cx>,
-            _env: &FlowJsEnv,
-            _use_op: &UseOp,
-            _u: &UseT<Cx>,
-            tparam: &TypeParam,
-            tparam_binder_reason: &Reason,
-            _instantiation_reason: &Reason,
-        ) -> Result<InferredTarg, FlowJsException> {
-            Ok(InferredTarg {
-                tparam: tparam.dupe(),
-                inferred: flow_typing_tvar::mk(cx, tparam_binder_reason.dupe()),
-            })
+        UseTResult::UpperEmpty | UseTResult::UpperNonT(_) => {
+            Ok(flow_typing_tvar::mk(cx, type_util::reason_of_t(t).dupe()))
         }
     }
-
-    pub fn pin_type<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        use_op: UseOp,
-        reason: &Reason,
-        t: &Type,
-    ) -> Result<Type, FlowJsException> {
-        let polarity = Polarity::Neutral;
-        let tparam = TypeParam::new(TypeParamInner {
-            reason: reason.dupe(),
-            name: SubstName::name("".into()),
-            bound: mixed_t::why(reason.dupe()),
-            polarity,
-            default: None,
-            is_this: false,
-            is_const: false,
-        });
-        let InferredTarg { inferred, .. } = make_pin_type::<PinTypesObserver>(
-            cx,
-            env,
-            &use_op,
-            &tparam,
-            Some(polarity),
-            &None,
-            reason,
-            t,
-        )?;
-        Ok(inferred)
-    }
-} // mod pin_types
+}
 
 pub mod instantiation_solver {
 
-    use std::marker::PhantomData;
-
     use super::*;
-
-    trait ConstantTparamMissingBounds {
-        fn on_missing_bounds<'cx>(
-            cx: &mut Context<'cx>,
-            env: &FlowJsEnv,
-            tparam: &TypeParam,
-        ) -> Result<InferredTarg, FlowJsException>;
-    }
-
-    struct UseDefaultOrBound;
-
-    impl ConstantTparamMissingBounds for UseDefaultOrBound {
-        fn on_missing_bounds<'cx>(
-            cx: &mut Context<'cx>,
-            _env: &FlowJsEnv,
-            tparam: &TypeParam,
-        ) -> Result<InferredTarg, FlowJsException> {
-            let inferred = tparam.default.as_ref().unwrap_or(&tparam.bound).dupe();
-            flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
-                vec![format!(
-                    "Constant type parameter {} is pinned to {}",
-                    tparam.name.string_of_subst_name(),
-                    flow_typing_debug::dump_t(Some(3), cx, &inferred),
-                )]
-            });
-            Ok(InferredTarg {
-                tparam: tparam.dupe(),
-                inferred,
-            })
-        }
-    }
-
-    struct MainObserver<ConstantTparam = UseDefaultOrBound>(PhantomData<ConstantTparam>);
-
-    impl<ConstantTparam: ConstantTparamMissingBounds> Observer for MainObserver<ConstantTparam> {
-        fn on_constant_tparam_missing_bounds<'cx>(
-            cx: &mut Context<'cx>,
-            env: &FlowJsEnv,
-            tparam: &TypeParam,
-        ) -> Result<InferredTarg, FlowJsException> {
-            ConstantTparam::on_missing_bounds(cx, env, tparam)
-        }
-
-        fn on_pinned_tparam<'cx>(
-            cx: &mut Context<'cx>,
-            tparam: &TypeParam,
-            inferred: Type,
-        ) -> InferredTarg {
-            flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
-                vec![format!(
-                    "Type parameter {} is pinned to {}",
-                    tparam.name.string_of_subst_name(),
-                    flow_typing_debug::dump_t(Some(3), cx, &inferred),
-                )]
-            });
-            InferredTarg {
-                tparam: tparam.dupe(),
-                inferred,
-            }
-        }
-
-        fn on_missing_bounds<'cx>(
-            cx: &mut Context<'cx>,
-            env: &FlowJsEnv,
-            use_op: &UseOp,
-            tparam: &TypeParam,
-            tparam_binder_reason: &Reason,
-            instantiation_reason: &Reason,
-        ) -> Result<InferredTarg, FlowJsException> {
-            match &tparam.default {
-                Some(inferred) => Ok(InferredTarg {
-                    tparam: tparam.dupe(),
-                    inferred: inferred.dupe(),
-                }),
-                None => {
-                    if !matches!(
-                        *cx.typing_mode(),
-                        flow_typing_context::TypingMode::CheckingMode
-                    ) {
-                        Ok(InferredTarg {
-                            tparam: tparam.dupe(),
-                            inferred: cx.mk_placeholder(tparam_binder_reason.dupe()),
-                        })
-                    } else {
-                        flow_js_utils::add_output_with_env(
-                            cx,
-                            env,
-                            ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
-                                EImplicitInstantiationUnderconstrainedErrorData {
-                                    call: ImplicitInstantiationReferenceData {
-                                        loc: instantiation_reason.loc().dupe(),
-                                        kind: implicit_instantiation_reference_kind(use_op)
-                                            .map(|kind| kind.dupe())
-                                            .unwrap_or(ImplicitInstantiationReferenceKind::Call(
-                                                None,
-                                            )),
-                                    },
-                                    type_param_loc: tparam_binder_reason.def_loc().dupe(),
-                                    type_param_name: tparam.name.string_of_subst_name().dupe(),
-                                    use_op: use_op.dupe(),
-                                },
-                            )),
-                        )?;
-                        Ok(InferredTarg {
-                            tparam: tparam.dupe(),
-                            inferred: any_t::why(
-                                AnySource::AnyError(None),
-                                tparam_binder_reason.dupe(),
-                            ),
-                        })
-                    }
-                }
-            }
-        }
-
-        fn on_upper_non_t<'cx>(
-            cx: &mut Context<'cx>,
-            env: &FlowJsEnv,
-            use_op: &UseOp,
-            u: &UseT<Cx>,
-            tparam: &TypeParam,
-            tparam_binder_reason: &Reason,
-            instantiation_reason: &Reason,
-        ) -> Result<InferredTarg, FlowJsException> {
-            if !matches!(
-                *cx.typing_mode(),
-                flow_typing_context::TypingMode::CheckingMode
-            ) {
-                Ok(InferredTarg {
-                    tparam: tparam.dupe(),
-                    inferred: cx.mk_placeholder(tparam_binder_reason.dupe()),
-                })
-            } else {
-                flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
-                    vec![
-                        "Underconstrained due to upper_non_t".to_string(),
-                        string_of_use_ctor(u),
-                    ]
-                });
-                flow_js_utils::add_output_with_env(
-                    cx,
-                    env,
-                    ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
-                        EImplicitInstantiationUnderconstrainedErrorData {
-                            call: ImplicitInstantiationReferenceData {
-                                loc: instantiation_reason.loc().dupe(),
-                                kind: implicit_instantiation_reference_kind(use_op)
-                                    .map(|kind| kind.dupe())
-                                    .unwrap_or(ImplicitInstantiationReferenceKind::Call(None)),
-                            },
-                            type_param_loc: tparam_binder_reason.def_loc().dupe(),
-                            type_param_name: tparam.name.string_of_subst_name().dupe(),
-                            use_op: use_op.dupe(),
-                        },
-                    )),
-                )?;
-                Ok(InferredTarg {
-                    tparam: tparam.dupe(),
-                    inferred: any_t::why(AnySource::AnyError(None), tparam_binder_reason.dupe()),
-                })
-            }
-        }
-    }
-
-    pub fn pin_type<'cx>(
-        cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        use_op: UseOp,
-        tparam: &TypeParam,
-        polarity: Option<Polarity>,
-        default_bound: Option<Type>,
-        reason: &Reason,
-        t: &Type,
-    ) -> Result<InferredTarg, FlowJsException> {
-        make_pin_type::<MainObserver>(
-            cx,
-            env,
-            &use_op,
-            tparam,
-            polarity,
-            &default_bound,
-            reason,
-            t,
-        )
-    }
 
     // Solves the type arguments of `check`'s operation, including how to instantiate the generic
     // values that the solve meets ("polymorphic lowers" in the names below).
@@ -2823,46 +2338,12 @@ pub mod instantiation_solver {
         ),
         FlowJsException,
     > {
-        // In the hint solve, a type parameter that the return type does not mention and that has
-        // no usable bounds becomes its default or a placeholder, not its bound.
-        //
-        // `MainObserver` can pin such a parameter to its bound because nothing reads it. A hint
-        // solve is different: its solution is the type that a generic argument is checked
-        // against. In
-        //
-        //   declare function on<T>(make: () => T): void;
-        //   declare function create<U>(): Array<U>;
-        //   on(create);
-        //
-        // `create` still has placeholder type arguments in the hint solve, so `T` only gets
-        // `Array<placeholder>`, which pinning ignores. Pinned to its bound, `T` would make
-        // `create` get checked against `() => mixed`, even though nothing said `mixed`. As a
-        // placeholder, `T` makes it get checked against `() => <placeholder>`, which says nothing
-        // about what it returns.
-        struct PolymorphicLowerHint;
-
-        impl ConstantTparamMissingBounds for PolymorphicLowerHint {
-            fn on_missing_bounds<'cx>(
-                cx: &mut Context<'cx>,
-                env: &FlowJsEnv,
-                tparam: &TypeParam,
-            ) -> Result<InferredTarg, FlowJsException> {
-                MainObserver::<Self>::on_missing_bounds(
-                    cx,
-                    env,
-                    &unknown_use(),
-                    tparam,
-                    &tparam.reason,
-                    &tparam.reason,
-                )
-            }
-        }
-
         let init_errors = cx.errors();
         let init_deferred_errors = env.deferred_error_count();
-        let solution = solve_targs_once::<MainObserver>(
+        let solution = solve_targs_once(
             cx,
             env,
+            UnmarkedFallback::Bound,
             use_op.dupe(),
             allow_underconstrained,
             has_syntactic_hint,
@@ -2890,9 +2371,10 @@ pub mod instantiation_solver {
         // hint, so literals are widened: `apply(id, 1)` hints `S = number`, not `S = 1`.
         let original_errors = cx.errors();
         let hint_solution = cx.run_in_hint_eval_mode(|cx| {
-            solve_targs_once::<MainObserver<PolymorphicLowerHint>>(
+            solve_targs_once(
                 cx,
                 &env.without_speculation(),
+                UnmarkedFallback::Underconstrained,
                 unknown_use(),
                 false,
                 false,
@@ -2911,9 +2393,10 @@ pub mod instantiation_solver {
             .unwrap_or_default();
 
         env.set_polymorphic_lower_hints(hints);
-        solve_targs_once::<MainObserver>(
+        solve_targs_once(
             cx,
             env,
+            UnmarkedFallback::Bound,
             use_op,
             allow_underconstrained,
             has_syntactic_hint,
@@ -2943,9 +2426,10 @@ pub mod instantiation_solver {
         }
     }
 
-    fn solve_targs_once<'cx, Obs: Observer>(
+    fn solve_targs_once<'cx>(
         cx: &mut Context<'cx>,
         env: &FlowJsEnv,
+        unmarked_fallback: UnmarkedFallback,
         use_op: UseOp,
         allow_underconstrained: bool,
         has_syntactic_hint: bool,
@@ -2985,110 +2469,65 @@ pub mod instantiation_solver {
                 }
                 _ => None,
             };
+            // Instantiates the poly type and checks the operation. If that raises no errors, the
+            // constraint cache entries it added are preserved, before the return hint or pinning
+            // add entries that may be associated with error-producing checks.
+            let instantiate = |cx: &mut Context<'cx>| {
+                let (targs, marked_tparams, tout) = implicitly_instantiate(cx, env, check)?;
+                let has_new_errors = !init_errors.ptr_eq(&cx.errors());
+                if !has_new_errors {
+                    cx.constraint_cache_mut()
+                        .move_top_entries_to_level(preserve_level);
+                }
+                Ok::<_, FlowJsException>((targs, marked_tparams, tout, has_new_errors))
+            };
+            let (mut targs, mut marked_tparams, tout, mut has_new_errors) = instantiate(cx)?;
+            preserved = !has_new_errors;
 
-            let (inferred_targ_list, marked_tparams, tparams_map, tout) =
-                implicitly_instantiate::<Obs>(cx,env,  check)?;
-            let errors_before_using_return_hint = cx.errors();
-            let has_new_errors = !init_errors.ptr_eq(&errors_before_using_return_hint);
-            // Capture constraint cache right after implicitly_instantiate, before
-            // the return hint flow or pin_types can add entries that may be
-            // associated with error-producing checks. Only safe if
-            // implicitly_instantiate did not produce errors.
-            if !has_new_errors {
-                cx.constraint_cache_mut()
-                    .move_top_entries_to_level(preserve_level);
-                preserved = true;
-            }
-
-            let (inferred_targ_list, marked_tparams, tparams_map, has_new_errors) =
-                match (&return_hint, &tout) {
-                    (_, None) | (None, _) => (
-                        inferred_targ_list,
-                        marked_tparams,
-                        tparams_map,
-                        has_new_errors,
-                    ),
-                    (Some((hint, kind)), Some(tout)) => {
-                        let speculative_exn: Option<FlowJsException> =
-                            match FlowJs::flow_t_with_env(cx, env, tout, hint) {
-                                Ok(()) => None,
-                                Err(FlowJsException::WorkerCanceled(c)) => {
-                                    return Err(FlowJsException::WorkerCanceled(c));
-                                }
-                                Err(FlowJsException::TimedOut(t)) => {
-                                    return Err(FlowJsException::TimedOut(t));
-                                }
-                                Err(FlowJsException::DebugThrow { loc }) => {
-                                    return Err(FlowJsException::DebugThrow { loc });
-                                }
-                                Err(e) => Some(e),
-                            };
-
-                        let errors_after_using_return_hint = cx.errors();
-                        let return_hint_has_errors = !errors_before_using_return_hint
-                            .ptr_eq(&errors_after_using_return_hint);
-                        let return_hint_leaked_placeholders =
-                            flow_js_utils::tvar_visitors::has_placeholders(cx, hint)
-                                && placeholders_leaked_into_bounds(cx, env, &inferred_targ_list);
-
-                        if (speculative_exn.is_some()
-                            || return_hint_has_errors
-                            || return_hint_leaked_placeholders)
-                            && *kind == flow_common::hint::HintKind::BestEffortHint
-                        {
-                            // Restore state
-                            cx.restore_cache_snapshot(cache_snapshot.take().expect(
-                                "best-effort return hints should have captured a cache snapshot",
-                            ));
-                            cx.reset_errors(init_errors.dupe());
-                            // Clear the preservation level before retry so the
-                            // re-run starts from the same base state as the original.
-                            cx.constraint_cache_mut().clear_level(preserve_level);
-                            preserved = false;
-                            // Re-run the implicit instantiation
-                            let (inferred_targ_list, marked_tparams, tparams_map, _tout) =
-                                implicitly_instantiate::<Obs>(cx,env,  check)?;
-                            let has_new_errors = !init_errors.ptr_eq(&cx.errors());
-                            // Re-capture constraint cache after retry
-                            if !has_new_errors {
-                                cx.constraint_cache_mut()
-                                    .move_top_entries_to_level(preserve_level);
-                                preserved = true;
-                            }
-                            (
-                                inferred_targ_list,
-                                marked_tparams,
-                                tparams_map,
-                                has_new_errors,
-                            )
-                        } else {
-                            // We're keeping the results with the current hint, but if there was
-                            // an exception that we caught, we need to rethrow it.
-                            if let Some(e) = speculative_exn {
-                                Err(e)?;
-                            }
-                            (
-                                inferred_targ_list,
-                                marked_tparams,
-                                tparams_map,
-                                has_new_errors,
-                            )
-                        }
-                    }
+            if let (Some((hint, kind)), Some(tout)) = (&return_hint, &tout) {
+                let errors_before_using_return_hint = cx.errors();
+                let hint_exn = match FlowJs::flow_t_with_env(cx, env, tout, hint) {
+                    Ok(()) => None,
+                    Err(
+                        e @ (FlowJsException::WorkerCanceled(_)
+                        | FlowJsException::TimedOut(_)
+                        | FlowJsException::DebugThrow { .. }),
+                    ) => return Err(e),
+                    Err(e) => Some(e),
                 };
+                let hint_failed = hint_exn.is_some()
+                    || !errors_before_using_return_hint.ptr_eq(&cx.errors())
+                    || (flow_js_utils::tvar_visitors::has_placeholders(cx, hint)
+                        && placeholders_leaked_into_bounds(cx, env, &targs));
+                if hint_failed && *kind == flow_common::hint::HintKind::BestEffortHint {
+                    // Solve again without the hint, from the same state as before it.
+                    cx.restore_cache_snapshot(cache_snapshot.take().expect(
+                        "best-effort return hints should have captured a cache snapshot",
+                    ));
+                    cx.reset_errors(init_errors.dupe());
+                    cx.constraint_cache_mut().clear_level(preserve_level);
+                    (targs, marked_tparams, _, has_new_errors) = instantiate(cx)?;
+                    preserved = !has_new_errors;
+                } else if let Some(e) = hint_exn {
+                    return Err(e);
+                }
+            }
 
             cx.reset_errors(Default::default());
 
-            let result = pin_types::<Obs>(
+            // A solve that allows underconstrained type parameters pins them all as unmarked.
+            if allow_underconstrained {
+                marked_tparams = Marked::new();
+            }
+            let result = pin_types(
                 cx,
                 env,
+                unmarked_fallback,
                 &use_op,
                 has_new_errors,
-                allow_underconstrained,
                 has_syntactic_hint,
-                &inferred_targ_list,
+                &targs,
                 &marked_tparams,
-                &tparams_map,
                 check,
             );
             let implicit_instantiation_errors = cx.errors().filter(|error| {
@@ -3195,14 +2634,14 @@ pub mod instantiation_solver {
                             Some(tp) => tp,
                             None => return Ok(()),
                         };
-                        let polarity = marked_tparams.get(name);
-                        let InferredTarg { inferred, .. } = make_pin_type::<MainObserver>(
+                        let inferred = pin_type(
                             cx,
                             env,
+                            UnmarkedFallback::Bound,
                             use_op,
                             tparam,
-                            polarity,
-                            &Some(bound.dupe()),
+                            marked_tparams.get(name),
+                            Some(bound.dupe()),
                             reason,
                             targ,
                         )?;
@@ -3231,39 +2670,6 @@ pub mod instantiation_solver {
         } else {
             Ok(None)
         }
-    }
-
-    pub fn fold<'cx, Acc>(
-        implicit_instantiation_cx: &mut Context<'cx>,
-        env: &FlowJsEnv,
-        cx: &mut Context<'cx>,
-        f: impl Fn(
-            &mut Context,
-            Acc,
-            &ImplicitInstantiationCheck,
-            &BTreeMap<SubstName, GeneralizedTarg>,
-        ) -> Result<Acc, FlowJsException>,
-        init: Acc,
-        post: impl FnOnce(&mut Context, &Context),
-        implicit_instantiation_checks: &[ImplicitInstantiationCheck],
-    ) -> Result<Acc, FlowJsException> {
-        let r = implicit_instantiation_checks
-            .iter()
-            .try_fold(init, |acc, check| {
-                let (ref use_op, _, _) = check.operation;
-                let (pinned, _) = solve_targs(
-                    implicit_instantiation_cx,
-                    env,
-                    use_op.dupe(),
-                    false,
-                    false,
-                    None,
-                    check,
-                )?;
-                f(implicit_instantiation_cx, acc, check, &pinned)
-            })?;
-        post(cx, implicit_instantiation_cx);
-        Ok(r)
     }
 }
 
@@ -3966,6 +3372,11 @@ pub mod kit {
         reason_op: &Reason,
         reason_tapp: &Reason,
     ) -> Result<(Type, Vec<(Type, subst_name::SubstName)>), FlowJsException> {
+        // A type parameter that nothing constrains can take its bound when the result is checked
+        // against a full return hint, which then reports a conflict with that bound. Without one,
+        // the bound would reach the caller silently, so it is underconstrained instead. A partial
+        // hint, which has placeholders, says nothing about their positions, so it only guides the
+        // solve as a best-effort hint.
         let (allow_underconstrained, rh) = match (return_hint.1)(cx, false, None, reason_op.dupe())?
         {
             HintEvalResult::HintAvailable(t, kind) => (true, Some((t, kind))),
@@ -3989,44 +3400,45 @@ pub mod kit {
                 .unwrap_or(false)
         };
 
-        {
-            let env = &match check.operation.2 {
-                Operation::SubtypeLowerPoly(_) => env.checking_polymorphic_lower(),
-                _ => env.solving_implicit_instantiation(),
-            };
-            let (_, _, ref t) = check.poly_t;
-            let (soln, inferred_targs) = solve_targs(
-                cx,
-                env,
-                use_op.dupe(),
-                allow_underconstrained,
-                has_syntactic_hint,
-                rh,
-                check,
-            )?;
-            let has_generic_arg = has_generic_arg(cx, check);
-            let result_t = instantiate_poly_with_subst_map(
-                cx,
-                env,
-                trace,
-                t,
-                &soln,
-                &use_op,
-                reason_op,
-                reason_tapp,
-                has_generic_arg,
-            )?;
-            Ok((result_t, inferred_targs))
-        }
+        let env = &match check.operation.2 {
+            Operation::SubtypeLowerPoly(_) => env.checking_polymorphic_lower(),
+            _ => env.solving_implicit_instantiation(),
+        };
+        let (_, _, ref t) = check.poly_t;
+        let (soln, inferred_targs) = solve_targs(
+            cx,
+            env,
+            use_op.dupe(),
+            allow_underconstrained,
+            has_syntactic_hint,
+            rh,
+            check,
+        )?;
+        let has_generic_arg = has_generic_arg(cx, check);
+        let result_t = instantiate_poly_with_subst_map(
+            cx,
+            env,
+            trace,
+            t,
+            &soln,
+            &use_op,
+            reason_op,
+            reason_tapp,
+            has_generic_arg,
+        )?;
+        Ok((result_t, inferred_targs))
     }
 
-    pub fn run_render_extractor<'cx>(
+    // Infers `T` in `t extends extends_t<T>`, as a conditional type with `infer T` would, where
+    // `extends_t` builds the extends type from `T`. Returns `None` if `t` does not extend it.
+    fn extract<'cx>(
         cx: &mut Context<'cx>,
         env: &FlowJsEnv,
-        use_op: UseOp,
+        use_op: &UseOp,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Type, FlowJsException> {
+        extends_t: impl FnOnce(&mut Context<'cx>, &FlowJsEnv, &Type) -> Type,
+    ) -> Result<Option<Type>, FlowJsException> {
         let name = SubstName::name("T".into());
         let bound = mixed_t::make(reason.dupe());
         let id = cx.make_generic_id(name.dupe(), reason.loc());
@@ -4039,17 +3451,49 @@ pub mod kit {
         })));
         let tparam = TypeParam::new(TypeParamInner {
             reason: reason.dupe(),
-            name: name.dupe(),
-            bound: bound.dupe(),
+            name,
+            bound,
             polarity: Polarity::Positive,
             default: None,
             is_this: false,
             is_const: false,
         });
+        let env = &env.solving_implicit_instantiation();
+        let extends_t = extends_t(cx, env, &generic_t);
+        let solution = solve_conditional_type_targs(
+            cx,
+            env,
+            DepthTrace::dummy_trace(),
+            use_op,
+            reason,
+            &[tparam],
+            t,
+            &extends_t,
+            &generic_t,
+            false,
+        )?;
+        Ok(solution.map(|subst_map| {
+            type_subst::subst(
+                cx,
+                Some(unknown_use()),
+                true,
+                false,
+                type_subst::Purpose::Normal,
+                &subst_map,
+                generic_t,
+            )
+        }))
+    }
 
-        let result = {
-            let env = &env.solving_implicit_instantiation();
-            let extends_t = Type::new(TypeInner::DefT(
+    pub fn run_render_extractor<'cx>(
+        cx: &mut Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: UseOp,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        let renders = extract(cx, env, &use_op, reason, t, |_, _, generic_t| {
+            Type::new(TypeInner::DefT(
                 reason.dupe(),
                 DefT::new(DefTInner::ReactAbstractComponentT(Box::new(
                     ReactAbstractComponentTData {
@@ -4058,32 +3502,9 @@ pub mod kit {
                         component_kind: ComponentKind::Structural,
                     },
                 ))),
-            ));
-            solve_conditional_type_targs(
-                cx,
-                env,
-                DepthTrace::dummy_trace(),
-                &use_op,
-                reason,
-                &[tparam],
-                t,
-                &extends_t,
-                &generic_t,
-                false,
-            )
-        };
-        match result? {
-            Some(subst_map) => Ok(type_subst::subst(
-                cx,
-                Some(unknown_use()),
-                true,
-                false,
-                type_subst::Purpose::Normal,
-                &subst_map,
-                generic_t,
-            )),
-            None => Ok(empty_t::why(reason.dupe())),
-        }
+            ))
+        })?;
+        Ok(renders.unwrap_or_else(|| empty_t::why(reason.dupe())))
     }
 
     // TODO: await should look up Promise in the environment instead of going directly to
@@ -4098,80 +3519,29 @@ pub mod kit {
         reason: &Reason,
         t: &Type,
     ) -> Result<Type, FlowJsException> {
-        let name = SubstName::name("T".into());
-        let bound = mixed_t::make(reason.dupe());
-        let id = cx.make_generic_id(name.dupe(), reason.loc());
-        let generic_t = Type::new(TypeInner::GenericT(Box::new(GenericTData {
-            reason: reason.dupe(),
-            name: name.dupe(),
-            bound: bound.dupe(),
-            no_infer: false,
-            id,
-        })));
-        let tparam = TypeParam::new(TypeParamInner {
-            reason: reason.dupe(),
-            name: name.dupe(),
-            bound: bound.dupe(),
-            polarity: Polarity::Positive,
-            default: None,
-            is_this: false,
-            is_const: false,
-        });
-
-        let result = {
-            let env = &env.solving_implicit_instantiation();
+        let awaited = extract(cx, env, &use_op, reason, t, |cx, env, generic_t| {
             let promise_t =
                 flow_js_utils::lookup_builtin_type_with_env(cx, env, "Promise", reason.dupe());
-            let extends_t = type_util::typeapp(
+            type_util::typeapp(
                 false,
                 false,
                 reason.dupe(),
                 promise_t,
                 vec![generic_t.dupe()],
-            );
-            solve_conditional_type_targs(
-                cx,
-                env,
-                DepthTrace::dummy_trace(),
-                &use_op,
-                reason,
-                &[tparam],
-                t,
-                &extends_t,
-                &generic_t,
-                false,
             )
+        })?;
+        let message = match awaited {
+            Some(_) => "We are awaiting a Promise.",
+            None => "We are awaiting a non-Promise.",
         };
-        match result? {
-            Some(subst_map) => {
-                flow_typing_debug::verbose::print_if_verbose(
-                    cx,
-                    None,
-                    None,
-                    None,
-                    vec!["We are awaiting a Promise.".to_string()],
-                );
-                Ok(type_subst::subst(
-                    cx,
-                    Some(unknown_use()),
-                    true,
-                    false,
-                    type_subst::Purpose::Normal,
-                    &subst_map,
-                    generic_t,
-                ))
-            }
-            None => {
-                flow_typing_debug::verbose::print_if_verbose(
-                    cx,
-                    None,
-                    None,
-                    None,
-                    vec!["We are awaiting a non-Promise.".to_string()],
-                );
-                Ok(t.dupe())
-            }
-        }
+        flow_typing_debug::verbose::print_if_verbose(
+            cx,
+            None,
+            None,
+            None,
+            vec![message.to_string()],
+        );
+        Ok(awaited.unwrap_or_else(|| t.dupe()))
     }
 
     pub fn run_monomorphize<'cx>(
@@ -4192,13 +3562,11 @@ pub mod kit {
                 reason_op,
                 reason_tapp,
             );
-            let InferredTarg {
-                tparam: tp,
-                inferred,
-            } = super::instantiation_solver::pin_type(
+            let inferred = pin_type(
                 cx,
                 env,
-                use_op.dupe(),
+                UnmarkedFallback::Bound,
+                &use_op,
                 tparam,
                 None,
                 None,
@@ -4206,11 +3574,11 @@ pub mod kit {
                 &targ,
             )?;
             let gt = GeneralizedTarg {
-                tparam: tp.dupe(),
+                tparam: tparam.dupe(),
                 inferred: inferred.dupe(),
                 generalized: inferred,
             };
-            subst_map.insert(tp.name.dupe(), gt);
+            subst_map.insert(tparam.name.dupe(), gt);
         }
         instantiate_poly_with_subst_map(
             cx,
