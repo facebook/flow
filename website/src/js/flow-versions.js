@@ -22,7 +22,7 @@ function getReleases() /*: Array<string> */ {
       .status == 0
       ? '$(fwdproxy-config curl) '
       : '';
-  const cmd = `curl ${authHeader} ${options}"https://api.github.com/repos/facebook/flow/releases?per_page=80" | jq --raw-output '.[] | .tag_name'`;
+  const cmd = `curl ${authHeader} ${options}"https://api.github.com/repos/meta/flow/releases?per_page=80" | jq --raw-output '.[] | .tag_name'`;
   return execSync(cmd, {stdio: ['ignore', 'pipe', 'ignore']})
     .toString('utf8')
     .trim()
