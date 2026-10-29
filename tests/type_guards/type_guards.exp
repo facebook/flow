@@ -1941,6 +1941,227 @@ References:
                                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- optional_calls.js:37:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:37:5
+   37|     x as number; // ERROR: the call might not run
+           ^
+
+References:
+   optional_calls.js:33:28
+   33| function nullableCallee(x: string | number) {
+                                  ^^^^^^ [1]
+   optional_calls.js:37:10
+   37|     x as number; // ERROR: the call might not run
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:53:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:53:5
+   53|     x as number; // ERROR: the call might not run
+           ^
+
+References:
+   optional_calls.js:49:30
+   49| function nullableReceiver(x: string | number) {
+                                    ^^^^^^ [1]
+   optional_calls.js:53:10
+   53|     x as number; // ERROR: the call might not run
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:61:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:61:5
+   61|     x as number; // ERROR: the call might not run
+           ^
+
+References:
+   optional_calls.js:57:29
+   57| function nullableInChain(x: string | number) {
+                                   ^^^^^^ [1]
+   optional_calls.js:61:10
+   61|     x as number; // ERROR: the call might not run
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:69:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:69:5
+   69|     x as number; // ERROR: the call might not run
+           ^
+
+References:
+   optional_calls.js:65:36
+   65| function nullableEarlierInChain(x: string | number) {
+                                          ^^^^^^ [1]
+   optional_calls.js:69:10
+   69|     x as number; // ERROR: the call might not run
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:77:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:77:5
+   77|     x as number; // ERROR: one-sided guards do not refine the else branch
+           ^
+
+References:
+   optional_calls.js:73:22
+   73| function oneSided(x: string | number) {
+                            ^^^^^^ [1]
+   optional_calls.js:77:10
+   77|     x as number; // ERROR: one-sided guards do not refine the else branch
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:108:5
+
+Cannot cast `m` to `OtherMessage` because `TextMessage` [1] is incompatible with `OtherMessage` [2]. [incompatible-type]
+
+   optional_calls.js:108:5
+   108|     m as OtherMessage; // ERROR: the call might not run
+            ^
+
+References:
+   optional_calls.js:104:37
+   104| function nullableReceiverGuard(m: ?(TextMessage | OtherMessage)) {
+                                            ^^^^^^^^^^^ [1]
+   optional_calls.js:108:10
+   108|     m as OtherMessage; // ERROR: the call might not run
+                 ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:114:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:114:5
+   114|     x as number; // ERROR: the call might not run
+            ^
+
+References:
+   optional_calls.js:112:29
+   112| function nullableNegated(x: string | number) {
+                                    ^^^^^^ [1]
+   optional_calls.js:114:10
+   114|     x as number; // ERROR: the call might not run
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:125:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:125:5
+   125|     x as number; // ERROR
+            ^
+
+References:
+   optional_calls.js:120:33
+   120| function nullableConjunction(x: string | number, y: string | number) {
+                                        ^^^^^^ [1]
+   optional_calls.js:125:10
+   125|     x as number; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:126:5
+
+Cannot cast `y` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:126:5
+   126|     y as string; // ERROR
+            ^
+
+References:
+   optional_calls.js:120:62
+   120| function nullableConjunction(x: string | number, y: string | number) {
+                                                                     ^^^^^^ [1]
+   optional_calls.js:126:10
+   126|     y as string; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:133:5
+
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:133:5
+   133|     x as string; // ERROR
+            ^
+
+References:
+   optional_calls.js:130:42
+   130| function nullableDisjunction(x: string | number) {
+                                                 ^^^^^^ [1]
+   optional_calls.js:133:10
+   133|     x as string; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:135:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:135:5
+   135|     x as number; // ERROR: the calls might not run
+            ^
+
+References:
+   optional_calls.js:130:33
+   130| function nullableDisjunction(x: string | number) {
+                                        ^^^^^^ [1]
+   optional_calls.js:135:10
+   135|     x as number; // ERROR: the calls might not run
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:141:5
+
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:141:5
+   141|     x as string; // ERROR: the plain alternative does not narrow
+            ^
+
+References:
+   optional_calls.js:139:43
+   139| function nullableGuardOrPlain(x: string | number) {
+                                                  ^^^^^^ [1]
+   optional_calls.js:141:10
+   141|     x as string; // ERROR: the plain alternative does not narrow
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:148:5
+
+Cannot cast `x` to `string` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:148:5
+   148|     x as string; // ERROR: reassigned
+            ^
+
+References:
+   optional_calls.js:147:9
+   147|     x = 1;
+                ^ [1]
+   optional_calls.js:148:10
+   148|     x as string; // ERROR: reassigned
+                 ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:1:56
 
 A type guard parameter `b` [1] cannot reference pattern parameter `b` [2]. [function-predicate]
@@ -5959,4 +6180,4 @@ References:
 
 
 
-Found 327 errors
+Found 340 errors

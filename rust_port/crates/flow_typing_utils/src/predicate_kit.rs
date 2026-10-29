@@ -1022,12 +1022,22 @@ fn call_latent_pred<'cx>(
     tin: &Type,
     result_collector: &PredicateResultCollector,
 ) -> Result<(), FlowJsException> {
-    let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+    let mut ts = FlowJs::possible_concrete_types_for_inspection_with_env(
         cx,
         env,
         reason_of_t(fun_t),
         fun_t,
     )?;
+    // A nullish callee never yields a truthy result: calling it throws, and an
+    // optional chain skips the call and evaluates to `undefined`. So it does not
+    // dilute the positive refinement, but it keeps the negative one unrefined.
+    let is_nullish = |t: &Type| {
+        matches!(t.deref(), TypeInner::DefT(_, def_t)
+            if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT))
+    };
+    if sense && ts.iter().any(|t| !is_nullish(t)) {
+        ts.retain(|t| !is_nullish(t));
+    }
     for t in ts.iter() {
         match t.deref() {
             TypeInner::IntersectionT(r, rep) => {

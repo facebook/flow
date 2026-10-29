@@ -7684,7 +7684,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         use flow_parser::ast::expression::Expression;
         use flow_parser::ast::expression::ExpressionInner;
         use flow_parser::ast::expression::ExpressionOrSpread;
-        use flow_parser::ast::expression::member::Property as MemberProperty;
 
         if ast_utils::is_call_to_is_array(&call.callee)
             && call.arguments.arguments.len() == 1
@@ -7717,6 +7716,48 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         }
 
         let callee = &call.callee;
+        self.expression(callee)?;
+        if let Some(targs) = &call.targs {
+            self.call_type_args(targs)?;
+        }
+        self.arg_list(&call.arguments)?;
+        let assertion = self.assertion_calls.get(callee.loc()).copied();
+        if let Some(assertion) = assertion
+            && bare_assertion_call_always_throws(assertion, &call.arguments.arguments)
+        {
+            self.raise_abrupt_completion(AbruptCompletion::Throw)?;
+        }
+        // Proven assertion calls (e.g. a userland `invariant`) are assumed
+        // pure: unlike ordinary calls they do not invalidate refinements.
+        if assertion.is_none() {
+            self.havoc_current_env(
+                flow_common::refinement_invalidation::Reason::FunctionCall,
+                loc.dupe(),
+            );
+        }
+
+        let call_exp = Expression::new(ExpressionInner::Call {
+            loc: loc.dupe(),
+            inner: Arc::new(call.clone()),
+        });
+        self.latent_call_refinement(loc, call_exp, call);
+        Ok(())
+    }
+
+    /// Adds the type-guard refinements of `call`, an evaluated call or optional call.
+    /// When an optional chain can skip the call, the callee type includes `void`,
+    /// so the guard narrows neither branch.
+    fn latent_call_refinement(
+        &mut self,
+        loc: ALoc,
+        call_exp: Expression<ALoc, ALoc>,
+        call: &flow_parser::ast::expression::Call<ALoc, ALoc>,
+    ) {
+        use env_api::RefinementKind;
+        use flow_parser::ast::expression::ExpressionOrSpread;
+        use flow_parser::ast::expression::member::Property as MemberProperty;
+
+        let callee = &call.callee;
         let arguments = &call.arguments;
         let targs = &call.targs;
 
@@ -7743,25 +7784,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 .map(refinement_key::RefinementKey::of_argument)
                 .collect()
         };
-        self.expression(callee)?;
-        if let Some(targs) = targs {
-            self.call_type_args(targs)?;
-        }
-        self.arg_list(arguments)?;
-        let assertion = self.assertion_calls.get(callee.loc()).copied();
-        if let Some(assertion) = assertion
-            && bare_assertion_call_always_throws(assertion, &call.arguments.arguments)
-        {
-            self.raise_abrupt_completion(AbruptCompletion::Throw)?;
-        }
-        // Proven assertion calls (e.g. a userland `invariant`) are assumed
-        // pure: unlike ordinary calls they do not invalidate refinements.
-        if assertion.is_none() {
-            self.havoc_current_env(
-                flow_common::refinement_invalidation::Reason::FunctionCall,
-                loc.dupe(),
-            );
-        }
 
         let mut refis: BTreeMap<Lookup, (ALoc, env_api::refi::Refinement<ALoc>)> = BTreeMap::new();
 
@@ -7773,10 +7795,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         // as an argument. Variables not passed into the function are havoced if
         // the invalidation api says they can be invalidated.
         let callee_loc = callee.loc().dupe();
-        let call_exp = Expression::new(ExpressionInner::Call {
-            loc: loc.dupe(),
-            inner: Arc::new(call.clone()),
-        });
         let mut key_map: BTreeMap<Lookup, (refinement_key::RefinementKey<ALoc>, Vec<i32>)> =
             BTreeMap::new();
         for (index, key_opt) in refinement_keys.iter().enumerate() {
@@ -7814,49 +7832,42 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             }
         }
 
-        if let ExpressionInner::Member {
-            inner,
-            loc: member_loc,
-            ..
-        } = callee.deref()
+        let member = match callee.deref() {
+            ExpressionInner::Member { inner, loc } => Some((loc, inner.as_ref())),
+            ExpressionInner::OptionalMember { inner, loc } => Some((loc, &inner.member)),
+            _ => None,
+        };
+        if let Some((member_loc, member)) = member
+            && let MemberProperty::PropertyIdentifier(_) = &member.property
+            && let Some(key) = refinement_key::RefinementKey::of_expression(&member.object)
+            // TODO For now in `x.f(x)` we do not consider the this-refinement on x.
+            // This is not fundamentally impossible, but causes crashes.
+            && !key_map.contains_key(&key.lookup)
         {
-            if let MemberProperty::PropertyIdentifier(_) = &inner.property {
-                if let Some(key) = refinement_key::RefinementKey::of_expression(&inner.object) {
-                    if !key_map.contains_key(&key.lookup) {
-                        // TODO For now in `x.f(x)` we do not consider the this-refinement on x.
-                        // This is not fundamentally impossible, but causes crashes.
-                        let call_exp = Expression::new(ExpressionInner::Call {
-                            loc: loc.dupe(),
-                            inner: Arc::new(call.clone()),
-                        });
-                        self.add_pred_func_info(
-                            member_loc.dupe(),
-                            call_exp,
-                            callee.clone(),
-                            targs.clone(),
-                            arguments.clone(),
-                        );
-                        let mut refining_locs = empty_refining_locs();
-                        refining_locs.insert(loc.dupe());
-                        refis = self.extend_refinement(
-                            &key,
-                            refining_locs,
-                            RefinementKind::LatentThisR {
-                                func: Rc::new(callee.clone()),
-                                targs: targs.clone().map(Rc::new),
-                                arguments: Rc::new(arguments.clone()),
-                            },
-                            refis,
-                        );
-                    }
-                }
-            }
+            self.add_pred_func_info(
+                member_loc.dupe(),
+                call_exp,
+                callee.clone(),
+                targs.clone(),
+                arguments.clone(),
+            );
+            let mut refining_locs = empty_refining_locs();
+            refining_locs.insert(loc.dupe());
+            refis = self.extend_refinement(
+                &key,
+                refining_locs,
+                RefinementKind::LatentThisR {
+                    func: Rc::new(callee.clone()),
+                    targs: targs.clone().map(Rc::new),
+                    arguments: Rc::new(arguments.clone()),
+                },
+                refis,
+            );
         }
 
         if !refis.is_empty() {
             self.commit_refinement(refis);
         }
-        Ok(())
     }
 
     fn unary_refinement(
@@ -8182,6 +8193,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             ExpressionInner::Call { inner, loc, .. } => {
                 self.call_refinement(loc.dupe(), inner)?;
             }
+            ExpressionInner::OptionalCall { inner, loc, .. } => {
+                self.expression(expression)?;
+                self.latent_call_refinement(loc.dupe(), expression.dupe(), &inner.call);
+            }
             ExpressionInner::Unary { inner, loc, .. } => {
                 self.unary_refinement(loc, inner)?;
             }
@@ -8227,7 +8242,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             | ExpressionInner::MetaProperty { .. }
             | ExpressionInner::New { .. }
             | ExpressionInner::Object { .. }
-            | ExpressionInner::OptionalCall { .. }
             | ExpressionInner::Record { .. }
             | ExpressionInner::Sequence { .. }
             | ExpressionInner::Super { .. }
