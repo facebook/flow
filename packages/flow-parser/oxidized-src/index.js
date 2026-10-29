@@ -53,6 +53,14 @@ function getOptions(opts?: ParserOptions): ParserOptions {
     );
   }
 
+  if (
+    options.sourceType == null &&
+    typeof options.sourceFilename === 'string' &&
+    /\.(mjs|mts)$/.test(options.sourceFilename)
+  ) {
+    options.sourceType = 'module';
+  }
+
   if (options.enableExperimentalComponentSyntax == null) {
     options.enableExperimentalComponentSyntax = true; // Enable by default
   }

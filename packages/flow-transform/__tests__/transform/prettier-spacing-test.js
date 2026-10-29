@@ -197,12 +197,13 @@ const foo = [].forEach((a, b, c) => {
 `);
   });
 
+  // Long callback parameters wrap without adding blank lines between them.
   it("should not add newlines between params that don't fit on one line within a call expression", async () => {
     const result = await codemod(`\
 /**
  */
 
-const foo = [].forEach(function foo(a, b, long, enough, to, _break, out, of, the, call, but, not, the, _function) {
+const foo = [].forEach(function foo(a, b, long, enough, to, _break, out, of, the, call, but, not, that, _function) {
   // body
 
 
@@ -227,14 +228,14 @@ const foo = [].forEach(
     call,
     but,
     not,
-    the,
+    that,
     _function,
   ) => {
     // body
     // the above double empty line should be collapsed
   },
 );
-`);
+`); // OK
   });
 });
 

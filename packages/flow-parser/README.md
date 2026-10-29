@@ -20,7 +20,7 @@ The Flow parser exposes a single `parse(code, [options])` function, where `code`
 - **enableExperimentalFlowRecordSyntax**: `boolean`, defaults to `true`. Controls parsing of Flow record syntax.
 - **reactRuntimeTarget**: `"18"` or `"19"`, defaults to `"18"`. Controls how component `ref` parameters are lowered when `babel` is `true`. React 18 treats `ref` as a separate parameter; React 19 treats it as a regular prop.
 - **sourceFilename**: `string`, defaults to `null`. The filename corresponding to the code that is to be parsed. If non-null, the filename will be added to all source locations in the output AST.
-- **sourceType**: `"module"`, `"script"`, or `"unambiguous"` (default). If `"unambiguous"`, source type will be automatically detected and set to `"module"` if any ES6 imports or exports are present in the code, otherwise source type will be set to `"script"`.
+- **sourceType**: `"module"`, `"script"`, or `"unambiguous"` (default). If unspecified or `"unambiguous"`, a `sourceFilename` ending in `.mjs` or `.mts` selects `"module"`. Otherwise, source type is detected from value imports and exports, falling back to `"script"`. An explicit `"module"` or `"script"` takes precedence over the filename.
 - **throwOnParseErrors**: `boolean`, defaults to `true`. If `true`, throw a `SyntaxError` for the first parse error. If `false`, return the partial AST with parse errors in the root node's `errors` property.
 - **tokens**: `boolean`, defaults to `false`. If `true`, add all tokens to a `tokens` property on the root node.
 - **transformOptions**: `object`. Options to be supplied to relevant transforms.

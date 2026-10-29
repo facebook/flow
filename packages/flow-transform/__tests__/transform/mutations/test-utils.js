@@ -13,13 +13,14 @@ import type {ESNode, ModuleDeclaration, Program, Statement} from 'flow-estree';
 import {traverse} from '../../../src/traverse/traverse';
 import {parse} from '../../../src/transform/parse';
 
-export type StatementTypes = Statement['type'] | ModuleDeclaration['type'];
+// Module-compatible statements exercise mutations across their allowed parents.
+export type StatementTypes =
+  Exclude<Statement['type'], 'WithStatement'> | ModuleDeclaration['type'];
 export const CODE_SAMPLES: Readonly<{[StatementTypes]: string}> = {
   ExpressionStatement: 'foo;',
   BlockStatement: '{}',
   EmptyStatement: ';',
   DebuggerStatement: 'debugger;',
-  WithStatement: 'with (foo) {}',
   ReturnStatement: 'return foo;',
   LabeledStatement: 'label: foo;',
   BreakStatement: 'break;',

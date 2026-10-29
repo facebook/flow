@@ -29,6 +29,7 @@ pub mod strip_flow;
 
 use std::ffi::CString;
 
+use flow_parser::TokenSinkResult;
 use flow_parser::ast;
 use flow_parser::ast::statement::ExportKind;
 use flow_parser::ast::statement::ImportKind;
@@ -125,7 +126,7 @@ fn nonneg_u32(v: i32) -> u32 {
 ///   entry point always treats Flow's legacy comment syntax (`/*: T */`,
 ///   `/*:: ... */`) as plain JavaScript comments.
 /// - source_type: integer encoding of [`SourceType`].
-///   Selects source-type metadata; ESTree parsing uses the same grammar for all values.
+///   Modules parse in strict mode with top-level await enabled.
 #[unsafe(no_mangle)]
 pub extern "C" fn hermesParse(
     source: *const u8,
@@ -311,24 +312,23 @@ pub extern "C" fn hermesParse(
     // The buffer is owned here, mutated by the sink callback, then handed to
     // the serializer below. When tokens are not requested we pass `None` to
     // the parser to avoid the per-token callback overhead.
-    let mut token_buffer: Vec<flow_parser::TokenSinkResult> = Vec::new();
-    let (program, errors) = if tokens != 0 {
-        let mut sink = |t: flow_parser::TokenSinkResult| token_buffer.push(t);
-        flow_parser::parse_program_file::<()>(
+    let mut token_buffer: Vec<TokenSinkResult> = Vec::new();
+    let mut sink = |token: TokenSinkResult| token_buffer.push(token);
+    let token_sink = (tokens != 0).then_some(&mut sink as &mut dyn FnMut(TokenSinkResult));
+    let (program, errors) = match source_type {
+        SourceType::Module => flow_parser::parse_module_file_with_errors(
+            token_sink,
+            parse_options,
+            file_key,
+            source_str,
+        ),
+        SourceType::Unspecified | SourceType::Script => flow_parser::parse_program_file::<()>(
             false, // panic_if_failed
-            Some(&mut sink),
+            token_sink,
             Some(parse_options),
             file_key,
             Ok(source_str),
-        )
-    } else {
-        flow_parser::parse_program_file::<()>(
-            false, // panic_if_failed
-            None,  // token_sink
-            Some(parse_options),
-            file_key,
-            Ok(source_str),
-        )
+        ),
     };
 
     let mut result = Box::new(ParseResult {
@@ -1375,27 +1375,21 @@ mod tests {
     }
 
     #[test]
-    fn module_source_type_does_not_panic() {
-        // Pre-fix this would panic with "source_type=2 (module) is not
-        // supported. flow_parser pins `allow_await: false` at the top
-        // level...". Now `source_type=2` is accepted: imports/exports
-        // already parsed regardless of the integer code, and `await` at
-        // top level remains usable as an identifier reference (matching
-        // OCaml flow_parser, which also pins `allow_await:false` and
-        // therefore treats `await` as a valid identifier outside async
-        // function bodies — see parser_common.ml:481-491).
-        let result = ffi_parse_with_source_type("export const x = 1;", super::SourceType::Module);
-        assert!(!result.is_null(), "ParseResult pointer should be non-null");
+    fn module_source_type_allows_top_level_await() {
+        // Module source type enables top-level await through the integer ABI.
+        let result =
+            ffi_parse_with_source_type("export const x = await live();", super::SourceType::Module);
+        assert!(!result.is_null(), "ParseResult pointer should be non-null"); // OK
         let buf_ptr = super::hermesParseResult_getProgramBuffer(result);
         assert!(
             !buf_ptr.is_null(),
             "program buffer should be non-null for valid module input"
-        );
+        ); // OK
         let err_ptr = super::hermesParseResult_getError(result);
         assert!(
             err_ptr.is_null(),
             "valid module input should not produce a parse error"
-        );
+        ); // OK
         super::hermesParseResult_free(result);
     }
 }

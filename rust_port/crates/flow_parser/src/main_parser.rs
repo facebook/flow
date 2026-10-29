@@ -567,10 +567,33 @@ pub fn parse_module_file(
     content: &str,
 ) -> Result<ast::Program<Loc, Loc>, Vec<(Loc, ParseError)>> {
     let env = init_env::<()>(None, Some(parse_options), Some(file_name), Ok(content));
-    do_parse(env, true, |env| {
-        env.with_strict(true, |env| env.with_allow_await(true, parse_program_inner))
-    })
-    .and_then(|(program, errors)| program.map_err(|_| errors))
+    do_parse(env, true, parse_module_program_inner)
+        .and_then(|(program, errors)| program.map_err(|_| errors))
+}
+
+/// Parse an ES module, retaining the partial AST, diagnostics, and optional tokens.
+pub fn parse_module_file_with_errors<'a>(
+    token_sink: Option<&'a mut dyn FnMut(TokenSinkResult)>,
+    parse_options: ParseOptions,
+    file_name: FileKey,
+    content: &'a str,
+) -> (ast::Program<Loc, Loc>, Vec<(Loc, ParseError)>) {
+    let env = init_env::<()>(
+        token_sink,
+        Some(parse_options),
+        Some(file_name),
+        Ok(content),
+    );
+    do_parse(env, false, parse_module_program_inner)
+        .and_then(|(program, errors)| match program {
+            Ok(program) => Ok((program, errors)),
+            Err(_) => Err(errors),
+        })
+        .expect("module parsing cannot roll back")
+}
+
+fn parse_module_program_inner(env: &mut ParserEnv) -> Result<ast::Program<Loc, Loc>, Rollback> {
+    env.with_strict(true, |env| env.with_allow_await(true, parse_program_inner))
 }
 
 pub fn parse_annotation<E>(

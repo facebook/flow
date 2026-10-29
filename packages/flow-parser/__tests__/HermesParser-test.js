@@ -275,7 +275,242 @@ describe('Program source type', () => {
       expect(ast.sourceType).toBe('module'); // OK
     }
   });
+
+  // Module filenames select modules even when their exports are all type-only.
+  test('module filenames with type-only exports', () => {
+    const source = 'export default interface I {}';
+    for (const sourceFilename of ['route.mjs', 'route.mts', 'route.d.mts']) {
+      for (const sourceOptions of [{}, {sourceType: 'unambiguous'}]) {
+        const options = {...sourceOptions, sourceFilename};
+        expect(parse(source, options)).toMatchObject({
+          sourceType: 'module',
+          errors: [],
+        }); // OK
+        expect(
+          parse(source, {...options, babel: true}).program.sourceType,
+        ).toBe('module'); // OK
+      }
+    }
+  });
 });
+
+// Module selection controls top-level await with and without token output.
+describe.each([{tokens: false}, {tokens: true}])(
+  'Top-level await (tokens: $tokens)',
+  ({tokens}) => {
+    test('await expressions in explicit modules', () => {
+      const awaitExpression = {
+        type: 'AwaitExpression',
+        argument: {type: 'CallExpression', callee: {name: 'live'}},
+      };
+      const sources = [
+        [
+          'export {}; await live();',
+          {type: 'ExpressionStatement', expression: awaitExpression},
+        ],
+        [
+          "export {}; const {POST} = await import('./route');",
+          {
+            type: 'VariableDeclaration',
+            declarations: [
+              {
+                id: {type: 'ObjectPattern'},
+                init: {
+                  type: 'AwaitExpression',
+                  argument: {type: 'ImportExpression'},
+                },
+              },
+            ],
+          },
+        ],
+      ];
+      for (const sourceOptions of [
+        {sourceType: 'module'},
+        {sourceType: 'module', sourceFilename: 'route.mts'},
+        {sourceFilename: 'route.mjs'},
+        {sourceFilename: 'route.mts'},
+      ]) {
+        for (const [source, statement] of sources) {
+          const ast = parse(source, {...sourceOptions, tokens});
+          expect(ast).toMatchObject({sourceType: 'module', errors: []});
+          expect(ast.body[1]).toMatchObject(statement);
+          if (tokens) {
+            expect(ast.tokens).toEqual(
+              parse(source, {...sourceOptions, sourceType: 'module', tokens})
+                .tokens,
+            );
+            expect(ast.tokens).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({value: 'await'}),
+              ]),
+            );
+          }
+        }
+      }
+    });
+
+    test('default parsing retains script grammar with module metadata', () => {
+      const source = 'export {}; with (obj) {} await(live());';
+      for (const options of [{}, {sourceType: 'unambiguous'}]) {
+        const ast = parse(source, {...options, tokens});
+        expect(ast).toMatchObject({sourceType: 'module', errors: []});
+        expect(ast.body[2]).toMatchObject({
+          type: 'ExpressionStatement',
+          expression: {type: 'CallExpression', callee: {name: 'await'}},
+        });
+      }
+    });
+
+    test('explicit modules without imports or exports', () => {
+      const ast = parse('await live(); for await (const item of items) {}', {
+        sourceType: 'module',
+        tokens,
+      });
+      expect(ast).toMatchObject({
+        sourceType: 'module',
+        errors: [],
+        body: [
+          {
+            type: 'ExpressionStatement',
+            expression: {type: 'AwaitExpression'},
+          },
+          {type: 'ForOfStatement', await: true},
+        ],
+      });
+    });
+
+    test.each(['route.mjs', 'route.mts', 'route.d.mts'])(
+      'module filename %s without imports or exports',
+      sourceFilename => {
+        for (const sourceOptions of [{}, {sourceType: 'unambiguous'}]) {
+          const options = {...sourceOptions, sourceFilename, tokens};
+          const ast = parse('await live();', options);
+          expect(ast).toMatchObject({
+            sourceType: 'module',
+            errors: [],
+            body: [
+              {
+                type: 'ExpressionStatement',
+                expression: {type: 'AwaitExpression'},
+              },
+            ],
+          });
+          expect(ast.tokens).toEqual(
+            parse('await live();', {...options, sourceType: 'module'}).tokens,
+          );
+          expect(
+            parse("const {POST} = await import('./route');", options),
+          ).toMatchObject({
+            sourceType: 'module',
+            errors: [],
+            body: [
+              {
+                declarations: [
+                  {
+                    init: {
+                      type: 'AwaitExpression',
+                      argument: {type: 'ImportExpression'},
+                    },
+                  },
+                ],
+              },
+            ],
+          });
+          expect(
+            parse('await live();', {...options, babel: true}).program,
+          ).toMatchObject({
+            sourceType: 'module',
+            body: [
+              {
+                type: 'ExpressionStatement',
+                expression: {type: 'AwaitExpression'},
+              },
+            ],
+          });
+          expect(() => parse('with (obj) {}', options)).toThrow(SyntaxError);
+          expect(() =>
+            parse('function f() { await live(); }', options),
+          ).toThrow(SyntaxError);
+        }
+      },
+    );
+
+    test('explicit script source type takes precedence over filename', () => {
+      for (const sourceFilename of ['route.mjs', 'route.mts']) {
+        const options = {sourceType: 'script', sourceFilename, tokens};
+        expect(parse('with (obj) {}', options)).toMatchObject({
+          sourceType: 'script',
+          errors: [],
+        });
+        expect(() => parse('await live();', options)).toThrow(SyntaxError);
+      }
+    });
+
+    test('other filenames use content detection', () => {
+      for (const sourceFilename of [
+        'route.js',
+        'route.ts',
+        'route.cjs',
+        'route.cts',
+        'route.mjs.map',
+        'route.mtsx',
+      ]) {
+        const options = {sourceFilename, tokens};
+        expect(parse('const x = 1;', options)).toMatchObject({
+          sourceType: 'script',
+          errors: [],
+        });
+        expect(() => parse('await live();', options)).toThrow(SyntaxError);
+      }
+    });
+
+    test('scripts and ordinary nested functions reject await', () => {
+      for (const [source, options] of [
+        ['await live();', {}],
+        ['await live();', {sourceType: 'script', sourceFilename: 'route.cjs'}],
+        ['export {}; await live();', {sourceType: 'script'}],
+        ["import type T from './types'; await live();", {}],
+        ["const route = await import('./route');", {}],
+        ['function f() { await live(); }', {sourceType: 'module'}],
+        ['export {}; function f() { await live(); }', {}],
+      ]) {
+        expect(() => parse(source, {...options, tokens})).toThrow(SyntaxError);
+        expect(
+          parse(source, {...options, tokens, throwOnParseErrors: false}).errors
+            .length,
+        ).toBeGreaterThan(0);
+      }
+    });
+
+    test('async functions allow await', () => {
+      for (const sourceType of ['script', 'module']) {
+        expect(
+          parse('async function f() { await live(); }', {sourceType, tokens}),
+        ).toMatchObject({errors: []});
+      }
+    });
+
+    test('modules retain strict mode diagnostics and partial ASTs', () => {
+      const source = 'export {}; with (obj) {} await live();';
+      for (const options of [{sourceType: 'module'}]) {
+        expect(() => parse(source, {...options, tokens})).toThrow(SyntaxError);
+        const ast = parse(source, {
+          ...options,
+          tokens,
+          throwOnParseErrors: false,
+        });
+        expect(ast.errors.length).toBeGreaterThan(0);
+        expect(ast.body[2]).toMatchObject({
+          type: 'ExpressionStatement',
+          expression: {type: 'AwaitExpression'},
+        });
+      }
+      expect(
+        parse('with (obj) {}', {sourceType: 'script', tokens}),
+      ).toMatchObject({errors: []});
+    });
+  },
+);
 
 test('Semantic validation', () => {
   // Semantic validator catches errors. Rust port surfaces the
