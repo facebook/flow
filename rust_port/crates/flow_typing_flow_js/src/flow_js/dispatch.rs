@@ -4645,7 +4645,9 @@ fn __flow_impl<'cx>(
         (
             DefT(_, deref!(PolyT(box _))),
             ConcretizeT(box ConcretizeTData {
-                kind: ConcretizationKind::ConcretizeForDestructuring,
+                kind:
+                    ConcretizationKind::ConcretizeForDestructuring
+                    | ConcretizationKind::ConcretizeForUnusedPromiseCheck,
                 collector,
                 ..
             }),
