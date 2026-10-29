@@ -228,6 +228,7 @@ pub mod opts {
         pub projects_path_mapping: Vec<(String, Vec<FlowSmolStr>)>,
         pub projects_strict_boundary: bool,
         pub react_custom_jsx_typing: bool,
+        pub react_managed_attributes: bool,
         pub stylex_shorthand_prop: Option<String>,
         pub react_rules: Vec<ReactRule>,
         pub react_runtime: ReactRuntime,
@@ -367,6 +368,7 @@ pub mod opts {
             projects_path_mapping: Vec::new(),
             projects_strict_boundary: false,
             react_custom_jsx_typing: false,
+            react_managed_attributes: false,
             stylex_shorthand_prop: None,
             // Keep in sync with `component_syntax: true` above: when component
             // syntax is on (the default), the React rules are on too. Explicitly
@@ -2160,6 +2162,16 @@ pub mod opts {
             }),
             ("experimental.projects_path_mapping", |values, config| {
                 projects_path_mapping_parser(values, config)
+            }),
+            ("experimental.react_managed_attributes", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.react_managed_attributes = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
             }),
             ("experimental.records", |values, config| {
                 parse_boolean(

@@ -165,6 +165,7 @@ pub enum ExpectedModulePurpose {
     ReactModuleForReactNodeType,
     ReactModuleForReactRefSetterType,
     ReactModuleForReactElementRefType,
+    ReactModuleForReactManagedAttributesType,
 }
 
 /// The first lower bound that reached one operand of an exponential spread, and the most recent

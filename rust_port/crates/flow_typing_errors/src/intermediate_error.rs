@@ -6724,6 +6724,13 @@ where
                         code("React.ElementRef"),
                         text("."),
                     ],
+                    ExpectedModulePurpose::ReactModuleForReactManagedAttributesType => vec![
+                        text("The "),
+                        code("react"),
+                        text(" module must exist to provide a type for "),
+                        code("React.ReactManagedAttributes"),
+                        text("."),
+                    ],
                 };
                 let mut features = vec![text("Cannot resolve module "), code(name), text(". ")];
                 features.extend(explanation);

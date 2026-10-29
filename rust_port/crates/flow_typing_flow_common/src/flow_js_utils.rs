@@ -6758,6 +6758,14 @@ pub mod import_export_utils {
                 ),
                 ImportKind::ImportType,
             ),
+            ExpectedModulePurpose::ReactModuleForReactManagedAttributesType => (
+                "ReactManagedAttributes",
+                mk_reason(
+                    VirtualReasonDesc::RType("React.ReactManagedAttributes".into()),
+                    loc.dupe(),
+                ),
+                ImportKind::ImportType,
+            ),
         };
         let name = FlowSmolStr::new(name);
         let (_name_def_loc, t) = get_imported_type(

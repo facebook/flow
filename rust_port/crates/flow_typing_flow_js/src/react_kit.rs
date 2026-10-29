@@ -664,9 +664,10 @@ fn props_to_tout<'cx>(
     }
 }
 
-// Creates the type that we expect for a React config by diffing out default
-// props with ObjKitT(Rest). The config does not include types for `key`
-// or `ref`.
+// Creates the type that we expect for a React config. For class components,
+// the default props are merged in with `React.ReactManagedAttributes` under
+// `experimental.react_managed_attributes`, and otherwise diffed out with
+// ObjKitT(Rest). The config does not include types for `key` or `ref`.
 //
 // There is some duplication between the logic used here to get a config type
 // and ObjKitT(ReactConfig). In create_element, we want to produce a props
@@ -726,6 +727,115 @@ pub fn get_config<'cx>(
         return Ok(());
     }
     let reason_component = type_util::reason_of_t(component);
+    if cx.react_managed_attributes()
+        && let TypeInner::DefT(reason_class, def_t) = dropped.deref()
+        && let DefTInner::ClassT(instance) = def_t.deref()
+    {
+        let reason_props = reason_component.dupe().replace_desc(None);
+        // The class must be a React class component.
+        let class = {
+            let props = flow_typing_tvar::mk(cx, reason_props.dupe());
+            component_class(cx, env, reason_class, &props)?
+        };
+        FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), component, &class)?;
+        // Apply an annotation operation, such as I['props'].
+        let eval = |cx: &mut Context<'cx>, type_: Type, destructor: Destructor| {
+            FlowJs::mk_type_destructor_with_env(
+                cx,
+                env,
+                trace,
+                unknown_use(),
+                &reason_props,
+                &type_,
+                &destructor,
+                eval::Id::generate_id(),
+            )
+        };
+        // type Props = I['props'];
+        let props = eval(
+            cx,
+            instance.dupe(),
+            Destructor::PropertyType {
+                name: Name::new("props"),
+            },
+        )?;
+        // Same fields as {...Props, ref?: Ref}, with exactness inherited from Props.
+        let props = {
+            // The inline object annotation {ref?: Ref}.
+            let ref_slice = {
+                // type Ref = React.RefSetter<I>;
+                let ref_setter = FlowJs::get_builtin_react_typeapp_with_env(
+                    cx,
+                    env,
+                    reason_op,
+                    None,
+                    ExpectedModulePurpose::ReactModuleForReactRefSetterType,
+                    vec![instance.dupe()],
+                )?;
+                // The property annotation ref?: Ref.
+                let ref_prop = Property::new(PropertyInner::Field(Box::new(FieldData {
+                    preferred_def_locs: None,
+                    key_loc: None,
+                    type_: type_util::optional(ref_setter, None, false),
+                    polarity: Polarity::Neutral,
+                })));
+                object::spread::OperandSlice::new(object::spread::OperandSliceInner {
+                    reason: reason_props.dupe(),
+                    prop_map: [(Name::new("ref"), ref_prop)].into_iter().collect(),
+                    generics: flow_typing_generics::spread_empty(),
+                    dict: None,
+                    reachable_targs: Rc::from([]),
+                })
+            };
+            let strictness_kind = cx.type_strictness_kind();
+            eval(
+                cx,
+                props,
+                Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
+                    object::spread::Target::Value {
+                        make_seal: object::spread::SealType::Sealed,
+                        strictness_kind,
+                        literal: false,
+                    },
+                    Default::default(),
+                    Some(ref_slice),
+                ))),
+            )?
+        };
+        let config = FlowJs::get_builtin_react_typeapp_with_env(
+            cx,
+            env,
+            reason_op,
+            None,
+            ExpectedModulePurpose::ReactModuleForReactManagedAttributesType,
+            vec![component.dupe(), props],
+        )?;
+        let use_op = VirtualUseOp::Frame(
+            Arc::new(VirtualFrameUseOp::ReactGetConfig { polarity: pole }),
+            Arc::new(use_op),
+        );
+        match pole {
+            Polarity::Positive => {
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &config, tout)?;
+            }
+            Polarity::Negative => {
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, tout, &config)?;
+            }
+            Polarity::Neutral => {
+                FlowJs::rec_unify_with_env(
+                    cx,
+                    env,
+                    trace,
+                    use_op,
+                    UnifyCause::Uncategorized,
+                    None,
+                    tout,
+                    &config,
+                )?;
+            }
+        }
+        return Ok(());
+    }
     let props = {
         let reason = reason_component.dupe().replace_desc(None);
         let use_op_clone = use_op.dupe();

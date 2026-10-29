@@ -206,6 +206,7 @@ pub struct FrozenMetadata {
     pub no_unchecked_indexed_access: bool,
     pub projects_options: Arc<ProjectsOptions>,
     pub react_custom_jsx_typing: bool,
+    pub react_managed_attributes: bool,
     pub react_rules: Arc<[ReactRule]>,
     pub recursion_limit: i32,
     pub relay_integration_esmodules: bool,
@@ -264,6 +265,7 @@ impl Default for FrozenMetadata {
             no_unchecked_indexed_access: false,
             projects_options: Arc::new(ProjectsOptions::default()),
             react_custom_jsx_typing: false,
+            react_managed_attributes: false,
             react_rules: Arc::from([]),
             recursion_limit: 10000,
             relay_integration_esmodules: false,
@@ -920,6 +922,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             no_unchecked_indexed_access: options.no_unchecked_indexed_access,
             projects_options: options.projects_options.dupe(),
             react_custom_jsx_typing: options.react_custom_jsx_typing,
+            react_managed_attributes: options.react_managed_attributes,
             react_rules: options.react_rules.dupe(),
             recursion_limit: options.recursion_limit,
             relay_integration_esmodules: options.relay_integration_esmodules,
@@ -1597,6 +1600,10 @@ impl<'a> Context<'a> {
 
     pub fn react_custom_jsx_typing(&self) -> bool {
         self.inner().metadata.frozen.react_custom_jsx_typing
+    }
+
+    pub fn react_managed_attributes(&self) -> bool {
+        self.inner().metadata.frozen.react_managed_attributes
     }
 
     pub fn react_runtime(&self) -> ReactRuntime {
