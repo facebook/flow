@@ -2274,6 +2274,9 @@ fn declare_namespace(
     global: bool,
     implicit_declare: bool,
 ) -> Result<statement::Statement<Loc, Loc>, Rollback> {
+    if implicit_declare && !env.should_parse_types() {
+        env.error(ParseError::UnexpectedTypeDeclaration)?;
+    }
     fn declare_namespace_helper(
         env: &mut ParserEnv,
         leading: Vec<Comment<Loc>>,
@@ -2650,6 +2653,11 @@ fn export_specifiers(
                     }
                 })?;
                 specifier.loc = loc;
+                if specifier.export_kind == statement::ExportKind::ExportType
+                    && !env.should_parse_types()
+                {
+                    env.error_at(specifier.loc.dupe(), ParseError::UnexpectedTypeExport)?;
+                }
                 specifiers.push(specifier);
                 preceding_comma = eat::maybe(env, TokenKind::TComma)?;
             }
@@ -2744,6 +2752,9 @@ fn import_equals_declaration_with_id(
     leading: Vec<Comment<Loc>>,
     id: Identifier<Loc, Loc>,
 ) -> Result<Arc<statement::ImportEqualsDeclaration<Loc, Loc>>, Rollback> {
+    if import_kind != statement::ImportKind::ImportValue && !env.should_parse_types() {
+        env.error(ParseError::UnexpectedTypeImport)?;
+    }
     expect::token(env, TokenKind::TAssign)?;
     let module_reference = import_equals_module_reference(env)?;
     let trailing = match semicolon(env, None, true)? {
@@ -2920,6 +2931,9 @@ fn export_declaration(
             // export as namespace Foo;
             TokenKind::TIdentifier { raw, .. } if raw == "as" && is_export_as_namespace => {
                 with_loc(Some(start_loc), env, |env| {
+                    if !env.should_parse_types() {
+                        env.error(ParseError::UnexpectedTypeExport)?;
+                    }
                     expect::identifier(env, "as")?;
                     expect::identifier(env, "namespace")?;
                     let id = main_parser::parse_identifier(env, None)?;
@@ -3293,6 +3307,9 @@ fn export_declaration(
             {
                 // export namespace/module X { ... } in ambient context - implicit declare
                 let (loc, mut s) = with_loc(Some(start_loc), env, |env| {
+                    if !env.should_parse_types() {
+                        env.error(ParseError::UnexpectedTypeExport)?;
+                    }
                     let (loc, declaration) = with_loc(None, env, |env| {
                         let keyword = match peek::token(env) {
                             TokenKind::TIdentifier { raw, .. } if raw == "module" => {
@@ -4496,7 +4513,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
             _ => None,
         };
 
-        if is_type_import(peek::token(env)) {
+        let specifier = if is_type_import(peek::token(env)) {
             // consume `type`, but we don't know yet whether this is `type foo` or
             // `type as foo`.
             let type_keyword_or_remote = identifier_name(env)?;
@@ -4584,7 +4601,11 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                 kind: None,
                 kind_loc: None,
             })
+        }?;
+        if specifier.kind.is_some() && !env.should_parse_types() {
+            env.error(ParseError::UnexpectedTypeImport)?;
         }
+        Ok(specifier)
     }
 
     // specifier in an `import type { ... }`

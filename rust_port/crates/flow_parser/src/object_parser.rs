@@ -1083,6 +1083,9 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     ) -> Result<Option<class::BodyElement<Loc, Loc>>, Rollback> {
         match declaration_parser::convert_function_params_to_type_params(params) {
             Ok(type_params) => {
+                if !env.should_parse_types() {
+                    env.error(ParseError::UnexpectedTypeDeclaration)?;
+                }
                 let return_ = match return_annot {
                     function::ReturnAnnot::Available(annot) => {
                         types::function::ReturnAnnotation::Available(annot.clone())
@@ -1661,6 +1664,9 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             && peek::token(env) == &TokenKind::TPling
             && peek::class_optional_method_continuation_is_call_or_type_args(env)
         {
+            if !env.should_parse_types() {
+                env.error(ParseError::UnexpectedTypeModifier)?;
+            }
             eat::token(env)?;
             error_unsupported_declare(env, &declare)?;
             error_unsupported_variance(env, &variance)?;
@@ -1728,6 +1734,9 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             };
         }
         if !async_ && !generator && peek::token(env) == &TokenKind::TPling {
+            if !env.should_parse_types() {
+                env.error(ParseError::UnexpectedTypeModifier)?;
+            }
             eat::token(env)?;
             return property(
                 env,
@@ -1986,6 +1995,10 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         peek::token_after_current_implies_identifier(env)
     }
 
+    fn type_modifier_continues(env: &mut ParserEnv) -> bool {
+        env.should_parse_types() || !peek::has_line_terminator_after_current(env)
+    }
+
     fn implies_identifier(env: &mut ParserEnv) -> bool {
         match peek::token(env) {
             TokenKind::TLessThan
@@ -2004,7 +2017,11 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
 
     let (declare, leading_declare) = if peek::token(env) == &TokenKind::TDeclare
         && !token_after_current_implies_identifier(env)
+        && type_modifier_continues(env)
     {
+        if !env.should_parse_types() {
+            env.error(ParseError::UnexpectedTypeDeclaration)?;
+        }
         let declare_loc = peek::loc(env).dupe();
         let leading = peek::comments(env);
         eat::token(env)?;
@@ -2014,11 +2031,17 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     };
 
     let is_public = matches!(peek::token(env), TokenKind::TPublic)
-        && peek::class_member_continuation_allows_modifier(env);
+        && peek::class_member_continuation_allows_modifier(env)
+        && type_modifier_continues(env);
     let is_private = matches!(peek::token(env), TokenKind::TPrivate)
-        && peek::class_member_continuation_allows_modifier(env);
+        && peek::class_member_continuation_allows_modifier(env)
+        && type_modifier_continues(env);
     let is_protected = matches!(peek::token(env), TokenKind::TProtected)
-        && peek::class_member_continuation_allows_modifier(env);
+        && peek::class_member_continuation_allows_modifier(env)
+        && type_modifier_continues(env);
+    if (is_public || is_private || is_protected) && !env.should_parse_types() {
+        env.error(ParseError::UnexpectedTypeModifier)?;
+    }
     let (ts_accessibility, leading_accessibility) = if is_public {
         let loc = peek::loc(env).dupe();
         let leading = peek::comments(env);
@@ -2087,8 +2110,12 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     let abstract_ = matches!(
         peek::token(env),
         TokenKind::TIdentifier { raw, .. } if raw == "abstract"
-    ) && peek::class_member_continuation_allows_modifier(env);
+    ) && peek::class_member_continuation_allows_modifier(env)
+        && type_modifier_continues(env);
     let leading_abstract = if abstract_ {
+        if !env.should_parse_types() {
+            env.error(ParseError::UnexpectedTypeModifier)?;
+        }
         let leading = peek::comments(env);
         eat::token(env)?;
         leading
@@ -2099,8 +2126,12 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     let override_ = matches!(
         peek::token(env),
         TokenKind::TIdentifier { raw, .. } if raw == "override"
-    ) && peek::class_member_continuation_allows_modifier(env);
+    ) && peek::class_member_continuation_allows_modifier(env)
+        && type_modifier_continues(env);
     let leading_override = if override_ {
+        if !env.should_parse_types() {
+            env.error(ParseError::UnexpectedTypeModifier)?;
+        }
         let leading = peek::comments(env);
         eat::token(env)?;
         leading
@@ -2164,11 +2195,12 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     };
     let (mut generator, mut leading_generator) = declaration_parser::parse_generator(env)?;
 
-    let parse_property_variance_keyword =
-        matches!(
-            peek::token(env),
-            TokenKind::TIdentifier { raw, .. } if raw == "readonly" || raw == "writeonly"
-        ) && peek::current_token_is_followed_by_object_key(env, true);
+    let parse_property_variance_keyword = matches!(
+        peek::token(env),
+        TokenKind::TIdentifier { raw, .. } if raw == "readonly" || raw == "writeonly"
+    ) && peek::current_token_is_followed_by_object_key(
+        env, true,
+    ) && type_modifier_continues(env);
     let variance = declaration_parser::parse_variance(
         env,
         parse_property_variance_keyword,
@@ -2291,6 +2323,9 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             let leading_lbracket = peek::comments(env);
             expect::token(env, TokenKind::TLbracket)?;
             if peek::ambient_computed_property_is_indexer(env) {
+                if !env.should_parse_types() {
+                    env.error(ParseError::UnexpectedTypeAnnotation)?;
+                }
                 // Index signature: [key: type]: type
                 // Reject modifiers that are not valid on index signatures.
                 error_unsupported_declare(env, &declare)?;
@@ -2569,6 +2604,9 @@ fn parse_class(
         let leading = peek::comments(env);
         let abstract_ = match peek::token(env) {
             TokenKind::TIdentifier { raw, .. } if raw == "abstract" => {
+                if !env.should_parse_types() {
+                    env.error(ParseError::UnexpectedTypeModifier)?;
+                }
                 eat::token(env)?;
                 true
             }

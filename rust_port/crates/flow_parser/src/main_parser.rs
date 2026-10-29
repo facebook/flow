@@ -749,6 +749,245 @@ mod tests {
     use crate::file_key::FileKeyInner;
 
     #[test]
+    fn type_syntax_requires_types() {
+        // Type-only class modifiers and signatures require types, even without annotations.
+        let sources = [
+            "abstract class C {}",
+            "const C = abstract class {};",
+            "abstract class C { abstract m(); }",
+            "abstract class C { abstract x; }",
+            "class C extends B { override m() {} }",
+            "class C extends B { override x = 1; }",
+            "class C { public x = 1; protected m() {} private n() {} }",
+            "class C { constructor(public x) {} }",
+            "class C { constructor(readonly x) {} }",
+            "class C { constructor(writeonly x) {} }",
+            "class C { m?(); }",
+            "class C { m?(): void; }",
+            "class C { m(): void; m() {} }",
+            "class C { readonly x = 1; }",
+            "class C { writeonly x = 1; }",
+            "class C { +x = 1; }",
+            "class C { -x = 1; }",
+            "class C { x?; }",
+            "class C { declare x; }",
+            "class C extends B<number> {}",
+            // Type-only imports and exports require types in every supported spelling.
+            "export as namespace X;",
+            "export {type T};",
+            "export {type as};",
+            "export {type as as T};",
+            "import {type T} from 'foo';",
+            "import {typeof X} from 'foo';",
+            "import {type as} from 'foo';",
+            "import {type as as T} from 'foo';",
+            "export import type X = A.B;",
+            // Existing annotation, expression, and declaration gates stay effective.
+            "const x: number = 1;",
+            "const x = value as number;",
+            "const x = value as const;",
+            "const x = value satisfies number;",
+            "const x = value!;",
+            "const x = value?.prop!;",
+            "export default interface I {}",
+            "class C<T> {}",
+            "class C implements I {}",
+            "const x = <C<number> />;",
+            "type T = number;",
+            "interface I {}",
+            "declare class C {}",
+            "export type {T};",
+            "export type * from 'foo';",
+            "import type X = A.B;",
+        ];
+        for source in sources {
+            for types in [false, true] {
+                let options = ParseOptions {
+                    types,
+                    ambiguous_types: types,
+                    ..crate::PERMISSIVE_PARSE_OPTIONS
+                };
+                let comment = if types { "OK" } else { "ERROR" };
+                let content = format!("{source} // {comment}");
+                let (_, errors) =
+                    parse_program_without_file(false, None, Some(options), Ok(&content));
+                assert_eq!(errors.is_empty(), types, "{source}: {errors:?}"); // OK
+            }
+
+            // TypeScript filenames keep enabling all type syntax despite disabled options.
+            let options = ParseOptions {
+                types: false,
+                ambiguous_types: false,
+                ..crate::PERMISSIVE_PARSE_OPTIONS
+            };
+            let file = FileKey::new(FileKeyInner::SourceFile("test.ts".to_owned()));
+            let content = format!("{source} // OK");
+            let (_, errors) =
+                parse_program_file::<()>(false, None, Some(options), file, Ok(&content));
+            assert!(errors.is_empty(), "{source}: {errors:?}"); // OK
+        }
+    }
+
+    #[test]
+    fn type_keywords_can_still_be_value_names() {
+        // Contextual type keywords remain valid member and import/export names in JavaScript.
+        for source in [
+            "class C { abstract = 1; override = 2; public = 3; private = 4; protected = 5; readonly = 6; writeonly = 7; declare = 8; } // OK",
+            "class C { abstract() {} override() {} public() {} private() {} protected() {} readonly() {} writeonly() {} declare() {} } // OK",
+            "import {type, type as T} from 'foo'; // OK",
+            "export {type, type as T}; // OK",
+            "const x = {namespace: 1, global: 2}; // OK",
+            // Value import aliases and export assignments do not require types.
+            "import X = require('foo'); // OK",
+            "import X = A.B; // OK",
+            "import type = require('foo'); // OK",
+            "export import X = A.B; // OK",
+            "export import type = A.B; // OK",
+            "export = X; // OK",
+            // Enums remain controlled by their own parser option.
+            "enum E { A } // OK",
+            "const enum E { A } // OK",
+        ] {
+            let (expected, errors) = parse_program_without_file(false, None, None, Ok(source));
+            assert!(errors.is_empty(), "{source}: {errors:?}"); // OK
+            let options = ParseOptions {
+                types: false,
+                ambiguous_types: false,
+                ..crate::PERMISSIVE_PARSE_OPTIONS
+            };
+            let (program, errors) =
+                parse_program_without_file(false, None, Some(options), Ok(source));
+            assert!(errors.is_empty(), "{source}: {errors:?}"); // OK
+            assert_eq!(program, expected, "{source}"); // OK
+        }
+    }
+
+    #[test]
+    fn type_keywords_followed_by_line_terminators_are_class_fields() {
+        // Line terminators, including those in comments, separate JavaScript keyword fields.
+        for keyword in [
+            "abstract",
+            "override",
+            "public",
+            "private",
+            "protected",
+            "readonly",
+            "writeonly",
+            "declare",
+        ] {
+            for separator in ["\n", "\r", "\u{2028}", "\u{2029}", "/*\n*/", "// field\n"] {
+                let content = format!("class C {{ {keyword}{separator}x; }} // OK");
+                let options = ParseOptions {
+                    types: false,
+                    ambiguous_types: false,
+                    ..crate::PERMISSIVE_PARSE_OPTIONS
+                };
+                let (program, errors) =
+                    parse_program_without_file(false, None, Some(options), Ok(&content));
+                assert!(errors.is_empty(), "{content}: {errors:?}"); // OK
+                assert!(matches!(
+                    &*program.statements[0],
+                    StatementInner::ClassDeclaration { inner, .. } if inner.body.body.len() == 2
+                )); // OK
+            }
+        }
+
+        // Type-enabled parsing continues to accept modifiers across line terminators.
+        let (program, errors) =
+            parse_program_without_file(false, None, None, Ok("class C { public\nx; } // OK"));
+        assert!(errors.is_empty(), "{errors:?}"); // OK
+        assert!(matches!(
+            &*program.statements[0],
+            StatementInner::ClassDeclaration { inner, .. } if inner.body.body.len() == 1
+        )); // OK
+    }
+
+    #[test]
+    fn type_syntax_diagnostics_describe_the_construct() {
+        // Operators, modifiers, and type arguments have distinct untyped-mode diagnostics.
+        for (source, expected) in [
+            (
+                "value as number; // ERROR",
+                ParseError::UnexpectedTypeOperator,
+            ),
+            (
+                "value satisfies number; // ERROR",
+                ParseError::UnexpectedTypeOperator,
+            ),
+            ("value!; // ERROR", ParseError::UnexpectedTypeOperator),
+            ("value?.prop!; // ERROR", ParseError::UnexpectedTypeOperator),
+            (
+                "value?.prop!.next; // ERROR",
+                ParseError::UnexpectedTypeOperator,
+            ),
+            (
+                "value?.method!(); // ERROR",
+                ParseError::UnexpectedTypeOperator,
+            ),
+            (
+                "abstract class C {} // ERROR",
+                ParseError::UnexpectedTypeModifier,
+            ),
+            (
+                "class C { public x; } // ERROR",
+                ParseError::UnexpectedTypeModifier,
+            ),
+            (
+                "class C { constructor(public x) {} } // ERROR",
+                ParseError::UnexpectedTypeModifier,
+            ),
+            (
+                "class C { readonly x; } // ERROR",
+                ParseError::UnexpectedTypeModifier,
+            ),
+            (
+                "class C { m?(); } // ERROR",
+                ParseError::UnexpectedTypeModifier,
+            ),
+            (
+                "class C extends B<number> {} // ERROR",
+                ParseError::UnexpectedTypeArguments,
+            ),
+        ] {
+            let options = ParseOptions {
+                types: false,
+                ambiguous_types: false,
+                ..crate::PERMISSIVE_PARSE_OPTIONS
+            };
+            let (_, errors) = parse_program_without_file(false, None, Some(options), Ok(source));
+            assert!(
+                errors.iter().any(|(_, error)| *error == expected),
+                "{source}: {errors:?}"
+            ); // OK
+        }
+    }
+
+    #[test]
+    fn type_syntax_respects_javascript_line_terminators() {
+        // A line terminator keeps identifier calls and prefix negation as separate JS statements.
+        for source in [
+            "value\nas(value); // OK",
+            "value\nsatisfies(value); // OK",
+            "value\n!other; // OK",
+            "value?.prop\n!other; // OK",
+            // Abstract can end a JavaScript statement before a class declaration.
+            "abstract\nclass C {} // OK",
+            "abstract/*\n*/class C {} // OK",
+            "export default abstract\nclass C {} // OK",
+        ] {
+            let options = ParseOptions {
+                types: false,
+                ambiguous_types: false,
+                ..crate::PERMISSIVE_PARSE_OPTIONS
+            };
+            let (program, errors) =
+                parse_program_without_file(false, None, Some(options), Ok(source));
+            assert!(errors.is_empty(), "{source}: {errors:?}"); // OK
+            assert_eq!(program.statements.len(), 2); // OK
+        }
+    }
+
+    #[test]
     fn typescript_filenames_enable_types() {
         // TypeScript filenames enable annotations and ambiguous call/new type arguments.
         let source =

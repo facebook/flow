@@ -336,6 +336,11 @@ pub(super) fn parse_function_params(
         env: &mut ParserEnv,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
     ) -> Result<class::Property<Loc, Loc>, Rollback> {
+        if let Some(accessibility) = &ts_accessibility
+            && !env.should_parse_types()
+        {
+            env.error_at(accessibility.loc.dupe(), ParseError::UnexpectedTypeModifier)?;
+        }
         let variance = parse_variance(env, true, false, false)?;
         let leading = peek::comments(env);
         let (
@@ -634,6 +639,11 @@ pub(super) fn parse_variance(
         }
         _ => None,
     };
+    if let Some(variance) = &variance
+        && !env.should_parse_types()
+    {
+        env.error_at(variance.loc.dupe(), ParseError::UnexpectedTypeModifier)?;
+    }
     match variance {
         Some(ref v) if is_async || is_generator => {
             env.error_at(v.loc.dupe(), ParseError::UnexpectedVariance)?;

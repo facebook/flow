@@ -3,9 +3,30 @@
     {
       "directive": null,
       "expression": {
+        "expression": {
+          "loc": {
+            "end": {
+              "column": 5,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 0,
+              "line": 2
+            }
+          },
+          "name": "value",
+          "optional": false,
+          "range": [
+            53,
+            58
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
         "loc": {
           "end": {
-            "column": 5,
+            "column": 6,
             "line": 2
           },
           "source": null,
@@ -14,18 +35,15 @@
             "line": 2
           }
         },
-        "name": "value",
-        "optional": false,
         "range": [
           53,
-          58
+          59
         ],
-        "type": "Identifier",
-        "typeAnnotation": null
+        "type": "NonNullExpression"
       },
       "loc": {
         "end": {
-          "column": 5,
+          "column": 7,
           "line": 2
         },
         "source": null,
@@ -36,65 +54,6 @@
       },
       "range": [
         53,
-        58
-      ],
-      "type": "ExpressionStatement"
-    },
-    {
-      "directive": null,
-      "expression": {
-        "argument": {
-          "loc": {
-            "end": {
-              "column": 7,
-              "line": 2
-            },
-            "source": null,
-            "start": {
-              "column": 6,
-              "line": 2
-            }
-          },
-          "range": [
-            59,
-            60
-          ],
-          "raw": "null",
-          "type": "Literal",
-          "value": null
-        },
-        "loc": {
-          "end": {
-            "column": 6,
-            "line": 2
-          },
-          "source": null,
-          "start": {
-            "column": 5,
-            "line": 2
-          }
-        },
-        "operator": "!",
-        "prefix": true,
-        "range": [
-          58,
-          59
-        ],
-        "type": "UnaryExpression"
-      },
-      "loc": {
-        "end": {
-          "column": 7,
-          "line": 2
-        },
-        "source": null,
-        "start": {
-          "column": 5,
-          "line": 2
-        }
-      },
-      "range": [
-        58,
         60
       ],
       "type": "ExpressionStatement"
@@ -103,22 +62,11 @@
       "directive": null,
       "expression": {
         "expression": {
-          "computed": false,
-          "loc": {
-            "end": {
-              "column": 11,
-              "line": 3
-            },
-            "source": null,
-            "start": {
-              "column": 0,
-              "line": 3
-            }
-          },
-          "object": {
+          "expression": {
+            "computed": false,
             "loc": {
               "end": {
-                "column": 5,
+                "column": 11,
                 "line": 3
               },
               "source": null,
@@ -127,46 +75,75 @@
                 "line": 3
               }
             },
-            "name": "value",
-            "optional": false,
+            "object": {
+              "loc": {
+                "end": {
+                  "column": 5,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 0,
+                  "line": 3
+                }
+              },
+              "name": "value",
+              "optional": false,
+              "range": [
+                70,
+                75
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "optional": true,
+            "property": {
+              "loc": {
+                "end": {
+                  "column": 11,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 7,
+                  "line": 3
+                }
+              },
+              "name": "prop",
+              "optional": false,
+              "range": [
+                77,
+                81
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
             "range": [
               70,
-              75
-            ],
-            "type": "Identifier",
-            "typeAnnotation": null
-          },
-          "optional": true,
-          "property": {
-            "loc": {
-              "end": {
-                "column": 11,
-                "line": 3
-              },
-              "source": null,
-              "start": {
-                "column": 7,
-                "line": 3
-              }
-            },
-            "name": "prop",
-            "optional": false,
-            "range": [
-              77,
               81
             ],
-            "type": "Identifier",
-            "typeAnnotation": null
+            "type": "MemberExpression"
+          },
+          "loc": {
+            "end": {
+              "column": 12,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 0,
+              "line": 3
+            }
           },
           "range": [
             70,
-            81
+            82
           ],
-          "type": "MemberExpression"
+          "type": "NonNullExpression"
         },
         "loc": {
           "end": {
-            "column": 11,
+            "column": 12,
             "line": 3
           },
           "source": null,
@@ -177,13 +154,13 @@
         },
         "range": [
           70,
-          81
+          82
         ],
         "type": "ChainExpression"
       },
       "loc": {
         "end": {
-          "column": 11,
+          "column": 13,
           "line": 3
         },
         "source": null,
@@ -194,65 +171,6 @@
       },
       "range": [
         70,
-        81
-      ],
-      "type": "ExpressionStatement"
-    },
-    {
-      "directive": null,
-      "expression": {
-        "argument": {
-          "loc": {
-            "end": {
-              "column": 13,
-              "line": 3
-            },
-            "source": null,
-            "start": {
-              "column": 12,
-              "line": 3
-            }
-          },
-          "range": [
-            82,
-            83
-          ],
-          "raw": "null",
-          "type": "Literal",
-          "value": null
-        },
-        "loc": {
-          "end": {
-            "column": 12,
-            "line": 3
-          },
-          "source": null,
-          "start": {
-            "column": 11,
-            "line": 3
-          }
-        },
-        "operator": "!",
-        "prefix": true,
-        "range": [
-          81,
-          82
-        ],
-        "type": "UnaryExpression"
-      },
-      "loc": {
-        "end": {
-          "column": 13,
-          "line": 3
-        },
-        "source": null,
-        "start": {
-          "column": 11,
-          "line": 3
-        }
-      },
-      "range": [
-        81,
         83
       ],
       "type": "ExpressionStatement"
@@ -264,7 +182,7 @@
           "computed": false,
           "loc": {
             "end": {
-              "column": 11,
+              "column": 17,
               "line": 4
             },
             "source": null,
@@ -274,9 +192,71 @@
             }
           },
           "object": {
+            "expression": {
+              "computed": false,
+              "loc": {
+                "end": {
+                  "column": 11,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 0,
+                  "line": 4
+                }
+              },
+              "object": {
+                "loc": {
+                  "end": {
+                    "column": 5,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 0,
+                    "line": 4
+                  }
+                },
+                "name": "value",
+                "optional": false,
+                "range": [
+                  93,
+                  98
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "optional": true,
+              "property": {
+                "loc": {
+                  "end": {
+                    "column": 11,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 7,
+                    "line": 4
+                  }
+                },
+                "name": "prop",
+                "optional": false,
+                "range": [
+                  100,
+                  104
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "range": [
+                93,
+                104
+              ],
+              "type": "MemberExpression"
+            },
             "loc": {
               "end": {
-                "column": 5,
+                "column": 12,
                 "line": 4
               },
               "source": null,
@@ -285,112 +265,11 @@
                 "line": 4
               }
             },
-            "name": "value",
-            "optional": false,
             "range": [
               93,
-              98
+              105
             ],
-            "type": "Identifier",
-            "typeAnnotation": null
-          },
-          "optional": true,
-          "property": {
-            "loc": {
-              "end": {
-                "column": 11,
-                "line": 4
-              },
-              "source": null,
-              "start": {
-                "column": 7,
-                "line": 4
-              }
-            },
-            "name": "prop",
-            "optional": false,
-            "range": [
-              100,
-              104
-            ],
-            "type": "Identifier",
-            "typeAnnotation": null
-          },
-          "range": [
-            93,
-            104
-          ],
-          "type": "MemberExpression"
-        },
-        "loc": {
-          "end": {
-            "column": 11,
-            "line": 4
-          },
-          "source": null,
-          "start": {
-            "column": 0,
-            "line": 4
-          }
-        },
-        "range": [
-          93,
-          104
-        ],
-        "type": "ChainExpression"
-      },
-      "loc": {
-        "end": {
-          "column": 11,
-          "line": 4
-        },
-        "source": null,
-        "start": {
-          "column": 0,
-          "line": 4
-        }
-      },
-      "range": [
-        93,
-        104
-      ],
-      "type": "ExpressionStatement"
-    },
-    {
-      "directive": null,
-      "expression": {
-        "argument": {
-          "computed": false,
-          "loc": {
-            "end": {
-              "column": 17,
-              "line": 4
-            },
-            "source": null,
-            "start": {
-              "column": 12,
-              "line": 4
-            }
-          },
-          "object": {
-            "loc": {
-              "end": {
-                "column": 13,
-                "line": 4
-              },
-              "source": null,
-              "start": {
-                "column": 12,
-                "line": 4
-              }
-            },
-            "range": [
-              105,
-              106
-            ],
-            "raw": "null",
-            "type": "Literal",
-            "value": null
+            "type": "NonNullExpression"
           },
           "optional": false,
           "property": {
@@ -415,7 +294,7 @@
             "typeAnnotation": null
           },
           "range": [
-            105,
+            93,
             110
           ],
           "type": "MemberExpression"
@@ -427,17 +306,15 @@
           },
           "source": null,
           "start": {
-            "column": 11,
+            "column": 0,
             "line": 4
           }
         },
-        "operator": "!",
-        "prefix": true,
         "range": [
-          104,
+          93,
           110
         ],
-        "type": "UnaryExpression"
+        "type": "ChainExpression"
       },
       "loc": {
         "end": {
@@ -446,12 +323,12 @@
         },
         "source": null,
         "start": {
-          "column": 11,
+          "column": 0,
           "line": 4
         }
       },
       "range": [
-        104,
+        93,
         111
       ],
       "type": "ExpressionStatement"
@@ -460,22 +337,73 @@
       "directive": null,
       "expression": {
         "expression": {
-          "computed": false,
-          "loc": {
-            "end": {
-              "column": 11,
-              "line": 5
+          "arguments": [],
+          "callee": {
+            "expression": {
+              "computed": false,
+              "loc": {
+                "end": {
+                  "column": 11,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 0,
+                  "line": 5
+                }
+              },
+              "object": {
+                "loc": {
+                  "end": {
+                    "column": 5,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 0,
+                    "line": 5
+                  }
+                },
+                "name": "value",
+                "optional": false,
+                "range": [
+                  121,
+                  126
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "optional": true,
+              "property": {
+                "loc": {
+                  "end": {
+                    "column": 11,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 7,
+                    "line": 5
+                  }
+                },
+                "name": "call",
+                "optional": false,
+                "range": [
+                  128,
+                  132
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "range": [
+                121,
+                132
+              ],
+              "type": "MemberExpression"
             },
-            "source": null,
-            "start": {
-              "column": 0,
-              "line": 5
-            }
-          },
-          "object": {
             "loc": {
               "end": {
-                "column": 5,
+                "column": 12,
                 "line": 5
               },
               "source": null,
@@ -484,46 +412,34 @@
                 "line": 5
               }
             },
-            "name": "value",
-            "optional": false,
             "range": [
               121,
-              126
+              133
             ],
-            "type": "Identifier",
-            "typeAnnotation": null
+            "type": "NonNullExpression"
           },
-          "optional": true,
-          "property": {
-            "loc": {
-              "end": {
-                "column": 11,
-                "line": 5
-              },
-              "source": null,
-              "start": {
-                "column": 7,
-                "line": 5
-              }
+          "loc": {
+            "end": {
+              "column": 14,
+              "line": 5
             },
-            "name": "call",
-            "optional": false,
-            "range": [
-              128,
-              132
-            ],
-            "type": "Identifier",
-            "typeAnnotation": null
+            "source": null,
+            "start": {
+              "column": 0,
+              "line": 5
+            }
           },
+          "optional": false,
           "range": [
             121,
-            132
+            135
           ],
-          "type": "MemberExpression"
+          "type": "CallExpression",
+          "typeArguments": null
         },
         "loc": {
           "end": {
-            "column": 11,
+            "column": 14,
             "line": 5
           },
           "source": null,
@@ -534,13 +450,13 @@
         },
         "range": [
           121,
-          132
+          135
         ],
         "type": "ChainExpression"
       },
       "loc": {
         "end": {
-          "column": 11,
+          "column": 15,
           "line": 5
         },
         "source": null,
@@ -551,65 +467,6 @@
       },
       "range": [
         121,
-        132
-      ],
-      "type": "ExpressionStatement"
-    },
-    {
-      "directive": null,
-      "expression": {
-        "argument": {
-          "loc": {
-            "end": {
-              "column": 14,
-              "line": 5
-            },
-            "source": null,
-            "start": {
-              "column": 13,
-              "line": 5
-            }
-          },
-          "range": [
-            134,
-            135
-          ],
-          "raw": "null",
-          "type": "Literal",
-          "value": null
-        },
-        "loc": {
-          "end": {
-            "column": 14,
-            "line": 5
-          },
-          "source": null,
-          "start": {
-            "column": 11,
-            "line": 5
-          }
-        },
-        "operator": "!",
-        "prefix": true,
-        "range": [
-          132,
-          135
-        ],
-        "type": "UnaryExpression"
-      },
-      "loc": {
-        "end": {
-          "column": 15,
-          "line": 5
-        },
-        "source": null,
-        "start": {
-          "column": 11,
-          "line": 5
-        }
-      },
-      "range": [
-        132,
         136
       ],
       "type": "ExpressionStatement"
@@ -1062,21 +919,7 @@
           "line": 2
         }
       },
-      "message": "Unexpected token `!`, expected the end of an expression statement (`;`)"
-    },
-    {
-      "loc": {
-        "end": {
-          "column": 7,
-          "line": 2
-        },
-        "source": null,
-        "start": {
-          "column": 6,
-          "line": 2
-        }
-      },
-      "message": "Unexpected token `;`"
+      "message": "Type operators are not allowed in untyped mode"
     },
     {
       "loc": {
@@ -1090,21 +933,7 @@
           "line": 3
         }
       },
-      "message": "Unexpected token `!`, expected the end of an expression statement (`;`)"
-    },
-    {
-      "loc": {
-        "end": {
-          "column": 13,
-          "line": 3
-        },
-        "source": null,
-        "start": {
-          "column": 12,
-          "line": 3
-        }
-      },
-      "message": "Unexpected token `;`"
+      "message": "Type operators are not allowed in untyped mode"
     },
     {
       "loc": {
@@ -1118,21 +947,7 @@
           "line": 4
         }
       },
-      "message": "Unexpected token `!`, expected the end of an expression statement (`;`)"
-    },
-    {
-      "loc": {
-        "end": {
-          "column": 13,
-          "line": 4
-        },
-        "source": null,
-        "start": {
-          "column": 12,
-          "line": 4
-        }
-      },
-      "message": "Unexpected token `.`"
+      "message": "Type operators are not allowed in untyped mode"
     },
     {
       "loc": {
@@ -1146,21 +961,7 @@
           "line": 5
         }
       },
-      "message": "Unexpected token `!`, expected the end of an expression statement (`;`)"
-    },
-    {
-      "loc": {
-        "end": {
-          "column": 14,
-          "line": 5
-        },
-        "source": null,
-        "start": {
-          "column": 13,
-          "line": 5
-        }
-      },
-      "message": "Unexpected token `)`"
+      "message": "Type operators are not allowed in untyped mode"
     }
   ],
   "loc": {

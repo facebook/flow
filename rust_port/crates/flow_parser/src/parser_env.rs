@@ -2151,7 +2151,8 @@ pub(crate) mod peek {
     }
 
     pub(crate) fn abstract_token_is_followed_by_class(env: &mut ParserEnv) -> bool {
-        current_token_is_followed_by_word(env, "class", |token| token == &TokenKind::TClass)
+        (env.should_parse_types() || !has_line_terminator_after_current(env))
+            && current_token_is_followed_by_word(env, "class", |token| token == &TokenKind::TClass)
     }
 
     pub(crate) fn match_token_is_followed_by_lparen_on_same_line(env: &mut ParserEnv) -> bool {

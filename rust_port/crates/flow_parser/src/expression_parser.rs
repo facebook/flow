@@ -753,7 +753,12 @@ fn binary_cover(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {
         while let Some(keyword) = match peek::token(env) {
             TokenKind::TIdentifier { raw, .. } => {
                 let keyword = raw.to_owned();
-                if (&keyword == "as" || &keyword == "satisfies") && env.should_parse_types() {
+                if (&keyword == "as" || &keyword == "satisfies")
+                    && (env.should_parse_types() || !peek::is_line_terminator(env))
+                {
+                    if !env.should_parse_types() {
+                        env.error(ParseError::UnexpectedTypeOperator)?;
+                    }
                     Some(keyword)
                 } else {
                     None
@@ -1835,9 +1840,22 @@ fn member_cover(
             static_member(env, allow_optional_chain, default_optional, start_loc, left)
         }
         TokenKind::TNot if in_optional_chain => {
-            if env.should_parse_types() && !peek::is_line_terminator(env) {
+            if !peek::is_line_terminator(env) {
                 let assertion_loc = Loc::between(&start_loc, peek::loc(env));
-                match peek::optional_chain_bang_continuation(env) {
+                let continuation = peek::optional_chain_bang_continuation(env);
+                if !env.should_parse_types()
+                    && matches!(
+                        continuation,
+                        TokenKind::TTemplatePart(_)
+                            | TokenKind::TLparen
+                            | TokenKind::TLessThan
+                            | TokenKind::TLbracket
+                            | TokenKind::TPeriod
+                    )
+                {
+                    env.error(ParseError::UnexpectedTypeOperator)?;
+                }
+                match continuation {
                     TokenKind::TTemplatePart(_) => {
                         env.error(ParseError::OptionalChainTemplate)?;
                         eat::token(env)?;
@@ -1897,11 +1915,11 @@ fn assert_operator_cover(
     start_loc: Loc,
     left: PatternCover,
 ) -> Result<PatternCover, Rollback> {
-    if !env.should_parse_types()
-        || peek::token(env) != &TokenKind::TNot
-        || peek::is_line_terminator(env)
-    {
+    if peek::token(env) != &TokenKind::TNot || peek::is_line_terminator(env) {
         return Ok(left);
+    }
+    if !env.should_parse_types() {
+        env.error(ParseError::UnexpectedTypeOperator)?;
     }
 
     let next_token = peek::assert_operator_bang_continuation(env); // clone needed: TokenKind doesn't implement Dupe

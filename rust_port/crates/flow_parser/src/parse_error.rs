@@ -236,10 +236,13 @@ pub enum ParseError {
     UnexpectedTokenWithSuggestion(String, String),
     UnexpectedTypeAlias,
     UnexpectedTypeAnnotation,
+    UnexpectedTypeArguments,
     UnexpectedTypeDeclaration,
     UnexpectedTypeExport,
     UnexpectedTypeImport,
     UnexpectedTypeInterface,
+    UnexpectedTypeModifier,
+    UnexpectedTypeOperator,
     UnexpectedVariance,
     UnexpectedWithExpected(String, String),
     UnknownLabel(String),
@@ -1020,6 +1023,9 @@ impl fmt::Display for ParseError {
             Self::UnexpectedTypeAnnotation => {
                 write!(f, "Type annotations are not allowed in untyped mode")
             }
+            Self::UnexpectedTypeArguments => {
+                write!(f, "Type arguments are not allowed in untyped mode")
+            }
             Self::UnexpectedTypeDeclaration => {
                 write!(f, "Type declarations are not allowed in untyped mode")
             }
@@ -1031,6 +1037,12 @@ impl fmt::Display for ParseError {
             }
             Self::UnexpectedTypeInterface => {
                 write!(f, "Interfaces are not allowed in untyped mode")
+            }
+            Self::UnexpectedTypeModifier => {
+                write!(f, "Type modifiers are not allowed in untyped mode")
+            }
+            Self::UnexpectedTypeOperator => {
+                write!(f, "Type operators are not allowed in untyped mode")
             }
             Self::UnexpectedVariance => {
                 write!(f, "Unexpected variance sigil")

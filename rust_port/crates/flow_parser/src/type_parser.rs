@@ -4179,6 +4179,9 @@ fn type_args(env: &mut ParserEnv) -> Result<Option<types::TypeArgs<Loc, Loc>>, R
     }
 
     if peek::token(env) == &TokenKind::TLessThan {
+        if !env.should_parse_types() {
+            env.error(ParseError::UnexpectedTypeArguments)?;
+        }
         let (loc, mut type_args) = with_loc(None, env, |env| {
             let leading = peek::comments(env);
             expect::token(env, TokenKind::TLessThan)?;

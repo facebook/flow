@@ -1,60 +1,174 @@
 {
-  "errors":[
+  "body": [
     {
-      "loc":{"source":null,"start":{"line":1,"column":2},"end":{"line":1,"column":11}},
-      "message":"Unexpected identifier, expected the end of an expression statement (`;`)"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":13}},
-      "message":"Unexpected identifier, expected the end of an expression statement (`;`)"
+      "directive": null,
+      "expression": {
+        "expression": {
+          "loc": {
+            "end": {
+              "column": 1,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 0,
+              "line": 2
+            }
+          },
+          "name": "a",
+          "optional": false,
+          "range": [
+            47,
+            48
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 13,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 0,
+            "line": 2
+          }
+        },
+        "range": [
+          47,
+          60
+        ],
+        "type": "SatisfiesExpression",
+        "typeAnnotation": {
+          "id": {
+            "loc": {
+              "end": {
+                "column": 13,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 12,
+                "line": 2
+              }
+            },
+            "name": "T",
+            "optional": false,
+            "range": [
+              59,
+              60
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 13,
+              "line": 2
+            },
+            "source": null,
+            "start": {
+              "column": 12,
+              "line": 2
+            }
+          },
+          "range": [
+            59,
+            60
+          ],
+          "type": "GenericTypeAnnotation",
+          "typeParameters": null
+        }
+      },
+      "loc": {
+        "end": {
+          "column": 14,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        47,
+        61
+      ],
+      "type": "ExpressionStatement"
     }
   ],
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":14}},
-  "range":[0,14],
-  "body":[
+  "comments": [
     {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":1}},
-      "range":[0,1],
-      "expression":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":1}},
-        "range":[0,1],
-        "name":"a",
-        "typeAnnotation":null,
-        "optional":false
+      "loc": {
+        "end": {
+          "column": 46,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
       },
-      "directive":null
+      "range": [
+        0,
+        46
+      ],
+      "type": "Line",
+      "value": " Satisfies expressions require type parsing."
     },
     {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":2},"end":{"line":1,"column":11}},
-      "range":[2,11],
-      "expression":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":2},"end":{"line":1,"column":11}},
-        "range":[2,11],
-        "name":"satisfies",
-        "typeAnnotation":null,
-        "optional":false
+      "loc": {
+        "end": {
+          "column": 23,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 15,
+          "line": 2
+        }
       },
-      "directive":null
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":14}},
-      "range":[12,14],
-      "expression":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":13}},
-        "range":[12,13],
-        "name":"T",
-        "typeAnnotation":null,
-        "optional":false
-      },
-      "directive":null
+      "range": [
+        62,
+        70
+      ],
+      "type": "Line",
+      "value": " ERROR"
     }
   ],
-  "comments":[]
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 11,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 2,
+          "line": 2
+        }
+      },
+      "message": "Type operators are not allowed in untyped mode"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 14,
+      "line": 2
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 2
+    }
+  },
+  "range": [
+    47,
+    61
+  ],
+  "type": "Program"
 }
