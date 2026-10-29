@@ -1617,6 +1617,406 @@ References:
                    ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- optional_calls.js:19:3
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:19:3
+   19|   x as number; // ERROR
+         ^
+
+References:
+   optional_calls.js:1:57
+    1| declare function assertString(x: unknown): asserts x is string;
+                                                               ^^^^^^ [1]
+   optional_calls.js:19:8
+   19|   x as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:25:3
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:25:3
+   25|   x as number; // ERROR
+         ^
+
+References:
+   optional_calls.js:7:46
+    7|   assertString: (x: unknown) => asserts x is string,
+                                                    ^^^^^^ [1]
+   optional_calls.js:25:8
+   25|   x as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:31:3
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:31:3
+   31|   x as number; // ERROR
+         ^
+
+References:
+   optional_calls.js:7:46
+    7|   assertString: (x: unknown) => asserts x is string,
+                                                    ^^^^^^ [1]
+   optional_calls.js:31:8
+   31|   x as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:37:3
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:37:3
+   37|   x as number; // ERROR
+         ^
+
+References:
+   optional_calls.js:7:46
+    7|   assertString: (x: unknown) => asserts x is string,
+                                                    ^^^^^^ [1]
+   optional_calls.js:37:8
+   37|   x as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:42:3
+
+Cannot cast `x` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:42:3
+   42|   x as string; // ERROR
+         ^
+
+References:
+   optional_calls.js:40:26
+   40| function skippedCalls(x: unknown, y: unknown, z: unknown) {
+                                ^^^^^^^ [1]
+   optional_calls.js:42:8
+   42|   x as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:44:3
+
+Cannot cast `y` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:44:3
+   44|   y as string; // ERROR
+         ^
+
+References:
+   optional_calls.js:40:38
+   40| function skippedCalls(x: unknown, y: unknown, z: unknown) {
+                                            ^^^^^^^ [1]
+   optional_calls.js:44:8
+   44|   y as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:46:3
+
+Cannot cast `z` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:46:3
+   46|   z as string; // ERROR
+         ^
+
+References:
+   optional_calls.js:40:50
+   40| function skippedCalls(x: unknown, y: unknown, z: unknown) {
+                                                        ^^^^^^^ [1]
+   optional_calls.js:46:8
+   46|   z as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:52:3
+
+Cannot cast `x` to `null` because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   optional_calls.js:52:3
+   52|   x as null; // ERROR
+         ^
+
+References:
+   optional_calls.js:49:26
+   49| function optionalBare(x: string | null) {
+                                ^^^^^^ [1]
+   optional_calls.js:52:8
+   52|   x as null; // ERROR
+              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:58:3
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:58:3
+   58|   x as number; // ERROR
+         ^
+
+References:
+   optional_calls.js:56:24
+   56|   checks?.assertTruthy(typeof x === 'string');
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   optional_calls.js:58:8
+   58|   x as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:65:26
+
+Cannot expect `number` as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
+
+   65| function skippedFalse(): number { // ERROR
+                                ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:71:3
+
+Cannot cast `x` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:71:3
+   71|   x as string; // ERROR
+         ^
+
+References:
+   optional_calls.js:69:32
+   69| function optionalExpression(x: unknown) {
+                                      ^^^^^^^ [1]
+   optional_calls.js:71:8
+   71|   x as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:83:3
+
+Cannot cast `x` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:83:3
+   83|   x as string; // ERROR
+         ^
+
+References:
+   exports.js:1:72
+    1| declare export function assertNumber(value: unknown): asserts value is number;
+                                                                              ^^^^^^ [1]
+   optional_calls.js:83:8
+   83|   x as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:86:3
+
+Cannot cast `y` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:86:3
+   86|   y as string; // ERROR
+         ^
+
+References:
+   exports.js:1:72
+    1| declare export function assertNumber(value: unknown): asserts value is number;
+                                                                              ^^^^^^ [1]
+   optional_calls.js:86:8
+   86|   y as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:89:3
+
+Cannot cast `z` to `number` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:89:3
+   89|   z as number; // ERROR
+         ^
+
+References:
+   optional_calls.js:80:53
+   80| function optionalImports(x: unknown, y: unknown, z: unknown) {
+                                                           ^^^^^^^ [1]
+   optional_calls.js:89:8
+   89|   z as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- optional_calls.js:95:3
+
+Cannot cast `x` to `string` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:95:3
+   95|   x as string; // ERROR
+         ^
+
+References:
+   optional_calls.js:94:25
+   94|   assertFirst?.(x, (x = 42));
+                               ^^ [1]
+   optional_calls.js:95:8
+   95|   x as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:106:5
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:106:5
+   106|     x as number; // ERROR
+            ^
+
+References:
+   optional_calls.js:99:42
+    99|   assertString(x: unknown): asserts x is string;
+                                                 ^^^^^^ [1]
+   optional_calls.js:106:10
+   106|     x as number; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:121:3
+
+Cannot cast `message.text` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_calls.js:121:3
+   121|   message.text as number; // ERROR
+          ^^^^^^^^^^^^
+
+References:
+   optional_calls.js:115:9
+   115|   text: string;
+                ^^^^^^ [1]
+   optional_calls.js:121:19
+   121|   message.text as number; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:126:3
+
+Cannot cast `message` to `TextMessage` because `Message` [1] is incompatible with `TextMessage` [2]. [incompatible-type]
+
+   optional_calls.js:126:3
+   126|   message as TextMessage; // ERROR: assertion can be skipped
+          ^^^^^^^
+
+References:
+   optional_calls.js:124:45
+   124| function nullableAssertionReceiver(message: Message | void) {
+                                                    ^^^^^^^ [1]
+   optional_calls.js:126:14
+   126|   message as TextMessage; // ERROR: assertion can be skipped
+                     ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:126:3
+
+Cannot cast `message` to `TextMessage` because `void` [1] is incompatible with `TextMessage` [2]. [incompatible-type]
+
+   optional_calls.js:126:3
+   126|   message as TextMessage; // ERROR: assertion can be skipped
+          ^^^^^^^
+
+References:
+   optional_calls.js:124:55
+   124| function nullableAssertionReceiver(message: Message | void) {
+                                                              ^^^^ [1]
+   optional_calls.js:126:14
+   126|   message as TextMessage; // ERROR: assertion can be skipped
+                     ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:138:3
+
+Cannot cast `x` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:138:3
+   138|   x as string; // ERROR
+          ^
+
+References:
+   optional_calls.js:136:34
+   136| function unrecognizedOptional(x: unknown, y: unknown) {
+                                         ^^^^^^^ [1]
+   optional_calls.js:138:8
+   138|   x as string; // ERROR
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:140:3
+
+Cannot cast `y` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:140:3
+   140|   y as string; // ERROR
+          ^
+
+References:
+   optional_calls.js:136:46
+   136| function unrecognizedOptional(x: unknown, y: unknown) {
+                                                     ^^^^^^^ [1]
+   optional_calls.js:140:8
+   140|   y as string; // ERROR
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:150:3
+
+Cannot cast `x` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:150:3
+   150|   x as string; // ERROR: optionalMapped.str can be missing
+          ^
+
+References:
+   optional_calls.js:148:38
+   148| function optionalMappedProperties(x: unknown, y: unknown, z: unknown) {
+                                             ^^^^^^^ [1]
+   optional_calls.js:150:8
+   150|   x as string; // ERROR: optionalMapped.str can be missing
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:152:3
+
+Cannot cast `y` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:152:3
+   152|   y as string; // ERROR
+          ^
+
+References:
+   optional_calls.js:148:50
+   148| function optionalMappedProperties(x: unknown, y: unknown, z: unknown) {
+                                                         ^^^^^^^ [1]
+   optional_calls.js:152:8
+   152|   y as string; // ERROR
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ optional_calls.js:154:3
+
+Cannot cast `z` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_calls.js:154:3
+   154|   z as string; // ERROR: optionalMappedReceiver.inner can be missing
+          ^
+
+References:
+   optional_calls.js:148:62
+   148| function optionalMappedProperties(x: unknown, y: unknown, z: unknown) {
+                                                                     ^^^^^^^ [1]
+   optional_calls.js:154:8
+   154|   z as string; // ERROR: optionalMappedReceiver.inner can be missing
+               ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------- receiver_assertions.js:16:5
 
 Cannot cast `this.text` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
@@ -3705,22 +4105,13 @@ as `a.b.c`. [unrecognized-assertion-call]
          ^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- unrecognized.js:118:3
-
-Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
-Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
-
-   118|   intersected(x); // error: intersection
-          ^^^^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------- unrecognized.js:119:3
 
 Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
 Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
 
-   119|   overloaded(x); // error: overloaded
-          ^^^^^^^^^^
+   119|   intersected(x); // error: intersection
+          ^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- unrecognized.js:120:3
@@ -3728,42 +4119,51 @@ Error --------------------------------------------------------------------------
 Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
 Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
 
-   120|   g(x); // error: type parameter (TODO: TS narrows through the bound)
-          ^
+   120|   overloaded(x); // error: overloaded
+          ^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- unrecognized.js:125:5
-
-Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
-Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
-
-   unrecognized.js:125:5
-   125|     g(x); // error: `g` needs an annotation
-            ^
-
-References:
-   unrecognized.js:124:56
-   124|   const h: (g: StringAssertion, x: unknown) => void = (g, x) => {
-                                                               ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- unrecognized.js:136:3
+Error -------------------------------------------------------------------------------------------- unrecognized.js:121:3
 
 Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
 Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
 
-   136|   assertionLast(x); // error: the assertion overload wins
-          ^^^^^^^^^^^^^
+   121|   g(x); // error: type parameter (TODO: TS narrows through the bound)
+          ^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:126:5
+
+Cannot narrow with this call to an assertion function because `g` [1] is not declared with an explicit type annotation.
+Annotate `g` or call the assertion function directly. [unrecognized-assertion-call]
+
+   unrecognized.js:126:5
+   126|     g(x); // error: `g` needs an annotation
+            ^
+
+References:
+   unrecognized.js:125:56
+   125|   const h: (g: StringAssertion, x: unknown) => void = (g, x) => {
+                                                               ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- unrecognized.js:137:3
 
+Cannot narrow with this call to an assertion function because its declared type is not a single assertion function type.
+Overloaded functions, intersections, and type parameters do not narrow. [unrecognized-assertion-call]
+
+   137|   assertionLast(x); // error: the assertion overload wins
+          ^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- unrecognized.js:138:3
+
 Cannot narrow with this call to an assertion function because the call target is not an identifier or a dotted name such
 as `a.b.c`. [unrecognized-assertion-call]
 
-   137|   utils['assertString'](x); // error: previous speculation does not suppress this call
+   138|   utils['assertString'](x); // error: previous speculation does not suppress this call
           ^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 227 errors
+Found 251 errors

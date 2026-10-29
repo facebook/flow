@@ -141,6 +141,8 @@ pub struct CalleeTarget<L> {
     pub import: Option<ImportedCallee>,
     /// How to obtain the receiver from the root signature type.
     pub root_kind: CalleeRootKind,
+    /// Property-path prefix lengths checked by optional chain steps.
+    pub optional_receiver_paths: Vec<usize>,
 }
 
 /// Receiver selected from a binding or an enclosing class signature.
@@ -172,6 +174,16 @@ impl<'a, L: LocSig> Collector<'a, L> {
                     self.targets.push(target);
                 }
             }
+            ExpressionInner::OptionalCall { loc, inner } => {
+                if let Some(mut target) = self.target_for_call(loc, &inner.call.callee) {
+                    if matches!(inner.optional, ast::expression::OptionalCallKind::Optional) {
+                        target
+                            .optional_receiver_paths
+                            .push(target.property_path.len());
+                    }
+                    self.targets.push(target);
+                }
+            }
             ExpressionInner::Sequence { inner, .. } => {
                 for expression in inner.expressions.iter() {
                     self.collect_assertion_flow_calls(expression);
@@ -181,25 +193,41 @@ impl<'a, L: LocSig> Collector<'a, L> {
         }
     }
 
-    fn callee_path(callee: &Expression<L, L>) -> Option<(&Expression<L, L>, Vec<FlowSmolStr>)> {
+    fn callee_path(
+        callee: &Expression<L, L>,
+    ) -> Option<(&Expression<L, L>, Vec<FlowSmolStr>, Vec<usize>)> {
         match &**callee {
             ExpressionInner::Identifier { .. }
             | ExpressionInner::This { .. }
-            | ExpressionInner::Super { .. } => Some((callee, vec![])),
+            | ExpressionInner::Super { .. } => Some((callee, vec![], vec![])),
             ExpressionInner::Member { inner, .. } => {
                 let member::Property::PropertyIdentifier(property) = &inner.property else {
                     return None;
                 };
-                let (root, mut path) = Self::callee_path(&inner.object)?;
+                let (root, mut path, optional) = Self::callee_path(&inner.object)?;
                 path.push(property.name.dupe());
-                Some((root, path))
+                Some((root, path, optional))
+            }
+            ExpressionInner::OptionalMember { inner, .. } => {
+                let member::Property::PropertyIdentifier(property) = &inner.member.property else {
+                    return None;
+                };
+                let (root, mut path, mut optional) = Self::callee_path(&inner.member.object)?;
+                if matches!(
+                    inner.optional,
+                    ast::expression::OptionalMemberKind::Optional
+                ) {
+                    optional.push(path.len());
+                }
+                path.push(property.name.dupe());
+                Some((root, path, optional))
             }
             _ => None,
         }
     }
 
     fn target_for_call(&self, call_loc: &L, callee: &Expression<L, L>) -> Option<CalleeTarget<L>> {
-        let (root, property_path) = Self::callee_path(callee)?;
+        let (root, property_path, optional_receiver_paths) = Self::callee_path(callee)?;
         let root_use_loc = root.loc();
         if matches!(
             &**root,
@@ -224,6 +252,7 @@ impl<'a, L: LocSig> Collector<'a, L> {
                 property_path,
                 import: None,
                 root_kind,
+                optional_receiver_paths,
             });
         }
         let Some(def) = self.scope_info.def_of_use_opt(root_use_loc) else {
@@ -244,6 +273,7 @@ impl<'a, L: LocSig> Collector<'a, L> {
                 property_path,
                 import: None,
                 root_kind: CalleeRootKind::Binding,
+                optional_receiver_paths,
             });
         };
         let is_import = matches!(def.kind, Kind::Import { .. } | Kind::TsImport);
@@ -290,6 +320,7 @@ impl<'a, L: LocSig> Collector<'a, L> {
             property_path,
             import,
             root_kind: CalleeRootKind::Binding,
+            optional_receiver_paths,
         })
     }
 

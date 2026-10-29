@@ -91,7 +91,8 @@ function notStatementPosition(x: unknown, b: boolean) {
 }
 
 function optionalCalls(x: unknown, u: typeof utils | void) {
-  assertString?.(x); // TODO: TS narrows optional calls
+  assertString?.(x);
+  x as string; // OK
   u?.assertString(x); // ok: may not run
 }
 

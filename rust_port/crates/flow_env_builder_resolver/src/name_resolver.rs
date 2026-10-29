@@ -6569,6 +6569,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             AssertionTarget::Receiver => {
                 let receiver = match call.callee.deref() {
                     ExpressionInner::Member { inner, .. } => &inner.object,
+                    ExpressionInner::OptionalMember { inner, .. } => &inner.member.object,
                     _ => return Ok(()),
                 };
                 (receiver, 0)
@@ -8002,10 +8003,16 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 }
                 self.arg_list(arguments)?;
                 self.pop_refinement_scope();
-                self.havoc_current_env(
-                    flow_common::refinement_invalidation::Reason::FunctionCall,
-                    loc,
-                );
+                if let Some(assertion) = self.assertion_calls.get(callee.loc()).copied() {
+                    if bare_assertion_call_always_throws(assertion, &arguments.arguments) {
+                        self.raise_abrupt_completion(AbruptCompletion::Throw)?;
+                    }
+                } else {
+                    self.havoc_current_env(
+                        flow_common::refinement_invalidation::Reason::FunctionCall,
+                        loc,
+                    );
+                }
             }
             ExpressionInner::Member {
                 inner,
@@ -11206,12 +11213,17 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             _ => ast_visitor::expression_default(self, expr),
         };
         result?;
-        if let ExpressionInner::Call { loc, inner } = expr.deref()
-            && let Some(assertion) = self.assertion_calls.get(inner.callee.loc()).copied()
+        let call = match expr.deref() {
+            ExpressionInner::Call { loc, inner } => Some((loc, inner.as_ref())),
+            ExpressionInner::OptionalCall { loc, inner } => Some((loc, &inner.call)),
+            _ => None,
+        };
+        if let Some((loc, call)) = call
+            && let Some(assertion) = self.assertion_calls.get(call.callee.loc()).copied()
             && (!self.env_state.in_loop_scout
-                || bare_assertion_call_always_throws(assertion, &inner.arguments.arguments))
+                || bare_assertion_call_always_throws(assertion, &call.arguments.arguments))
         {
-            self.add_assertion_call_refinement(loc, inner, assertion)?;
+            self.add_assertion_call_refinement(loc, call, assertion)?;
         }
         Ok(())
     }

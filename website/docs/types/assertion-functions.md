@@ -173,8 +173,6 @@ function check(value: unknown) {
 }
 ```
 
-Flow currently does not narrow values for optional calls.
-
 ## Adoption {#toc-adoption}
 
 Assertion functions are available starting in Flow 0.336. In Flow 0.336, enable them in your `.flowconfig`:

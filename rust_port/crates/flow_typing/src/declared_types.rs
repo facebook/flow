@@ -70,6 +70,7 @@ struct CanonicalCallee {
     root_binding_loc: ALoc,
     property_path: Vec<FlowSmolStr>,
     root_kind: CalleeRootKind,
+    optional_receiver_paths: Vec<usize>,
 }
 
 impl CanonicalCallee {
@@ -78,6 +79,7 @@ impl CanonicalCallee {
             root_binding_loc: target.root_binding_loc.dupe(),
             property_path: target.property_path.clone(),
             root_kind: target.root_kind,
+            optional_receiver_paths: target.optional_receiver_paths.clone(),
         }
     }
 }
@@ -218,14 +220,7 @@ pub(crate) fn resolve<'cx>(cx: &mut Context<'cx>, analysis: PackedAnalysis) -> R
                 .and_then(|merged| merged.root(&candidate.root_binding_loc));
             let assertion = root_type
                 .and_then(|root_type| receiver_type(cx, &reason, candidate.root_kind, root_type))
-                .and_then(|root_type| {
-                    callee_type_for_classification(
-                        cx,
-                        &candidate.callee_loc,
-                        &candidate.property_path,
-                        &root_type,
-                    )
-                })
+                .and_then(|root_type| callee_type_for_classification(cx, candidate, &root_type, 0))
                 .as_ref()
                 .and_then(|callee_type| assertion_info_of_type(cx, &reason, callee_type));
             match assertion {
@@ -236,12 +231,8 @@ pub(crate) fn resolve<'cx>(cx: &mut Context<'cx>, analysis: PackedAnalysis) -> R
                     // Global roots (e.g. lib declarations) are never merged here.
                     // Their annotation lives in the lib itself, so a guard refines directly.
                     if let Some((_, global_t)) = cx.builtin_type_opt(candidate.root_name.as_str())
-                        && let Some(callee_type) = callee_type_for_classification(
-                            cx,
-                            &candidate.callee_loc,
-                            &candidate.property_path,
-                            &global_t,
-                        )
+                        && let Some(callee_type) =
+                            callee_type_for_classification(cx, candidate, &global_t, 0)
                         && let Some(info) = assertion_info_of_type(cx, &reason, &callee_type)
                     {
                         classified.insert(canonical, info);
@@ -325,22 +316,14 @@ fn imported_assertion_info(
         ImportedName::CommonJS | ImportedName::Default
     ) && let Some((_, export)) = &module.module_export_types.cjs_export
     {
-        let callee_type = callee_type_for_classification(
-            cx,
-            &candidate.callee_loc,
-            &candidate.property_path,
-            export,
-        )?;
+        let callee_type = callee_type_for_classification(cx, candidate, export, 0)?;
         return assertion_info_of_type(cx, reason, &callee_type);
     }
     let exports = cx.find_exports(module.module_export_types.value_exports_tmap.dupe());
-    let (export_name, property_path) = match &import.remote {
-        ImportedName::Default => ("default", candidate.property_path.as_slice()),
-        ImportedName::Named(name) => (name.as_str(), candidate.property_path.as_slice()),
-        ImportedName::Namespace => {
-            let (name, rest) = candidate.property_path.split_first()?;
-            (name.as_str(), rest)
-        }
+    let (export_name, prefix) = match &import.remote {
+        ImportedName::Default => ("default", 0),
+        ImportedName::Named(name) => (name.as_str(), 0),
+        ImportedName::Namespace => (candidate.property_path.first()?.as_str(), 1),
         ImportedName::CommonJS => {
             // Mirror checking's `require()` typing
             // (`cjs_require_t_kit::on_module_t`): without
@@ -350,16 +333,14 @@ fn imported_assertion_info(
             let automatic_require_default =
                 cx.automatic_require_default() && !cx.is_lib_reason_def(&module.module_reason);
             if automatic_require_default && exports.get(&Name::new("default")).is_some() {
-                ("default", candidate.property_path.as_slice())
+                ("default", 0)
             } else {
-                let (name, rest) = candidate.property_path.split_first()?;
-                (name.as_str(), rest)
+                (candidate.property_path.first()?.as_str(), 1)
             }
         }
     };
     let export = exports.get(&Name::new(export_name))?;
-    let callee_type =
-        callee_type_for_classification(cx, &candidate.callee_loc, property_path, &export.type_)?;
+    let callee_type = callee_type_for_classification(cx, candidate, &export.type_, prefix)?;
     assertion_info_of_type(cx, reason, &callee_type)
 }
 
@@ -396,25 +377,82 @@ fn assertion_info_of_type(
 /// dependency exports).
 fn callee_type_for_classification(
     cx: &mut Context<'_>,
+    candidate: &CalleeTarget<ALoc>,
+    root_type: &Type,
+    prefix: usize,
+) -> Option<Type> {
+    let reason = reason::mk_reason(RProperty(None), candidate.callee_loc.dupe());
+    for index in &candidate.optional_receiver_paths {
+        // An import namespace is non-nullish; selecting an export consumes
+        // that part of the path before navigation starts.
+        if *index < prefix {
+            continue;
+        }
+        let (receiver, mapped_property) = navigate_type(
+            cx,
+            &candidate.callee_loc,
+            &candidate.property_path[prefix..*index],
+            root_type,
+        )?;
+        if mapped_property || !definitely_nonnullish(cx, &reason, &receiver) {
+            return None;
+        }
+    }
+    navigate_type(
+        cx,
+        &candidate.callee_loc,
+        &candidate.property_path[prefix..],
+        root_type,
+    )
+    .map(|(callee_type, _)| callee_type)
+}
+
+/// The flag is set when a mapped head consumed the last path element. Its
+/// optionality depends on the unevaluated mapped type, so the property may be
+/// missing.
+fn navigate_type(
+    cx: &mut Context<'_>,
     callee_loc: &ALoc,
     property_path: &[FlowSmolStr],
     root_type: &Type,
-) -> Option<Type> {
+) -> Option<(Type, bool)> {
     let mut current = root_type.dupe();
     let mut path = property_path;
+    let mut mapped_property = false;
     loop {
         let resolved = cx.find_resolved(&current)?;
-        if let TypeInner::EvalT { defer_use_t, .. } = resolved.deref() {
-            if let flow_typing_type::type_::Destructor::MappedType(data) = defer_use_t.2.as_ref() {
-                let (_, rest) = path.split_first()?;
-                current = data.property_type.dupe();
-                path = rest;
-                continue;
-            }
+        if let TypeInner::EvalT { defer_use_t, .. } = resolved.deref()
+            && let flow_typing_type::type_::Destructor::MappedType(data) = defer_use_t.2.as_ref()
+            && let Some((_, rest)) = path.split_first()
+        {
+            current = data.property_type.dupe();
+            path = rest;
+            mapped_property = path.is_empty();
+            continue;
         }
         break;
     }
-    Some(property_type(cx, callee_loc, path, current))
+    Some((
+        property_type(cx, callee_loc, path, current),
+        mapped_property,
+    ))
+}
+
+fn definitely_nonnullish(cx: &mut Context<'_>, reason: &Reason, type_: &Type) -> bool {
+    let Some(type_) = normalized_assertion_head(cx, reason, type_) else {
+        return false;
+    };
+    match type_.deref() {
+        TypeInner::DefT(_, def_t) => match def_t.deref() {
+            DefTInner::FunT(..)
+            | DefTInner::ObjT(_)
+            | DefTInner::InstanceT(_)
+            | DefTInner::ClassT(_) => true,
+            DefTInner::PolyT(poly) => definitely_nonnullish(cx, reason, &poly.t_out),
+            _ => false,
+        },
+        _ => false,
+    }
 }
 
 fn receiver_type(

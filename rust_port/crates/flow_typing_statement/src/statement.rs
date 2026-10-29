@@ -8573,7 +8573,12 @@ fn check_unrecognized_assertion_call(
     }
     let mut dotted = true;
     let mut root = callee;
-    while let expression::ExpressionInner::Member { inner, .. } = root.deref() {
+    loop {
+        let inner = match root.deref() {
+            expression::ExpressionInner::Member { inner, .. } => inner.as_ref(),
+            expression::ExpressionInner::OptionalMember { inner, .. } => &inner.member,
+            _ => break,
+        };
         dotted &= matches!(inner.property, member::Property::PropertyIdentifier(_));
         root = &inner.object;
     }
