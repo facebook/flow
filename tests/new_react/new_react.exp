@@ -17,13 +17,13 @@ Error --------------------------------------------------------------------------
 Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-arg]
 
    bad_default_props.js:15:18
-    15| class C3 extends React.Component { // error
-                         ^^^^^^^^^^^^^^^
+     15| class C3 extends React.Component { // error
+                          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:994:28
-   994|     declare class Component<Props, State = void> {
-                                   ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1243:28
+   1243|     declare class Component<Props, State = void> {
+                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- bad_default_props.js:20:18
@@ -31,13 +31,13 @@ Error --------------------------------------------------------------------------
 Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-arg]
 
    bad_default_props.js:20:18
-    20| class C4 extends React.Component {
-                         ^^^^^^^^^^^^^^^
+     20| class C4 extends React.Component {
+                          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:994:28
-   994|     declare class Component<Props, State = void> {
-                                   ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1243:28
+   1243|     declare class Component<Props, State = void> {
+                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
@@ -140,8 +140,8 @@ References:
      35|
      36| }
          ^ [2]
-   <BUILTINS>/react.js:1003:23
-   1003|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+   <BUILTINS>/react.js:1252:23
+   1252|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -191,8 +191,8 @@ References:
      35|
      36| }
          ^ [2]
-   <BUILTINS>/react.js:1003:23
-   1003|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+   <BUILTINS>/react.js:1252:23
+   1252|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -244,8 +244,8 @@ References:
      35|
      36| }
          ^ [2]
-   <BUILTINS>/react.js:1003:52
-   1003|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+   <BUILTINS>/react.js:1252:52
+   1252|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -430,13 +430,13 @@ Error --------------------------------------------------------------------------
 Cannot get `this.state.x` because property `x` is missing in `void` [1]. [incompatible-use]
 
    state5.js:5:23
-     5|     return this.state.x; // error: need to declare type of state
-                              ^
+      5|     return this.state.x; // error: need to declare type of state
+                               ^
 
 References:
-   <BUILTINS>/react.js:994:44
-   994|     declare class Component<Props, State = void> {
-                                                   ^^^^ [1]
+   <BUILTINS>/react.js:1243:44
+   1243|     declare class Component<Props, State = void> {
+                                                    ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:27:19

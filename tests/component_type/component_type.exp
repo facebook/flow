@@ -251,8 +251,8 @@ Cannot return `x` because in property `ref` > type argument `T` [1]: `Subcompone
                  ^
 
 References:
-   <BUILTINS>/react.js:463:36
-   463|   declare export type RefSetter<in T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:587:36
+   587|   declare export type RefSetter<in T> = React.RefSetter<T>;
                                            ^ [1]
    component_to_component.js:27:35
     27| ): component(ref: React.RefSetter<Subcomponent>, ...{...}) { // Error instance is covariant
@@ -346,19 +346,19 @@ Flow is showing the union/intersection branches that got closest to passing. Oth
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    create_element.js:22:41
-    22| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref
-                                                ^^^^^^
+     22| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref
+                                                 ^^^^^^
 
 References:
    create_element.js:6:25
-     6|   ref?: React.RefSetter<number>,
-                                ^^^^^^ [1]
+      6|   ref?: React.RefSetter<number>,
+                                 ^^^^^^ [1]
    create_element.js:21:32
-    21| const refBad = React.createRef<string>();
-                                       ^^^^^^ [2]
-   <BUILTINS>/react.js:970:28
-   970|     ): React$RefObject<T | null>;
-                                   ^^^^ [3]
+     21| const refBad = React.createRef<string>();
+                                        ^^^^^^ [2]
+   <BUILTINS>/react.js:1219:28
+   1219|     ): React$RefObject<T | null>;
+                                    ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:25:49

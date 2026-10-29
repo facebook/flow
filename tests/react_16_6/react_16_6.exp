@@ -37,22 +37,22 @@ is incompatible with `Promise<Readonly<{default: component(...any) renders any, 
 Functions without statics are not compatible with objects.
 
    lazy.js:9:18
-     9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
-                         ^^^^^^^^^^^^^^^^^
+      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
+                          ^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:6:1
-     6| function FunctionComponent(x: Props): React.Node { return null }
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:928:24
-                               v-------
-   928|       component: () => Promise<
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-   933|       >,
-              ^ [2]
+      6| function FunctionComponent(x: Props): React.Node { return null }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1177:24
+                                v-------
+   1177|       component: () => Promise<
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+   1182|       >,
+               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
@@ -62,22 +62,22 @@ missing in class `ClassComponent` [1] but exists in
 `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2]. [incompatible-type]
 
    lazy.js:10:18
-    10| React.lazy(() => ClassComponent); // Error incompatible with Promise
-                         ^^^^^^^^^^^^^^
+     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
+                          ^^^^^^^^^^^^^^
 
 References:
    lazy.js:7:7
-     7| class ClassComponent extends React.Component<Props> {}
-              ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:928:24
-                               v-------
-   928|       component: () => Promise<
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-   933|       >,
-              ^ [2]
+      7| class ClassComponent extends React.Component<Props> {}
+               ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1177:24
+                                v-------
+   1177|       component: () => Promise<
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+   1182|       >,
+               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
@@ -87,22 +87,22 @@ class `ClassComponent` [1] but exists in `Promise<Readonly<{default: component(.
 [incompatible-type]
 
    lazy.js:10:18
-    10| React.lazy(() => ClassComponent); // Error incompatible with Promise
-                         ^^^^^^^^^^^^^^
+     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
+                          ^^^^^^^^^^^^^^
 
 References:
    lazy.js:7:7
-     7| class ClassComponent extends React.Component<Props> {}
-              ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:928:24
-                               v-------
-   928|       component: () => Promise<
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-   933|       >,
-              ^ [2]
+      7| class ClassComponent extends React.Component<Props> {}
+               ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1177:24
+                                v-------
+   1177|       component: () => Promise<
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+   1182|       >,
+               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
@@ -112,22 +112,22 @@ in class `ClassComponent` [1] but exists in `Promise<Readonly<{default: componen
 [incompatible-type]
 
    lazy.js:10:18
-    10| React.lazy(() => ClassComponent); // Error incompatible with Promise
-                         ^^^^^^^^^^^^^^
+     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
+                          ^^^^^^^^^^^^^^
 
 References:
    lazy.js:7:7
-     7| class ClassComponent extends React.Component<Props> {}
-              ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:928:24
-                               v-------
-   928|       component: () => Promise<
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-   933|       >,
-              ^ [2]
+      7| class ClassComponent extends React.Component<Props> {}
+               ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1177:24
+                                v-------
+   1177|       component: () => Promise<
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+   1182|       >,
+               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
@@ -137,22 +137,22 @@ class `ClassComponent` [1] but exists in `Promise<Readonly<{default: component(.
 [incompatible-type]
 
    lazy.js:10:18
-    10| React.lazy(() => ClassComponent); // Error incompatible with Promise
-                         ^^^^^^^^^^^^^^
+     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
+                          ^^^^^^^^^^^^^^
 
 References:
    lazy.js:7:7
-     7| class ClassComponent extends React.Component<Props> {}
-              ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:928:24
-                               v-------
-   928|       component: () => Promise<
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-   933|       >,
-              ^ [2]
+      7| class ClassComponent extends React.Component<Props> {}
+               ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1177:24
+                                v-------
+   1177|       component: () => Promise<
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+   1182|       >,
+               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:11:34
@@ -166,35 +166,35 @@ Cannot call `React.lazy` with function bound to `component` because: [incompatib
 Functions without statics are not compatible with objects.
 
    lazy.js:11:34
-    11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
-                                         ^^^^^^^^^^^^^^^^^
+     11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
+                                          ^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:11:18
-    11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:928:24
-                               v-------
-   928|       component: () => Promise<
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-   933|       >,
-              ^ [2]
+     11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1177:24
+                                v-------
+   1177|       component: () => Promise<
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+   1182|       >,
+               ^ [2]
    <BUILTINS>/misc.js:216:19
-   216| interface Promise<R> {
-                          ^ [3]
+    216| interface Promise<R> {
+                           ^ [3]
    lazy.js:6:1
-     6| function FunctionComponent(x: Props): React.Node { return null }
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:929:18
-                         v
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-                ^ [5]
+      6| function FunctionComponent(x: Props): React.Node { return null }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:1178:18
+                          v
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+                 ^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:12:34
@@ -206,35 +206,35 @@ Cannot call `React.lazy` with function bound to `component` because: [incompatib
       in `{readonly default: component(...any) renders any, ...}` [5]
 
    lazy.js:12:34
-    12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
-                                         ^^^^^^^^^^^^^^
+     12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
+                                          ^^^^^^^^^^^^^^
 
 References:
    lazy.js:12:18
-    12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:928:24
-                               v-------
-   928|       component: () => Promise<
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-   933|       >,
-              ^ [2]
+     12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1177:24
+                                v-------
+   1177|       component: () => Promise<
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+   1182|       >,
+               ^ [2]
    <BUILTINS>/misc.js:216:19
-   216| interface Promise<R> {
-                          ^ [3]
+    216| interface Promise<R> {
+                           ^ [3]
    lazy.js:7:7
-     7| class ClassComponent extends React.Component<Props> {}
-              ^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:929:18
-                         v
-   929|         Readonly<{
-   930|           default: component(...Config) renders Renders,
-   931|           ...
-   932|         }>,
-                ^ [5]
+      7| class ClassComponent extends React.Component<Props> {}
+               ^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:1178:18
+                          v
+   1178|         Readonly<{
+   1179|           default: component(...Config) renders Renders,
+   1180|           ...
+   1181|         }>,
+                 ^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:19:13

@@ -165,19 +165,108 @@ Flags: --pretty
 {
   "result":[
     {
+      "name":"AbstractView",
+      "type":"type AbstractView = {readonly [property: string]: any}"
+    },
+    {
       "name":"ActionDispatch",
       "type":"type ActionDispatch<ActionArg extends ReadonlyArray<any> = Readonly<[]>> = (...args: ActionArg) => void"
     },
+    {
+      "name":"AllHTMLAttributes",
+      "type":"type AllHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"AnchorHTMLAttributes",
+      "type":"type AnchorHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"AnimationEvent",
+      "type":"type AnimationEvent<T = Element> = SyntheticEvent<T>"
+    },
+    {
+      "name":"AnimationEventHandler",
+      "type":"type AnimationEventHandler<T = Element> = EventHandler<AnimationEvent<T>>"
+    },
+    {
+      "name":"AreaHTMLAttributes",
+      "type":"type AreaHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"AriaAttributes",
+      "type":"type AriaAttributes = {readonly [property: string]: any}"
+    },
+    {"name":"AriaRole","type":"type AriaRole = string"},
     {"name":"Attributes","type":"type Attributes = {key?: React$Key, ...}"},
+    {
+      "name":"AudioHTMLAttributes",
+      "type":"type AudioHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {"name":"AutoFill","type":"type AutoFill = string"},
+    {"name":"AutoFillAddressKind","type":"type AutoFillAddressKind = string"},
+    {"name":"AutoFillBase","type":"type AutoFillBase = string"},
+    {"name":"AutoFillContactField","type":"type AutoFillContactField = string"},
+    {"name":"AutoFillContactKind","type":"type AutoFillContactKind = string"},
+    {
+      "name":"AutoFillCredentialField",
+      "type":"type AutoFillCredentialField = string"
+    },
+    {"name":"AutoFillField","type":"type AutoFillField = string"},
+    {"name":"AutoFillNormalField","type":"type AutoFillNormalField = string"},
+    {"name":"AutoFillSection","type":"type AutoFillSection = string"},
+    {
+      "name":"BaseHTMLAttributes",
+      "type":"type BaseHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"BaseSyntheticEvent",
+      "type":"type BaseSyntheticEvent<E = interface {}, C = any, T = any> = {readonly [property: string]: any}"
+    },
+    {
+      "name":"BlockquoteHTMLAttributes",
+      "type":"type BlockquoteHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"ButtonHTMLAttributes",
+      "type":"type ButtonHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {
       "name":"CSSProperties",
       "type":"type CSSProperties = Properties<string | number>"
+    },
+    {
+      "name":"CanvasHTMLAttributes",
+      "type":"type CanvasHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"ChangeEvent",
+      "type":"type ChangeEvent<CurrentTarget = Element, Target = Element> = SyntheticEvent<CurrentTarget>"
+    },
+    {
+      "name":"ChangeEventHandler",
+      "type":"type ChangeEventHandler<CurrentTarget = Element, Target = Element> = EventHandler<ChangeEvent<CurrentTarget, Target>>"
     },
     {
       "name":"ChildrenArray",
       "type":"type ChildrenArray<out T> = ReadonlyArray<ChildrenArray<T>> | T"
     },
     {"name":"ClassAttributes","type":"type ClassAttributes<T> = RefAttributes<T>"},
+    {
+      "name":"ClipboardEvent",
+      "type":"type ClipboardEvent<T = Element> = SyntheticEvent<T>"
+    },
+    {
+      "name":"ClipboardEventHandler",
+      "type":"type ClipboardEventHandler<T = Element> = EventHandler<ClipboardEvent<T>>"
+    },
+    {
+      "name":"ColHTMLAttributes",
+      "type":"type ColHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"ColgroupHTMLAttributes",
+      "type":"type ColgroupHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {
       "name":"ComponentClass",
       "type":"type ComponentClass<P extends {...} = {...}, S = any> = component(...P)"
@@ -199,16 +288,62 @@ Flags: --pretty
       "type":"type ComponentType<in P extends {...}> = component(...P)"
     },
     {
+      "name":"CompositionEvent",
+      "type":"type CompositionEvent<T = Element> = SyntheticEvent<T>"
+    },
+    {
+      "name":"CompositionEventHandler",
+      "type":"type CompositionEventHandler<T = Element> = EventHandler<CompositionEvent<T>>"
+    },
+    {
       "name":"Consumer",
       "type":"type Consumer<T> = component(children: (value: T) => React$Node)"
     },
     {"name":"Context","type":"opaque type Context<T>"},
     {
+      "name":"DOMAttributes",
+      "type":"type DOMAttributes<T> = {readonly [property: string]: any}"
+    },
+    {
+      "name":"DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS",
+      "type":"type DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_FORM_ACTIONS = {...}"
+    },
+    {
+      "name":"DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_IMG_SRC_TYPES",
+      "type":"type DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_IMG_SRC_TYPES = {...}"
+    },
+    {
+      "name":"DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_MEDIA_SRC_TYPES",
+      "type":"type DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_MEDIA_SRC_TYPES = {...}"
+    },
+    {
+      "name":"DataHTMLAttributes",
+      "type":"type DataHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
       "name":"Defaultize",
       "type":"type Defaultize<P, D> = P extends any ? string extends keyof P ? P : {...Pick<P, Exclude<keyof P, keyof D>>, ...InexactPartial<Pick<P, Extract<keyof P, keyof D>>>, ...InexactPartial<Pick<D, Exclude<keyof D, keyof P>>>} : empty"
     },
+    {
+      "name":"DelHTMLAttributes",
+      "type":"type DelHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {"name":"DependencyList","type":"type DependencyList = ReadonlyArray<unknown>"},
+    {"name":"DetailedHTMLProps","type":"type DetailedHTMLProps<E, T> = E"},
+    {
+      "name":"DetailsHTMLAttributes",
+      "type":"type DetailsHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"DialogHTMLAttributes",
+      "type":"type DialogHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {"name":"Dispatch","type":"type Dispatch<A> = (A) => void"},
+    {"name":"DragEvent","type":"type DragEvent<T = Element> = MouseEvent<T>"},
+    {
+      "name":"DragEventHandler",
+      "type":"type DragEventHandler<T = Element> = EventHandler<DragEvent<T>>"
+    },
     {
       "name":"EffectCallback",
       "type":"type EffectCallback = () => void | (() => void)"
@@ -219,14 +354,40 @@ Flags: --pretty
     },
     {"name":"ElementType","type":"type ElementType = React$ElementType"},
     {
+      "name":"EmbedHTMLAttributes",
+      "type":"type EmbedHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
       "name":"ErrorInfo",
       "type":"type ErrorInfo = {componentStack?: string | null, ...}"
     },
+    {"name":"EventHandler","type":"type EventHandler<E> = (event: E) => void"},
     {
       "name":"ExoticComponent",
       "type":"type ExoticComponent<P extends {...} = {...}> = component(...P)"
     },
     {"name":"FC","type":"type FC<P extends {...} = {...}> = component(...P)"},
+    {
+      "name":"FieldsetHTMLAttributes",
+      "type":"type FieldsetHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"FocusEvent",
+      "type":"type FocusEvent<Target = Element, RelatedTarget = Element> = SyntheticEvent<Target>"
+    },
+    {
+      "name":"FocusEventHandler",
+      "type":"type FocusEventHandler<T = Element> = EventHandler<FocusEvent<T>>"
+    },
+    {"name":"FormEvent","type":"type FormEvent<T = Element> = SyntheticEvent<T>"},
+    {
+      "name":"FormEventHandler",
+      "type":"type FormEventHandler<T = Element> = EventHandler<FormEvent<T>>"
+    },
+    {
+      "name":"FormHTMLAttributes",
+      "type":"type FormHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {
       "name":"ForwardRefExoticComponent",
       "type":"type ForwardRefExoticComponent<P extends {...} = {...}> = component(...P)"
@@ -240,29 +401,127 @@ Flags: --pretty
       "type":"type FunctionComponent<P extends {...} = {...}> = component(...P)"
     },
     {
+      "name":"HTMLAttributeAnchorTarget",
+      "type":"type HTMLAttributeAnchorTarget = string"
+    },
+    {
+      "name":"HTMLAttributeReferrerPolicy",
+      "type":"type HTMLAttributeReferrerPolicy = string"
+    },
+    {
+      "name":"HTMLAttributes",
+      "type":"type HTMLAttributes<T> = {readonly [property: string]: any}"
+    },
+    {"name":"HTMLElementType","type":"type HTMLElementType = string"},
+    {
+      "name":"HTMLInputAutoCompleteAttribute",
+      "type":"type HTMLInputAutoCompleteAttribute = string"
+    },
+    {"name":"HTMLInputTypeAttribute","type":"type HTMLInputTypeAttribute = string"},
+    {"name":"HTMLProps","type":"type HTMLProps<T> = AllHTMLAttributes<T>"},
+    {
+      "name":"HtmlHTMLAttributes",
+      "type":"type HtmlHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"IframeHTMLAttributes",
+      "type":"type IframeHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"ImgHTMLAttributes",
+      "type":"type ImgHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
       "name":"InexactPartial",
       "type":"type InexactPartial<T> = {[K in keyof T]?: T[K] | void}"
+    },
+    {"name":"InputEvent","type":"type InputEvent<T = Element> = SyntheticEvent<T>"},
+    {
+      "name":"InputEventHandler",
+      "type":"type InputEventHandler<T = Element> = EventHandler<InputEvent<T>>"
+    },
+    {
+      "name":"InputHTMLAttributes",
+      "type":"type InputHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"InsHTMLAttributes",
+      "type":"type InsHTMLAttributes<T> = HTMLAttributes<T>"
     },
     {
       "name":"Interaction",
       "type":"type Interaction = {name: string, timestamp: number, ...}"
     },
     {
+      "name":"InvalidEvent",
+      "type":"type InvalidEvent<T = Element> = SyntheticEvent<T>"
+    },
+    {
       "name":"JSXElementConstructor",
       "type":"type JSXElementConstructor<P extends {...} = {...}> = component(...P)"
     },
     {"name":"Key","type":"type Key = React$Key"},
+    {"name":"KeyboardEvent","type":"type KeyboardEvent<T = Element> = UIEvent<T>"},
+    {
+      "name":"KeyboardEventHandler",
+      "type":"type KeyboardEventHandler<T = Element> = EventHandler<KeyboardEvent<T>>"
+    },
+    {
+      "name":"KeygenHTMLAttributes",
+      "type":"type KeygenHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"LabelHTMLAttributes",
+      "type":"type LabelHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {
       "name":"LazyExoticComponent",
       "type":"type LazyExoticComponent<T extends ComponentType<any>> = component(...ComponentProps<T>)"
+    },
+    {
+      "name":"LiHTMLAttributes",
+      "type":"type LiHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"LinkHTMLAttributes",
+      "type":"type LinkHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"MapHTMLAttributes",
+      "type":"type MapHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"MediaHTMLAttributes",
+      "type":"type MediaHTMLAttributes<T> = HTMLAttributes<T>"
     },
     {
       "name":"MemoExoticComponent",
       "type":"type MemoExoticComponent<T extends ComponentType<any>> = component(...ComponentProps<T>)"
     },
     {
+      "name":"MenuHTMLAttributes",
+      "type":"type MenuHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"MetaHTMLAttributes",
+      "type":"type MetaHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"MeterHTMLAttributes",
+      "type":"type MeterHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
       "name":"MixedElement",
       "type":"type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>"
+    },
+    {"name":"ModifierKey","type":"type ModifierKey = string"},
+    {
+      "name":"MouseEvent",
+      "type":"type MouseEvent<T = Element, E = MouseEvent> = UIEvent<T, E>"
+    },
+    {
+      "name":"MouseEventHandler",
+      "type":"type MouseEventHandler<T = Element> = EventHandler<MouseEvent<T>>"
     },
     {
       "name":"MutableRefObject",
@@ -273,7 +532,48 @@ Flags: --pretty
       "type":"type NamedExoticComponent<P extends {...} = {...}> = component(...P)"
     },
     {"name":"Node","type":"type Node = React$Node"},
+    {
+      "name":"ObjectHTMLAttributes",
+      "type":"type ObjectHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"OlHTMLAttributes",
+      "type":"type OlHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"OptgroupHTMLAttributes",
+      "type":"type OptgroupHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"OptionHTMLAttributes",
+      "type":"type OptionHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"OptionalPostfixToken",
+      "type":"type OptionalPostfixToken<T extends string> = string"
+    },
+    {
+      "name":"OptionalPrefixToken",
+      "type":"type OptionalPrefixToken<T extends string> = string"
+    },
+    {
+      "name":"OutputHTMLAttributes",
+      "type":"type OutputHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"ParamHTMLAttributes",
+      "type":"type ParamHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {"name":"PointerEvent","type":"type PointerEvent<T = Element> = MouseEvent<T>"},
+    {
+      "name":"PointerEventHandler",
+      "type":"type PointerEventHandler<T = Element> = EventHandler<PointerEvent<T>>"
+    },
     {"name":"Portal","type":"type Portal = React$Portal"},
+    {
+      "name":"ProgressHTMLAttributes",
+      "type":"type ProgressHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {
       "name":"PropOf",
       "type":"type PropOf<E extends string | MixedElement | React$RendersExactly<React$ElementType>, K extends string> = PropsOf<E>[K]"
@@ -296,8 +596,16 @@ Flags: --pretty
       "type":"type ProviderProps<T> = {children?: React$Node, value: T, ...}"
     },
     {
+      "name":"QuoteHTMLAttributes",
+      "type":"type QuoteHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
       "name":"ReactElement",
       "type":"type ReactElement<P = unknown, T = React$ElementType> = ExactReactElement_DEPRECATED<T, P>"
+    },
+    {
+      "name":"ReactEventHandler",
+      "type":"type ReactEventHandler<T = Element> = EventHandler<SyntheticEvent<T>>"
     },
     {"name":"ReactInstance","type":"type ReactInstance = any"},
     {
@@ -329,15 +637,132 @@ Flags: --pretty
       "name":"RefSetter",
       "type":"type RefSetter<in T> = ?{writeonly current: T | null, ...} | ((T | null) => void | (() => void))"
     },
+    {
+      "name":"SVGAttributes",
+      "type":"type SVGAttributes<T> = {readonly [property: string]: any}"
+    },
+    {"name":"SVGElementType","type":"type SVGElementType = string"},
+    {
+      "name":"SVGLineElementAttributes",
+      "type":"type SVGLineElementAttributes<T> = SVGProps<T>"
+    },
+    {"name":"SVGProps","type":"type SVGProps<T> = SVGAttributes<T>"},
+    {
+      "name":"SVGTextElementAttributes",
+      "type":"type SVGTextElementAttributes<T> = SVGProps<T>"
+    },
+    {
+      "name":"ScriptHTMLAttributes",
+      "type":"type ScriptHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"SelectHTMLAttributes",
+      "type":"type SelectHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {"name":"SetStateAction","type":"type SetStateAction<S> = S | ((S) => S)"},
+    {
+      "name":"SlotHTMLAttributes",
+      "type":"type SlotHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"SourceHTMLAttributes",
+      "type":"type SourceHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"StyleHTMLAttributes",
+      "type":"type StyleHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"SubmitEvent",
+      "type":"type SubmitEvent<T = Element> = SyntheticEvent<T>"
+    },
+    {
+      "name":"SubmitEventHandler",
+      "type":"type SubmitEventHandler<T = Element> = EventHandler<SubmitEvent<T>>"
+    },
+    {
+      "name":"SyntheticEvent",
+      "type":"type SyntheticEvent<T = Element, E = Event> = BaseSyntheticEvent<E, EventTarget & T, EventTarget>"
+    },
+    {
+      "name":"TableHTMLAttributes",
+      "type":"type TableHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"TdHTMLAttributes",
+      "type":"type TdHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"TextareaHTMLAttributes",
+      "type":"type TextareaHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"ThHTMLAttributes",
+      "type":"type ThHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"TimeHTMLAttributes",
+      "type":"type TimeHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"ToggleEvent",
+      "type":"type ToggleEvent<T = Element> = SyntheticEvent<T>"
+    },
+    {
+      "name":"ToggleEventHandler",
+      "type":"type ToggleEventHandler<T = Element> = EventHandler<ToggleEvent<T>>"
+    },
+    {"name":"Touch","type":"type Touch = {readonly [property: string]: any}"},
+    {"name":"TouchEvent","type":"type TouchEvent<T = Element> = UIEvent<T>"},
+    {
+      "name":"TouchEventHandler",
+      "type":"type TouchEventHandler<T = Element> = EventHandler<TouchEvent<T>>"
+    },
+    {
+      "name":"TouchList",
+      "type":"type TouchList = {readonly [property: string]: any}"
+    },
+    {
+      "name":"TrackHTMLAttributes",
+      "type":"type TrackHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {
+      "name":"TransitionEvent",
+      "type":"type TransitionEvent<T = Element> = SyntheticEvent<T>"
+    },
+    {
+      "name":"TransitionEventHandler",
+      "type":"type TransitionEventHandler<T = Element> = EventHandler<TransitionEvent<T>>"
+    },
     {
       "name":"TransitionStartFunction",
       "type":"type TransitionStartFunction = (callback: () => void | Promise<void>) => void"
     },
+    {
+      "name":"UIEvent",
+      "type":"type UIEvent<T = Element, E = UIEvent> = SyntheticEvent<T, E>"
+    },
+    {
+      "name":"UIEventHandler",
+      "type":"type UIEventHandler<T = Element> = EventHandler<UIEvent<T>>"
+    },
     {"name":"ValidationMap","type":"type ValidationMap<T> = {[string]: any}"},
+    {
+      "name":"VideoHTMLAttributes",
+      "type":"type VideoHTMLAttributes<T> = HTMLAttributes<T>"
+    },
     {
       "name":"WeakValidationMap",
       "type":"type WeakValidationMap<T> = {[string]: any}"
+    },
+    {
+      "name":"WebViewHTMLAttributes",
+      "type":"type WebViewHTMLAttributes<T> = HTMLAttributes<T>"
+    },
+    {"name":"WheelEvent","type":"type WheelEvent<T = Element> = MouseEvent<T>"},
+    {
+      "name":"WheelEventHandler",
+      "type":"type WheelEventHandler<T = Element> = EventHandler<WheelEvent<T>>"
     }
   ]
 }

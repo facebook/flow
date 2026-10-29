@@ -4,16 +4,16 @@ Cannot cast `React.Component` to `number` because class `Component` [1] is incom
 [incompatible-type]
 
    commonjs.js:4:1
-     4| React.Component as number; // Error
-        ^^^^^^^^^^^^^^^
+      4| React.Component as number; // Error
+         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:994:19
-   994|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1243:19
+   1243|     declare class Component<Props, State = void> {
+                           ^^^^^^^^^ [1]
    commonjs.js:4:20
-     4| React.Component as number; // Error
-                           ^^^^^^ [2]
+      4| React.Component as number; // Error
+                            ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:6:2
@@ -63,16 +63,16 @@ Cannot cast `React.Component` to `number` because class `Component` [1] is incom
 [incompatible-type]
 
    es-default.js:4:1
-     4| React.Component as number; // Error
-        ^^^^^^^^^^^^^^^
+      4| React.Component as number; // Error
+         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:994:19
-   994|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1243:19
+   1243|     declare class Component<Props, State = void> {
+                           ^^^^^^^^^ [1]
    es-default.js:4:20
-     4| React.Component as number; // Error
-                           ^^^^^^ [2]
+      4| React.Component as number; // Error
+                            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ es-default.js:6:2
@@ -111,8 +111,8 @@ Cannot get `React.Missing` because property `Missing` is missing in `...` [1]. [
                        ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1570:26
-   1570|   declare export default typeof React;
+   <BUILTINS>/react.js:1820:26
+   1820|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -122,16 +122,16 @@ Cannot cast `React.Component` to `number` because class `Component` [1] is incom
 [incompatible-type]
 
    es-namespace.js:4:1
-     4| React.Component as number; // Error
-        ^^^^^^^^^^^^^^^
+      4| React.Component as number; // Error
+         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:994:19
-   994|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1243:19
+   1243|     declare class Component<Props, State = void> {
+                           ^^^^^^^^^ [1]
    es-namespace.js:4:20
-     4| React.Component as number; // Error
-                           ^^^^^^ [2]
+      4| React.Component as number; // Error
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:6:2
@@ -170,8 +170,8 @@ Cannot get `React.Missing` because property `Missing` is missing in `...` [1]. [
                       ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:366:16
-   366| declare module "react" {
+   <BUILTINS>/react.js:365:16
+   365| declare module "react" {
                        ^^^^^^^ [1]
 
 

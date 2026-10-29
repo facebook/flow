@@ -1217,8 +1217,8 @@ with `{a: number, ...}` [3]. [incompatible-type]
           ^
 
 References:
-   <BUILTINS>/react.js:447:40
-   447|   declare export type ComponentType<in P extends {...}> = component(...P);
+   <BUILTINS>/react.js:571:40
+   571|   declare export type ComponentType<in P extends {...}> = component(...P);
                                                ^ [1]
    react.js:11:40
     11|   declare const a: React.ComponentType<P>;
@@ -1234,19 +1234,19 @@ Cannot cast `b` to `Component<P>` because in type argument `Props` [1]: `{readon
 with `empty` [3]. [incompatible-type]
 
    react.js:14:3
-    14|   b as React.Component<P>; // nope
-          ^
+     14|   b as React.Component<P>; // nope
+           ^
 
 References:
-   <BUILTINS>/react.js:994:29
-   994|     declare class Component<Props, State = void> {
-                                    ^^^^^ [1]
+   <BUILTINS>/react.js:1243:29
+   1243|     declare class Component<Props, State = void> {
+                                     ^^^^^ [1]
    react.js:12:36
-    12|   declare const b: React.Component<{readonly a: number, ...}>;
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     12|   declare const b: React.Component<{readonly a: number, ...}>;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    react.js:14:24
-    14|   b as React.Component<P>; // nope
-                               ^ [3]
+     14|   b as React.Component<P>; // nope
+                                ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- react.js:46:26
