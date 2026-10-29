@@ -4652,6 +4652,18 @@ fn __flow_impl<'cx>(
         ) => {
             collector.add(l.dupe());
         }
+        // A polymorphic value is not empty, so the conditional type switch below passes it on
+        // without instantiating it.
+        (
+            DefT(_, deref!(PolyT(box _))),
+            CondT(box CondTData {
+                opt_type: then_t_opt,
+                collector,
+                ..
+            }),
+        ) => {
+            collector.add(then_t_opt.as_ref().unwrap_or(l).dupe());
+        }
 
         // The rules below are hit when a polymorphic type appears outside a
         // type application expression - i.e. not followed by a type argument list
