@@ -739,3 +739,88 @@ pub fn parse_to_json(
     }
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use dupe::Dupe;
+
+    use super::*;
+    use crate::ast::statement::StatementInner;
+    use crate::file_key::FileKeyInner;
+
+    #[test]
+    fn typescript_filenames_enable_types() {
+        // TypeScript filenames enable annotations and ambiguous call/new type arguments.
+        let source =
+            "const value: number = 1; // OK\nf<number>(value); // OK\nnew C<number>(value); // OK";
+        for filename in [
+            "test.ts",
+            "test.tsx",
+            "test.cts",
+            "test.mts",
+            "test.d.ts",
+            "test.d.cts",
+            "test.d.mts",
+        ] {
+            let file = FileKey::new(FileKeyInner::SourceFile(filename.to_owned()));
+            let (expected, errors) =
+                parse_program_file::<()>(false, None, None, file.dupe(), Ok(source));
+            assert!(errors.is_empty(), "{filename}: {errors:?}"); // OK
+            for types in [false, true] {
+                let options = ParseOptions {
+                    types,
+                    ambiguous_types: false,
+                    ..Default::default()
+                };
+                let (program, errors) =
+                    parse_program_file::<()>(false, None, Some(options), file.dupe(), Ok(source));
+                assert!(errors.is_empty(), "{filename}, types={types}: {errors:?}"); // OK
+                assert_eq!(program, expected, "{filename}, types={types}"); // OK
+            }
+        }
+    }
+
+    #[test]
+    fn non_typescript_filenames_respect_type_options() {
+        // JavaScript and unnamed sources still reject annotations when types are disabled.
+        for filename in [None, Some("test.js"), Some("test.ts.js")] {
+            let file = filename.map(|name| FileKey::new(FileKeyInner::SourceFile(name.to_owned())));
+            let options = ParseOptions {
+                types: false,
+                ambiguous_types: false,
+                ..Default::default()
+            };
+            let (_, errors) = parse_program(
+                false,
+                None,
+                Some(options),
+                file.dupe(),
+                Ok("const value: number = 1; // ERROR"),
+            );
+            assert!(
+                errors
+                    .iter()
+                    .any(|(_, error)| *error == ParseError::UnexpectedTypeAnnotation)
+            ); // OK
+
+            // Disabling ambiguous types preserves JavaScript comparison parsing.
+            let options = ParseOptions {
+                ambiguous_types: false,
+                ..Default::default()
+            };
+            let (program, errors) = parse_program(
+                false,
+                None,
+                Some(options),
+                file,
+                Ok("f<number>(value); // OK"),
+            );
+            assert!(errors.is_empty(), "{filename:?}: {errors:?}"); // OK
+            assert!(matches!(
+                &*program.statements[0],
+                StatementInner::Expression { inner, .. }
+                    if matches!(&*inner.expression, ExpressionInner::Binary { .. })
+            )); // OK
+        }
+    }
+}

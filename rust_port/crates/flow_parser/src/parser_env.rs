@@ -418,7 +418,14 @@ pub fn init_env<'a, E>(
             ""
         }
     };
-    let parse_options = parse_options.unwrap_or(PERMISSIVE_PARSE_OPTIONS);
+    let mut parse_options = parse_options.unwrap_or(PERMISSIVE_PARSE_OPTIONS);
+    if source
+        .as_ref()
+        .is_some_and(|file| has_ts_ext(file.as_str()))
+    {
+        parse_options.types = true;
+        parse_options.ambiguous_types = true;
+    }
     let enable_types_in_comments = parse_options.types && parse_options.enable_types_in_comments;
     let lex_env = wrapped_lex_env::WrappedLexEnv::new(source, content, enable_types_in_comments);
     let lookahead = lookahead::Lookahead::new(LexMode::Normal, lex_env);
