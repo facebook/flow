@@ -1202,8 +1202,11 @@ fn try_method_bivariant<'cx>(
                     ..
                 }))),
             ) if ps1.len() == ps2.len() => {
-                let (map1, generics) = flow_js_utils::mk_tparams(cx, ps1);
-                let map2 = ps2.iter().zip(generics).fold(
+                // Like TypeScript, compare the methods at the type arguments a caller of the
+                // upper method passes, which are within its bounds, rather than within the
+                // bounds of the lower method.
+                let (map2, generics) = flow_js_utils::mk_tparams(cx, ps2);
+                let map1 = ps1.iter().zip(generics).fold(
                     flow_data_structure_wrapper::ord_map::FlowOrdMap::new(),
                     |mut map, (param, generic)| {
                         map.insert(param.name.dupe(), generic);
