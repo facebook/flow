@@ -1,0 +1,78 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:11:1
+
+Cannot cast `5` to `Nums` because `5` [1] is incompatible with `Nums` [2]. [incompatible-type]
+
+   test.js:11:1
+   11| 5 as Nums; // error
+       ^ [1]
+
+References:
+   test.js:11:6
+   11| 5 as Nums; // error
+            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:1
+
+Cannot cast `3n` to `BigInts` because `3n` [1] is incompatible with `BigInts` [2]. [incompatible-type]
+
+   test.js:16:1
+   16| 3n as BigInts; // error
+       ^^ [1]
+
+References:
+   test.js:16:7
+   16| 3n as BigInts; // error
+             ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:1
+
+Cannot cast `2` to `Mixed` because `2` [1] is incompatible with `Mixed` [2]. [incompatible-type]
+
+   test.js:21:1
+   21| 2 as Mixed; // error
+       ^ [1]
+
+References:
+   test.js:21:6
+   21| 2 as Mixed; // error
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:22:1
+
+Cannot cast `false` to `Mixed` because `false` [1] is incompatible with `Mixed` [2]. [incompatible-type]
+
+   test.js:22:1
+   22| false as Mixed; // error
+       ^^^^^ [1]
+
+References:
+   test.js:22:10
+   22| false as Mixed; // error
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:27:1
+
+Cannot cast `keyOf(...)` to `"A" | "B"` because `"A" | "B" | "C"` [1] is incompatible with `"A" | "B"` [2].
+[incompatible-type]
+
+Type `"A" | "B" | "C"` [1] includes members `C` that are not included in type `"A" | "B"` [2].
+
+   test.js:27:1
+   27| keyOf(values.A, values) as 'A' | 'B'; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:25:24
+   25| declare function keyOf<K, V>(value: V, values: Readonly<{[key: K]: V, ...}>): K;
+                              ^ [1]
+   test.js:27:28
+   27| keyOf(values.A, values) as 'A' | 'B'; // error
+                                  ^^^^^^^^^ [2]
+
+
+
+Found 5 errors

@@ -4331,6 +4331,19 @@ pub fn rec_sub_t<'cx>(
             flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             Ok(())
         }
+        // Number, boolean and bigint literals in an enum union are found by membership in the
+        // set, like string literals above, instead of by comparing against every member below.
+        // Unlike strings, a miss falls through rather than erroring: the set compares bigints
+        // by source text as well as value, so `0x1n` misses `1n` but is still a subtype of it.
+        (
+            DefT(_, deref!(SingletonNumT { .. } | SingletonBoolT { .. } | SingletonBigIntT { .. })),
+            UnionT(_, rep),
+        ) if let Some(member) = union_rep::canon(l)
+            && rep.check_enum().is_some_and(|enums| enums.contains(&member)) =>
+        {
+            flow_js_utils::update_lit_type_from_annot(cx, env, l);
+            Ok(())
+        }
         (_, UnionT(_, rep))
             if {
                 let ts: Vec<Type> = type_mapper::union_flatten(cx, rep.members_iter().duped());

@@ -8576,7 +8576,7 @@ pub mod union_rep {
     }
 
     // canonicalize a type w.r.t. enum membership
-    fn canon(t: &Type) -> Option<UnionEnum> {
+    pub fn canon(t: &Type) -> Option<UnionEnum> {
         match t.0.as_ref() {
             TypeInner::DefT(_, def_t) => match &**def_t {
                 DefTInner::SingletonStrT { value, .. } => Some(UnionEnum::Str(value.dupe())),
