@@ -1,29 +1,33 @@
-Error ------------------------------------------------------------------------------------------ bounded_consumer.js:6:4
+Error -------------------------------------------------------------------------------------------------- bounded.js:4:20
 
-Cannot call `id` because in type argument `T`: `"x"` [1] is incompatible with `number` [2]. [incompatible-type]
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
 
-   bounded_consumer.js:6:4
-   6| id('x'); // ERROR
-         ^^^ [1]
-
-References:
-   bounded.js:3:25
-   3| class Bounded<T extends number> {
-                              ^^^^^^ [2]
+   4|   static id(value: T): T { return value; } // ERROR - static members cannot reference `T`
+                         ^
 
 
-Error ----------------------------------------------------------------------------------------- bounded_consumer.js:7:12
+Error -------------------------------------------------------------------------------------------------- bounded.js:4:24
 
-Cannot call `Bounded.id` because in type argument `T`: `"x"` [1] is incompatible with `number` [2]. [incompatible-type]
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
 
-   bounded_consumer.js:7:12
-   7| Bounded.id('x'); // ERROR
-                 ^^^ [1]
+   4|   static id(value: T): T { return value; } // ERROR - static members cannot reference `T`
+                             ^
 
-References:
-   bounded.js:3:25
-   3| class Bounded<T extends number> {
-                              ^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------------------------------ box.js:4:20
+
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
+
+   4|   static id(value: T): T { return value; } // ERROR - static members cannot reference `T`
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------------------ box.js:4:24
+
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
+
+   4|   static id(value: T): T { return value; } // ERROR - static members cannot reference `T`
+                             ^
 
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:10:1
@@ -61,4 +65,4 @@ References:
 
 
 
-Found 4 errors
+Found 6 errors

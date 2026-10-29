@@ -1112,6 +1112,12 @@ struct NameResolverState {
     in_param_default: bool,
     invalid_type_param_default_locs: FlowOrdSet<ALoc>,
     cyclic_type_param_locs: FlowOrdSet<ALoc>,
+    /// The def locs of the type parameters of the innermost class.
+    class_type_params: FlowOrdSet<ALoc>,
+    /// The def locs of the class type parameters that the static member being visited cannot
+    /// reference: those of its class and of the classes whose static members it is nested in.
+    static_hidden_type_params: FlowOrdSet<ALoc>,
+    invalid_static_type_param_locs: FlowOrdSet<ALoc>,
     /// True while scouting a loop body for written variables. Assertion
     /// refinements are skipped during scouting: they are persistent, so
     /// they would survive into the scout's post-env and masquerade as
@@ -1165,6 +1171,9 @@ impl NameResolverState {
             in_param_default: false,
             invalid_type_param_default_locs: FlowOrdSet::new(),
             cyclic_type_param_locs: FlowOrdSet::new(),
+            class_type_params: FlowOrdSet::new(),
+            static_hidden_type_params: FlowOrdSet::new(),
+            invalid_static_type_param_locs: FlowOrdSet::new(),
             in_loop_scout: false,
             skip_read_recording: false,
         }
@@ -3638,6 +3647,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 .invalid_type_param_default_locs
                 .insert(loc.dupe());
         }
+        self.check_static_type_param_read(&loc, name, &env_val);
         if self.env_state.skip_read_recording {
             return;
         }
@@ -3648,6 +3658,25 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             name: Some(name.dupe()),
         };
         self.env_state.values.insert(loc, entry);
+    }
+
+    fn check_static_type_param_read(&mut self, loc: &ALoc, name: &FlowSmolStr, env_val: &EnvVal) {
+        if env_val.kind == BindingsKind::TypeParam
+            && env_val
+                .def_loc
+                .as_ref()
+                .is_some_and(|def_loc| self.env_state.static_hidden_type_params.contains(def_loc))
+            && self
+                .env_state
+                .invalid_static_type_param_locs
+                .insert(loc.dupe())
+                .is_none()
+        {
+            Fl::add_output(
+                self.cx,
+                ErrorMessage::EClassTypeParamInStatic(Box::new((loc.dupe(), name.dupe()))),
+            );
+        }
     }
 
     /// Type-position read: prefer the type namespace's binding, falling back
@@ -3677,6 +3706,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 .invalid_type_param_default_locs
                 .insert(loc.dupe());
         }
+        self.check_static_type_param_read(&loc, name, &env_val);
         if self.env_state.skip_read_recording {
             return;
         }
@@ -5844,9 +5874,39 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         loc: &ALoc,
         cls: &flow_parser::ast::class::Class<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
-        scope_builder::class_(self, true, loc, cls, |v, class_loc, id| {
-            v.class_identifier_opt(class_loc, id)
+        self.with_class_type_params(cls.tparams.as_ref(), |this| {
+            scope_builder::class_(this, true, loc, cls, |v, class_loc, id| {
+                v.class_identifier_opt(class_loc, id)
+            })
         })
+    }
+
+    fn with_class_type_params<T>(
+        &mut self,
+        tparams: Option<&flow_parser::ast::types::TypeParams<ALoc, ALoc>>,
+        f: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        let class_type_params = tparams
+            .iter()
+            .flat_map(|tparams| tparams.params.iter())
+            .map(|tparam| tparam.name.loc.dupe())
+            .collect();
+        let enclosing = std::mem::replace(&mut self.env_state.class_type_params, class_type_params);
+        let result = f(self);
+        self.env_state.class_type_params = enclosing;
+        result
+    }
+
+    /// Visit a static member of the innermost class, which cannot reference the type parameters
+    /// of that class.
+    fn in_static_member<T>(&mut self, f: impl FnOnce(&mut Self) -> T) -> T {
+        let enclosing = self.env_state.static_hidden_type_params.dupe();
+        self.env_state.static_hidden_type_params = enclosing
+            .dupe()
+            .union(self.env_state.class_type_params.dupe());
+        let result = f(self);
+        self.env_state.static_hidden_type_params = enclosing;
+        result
     }
 
     fn lambda(
@@ -8771,6 +8831,57 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         result
     }
 
+    // An object type property is static only as a member of a `declare class`.
+    fn object_property_type(
+        &mut self,
+        prop: &flow_parser::ast::types::object::NormalProperty<ALoc, ALoc>,
+    ) -> Result<(), AbruptCompletion> {
+        if prop.static_ {
+            self.in_static_member(|this| ast_visitor::object_property_type_default(this, prop))
+        } else {
+            ast_visitor::object_property_type_default(self, prop)
+        }
+    }
+
+    fn object_indexer_property_type(
+        &mut self,
+        indexer: &flow_parser::ast::types::object::Indexer<ALoc, ALoc>,
+    ) -> Result<(), AbruptCompletion> {
+        if indexer.static_ {
+            self.in_static_member(|this| {
+                ast_visitor::object_indexer_property_type_default(this, indexer)
+            })
+        } else {
+            ast_visitor::object_indexer_property_type_default(self, indexer)
+        }
+    }
+
+    fn object_internal_slot_property_type(
+        &mut self,
+        slot: &flow_parser::ast::types::object::InternalSlot<ALoc, ALoc>,
+    ) -> Result<(), AbruptCompletion> {
+        if slot.static_ {
+            self.in_static_member(|this| {
+                ast_visitor::object_internal_slot_property_type_default(this, slot)
+            })
+        } else {
+            ast_visitor::object_internal_slot_property_type_default(self, slot)
+        }
+    }
+
+    fn object_call_property_type(
+        &mut self,
+        call_prop: &flow_parser::ast::types::object::CallProperty<ALoc, ALoc>,
+    ) -> Result<(), AbruptCompletion> {
+        if call_prop.static_ {
+            self.in_static_member(|this| {
+                ast_visitor::object_call_property_type_default(this, call_prop)
+            })
+        } else {
+            ast_visitor::object_call_property_type_default(self, call_prop)
+        }
+    }
+
     fn type_identifier_reference(
         &mut self,
         id: &flow_parser::ast::Identifier<ALoc, ALoc>,
@@ -10444,8 +10555,10 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         _loc: &ALoc,
         decl: &flow_parser::ast::statement::DeclareClass<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
-        scope_builder::declare_class(self, true, decl, &|this, f| {
-            this.hoist_annotations(|this_inner| f(this_inner))
+        self.with_class_type_params(decl.tparams.as_ref(), |this| {
+            scope_builder::declare_class(this, true, decl, &|this, f| {
+                this.hoist_annotations(|this_inner| f(this_inner))
+            })
         })
     }
 
@@ -10591,16 +10704,18 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 Ok(())
             },
         )?;
-        self.with_scoped_bindings(
-            ThisSuperBindingEnv::ClassStaticEnv,
-            &this_super_bindings,
-            |this| {
-                for element in &static_body {
-                    this.class_element(element)?;
-                }
-                Ok(())
-            },
-        )?;
+        self.in_static_member(|this| {
+            this.with_scoped_bindings(
+                ThisSuperBindingEnv::ClassStaticEnv,
+                &this_super_bindings,
+                |this| {
+                    for element in &static_body {
+                        this.class_element(element)?;
+                    }
+                    Ok(())
+                },
+            )
+        })?;
         Ok(())
     }
 
@@ -12226,6 +12341,7 @@ pub struct NameResolverResult {
     pub declare_class_interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
     pub invalid_type_param_default_locs: FlowOrdSet<ALoc>,
     pub cyclic_type_param_locs: FlowOrdSet<ALoc>,
+    pub invalid_static_type_param_locs: FlowOrdSet<ALoc>,
     pub declare_namespace_read_paths:
         FlowOrdMap<ALoc, FlowVector<env_api::DeclareNamespaceReadPathElement<ALoc>>>,
     pub assertion_calls: BTreeMap<ALoc, AssertionInfo>,
@@ -12248,6 +12364,7 @@ impl NameResolverResult {
             declare_class_interface_merge_conflicts: self.declare_class_interface_merge_conflicts,
             invalid_type_param_default_locs: Rc::new(self.invalid_type_param_default_locs),
             cyclic_type_param_locs: Rc::new(self.cyclic_type_param_locs),
+            invalid_static_type_param_locs: Rc::new(self.invalid_static_type_param_locs),
             declare_namespace_read_paths: self.declare_namespace_read_paths,
             assertion_calls: self.assertion_calls,
         }
@@ -12363,6 +12480,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
         env_walk.declare_class_interface_merge_conflicts();
     let invalid_type_param_default_locs = env_walk.env_state.invalid_type_param_default_locs.dupe();
     let cyclic_type_param_locs = env_walk.env_state.cyclic_type_param_locs.dupe();
+    let invalid_static_type_param_locs = env_walk.env_state.invalid_static_type_param_locs.dupe();
     let declare_namespace_read_paths = env_walk
         .env_state
         .declare_namespace_read_recorder
@@ -12384,6 +12502,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
             declare_class_interface_merge_conflicts,
             invalid_type_param_default_locs,
             cyclic_type_param_locs,
+            invalid_static_type_param_locs,
             declare_namespace_read_paths,
             assertion_calls,
         },

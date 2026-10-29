@@ -186,6 +186,14 @@ Cannot assign function to `b.m` because property `m` is not writable. [cannot-wr
             ^
 
 
+Error --------------------------------------------------------------------------------------------------- test.js:151:13
+
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
+
+   151|   static y: T;
+                    ^
+
+
 Error ------------------------------------------------------------------------------------------------ with_hint.js:13:1
 
 Cannot call `method` as a standalone function because its `this` parameter requires `Foo` [1] as the receiver. Call it
@@ -202,4 +210,4 @@ References:
 
 
 
-Found 13 errors
+Found 14 errors

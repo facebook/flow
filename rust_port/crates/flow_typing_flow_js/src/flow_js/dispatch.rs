@@ -4703,6 +4703,45 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(cx, env, trace, (&t_, u))?;
         }
+        // Reading the statics of a polymorphic class instantiates the instance's tparams with
+        // their bounds too, rather than implicitly instantiating them from the operation: the
+        // statics cannot reference them, so only a `this` type in a static member observes the
+        // instantiation, and nothing in the statics constrains them. The prototype is the
+        // instance rather than a static, so reading it still goes through the rule below.
+        #[rustfmt::skip]
+        (
+            DefT(reason_tapp, deref!(PolyT(box PolyTData {
+                tparams_loc,
+                tparams: ids,
+                t_out: t @ deref!(DefT(_, deref!(ClassT(deref!(ThisInstanceT(..)))))),
+                ..
+            }))),
+            _,
+        ) if flow_js_utils::object_like_op(u)
+            && !matches!(
+                u.deref(),
+                GetPropT(box GetPropTData { propref: box PropRef::Named { name, .. }, .. })
+                    if name == &Name::new("prototype")
+            ) =>
+        {
+            let reason_op = upper_operation_reason_or(u, reason_tapp);
+            let use_op = use_op_of_use_t(u).unwrap_or_else(unknown_use);
+            let ids = Vec1::try_from_vec(ids.to_vec()).unwrap();
+            let targs = flow_js_utils::instantiate_poly_param_upper_bounds(cx, &ids);
+            let (t_, _) = FlowJs::instantiate_poly_with_targs_with_env(
+                cx,
+                env,
+                trace,
+                use_op,
+                &reason_op,
+                reason_tapp,
+                None,
+                None,
+                (tparams_loc.dupe(), ids, t.dupe()),
+                targs,
+            )?;
+            rec_flow(cx, env, trace, (&t_, u))?;
+        }
         // We use the ConcretizeCallee action to simplify types for hint decomposition.
         // After having instantiated polymorphic classes on static calls (case above),
         // we can just return the remaining polymorphic types, since there is not

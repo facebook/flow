@@ -668,6 +668,14 @@ References:
                       ^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------- with-targs-exported.js:10:13
+
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
+
+   10|   static x: T; // error: static members cannot reference T
+                   ^
+
+
 Error ------------------------------------------------------------------------------------------------ with-targs.js:9:1
 
 Cannot cast `new FooClass()` to `Foo<number>` because in type argument `T` [1]: `string` [2] is incompatible with
@@ -893,20 +901,12 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- with-targs.js:43:15
+Error ---------------------------------------------------------------------------------------------- with-targs.js:41:13
 
-Cannot instantiate `typeof EscapedGeneric.x` because `empty` [1] is not a polymorphic type. [incompatible-use]
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
 
-   43| emptyValue as typeof EscapedGeneric.x<number, boolean>; // error: empty not polymorphic
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- with-targs.js:44:15
-
-Cannot instantiate `typeof EscapedGenericExported.x` because `empty` [1] is not a polymorphic type. [incompatible-use]
-
-   44| emptyValue as typeof EscapedGenericExported.x<number, boolean>; // error: empty not polymorphic
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   41|   static x: T; // error: static members cannot reference T
+                   ^
 
 
 

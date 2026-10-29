@@ -224,6 +224,22 @@ References:
                                            ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:31:13
+
+Static members cannot reference class type parameter `X`. [cannot-resolve-name]
+
+   31|   static x: X;
+                   ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:32:17
+
+Static members cannot reference class type parameter `X`. [cannot-resolve-name]
+
+   32|   static bar(x: X) { }
+                       ^
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:40:7
 
 Cannot call `D.foo` because property `foo` is missing in `{main(): void, name: string, ...}` [1]. [prop-missing]
@@ -236,20 +252,6 @@ References:
    test.js:38:7
    38| class D extends C<string> {
              ^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:42:11
-
-Cannot call `D.bar` with `0` bound to `x` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
-
-   test.js:42:11
-   42|     D.bar(0);
-                 ^ [1]
-
-References:
-   test.js:38:19
-   38| class D extends C<string> {
-                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:1
@@ -383,4 +385,4 @@ References:
 
 
 
-Found 24 errors
+Found 25 errors

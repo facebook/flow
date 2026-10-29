@@ -137,7 +137,7 @@ class-statics.js:20:19 = (property) C.y: this
 class-statics.js:20:19,20:19
 class-statics-poly.js:4:10 = (method) A.m(): void
 class-statics-poly.js:4:10,4:10
-class-statics-poly.js:8:10 = (method) B.m(this: Class<this>): Class<B<T>>
+class-statics-poly.js:8:10 = (method) B.m(this: Class<this>): Class<B<any>>
 
 'B' defined at class-statics-poly.js:7:6
 
@@ -149,12 +149,12 @@ class-statics-poly.js:11:8 = Class<A<T>>
 'A' defined at class-statics-poly.js:3:6
 
 class-statics-poly.js:11:5,11:9
-class-statics-poly.js:16:5 = var bCtor: Class<B<unknown>>
+class-statics-poly.js:16:5 = var bCtor: Class<B<any>>
 
 'B' defined at class-statics-poly.js:7:6
 
 class-statics-poly.js:16:5,16:9
-class-statics-poly.js:17:5 = var b: B<unknown>
+class-statics-poly.js:17:5 = var b: B<any>
 
 'B' defined at class-statics-poly.js:7:6
 

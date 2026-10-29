@@ -24,6 +24,6 @@ class ClassGenericInitialized<T, U> {
   invalid: T = 42; // Error: number ~> Generic<T>
   valid: T = 42 as any as T;
 
-  static invalid: T = 42; // Error: number ~> Generic<T>
-  static valid: T = 42 as any as T;
+  static invalid: T = 42; // Error: static members cannot reference T
+  static valid: T = 42 as any as T; // Error: static members cannot reference T
 }

@@ -2583,6 +2583,7 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidTrivialRecursiveDefinition,
     MessageInvalidTrivialRecursiveTypeParameter(FlowSmolStr),
+    MessageClassTypeParamInStatic(FlowSmolStr),
 
     MessageInvalidTupleRequiredAfterOptional {
         tuple_loc: L,

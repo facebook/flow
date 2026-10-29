@@ -8316,6 +8316,11 @@ where
                 code(name),
                 text(". "),
             ]),
+            MessageClassTypeParamInStatic(name) => friendly::Message(vec![
+                text("Static members cannot reference class type parameter "),
+                code(name),
+                text("."),
+            ]),
             MessageInvalidTupleRequiredAfterOptional {
                 tuple_loc,
                 required,

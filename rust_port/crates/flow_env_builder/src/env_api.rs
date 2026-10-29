@@ -596,6 +596,8 @@ where
     pub declare_class_interface_merge_conflicts: FlowOrdMap<L, Vec<L>>,
     pub invalid_type_param_default_locs: Rc<FlowOrdSet<L>>,
     pub cyclic_type_param_locs: Rc<FlowOrdSet<L>>,
+    /// References to a class type parameter from a static member of that class.
+    pub invalid_static_type_param_locs: Rc<FlowOrdSet<L>>,
     /// For each identifier read inside a `declare namespace`, the namespace
     /// path that was active while the resolver visited that read.
     ///
@@ -661,6 +663,7 @@ where
             declare_class_interface_merge_conflicts: FlowOrdMap::new(),
             invalid_type_param_default_locs: Rc::new(FlowOrdSet::new()),
             cyclic_type_param_locs: Rc::new(FlowOrdSet::new()),
+            invalid_static_type_param_locs: Rc::new(FlowOrdSet::new()),
             declare_namespace_read_paths: FlowOrdMap::new(),
             assertion_calls: BTreeMap::new(),
         }

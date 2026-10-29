@@ -1,146 +1,254 @@
-Error --------------------------------------------------------------------------------------------------- method.js:42:1
+Error -------------------------------------------------------------------------------------------------- method.js:31:22
+
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
+
+   31|   static from(field: T): this; // ERROR - static members cannot reference `T`
+                            ^
+
+
+Error -------------------------------------------------------------------------------------------------- method.js:42:35
+
+Cannot assign `result.info.serialize(...)` to `serialized` because: [incompatible-type]
+ - Either `unknown` [1] is incompatible with `number` [2].
+ - Or `unknown` [1] is incompatible with `null` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   method.js:42:35
+   42| const serialized: number | null = result.info.serialize('DOG'); // ERROR
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:35:27
+   35| declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
+                                 ^ [1]
+   method.js:42:19
+   42| const serialized: number | null = result.info.serialize('DOG'); // ERROR
+                         ^^^^^^ [2]
+   method.js:42:28
+   42| const serialized: number | null = result.info.serialize('DOG'); // ERROR
+                                  ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:43:1
 
 Cannot cast `result.info.serialize(...)` to `string` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   method.js:42:1
-   42| result.info.serialize('DOG') as string; // ERROR
+   method.js:43:1
+   43| result.info.serialize('DOG') as string; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    method.js:15:35
    15|   serialize(value: V | null): H | null;
                                          ^^^^ [1]
-   method.js:42:33
-   42| result.info.serialize('DOG') as string; // ERROR
+   method.js:43:33
+   43| result.info.serialize('DOG') as string; // ERROR
                                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- method.js:42:1
+Error --------------------------------------------------------------------------------------------------- method.js:43:1
 
-Cannot cast `result.info.serialize(...)` to `string` because `number` [1] is incompatible with `string` [2].
+Cannot cast `result.info.serialize(...)` to `string` because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   method.js:42:1
-   42| result.info.serialize('DOG') as string; // ERROR
+   method.js:43:1
+   43| result.info.serialize('DOG') as string; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   method.js:37:50
-   37| const info = new NullableInfo(new EnumInfo({DOG: 1}));
-                                                        ^ [1]
-   method.js:42:33
-   42| result.info.serialize('DOG') as string; // ERROR
+   method.js:35:27
+   35| declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
+                                 ^ [1]
+   method.js:43:33
+   43| result.info.serialize('DOG') as string; // ERROR
                                        ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- method.js:46:1
+Error -------------------------------------------------------------------------------------------------- method.js:46:50
+
+Cannot assign `optionalResult?.info.serialize(...)` to `optionalSerialized` because: [incompatible-type]
+ - Either `unknown` [1] is incompatible with `number` [2].
+ - Or `unknown` [1] is incompatible with `null` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   method.js:46:50
+   46| const optionalSerialized: number | null | void = optionalResult?.info.serialize('DOG'); // ERROR
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:35:27
+   35| declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
+                                 ^ [1]
+   method.js:46:27
+   46| const optionalSerialized: number | null | void = optionalResult?.info.serialize('DOG'); // ERROR
+                                 ^^^^^^ [2]
+   method.js:46:36
+   46| const optionalSerialized: number | null | void = optionalResult?.info.serialize('DOG'); // ERROR
+                                          ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:47:1
 
 Cannot cast `optionalResult?.info.serialize(...)` to `string` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   method.js:46:1
-   46| optionalResult?.info.serialize('DOG') as string; // ERROR
+   method.js:47:1
+   47| optionalResult?.info.serialize('DOG') as string; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    method.js:15:35
    15|   serialize(value: V | null): H | null;
                                          ^^^^ [1]
-   method.js:46:42
-   46| optionalResult?.info.serialize('DOG') as string; // ERROR
+   method.js:47:42
+   47| optionalResult?.info.serialize('DOG') as string; // ERROR
                                                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- method.js:46:1
+Error --------------------------------------------------------------------------------------------------- method.js:47:1
 
-Cannot cast `optionalResult?.info.serialize(...)` to `string` because `number` [1] is incompatible with `string` [2].
+Cannot cast `optionalResult?.info.serialize(...)` to `string` because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   method.js:46:1
-   46| optionalResult?.info.serialize('DOG') as string; // ERROR
+   method.js:47:1
+   47| optionalResult?.info.serialize('DOG') as string; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   method.js:37:50
-   37| const info = new NullableInfo(new EnumInfo({DOG: 1}));
-                                                        ^ [1]
-   method.js:46:42
-   46| optionalResult?.info.serialize('DOG') as string; // ERROR
+   method.js:35:27
+   35| declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
+                                 ^ [1]
+   method.js:47:42
+   47| optionalResult?.info.serialize('DOG') as string; // ERROR
                                                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- method.js:51:1
+Error -------------------------------------------------------------------------------------------------- method.js:51:40
+
+Cannot assign `plainResult.info.serialize(...)` to `plainSerialized` because: [incompatible-type]
+ - Either `unknown` [1] is incompatible with `number` [2].
+ - Or `unknown` [1] is incompatible with `null` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   method.js:51:40
+   51| const plainSerialized: number | null = plainResult.info.serialize('DOG'); // ERROR
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:35:27
+   35| declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
+                                 ^ [1]
+   method.js:51:24
+   51| const plainSerialized: number | null = plainResult.info.serialize('DOG'); // ERROR
+                              ^^^^^^ [2]
+   method.js:51:33
+   51| const plainSerialized: number | null = plainResult.info.serialize('DOG'); // ERROR
+                                       ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:52:1
 
 Cannot cast `plainResult.info.serialize(...)` to `string` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   method.js:51:1
-   51| plainResult.info.serialize('DOG') as string; // ERROR
+   method.js:52:1
+   52| plainResult.info.serialize('DOG') as string; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    method.js:15:35
    15|   serialize(value: V | null): H | null;
                                          ^^^^ [1]
-   method.js:51:38
-   51| plainResult.info.serialize('DOG') as string; // ERROR
+   method.js:52:38
+   52| plainResult.info.serialize('DOG') as string; // ERROR
                                             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- method.js:51:1
+Error --------------------------------------------------------------------------------------------------- method.js:52:1
 
-Cannot cast `plainResult.info.serialize(...)` to `string` because `number` [1] is incompatible with `string` [2].
+Cannot cast `plainResult.info.serialize(...)` to `string` because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type]
 
-   method.js:51:1
-   51| plainResult.info.serialize('DOG') as string; // ERROR
+   method.js:52:1
+   52| plainResult.info.serialize('DOG') as string; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   method.js:48:53
-   48| const plainField = new FieldInfo(new EnumInfo({DOG: 1}));
-                                                           ^ [1]
-   method.js:51:38
-   51| plainResult.info.serialize('DOG') as string; // ERROR
+   method.js:35:27
+   35| declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
+                                 ^ [1]
+   method.js:52:38
+   52| plainResult.info.serialize('DOG') as string; // ERROR
                                             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- method.js:56:1
+Error -------------------------------------------------------------------------------------------------- method.js:56:41
+
+Cannot assign `stringResult.info.serialize(...)` to `stringSerialized` because: [incompatible-type]
+ - Either `unknown` [1] is incompatible with `string` [2].
+ - Or `unknown` [1] is incompatible with `null` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   method.js:56:41
+   56| const stringSerialized: string | null = stringResult.info.serialize('DOG'); // ERROR
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method.js:35:27
+   35| declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
+                                 ^ [1]
+   method.js:56:25
+   56| const stringSerialized: string | null = stringResult.info.serialize('DOG'); // ERROR
+                               ^^^^^^ [2]
+   method.js:56:34
+   56| const stringSerialized: string | null = stringResult.info.serialize('DOG'); // ERROR
+                                        ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- method.js:57:1
 
 Cannot cast `stringResult.info.serialize(...)` to `number` because `null` [1] is incompatible with `number` [2].
 [incompatible-type]
 
-   method.js:56:1
-   56| stringResult.info.serialize('DOG') as number; // ERROR
+   method.js:57:1
+   57| stringResult.info.serialize('DOG') as number; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    method.js:15:35
    15|   serialize(value: V | null): H | null;
                                          ^^^^ [1]
-   method.js:56:39
-   56| stringResult.info.serialize('DOG') as number; // ERROR
+   method.js:57:39
+   57| stringResult.info.serialize('DOG') as number; // ERROR
                                              ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- method.js:56:1
+Error --------------------------------------------------------------------------------------------------- method.js:57:1
 
-Cannot cast `stringResult.info.serialize(...)` to `number` because `"dog"` [1] is incompatible with `number` [2].
+Cannot cast `stringResult.info.serialize(...)` to `number` because `unknown` [1] is incompatible with `number` [2].
 [incompatible-type]
 
-   method.js:56:1
-   56| stringResult.info.serialize('DOG') as number; // ERROR
+   method.js:57:1
+   57| stringResult.info.serialize('DOG') as number; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   method.js:53:71
-   53| const stringField = new FieldInfo(new NullableInfo(new EnumInfo({DOG: 'dog'})));
-                                                                             ^^^^^ [1]
-   method.js:56:39
-   56| stringResult.info.serialize('DOG') as number; // ERROR
+   method.js:35:27
+   35| declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
+                                 ^ [1]
+   method.js:57:39
+   57| stringResult.info.serialize('DOG') as number; // ERROR
                                              ^^^^^^ [2]
 
 
 
-Found 8 errors
+Found 13 errors

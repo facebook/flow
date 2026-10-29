@@ -8712,6 +8712,7 @@ fn declare_class_props<'arena, 'ast>(
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
     xs: &mut tparam_stack::TParamStack,
+    class_tparam_names: &[FlowSmolStr],
     properties: &[ast::types::object::Property<Loc, Loc>],
     acc: &mut declare_class_acc::DeclareClassAcc<'arena, 'ast>,
 ) {
@@ -8980,6 +8981,23 @@ fn declare_class_props<'arena, 'ast>(
     use ast::types::object as O;
 
     for objprop in properties {
+        // Static members cannot reference the type parameters of the class.
+        let static_ = match objprop {
+            O::Property::NormalProperty(p) => p.static_,
+            O::Property::Indexer(p) => p.static_,
+            O::Property::CallProperty(p) => p.static_,
+            O::Property::InternalSlot(p) => p.static_,
+            O::Property::SpreadProperty(_)
+            | O::Property::MappedType(_)
+            | O::Property::PrivateField(_) => false,
+        };
+        for name in class_tparam_names {
+            if static_ {
+                xs.insert_uninitialized(name.dupe());
+            } else {
+                xs.initialize(name);
+            }
+        }
         match objprop {
             O::Property::NormalProperty(p) => {
                 declare_class_prop(opts, scope, scopes, tbls, xs, acc, p);
@@ -11686,8 +11704,32 @@ fn class_def<'arena: 'ast, 'ast>(
         }
     };
     let implements = class_implements(opts, scope, scopes, tbls, &mut xs, implements);
+    let class_tparam_names: Vec<FlowSmolStr> = tps
+        .iter()
+        .flat_map(|tps| tps.params.iter())
+        .map(|tp| tp.name.name.dupe())
+        .collect();
     let mut acc = ClassAcc::empty();
     for element in body.body.iter() {
+        // Static members cannot reference the type parameters of the class.
+        let static_ = match element {
+            class::BodyElement::Method(method) => method.static_,
+            class::BodyElement::Property(prop) => prop.static_,
+            class::BodyElement::PrivateField(field) => field.static_,
+            class::BodyElement::DeclareMethod(method) => method.static_,
+            class::BodyElement::StaticBlock(_) => true,
+            class::BodyElement::AbstractMethod(_) | class::BodyElement::AbstractProperty(_) => {
+                false
+            }
+            class::BodyElement::IndexSignature(indexer) => indexer.static_,
+        };
+        for name in &class_tparam_names {
+            if static_ {
+                xs.insert_uninitialized(name.dupe());
+            } else {
+                xs.initialize(name);
+            }
+        }
         match element {
             class::BodyElement::Method(class::Method {
                 key,
@@ -12719,6 +12761,11 @@ fn declare_class_def<'arena, 'ast>(
         parsed_mixins.push(mixin_val);
     }
     let parsed_implements = class_implements(opts, scope, scopes, tbls, &mut xs, implements);
+    let class_tparam_names: Vec<FlowSmolStr> = tps
+        .iter()
+        .flat_map(|tps| tps.params.iter())
+        .map(|tp| tp.name.name.dupe())
+        .collect();
 
     let mut acc = DeclareClassAcc::empty();
     declare_class_props(
@@ -12727,6 +12774,7 @@ fn declare_class_def<'arena, 'ast>(
         scopes,
         tbls,
         &mut xs,
+        &class_tparam_names,
         &body.properties,
         &mut acc,
     );

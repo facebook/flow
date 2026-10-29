@@ -28,29 +28,30 @@ declare class FieldInfo<T> {
 }
 
 declare class Creator<T> {
-  static from(field: T): this;
+  static from(field: T): this; // ERROR - static members cannot reference `T`
   create(): T;
 }
 
 declare class EnumCreator<T> extends Creator<Field<EnumInfo<T> | Nullable<EnumInfo<T>>>> {}
 
+// `from` does not constrain `T`, so `EnumCreator`'s `T` is `unknown`.
 const info = new NullableInfo(new EnumInfo({DOG: 1}));
 const field = new FieldInfo(info);
 const result = EnumCreator.from(field).create();
 
-const serialized: number | null = result.info.serialize('DOG');
+const serialized: number | null = result.info.serialize('DOG'); // ERROR
 result.info.serialize('DOG') as string; // ERROR
 
 const optionalResult = EnumCreator.from?.(field)?.create();
-const optionalSerialized: number | null | void = optionalResult?.info.serialize('DOG');
+const optionalSerialized: number | null | void = optionalResult?.info.serialize('DOG'); // ERROR
 optionalResult?.info.serialize('DOG') as string; // ERROR
 
 const plainField = new FieldInfo(new EnumInfo({DOG: 1}));
 const plainResult = EnumCreator.from(plainField).create();
-const plainSerialized: number | null = plainResult.info.serialize('DOG');
+const plainSerialized: number | null = plainResult.info.serialize('DOG'); // ERROR
 plainResult.info.serialize('DOG') as string; // ERROR
 
 const stringField = new FieldInfo(new NullableInfo(new EnumInfo({DOG: 'dog'})));
 const stringResult = EnumCreator.from(stringField).create();
-const stringSerialized: string | null = stringResult.info.serialize('DOG');
+const stringSerialized: string | null = stringResult.info.serialize('DOG'); // ERROR
 stringResult.info.serialize('DOG') as number; // ERROR

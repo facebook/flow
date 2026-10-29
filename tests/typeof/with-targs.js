@@ -38,7 +38,7 @@ barGenericExported(() => 1) as number; // ok
 barGenericExported(() => 1) as string; // error: number ~> string
 
 class EscapedGeneric<T> {
-  static x: T;
+  static x: T; // error: static members cannot reference T
 }
-emptyValue as typeof EscapedGeneric.x<number, boolean>; // error: empty not polymorphic
-emptyValue as typeof EscapedGenericExported.x<number, boolean>; // error: empty not polymorphic
+emptyValue as typeof EscapedGeneric.x<number, boolean>; // ok: x is any
+emptyValue as typeof EscapedGenericExported.x<number, boolean>; // ok: x is any

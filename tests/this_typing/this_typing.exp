@@ -410,6 +410,14 @@ References:
                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- class_poly_method.js:12:36
+
+Static members cannot reference class type parameter `N`. [cannot-resolve-name]
+
+   12|   static convert<M>(this : Class<A<N>>) {}
+                                          ^
+
+
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:19:1
 
 Cannot cast `n.method()` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -2834,4 +2842,4 @@ References:
 
 
 
-Found 160 errors
+Found 161 errors

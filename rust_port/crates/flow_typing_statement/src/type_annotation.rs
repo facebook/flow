@@ -2039,6 +2039,18 @@ fn convert_inner<'a>(
                             }
                         }
                     }
+                    // A class type parameter in a static member of the class, which the name
+                    // resolver reports.
+                    _ if cx
+                        .environment()
+                        .var_info
+                        .invalid_static_type_param_locs
+                        .contains(&name_loc) =>
+                    {
+                        let Ok(v) =
+                            polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
+                        v
+                    }
                     // in-scope type vars
                     _ if env.tparams_map.contains_key(&SubstName::name(name.dupe()))
                         && !cx

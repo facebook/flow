@@ -3887,6 +3887,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETrivialRecursiveTypeParameter(Box<(L, FlowSmolStr)>),
 
+    EClassTypeParamInStatic(Box<(L, FlowSmolStr)>),
+
     EDefinitionCycle(Vec1<(DefinitionReferenceData<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
 
     ERecursiveDefinition(Box<ERecursiveDefinitionData<L>>),
@@ -6343,6 +6345,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ETrivialRecursiveDefinition(loc) => ETrivialRecursiveDefinition(f(loc)),
             ETrivialRecursiveTypeParameter(box (loc, name)) => {
                 ETrivialRecursiveTypeParameter(Box::new((f(loc), name)))
+            }
+            EClassTypeParamInStatic(box (loc, name)) => {
+                EClassTypeParamInStatic(Box::new((f(loc), name)))
             }
 
             EDefinitionCycle(elts) => EDefinitionCycle(
@@ -9105,6 +9110,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::ETrivialRecursiveTypeParameter(data) => Some(data.0.dupe()),
 
+            Self::EClassTypeParamInStatic(data) => Some(data.0.dupe()),
+
             Self::ECallTypeArity(box ECallTypeArityData { call_loc, .. }) => Some(call_loc.dupe()),
             Self::EMissingTypeArgs(box EMissingTypeArgsData { loc, .. }) => Some(loc.dupe()),
             Self::EInvalidRendersTypeArgument(box EInvalidRendersTypeArgumentData {
@@ -10791,6 +10798,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
             ErrorMessage::ETrivialRecursiveTypeParameter(box (_, name)) => {
                 Normal(Message::MessageInvalidTrivialRecursiveTypeParameter(name))
+            }
+            ErrorMessage::EClassTypeParamInStatic(box (_, name)) => {
+                Normal(Message::MessageClassTypeParamInStatic(name))
             }
             ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData {
                 definition,
@@ -13348,6 +13358,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EAnnotationInference { .. } => Some(InvalidExportedAnnotation),
             ErrorMessage::ETrivialRecursiveDefinition(_) => Some(RecursiveDefinition),
             ErrorMessage::ETrivialRecursiveTypeParameter(_) => Some(RecursiveDefinition),
+            ErrorMessage::EClassTypeParamInStatic(_) => Some(CannotResolveName),
             ErrorMessage::EDefinitionCycle { .. } => Some(DefinitionCycle),
             ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData { .. }) => {
                 Some(RecursiveDefinition)

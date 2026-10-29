@@ -4198,6 +4198,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             string_of_aloc(None, &data.0),
             data.1
         ),
+        ErrorMessage::EClassTypeParamInStatic(data) => format!(
+            "EClassTypeParamInStatic ({}) ({})",
+            string_of_aloc(None, &data.0),
+            data.1
+        ),
         ErrorMessage::EDefinitionCycle(_) => "EDefinitionCycle".to_string(),
         ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData { .. }) => {
             "ERecursiveDefinition".to_string()

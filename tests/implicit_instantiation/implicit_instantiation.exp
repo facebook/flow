@@ -12,6 +12,14 @@ References:
                 ^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------- eval_cache_regression.js:18:39
+
+Static members cannot reference class type parameter `T`. [cannot-resolve-name]
+
+   18|   static defaultProps: Partial<PropsP<T>> = {};
+                                             ^
+
+
 Error --------------------------------------------------------------------------------- new_map_perf_regression.js:19:31
 
 Cannot use `V` [1] in an input/output position because `V` [1] is expected to occur only in output positions.
@@ -810,4 +818,4 @@ References:
 
 
 
-Found 47 errors
+Found 48 errors
