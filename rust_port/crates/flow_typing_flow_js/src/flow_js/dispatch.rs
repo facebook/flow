@@ -5097,6 +5097,17 @@ fn __flow_impl<'cx>(
                 action,
             )?;
         }
+        // As above, the statics of a polymorphic function do not depend on its type
+        // parameters, so the function is not instantiated to read them.
+        #[rustfmt::skip]
+        (
+            DefT(_, deref!(PolyT(box PolyTData {
+                t_out: t_out @ deref!(DefT(_, deref!(FunT(_, _)))), ..
+            }))),
+            _,
+        ) if flow_js_utils::object_like_op(u) => {
+            rec_flow(cx, env, trace, (t_out, u))?;
+        }
         #[rustfmt::skip]
         (
             DefT(reason_tapp, deref!(PolyT(box PolyTData {
