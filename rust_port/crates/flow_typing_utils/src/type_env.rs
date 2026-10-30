@@ -508,7 +508,7 @@ pub fn checked_find_loc_env_write<'cx>(cx: &mut Context<'cx>, kind: DefLocType, 
 }
 
 fn find_var_opt<'a>(var_info: &'a EnvInfo<ALoc>, loc: &ALoc) -> Result<&'a EnvRead<ALoc>, ALoc> {
-    match var_info.env_values.get(loc) {
+    match var_info.env_values.get_ordinary(loc) {
         Some(x) => Ok(x),
         None => Err(loc.dupe()),
     }

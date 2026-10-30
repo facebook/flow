@@ -919,7 +919,7 @@ fn find_unbound_names_from_scope(
     let env = cx.environment();
     let env_values = &env.var_info.env_values;
     let mut acc = vec![];
-    for (aloc, read) in env_values.iter() {
+    for (aloc, read) in env_values.iter_ordinary() {
         match read.write_locs.as_slice() {
             [WriteLoc::Global(name)] => {
                 let loc = loc_of_aloc(aloc);

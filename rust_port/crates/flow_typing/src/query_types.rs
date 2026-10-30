@@ -768,7 +768,7 @@ pub fn dump_types_for_tool(
         let expression_type = type_to_json(&mut json_cx, &t);
         let mut fields: Vec<(String, Json)> =
             vec![("expression_type".to_string(), expression_type)];
-        match env_values.get(&loc) {
+        match env_values.get_ordinary(&loc) {
             Some(read) if let Some(dl) = &read.def_loc => {
                 let dl = dl.dupe();
                 let provider_t = type_env::provider_type_for_def_loc(false, &mut json_cx, dl);

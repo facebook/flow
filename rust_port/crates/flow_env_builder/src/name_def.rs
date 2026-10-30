@@ -1572,7 +1572,8 @@ fn collect_declared_namespace_members(
                     ) = &inner.specifiers
                 {
                     for specifier in specifiers {
-                        let Some(read) = env_info.env_values.get(&specifier.local.loc) else {
+                        let Some(read) = env_info.env_values.get_ordinary(&specifier.local.loc)
+                        else {
                             continue;
                         };
                         let Some(def_loc) = &read.def_loc else {
@@ -3541,13 +3542,13 @@ impl<'a> DefFinder<'a> {
                     ast::expression::ExpressionInner::Member {
                         loc: callee_loc,
                         inner: member,
-                    } if !self.env_info.env_values.contains_key(callee_loc) => {
+                    } if self.env_info.env_values.get_ordinary(callee_loc).is_none() => {
                         build_member_hints(member, &self.class_stack)
                     }
                     ast::expression::ExpressionInner::OptionalMember {
                         loc: callee_loc,
                         inner: opt_member,
-                    } if !self.env_info.env_values.contains_key(callee_loc) => {
+                    } if self.env_info.env_values.get_ordinary(callee_loc).is_none() => {
                         build_member_hints(&opt_member.member, &self.class_stack)
                     }
                     ast::expression::ExpressionInner::Super { .. } => {

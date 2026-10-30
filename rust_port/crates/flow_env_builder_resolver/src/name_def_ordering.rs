@@ -435,7 +435,7 @@ where
         allow_missing: bool,
         loc: &ALoc,
     ) -> Vec<EnvKey<ALoc>> {
-        let write_locs = match self.env_values.get(loc) {
+        let write_locs = match self.env_values.get_ordinary(loc) {
             Some(read) => read.write_locs.as_slice(),
             None => {
                 if !allow_missing {

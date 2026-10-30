@@ -457,9 +457,34 @@ pub struct Read<L: Dupe + Eq + Ord + Hash> {
     pub id: Option<i32>,
 }
 
+/// What kind of read a read table entry records. The read table is keyed by kind and location,
+/// as writes are (`EnvKey`), so that reads of different kinds can share a location.
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ReadKind {
+    /// A read at a location in the source: of an identifier, of a property path that Flow
+    /// narrows, or of the value that a `switch` or `match` tests.
+    Ordinary,
+}
+
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ReadKey<L: Dupe + Eq + Ord + Hash> {
+    pub kind: ReadKind,
+    pub loc: L,
+}
+
+impl<L: Dupe + Eq + Ord + Hash> ReadKey<L> {
+    pub fn new(kind: ReadKind, loc: L) -> Self {
+        Self { kind, loc }
+    }
+
+    pub fn ordinary(loc: L) -> Self {
+        Self::new(ReadKind::Ordinary, loc)
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Values<L: Dupe + Eq + Ord + Hash> {
-    inner: FlowOrdMap<L, Read<L>>,
+    inner: FlowOrdMap<ReadKey<L>, Read<L>>,
 }
 
 impl<L: Dupe + Eq + Ord + Hash> Dupe for Values<L> {}
@@ -470,10 +495,22 @@ impl<L: Dupe + Eq + Ord + Hash> Values<L> {
             inner: FlowOrdMap::new(),
         }
     }
+
+    pub fn get_ordinary(&self, loc: &L) -> Option<&Read<L>> {
+        self.inner.get(&ReadKey::ordinary(loc.dupe()))
+    }
+
+    /// The ordinary reads, with their locations.
+    pub fn iter_ordinary(&self) -> impl Iterator<Item = (&L, &Read<L>)> {
+        self.inner
+            .iter()
+            .filter(|(key, _)| key.kind == ReadKind::Ordinary)
+            .map(|(key, read)| (&key.loc, read))
+    }
 }
 
 impl<L: Dupe + Eq + Ord + Hash> Deref for Values<L> {
-    type Target = FlowOrdMap<L, Read<L>>;
+    type Target = FlowOrdMap<ReadKey<L>, Read<L>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -735,7 +772,7 @@ where
     L: Dupe + Eq + Ord + Hash,
 {
     let read = values
-        .get(read_loc)
+        .get_ordinary(read_loc)
         .expect("write_locs_of_read_loc: read_loc not found in values");
     read.write_locs.as_slice()
 }

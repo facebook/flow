@@ -692,7 +692,7 @@ fn downstream_effects<'cx>(
         result
     }
 
-    match env_values.get(&loc) {
+    match env_values.get_ordinary(&loc) {
         Some(read) => {
             let write_keys: Vec<env_api::EnvKey<ALoc>> = read
                 .write_locs
@@ -825,7 +825,7 @@ fn is_initializing(ev_cx: &EffectVisitorContext, cx: &mut Context<'_>, loc: &ALo
     let env_values = &ev_cx.var_info.env_values;
     let refinement_of_id = &ev_cx.var_info.refinement_of_id;
 
-    let read = match env_values.get(loc) {
+    let read = match env_values.get_ordinary(loc) {
         Some(read) => read,
         None => return false,
     };

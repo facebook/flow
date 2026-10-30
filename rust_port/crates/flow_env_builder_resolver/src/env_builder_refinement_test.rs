@@ -173,7 +173,7 @@ where
 
     move |values: &Values<ALoc>, invalidations: &FlowOrdMap<ALoc, RefinementInvalidation>| {
         let mut strlist: Vec<String> = values
-            .iter()
+            .iter_ordinary()
             .map(|(read_loc, read_entry)| {
                 let writes_str: Vec<String> = read_entry
                     .write_locs

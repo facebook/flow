@@ -24,6 +24,7 @@ use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
 use env_api::AssertionConsistencyInfo;
 use env_api::AssertionConsistencyMaps;
+use env_api::ReadKey;
 use env_api::Refinement;
 use env_api::TypeGuardConsistencyMaps;
 use flow_aloc::ALoc;
@@ -167,7 +168,7 @@ struct ReadEntry {
     name: Option<FlowSmolStr>,
 }
 
-type ReadEntryMap = FlowRedBlackTreeMap<ALoc, ReadEntry>;
+type ReadEntryMap = FlowRedBlackTreeMap<ReadKey<ALoc>, ReadEntry>;
 
 /// A variable that a loop body may change or, when `projections` is not empty, a property path
 /// on it. Like `refinement_key::Lookup`, except that the base is an environment key, so it can
@@ -1836,7 +1837,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
     fn values(&self) -> env_api::Values<ALoc> {
         let mut result = env_api::Values::new();
-        for (loc, read_entry) in &self.env_state.values {
+        for (key, read_entry) in &self.env_state.values {
             let read = ssa_val::simplify(
                 &mut *self.simplify_cache.borrow_mut(),
                 read_entry.def_loc.dupe(),
@@ -1844,7 +1845,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 read_entry.name.dupe(),
                 &read_entry.value,
             );
-            result.insert(loc.dupe(), read);
+            result.insert(key.dupe(), read);
         }
         result
     }
@@ -3700,7 +3701,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             val_binding_kind: ssa_val::ValBindingKind::SourceLevelBinding(env_val.kind),
             name,
         };
-        self.env_state.values.insert(loc, entry);
+        self.env_state.values.insert(ReadKey::ordinary(loc), entry);
     }
 
     fn check_static_type_param_read(&mut self, loc: &ALoc, name: &FlowSmolStr, env_val: &EnvVal) {
@@ -3759,7 +3760,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             val_binding_kind: ssa_val::ValBindingKind::SourceLevelBinding(env_val.kind),
             name: Some(name.dupe()),
         };
-        self.env_state.values.insert(loc, entry);
+        self.env_state.values.insert(ReadKey::ordinary(loc), entry);
     }
 
     fn with_current_pattern_bindings<F, R>(
@@ -4171,7 +4172,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 match r.get_val_of_expression(&arg) {
                     Some(refined_value) if !r.env_state.skip_read_recording => {
                         r.env_state.values.insert(
-                            case_match_root_loc.dupe(),
+                            ReadKey::ordinary(case_match_root_loc.dupe()),
                             ReadEntry {
                                 def_loc: None,
                                 value: refined_value,
@@ -5557,7 +5558,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     resolver.get_val_of_expression(discriminant);
                 if let Some(discriminant_val) = discriminant_after_all_negated_refinements {
                     resolver.env_state.values.insert(
-                        switch_loc.dupe(),
+                        ReadKey::ordinary(switch_loc.dupe()),
                         ReadEntry {
                             def_loc: None,
                             value: discriminant_val,
@@ -5650,11 +5651,13 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     ExpressionInner::Member { inner, .. } => {
                         match self.get_val_of_expression(&inner.object) {
                             None => {
-                                self.env_state.values.remove(case_loc);
+                                self.env_state
+                                    .values
+                                    .remove(&ReadKey::ordinary(case_loc.dupe()));
                             }
                             Some(refined_v) => {
                                 self.env_state.values.insert(
-                                    case_loc.dupe(),
+                                    ReadKey::ordinary(case_loc.dupe()),
                                     ReadEntry {
                                         def_loc: None,
                                         value: refined_v,
@@ -8027,10 +8030,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         // environment which is no longer available when seen through a subsequent. In order
                         // to prevent old environment values from "leaking" through, we need to actively remove
                         // values that may have previously existed but no longer do.
-                        self.env_state.values.remove(&loc);
+                        self.env_state.values.remove(&ReadKey::ordinary(loc));
                     }
                     Some(Err(invalidation_info)) => {
-                        self.env_state.values.remove(&loc);
+                        self.env_state.values.remove(&ReadKey::ordinary(loc.dupe()));
                         self.env_state
                             .refinement_invalidation_info
                             .insert(loc, invalidation_info);
@@ -8039,7 +8042,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         // We model a heap refinement as a separate const binding. We prefer this over using
                         // None so that we can report errors when using this value in a type position
                         self.env_state.values.insert(
-                            loc,
+                            ReadKey::ordinary(loc),
                             ReadEntry {
                                 def_loc: None,
                                 value: refined_v,
@@ -9861,7 +9864,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             );
             if let Some(refined_value) = r.get_val_of_expression(&match_expr) {
                 r.env_state.values.insert(
-                    match_keyword_loc.dupe(),
+                    ReadKey::ordinary(match_keyword_loc.dupe()),
                     ReadEntry {
                         def_loc: None,
                         value: refined_value,
@@ -11643,13 +11646,15 @@ impl<'a, Cx: Context> DeadCodeMarker<'a, Cx> {
         use env_api::Read;
         use env_api::WriteLoc;
 
-        self.values.entry(loc.dupe()).or_insert_with(|| Read {
-            def_loc: None,
-            write_locs: Rc::new(vec![WriteLoc::Unreachable(loc)]),
-            val_kind: env_api::ValKind::Value,
-            name,
-            id: None,
-        });
+        self.values
+            .entry(ReadKey::ordinary(loc.dupe()))
+            .or_insert_with(|| Read {
+                def_loc: None,
+                write_locs: Rc::new(vec![WriteLoc::Unreachable(loc)]),
+                val_kind: env_api::ValKind::Value,
+                name,
+                id: None,
+            });
     }
 
     fn jsx_function_call(&mut self, loc: ALoc) {
