@@ -10,6 +10,12 @@
 #[used]
 static malloc_conf: &str = "metadata_thp:always\0";
 
+// Buck builds pick their allocator with `fbcode.default_allocator`, which replaces `malloc` for the
+// whole binary, so a Rust global allocator there could link a second copy of jemalloc.
+#[cfg(all(not(fbcode_build), target_os = "linux"))]
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
 fn main() {
     #[cfg(windows)]
     {

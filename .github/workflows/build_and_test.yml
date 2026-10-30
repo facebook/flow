@@ -80,6 +80,8 @@ jobs:
       env:
         CARGO_PROFILE_RELEASE_STRIP: 'true'
         CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '1'
+        # jemalloc fixes its page size at build time; 64 KiB pages also run on 4 and 16 KiB kernels.
+        JEMALLOC_SYS_WITH_LG_PAGE: '16'
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
       run: |-
