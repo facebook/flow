@@ -109,6 +109,7 @@ pub(super) const LIB_ESNEXT_DISPOSABLE_D_TS: &str = include_tslib!("lib.esnext.d
 pub(super) const LIB_ESNEXT_FLOAT16_D_TS: &str = include_tslib!("lib.esnext.float16.d.ts");
 pub(super) const LIB_ESNEXT_ERROR_D_TS: &str = include_tslib!("lib.esnext.error.d.ts");
 pub(super) const LIB_ESNEXT_INTL_D_TS: &str = include_tslib!("lib.esnext.intl.d.ts");
+pub(super) const LIB_ESNEXT_ITERATOR_D_TS: &str = include_tslib!("lib.esnext.iterator.d.ts");
 pub(super) const LIB_ESNEXT_PROMISE_D_TS: &str = include_tslib!("lib.esnext.promise.d.ts");
 pub(super) const LIB_ESNEXT_SHAREDMEMORY_D_TS: &str =
     include_tslib!("lib.esnext.sharedmemory.d.ts");
@@ -254,10 +255,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         include_tslib!("lib.esnext.full.d.ts"),
     ),
     ("lib.esnext.intl.d.ts", LIB_ESNEXT_INTL_D_TS),
-    (
-        "lib.esnext.iterator.d.ts",
-        include_tslib!("lib.esnext.iterator.d.ts"),
-    ),
+    ("lib.esnext.iterator.d.ts", LIB_ESNEXT_ITERATOR_D_TS),
     ("lib.esnext.promise.d.ts", LIB_ESNEXT_PROMISE_D_TS),
     ("lib.esnext.sharedmemory.d.ts", LIB_ESNEXT_SHAREDMEMORY_D_TS),
     ("lib.scripthost.d.ts", include_tslib!("lib.scripthost.d.ts")),

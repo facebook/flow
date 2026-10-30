@@ -22,7 +22,6 @@ macro_rules! flowlib_file {
 
 flowlib_file!(LIB_ES5_JS, "lib.es5.js");
 flowlib_file!(LIB_ES2015_CORE_JS, "lib.es2015.core.js");
-flowlib_file!(LIB_ESNEXT_ITERATOR_JS, "lib.esnext.iterator.js");
 flowlib_file!(MISC_JS, "misc.js");
 flowlib_file!(REACT_JS, "react.js");
 flowlib_file!(DOM_EXTRA_TO_BE_REMOVED_JS, "dom_extra_to_be_removed.js");
@@ -55,6 +54,7 @@ tslib_patched_file!(LIB_ES2016_ARRAY_INCLUDE_D_TS, "lib.es2016.array.include");
 tslib_patched_file!(LIB_ES2019_ARRAY_D_TS, "lib.es2019.array");
 tslib_patched_file!(LIB_ES2020_PROMISE_D_TS, "lib.es2020.promise");
 tslib_patched_file!(LIB_ESNEXT_COLLECTION_D_TS, "lib.esnext.collection");
+tslib_patched_file!(LIB_ESNEXT_ITERATOR_D_TS, "lib.esnext.iterator");
 
 /// The embedded flowlib file contents as (filename, contents) pairs.
 ///
@@ -254,7 +254,7 @@ pub(super) static COMMON_CONTENTS: LazyLock<Vec<(&str, &str)>> = LazyLock::new(|
             tslib_contents::LIB_ESNEXT_FLOAT16_D_TS,
         ),
         ("lib.esnext.intl.js", tslib_contents::LIB_ESNEXT_INTL_D_TS),
-        ("lib.esnext.iterator.js", LIB_ESNEXT_ITERATOR_JS),
+        ("lib.esnext.iterator.js", LIB_ESNEXT_ITERATOR_D_TS.as_str()),
         (
             "lib.esnext.promise.js",
             tslib_contents::LIB_ESNEXT_PROMISE_D_TS,
@@ -367,6 +367,10 @@ mod tests {
             (
                 &*LIB_ESNEXT_COLLECTION_D_TS,
                 tslib_contents::LIB_ESNEXT_COLLECTION_D_TS,
+            ),
+            (
+                &*LIB_ESNEXT_ITERATOR_D_TS,
+                tslib_contents::LIB_ESNEXT_ITERATOR_D_TS,
             ),
         ] {
             assert_ne!(patched, original, "a patch should change its library");

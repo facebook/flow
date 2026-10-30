@@ -1,1 +1,30 @@
-Found 0 errors
+Error --------------------------------------------------------------------------------------------------- reduce.js:9:10
+
+Cannot call `iterator.reduce` because: [incompatible-type]
+ - Either in the return value: `string` [1] is incompatible with `number` [2].
+ - Or `void` [3] is incompatible with `string` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   reduce.js:9:10
+   9| iterator.reduce(flexibleReducer) as string | number; // ERROR: without an initial value, the reducer must return a number
+               ^^^^^^
+
+References:
+   reduce.js:5:62
+   5| declare const flexibleReducer: (string | number,  number) => string;
+                                                                   ^^^^^^ [1]
+   reduce.js:2:40
+   2| declare const iterator: IteratorObject<number>;
+                                             ^^^^^^ [2]
+   reduce.js:9:1
+   9| iterator.reduce(flexibleReducer) as string | number; // ERROR: without an initial value, the reducer must return a number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   reduce.js:5:33
+   5| declare const flexibleReducer: (string | number,  number) => string;
+                                      ^^^^^^ [4]
+
+
+
+Found 1 error

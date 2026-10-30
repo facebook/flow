@@ -1,0 +1,27 @@
+--- tslib/lib.esnext.iterator.d.ts
++++ rust_port/crates/flow_flowlib/src/tslib_patches/lib.esnext.iterator.d.ts
+@@ -52,7 +52,8 @@
+          * Creates an iterator whose values are those from this iterator for which the provided predicate returns true.
+          * @param predicate A function that accepts up to two arguments to be used to test values from the underlying iterator.
+          */
+-        filter<S extends T>(predicate: (value: T, index: number) => value is S): IteratorObject<S, undefined, unknown>;
++        filter(predicate: typeof Boolean): IteratorObject<NonNullable<T>, undefined, unknown>;
++        filter<S extends T>(predicate: (value: T, index: number) => implies value is S): IteratorObject<S, undefined, unknown>;
+ 
+         /**
+          * Creates an iterator whose values are those from this iterator for which the provided predicate returns true.
+@@ -127,12 +128,12 @@
+          * order, until it finds one where predicate returns true. If such an element is found, find
+          * immediately returns that element value. Otherwise, find returns undefined.
+          */
+-        find<S extends T>(predicate: (value: T, index: number) => value is S): S | undefined;
++        find<S extends T>(predicate: (value: T, index: number) => implies value is S): S | undefined;
+         find(predicate: (value: T, index: number) => unknown): T | undefined;
+         readonly [Symbol.toStringTag]: string;
+     }
+     // Global `IteratorConstructor` interface that can be augmented by polyfills
+-    interface IteratorConstructor extends IteratorObjectConstructor {
++    interface IteratorConstructor {
+         /**
+          * Creates a native iterator from an iterator or iterable object.
+          * Returns its input if the input already inherits from the built-in Iterator class.

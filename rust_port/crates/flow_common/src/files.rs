@@ -739,8 +739,22 @@ pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<String> {
     libs
 }
 
+/// The bundled TypeScript libraries that are modules. Their `.js` names keep their declarations
+/// Flow-strict, but like the bundled `.d.ts` files they are TypeScript source files.
+const BUILTIN_TS_MODULES: &[&str] = &["lib.esnext.iterator.js"];
+
+pub fn has_builtin_ts_module_name(path: &str) -> bool {
+    Path::new(path)
+        .file_name()
+        .is_some_and(|name| BUILTIN_TS_MODULES.iter().any(|module| name == *module))
+}
+
+pub fn is_builtin_ts_module(options: &FileOptions, path: &str) -> bool {
+    has_builtin_ts_module_name(path) && is_in_flowlib(options, path)
+}
+
 fn is_dynamically_discovered_builtin_ts_libdef(options: &FileOptions, path: &str) -> bool {
-    has_dts_ext(path) && is_in_flowlib(options, path)
+    (has_dts_ext(path) && is_in_flowlib(options, path)) || is_builtin_ts_module(options, path)
 }
 
 pub fn is_configured_lib_file(options: &FileOptions, path: &str) -> bool {

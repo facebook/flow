@@ -1,8 +1,8 @@
 === single field -> flat array of values ===
-{"clock":"<redacted>","files":["a.js"],"is_fresh_instance":true}
+{"clock":"<redacted>","files":["<BUILTIN_FLOW_LIB>///lib.esnext.iterator.js","a.js"],"is_fresh_instance":true}
 === multiple fields -> object per file ===
-{"clock":"<redacted>","files":[{"flow.content_hash":"608a96052ff4287d","name":"a.js"}],"is_fresh_instance":true}
+{"clock":"<redacted>","files":[{"flow.content_hash":"876d84e7cf333695","name":"<BUILTIN_FLOW_LIB>///lib.esnext.iterator.js"},{"flow.content_hash":"608a96052ff4287d","name":"a.js"}],"is_fresh_instance":true}
 === exists + new ===
-{"clock":"<redacted>","files":[{"exists":true,"name":"a.js","new":true}],"is_fresh_instance":true}
+{"clock":"<redacted>","files":[{"exists":true,"name":"<BUILTIN_FLOW_LIB>///lib.esnext.iterator.js","new":true},{"exists":true,"name":"a.js","new":true}],"is_fresh_instance":true}
 === empty_on_fresh_instance -> no files on a fresh instance ===
 {"clock":"<redacted>","files":[],"is_fresh_instance":true}

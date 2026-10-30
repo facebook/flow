@@ -587,7 +587,7 @@ fn init_builtins(params: &Value) -> Result<Value, String> {
         .and_then(Value::as_array)
         .ok_or_else(|| "missing array parameter `filenames`".to_string())?;
     let options = config_options(None)?;
-    let asts = STATE.with(|state| {
+    let parsed_files = STATE.with(|state| {
         let state = state.borrow();
         filenames
             .iter()
@@ -600,7 +600,14 @@ fn init_builtins(params: &Value) -> Result<Value, String> {
                     .files
                     .get(filename)
                     .ok_or_else(|| format!("File `{}` has not been registered", filename))?;
-                let file_key = FileKey::new(FileKeyInner::LibFile(filename.to_string()));
+                // Like the CLI, read the bundled TypeScript modules as source files that augment
+                // the global scope.
+                let is_ts_module = flow_common::files::has_builtin_ts_module_name(filename);
+                let file_key = FileKey::new(if is_ts_module {
+                    FileKeyInner::SourceFile(filename.to_string())
+                } else {
+                    FileKeyInner::LibFile(filename.to_string())
+                });
                 let strictness_kind =
                     flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(
                         flow_common::files::has_ts_ext(&file_key),
@@ -609,13 +616,28 @@ fn init_builtins(params: &Value) -> Result<Value, String> {
                 if !parsed.parse_errors.is_empty() {
                     Err(format!("Failed to parse builtin `{}`", filename))
                 } else {
-                    Ok((strictness_kind, parsed.ast))
+                    Ok((is_ts_module, strictness_kind, parsed))
                 }
             })
             .collect::<Result<Vec<_>, _>>()
     })?;
-    let (_errors, master_cx) =
-        merge::merge_lib_files(&builtin_sig_options(), Arc::default(), &asts, &[]);
+    let (ts_modules, libs): (Vec<_>, Vec<_>) = parsed_files
+        .into_iter()
+        .partition(|(is_ts_module, _, _)| *is_ts_module);
+    let asts: Vec<_> = libs
+        .into_iter()
+        .map(|(_, strictness_kind, parsed)| (strictness_kind, parsed.ast))
+        .collect();
+    let global_augmentation_asts: Vec<_> = ts_modules
+        .into_iter()
+        .map(|(_, strictness_kind, parsed)| (strictness_kind, parsed.ast, parsed.file_sig))
+        .collect();
+    let (_errors, master_cx) = merge::merge_lib_files(
+        &builtin_sig_options(),
+        Arc::default(),
+        &asts,
+        &global_augmentation_asts,
+    );
     STATE.with(|state| {
         state.borrow_mut().master_cx = Arc::new(master_cx);
     });

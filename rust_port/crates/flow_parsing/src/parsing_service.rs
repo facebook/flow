@@ -155,7 +155,8 @@ fn has_ts_global_augmentation(
     ast: &Program<Loc, Loc>,
 ) -> bool {
     !is_lib_file
-        && files::has_ts_ext(file)
+        && (files::has_ts_ext(file)
+            || files::is_builtin_ts_module(&options.file_options, &file.to_absolute()))
         && is_external_module(file, ast)
         && (has_top_level_declare_global(ast)
             || (options.export_as_namespace_support
@@ -202,7 +203,9 @@ fn types_checked(
     if is_lib_file {
         // types are always allowed in lib files
         true
-    } else if flow_common::files::has_ts_ext(file) {
+    } else if flow_common::files::has_ts_ext(file)
+        || flow_common::files::is_builtin_ts_module(&options.file_options, &file.to_absolute())
+    {
         // .ts files are always typed
         true
     } else {

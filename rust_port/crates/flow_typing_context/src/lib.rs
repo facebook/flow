@@ -1007,7 +1007,12 @@ pub fn docblock_overrides(
     metadata.overridable.available_platforms = available_platforms;
     metadata.overridable.has_explicit_supports_platform = explicit_available_platforms.is_some();
 
-    if flow_common::files::has_ts_ext(file_key) {
+    if flow_common::files::has_ts_ext(file_key)
+        || flow_common::files::is_builtin_ts_module(
+            &metadata.frozen.file_options,
+            &file_key.to_absolute(),
+        )
+    {
         // .ts files are always checked, consistent with `types_checked` in `parsing_service_js`
         metadata.overridable.checked = true;
         let frozen = Rc::make_mut(&mut metadata.frozen);
