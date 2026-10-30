@@ -1031,16 +1031,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x.name` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function.js:7:1
-     7| x.name as empty; // ERROR
-        ^^^^^^
+    7| x.name as empty; // ERROR
+       ^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.core.js:102:20
-   102|     readonly name: string;
-                           ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.core.js:98:20
+   98|     readonly name: string;
+                          ^^^^^^ [1]
    function.js:7:11
-     7| x.name as empty; // ERROR
-                  ^^^^^ [2]
+    7| x.name as empty; // ERROR
+                 ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- function.js:8:1
@@ -1048,16 +1048,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `y.name` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function.js:8:1
-     8| y.name as empty; // ERROR
-        ^^^^^^
+    8| y.name as empty; // ERROR
+       ^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.core.js:102:20
-   102|     readonly name: string;
-                           ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.core.js:98:20
+   98|     readonly name: string;
+                          ^^^^^^ [1]
    function.js:8:11
-     8| y.name as empty; // ERROR
-                  ^^^^^ [2]
+    8| y.name as empty; // ERROR
+                 ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:10:3

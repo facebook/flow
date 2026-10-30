@@ -169,6 +169,7 @@ const TSLIB_SOURCED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
 // adapted `.d.ts` file in `tslib_patches/`.
 const TSLIB_PATCHED_FLOWLIB_FILES_338: ReadonlyArray<string> = [
   'lib.es2015.collection.js',
+  'lib.es2015.core.js',
   'lib.es2015.iterable.js',
   'lib.es2015.promise.js',
   'lib.es2016.array.include.js',

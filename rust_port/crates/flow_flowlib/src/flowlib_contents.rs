@@ -21,7 +21,6 @@ macro_rules! flowlib_file {
 }
 
 flowlib_file!(LIB_ES5_JS, "lib.es5.js");
-flowlib_file!(LIB_ES2015_CORE_JS, "lib.es2015.core.js");
 flowlib_file!(MISC_JS, "misc.js");
 flowlib_file!(REACT_JS, "react.js");
 flowlib_file!(DOM_EXTRA_TO_BE_REMOVED_JS, "dom_extra_to_be_removed.js");
@@ -48,6 +47,7 @@ macro_rules! tslib_patched_file {
 }
 
 tslib_patched_file!(LIB_ES2015_COLLECTION_D_TS, "lib.es2015.collection");
+tslib_patched_file!(LIB_ES2015_CORE_D_TS, "lib.es2015.core");
 tslib_patched_file!(LIB_ES2015_ITERABLE_D_TS, "lib.es2015.iterable");
 tslib_patched_file!(LIB_ES2015_PROMISE_D_TS, "lib.es2015.promise");
 tslib_patched_file!(LIB_ES2016_ARRAY_INCLUDE_D_TS, "lib.es2016.array.include");
@@ -71,7 +71,7 @@ pub(super) static COMMON_CONTENTS: LazyLock<Vec<(&str, &str)>> = LazyLock::new(|
             "lib.es2015.collection.js",
             LIB_ES2015_COLLECTION_D_TS.as_str(),
         ),
-        ("lib.es2015.core.js", LIB_ES2015_CORE_JS),
+        ("lib.es2015.core.js", LIB_ES2015_CORE_D_TS.as_str()),
         (
             "lib.es2015.generator.js",
             tslib_contents::LIB_ES2015_GENERATOR_D_TS,
@@ -344,6 +344,7 @@ mod tests {
                 &*LIB_ES2015_COLLECTION_D_TS,
                 tslib_contents::LIB_ES2015_COLLECTION_D_TS,
             ),
+            (&*LIB_ES2015_CORE_D_TS, tslib_contents::LIB_ES2015_CORE_D_TS),
             (
                 &*LIB_ES2015_ITERABLE_D_TS,
                 tslib_contents::LIB_ES2015_ITERABLE_D_TS,

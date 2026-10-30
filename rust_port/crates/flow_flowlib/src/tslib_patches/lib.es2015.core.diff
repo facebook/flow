@@ -1,0 +1,98 @@
+--- tslib/lib.es2015.core.d.ts
++++ rust_port/crates/flow_flowlib/src/tslib_patches/lib.es2015.core.d.ts
+@@ -27,8 +27,8 @@
+      * @param thisArg If provided, it will be used as the this value for each invocation of
+      * predicate. If it is not provided, undefined is used instead.
+      */
+-    find<S extends T>(predicate: (value: T, index: number, obj: T[]) => value is S, thisArg?: any): S | undefined;
+-    find(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): T | undefined;
++    find<This, S extends T>(predicate: (this: This, value: T, index: number, obj: T[]) => implies value is S, thisArg: This): S | undefined;
++    find<This>(predicate: (this: This, value: T, index: number, obj: T[]) => unknown, thisArg: This): T | undefined;
+ 
+     /**
+      * Returns the index of the first element in the array where predicate is true, and -1
+@@ -39,7 +39,7 @@
+      * @param thisArg If provided, it will be used as the this value for each invocation of
+      * predicate. If it is not provided, undefined is used instead.
+      */
+-    findIndex(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): number;
++    findIndex<This>(predicate: (this: This, value: T, index: number, obj: T[]) => unknown, thisArg: This): number;
+ 
+     /**
+      * Changes all array elements from `start` to `end` index to a static `value` and returns the modified array
+@@ -49,7 +49,7 @@
+      * @param end index to stop filling the array at. If end is negative, it is treated as
+      * length+end.
+      */
+-    fill(value: T, start?: number, end?: number): this;
++    fill(value: T, start?: number, end?: number): Array<T>;
+ 
+     /**
+      * Returns the this object after copying a section of the array identified by start and end
+@@ -223,29 +223,29 @@
+      * Returns true if passed value is finite.
+      * Unlike the global isFinite, Number.isFinite doesn't forcibly convert the parameter to a
+      * number. Only finite values of the type number, result in true.
+-     * @param number A numeric value.
++     * @param value A numeric value.
+      */
+-    isFinite(number: unknown): boolean;
++    isFinite(value: unknown): implies value is number;
+ 
+     /**
+      * Returns true if the value passed is an integer, false otherwise.
+-     * @param number A numeric value.
++     * @param value A numeric value.
+      */
+-    isInteger(number: unknown): boolean;
++    isInteger(value: unknown): implies value is number;
+ 
+     /**
+      * Returns a Boolean value that indicates whether a value is the reserved value NaN (not a
+      * number). Unlike the global isNaN(), Number.isNaN() doesn't forcefully convert the parameter
+      * to a number. Only values of the type number, that are also NaN, result in true.
+-     * @param number A numeric value.
++     * @param value A numeric value.
+      */
+-    isNaN(number: unknown): boolean;
++    isNaN(value: unknown): implies value is number;
+ 
+     /**
+      * Returns true if the value passed is a safe integer.
+-     * @param number A numeric value.
++     * @param value A numeric value.
+      */
+-    isSafeInteger(number: unknown): boolean;
++    isSafeInteger(value: unknown): implies value is number;
+ 
+     /**
+      * The value of the largest integer n such that n and n + 1 are both exactly representable as
+@@ -350,8 +350,8 @@
+      * @param thisArg If provided, it will be used as the this value for each invocation of
+      * predicate. If it is not provided, undefined is used instead.
+      */
+-    find<S extends T>(predicate: (value: T, index: number, obj: readonly T[]) => value is S, thisArg?: any): S | undefined;
+-    find(predicate: (value: T, index: number, obj: readonly T[]) => unknown, thisArg?: any): T | undefined;
++    find<This, S extends T>(predicate: (this: This, value: T, index: number, obj: readonly T[]) => implies value is S, thisArg: This): S | undefined;
++    find<This>(predicate: (this: This, value: T, index: number, obj: readonly T[]) => unknown, thisArg: This): T | undefined;
+ 
+     /**
+      * Returns the index of the first element in the array where predicate is true, and -1
+@@ -362,7 +362,7 @@
+      * @param thisArg If provided, it will be used as the this value for each invocation of
+      * predicate. If it is not provided, undefined is used instead.
+      */
+-    findIndex(predicate: (value: T, index: number, obj: readonly T[]) => unknown, thisArg?: any): number;
++    findIndex<This>(predicate: (this: This, value: T, index: number, obj: readonly T[]) => unknown, thisArg: This): number;
+ 
+     toLocaleString(locales: string | string[], options?: Intl.NumberFormatOptions & Intl.DateTimeFormatOptions): string;
+ }
+@@ -558,7 +558,7 @@
+      * @param template A well-formed template string call site representation.
+      * @param substitutions A set of substitution values.
+      */
+-    raw(template: { raw: readonly string[] | ArrayLike<string>; }, ...substitutions: any[]): string;
++    raw: (template: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+ }
+ 
+ interface Int8Array<TArrayBuffer extends ArrayBufferLike> {

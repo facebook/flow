@@ -51,8 +51,8 @@ References:
    date.js:18:10
      18| new Date({});
                   ^^ [1]
-   <BUILTINS>/lib.es2015.core.js:95:35
-     95|     new (value: number | string | Date): Date;
+   <BUILTINS>/lib.es2015.core.js:91:35
+     91|     new (value: number | string | Date): Date;
                                            ^^^^ [2]
    <BUILTINS>/lib.es5.js:240:16
     240|     valueOf(): unknown;
@@ -237,8 +237,8 @@ References:
    <BUILTINS>/lib.es5.js:1271:5
    1271|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es2015.core.js:95:5
-     95|     new (value: number | string | Date): Date;
+   <BUILTINS>/lib.es2015.core.js:91:5
+     91|     new (value: number | string | Date): Date;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
