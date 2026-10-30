@@ -1,3 +1,121 @@
+### 0.338.0
+
+Breaking Changes:
+* Flowconfig option `experimental.assertion_functions` is removed. Assertion functions have been on by default and the option only accepted `true` since 0.337.
+* Flowconfig option `experimental.disable_invariant_special_casing` is removed. It has been on by default and only accepted `true` since 0.337.
+* Flowconfig option `experimental.function_and_object_type_is_no_longer_any` is removed. It has been on by default and only accepted `true` for a while.
+* Flowconfig option `experimental.builtin_ts_libdef_dynamic_discovery` is removed. It has been on by default and only accepted `true`.
+* Flowconfig option `experimental.declare_global_support` is removed. It has been on by default and only accepted `true`.
+
+Likely to cause new Flow errors:
+* `Readonly`, `Partial`, `Required`, `$Exact`, `Omit` and mapped types over an interface now include its methods and the members it inherits.
+* Type guards now refine `Array<any>`, `{data: any}`, `Map<string, any>` and similar types to the guarded type, e.g. `Array<string>`, which can surface errors in code that relied on `any`.
+* Static members can no longer reference the type parameters of their class, like in TypeScript, and reading a static member of a generic class no longer infers them.
+* `keyof` of an object with a template literal indexer no longer widens the indexer key to `string` in conditional types like `Exclude`.
+
+New Features:
+* Mapped types over arrays and tuples support `readonly` and `writeonly` modifiers.
+* Property truthiness checks such as `if (result.done)` now refine unions of classes and interfaces by fields with literal types, as `===` checks already did.
+* Type guards narrow through optional calls such as `isString?.(x)`. When the callee or receiver is nullable, only the true branch narrows.
+* Support optional assertion calls when their declared types guarantee the call runs.
+* Added the intrinsic `ExactObjectType`, the supertype of every exact object type and a subtype of `{...}`.
+
+Notable bug fixes:
+* Fix crashes and false recursive-definition errors from cyclic type star exports in TypeScript declarations.
+* Support namespace export aliases and ambient exported members in TypeScript definitions.
+* Allow classes to extend a constructor whose overloads are not all generic, such as `Uint8Array<ArrayBuffer>`.
+* Casting a value whose type intersects an enum with other types (e.g. `E & E`) to the enum's representation type no longer errors.
+* Arrays can be assigned to variables and parameters whose type was inferred from `new Array<T>(...)`.
+* Report delegated yield type errors at the yield expression.
+* Align Try Flow's default lints and `declare global` support with regular Flow.
+* Improve inference for generic values passed to polymorphic operations.
+* Fix Try Flow initialization after the async builtin migration while preserving older releases' library definitions.
+* Report conditional type instantiation errors at the caller.
+* Apply type-parameter defaults when omitted optional or nullable arguments are the only evidence for them.
+* An object with an indexer is no longer checked against optional properties it doesn't declare of a TypeScript-declared (`.d.ts`) object type, matching TypeScript.
+* Fewer `underconstrained-implicit-instantiation` errors for generic calls passed as arguments to other generic calls.
+* Fixed a crash when printing long types that contain non-ASCII names in error messages.
+* Tuple types with a spread keep the variance of their own elements, e.g. `a` in `[readonly a: unknown, ...T]` stays read-only.
+* `First` in `[infer First, ...infer Rest]` is now inferred instead of `unknown`.
+* Fixed a deadlock in the Flow server monitor that could make all subsequent commands fail with "Out of retries, exiting!".
+* Type guards with a union type now refine union members precisely, e.g. a falsy-value guard on `string | number` refines to `"" | 0`.
+* Type guards now drop union members that are instances of classes unrelated to the guarded class, e.g. `x: A | B` refined by `x is A` is now `A` rather than `A | (A & B)`.
+* The negative branch of a type guard now refines away generics that satisfy the guard, e.g. `x: T | number` refined by `!isT(x)` with `isT: (x: unknown) => x is T` is now `number`.
+* In the negative branch of a type guard, `any` now stays `any` instead of becoming `empty`, and `boolean` is refined to the literal the guard does not cover.
+* Correct stdin behavior for `flow check-contents` and `flow autocomplete`.
+* Error messages print code that contains backticks, such as template literals, as markdown code spans.
+* Instances of TypeScript-declared generics, such as `React.MouseEvent<T>`, now compare type parameters without a variance annotation covariantly, as type applications already did.
+* Type guards now drop tuple members of a different length and array members with disjoint element types.
+* Type guards now drop object and interface union members whose properties conflict with the guard type.
+* `x instanceof C` no longer refines a value of an intersection type to `empty`.
+* Linux release builds use jemalloc, which keeps the memory of long-running servers from growing after large rechecks.
+* Fixed a race that could leave a file unmerged after a recheck, which made the server recheck forever while an open file imported it.
+
+Misc:
+* Print rest arrays as array types in errors.
+* Print receiver and merged declaration types in errors.
+* Simplify missing this annotation diagnostics.
+* Print both types in inheritance errors.
+* Identify missing parameter annotations directly at the parameter location.
+* Remove empty filename metadata from the Try Flow AST display.
+* Add a default-on option to hide locations in the Try Flow AST pane.
+* Show node types first in the Try Flow AST pane.
+* Add a default-on option to hide null and undefined fields in the Try Flow AST pane.
+* Move Try Flow's JSON error output into an Errors format pill bar.
+* Add JSON AST output to Try Flow.
+
+Parser:
+* Accept explicit semicolons on shorthand ambient modules.
+* Accept keyword members in qualified type names and import types.
+* Allow repeated inline interface exports in TypeScript files.
+* Fixed `flow-parser` taking minutes to parse JS files over ~1 MB.
+* Support destructured rest parameters in function type signatures.
+* Support import attributes on re-export declarations.
+* Preserve TypeScript accessibility modifiers on bodyless class method signatures.
+* Preserve computed type-literal keys as properties in TypeScript source files.
+* Allow newline-separated type members in TypeScript source files.
+* Use `"in out"` for the ESTree variance kind of `in out` type parameters.
+* Parse postfix non-null assertions with type syntax enabled, preserve ASI, and emit TypeScript-compatible `NonNullExpression` nodes.
+* Respect JavaScript line terminators and Unicode whitespace when recovering source locations.
+* Parse default interface exports and report unsupported syntax during type checking.
+* Correct inferred ESTree source type for default interfaces, inline type specifiers, and exported import aliases.
+* Exclude default interface exports and all-type specifier lists from inferred Babel module source type.
+* Support top-level await for explicit modules and `.mjs`/`.mts` files in flow-parser.
+* Always enable type parsing for TypeScript filenames.
+* Reject type syntax in untyped parser mode and report precise diagnostics.
+* Fix declaration method signature locations to include the complete signature.
+* Include the `const` keyword in const enum declaration locations.
+
+IDE:
+* Hover and error messages no longer print redundant parentheses around function types in maybe types, e.g. `?() => void` instead of `?(() => void)`.
+
+Library Definitions:
+* Align well-known symbol members (`Symbol.toStringTag`, `Symbol.match`, `Symbol.toPrimitive`, ...) with TypeScript.
+* `Map` and `WeakMap` `set`, and `Set` and `WeakSet` `add`, now return `this`.
+* `RegExp` `flags`/`sticky`/`unicode` and `Number.EPSILON`/`MAX_SAFE_INTEGER`/`MIN_SAFE_INTEGER` are now read-only; `String.prototype.normalize` accepts the normalization form literals and the legacy HTML methods (`bold`, `link`, ...) are declared.
+* `Array.prototype.copyWithin` returns `this`, so subclasses of `Array` keep their type.
+* `Array.prototype.sort` returns `this`, so subclasses of `Array` keep their type.
+* `Math` constants (`Math.PI`, `Math.E`, ...) are read-only.
+* `Number.MAX_VALUE`, `MIN_VALUE`, `NaN`, `NEGATIVE_INFINITY` and `POSITIVE_INFINITY` are read-only.
+* `String#split` requires a separator, `String#replace` has separate overloads for a string and a function replacement, and `String#length` is read-only, as in TypeScript.
+* Use TypeScript's ES2018 async iterator and iterable definitions.
+* Use TypeScript's ES2018 async generator definitions.
+* Use TypeScript's ES2019 array definitions while preserving Flow's existing `flatMap` union order and inference.
+* Use TypeScript's ES2020 promise definitions, including mutable settled results.
+* Use TypeScript's ES2016 array `includes` definitions while keeping Flow's element refinement.
+* Use TypeScript's ES2015 generator definitions. `Generator.prototype.return` now requires a value of the generator's return type.
+* Add `React.CSSProperties`, typed by `csstype`.
+* Use TypeScript's ES2015 promise definitions, adapted to Flow's inference.
+* Use TypeScript's ESNext set method definitions, including `Set.prototype.union`.
+* Use TypeScript's ES2015 `Map`, `Set`, `WeakMap` and `WeakSet` definitions. `size` is now read-only.
+* `done` is now optional in the non-final branch of `IteratorResult`, as in TypeScript.
+* Use TypeScript's ES2015 iterable definitions. `ArrayIterator`, `MapIterator`, `SetIterator` and `StringIterator` are now interfaces, and `StringIterator` takes a type argument.
+* Add React's DOM types from `@types/react`, such as `React.MouseEvent`, `React.HTMLAttributes` and `React.JSX.IntrinsicElements`.
+* `React.ComponentProps` of a string that is not a JSX intrinsic is `empty` in roots that define their own `$JSXIntrinsics`.
+* Use TypeScript's ESNext iterator helper definitions. `reduce` without an initial value now requires the reducer to return the iterator's element type.
+* `Array`, `ReadonlyArray` and typed array `toLocaleString` now accept locales and formatting options.
+* Use TypeScript's ES2015 core definitions.
+
 ### 0.337.0
 
 Likely to cause new Flow errors:
