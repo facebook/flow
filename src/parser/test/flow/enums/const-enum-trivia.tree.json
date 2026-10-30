@@ -1,0 +1,102 @@
+{
+  "body": [
+    {
+      "body": {
+        "explicitType": null,
+        "hasUnknownMembers": false,
+        "loc": {
+          "end": {
+            "column": 13,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 11,
+            "line": 2
+          }
+        },
+        "members": [],
+        "range": [
+          29,
+          31
+        ],
+        "type": "EnumBody"
+      },
+      "const": true,
+      "id": {
+        "loc": {
+          "end": {
+            "column": 10,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 2
+          }
+        },
+        "name": "E",
+        "optional": false,
+        "range": [
+          27,
+          28
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 13,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 2,
+          "line": 1
+        }
+      },
+      "range": [
+        2,
+        31
+      ],
+      "type": "EnumDeclaration"
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 17,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 8,
+          "line": 1
+        }
+      },
+      "range": [
+        8,
+        17
+      ],
+      "type": "Block",
+      "value": " gap "
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 13,
+      "line": 2
+    },
+    "source": null,
+    "start": {
+      "column": 2,
+      "line": 1
+    }
+  },
+  "range": [
+    2,
+    31
+  ],
+  "type": "Program"
+}

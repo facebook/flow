@@ -712,12 +712,12 @@ References:
                           ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ const-enum.js:1:7
+Error ------------------------------------------------------------------------------------------------ const-enum.js:1:1
 
 `const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be
 part of the build system (whatever you use) rather than Flow itself. [unsupported-syntax]
 
-            v----------------
+      v----------------------
    1| const enum E { // ERROR
    2|   A,
    3|   B,

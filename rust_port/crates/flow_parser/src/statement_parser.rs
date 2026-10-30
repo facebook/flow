@@ -3125,7 +3125,7 @@ fn export_declaration(
                             } else if peek::token(env) == &TokenKind::TEnum {
                                 // export default enum foo { ... }
                                 let enum_decl =
-                                    declaration_parser::parse_enum_declaration(env, None, false)?;
+                                    declaration_parser::parse_enum_declaration(env, None, None, false)?;
                                 Ok((
                                     statement::export_default_declaration::Declaration::Declaration(
                                         enum_decl,
@@ -5122,7 +5122,7 @@ fn parse_statement_list_item(
             let leading = peek::comments(env);
             eat::token(env)?;
             if parse_enums && peek::token(env) == &TokenKind::TEnum {
-                declaration_parser::parse_enum_declaration(env, None, true)
+                declaration_parser::parse_enum_declaration(env, Some(start_loc), None, true)
             } else {
                 const_statement_after_const(env, start_loc, leading)
             }
@@ -5132,7 +5132,7 @@ fn parse_statement_list_item(
         TokenKind::TType => type_alias(env),
         TokenKind::TOpaque => opaque_type(env),
         TokenKind::TEnum if parse_enums => {
-            declaration_parser::parse_enum_declaration(env, None, false)
+            declaration_parser::parse_enum_declaration(env, None, None, false)
         }
         TokenKind::TIdentifier { raw, .. } if raw == "namespace" && in_ambient_context => {
             declare_namespace(env, false, true)

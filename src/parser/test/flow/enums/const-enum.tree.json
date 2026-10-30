@@ -1,30 +1,82 @@
 {
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":1,"column":15}},
-  "range":[6,15],
-  "body":[
+  "body": [
     {
-      "type":"EnumDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":1,"column":15}},
-      "range":[6,15],
-      "const":true,
-      "id":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":12}},
-        "range":[11,12],
-        "name":"E",
-        "typeAnnotation":null,
-        "optional":false
+      "body": {
+        "explicitType": null,
+        "hasUnknownMembers": false,
+        "loc": {
+          "end": {
+            "column": 15,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 13,
+            "line": 1
+          }
+        },
+        "members": [],
+        "range": [
+          13,
+          15
+        ],
+        "type": "EnumBody"
       },
-      "body":{
-        "type":"EnumBody",
-        "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":15}},
-        "range":[13,15],
-        "members":[],
-        "explicitType":null,
-        "hasUnknownMembers":false
-      }
+      "const": true,
+      "id": {
+        "loc": {
+          "end": {
+            "column": 12,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 11,
+            "line": 1
+          }
+        },
+        "name": "E",
+        "optional": false,
+        "range": [
+          11,
+          12
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 15,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        15
+      ],
+      "type": "EnumDeclaration"
     }
   ],
-  "comments":[]
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 15,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    15
+  ],
+  "type": "Program"
 }

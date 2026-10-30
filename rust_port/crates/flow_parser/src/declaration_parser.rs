@@ -1150,10 +1150,11 @@ pub(super) fn parse_let(
 
 pub(super) fn parse_enum_declaration(
     env: &mut ParserEnv,
+    start_loc: Option<Loc>,
     leading: Option<Vec<Comment<Loc>>>,
     const_: bool,
 ) -> Result<statement::Statement<Loc, Loc>, Rollback> {
-    let (loc, decl) = with_loc(None, env, |env| {
+    let (loc, decl) = with_loc(start_loc, env, |env| {
         enum_parser::declaration(leading.unwrap_or_default(), const_, env)
     })?;
     Ok(statement::Statement::new(

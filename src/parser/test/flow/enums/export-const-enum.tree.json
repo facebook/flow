@@ -1,38 +1,103 @@
 {
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":22}},
-  "range":[0,22],
-  "body":[
+  "body": [
     {
-      "type":"ExportNamedDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":22}},
-      "range":[0,22],
-      "declaration":{
-        "type":"EnumDeclaration",
-        "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":22}},
-        "range":[13,22],
-        "const":true,
-        "id":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":19}},
-          "range":[18,19],
-          "name":"E",
-          "typeAnnotation":null,
-          "optional":false
+      "declaration": {
+        "body": {
+          "explicitType": null,
+          "hasUnknownMembers": false,
+          "loc": {
+            "end": {
+              "column": 22,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 20,
+              "line": 1
+            }
+          },
+          "members": [],
+          "range": [
+            20,
+            22
+          ],
+          "type": "EnumBody"
         },
-        "body":{
-          "type":"EnumBody",
-          "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":22}},
-          "range":[20,22],
-          "members":[],
-          "explicitType":null,
-          "hasUnknownMembers":false
+        "const": true,
+        "id": {
+          "loc": {
+            "end": {
+              "column": 19,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 18,
+              "line": 1
+            }
+          },
+          "name": "E",
+          "optional": false,
+          "range": [
+            18,
+            19
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 22,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 1
+          }
+        },
+        "range": [
+          7,
+          22
+        ],
+        "type": "EnumDeclaration"
+      },
+      "exportKind": "value",
+      "loc": {
+        "end": {
+          "column": 22,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
         }
       },
-      "specifiers":[],
-      "source":null,
-      "exportKind":"value"
+      "range": [
+        0,
+        22
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "ExportNamedDeclaration"
     }
   ],
-  "comments":[]
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 22,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    22
+  ],
+  "type": "Program"
 }
