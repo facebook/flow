@@ -1619,7 +1619,7 @@ References:
    27|   // This is only on function components, but trying to access name when
    28|   // displayName is undefined is a common pattern.
    29|   name?: ?string,
-   30|   propTypes?: {[string] : any, ...},
+   30|   propTypes?: {[key: string]: any, ...},
    31|   ...
    32| };
        ^ [1]
@@ -3508,7 +3508,7 @@ References:
    27|   // This is only on function components, but trying to access name when
    28|   // displayName is undefined is a common pattern.
    29|   name?: ?string,
-   30|   propTypes?: {[string] : any, ...},
+   30|   propTypes?: {[key: string]: any, ...},
    31|   ...
    32| };
        ^ [1]

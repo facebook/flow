@@ -103,7 +103,7 @@ Flags: --pretty
   "result":[
     {"name":"displayName","type":"(?string) | void"},
     {"name":"name","type":"(?string) | void"},
-    {"name":"propTypes","type":"{[string]: any} | void"}
+    {"name":"propTypes","type":"{[key: string]: any} | void"}
   ]
 }
 
@@ -113,7 +113,7 @@ Flags: --pretty
   "result":[
     {"name":"displayName","type":"(?string) | void"},
     {"name":"name","type":"(?string) | void"},
-    {"name":"propTypes","type":"{[string]: any} | void"}
+    {"name":"propTypes","type":"{[key: string]: any} | void"}
   ]
 }
 
@@ -746,14 +746,14 @@ Flags: --pretty
       "name":"UIEventHandler",
       "type":"type UIEventHandler<T = Element> = EventHandler<UIEvent<T>>"
     },
-    {"name":"ValidationMap","type":"type ValidationMap<T> = {[string]: any}"},
+    {"name":"ValidationMap","type":"type ValidationMap<T> = {[key: string]: any}"},
     {
       "name":"VideoHTMLAttributes",
       "type":"type VideoHTMLAttributes<T> = HTMLAttributes<T>"
     },
     {
       "name":"WeakValidationMap",
-      "type":"type WeakValidationMap<T> = {[string]: any}"
+      "type":"type WeakValidationMap<T> = {[key: string]: any}"
     },
     {
       "name":"WebViewHTMLAttributes",
