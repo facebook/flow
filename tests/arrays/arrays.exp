@@ -115,9 +115,9 @@ Cannot assign `0` to `arr[day]` because `Date` [1] is not an array index. [incom
          ^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1275:12
-   1275|     new(): Date;
-                    ^^^^ [1]
+   <BUILTINS>/lib.es5.js:1277:13
+   1277|     new (): Date;
+                     ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- numeric_elem.js:7:1
@@ -129,9 +129,9 @@ Cannot get `arr[day]` because `Date` [1] is not an array index. [incompatible-us
          ^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1275:12
-   1275|     new(): Date;
-                    ^^^^ [1]
+   <BUILTINS>/lib.es5.js:1277:13
+   1277|     new (): Date;
+                     ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:67:1

@@ -620,35 +620,35 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:38:26
 
-Cannot assign `x.toString` to `xToString` because `(this: Object) => string` [1] is incompatible with `number` [2].
+Cannot assign `x.toString` to `xToString` because `(this: Date) => string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    object_prototype.js:38:26
-    38| var xToString : number = x.toString; // error
-                                 ^^^^^^^^^^
+     38| var xToString : number = x.toString; // error
+                                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:244:5
-   244|     toString(): string;
-            ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1113:5
+   1113|     toString(): string;
+             ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:38:17
-    38| var xToString : number = x.toString; // error
-                        ^^^^^^ [2]
+     38| var xToString : number = x.toString; // error
+                         ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
 
-Cannot assign `x.toString` to `xToString2` because in the `this` parameter: `Object` [1] is incompatible with `unknown`.
+Cannot assign `x.toString` to `xToString2` because in the `this` parameter: `Date` [1] is incompatible with `unknown`.
 [incompatible-type]
 
    object_prototype.js:39:33
-   39| var xToString2 : () => number = x.toString; // error
-                                       ^^^^^^^^^^
+     39| var xToString2 : () => number = x.toString; // error
+                                         ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:89:15
-   89| declare class Object {
-                     ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1111:11
+   1111| interface Date {
+                   ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
@@ -657,16 +657,16 @@ Cannot assign `x.toString` to `xToString2` because in the return value: `string`
 [incompatible-type]
 
    object_prototype.js:39:33
-    39| var xToString2 : () => number = x.toString; // error
-                                        ^^^^^^^^^^
+     39| var xToString2 : () => number = x.toString; // error
+                                         ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:244:17
-   244|     toString(): string;
-                        ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1113:17
+   1113|     toString(): string;
+                         ^^^^^^ [1]
    object_prototype.js:39:24
-    39| var xToString2 : () => number = x.toString; // error
-                               ^^^^^^ [2]
+     39| var xToString2 : () => number = x.toString; // error
+                                ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:43:26
@@ -923,8 +923,8 @@ Cannot assign `x.valueOf` to `xValueOf` because `(this: Date) => number` [1] is 
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1135:5
-   1135|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:1137:5
+   1137|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -983,8 +983,8 @@ References:
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1121:5
-   1121|     toLocaleString(locales?: string | string[], options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/lib.es5.js:1123:5
+   1123|     toLocaleString(locales?: string | string[], options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
