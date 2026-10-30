@@ -30,6 +30,8 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocSet;
 use flow_analysis::bindings::Bindings;
 use flow_analysis::bindings::Kind as BindingsKind;
+use flow_analysis::bindings::SyntheticVar;
+use flow_analysis::bindings::VarKey;
 use flow_analysis::hoister::LexicalHoister;
 use flow_analysis::scope_builder;
 use flow_analysis::scope_builder::WithBindings;
@@ -82,11 +84,6 @@ use vec1::Vec1;
 use crate::dependency_sigs::Context;
 use crate::dependency_sigs::Flow;
 use crate::super_call_in_derived_ctor_checker;
-
-const MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME: &str = "<maybe_exhaustively_checked>";
-static MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR: std::sync::LazyLock<FlowSmolStr> =
-    std::sync::LazyLock::new(|| FlowSmolStr::new(MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME));
-const NEXT_VAR_NAME: &str = "<next>";
 
 #[derive(Debug, Clone, Dupe)]
 pub enum RefinementChain {
@@ -172,6 +169,14 @@ struct ReadEntry {
 
 type ReadEntryMap = FlowRedBlackTreeMap<ALoc, ReadEntry>;
 
+/// A variable that a loop body may change or, when `projections` is not empty, a property path
+/// on it. Like `refinement_key::Lookup`, except that the base is an environment key, so it can
+/// also be a synthetic variable.
+struct ChangedEnvKey {
+    base: VarKey,
+    projections: FlowVector<Proj>,
+}
+
 /// A partial environment is a map from variables to environment value snapshots.
 /// This environment contains only the set of values that might change under the current scope.
 mod partial_env_snapshot {
@@ -200,33 +205,29 @@ mod partial_env_snapshot {
     }
 
     #[derive(Debug, Clone, Dupe, Default)]
-    pub(super) struct PartialEnvSnapshot(Rc<HashMap<FlowSmolStr, Entry>>);
+    pub(super) struct PartialEnvSnapshot(Rc<HashMap<VarKey, Entry>>);
 
     impl PartialEnvSnapshot {
-        pub(super) fn from_hash_map(map: HashMap<FlowSmolStr, Entry>) -> Self {
+        pub(super) fn from_hash_map(map: HashMap<VarKey, Entry>) -> Self {
             PartialEnvSnapshot(Rc::new(map))
         }
 
-        pub(super) fn get(&self, x: &FlowSmolStr) -> Option<&Entry> {
+        pub(super) fn get(&self, x: &VarKey) -> Option<&Entry> {
             self.0.get(x)
         }
     }
 
     impl<'a> IntoIterator for &'a PartialEnvSnapshot {
-        type Item = (&'a FlowSmolStr, &'a Entry);
-        type IntoIter = std::collections::hash_map::Iter<'a, FlowSmolStr, Entry>;
+        type Item = (&'a VarKey, &'a Entry);
+        type IntoIter = std::collections::hash_map::Iter<'a, VarKey, Entry>;
         fn into_iter(self) -> Self::IntoIter {
             self.0.iter()
         }
     }
 
-    pub(super) fn read_with_fallback<F>(
-        x: &FlowSmolStr,
-        env: &PartialEnvSnapshot,
-        fallback: F,
-    ) -> Entry
+    pub(super) fn read_with_fallback<F>(x: &VarKey, env: &PartialEnvSnapshot, fallback: F) -> Entry
     where
-        F: Fn(&FlowSmolStr) -> Entry,
+        F: Fn(&VarKey) -> Entry,
     {
         match env.get(x) {
             Some(v) => v.dupe(),
@@ -239,9 +240,9 @@ mod partial_env_snapshot {
         s1: &PartialEnvSnapshot,
         s2: &PartialEnvSnapshot,
         mut combine: F,
-    ) -> (Acc, BTreeMap<FlowSmolStr, V>)
+    ) -> (Acc, BTreeMap<VarKey, V>)
     where
-        F: FnMut(Acc, &FlowSmolStr, Option<&Entry>, Option<&Entry>) -> (Acc, Option<V>),
+        F: FnMut(Acc, &VarKey, Option<&Entry>, Option<&Entry>) -> (Acc, Option<V>),
     {
         // First: fold over s2, looking up in s1
         let mut map = BTreeMap::new();
@@ -331,10 +332,10 @@ mod full_env {
     /// interface rather than the same-named const.
     #[derive(Debug, Clone)]
     pub(super) struct FunctionScope {
-        pub(super) value_local_stacked_env: BTreeMap<FlowSmolStr, Vec<EnvVal>>,
-        pub(super) type_local_stacked_env: BTreeMap<FlowSmolStr, Vec<EnvVal>>,
-        pub(super) value_captured: Rc<RefCell<BTreeMap<FlowSmolStr, EnvVal>>>,
-        pub(super) type_captured: Rc<RefCell<BTreeMap<FlowSmolStr, EnvVal>>>,
+        pub(super) value_local_stacked_env: BTreeMap<VarKey, Vec<EnvVal>>,
+        pub(super) type_local_stacked_env: BTreeMap<VarKey, Vec<EnvVal>>,
+        pub(super) value_captured: Rc<RefCell<BTreeMap<VarKey, EnvVal>>>,
+        pub(super) type_captured: Rc<RefCell<BTreeMap<VarKey, EnvVal>>>,
     }
 
     impl FunctionScope {
@@ -355,8 +356,8 @@ mod full_env {
     }
 
     pub(super) struct FunctionScopeLocalEnvSnapshot {
-        value: Vec<(FlowSmolStr, bool)>,
-        type_: Vec<(FlowSmolStr, bool)>,
+        value: Vec<(VarKey, bool)>,
+        type_: Vec<(VarKey, bool)>,
     }
 
     fn copy_env_val_from_env_below(
@@ -386,14 +387,14 @@ mod full_env {
         }
     }
 
-    fn function_scope_read_value(x: &FlowSmolStr, scope: &FunctionScope) -> Option<EnvVal> {
+    fn function_scope_read_value(x: &VarKey, scope: &FunctionScope) -> Option<EnvVal> {
         if let Some(stack) = scope.value_local_stacked_env.get(x) {
             return stack.last().duped();
         }
         scope.value_captured.borrow().get(x).duped()
     }
 
-    fn function_scope_read_type(x: &FlowSmolStr, scope: &FunctionScope) -> Option<EnvVal> {
+    fn function_scope_read_type(x: &VarKey, scope: &FunctionScope) -> Option<EnvVal> {
         if let Some(stack) = scope.type_local_stacked_env.get(x) {
             return stack.last().duped();
         }
@@ -407,7 +408,7 @@ mod full_env {
     }
 
     fn function_scope_read_type_or_value(
-        x: &FlowSmolStr,
+        x: &VarKey,
         scope: &FunctionScope,
     ) -> Option<(EnvVal, TypeLookupNamespace)> {
         match function_scope_read_type(x, scope) {
@@ -421,7 +422,7 @@ mod full_env {
         f: F,
     ) -> PartialEnvSnapshot
     where
-        F: Fn(&FlowSmolStr, &EnvVal) -> PartialEnvEntry,
+        F: Fn(&VarKey, &EnvVal) -> PartialEnvEntry,
     {
         let captured = scope.value_captured.borrow();
         let mut acc = HashMap::with_capacity(scope.value_local_stacked_env.len() + captured.len());
@@ -438,7 +439,7 @@ mod full_env {
 
     fn iter_function_scope_value<F>(scope: &FunctionScope, mut f: F)
     where
-        F: FnMut(&FlowSmolStr, &EnvVal),
+        F: FnMut(&VarKey, &EnvVal),
     {
         for (x, stack) in &scope.value_local_stacked_env {
             if let Some(last) = stack.last() {
@@ -458,7 +459,7 @@ mod full_env {
     }
 
     impl FullEnv {
-        pub(super) fn init(globals: HashMap<FlowSmolStr, EnvVal>) -> Self {
+        pub(super) fn init(globals: HashMap<VarKey, EnvVal>) -> Self {
             let value_local_stacked_env = globals.into_iter().map(|(k, v)| (k, vec![v])).collect();
             FullEnv {
                 scopes: vec![FunctionScope {
@@ -502,7 +503,7 @@ mod full_env {
         pub(super) fn env_read_opt(
             &self,
             should_havoc: impl Fn(&EnvVal) -> bool,
-            x: &FlowSmolStr,
+            x: &VarKey,
         ) -> Option<EnvVal> {
             let curr_scope = self.scopes.last().unwrap();
             if let Some(v) = function_scope_read_value(x, curr_scope) {
@@ -525,7 +526,7 @@ mod full_env {
         pub(super) fn env_read_from_below(
             &self,
             should_havoc: impl Fn(&EnvVal) -> bool,
-            x: &FlowSmolStr,
+            x: &VarKey,
         ) -> EnvVal {
             let len = self.scopes.len();
             for i in (0..len.saturating_sub(1)).rev() {
@@ -533,13 +534,13 @@ mod full_env {
                     return copy_env_val_from_env_below(&should_havoc, &env_val);
                 }
             }
-            panic!("Missing env entry from below: {}", x)
+            panic!("Missing env entry from below: {x:?}")
         }
 
         pub(super) fn env_read_entry_from_below(
             &self,
             should_havoc: impl Fn(&EnvVal) -> bool,
-            x: &FlowSmolStr,
+            x: &VarKey,
         ) -> PartialEnvEntry {
             PartialEnvEntry::of_env_val(&self.env_read_from_below(should_havoc, x))
         }
@@ -547,7 +548,7 @@ mod full_env {
         pub(super) fn type_env_read_opt(
             &self,
             should_havoc: impl Fn(&EnvVal) -> bool,
-            x: &FlowSmolStr,
+            x: &VarKey,
         ) -> Option<EnvVal> {
             let curr_scope = self.scopes.last().unwrap();
             if let Some((v, _)) = function_scope_read_type_or_value(x, curr_scope) {
@@ -584,8 +585,8 @@ mod full_env {
         /// restore old state.
         pub(super) fn push_new_bindings(
             &mut self,
-            value: BTreeMap<FlowSmolStr, EnvVal>,
-            type_: BTreeMap<FlowSmolStr, EnvVal>,
+            value: BTreeMap<VarKey, EnvVal>,
+            type_: BTreeMap<VarKey, EnvVal>,
         ) -> FunctionScopeLocalEnvSnapshot {
             let scope = self.scopes.last_mut().unwrap();
             let mut value_snapshot = Vec::with_capacity(value.len());
@@ -660,14 +661,14 @@ mod full_env {
 
         pub(super) fn to_partial_env_snapshot<F>(&self, f: F) -> PartialEnvSnapshot
         where
-            F: Fn(&FlowSmolStr, &EnvVal) -> PartialEnvEntry,
+            F: Fn(&VarKey, &EnvVal) -> PartialEnvEntry,
         {
             map_function_scope_value_into_partial_env_entries(self.scopes.last().unwrap(), f)
         }
 
         pub(super) fn update_env<F>(&self, f: F)
         where
-            F: FnMut(&FlowSmolStr, &EnvVal),
+            F: FnMut(&VarKey, &EnvVal),
         {
             iter_function_scope_value(self.scopes.last().unwrap(), f);
         }
@@ -690,7 +691,7 @@ mod full_env {
             partial_env: &PartialEnvSnapshot,
             mut f: F,
         ) where
-            F: FnMut(&FlowSmolStr, &PartialEnvEntry, &EnvVal),
+            F: FnMut(&VarKey, &PartialEnvEntry, &EnvVal),
         {
             iter_function_scope_value(self.scopes.last().unwrap(), |x, env_val| {
                 let env_entry = partial_env_snapshot::read_with_fallback(x, partial_env, |x| {
@@ -724,18 +725,18 @@ mod full_env {
             self.scopes.last_mut().unwrap()
         }
 
-        /// Get all names in the current scope (value namespace)
-        pub(super) fn all_names(&self) -> Vec<FlowSmolStr> {
-            let mut names = Vec::new();
-            iter_function_scope_value(self.scopes.last().unwrap(), |name, _| {
-                names.push(name.dupe());
+        /// Get the keys of all variables in the current scope (value namespace)
+        pub(super) fn all_keys(&self) -> Vec<VarKey> {
+            let mut keys = Vec::new();
+            iter_function_scope_value(self.scopes.last().unwrap(), |key, _| {
+                keys.push(key.dupe());
             });
-            names
+            keys
         }
 
-        /// Get an env_val by name from the current scope (value namespace)
-        pub(super) fn env_val_by_name(&self, name: &FlowSmolStr) -> Option<EnvVal> {
-            function_scope_read_value(name, self.scopes.last().unwrap())
+        /// Get an env_val by key from the current scope (value namespace)
+        pub(super) fn env_val_by_key(&self, key: &VarKey) -> Option<EnvVal> {
+            function_scope_read_value(key, self.scopes.last().unwrap())
         }
     }
 }
@@ -1488,7 +1489,7 @@ fn initialize_globals(
     unbound_names: &BTreeSet<FlowSmolStr>,
     program_loc: ALoc,
     cache: &mut ValCache<ALoc>,
-) -> HashMap<FlowSmolStr, EnvVal> {
+) -> HashMap<VarKey, EnvVal> {
     use flow_common::reason::VirtualReason;
     use refinement_key::Proj;
 
@@ -1505,7 +1506,7 @@ fn initialize_globals(
             kind: BindingsKind::Var,
             kind_at_loc: BTreeMap::new(),
         });
-        globals.insert(name.dupe(), entry);
+        globals.insert(VarKey::Name(name.dupe()), entry);
     }
 
     for name in exclude_syms {
@@ -1519,7 +1520,7 @@ fn initialize_globals(
             kind: BindingsKind::Var,
             kind_at_loc: BTreeMap::new(),
         });
-        globals.insert(name.dupe(), entry);
+        globals.insert(VarKey::Name(name.dupe()), entry);
     }
 
     // this has to come later, since this can be thought to be unbound names
@@ -1536,7 +1537,7 @@ fn initialize_globals(
             kind: BindingsKind::Var,
             kind_at_loc: BTreeMap::new(),
         });
-        globals.insert(FlowSmolStr::new_inline("this"), entry);
+        globals.insert(VarKey::Name(FlowSmolStr::new_inline("this")), entry);
     }
 
     if !is_lib {
@@ -1560,7 +1561,7 @@ fn initialize_globals(
             kind: BindingsKind::Var,
             kind_at_loc: BTreeMap::new(),
         });
-        globals.insert(module_name, entry);
+        globals.insert(VarKey::Name(module_name), entry);
     }
 
     for &name in MODULE_SCOPED_VARS {
@@ -1575,7 +1576,7 @@ fn initialize_globals(
             kind: BindingsKind::Var,
             kind_at_loc: BTreeMap::new(),
         });
-        globals.insert(name_str, entry);
+        globals.insert(VarKey::Name(name_str), entry);
     }
 
     globals
@@ -1604,11 +1605,8 @@ fn initial_env<Cx: Context>(
 ) -> (full_env::FullEnv, Option<FlowSmolStr>) {
     let mut globals = initialize_globals(is_lib, exclude_syms, unbound_names, program_loc, cache);
 
-    let exhaustive_val = ssa_val::undeclared(
-        cache,
-        MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR.dupe(),
-        ALoc::none(),
-    );
+    let exhaustive_key = VarKey::Synthetic(SyntheticVar::MaybeExhaustivelyChecked);
+    let exhaustive_val = ssa_val::uninitialized(cache, ALoc::none());
     let exhaustive_entry = EnvVal::new(EnvValInner {
         val_ref: Rc::new(RefCell::new(exhaustive_val.dupe())),
         havoc: exhaustive_val,
@@ -1618,10 +1616,7 @@ fn initial_env<Cx: Context>(
         kind: BindingsKind::Internal,
         kind_at_loc: BTreeMap::new(),
     });
-    globals.insert(
-        MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR.dupe(),
-        exhaustive_entry,
-    );
+    globals.insert(exhaustive_key, exhaustive_entry);
 
     // We need to make sure that the base name for jsx is always in scope.
     // statement.rs is going to read these identifiers at jsx calls, even if
@@ -1644,7 +1639,7 @@ fn initial_env<Cx: Context>(
             kind: BindingsKind::Var,
             kind_at_loc: BTreeMap::new(),
         });
-        globals.insert(jsx_name.dupe(), env_val);
+        globals.insert(VarKey::Name(jsx_name.dupe()), env_val);
     }
 
     (full_env::FullEnv::init(globals), jsx_base_name)
@@ -1972,16 +1967,17 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// binding so downstream type checking can flag it as a "type used as
     /// value" error rather than crashing on a missing env entry.
     fn env_read(&self, x: &FlowSmolStr) -> EnvVal {
+        let key = &VarKey::Name(x.dupe());
         let value_entry = self
             .env_state
             .env
-            .env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), x);
+            .env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key);
         match value_entry {
             Some(v) if v.def_loc.is_none() && self.env_state.jsx_base_name.as_ref() == Some(x) => {
                 match self
                     .env_state
                     .env
-                    .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), x)
+                    .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key)
                 {
                     Some(type_v) if type_v.def_loc.is_some() => type_v,
                     _ => v,
@@ -1991,22 +1987,23 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             None => self
                 .env_state
                 .env
-                .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), x)
+                .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key)
                 .unwrap_or_else(|| panic!("Missing env entry: {}", x)),
         }
     }
 
     fn env_read_opt(&self, x: &FlowSmolStr) -> Option<EnvVal> {
+        let key = &VarKey::Name(x.dupe());
         let value_entry = self
             .env_state
             .env
-            .env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), x);
+            .env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key);
         match value_entry {
             Some(v) if v.def_loc.is_none() && self.env_state.jsx_base_name.as_ref() == Some(x) => {
                 match self
                     .env_state
                     .env
-                    .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), x)
+                    .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key)
                 {
                     Some(type_v) if type_v.def_loc.is_some() => Some(type_v),
                     _ => Some(v),
@@ -2016,8 +2013,17 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             None => self
                 .env_state
                 .env
-                .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), x),
+                .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key),
         }
+    }
+
+    /// Read a variable the resolver added itself. Synthetic variables live only in the value
+    /// namespace, so there is no type-namespace fallback.
+    fn synthetic_env_read_opt(&self, var: SyntheticVar) -> Option<EnvVal> {
+        let key = &VarKey::Synthetic(var);
+        self.env_state
+            .env
+            .env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key)
     }
 
     /// Read a name in the type namespace. Used by visitor entry points for
@@ -2026,10 +2032,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// needed for class names, declared classes, and other NValueAndType
     /// bindings to be reachable as types.
     fn type_env_read(&self, x: &FlowSmolStr) -> EnvVal {
+        let key = &VarKey::Name(x.dupe());
         match self
             .env_state
             .env
-            .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), x)
+            .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key)
         {
             Some(v) => v,
             None => self.env_read(x),
@@ -2037,27 +2044,24 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     }
 
     fn type_env_read_opt(&self, x: &FlowSmolStr) -> Option<EnvVal> {
+        let key = &VarKey::Name(x.dupe());
         match self
             .env_state
             .env
-            .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), x)
+            .type_env_read_opt(|env_val| self.should_havoc_val_to_initialized(env_val), key)
         {
             Some(v) => Some(v),
             None => self.env_read_opt(x),
         }
     }
 
-    fn env_read_into_snapshot_from_below(&self, x: &FlowSmolStr) -> PartialEnvEntry {
+    fn env_read_into_snapshot_from_below(&self, x: &VarKey) -> PartialEnvEntry {
         self.env_state
             .env
             .env_read_entry_from_below(|env_val| self.should_havoc_val_to_initialized(env_val), x)
     }
 
-    fn partial_env_snapshot_read(
-        &self,
-        x: &FlowSmolStr,
-        env: &PartialEnvSnapshot,
-    ) -> PartialEnvEntry {
+    fn partial_env_snapshot_read(&self, x: &VarKey, env: &PartialEnvSnapshot) -> PartialEnvEntry {
         partial_env_snapshot::read_with_fallback(x, env, |x| {
             self.env_read_into_snapshot_from_below(x)
         })
@@ -2080,8 +2084,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// approach is simpler than this one.
     fn env_snapshot_without_latest_refinements(&self) -> PartialEnvSnapshot {
         struct RefinementsByKey {
-            value: BTreeMap<FlowSmolStr, BTreeSet<usize>>,
-            heap: BTreeMap<FlowSmolStr, BTreeMap<FlowVector<Proj>, BTreeSet<usize>>>,
+            value: BTreeMap<VarKey, BTreeSet<usize>>,
+            heap: BTreeMap<VarKey, BTreeMap<FlowVector<Proj>, BTreeSet<usize>>>,
         }
 
         fn refinements_by_key(refinement_maps: &RefinementMaps) -> RefinementsByKey {
@@ -2090,16 +2094,13 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 heap: BTreeMap::new(),
             };
             for (lookup_key, refinement_id) in refinement_maps.applied.values() {
+                let key = VarKey::Name(lookup_key.base.dupe());
                 if lookup_key.projections.is_empty() {
-                    result
-                        .value
-                        .entry(lookup_key.base.dupe())
-                        .or_default()
-                        .insert(refinement_id.0);
+                    result.value.entry(key).or_default().insert(refinement_id.0);
                 } else {
                     result
                         .heap
-                        .entry(lookup_key.base.dupe())
+                        .entry(key)
                         .or_default()
                         .entry(lookup_key.projections.dupe())
                         .or_default()
@@ -2613,11 +2614,51 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         (val, providers)
     }
 
+    /// The starting value of a variable the resolver adds to a scope itself.
+    fn synthetic_env_val(
+        &mut self,
+        var: SyntheticVar,
+        kind: BindingsKind,
+        loc: &ALoc,
+        kind_at_loc: BTreeMap<ALoc, BindingsKind>,
+    ) -> EnvVal {
+        use env_api::DefLocType;
+        use env_api::EnvKey;
+        use flow_common::reason::VirtualReason;
+
+        let (val, def_loc) = match var {
+            SyntheticVar::MaybeExhaustivelyChecked => (
+                ssa_val::uninitialized(&mut *self.cache.borrow_mut(), loc.dupe()),
+                None,
+            ),
+            SyntheticVar::GeneratorNext => {
+                let reason = VirtualReason::new(None, loc.dupe());
+                self.env_state.write_entries.insert(
+                    EnvKey::new(DefLocType::OrdinaryNameLoc, loc.dupe()),
+                    EnvEntry::AssigningWrite(reason.dupe()),
+                );
+                (
+                    ssa_val::one(&mut *self.cache.borrow_mut(), reason),
+                    Some(loc.dupe()),
+                )
+            }
+        };
+        EnvVal::new(EnvValInner {
+            val_ref: Rc::new(RefCell::new(val.dupe())),
+            havoc: val,
+            writes_by_closure_provider_val: None,
+            def_loc,
+            heap_refinements: empty_heap_refinements(),
+            kind,
+            kind_at_loc,
+        })
+    }
+
     fn mk_env(
         &mut self,
         this_super_binding_env: ThisSuperBindingEnv,
-        bindings: &BTreeMap<FlowSmolStr, (BindingsKind, Vec1<(ALoc, BindingsKind)>)>,
-    ) -> BTreeMap<FlowSmolStr, EnvVal> {
+        bindings: &BTreeMap<VarKey, (BindingsKind, Vec1<(ALoc, BindingsKind)>)>,
+    ) -> BTreeMap<VarKey, EnvVal> {
         use env_api::DefLocType;
         use env_api::EnvKey;
         use flow_common::reason::VirtualReason;
@@ -2625,10 +2666,18 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
         let mut result = BTreeMap::new();
 
-        for (name, (kind, entries)) in bindings {
+        for (key, (kind, entries)) in bindings {
             let (loc, _) = entries.first();
             let kind_at_loc: BTreeMap<ALoc, BindingsKind> =
                 entries.iter().map(|(l, k)| (l.dupe(), *k)).collect();
+            let name = match key {
+                VarKey::Name(name) => name,
+                VarKey::Synthetic(var) => {
+                    let env_val = self.synthetic_env_val(*var, *kind, loc, kind_at_loc);
+                    result.insert(key.dupe(), env_val);
+                    continue;
+                }
+            };
 
             let env_val = match kind {
                 BindingsKind::Type { .. } | BindingsKind::Interface { .. } => {
@@ -2769,23 +2818,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         kind_at_loc: kind_at_loc.clone(),
                     })
                 }
-                BindingsKind::GeneratorNext => {
-                    let reason = VirtualReason::new(None, loc.dupe());
-                    self.env_state.write_entries.insert(
-                        EnvKey::new(DefLocType::OrdinaryNameLoc, loc.dupe()),
-                        EnvEntry::AssigningWrite(reason.dupe()),
-                    );
-                    let val = ssa_val::one(&mut *self.cache.borrow_mut(), reason.dupe());
-                    EnvVal::new(EnvValInner {
-                        val_ref: Rc::new(RefCell::new(val.dupe())),
-                        havoc: val,
-                        writes_by_closure_provider_val: None,
-                        def_loc: Some(loc.dupe()),
-                        heap_refinements: empty_heap_refinements(),
-                        kind: *kind,
-                        kind_at_loc: kind_at_loc.clone(),
-                    })
-                }
                 _ => {
                     let (initial_val, havoc, writes_by_closure_provider_val) = if name.as_str()
                         == "this"
@@ -2896,10 +2928,12 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 }
             };
 
-            result.insert(name.dupe(), env_val);
+            result.insert(key.dupe(), env_val);
         }
 
-        result.retain(|name, _| !self.is_excluded_ordinary_name(name));
+        result.retain(
+            |key, _| !matches!(key, VarKey::Name(name) if self.is_excluded_ordinary_name(name)),
+        );
         result
     }
 
@@ -2915,9 +2949,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// iface_loc need AssigningWrites for name_def to register both).
     fn mk_type_env(
         &mut self,
-        bindings: &BTreeMap<FlowSmolStr, (BindingsKind, Vec1<(ALoc, BindingsKind)>)>,
-        full: &BTreeMap<FlowSmolStr, (BindingsKind, Vec1<(ALoc, BindingsKind)>)>,
-    ) -> BTreeMap<FlowSmolStr, EnvVal> {
+        bindings: &BTreeMap<VarKey, (BindingsKind, Vec1<(ALoc, BindingsKind)>)>,
+        full: &BTreeMap<VarKey, (BindingsKind, Vec1<(ALoc, BindingsKind)>)>,
+    ) -> BTreeMap<VarKey, EnvVal> {
         use env_api::DefLocType;
         use env_api::EnvKey;
         use flow_analysis::bindings::Namespace;
@@ -2925,7 +2959,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         use flow_common::reason::VirtualReasonDesc;
 
         let mut result = BTreeMap::new();
-        for (name, (kind, entries)) in bindings {
+        for (key, (kind, entries)) in bindings {
+            // Synthetic variables are values only.
+            let VarKey::Name(name) = key else {
+                continue;
+            };
             let (loc, _) = entries.first();
             let default_type_entries: Vec<(ALoc, BindingsKind)> =
                 entries.iter().map(|(l, k)| (l.dupe(), *k)).collect();
@@ -2939,7 +2977,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 | BindingsKind::Interface { .. } => 2,
                 _ => 3,
             };
-            let type_entries = match full.get(name) {
+            let type_entries = match full.get(key) {
                 None => default_type_entries.clone(),
                 Some((_, full_entries)) => full_entries
                     .iter()
@@ -2982,7 +3020,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             // namespace-before-function order is handled too. A value-bodied
             // `declare namespace` binds as `DeclaredConst` (see hoister.rs) and
             // never enters this type-side map.
-            let (canonical_loc, canonical_kind) = match (canonical_kind, full.get(name)) {
+            let (canonical_loc, canonical_kind) = match (canonical_kind, full.get(key)) {
                 (
                     BindingsKind::Type {
                         type_only_namespace: true,
@@ -3011,18 +3049,17 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             // name_def (the type members are folded into the sibling via
             // `wrap_with_namespace_types`), so a write at that id would
             // create an unresolvable lazy tvar.
-            let merges_into_sibling_declaration =
-                full.get(name).is_some_and(|(_, full_entries)| {
-                    full_entries.iter().any(|(_, kind)| {
-                        matches!(
-                            kind,
-                            BindingsKind::Function
-                                | BindingsKind::DeclaredFunction
-                                | BindingsKind::Class
-                                | BindingsKind::DeclaredClass
-                        )
-                    })
-                });
+            let merges_into_sibling_declaration = full.get(key).is_some_and(|(_, full_entries)| {
+                full_entries.iter().any(|(_, kind)| {
+                    matches!(
+                        kind,
+                        BindingsKind::Function
+                            | BindingsKind::DeclaredFunction
+                            | BindingsKind::Class
+                            | BindingsKind::DeclaredClass
+                    )
+                })
+            });
             for (decl_loc, decl_kind) in type_kind_at_loc.iter() {
                 let is_merged_type_only_namespace = matches!(
                     decl_kind,
@@ -3056,10 +3093,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 kind: canonical_kind,
                 kind_at_loc: type_kind_at_loc,
             });
-            result.insert(name.dupe(), env_val);
+            result.insert(key.dupe(), env_val);
         }
-        result.retain(|name, env_val| {
-            env_val.kind == BindingsKind::TypeParam || !self.is_excluded_ordinary_name(name)
+        result.retain(|key, env_val| {
+            env_val.kind == BindingsKind::TypeParam
+                || !matches!(key, VarKey::Name(name) if self.is_excluded_ordinary_name(name))
         });
         result
     }
@@ -3628,10 +3666,16 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// Instead of augmenting the name_resolver with those capabilities, we emit these errors
     /// in the new_env, which does know if it's querying a value or a type.
     fn any_identifier(&mut self, loc: ALoc, name: &FlowSmolStr) {
+        let env_val = self.env_read(name);
+        self.check_static_type_param_read(&loc, name, &env_val);
+        self.record_read(loc, env_val, Some(name.dupe()));
+    }
+
+    /// Records in the read table that `env_val` is read at `loc`.
+    fn record_read(&mut self, loc: ALoc, env_val: EnvVal, name: Option<FlowSmolStr>) {
         self.env_state
             .declare_namespace_read_recorder
             .record_identifier_read(loc.dupe());
-        let env_val = self.env_read(name);
         let v = if self.env_state.visiting_hoisted_type
             && !(self.env_state.in_param_default && env_val.kind == BindingsKind::TypeParam)
         {
@@ -3647,7 +3691,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 .invalid_type_param_default_locs
                 .insert(loc.dupe());
         }
-        self.check_static_type_param_read(&loc, name, &env_val);
         if self.env_state.skip_read_recording {
             return;
         }
@@ -3655,7 +3698,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             def_loc: env_val.def_loc.dupe(),
             value: v,
             val_binding_kind: ssa_val::ValBindingKind::SourceLevelBinding(env_val.kind),
-            name: Some(name.dupe()),
+            name,
         };
         self.env_state.values.insert(loc, entry);
     }
@@ -4841,30 +4884,30 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             (None, Some(_)) => self.reset_env(refined_env1),
             (Some(_), None) => self.reset_env(refined_env2),
             _ => {
-                let names = self.env_state.env.all_names();
-                for name in names {
+                let keys = self.env_state.env.all_keys();
+                for key in keys {
                     let PartialEnvEntry {
                         env_val: value1,
                         heap_refinements: heap_entries1,
                         def_loc: _,
-                    } = self.partial_env_snapshot_read(&name, env1);
+                    } = self.partial_env_snapshot_read(&key, env1);
                     let PartialEnvEntry {
                         env_val: value2,
                         heap_refinements: heap_entries2,
                         def_loc: _,
-                    } = self.partial_env_snapshot_read(&name, env2);
+                    } = self.partial_env_snapshot_read(&key, env2);
                     let PartialEnvEntry {
                         env_val: refined_value1,
                         heap_refinements: refined_heap_entries1,
                         def_loc: _,
-                    } = self.partial_env_snapshot_read(&name, refined_env1);
+                    } = self.partial_env_snapshot_read(&key, refined_env1);
                     let PartialEnvEntry {
                         env_val: refined_value2,
                         heap_refinements: refined_heap_entries2,
                         def_loc: _,
-                    } = self.partial_env_snapshot_read(&name, refined_env2);
+                    } = self.partial_env_snapshot_read(&key, refined_env2);
 
-                    let env_val = self.env_state.env.env_val_by_name(&name).unwrap();
+                    let env_val = self.env_state.env.env_val_by_key(&key).unwrap();
 
                     let merged_heap = {
                         let mut result: HeapRefinementMap = FlowRedBlackTreeMap::new();
@@ -4964,7 +5007,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         &mut self,
         scout: F,
         continues: &[AbruptCompletion],
-    ) -> Vec<refinement_key::Lookup> {
+    ) -> Vec<ChangedEnvKey> {
         // Calling scout may have side effects, like adding new abrupt completions. We
         // need to be sure to restore the old abrupt completion envs after scouting,
         // because a scout should be followed-up by a run that revisits everything visited by
@@ -4981,14 +5024,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 Vec::new(),
                 &pre_env,
                 &post_env,
-                |acc, name, pre_env_v, post_env_v| {
+                |acc, key, pre_env_v, post_env_v| {
                     let PartialEnvEntry {
                         env_val: post_env_val,
                         heap_refinements: post_env_heap_refinements,
                         def_loc,
                     } = match post_env_v {
                         Some(v) => v.dupe(),
-                        None => this.env_read_into_snapshot_from_below(name),
+                        None => this.env_read_into_snapshot_from_below(key),
                     };
                     let PartialEnvEntry {
                         env_val: pre_env_val,
@@ -4996,7 +5039,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: _,
                     } = match pre_env_v {
                         Some(v) => v.dupe(),
-                        None => this.env_read_into_snapshot_from_below(name),
+                        None => this.env_read_into_snapshot_from_below(key),
                     };
                     let mut acc = post_env_heap_refinements.iter().fold(
                         acc,
@@ -5004,8 +5047,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                             Err(_) => acc,
                             Ok(post_env_heap_refinement) => match pre_env_heap_refinements.get(k) {
                                 None | Some(Err(_)) => {
-                                    acc.push(refinement_key::Lookup {
-                                        base: name.dupe(),
+                                    acc.push(ChangedEnvKey {
+                                        base: key.dupe(),
                                         projections: k.dupe(),
                                     });
                                     acc
@@ -5016,8 +5059,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                     {
                                         acc
                                     } else {
-                                        acc.push(refinement_key::Lookup {
-                                            base: name.dupe(),
+                                        acc.push(ChangedEnvKey {
+                                            base: key.dupe(),
                                             projections: k.dupe(),
                                         });
                                         acc
@@ -5041,7 +5084,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     {
                         (acc, None::<()>)
                     } else {
-                        acc.push(refinement_key::Lookup::of_name(name.dupe()));
+                        acc.push(ChangedEnvKey {
+                            base: key.dupe(),
+                            projections: FlowVector::new(),
+                        });
                         (acc, None::<()>)
                     }
                 },
@@ -5050,13 +5096,17 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         })
     }
 
-    fn havoc_changed_refinement_keys(&mut self, changed: &[refinement_key::Lookup]) {
+    fn havoc_changed_refinement_keys(&mut self, changed: &[ChangedEnvKey]) {
         for lookup in changed {
             // If a var is changed then all the heap refinements on that var should
             // also be havoced. If only heap refinements are havoced then there's no
             // need to havoc the subject of the projection
             if lookup.projections.is_empty() {
-                if let Some(env_val) = self.env_read_opt(&lookup.base) {
+                let env_val = match &lookup.base {
+                    VarKey::Name(name) => self.env_read_opt(name),
+                    VarKey::Synthetic(var) => self.synthetic_env_read_opt(*var),
+                };
+                if let Some(env_val) = env_val {
                     if !matches!(
                         env_val.kind,
                         BindingsKind::Const | BindingsKind::DeclaredConst
@@ -5425,8 +5475,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     fn switch_completeness(&mut self, loc: ALoc) {
         use flow_common::reason::VirtualReason;
         let reason = VirtualReason::new(None, loc);
-        let var_name = MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR.dupe();
-        let env_val = self.env_read(&var_name);
+        let env_val = self
+            .synthetic_env_read_opt(SyntheticVar::MaybeExhaustivelyChecked)
+            .expect("should be bound in every function and component body, and at the top level");
         let new_val = ssa_val::one(&mut *self.cache.borrow_mut(), reason);
         *env_val.val_ref.borrow_mut() = new_val;
     }
@@ -5467,7 +5518,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         cases_with_lexical_bindings: &[(
             &'b flow_parser::ast::statement::switch::Case<ALoc, ALoc>,
             BTreeMap<
-                FlowSmolStr,
+                VarKey,
                 (
                     flow_analysis::bindings::Kind,
                     Vec1<(ALoc, flow_analysis::bindings::Kind)>,
@@ -5564,7 +5615,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         ),
         case: &flow_parser::ast::statement::switch::Case<ALoc, ALoc>,
         lexical_bindings: &BTreeMap<
-            FlowSmolStr,
+            VarKey,
             (
                 flow_analysis::bindings::Kind,
                 Vec1<(ALoc, flow_analysis::bindings::Kind)>,
@@ -5637,7 +5688,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         if let Some(ref fallthrough) = fallthrough_env {
             self.merge_self_env(fallthrough);
         }
-        for (name, (kind, locs)) in lexical_bindings {
+        for (key, (kind, locs)) in lexical_bindings {
+            let VarKey::Name(name) = key else {
+                continue;
+            };
             if self.is_excluded_ordinary_name(name) {
                 continue;
             }
@@ -5768,7 +5822,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
                         let bindings = Bindings::singleton(flow_analysis::bindings::Entry {
                             loc: loc.dupe(),
-                            name: MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR.dupe(),
+                            key: VarKey::Synthetic(SyntheticVar::MaybeExhaustivelyChecked),
                             kind: BindingsKind::Internal,
                         });
                         r2.with_scoped_bindings(ThisSuperBindingEnv::FunctionEnv, &bindings, |r3| {
@@ -5781,7 +5835,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                 params,
                             )?;
 
-                            if let Some(env_val) = r3.env_read_opt(&MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR) {
+                            if let Some(env_val) = r3.synthetic_env_read_opt(SyntheticVar::MaybeExhaustivelyChecked) {
                                 let val = env_val.val_ref.borrow();
                                 let mut cache = HashMap::new();
                                 let simplified = ssa_val::simplify(
@@ -5792,10 +5846,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                     &val,
                                 );
                                 let mut locs: Vec<ALoc> = Vec::new();
-                                let mut undeclared = false;
+                                let mut uninitialized = false;
                                 for write_loc in simplified.write_locs.iter() {
                                     match write_loc {
-                                        env_api::WriteLoc::Undeclared { .. } => undeclared = true,
+                                        env_api::WriteLoc::Uninitialized(_) => uninitialized = true,
                                         env_api::WriteLoc::Write(r) => locs.push(r.loc().dupe()),
                                         _ => {
                                             panic!(
@@ -5805,7 +5859,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                         }
                                     }
                                 }
-                                r3.cx.add_exhaustive_check(loc, (locs, undeclared));
+                                r3.cx.add_exhaustive_check(loc, (locs, uninitialized));
                             }
 
                             Ok(())
@@ -5938,7 +5992,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         };
                         let mut bindings = Bindings::singleton(flow_analysis::bindings::Entry {
                             loc: body_loc.dupe(),
-                            name: MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR.dupe(),
+                            key: VarKey::Synthetic(SyntheticVar::MaybeExhaustivelyChecked),
                             kind: BindingsKind::Internal,
                         });
 
@@ -5955,14 +6009,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                     );
                                     bindings.add(flow_analysis::bindings::Entry {
                                         loc: this_loc,
-                                        name: FlowSmolStr::new_inline("this"),
+                                        key: VarKey::Name(FlowSmolStr::new_inline("this")),
                                         kind: BindingsKind::ThisAnnot,
                                     });
                                 }
                                 None => {
                                     bindings.add(flow_analysis::bindings::Entry {
                                         loc: fun_loc.dupe(),
-                                        name: FlowSmolStr::new_inline("this"),
+                                        key: VarKey::Name(FlowSmolStr::new_inline("this")),
                                         kind: BindingsKind::Const,
                                     });
                                 }
@@ -5971,8 +6025,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         if let Some(return_loc) = generator_return_loc {
                             bindings.add(flow_analysis::bindings::Entry {
                                 loc: return_loc.dupe(),
-                                name: FlowSmolStr::new_inline(NEXT_VAR_NAME),
-                                kind: BindingsKind::GeneratorNext,
+                                key: VarKey::Synthetic(SyntheticVar::GeneratorNext),
+                                kind: BindingsKind::Internal,
                             });
                         }
                         r2.with_scoped_bindings(ThisSuperBindingEnv::FunctionEnv, &bindings, |r3| {
@@ -5989,15 +6043,15 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                 predicate,
                                 body,
                             )?;
-                            if let Some(env_val) = r3.env_read_opt(&MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR) {
+                            if let Some(env_val) = r3.synthetic_env_read_opt(SyntheticVar::MaybeExhaustivelyChecked) {
                                 let val = env_val.val_ref.borrow();
                                 let mut cache = HashMap::new();
                                 let simplified = ssa_val::simplify(&mut cache, None, ssa_val::ValBindingKind::InternalBinding, None, &val);
                                 let mut locs: Vec<ALoc> = Vec::new();
-                                let mut undeclared = false;
+                                let mut uninitialized = false;
                                 for write_loc in simplified.write_locs.iter() {
                                     match write_loc {
-                                        env_api::WriteLoc::Undeclared { .. } => undeclared = true,
+                                        env_api::WriteLoc::Uninitialized(_) => uninitialized = true,
                                         env_api::WriteLoc::Write(r) => locs.push(r.loc().dupe()),
                                         _ => {
                                             panic!(
@@ -6007,7 +6061,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                         }
                                     }
                                 }
-                                r3.cx.add_exhaustive_check(body_loc, (locs, undeclared));
+                                r3.cx.add_exhaustive_check(body_loc, (locs, uninitialized));
                             }
 
                             Ok(())
@@ -8487,7 +8541,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         bindings: Bindings<ALoc>,
         statements: &[flow_parser::ast::statement::Statement<ALoc, ALoc>],
     ) -> Option<AbruptCompletion> {
-        let names: FlowOrdSet<_> = bindings.to_map().into_keys().collect();
+        let names: FlowOrdSet<_> = bindings
+            .to_map()
+            .into_keys()
+            .filter_map(VarKey::into_name)
+            .collect();
         let global_bindings: BTreeMap<_, _> = names
             .iter()
             .map(|name| {
@@ -8501,7 +8559,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     kind: BindingsKind::Var,
                     kind_at_loc: BTreeMap::new(),
                 });
-                (name.dupe(), entry)
+                (VarKey::Name(name.dupe()), entry)
             })
             .collect();
         let snapshot = self
@@ -9775,7 +9833,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             let match_root_id = ast_utils::match_root_ident::<ALoc, ALoc>(match_keyword_loc.dupe());
             let entry = flow_analysis::bindings::Entry {
                 loc: match_root_id.loc.dupe(),
-                name: match_root_id.name.dupe(),
+                key: VarKey::Name(match_root_id.name.dupe()),
                 kind: flow_analysis::bindings::Kind::Internal,
             };
             Bindings::singleton(entry)
@@ -10686,12 +10744,12 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         let mut this_super_bindings = bindings::Bindings::empty();
         this_super_bindings.add(bindings::Entry {
             loc: loc.dupe(),
-            name: FlowSmolStr::from("this"),
+            key: VarKey::Name(FlowSmolStr::from("this")),
             kind: bindings::Kind::Const,
         });
         this_super_bindings.add(bindings::Entry {
             loc: loc.dupe(),
-            name: FlowSmolStr::from("super"),
+            key: VarKey::Name(FlowSmolStr::from("super")),
             kind: bindings::Kind::Const,
         });
         self.with_scoped_bindings(
@@ -10866,12 +10924,12 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         let mut this_super_bindings = bindings::Bindings::empty();
         this_super_bindings.add(bindings::Entry {
             loc: loc.dupe(),
-            name: FlowSmolStr::from("this"),
+            key: VarKey::Name(FlowSmolStr::from("this")),
             kind: bindings::Kind::Const,
         });
         this_super_bindings.add(bindings::Entry {
             loc: loc.dupe(),
-            name: FlowSmolStr::from("super"),
+            key: VarKey::Name(FlowSmolStr::from("super")),
             kind: bindings::Kind::Const,
         });
 
@@ -10944,12 +11002,12 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 let mut illegal_this_super_binding =
                     flow_analysis::bindings::Bindings::singleton(flow_analysis::bindings::Entry {
                         loc: loc.dupe(),
-                        name: FlowSmolStr::new_inline("this"),
+                        key: VarKey::Name(FlowSmolStr::new_inline("this")),
                         kind: flow_analysis::bindings::Kind::Const,
                     });
                 illegal_this_super_binding.add(flow_analysis::bindings::Entry {
                     loc: loc.dupe(),
-                    name: FlowSmolStr::new_inline("super"),
+                    key: VarKey::Name(FlowSmolStr::new_inline("super")),
                     kind: flow_analysis::bindings::Kind::Const,
                 });
                 // Do not bind this to a function-level this as usual. We use arrow function visitor
@@ -11076,8 +11134,10 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         expr: &flow_parser::ast::expression::Yield<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
         use flow_common::refinement_invalidation::Reason;
-        let next_name = FlowSmolStr::new_inline(NEXT_VAR_NAME);
-        self.any_identifier(loc.dupe(), &next_name);
+        let next = self
+            .synthetic_env_read_opt(SyntheticVar::GeneratorNext)
+            .expect("should be bound by the generator that contains the `yield`");
+        self.record_read(loc.dupe(), next, None);
         ast_visitor::yield_default(self, loc, expr)?;
         self.havoc_current_env(Reason::Yield, loc.dupe());
         Ok(())
@@ -11576,6 +11636,10 @@ impl<'a, Cx: Context> DeadCodeMarker<'a, Cx> {
     }
 
     fn any_identifier(&mut self, loc: ALoc, name: FlowSmolStr) {
+        self.mark_unreachable_read(loc, Some(name));
+    }
+
+    fn mark_unreachable_read(&mut self, loc: ALoc, name: Option<FlowSmolStr>) {
         use env_api::Read;
         use env_api::WriteLoc;
 
@@ -11583,7 +11647,7 @@ impl<'a, Cx: Context> DeadCodeMarker<'a, Cx> {
             def_loc: None,
             write_locs: Rc::new(vec![WriteLoc::Unreachable(loc)]),
             val_kind: env_api::ValKind::Value,
-            name: Some(name),
+            name,
             id: None,
         });
     }
@@ -12013,7 +12077,7 @@ impl<'ast, 'a, Cx: Context> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for Dead
         loc: &ALoc,
         yield_: &flow_parser::ast::expression::Yield<ALoc, ALoc>,
     ) -> Result<(), !> {
-        self.any_identifier(loc.dupe(), FlowSmolStr::new_inline(NEXT_VAR_NAME));
+        self.mark_unreachable_read(loc.dupe(), None);
         ast_visitor::yield_default(self, loc, yield_)
     }
 

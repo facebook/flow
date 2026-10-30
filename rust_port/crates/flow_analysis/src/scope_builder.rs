@@ -18,6 +18,7 @@ use flow_parser::ast_visitor::AstVisitor;
 use crate::bindings::Bindings;
 use crate::bindings::Entry;
 use crate::bindings::Kind;
+use crate::bindings::VarKey;
 use crate::hoister::Hoister;
 use crate::hoister::LexicalHoister;
 use crate::infer_type_hoister;
@@ -380,7 +381,7 @@ pub fn scoped_infer_type_params<
     for tp in tps {
         bindings.add(Entry {
             loc: tp.name.loc.dupe(),
-            name: tp.name.name.dupe(),
+            key: VarKey::Name(tp.name.name.dupe()),
             kind: Kind::Type {
                 imported: false,
                 type_only_namespace: false,
@@ -419,7 +420,7 @@ where
     for tparam in tparams.params.iter() {
         bindings.add(Entry {
             loc: tparam.name.loc.dupe(),
-            name: tparam.name.name.dupe(),
+            key: VarKey::Name(tparam.name.name.dupe()),
             kind: Kind::TypeParam,
         });
     }
@@ -981,7 +982,7 @@ where
     let bindings = match id {
         Some(name) => Bindings::singleton(Entry {
             loc: name.loc.dupe(),
-            name: name.name.dupe(),
+            key: VarKey::Name(name.name.dupe()),
             kind: Kind::Function,
         }),
         None => Bindings::empty(),
@@ -1281,7 +1282,7 @@ where
     let bindings = match id {
         Some(name) => Bindings::singleton(Entry {
             loc: name.loc.dupe(),
-            name: name.name.dupe(),
+            key: VarKey::Name(name.name.dupe()),
             kind: Kind::Class,
         }),
         None => Bindings::empty(),
@@ -1712,7 +1713,11 @@ impl<Loc: Dupe + Eq + Ord + Hash + Default, E> WithBindings<Loc, E> for ScopeBui
         self.current_scope = Some(child);
         let new_env = {
             let mut env = BTreeMap::new();
-            for (x, (kind, locs)) in bindings.to_assoc() {
+            let named = bindings
+                .to_assoc()
+                .into_iter()
+                .filter_map(|(key, value)| Some((key.into_name()?, value)));
+            for (x, (kind, locs)) in named {
                 let name = match self.env.get(&x) {
                     Some(def) => def.name,
                     None => self.next(),

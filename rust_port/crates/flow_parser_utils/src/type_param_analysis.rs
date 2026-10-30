@@ -111,8 +111,9 @@ impl<Loc: Dupe> WithBindings<Loc, !> for DependencyVisitor<'_, Loc> {
         let shadowed = bindings
             .to_assoc()
             .into_iter()
-            .filter_map(|(name, (kind, _))| {
-                matches!(kind, Kind::Type { .. } | Kind::TypeParam).then_some(name)
+            .filter_map(|(key, (kind, _))| match kind {
+                Kind::Type { .. } | Kind::TypeParam => key.into_name(),
+                _ => None,
             })
             .collect();
         self.shadowed.push(shadowed);

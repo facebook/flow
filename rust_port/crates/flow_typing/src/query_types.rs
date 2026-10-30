@@ -107,7 +107,6 @@ pub fn binder_kind_of_binding_kind(kind: bindings::Kind) -> Option<BinderKind> {
         | bindings::Kind::Import { .. }
         | bindings::Kind::TsImport
         | bindings::Kind::Internal
-        | bindings::Kind::GeneratorNext
         | bindings::Kind::Component
         | bindings::Kind::Record => None,
     }
@@ -139,7 +138,6 @@ fn is_imported_binding_kind(kind: bindings::Kind) -> bool {
         | bindings::Kind::DeclaredClass
         | bindings::Kind::DeclaredNamespace
         | bindings::Kind::Internal
-        | bindings::Kind::GeneratorNext
         | bindings::Kind::Component
         | bindings::Kind::Record => false,
     }

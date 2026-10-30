@@ -16,6 +16,7 @@ use flow_parser::ast_visitor::AstVisitor;
 use crate::bindings::Bindings;
 use crate::bindings::Entry;
 use crate::bindings::Kind;
+use crate::bindings::VarKey;
 
 // Hoister class. Does a shallow visit of statements, looking for binding
 // declarations (currently, variable declarations, parameters, function
@@ -47,7 +48,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if !self.lexical_only {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::Var,
             });
         }
@@ -58,7 +59,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
             let kind = kind.unwrap_or(self.let_kind);
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind,
             });
         }
@@ -69,7 +70,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
             let kind = kind.unwrap_or(Kind::Const);
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind,
             });
         }
@@ -79,7 +80,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if !self.lexical_only {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::Type {
                     imported,
                     type_only_namespace: false,
@@ -92,7 +93,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if !self.lexical_only {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::Interface {
                     imported,
                     type_only_namespace: false,
@@ -105,7 +106,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if self.lexical_only || self.lexical {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::Function,
             });
         }
@@ -115,7 +116,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if self.lexical_only || self.lexical {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::Component,
             });
         }
@@ -125,7 +126,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if self.lexical_only || self.lexical {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::DeclaredFunction,
             });
         }
@@ -135,7 +136,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if self.lexical_only || self.lexical {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::DeclaredClass,
             });
         }
@@ -145,7 +146,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if !self.lexical_only {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::DeclaredVar,
             });
         }
@@ -155,7 +156,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if self.lexical_only || self.lexical {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::DeclaredLet,
             });
         }
@@ -165,7 +166,7 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         if self.lexical_only || self.lexical {
             self.bindings.add(Entry {
                 loc: entry.loc.dupe(),
-                name: entry.name.dupe(),
+                key: VarKey::Name(entry.name.dupe()),
                 kind: Kind::DeclaredConst,
             });
         }
@@ -489,7 +490,7 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
                 };
                 self.bindings.add(Entry {
                     loc: id.loc.dupe(),
-                    name: id.name.dupe(),
+                    key: VarKey::Name(id.name.dupe()),
                     kind,
                 });
                 Ok(())
@@ -677,7 +678,7 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
                     if self.with_types {
                         self.bindings.add(Entry {
                             loc: id.loc.dupe(),
-                            name: id.name.dupe(),
+                            key: VarKey::Name(id.name.dupe()),
                             kind: Kind::Type {
                                 imported: true,
                                 type_only_namespace: true,
@@ -791,7 +792,7 @@ mod tests {
         let Ok(()) = hoister.program(&ast);
         let bindings = hoister.into_bindings();
         assert!(
-            !bindings.exists(|entry| entry.name.as_str() == "C"),
+            !bindings.exists(|entry| entry.key == VarKey::Name("C".into())),
             "nested block bindings should not be hoisted into the enclosing scope"
         );
     }

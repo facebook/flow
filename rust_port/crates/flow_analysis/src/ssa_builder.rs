@@ -639,7 +639,7 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
         let binding_names: Vec<_> = bindings
             .to_assoc()
             .into_iter()
-            .map(|(name, _)| name)
+            .filter_map(|(key, _)| key.into_name())
             .collect();
         let mut old_bindings = Vec::with_capacity(binding_names.len());
         for name in &binding_names {

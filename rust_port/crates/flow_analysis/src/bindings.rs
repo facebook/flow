@@ -45,16 +45,43 @@ pub enum Kind {
     TsImport,
     DeclaredFunction,
     Internal,
-    GeneratorNext,
     Component,
     ComponentParameter,
     Record,
 }
 
+/// A variable that the name resolver adds to a scope itself, rather than one the program
+/// declares.
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SyntheticVar {
+    /// Read at the end of a function or component body. Its writes are the `switch` statements
+    /// without a `default` through which the end can be reached.
+    MaybeExhaustivelyChecked,
+    /// The value a generator receives from `next()`. Each `yield` reads it.
+    GeneratorNext,
+}
+
+/// How a scope identifies a binding: by its name in the source, or as a synthetic variable.
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VarKey {
+    Name(FlowSmolStr),
+    Synthetic(SyntheticVar),
+}
+
+impl VarKey {
+    /// The name, if the program declares this variable.
+    pub fn into_name(self) -> Option<FlowSmolStr> {
+        match self {
+            VarKey::Name(name) => Some(name),
+            VarKey::Synthetic(_) => None,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Entry<Loc> {
     pub loc: Loc,
-    pub name: FlowSmolStr,
+    pub key: VarKey,
     pub kind: Kind,
 }
 
@@ -83,42 +110,42 @@ impl<Loc: Dupe> Bindings<Loc> {
         self.0.iter().any(pred)
     }
 
-    pub fn to_assoc(&self) -> Vec<(FlowSmolStr, (Kind, Vec1<Loc>))> {
+    pub fn to_assoc(&self) -> Vec<(VarKey, (Kind, Vec1<Loc>))> {
         let mut result = Vec::new();
-        let mut map: HashMap<FlowSmolStr, (Kind, Vec1<Loc>)> = HashMap::new();
+        let mut map: HashMap<VarKey, (Kind, Vec1<Loc>)> = HashMap::new();
 
-        for Entry { loc, name, kind } in self.0.iter() {
-            match map.get_mut(name) {
+        for Entry { loc, key, kind } in self.0.iter() {
+            match map.get_mut(key) {
                 // First kind wins
                 Some((_, locs)) => {
                     locs.push(loc.dupe());
                 }
                 None => {
-                    result.push(name.dupe());
-                    map.insert(name.dupe(), (*kind, Vec1::new(loc.dupe())));
+                    result.push(key.dupe());
+                    map.insert(key.dupe(), (*kind, Vec1::new(loc.dupe())));
                 }
             }
         }
 
         result
             .into_iter()
-            .map(|name| {
-                let (kind, locs) = map.remove(&name).unwrap();
-                (name, (kind, locs))
+            .map(|key| {
+                let (kind, locs) = map.remove(&key).unwrap();
+                (key, (kind, locs))
             })
             .collect()
     }
 
-    pub fn to_map(&self) -> BTreeMap<FlowSmolStr, (Kind, Vec1<(Loc, Kind)>)> {
-        let mut map: BTreeMap<FlowSmolStr, (Kind, Vec1<(Loc, Kind)>)> = BTreeMap::new();
+    pub fn to_map(&self) -> BTreeMap<VarKey, (Kind, Vec1<(Loc, Kind)>)> {
+        let mut map: BTreeMap<VarKey, (Kind, Vec1<(Loc, Kind)>)> = BTreeMap::new();
 
-        for Entry { loc, name, kind } in self.0.iter() {
-            match map.get_mut(name) {
+        for Entry { loc, key, kind } in self.0.iter() {
+            match map.get_mut(key) {
                 Some((_, entries)) => {
                     entries.push((loc.dupe(), *kind));
                 }
                 None => {
-                    map.insert(name.dupe(), (*kind, Vec1::new((loc.dupe(), *kind))));
+                    map.insert(key.dupe(), (*kind, Vec1::new((loc.dupe(), *kind))));
                 }
             }
         }
