@@ -84,9 +84,9 @@ function optionalImports(x: unknown, y: unknown, z: unknown) {
   all?.assertNumber?.(y);
   y as number;
   y as string; // ERROR
-  // Mapped properties may be optional, so optional chains through them do not narrow.
   importedMappedAssertions?.number?.(z);
-  z as number; // ERROR
+  z as number;
+  z as string; // ERROR
 }
 
 declare const assertFirst: (x: unknown, ignored: unknown) => asserts x is string;
@@ -149,7 +149,8 @@ function optionalMappedProperties(x: unknown, y: unknown, z: unknown) {
   optionalMapped.str?.(x);
   x as string; // ERROR: optionalMapped.str can be missing
   requiredMapped.str?.(y);
-  y as string; // ERROR
+  y as string;
+  y as number; // ERROR
   optionalMappedReceiver.inner?.assertString(z);
   z as string; // ERROR: optionalMappedReceiver.inner can be missing
 }

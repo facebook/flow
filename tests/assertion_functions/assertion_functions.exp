@@ -1832,18 +1832,18 @@ References:
 
 Error ------------------------------------------------------------------------------------------- optional_calls.js:89:3
 
-Cannot cast `z` to `number` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `z` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    optional_calls.js:89:3
-   89|   z as number; // ERROR
+   89|   z as string; // ERROR
          ^
 
 References:
-   optional_calls.js:80:53
-   80| function optionalImports(x: unknown, y: unknown, z: unknown) {
-                                                           ^^^^^^^ [1]
+   exports.js:41:11
+   41|   number: number,
+                 ^^^^^^ [1]
    optional_calls.js:89:8
-   89|   z as number; // ERROR
+   89|   z as string; // ERROR
               ^^^^^^ [2]
 
 
@@ -1983,37 +1983,37 @@ References:
                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ optional_calls.js:152:3
+Error ------------------------------------------------------------------------------------------ optional_calls.js:153:3
 
-Cannot cast `y` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `y` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   optional_calls.js:152:3
-   152|   y as string; // ERROR
+   optional_calls.js:153:3
+   153|   y as number; // ERROR
           ^
 
 References:
-   optional_calls.js:148:50
-   148| function optionalMappedProperties(x: unknown, y: unknown, z: unknown) {
-                                                         ^^^^^^^ [1]
-   optional_calls.js:152:8
-   152|   y as string; // ERROR
+   optional_calls.js:143:26
+   143| type MappedShape = {str: string};
+                                 ^^^^^^ [1]
+   optional_calls.js:153:8
+   153|   y as number; // ERROR
                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ optional_calls.js:154:3
+Error ------------------------------------------------------------------------------------------ optional_calls.js:155:3
 
 Cannot cast `z` to `string` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   optional_calls.js:154:3
-   154|   z as string; // ERROR: optionalMappedReceiver.inner can be missing
+   optional_calls.js:155:3
+   155|   z as string; // ERROR: optionalMappedReceiver.inner can be missing
           ^
 
 References:
    optional_calls.js:148:62
    148| function optionalMappedProperties(x: unknown, y: unknown, z: unknown) {
                                                                      ^^^^^^^ [1]
-   optional_calls.js:154:8
-   154|   z as string; // ERROR: optionalMappedReceiver.inner can be missing
+   optional_calls.js:155:8
+   155|   z as string; // ERROR: optionalMappedReceiver.inner can be missing
                ^^^^^^ [2]
 
 

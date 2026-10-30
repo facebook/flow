@@ -369,19 +369,13 @@ fn compute_name_remap<'cx>(
     })
 }
 
-pub fn mapped_type_of_keys<'cx>(
-    cx: &mut Context<'cx>,
-    env: &FlowJsEnv,
-    trace: DepthTrace,
-    use_op: UseOp,
+/// The object that a mapped type over a union of keys maps: one property per
+/// key and one indexer per non-literal key type.
+pub fn slice_of_keys(
     reason: &Reason,
-    keys: &Type,
-    property_type: &Type,
-    name_type: Option<&Type>,
-    mapped_type_flags: &MappedTypeFlags,
-) -> Result<Type, FlowJsException> {
-    let (keys_with_reasons, indexers) =
-        partition_keys_and_indexer(cx, env, trace, use_op.dupe(), reason, keys)?;
+    keys_with_reasons: &[(Name, Reason)],
+    indexers: &[Type],
+) -> object::Slice {
     // To go from a union to a MappedType we first build an object with all the keys we
     // extract from the union and create an object with all mixed values. Then we push it
     // through the mapped type machinery. The specific type we choose for the properties
@@ -400,7 +394,7 @@ pub fn mapped_type_of_keys<'cx>(
         .map(|(key, key_reason)| (key.dupe(), mixed_prop_t(key_reason)))
         .collect();
     let generics = flow_typing_generics::spread_empty();
-    let obj_kind = match indexers.as_slice() {
+    let obj_kind = match indexers {
         [] => ObjKind::Exact,
         [t1, ts @ ..] => {
             let key_t = match ts {
@@ -430,7 +424,7 @@ pub fn mapped_type_of_keys<'cx>(
     };
     let interface = None;
     let obj_reason = reason.dupe().replace_desc(VirtualReasonDesc::RObjectType);
-    let slice = object::Slice {
+    object::Slice {
         reason: obj_reason,
         strictness_kind: TypeStrictnessKind::Flow,
         props,
@@ -440,7 +434,23 @@ pub fn mapped_type_of_keys<'cx>(
         interface,
         reachable_targs: Rc::from([]),
         literal: false,
-    };
+    }
+}
+
+pub fn mapped_type_of_keys<'cx>(
+    cx: &mut Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    use_op: UseOp,
+    reason: &Reason,
+    keys: &Type,
+    property_type: &Type,
+    name_type: Option<&Type>,
+    mapped_type_flags: &MappedTypeFlags,
+) -> Result<Type, FlowJsException> {
+    let (keys_with_reasons, indexers) =
+        partition_keys_and_indexer(cx, env, trace, use_op.dupe(), reason, keys)?;
+    let slice = slice_of_keys(reason, &keys_with_reasons, &indexers);
     let filter_optional = |cx: &mut Context<'cx>, t: Type| -> Result<Type, FlowJsException> {
         let filter_id = crate::flow_js::filter_optional_with_env(cx, env, reason, &t)?;
         Ok(Type::new(TypeInner::OpenT(Tvar::new(

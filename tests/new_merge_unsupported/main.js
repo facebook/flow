@@ -89,23 +89,3 @@ react_config_x13 as any;
 import { x as x_inst_rest } from './ops_on_inst_rest';
 x_inst_rest as any;
 
-
-import {
-  x2 as mapped_type_x2,
-  x3 as mapped_type_x3,
-  x4 as mapped_type_x4,
-  x5 as mapped_type_x5,
-  x8 as mapped_type_x8,
-  x11 as mapped_type_x11,
-  x12 as mapped_type_x12,
-  x13 as mapped_type_x13,
-} from './ops_on_eval_mapped_type';
-
-mapped_type_x2 as any;
-mapped_type_x3 as any;
-mapped_type_x4 as any;
-mapped_type_x5 as any;
-mapped_type_x8.__proto__ as any;
-mapped_type_x11 as any;
-mapped_type_x12 as any;
-mapped_type_x13 as any;

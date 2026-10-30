@@ -1406,6 +1406,159 @@ References:
                                         ^^^^^^^^^^^^^ [3]
 
 
+Error -------------------------------------------------------------------------------------------- import_values.js:15:1
+
+Cannot cast `getProp` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   import_values.js:15:1
+   15| getProp as number; // ERROR
+       ^^^^^^^
+
+References:
+   export_values.js:1:38
+    1| type T = {[_K in keyof {f: number}]: string};
+                                            ^^^^^^ [1]
+   import_values.js:15:12
+   15| getProp as number; // ERROR
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_values.js:19:1
+
+Cannot cast `spread.f` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   import_values.js:19:1
+   19| spread.f as number; // ERROR
+       ^^^^^^^^
+
+References:
+   export_values.js:1:38
+    1| type T = {[_K in keyof {f: number}]: string};
+                                            ^^^^^^ [1]
+   import_values.js:19:13
+   19| spread.f as number; // ERROR
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_values.js:20:1
+
+Cannot cast `exactProp` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   import_values.js:20:1
+   20| exactProp as number; // ERROR
+       ^^^^^^^^^
+
+References:
+   export_values.js:1:38
+    1| type T = {[_K in keyof {f: number}]: string};
+                                            ^^^^^^ [1]
+   import_values.js:20:14
+   20| exactProp as number; // ERROR
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_values.js:21:1
+
+Cannot cast `proto.f` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   import_values.js:21:1
+   21| proto.f as number; // ERROR
+       ^^^^^^^
+
+References:
+   export_values.js:1:38
+    1| type T = {[_K in keyof {f: number}]: string};
+                                            ^^^^^^ [1]
+   import_values.js:21:12
+   21| proto.f as number; // ERROR
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_values.js:23:1
+
+Cannot cast `not` to `string` because `false` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   import_values.js:23:1
+   23| not as string; // ERROR
+       ^^^
+
+References:
+   export_values.js:10:20
+   10| export const not = !t;
+                          ^^ [1]
+   import_values.js:23:8
+   23| not as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_values.js:25:1
+
+Cannot cast `keyMirrorProp` to `"g"` because `"f"` [1] is incompatible with `"g"` [2]. [incompatible-type]
+
+   import_values.js:25:1
+   25| keyMirrorProp as 'g'; // ERROR
+       ^^^^^^^^^^^^^
+
+References:
+   export_values.js:11:26
+   11| declare const keyMirror: $KeyMirror<T>;
+                                ^^^^^^^^^^^^^ [1]
+   import_values.js:25:18
+   25| keyMirrorProp as 'g'; // ERROR
+                        ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_values.js:26:1
+
+Cannot cast `keysLength` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   import_values.js:26:1
+     26| keysLength as string; // ERROR
+         ^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1039:22
+   1039|     readonly length: number;
+                              ^^^^^^ [1]
+   import_values.js:26:15
+     26| keysLength as string; // ERROR
+                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_values.js:28:1
+
+Cannot cast `nonHomomorphicProp` to `string` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   import_values.js:28:1
+   28| nonHomomorphicProp as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   export_values.js:16:42
+   16| type NonHomomorphic = {[K in 'a' | 'b']: number};
+                                                ^^^^^^ [1]
+   import_values.js:28:23
+   28| nonHomomorphicProp as string; // ERROR
+                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- import_values.js:30:1
+
+Cannot cast `optionalProp` to `string` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   import_values.js:30:1
+   30| optionalProp as string; // ERROR
+       ^^^^^^^^^^^^
+
+References:
+   export_values.js:20:45
+   20| type Optional = {[K in keyof {f: number}]?: string};
+                                                   ^^^^^^ [1]
+   import_values.js:30:17
+   30| optionalProp as string; // ERROR
+                       ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- instancet.js:9:3
 
 Cannot cast `i` to `interface {foo: number}` because property `foo` is read-only in
@@ -2867,4 +3020,4 @@ References:
 
 
 
-Found 172 errors
+Found 181 errors

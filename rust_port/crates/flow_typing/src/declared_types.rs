@@ -214,7 +214,6 @@ pub(crate) fn resolve<'cx>(cx: &mut Context<'cx>, analysis: PackedAnalysis) -> R
                 }
                 continue;
             }
-            // Deferred heads evaluate before navigation; mapped heads consume one path element.
             let root_type = merged
                 .as_ref()
                 .and_then(|merged| merged.root(&candidate.root_binding_loc));
@@ -371,8 +370,7 @@ fn assertion_info_of_type(
     }
 }
 
-/// Navigate `property_path` from `root_type`: mapped heads consume one path
-/// element each (shared value type); the rest via `get_prop` lookup.
+/// Navigate `property_path` from `root_type` via `get_prop` lookup.
 /// Shared by locals (roots from merged signatures) and imports (roots from
 /// dependency exports).
 fn callee_type_for_classification(
@@ -381,6 +379,7 @@ fn callee_type_for_classification(
     root_type: &Type,
     prefix: usize,
 ) -> Option<Type> {
+    let root_type = cx.find_resolved(root_type)?;
     let reason = reason::mk_reason(RProperty(None), candidate.callee_loc.dupe());
     for index in &candidate.optional_receiver_paths {
         // An import namespace is non-nullish; selecting an export consumes
@@ -388,53 +387,21 @@ fn callee_type_for_classification(
         if *index < prefix {
             continue;
         }
-        let (receiver, mapped_property) = navigate_type(
+        let receiver = property_type(
             cx,
             &candidate.callee_loc,
             &candidate.property_path[prefix..*index],
-            root_type,
-        )?;
-        if mapped_property || !definitely_nonnullish(cx, &reason, &receiver) {
+            root_type.dupe(),
+        );
+        if !definitely_nonnullish(cx, &reason, &receiver) {
             return None;
         }
     }
-    navigate_type(
+    Some(property_type(
         cx,
         &candidate.callee_loc,
         &candidate.property_path[prefix..],
         root_type,
-    )
-    .map(|(callee_type, _)| callee_type)
-}
-
-/// The flag is set when a mapped head consumed the last path element. Its
-/// optionality depends on the unevaluated mapped type, so the property may be
-/// missing.
-fn navigate_type(
-    cx: &mut Context<'_>,
-    callee_loc: &ALoc,
-    property_path: &[FlowSmolStr],
-    root_type: &Type,
-) -> Option<(Type, bool)> {
-    let mut current = root_type.dupe();
-    let mut path = property_path;
-    let mut mapped_property = false;
-    loop {
-        let resolved = cx.find_resolved(&current)?;
-        if let TypeInner::EvalT { defer_use_t, .. } = resolved.deref()
-            && let flow_typing_type::type_::Destructor::MappedType(data) = defer_use_t.2.as_ref()
-            && let Some((_, rest)) = path.split_first()
-        {
-            current = data.property_type.dupe();
-            path = rest;
-            mapped_property = path.is_empty();
-            continue;
-        }
-        break;
-    }
-    Some((
-        property_type(cx, callee_loc, path, current),
-        mapped_property,
     ))
 }
 
