@@ -638,17 +638,14 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
    `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `boolean` [1] is incompatible with `symbol` [3].
 
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
    weakref.js:17:23
      17| let wr5 = new WeakRef(true); // error, must be objects
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3757:13
-   3757|     object: interface {} | ReadonlyArray<unknown>;
-                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:3760:13
+   3760|     object: object;
+                     ^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
                      ^^^^^^ [3]
@@ -661,17 +658,14 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
    weakref.js:18:23
      18| let wr6 = new WeakRef(123); // error, must be objects
                                ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3757:13
-   3757|     object: interface {} | ReadonlyArray<unknown>;
-                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:3760:13
+   3760|     object: object;
+                     ^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
                      ^^^^^^ [3]
@@ -684,17 +678,14 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
    `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `string` [1] is incompatible with `symbol` [3].
 
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
    weakref.js:19:23
      19| let wr7 = new WeakRef('not an object'); // error, must be objects
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3757:13
-   3757|     object: interface {} | ReadonlyArray<unknown>;
-                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:3760:13
+   3760|     object: object;
+                     ^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
                      ^^^^^^ [3]
@@ -707,17 +698,14 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
    weakset.js:14:24
      14| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                 ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3757:13
-   3757|     object: interface {} | ReadonlyArray<unknown>;
-                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:3760:13
+   3760|     object: object;
+                     ^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
                      ^^^^^^ [3]
@@ -730,17 +718,14 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
    weakset.js:14:27
      14| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                    ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3757:13
-   3757|     object: interface {} | ReadonlyArray<unknown>;
-                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:3760:13
+   3760|     object: object;
+                     ^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
                      ^^^^^^ [3]
@@ -753,17 +738,14 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
    weakset.js:14:30
      14| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                       ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3757:13
-   3757|     object: interface {} | ReadonlyArray<unknown>;
-                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:3760:13
+   3760|     object: object;
+                     ^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
                      ^^^^^^ [3]
@@ -776,9 +758,6 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
    weakset.js:31:15
      31| let ws5 = new WeakSet(numbers()); // error, must be objects
                        ^^^^^^^
@@ -787,9 +766,9 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:3757:13
-   3757|     object: interface {} | ReadonlyArray<unknown>;
-                     ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:3760:13
+   3760|     object: object;
+                     ^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
                      ^^^^^^ [3]
