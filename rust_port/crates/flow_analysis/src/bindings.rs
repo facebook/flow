@@ -52,13 +52,15 @@ pub enum Kind {
 
 /// A variable that the name resolver adds to a scope itself, rather than one the program
 /// declares.
-#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SyntheticVar {
     /// Read at the end of a function or component body. Its writes are the `switch` statements
     /// without a `default` through which the end can be reached.
     MaybeExhaustivelyChecked,
     /// The value a generator receives from `next()`. Each `yield` reads it.
     GeneratorNext,
+    /// Whether the constructor has assigned the instance field `name` (`#name` if `private_`).
+    FieldInit { name: FlowSmolStr, private_: bool },
 }
 
 /// How a scope identifies a binding: by its name in the source, or as a synthetic variable.
@@ -78,15 +80,21 @@ impl VarKey {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Entry<Loc> {
     pub loc: Loc,
     pub key: VarKey,
     pub kind: Kind,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Bindings<Loc>(Vec<Entry<Loc>>);
+
+impl<Loc> FromIterator<Entry<Loc>> for Bindings<Loc> {
+    fn from_iter<I: IntoIterator<Item = Entry<Loc>>>(entries: I) -> Self {
+        Self(entries.into_iter().collect())
+    }
+}
 
 impl<Loc: Dupe> Bindings<Loc> {
     pub fn empty() -> Self {

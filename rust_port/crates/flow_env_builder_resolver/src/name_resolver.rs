@@ -34,6 +34,7 @@ use flow_analysis::bindings::Kind as BindingsKind;
 use flow_analysis::bindings::SyntheticVar;
 use flow_analysis::bindings::VarKey;
 use flow_analysis::hoister::LexicalHoister;
+use flow_analysis::hoister::field_init_bindings;
 use flow_analysis::scope_builder;
 use flow_analysis::scope_builder::WithBindings;
 use flow_common::options::JsxMode;
@@ -59,6 +60,7 @@ use flow_parser::ast::expression::CallTypeArgs;
 use flow_parser::ast::expression::Expression;
 use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::expression::LogicalOperator;
+use flow_parser::ast::expression::Member;
 use flow_parser::ast::statement::StatementInner;
 use flow_parser::ast::types::TypeGuardKind;
 use flow_parser::ast::types::TypeInner;
@@ -1136,6 +1138,13 @@ struct NameResolverState {
     /// arguments are being typed and panics. Writes and havoc still
     /// apply so later arguments can invalidate the refinement.
     skip_read_recording: bool,
+    /// The location of the constructor of the class whose body is being visited, with the
+    /// variables of the fields it must assign (`experimental.strict_property_initialization`).
+    class_field_inits: Option<(ALoc, Rc<Bindings<ALoc>>)>,
+    /// Whether the code being visited is a constructor's own code, whose assignments to
+    /// `this.x` count. Nested functions may run at any time, and a nested class's `this` is
+    /// another object, so neither counts.
+    in_constructor: bool,
 }
 
 impl NameResolverState {
@@ -1178,6 +1187,8 @@ impl NameResolverState {
             invalid_static_type_param_locs: FlowOrdSet::new(),
             in_loop_scout: false,
             skip_read_recording: false,
+            class_field_inits: None,
+            in_constructor: false,
         }
     }
 }
@@ -1677,6 +1688,7 @@ struct NameResolver<'a, Cx: Context, Fl: Flow<Cx = Cx>> {
     enable_enums: bool,
     is_ts: bool,
     enable_const_params: bool,
+    strict_property_initialization: bool,
     provider_info: Rc<provider_api::Info<ALoc>>,
     prepass_info: &'a flow_analysis::scope_api::ScopeInfo<ALoc>,
     prepass_values: &'a flow_analysis::ssa_api::Values<ALoc>,
@@ -1757,6 +1769,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         let enable_enums = cx.enable_enums();
         let is_ts = flow_common::files::has_ts_ext(&cx.file());
         let enable_const_params = cx.enable_const_params();
+        let strict_property_initialization = cx.strict_property_initialization();
         let cache = Rc::new(RefCell::new(ValCache::new()));
         let (env, jsx_base_name) = initial_env(
             cx,
@@ -1777,6 +1790,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             enable_enums,
             is_ts,
             enable_const_params,
+            strict_property_initialization,
             provider_info,
             prepass_info,
             prepass_values,
@@ -2627,26 +2641,32 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         use env_api::EnvKey;
         use flow_common::reason::VirtualReason;
 
-        let (val, def_loc) = match var {
-            SyntheticVar::MaybeExhaustivelyChecked => (
-                ssa_val::uninitialized(&mut *self.cache.borrow_mut(), loc.dupe()),
-                None,
-            ),
+        let (val, havoc, def_loc) = match var {
+            SyntheticVar::MaybeExhaustivelyChecked => {
+                let val = ssa_val::uninitialized(&mut *self.cache.borrow_mut(), loc.dupe());
+                (val.dupe(), val, None)
+            }
             SyntheticVar::GeneratorNext => {
                 let reason = VirtualReason::new(None, loc.dupe());
                 self.env_state.write_entries.insert(
                     EnvKey::new(DefLocType::OrdinaryNameLoc, loc.dupe()),
                     EnvEntry::AssigningWrite(reason.dupe()),
                 );
-                (
-                    ssa_val::one(&mut *self.cache.borrow_mut(), reason),
-                    Some(loc.dupe()),
-                )
+                let val = ssa_val::one(&mut *self.cache.borrow_mut(), reason);
+                (val.dupe(), val, Some(loc.dupe()))
+            }
+            // Starts unassigned. A loop resets it to assigned, keeping unassigned only if that
+            // reaches the loop.
+            SyntheticVar::FieldInit { .. } => {
+                let cache = &mut *self.cache.borrow_mut();
+                let val = ssa_val::uninitialized(cache, loc.dupe());
+                let assigned = ssa_val::one(cache, VirtualReason::new(None, loc.dupe()));
+                (val, assigned, Some(loc.dupe()))
             }
         };
         EnvVal::new(EnvValInner {
-            val_ref: Rc::new(RefCell::new(val.dupe())),
-            havoc: val,
+            val_ref: Rc::new(RefCell::new(val)),
+            havoc,
             writes_by_closure_provider_val: None,
             def_loc,
             heap_refinements: empty_heap_refinements(),
@@ -2674,7 +2694,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             let name = match key {
                 VarKey::Name(name) => name,
                 VarKey::Synthetic(var) => {
-                    let env_val = self.synthetic_env_val(*var, *kind, loc, kind_at_loc);
+                    let env_val = self.synthetic_env_val(var.dupe(), *kind, loc, kind_at_loc);
                     result.insert(key.dupe(), env_val);
                     continue;
                 }
@@ -4131,6 +4151,39 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             .push(env_api::AssertionExit { return_loc, read });
     }
 
+    /// The variable of the field that `member` refers to, if `member` is `this.x` or `this.#x`
+    /// in a constructor's own code and the constructor must assign that field.
+    fn field_init_of_member(&self, member: &Member<ALoc, ALoc>) -> Option<EnvVal> {
+        use flow_parser::ast::expression::member::Property;
+
+        if !self.env_state.in_constructor
+            || !matches!(member.object.deref(), ExpressionInner::This { .. })
+        {
+            return None;
+        }
+        let (name, private_) = match &member.property {
+            Property::PropertyIdentifier(id) => (&id.name, false),
+            Property::PropertyPrivateName(pn) => (&pn.name, true),
+            Property::PropertyExpression(_) => return None,
+        };
+        self.env_state
+            .env
+            .env_val_by_key(&VarKey::Synthetic(SyntheticVar::FieldInit {
+                name: name.dupe(),
+                private_,
+            }))
+    }
+
+    fn mark_field_assigned(&mut self, member: &Member<ALoc, ALoc>, loc: ALoc) {
+        use flow_common::reason::VirtualReason;
+
+        let Some(env_val) = self.field_init_of_member(member) else {
+            return;
+        };
+        let assigned = ssa_val::one(&mut *self.cache.borrow_mut(), VirtualReason::new(None, loc));
+        *env_val.val_ref.borrow_mut() = assigned;
+    }
+
     fn visit_match_case<'ast, B, F>(
         &mut self,
         case: &'ast flow_parser::ast::match_::Case<ALoc, ALoc, B>,
@@ -5105,7 +5158,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             if lookup.projections.is_empty() {
                 let env_val = match &lookup.base {
                     VarKey::Name(name) => self.env_read_opt(name),
-                    VarKey::Synthetic(var) => self.synthetic_env_read_opt(*var),
+                    VarKey::Synthetic(var) => self.synthetic_env_read_opt(var.dupe()),
                 };
                 if let Some(env_val) = env_val {
                     if !matches!(
@@ -5984,6 +6037,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     // type_guard_annotation. Otherwise it must not refer to the guard of
                     // an enclosing function.
                     let saved_type_guard_name = r.env_state.type_guard_name.take();
+                    let field_inits = r
+                        .env_state
+                        .class_field_inits
+                        .as_ref()
+                        .filter(|(constructor_loc, _)| constructor_loc == fun_loc)
+                        .map(|(_, field_inits)| field_inits.dupe());
+                    let saved_in_constructor =
+                        std::mem::replace(&mut r.env_state.in_constructor, field_inits.is_some());
                     let saved_inferred_candidate = r.env_state.inferred_type_guard_candidate.dupe();
                     r.env_state.inferred_type_guard_candidate =
                         flow_parser::ast_utils::get_inferred_type_guard_candidate(params, body, return_)
@@ -5998,6 +6059,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                             key: VarKey::Synthetic(SyntheticVar::MaybeExhaustivelyChecked),
                             kind: BindingsKind::Internal,
                         });
+                        if let Some(field_inits) = &field_inits {
+                            bindings.push(field_inits.as_ref().clone());
+                        }
 
                         if !is_arrow {
                             match &params.this_ {
@@ -6072,6 +6136,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     });
                     r.env_state.type_guard_name = saved_type_guard_name;
                     r.env_state.inferred_type_guard_candidate = saved_inferred_candidate;
+                    r.env_state.in_constructor = saved_in_constructor;
                     r.commit_abrupt_completion_matching(
                         |c| matches!(c, AbruptCompletion::Return | AbruptCompletion::Throw),
                         completion_state.as_ref(),
@@ -9247,6 +9312,9 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 Pattern::Expression { inner: e, .. } => {
                     // given `o.x = e`, read o then read e
                     self.assign_expression(assign_loc, e, right)?;
+                    if let ExpressionInner::Member { loc, inner } = &***e {
+                        self.mark_field_assigned(inner, loc.dupe());
+                    }
                 }
             },
             Some(
@@ -9363,6 +9431,10 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                                 assigned_val,
                                 reason,
                             );
+                            // `&&=` leaves an unassigned field unassigned.
+                            if !matches!(op, Operator::AndAssign) {
+                                self.mark_field_assigned(mem, loc.dupe());
+                            }
                         }
                     }
                     Pattern::Identifier { .. } => {
@@ -10755,29 +10827,55 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             key: VarKey::Name(FlowSmolStr::from("super")),
             kind: bindings::Kind::Const,
         });
-        self.with_scoped_bindings(
-            ThisSuperBindingEnv::ClassInstanceEnv,
-            &this_super_bindings,
-            |this| {
-                for element in &instance_body {
-                    this.class_element(element)?;
-                }
-                Ok(())
-            },
-        )?;
-        self.in_static_member(|this| {
-            this.with_scoped_bindings(
-                ThisSuperBindingEnv::ClassStaticEnv,
+        let field_inits = Rc::new(if self.strict_property_initialization {
+            field_init_bindings(&instance_body)
+        } else {
+            Bindings::empty()
+        });
+        let constructor_loc = instance_body.iter().find_map(|element| match element {
+            BodyElement::Method(method)
+                if matches!(
+                    method.kind,
+                    flow_parser::ast::class::MethodKind::Constructor
+                ) =>
+            {
+                Some(method.value.0.dupe())
+            }
+            _ => None,
+        });
+        let saved_field_inits = std::mem::replace(
+            &mut self.env_state.class_field_inits,
+            constructor_loc.map(|loc| (loc, field_inits.dupe())),
+        );
+        let saved_in_constructor = std::mem::replace(&mut self.env_state.in_constructor, false);
+        let result = self
+            .with_scoped_bindings(
+                ThisSuperBindingEnv::ClassInstanceEnv,
                 &this_super_bindings,
                 |this| {
-                    for element in &static_body {
+                    for element in &instance_body {
                         this.class_element(element)?;
                     }
                     Ok(())
                 },
             )
-        })?;
-        Ok(())
+            .and_then(|()| {
+                self.in_static_member(|this| {
+                    this.with_scoped_bindings(
+                        ThisSuperBindingEnv::ClassStaticEnv,
+                        &this_super_bindings,
+                        |this| {
+                            for element in &static_body {
+                                this.class_element(element)?;
+                            }
+                            Ok(())
+                        },
+                    )
+                })
+            });
+        self.env_state.class_field_inits = saved_field_inits;
+        self.env_state.in_constructor = saved_in_constructor;
+        result
     }
 
     fn class_method(

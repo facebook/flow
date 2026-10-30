@@ -16,6 +16,7 @@ use flow_parser::ast_visitor::AstVisitor;
 use crate::bindings::Bindings;
 use crate::bindings::Entry;
 use crate::bindings::Kind;
+use crate::bindings::SyntheticVar;
 use crate::bindings::VarKey;
 
 // Hoister class. Does a shallow visit of statements, looking for binding
@@ -769,6 +770,41 @@ impl<Loc> std::ops::DerefMut for Hoister<Loc> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
+}
+
+/// The variables that record whether a constructor has assigned each of a class's own instance
+/// fields that have no initializer, at the fields' declarations. A `declare` field holds no value
+/// of its own, so it has none.
+pub fn field_init_bindings<Loc: Dupe>(
+    instance_body: &[&ast::class::BodyElement<Loc, Loc>],
+) -> Bindings<Loc> {
+    use ast::class::BodyElement;
+    use ast::class::property::Value;
+    use ast::expression::object::Key;
+
+    instance_body
+        .iter()
+        .filter_map(|element| match element {
+            BodyElement::Property(prop) if matches!(prop.value, Value::Uninitialized) => {
+                match &prop.key {
+                    Key::Identifier(id) => Some((&id.name, false, &id.loc)),
+                    _ => None,
+                }
+            }
+            BodyElement::PrivateField(field) if matches!(field.value, Value::Uninitialized) => {
+                Some((&field.key.name, true, &field.key.loc))
+            }
+            _ => None,
+        })
+        .map(|(name, private_, loc)| Entry {
+            loc: loc.dupe(),
+            key: VarKey::Synthetic(SyntheticVar::FieldInit {
+                name: name.dupe(),
+                private_,
+            }),
+            kind: Kind::Internal,
+        })
+        .collect()
 }
 
 #[cfg(test)]
