@@ -82,10 +82,7 @@ Flags: --pretty
     },
     {"name":"length","type":"number"},
     {"name":"link","type":"(this: String, url: string) => string"},
-    {
-      "name":"localeCompare",
-      "type":"(this: String, that: string, locales?: string | Array<string>, options?: Intl$CollatorOptions) => number"
-    },
+    {"name":"localeCompare","type":"(this: String, that: string) => number"},
     {
       "name":"match",
       "type":"(this: String, regexp: string | RegExp) => RegExpMatchArray | null"
