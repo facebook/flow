@@ -805,7 +805,8 @@ pub fn get_config<'cx>(
         let config = FlowJs::get_builtin_react_typeapp_with_env(
             cx,
             env,
-            reason_op,
+            // References to the config point at the class, not into the libdef.
+            &reason_op.dupe().annotate(reason_component.def_loc().dupe()),
             None,
             ExpectedModulePurpose::ReactModuleForReactManagedAttributesType,
             vec![component.dupe(), props],
