@@ -37,7 +37,7 @@ function subtyping() {
     }
 
     isIntersection(): this is B & Unrelated {
-      return this instanceof B; // error twice: A & B ~> Unrelated, and negation
+      return this instanceof B; // error A & B ~> Unrelated
     }
   }
 

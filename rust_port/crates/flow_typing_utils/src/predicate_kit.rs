@@ -2935,6 +2935,61 @@ fn instanceof_test<'cx>(
                 instanceof_test(cx, env, trace, result_collector, true, &obj_proto, right)?;
             }
         }
+        // An intersection is an instance of A when any of its members extends A. Like an
+        // intersection lower bound in subtyping, each member is checked on its own.
+        (sense, TypeInner::IntersectionT(_, rep), InstanceofRhs::TypeOperand(right_t))
+            if let TypeInner::DefT(r, right_def) = right_t.deref()
+                && let DefTInner::ClassT(a) = right_def.deref() =>
+        {
+            let mut member_extends_a = false;
+            for member in rep.members_iter() {
+                let extends_use: UseT<Cx> =
+                    UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
+                        use_op: unknown_use(),
+                        reason: r.dupe(),
+                        targs: Vec::new().into(),
+                        true_t: member.dupe(),
+                        false_t: a.dupe(),
+                    })));
+                match speculation_kit::try_singleton_throw_on_failure(
+                    cx,
+                    env,
+                    trace,
+                    member.dupe(),
+                    extends_use,
+                ) {
+                    Ok(()) => {
+                        member_extends_a = true;
+                        break;
+                    }
+                    Err(FlowJsException::SpeculationSingletonError) => {}
+                    Err(other) => return Err(other),
+                }
+            }
+            if member_extends_a {
+                if sense {
+                    report_unchanged_filtering_result_to_predicate_result(
+                        left.dupe(),
+                        result_collector,
+                    );
+                } else {
+                    report_changes_to_input(result_collector);
+                }
+            } else {
+                let root = if sense {
+                    Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::NullT)))
+                } else {
+                    Type::new(TypeInner::ObjProtoT(r.dupe()))
+                };
+                let right = InstanceofRhs::InternalExtendsOperand {
+                    reason: r.dupe(),
+                    c: left.dupe(),
+                    a: a.dupe(),
+                    seen: SeenClasses::new(),
+                };
+                instanceof_test(cx, env, trace, result_collector, sense, &root, &right)?;
+            }
+        }
         (
             sense,
             TypeInner::IntersectionT(_, _),

@@ -4314,7 +4314,7 @@ The type of this [3] at the return expression `this instanceof B` [4] needs to b
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    this_classes.js:40:30
-   40|       return this instanceof B; // error twice: A & B ~> Unrelated, and negation
+   40|       return this instanceof B; // error A & B ~> Unrelated
                                     ^
 
 References:
@@ -4328,27 +4328,11 @@ References:
    39|     isIntersection(): this is B & Unrelated {
                              ^^^^ [3]
    this_classes.js:40:14
-   40|       return this instanceof B; // error twice: A & B ~> Unrelated, and negation
+   40|       return this instanceof B; // error A & B ~> Unrelated
                     ^^^^^^^^^^^^^^^^^ [4]
    this_classes.js:39:31
    39|     isIntersection(): this is B & Unrelated {
                                      ^^^^^^^^^^^^^ [5]
-
-
-Error -------------------------------------------------------------------------------------------- this_classes.js:40:14
-
-Cannot return `this instanceof B` because the negation of the predicate encoded in this expression needs to completely
-refine away the guard type `B & Unrelated` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
-
-   this_classes.js:40:14
-   40|       return this instanceof B; // error twice: A & B ~> Unrelated, and negation
-                    ^^^^^^^^^^^^^^^^^
-
-References:
-   this_classes.js:39:31
-   39|     isIntersection(): this is B & Unrelated {
-                                     ^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- this_classes.js:53:5
@@ -6180,4 +6164,4 @@ References:
 
 
 
-Found 340 errors
+Found 339 errors
