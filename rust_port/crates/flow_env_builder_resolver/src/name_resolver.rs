@@ -4152,20 +4152,20 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             .push(env_api::AssertionExit { return_loc, read });
     }
 
-    /// The variable of the field that `member` refers to, if `member` is `this.x` or `this.#x`
-    /// in a constructor's own code and the constructor must assign that field.
+    /// The variable of the field that `member` refers to, if `member` is `this.x`, `this['x']` or
+    /// `this.#x` in a constructor's own code and the constructor must assign that field.
     fn field_init_of_member(&self, member: &Member<ALoc, ALoc>) -> Option<EnvVal> {
-        use flow_parser::ast::expression::member::Property;
-
-        if !self.env_state.in_constructor
-            || !matches!(member.object.deref(), ExpressionInner::This { .. })
-        {
+        if !self.env_state.in_constructor {
             return None;
         }
-        let (name, private_) = match &member.property {
-            Property::PropertyIdentifier(id) => (&id.name, false),
-            Property::PropertyPrivateName(pn) => (&pn.name, true),
-            Property::PropertyExpression(_) => return None,
+        let lookup = Lookup::of_member(member, false)?;
+        if lookup.base != "this" || lookup.projections.len() != 1 {
+            return None;
+        }
+        let (name, private_) = match lookup.projections.front()? {
+            Proj::Prop(name) => (name, false),
+            Proj::PrivateField(name) => (name, true),
+            Proj::Elem(_) => return None,
         };
         self.env_state
             .env

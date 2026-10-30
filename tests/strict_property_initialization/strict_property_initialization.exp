@@ -158,6 +158,22 @@ Property `x` has no initializer and is not definitely assigned in the constructo
         ^
 
 
+Error --------------------------------------------------------------------------------------------- member_forms.js:14:5
+
+Property `value` is used before being assigned. [uninitialized-property]
+
+   14|     this['value']; // error
+           ^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- member_forms.js:22:6
+
+Property `Render` is used before being assigned. [uninitialized-property]
+
+   22|     <this.Render />; // error
+            ^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- reads.js:4:5
 
 Property `value` is used before being assigned. [uninitialized-property]
@@ -263,4 +279,4 @@ Property `value` is used before being assigned. [uninitialized-property]
 
 
 
-Found 33 errors
+Found 35 errors
