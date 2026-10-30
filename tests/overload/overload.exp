@@ -31,19 +31,19 @@ Flow is showing the union/intersection branches that got closest to passing. Oth
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    overload.js:7:21
-     7| var x1: number = "".match(0)[0];
-                            ^^^^^
+      7| var x1: number = "".match(0)[0];
+                             ^^^^^
 
 References:
    overload.js:7:27
-     7| var x1: number = "".match(0)[0];
-                                  ^ [1]
-   <BUILTINS>/lib.es5.js:992:19
-   992|     match(regexp: string | RegExp): RegExpMatchArray | null;
-                          ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:992:28
-   992|     match(regexp: string | RegExp): RegExpMatchArray | null;
-                                   ^^^^^^ [3]
+      7| var x1: number = "".match(0)[0];
+                                   ^ [1]
+   <BUILTINS>/lib.es5.js:1002:19
+   1002|     match(regexp: string | RegExp): RegExpMatchArray | null;
+                           ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1002:28
+   1002|     match(regexp: string | RegExp): RegExpMatchArray | null;
+                                    ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- overload.js:8:18
@@ -55,9 +55,9 @@ Cannot assign `"".match(...)[0]` to `x2` because `string` [1] is incompatible wi
                          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:737:42
-   737| interface RegExpMatchArray extends Array<string> {
-                                                 ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:749:8
+   749|     0: string;
+               ^^^^^^ [1]
    overload.js:8:9
      8| var x2: number = "".match(/pattern/)[0];
                 ^^^^^^ [2]
@@ -68,13 +68,13 @@ Error --------------------------------------------------------------------------
 Cannot get `"".match(...)[0]` because `null` [1] does not have properties. [incompatible-use]
 
    overload.js:8:38
-     8| var x2: number = "".match(/pattern/)[0];
-                                             ^
+      8| var x2: number = "".match(/pattern/)[0];
+                                              ^
 
 References:
-   <BUILTINS>/lib.es5.js:992:56
-   992|     match(regexp: string | RegExp): RegExpMatchArray | null;
-                                                               ^^^^ [1]
+   <BUILTINS>/lib.es5.js:1002:56
+   1002|     match(regexp: string | RegExp): RegExpMatchArray | null;
+                                                                ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ overload.js:10:18
@@ -86,8 +86,8 @@ Cannot assign `"".split(...)[0]` to `x4` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1022:56
-   1022|     split(separator: string | RegExp, limit?: number): string[];
+   <BUILTINS>/lib.es5.js:1032:56
+   1032|     split(separator: string | RegExp, limit?: number): string[];
                                                                 ^^^^^^ [1]
    overload.js:10:9
      10| var x4: number = "".split(/pattern/)[0];

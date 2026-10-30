@@ -628,8 +628,8 @@ Cannot assign `x.toString` to `xToString` because `(this: Date) => string` [1] i
                                   ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1152:5
-   1152|     toString(): string;
+   <BUILTINS>/lib.es5.js:1162:5
+   1162|     toString(): string;
              ^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:38:17
      38| var xToString : number = x.toString; // error
@@ -646,8 +646,8 @@ Cannot assign `x.toString` to `xToString2` because in the `this` parameter: `Dat
                                          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1150:11
-   1150| interface Date {
+   <BUILTINS>/lib.es5.js:1160:11
+   1160| interface Date {
                    ^^^^ [1]
 
 
@@ -661,8 +661,8 @@ Cannot assign `x.toString` to `xToString2` because in the return value: `string`
                                          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1152:17
-   1152|     toString(): string;
+   <BUILTINS>/lib.es5.js:1162:17
+   1162|     toString(): string;
                          ^^^^^^ [1]
    object_prototype.js:39:24
      39| var xToString2 : () => number = x.toString; // error
@@ -923,8 +923,8 @@ Cannot assign `x.valueOf` to `xValueOf` because `(this: Date) => number` [1] is 
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1164:5
-   1164|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:1174:5
+   1174|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -984,11 +984,11 @@ References:
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:3918:5
-   3918|     toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
+   <BUILTINS>/lib.es5.js:3928:5
+   3928|     toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:1158:5
-   1158|     toLocaleString(): string;
+   <BUILTINS>/lib.es5.js:1168:5
+   1168|     toLocaleString(): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1004,8 +1004,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because: [incompatible-ty
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1150:11
-   1150| interface Date {
+   <BUILTINS>/lib.es5.js:1160:11
+   1160| interface Date {
                    ^^^^ [1]
 
 
