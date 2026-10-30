@@ -923,8 +923,8 @@ Cannot assign `x.valueOf` to `xValueOf` because `(this: Date) => number` [1] is 
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1127:5
-   1127|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:1129:5
+   1129|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -983,8 +983,8 @@ References:
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1113:5
-   1113|     toLocaleString(locales?: string | string[], options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/lib.es5.js:1115:5
+   1115|     toLocaleString(locales?: string | string[], options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -999,8 +999,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because: [incompatible-ty
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1103:11
-   1103| interface Date {
+   <BUILTINS>/lib.es5.js:1105:11
+   1105| interface Date {
                    ^^^^ [1]
 
 
