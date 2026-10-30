@@ -2546,11 +2546,17 @@ fn __flow_impl<'cx>(
         }
 
         // Use the upper bound of NominalT if it's available, for operations that must be
-        // performed on some concretized types.
+        // performed on some concretized types. Object kit resolves an `ExactObjectType` itself,
+        // to keep it exact.
+        (NominalT { nominal_type, .. }, ObjKitT { .. })
+            if let Some(t) = nominal_type.upper_t.as_ref()
+                && nominal_type.nominal_id != nominal::Id::ExactObjectType =>
+        {
+            rec_flow(cx, env, trace, (t, u))?;
+        }
         (
             NominalT { nominal_type, .. },
-            ObjKitT { .. }
-            | ReactKitT(box ReactKitTData {
+            ReactKitT(box ReactKitTData {
                 use_op: _,
                 reason: _,
                 tool: _,

@@ -2272,6 +2272,7 @@ pub enum Annot<Loc, T> {
     // TS-only `object` builtin: a structurally-empty interface that rejects
     // primitives. See type_annotation.rs / subtyping_kit.rs.
     ObjectBuiltin(Box<(Loc, TypeStrictnessKind)>),
+    ExactObjectType(Box<Loc>),
     Optional(Box<T>),
     Maybe(Box<(Loc, T)>),
     Union(Box<AnnotUnion<Loc, T>>),
@@ -2335,7 +2336,8 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
             | Annot::BigInt(l)
             | Annot::String(l)
             | Annot::Boolean(l)
-            | Annot::Exists(l) => l.hash(state),
+            | Annot::Exists(l)
+            | Annot::ExactObjectType(l) => l.hash(state),
             Annot::ObjectBuiltin(inner) => inner.hash(state),
             Annot::Optional(t) => t.hash(state),
             Annot::Maybe(inner) => {
@@ -2542,7 +2544,8 @@ impl<Loc, T> Annot<Loc, T> {
             | Annot::BigInt(box loc)
             | Annot::String(box loc)
             | Annot::Boolean(box loc)
-            | Annot::Exists(box loc) => f_loc(cx, loc),
+            | Annot::Exists(box loc)
+            | Annot::ExactObjectType(box loc) => f_loc(cx, loc),
             Annot::ObjectBuiltin(box (loc, _)) => f_loc(cx, loc),
             Annot::Optional(box t) => f_t(cx, t),
             Annot::Maybe(inner) => {
@@ -2871,6 +2874,7 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::ObjectBuiltin(box (loc, strictness_kind)) => {
                 Annot::ObjectBuiltin(Box::new((f_loc(cx, loc), *strictness_kind)))
             }
+            Annot::ExactObjectType(loc) => Annot::ExactObjectType(Box::new(f_loc(cx, loc))),
             Annot::Optional(t) => Annot::Optional(Box::new(f_t(cx, t))),
             Annot::Maybe(inner) => Annot::Maybe(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
             Annot::Union(inner) => Annot::Union(Box::new(AnnotUnion {

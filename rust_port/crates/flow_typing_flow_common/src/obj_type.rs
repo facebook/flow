@@ -10,16 +10,20 @@ use std::rc::Rc;
 use dupe::Dupe;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
+use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::Flags;
+use flow_typing_type::type_::NominalType;
+use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::mk_objecttype_with_strictness;
+use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::obj_proto;
 use flow_typing_type::type_::object::spread::SealType;
 use flow_typing_type::type_::properties;
@@ -113,6 +117,31 @@ pub fn mk(obj_kind: ObjKind, cx: &mut Context, reason: Reason, literal: bool) ->
         obj_proto::make(reason),
         literal,
     )
+}
+
+/// The intrinsic `ExactObjectType`, bounded above by `{...}`.
+pub fn mk_exact_object_type(cx: &mut Context, reason: Reason) -> Type {
+    let upper_t = mk(
+        ObjKind::Inexact,
+        cx,
+        reason.dupe().replace_desc(VirtualReasonDesc::RObjectType),
+        false,
+    );
+    mk_exact_object_type_with_upper(reason, upper_t)
+}
+
+/// An `ExactObjectType` known to have the props of the inexact object `upper_t`.
+pub fn mk_exact_object_type_with_upper(reason: Reason, upper_t: Type) -> Type {
+    Type::new(TypeInner::NominalT {
+        reason,
+        nominal_type: Rc::new(NominalType::new(NominalTypeInner {
+            nominal_id: nominal::Id::ExactObjectType,
+            underlying_t: nominal::UnderlyingT::FullyOpaque,
+            lower_t: None,
+            upper_t: Some(upper_t),
+            nominal_type_args: Rc::from([]),
+        })),
+    })
 }
 
 pub fn is_exact(obj_kind: &ObjKind) -> bool {

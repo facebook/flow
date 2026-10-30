@@ -7790,6 +7790,9 @@ pub mod nominal {
     pub enum Id {
         /// Special nominal type to test t ~> union optimization
         InternalEnforceUnionOptimized,
+        /// The intrinsic `ExactObjectType`: the supertype of every exact object type, which no
+        /// lower bound type can express, and a subtype of `{...}`.
+        ExactObjectType,
         /// We also track the name so that we can do common interface conformance check, where we check
         /// the structural subtyping for nominal constructs defined in impl and interface files.
         UserDefinedOpaqueTypeId(Box<UserDefinedOpaqueTypeIdData>),
@@ -7804,6 +7807,7 @@ pub mod nominal {
                     write!(f, "user-defined {} (<opaque>)", name)
                 }
                 Id::InternalEnforceUnionOptimized => write!(f, "InternalEnforceUnionOptimized"),
+                Id::ExactObjectType => write!(f, "ExactObjectType"),
                 Id::StuckEval(kind) => match kind {
                     StuckEvalKind::StuckEvalForNonMaybeType => write!(f, "StuckEvalForNonMaybeType"),
                     StuckEvalKind::StuckEvalForPropertyType { name } => {
@@ -9263,6 +9267,9 @@ pub mod object {
         pub interface: Option<(Type, InstType)>,
         pub reachable_targs: Rc<[(Type, Polarity)]>,
         pub literal: bool,
+        /// The props beyond `props` of an inexact slice belong to an exact object, an
+        /// `ExactObjectType`.
+        pub exact_object_type: bool,
     }
 
     pub type Dict = Option<DictType>;

@@ -1882,6 +1882,13 @@ fn merge_annot<'cx>(
         Annot::String(box loc) => type_::str_module_t::at(loc.dupe()),
         Annot::Boolean(box loc) => type_::bool_module_t::at(loc.dupe()),
         Annot::Exists(box loc) => type_::any_t::at(type_::AnySource::AnnotatedAny, loc.dupe()),
+        Annot::ExactObjectType(box loc) => {
+            let reason = reason::mk_annot_reason(
+                RType(FlowSmolStr::new_inline("ExactObjectType")),
+                loc.dupe(),
+            );
+            obj_type::mk_exact_object_type(cx, reason)
+        }
         Annot::Optional(t) => {
             let t = merge_impl(env, cx, file, t, false, false);
             type_util::optional(t, None, false)

@@ -9354,6 +9354,10 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
+        "ExactObjectType" => match targs {
+            None => Parsed::Annot(Box::new(ParsedAnnot::ExactObjectType(Box::new(loc)))),
+            Some(_) => Parsed::Err(loc, Errno::CheckError),
+        },
         "$ReadOnlyArray" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);

@@ -184,6 +184,16 @@ pub fn mk_object_type<'cx>(
             }
         }
     };
+    wrap_generics(reason, kind, generics, t)
+}
+
+/// Wraps `t`, the result of `kind`, to remember the generics spread into it.
+fn wrap_generics(
+    reason: Reason,
+    kind: flow_common::subst_name::OpKind,
+    generics: object::GenericSpreadId,
+    t: Type,
+) -> Type {
     let Some(id) = flow_typing_generics::GenericId::make_op_id(kind, generics) else {
         return t;
     };
@@ -235,6 +245,7 @@ fn object_type_of_slice<'cx>(cx: &mut Context<'cx>, slice: &object::Slice) -> Ty
         interface,
         reachable_targs,
         literal,
+        exact_object_type: _,
     } = slice;
     let id = cx.generate_property_map(props.clone());
     mk_object_type(
@@ -462,6 +473,7 @@ pub fn object_slice<'cx>(
         interface,
         reachable_targs,
         literal,
+        exact_object_type: false,
     }
 }
 
@@ -570,6 +582,7 @@ fn spread2<'cx>(
             interface: _,
             reachable_targs: targs1,
             literal: _,
+            exact_object_type: exact_object_type1,
         },
     ): &(bool, Option<object::Slice>, object::Slice),
     (
@@ -585,6 +598,7 @@ fn spread2<'cx>(
             interface: _,
             reachable_targs: targs2,
             literal: _,
+            exact_object_type: exact_object_type2,
         },
     ): &(bool, Option<object::Slice>, object::Slice),
 ) -> Result<(bool, Option<object::Slice>, object::Slice), FlowJsException> {
@@ -764,6 +778,9 @@ fn spread2<'cx>(
             }
         }
     };
+    let exact_object_type = matches!(obj_kind, ObjKind::Inexact)
+        && (exact1 || *exact_object_type1)
+        && (exact2 || *exact_object_type2);
     let flags = Flags {
         obj_kind,
         react_dro: merge_dro(flags1.react_dro.clone(), flags2.react_dro.clone()),
@@ -800,6 +817,7 @@ fn spread2<'cx>(
                 interface: None,
                 reachable_targs: reachable_targs.into(),
                 literal,
+                exact_object_type,
             },
         )),
         Err(e) => Err(FlowJsException::Speculative(SpeculativeError(e))),
@@ -860,6 +878,7 @@ pub fn spread<'cx>(
                             interface: None,
                             reachable_targs: inline.reachable_targs.dupe(),
                             literal,
+                            exact_object_type: false,
                         },
                     ))
                 }
@@ -897,6 +916,7 @@ pub fn spread_mk_object<'cx>(
         interface: _,
         reachable_targs,
         literal: _,
+        exact_object_type,
     } = slice;
     let mk_dro = |t: Type| -> Type {
         match &flags.react_dro {
@@ -912,14 +932,19 @@ pub fn spread_mk_object<'cx>(
             None => t,
         }
     };
-    let (exact, sealed) = match target {
+    let (exact, exact_object_type, sealed) = match target {
         object::spread::Target::Annot { make_exact, .. } => {
             // Type spread result is exact if annotated to be exact
-            (*make_exact, object::spread::SealType::Sealed)
+            (*make_exact, false, object::spread::SealType::Sealed)
         }
         object::spread::Target::Value { make_seal, .. } => {
-            // Value spread result is exact if all inputs are exact
-            (obj_type::is_exact(&flags.obj_kind), *make_seal)
+            // Value spread result is exact if all inputs are exact, and an `ExactObjectType` if
+            // the inputs that are not exact are `ExactObjectType`s
+            (
+                obj_type::is_exact(&flags.obj_kind),
+                exact_object_type,
+                *make_seal,
+            )
         }
     };
     let as_const = sealed == object::spread::SealType::AsConst;
@@ -952,7 +977,13 @@ pub fn spread_mk_object<'cx>(
     let id = cx.generate_property_map(props_map);
     let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
     let call = None;
-    mk_object_type(
+    // The generics spread into an `ExactObjectType` wrap it, not its upper bound
+    let obj_generics = if exact_object_type {
+        flow_typing_generics::spread_empty()
+    } else {
+        generics.clone()
+    };
+    let t = mk_object_type(
         cx,
         reason,
         true,
@@ -964,9 +995,19 @@ pub fn spread_mk_object<'cx>(
         call,
         id,
         proto,
-        generics,
+        obj_generics,
         target.strictness_kind().join(strictness_kind),
         target.literal(),
+    );
+    if !exact_object_type {
+        return t;
+    }
+    let t = obj_type::mk_exact_object_type_with_upper(reason.dupe(), t);
+    wrap_generics(
+        reason.dupe(),
+        flow_common::subst_name::OpKind::Spread,
+        generics,
+        t,
     )
 }
 
@@ -1425,6 +1466,7 @@ pub fn object_rest_with_env<'cx, A>(
                     interface,
                     reachable_targs,
                     literal: literal1,
+                    exact_object_type: _,
                 }: &object::Slice,
                 slice2 @ object::Slice {
                     reason: r2,
@@ -1436,6 +1478,7 @@ pub fn object_rest_with_env<'cx, A>(
                     interface: _,
                     reachable_targs: _,
                     literal: _,
+                    exact_object_type: _,
                 }: &object::Slice|
      -> Result<Type, FlowJsException> {
         let dict1 = obj_type::get_dict_opt(&flags1.obj_kind);
@@ -1666,6 +1709,7 @@ pub fn object_make_exact<'cx>(
                                interface,
                                reachable_targs,
                                literal,
+                               exact_object_type: _,
                            }: &object::Slice|
      -> Result<Type, FlowJsException> {
         match interface {
@@ -1772,6 +1816,7 @@ pub fn object_read_only<'cx>(
                                    interface,
                                    reachable_targs,
                                    literal,
+                                   exact_object_type: _,
                                }: &object::Slice|
      -> Type {
         let props_map = props.ident_map(|p| property::with_polarity(p, polarity));
@@ -1844,6 +1889,7 @@ pub fn object_update_optionality<'cx>(
                          interface,
                          reachable_targs,
                          literal,
+                         exact_object_type: _,
                      }: &object::Slice|
      -> Type {
         let polarity_for = |orig: Polarity| {
@@ -1952,6 +1998,7 @@ pub fn intersect2<'cx>(
         interface: _,
         reachable_targs: targs1,
         literal: _,
+        exact_object_type: _,
     }: &object::Slice,
     object::Slice {
         reason: r2,
@@ -1963,6 +2010,7 @@ pub fn intersect2<'cx>(
         interface: _,
         reachable_targs: targs2,
         literal: _,
+        exact_object_type: _,
     }: &object::Slice,
 ) -> (
     properties::PropertiesMap,
@@ -2084,6 +2132,7 @@ pub fn intersect2_with_reason<'cx>(
         interface: None,
         reachable_targs,
         literal: false,
+        exact_object_type: false,
     }
 }
 
@@ -2341,6 +2390,42 @@ fn resolve_with_env<'cx, A>(
         loop_generic(cx, t, flow_typing_generics::spread_empty())
     };
     match t.deref() {
+        // An `ExactObjectType` has the props of its inexact upper bound, but is exact.
+        TypeInner::NominalT { nominal_type, .. }
+            if nominal_type.nominal_id == nominal::Id::ExactObjectType
+                && let Some(upper_t) = &nominal_type.upper_t
+                && let TypeInner::DefT(r, def_t) = upper_t.deref()
+                && let DefTInner::ObjT(obj) = def_t.deref() =>
+        {
+            let slice = object_slice(
+                cx,
+                None,
+                r,
+                obj.props_tmap.dupe(),
+                &obj.flags,
+                dict_polarity_override,
+                false,
+                obj.reachable_targs.dupe(),
+                t_generic_id,
+                obj.strictness_kind,
+                obj.literal,
+            );
+            let x = Vec1::new(object::Slice {
+                exact_object_type: true,
+                ..slice
+            });
+            return resolved(
+                next,
+                recurse,
+                cx,
+                env,
+                use_op,
+                reason,
+                resolve_tool,
+                tool,
+                x,
+            );
+        }
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             // We extract the props from an ObjT.
             DefTInner::ObjT(obj) => {
@@ -2519,6 +2604,7 @@ fn resolve_with_env<'cx, A>(
                     interface: None,
                     reachable_targs: Rc::from([]),
                     literal,
+                    exact_object_type: false,
                 });
                 return resolved(
                     next,
@@ -2554,6 +2640,7 @@ fn resolve_with_env<'cx, A>(
                     interface: None,
                     reachable_targs: Rc::from([]),
                     literal,
+                    exact_object_type: false,
                 });
                 return resolved(
                     next,
@@ -2593,6 +2680,7 @@ fn resolve_with_env<'cx, A>(
                             interface: None,
                             reachable_targs: Rc::from([]),
                             literal,
+                            exact_object_type: false,
                         })
                     }
                     _ => {
@@ -2615,6 +2703,7 @@ fn resolve_with_env<'cx, A>(
                             interface: None,
                             reachable_targs: Rc::from([]),
                             literal,
+                            exact_object_type: false,
                         })
                     }
                 };
@@ -3039,6 +3128,7 @@ pub fn super_<'cx, A>(
                 interface: slice.interface.or(acc.interface),
                 reachable_targs,
                 literal: acc.literal,
+                exact_object_type: false,
             };
             match super_t {
                 Some(base) => recurse(
@@ -3252,6 +3342,7 @@ pub fn map_object<'cx>(
         interface,
         reachable_targs,
         literal: _,
+        exact_object_type: _,
     } = slice;
     let mk_prop_type = |cx: &mut Context<'cx>,
                         key_t: Type,

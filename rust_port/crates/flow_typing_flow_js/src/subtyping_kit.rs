@@ -3321,6 +3321,12 @@ pub fn rec_sub_t<'cx>(
                         Err(other) => return Err(other),
                     }
                 }
+                // An `ExactObjectType` carries the props it is known to have in its upper bound.
+                nominal::Id::ExactObjectType
+                    if let (Some(lupper), Some(uupper)) = (&lnom.upper_t, &unom.upper_t) =>
+                {
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, lupper, uupper)?;
+                }
                 _ => {
                     FlowJs::flow_type_args_with_env(
                         cx, env,
@@ -6616,6 +6622,18 @@ pub fn rec_sub_t<'cx>(
                 Arc::new(use_op),
             );
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, t)
+        }
+
+        // `ExactObjectType` is the supertype of every exact object type, a lower bound no type
+        // can express.
+        (DefT(_, deref!(ObjT(obj))), NominalT { nominal_type: unom, .. })
+            if unom.nominal_id == nominal::Id::ExactObjectType =>
+        {
+            if obj_type::is_exact(&obj.flags.obj_kind) {
+                Ok(())
+            } else {
+                flow_js_utils::exact_obj_error(cx, env, &obj.flags.obj_kind, use_op, u, l)
+            }
         }
 
         // *********************

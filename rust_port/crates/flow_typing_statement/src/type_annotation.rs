@@ -46,6 +46,7 @@ use flow_typing_errors::intermediate_error_types::InternalType;
 use flow_typing_errors::intermediate_error_types::InvalidObjKey;
 use flow_typing_errors::intermediate_error_types::TsLibSyntaxKind;
 use flow_typing_flow_common::flow_js_utils;
+use flow_typing_flow_common::obj_type;
 use flow_typing_flow_common::string_case_transform;
 use flow_typing_flow_common::type_subst;
 use flow_typing_flow_js::flow_js;
@@ -2177,6 +2178,16 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, &mut env_no_infer, inner.targs.as_ref())?;
                             let elem_t = elemts.into_iter().next().unwrap();
                             Ok(reconstruct_ast(elem_t, None, targs_ast))
+                        })?
+                    }
+                    "ExactObjectType" => {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, |cx| {
+                            let reason = reason::mk_annot_reason(
+                                reason::VirtualReasonDesc::RType(name.dupe()),
+                                loc.dupe(),
+                            );
+                            let t = obj_type::mk_exact_object_type(cx, reason);
+                            Ok(reconstruct_ast(t, None, None))
                         })?
                     }
                     kind_name @ ("Uppercase" | "Lowercase" | "Capitalize" | "Uncapitalize") => {

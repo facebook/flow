@@ -441,6 +441,7 @@ pub fn slice_of_keys(
         interface,
         reachable_targs: Rc::from([]),
         literal: false,
+        exact_object_type: false,
     }
 }
 
@@ -784,6 +785,7 @@ pub(super) fn run_with_env<'cx>(
                 interface: _,
                 reachable_targs,
                 literal,
+                exact_object_type: _,
             } = slice;
             // TODO(jmbrown): Add polarity information to props
             let polarity = Polarity::Neutral;
@@ -866,6 +868,7 @@ pub(super) fn run_with_env<'cx>(
                 interface: _,
                 reachable_targs: config_targs,
                 literal: _,
+                exact_object_type: _,
             } = config;
             let config_dict = obj_type::get_dict_opt(&config_flags.obj_kind);
             let key_name = Name::new("key");
@@ -914,6 +917,7 @@ pub(super) fn run_with_env<'cx>(
                         interface: _,
                         reachable_targs: defaults_targs,
                         literal: _,
+                        exact_object_type: _,
                     } = defaults_slice;
                     let defaults_dict = obj_type::get_dict_opt(&defaults_flags.obj_kind);
                     //  Merge our props and default props.

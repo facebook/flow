@@ -42,6 +42,7 @@ use flow_common_ty::ty_symbol::ALocSymbol;
 use flow_common_ty::ty_symbol::ImportMode;
 use flow_common_ty::ty_symbol::Provenance;
 use flow_common_ty::ty_symbol::Symbol;
+use flow_common_ty::ty_symbol::builtin_symbol;
 use flow_common_ty::ty_utils::simplify_elt;
 use flow_common_ty::ty_utils::size_of_type;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
@@ -2985,6 +2986,10 @@ mod type_converter {
                 Some("Special InternalEnforceUnionOptimized upper bound"),
                 None,
             )),
+            NominalId::ExactObjectType => Ok(generic_talias(
+                builtin_symbol(FlowSmolStr::new_inline("ExactObjectType")),
+                None,
+            )),
             NominalId::StuckEval(kind) => stuck_eval::<I>(env, state, reason, kind, nominal),
         }
     }
@@ -3893,6 +3898,14 @@ pub mod element_converter {
                 return Err(terr(
                     ErrorKind::UnsupportedTypeCtor,
                     Some("Special InternalEnforceUnionOptimized upper bound"),
+                    None,
+                ));
+            }
+            // The intrinsic has no declaration.
+            nominal::Id::ExactObjectType => {
+                return Err(terr(
+                    ErrorKind::UnsupportedTypeCtor,
+                    Some("Intrinsic ExactObjectType"),
                     None,
                 ));
             }
