@@ -94,6 +94,22 @@ Property `value` has no initializer and is not definitely assigned in the constr
              ^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- field_types.js:13:3
+
+Property `x` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   13|   x: T; // error
+         ^
+
+
+Error ---------------------------------------------------------------------------------------------- field_types.js:17:3
+
+Property `x` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   17|   x: T; // error: `T` may be `empty`, a narrower type than `void`
+         ^
+
+
 Error ------------------------------------------------------------------------------------ inherited_declarations.js:7:3
 
 Property `x` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
@@ -103,4 +119,4 @@ Property `x` has no initializer and is not definitely assigned in the constructo
 
 
 
-Found 13 errors
+Found 15 errors

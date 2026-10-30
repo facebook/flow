@@ -15090,7 +15090,7 @@ fn mk_class<'a>(
     );
     class_sig::check_signature_compatibility(cx, def_reason, &class_sig);
     if cx.strict_property_initialization() {
-        check_property_initialization(cx, c);
+        check_property_initialization(cx, c, &class_sig)?;
     }
     class_sig::toplevels(cx, &class_sig)?;
     let class_body = &c.body.body;
@@ -15104,43 +15104,84 @@ fn mk_class<'a>(
 }
 
 /// Reports the instance fields that some path through the constructor may leave
-/// unassigned. The name resolver records a read at the declaration of each field it
-/// tracks, with the field's state when construction ends (`ReadKind::FieldInitCheck`).
-fn check_property_initialization<'a>(cx: &mut Context<'a>, c: &ast::class::Class<ALoc, ALoc>) {
+/// unassigned, unless the field's type includes `void`. The name resolver records a
+/// read at the declaration of each field it tracks, with the field's state when
+/// construction ends (`ReadKind::FieldInitCheck`).
+fn check_property_initialization<'a>(
+    cx: &mut Context<'a>,
+    c: &ast::class::Class<ALoc, ALoc>,
+    class_sig: &func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
+) -> Result<(), CheckExprError> {
     use ast::class::BodyElement;
     use ast::expression::object::Key;
+    use func_class_sig_types::class::Field;
 
     let env_values = cx.environment().var_info.env_values.dupe();
     for element in c.body.body.iter() {
-        let (loc, name) = match element {
+        let (loc, name, field) = match element {
             BodyElement::Property(prop) => match &prop.key {
-                Key::Identifier(id) => (&id.loc, id.name.dupe()),
+                Key::Identifier(id) => (
+                    &id.loc,
+                    id.name.dupe(),
+                    class_sig.instance.fields.get(&Name::new(id.name.dupe())),
+                ),
                 _ => continue,
             },
             BodyElement::PrivateField(field) => (
                 &field.key.loc,
                 FlowSmolStr::from(format!("#{}", field.key.name)),
+                class_sig.instance.private_fields.get(&field.key.name),
             ),
             _ => continue,
         };
         let Some(read) = env_values.get(&ReadKey::new(ReadKind::FieldInitCheck, loc.dupe())) else {
             continue;
         };
-        if read
+        if !read
             .write_locs
             .iter()
             .any(|write| matches!(write, WriteLoc::Uninitialized(_)))
         {
-            flow_js::add_output_non_speculating(
-                cx,
-                ErrorMessage::EUninitializedProperty(Box::new((
-                    loc.dupe(),
-                    name,
-                    UninitializedPropertyKind::NotDefinitelyAssigned,
-                ))),
-            );
+            continue;
         }
+        if let Some((_, _, Field::Annot(field_t))) = field
+            && declared_type_includes_void(cx, field_t)?
+        {
+            continue;
+        }
+        flow_js::add_output_non_speculating(
+            cx,
+            ErrorMessage::EUninitializedProperty(Box::new((
+                loc.dupe(),
+                name,
+                UninitializedPropertyKind::NotDefinitelyAssigned,
+            ))),
+        );
     }
+    Ok(())
+}
+
+/// Whether a field's declared type includes `void`: one of the types it can be is `void`,
+/// `mixed` or `any`. Unlike TypeScript, which leaves a type operation on a type parameter
+/// (`O['label']`) unevaluated, this works it out from the parameter's bound.
+fn declared_type_includes_void(cx: &mut Context<'_>, field_t: &Type) -> Result<bool, JobError> {
+    // Resolving the type can instantiate aliases and evaluate type operations that the
+    // program itself never uses: keep their errors and cached results out of the program's.
+    let concrete_types =
+        flow_js_utils::flow_js_result_to_job_error(cx.run_and_rolled_back_cache(|cx| {
+            cx.with_suppressed_errors(|cx| {
+                FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(field_t), field_t)
+            })
+        }))?;
+    Ok(concrete_types.iter().any(|t| match t.deref() {
+        TypeInner::AnyT(..) => true,
+        TypeInner::DefT(_, def_t) => matches!(
+            def_t.deref(),
+            DefTInner::VoidT
+                | DefTInner::MixedT(MixedFlavor::MixedEverything | MixedFlavor::MixedNonNull)
+        ),
+        _ => false,
+    }))
 }
 
 fn check_duplicate_class_member<'a>(
