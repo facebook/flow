@@ -38,11 +38,11 @@ References:
    overload.js:7:27
      7| var x1: number = "".match(0)[0];
                                   ^ [1]
-   <BUILTINS>/lib.es5.js:990:19
-   990|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:994:19
+   994|     match(regexp: string | RegExp): RegExpMatchArray | null;
                           ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:990:28
-   990|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:994:28
+   994|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                    ^^^^^^ [3]
 
 
@@ -55,8 +55,8 @@ Cannot assign `"".match(...)[0]` to `x2` because `string` [1] is incompatible wi
                          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:733:42
-   733| interface RegExpMatchArray extends Array<string> {
+   <BUILTINS>/lib.es5.js:737:42
+   737| interface RegExpMatchArray extends Array<string> {
                                                  ^^^^^^ [1]
    overload.js:8:9
      8| var x2: number = "".match(/pattern/)[0];
@@ -72,8 +72,8 @@ Cannot get `"".match(...)[0]` because `null` [1] does not have properties. [inco
                                              ^
 
 References:
-   <BUILTINS>/lib.es5.js:990:56
-   990|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:994:56
+   994|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                                                ^^^^ [1]
 
 
@@ -86,8 +86,8 @@ Cannot assign `"".split(...)[0]` to `x4` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1020:56
-   1020|     split(separator: string | RegExp, limit?: number): string[];
+   <BUILTINS>/lib.es5.js:1024:56
+   1024|     split(separator: string | RegExp, limit?: number): string[];
                                                                 ^^^^^^ [1]
    overload.js:10:9
      10| var x4: number = "".split(/pattern/)[0];

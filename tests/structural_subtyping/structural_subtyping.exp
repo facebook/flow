@@ -8,8 +8,8 @@ Cannot assign `new String(...)` to `lengthTest2` because property `length` is re
                                        ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1054:24
-   1054|     new (value?: any): String;
+   <BUILTINS>/lib.es5.js:1058:24
+   1058|     new (value?: any): String;
                                 ^^^^^^ [1]
    builtin.js:10:18
      10| var lengthTest2: IHasLength = new String('hello');
