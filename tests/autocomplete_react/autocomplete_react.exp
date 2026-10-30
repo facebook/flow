@@ -170,7 +170,7 @@ Flags: --pretty
     },
     {
       "name":"ActionDispatch",
-      "type":"type ActionDispatch<ActionArg extends ReadonlyArray<any> = Readonly<[]>> = (...args: ActionArg) => void"
+      "type":"type ActionDispatch<in ActionArg extends ReadonlyArray<any> = Readonly<[]>> = (...args: ActionArg) => void"
     },
     {
       "name":"AllHTMLAttributes",
@@ -269,7 +269,7 @@ Flags: --pretty
     },
     {
       "name":"ComponentClass",
-      "type":"type ComponentClass<P extends {...} = {...}, S = any> = component(...P)"
+      "type":"type ComponentClass<in P extends {...} = {...}, S = any> = component(...P)"
     },
     {
       "name":"ComponentProps",
@@ -297,7 +297,7 @@ Flags: --pretty
     },
     {
       "name":"Consumer",
-      "type":"type Consumer<T> = component(children: (value: T) => React$Node)"
+      "type":"type Consumer<out T> = component(children: (value: T) => React$Node)"
     },
     {"name":"Context","type":"opaque type Context<T>"},
     {
@@ -338,7 +338,7 @@ Flags: --pretty
       "name":"DialogHTMLAttributes",
       "type":"type DialogHTMLAttributes<T> = HTMLAttributes<T>"
     },
-    {"name":"Dispatch","type":"type Dispatch<A> = (A) => void"},
+    {"name":"Dispatch","type":"type Dispatch<in A> = (A) => void"},
     {"name":"DragEvent","type":"type DragEvent<T = Element> = MouseEvent<T>"},
     {
       "name":"DragEventHandler",
@@ -364,9 +364,9 @@ Flags: --pretty
     {"name":"EventHandler","type":"type EventHandler<E> = (event: E) => void"},
     {
       "name":"ExoticComponent",
-      "type":"type ExoticComponent<P extends {...} = {...}> = component(...P)"
+      "type":"type ExoticComponent<in P extends {...} = {...}> = component(...P)"
     },
-    {"name":"FC","type":"type FC<P extends {...} = {...}> = component(...P)"},
+    {"name":"FC","type":"type FC<in P extends {...} = {...}> = component(...P)"},
     {
       "name":"FieldsetHTMLAttributes",
       "type":"type FieldsetHTMLAttributes<T> = HTMLAttributes<T>"
@@ -390,15 +390,15 @@ Flags: --pretty
     },
     {
       "name":"ForwardRefExoticComponent",
-      "type":"type ForwardRefExoticComponent<P extends {...} = {...}> = component(...P)"
+      "type":"type ForwardRefExoticComponent<in P extends {...} = {...}> = component(...P)"
     },
     {
       "name":"ForwardRefRenderFunction",
-      "type":"type ForwardRefRenderFunction<T, P = {...}> = (props: P, ref: RefSetter<T>) => React$Node"
+      "type":"type ForwardRefRenderFunction<out T, in P = {...}> = (props: P, ref: RefSetter<T>) => React$Node"
     },
     {
       "name":"FunctionComponent",
-      "type":"type FunctionComponent<P extends {...} = {...}> = component(...P)"
+      "type":"type FunctionComponent<in P extends {...} = {...}> = component(...P)"
     },
     {
       "name":"HTMLAttributeAnchorTarget",
@@ -458,7 +458,7 @@ Flags: --pretty
     },
     {
       "name":"JSXElementConstructor",
-      "type":"type JSXElementConstructor<P extends {...} = {...}> = component(...P)"
+      "type":"type JSXElementConstructor<in P extends {...} = {...}> = component(...P)"
     },
     {"name":"Key","type":"type Key = React$Key"},
     {"name":"KeyboardEvent","type":"type KeyboardEvent<T = Element> = UIEvent<T>"},
@@ -529,7 +529,7 @@ Flags: --pretty
     },
     {
       "name":"NamedExoticComponent",
-      "type":"type NamedExoticComponent<P extends {...} = {...}> = component(...P)"
+      "type":"type NamedExoticComponent<in P extends {...} = {...}> = component(...P)"
     },
     {"name":"Node","type":"type Node = React$Node"},
     {
@@ -584,12 +584,12 @@ Flags: --pretty
     },
     {
       "name":"PropsWithChildren",
-      "type":"type PropsWithChildren<P = {...}> = P & {children?: React$Node, ...}"
+      "type":"type PropsWithChildren<out P = {...}> = P & {children?: React$Node, ...}"
     },
     {"name":"PropsWithoutRef","type":"type PropsWithoutRef<P> = Omit<P, \"ref\">"},
     {
       "name":"Provider",
-      "type":"type Provider<T> = component(children?: React$Node, value: T)"
+      "type":"type Provider<in T> = component(children?: React$Node, value: T)"
     },
     {
       "name":"ProviderProps",
@@ -601,7 +601,7 @@ Flags: --pretty
     },
     {
       "name":"ReactElement",
-      "type":"type ReactElement<P = unknown, T = React$ElementType> = ExactReactElement_DEPRECATED<T, P>"
+      "type":"type ReactElement<out P = unknown, out T = React$ElementType> = ExactReactElement_DEPRECATED<T, P>"
     },
     {
       "name":"ReactEventHandler",
@@ -619,14 +619,14 @@ Flags: --pretty
       "type":"type ReactSetStateFunction<S> = (((S) => S) | S) => void"
     },
     {"name":"ReactText","type":"type ReactText = string | number"},
-    {"name":"Ref","type":"type Ref<T> = RefSetter<T>"},
+    {"name":"Ref","type":"type Ref<in T> = RefSetter<T>"},
     {
       "name":"RefAttributes",
       "type":"type RefAttributes<T> = {ref?: RefSetter<T>, ...}"
     },
     {
       "name":"RefCallback",
-      "type":"type RefCallback<T> = (T | null) => void | (() => void)"
+      "type":"type RefCallback<in T> = (T | null) => void | (() => void)"
     },
     {"name":"RefObject","type":"type RefObject<T> = React$RefObject<T>"},
     {
