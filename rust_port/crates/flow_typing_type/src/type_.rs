@@ -10746,6 +10746,7 @@ pub mod aconstraint {
             keys: Rc<[FlowSmolStr]>,
         },
         AnnotGetValuesT(Reason),
+        AnnotFilterOptionalT(Reason),
     }
 
     #[derive(Clone, Dupe)]
@@ -10862,7 +10863,8 @@ pub mod aconstraint {
                 | OpInner::AnnotGetKeysDictKeyT(reason)
                 | OpInner::AnnotToStringT { reason, .. }
                 | OpInner::AnnotObjRestT { reason, .. }
-                | OpInner::AnnotGetValuesT(reason) => reason.dupe(),
+                | OpInner::AnnotGetValuesT(reason)
+                | OpInner::AnnotFilterOptionalT(reason) => reason.dupe(),
                 OpInner::AnnotSpecializeT(data) => data.reason.dupe(),
                 OpInner::AnnotGetTypeFromNamespaceT(data) => data.reason.dupe(),
                 OpInner::AnnotGetPropT(data) => data.reason.dupe(),
@@ -10949,6 +10951,7 @@ pub mod aconstraint {
                 OpInner::AnnotToStringT { .. } => "Annot_ToStringT",
                 OpInner::AnnotObjRestT { .. } => "Annot_ObjRestT",
                 OpInner::AnnotGetValuesT(_) => "Annot_GetValuesT",
+                OpInner::AnnotFilterOptionalT(_) => "Annot_FilterOptionalT",
             }
         }
 
@@ -11025,6 +11028,7 @@ pub mod aconstraint {
                 OpInner::AnnotToStringT { .. } => AnnotationInferenceOperation::ToString,
                 OpInner::AnnotObjRestT { .. } => AnnotationInferenceOperation::Rest,
                 OpInner::AnnotGetValuesT(_) => AnnotationInferenceOperation::Values,
+                OpInner::AnnotFilterOptionalT(_) => AnnotationInferenceOperation::MappedType,
             }
         }
     }

@@ -20,3 +20,17 @@ export const nonHomomorphicProp = nonHomomorphic.a;
 type Optional = {[K in keyof {f: number}]?: string};
 declare const optional: Optional;
 export const optionalProp = optional.f;
+
+type Source = {f: number, g?: string, h?: ?string};
+
+declare const picked: Pick<Source, 'f' | 'g'>;
+export const pickedF = picked.f;
+export const pickedG = picked.g;
+
+declare const stringKeys: {[K in string]: number};
+export const stringKeysProp = stringKeys.anything;
+
+declare const required: {[K in keyof Source]-?: Source[K]};
+export const requiredF = required.f;
+export const requiredG = required.g;
+export const requiredH = required.h;

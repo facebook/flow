@@ -9,6 +9,12 @@ import {
   keysLength,
   nonHomomorphicProp,
   optionalProp,
+  pickedF,
+  pickedG,
+  stringKeysProp,
+  requiredF,
+  requiredG,
+  requiredH,
 } from './export_values';
 
 getProp as string; // OK
@@ -28,3 +34,15 @@ nonHomomorphicProp as number; // OK
 nonHomomorphicProp as string; // ERROR
 optionalProp as string | void; // OK
 optionalProp as string; // ERROR
+pickedF as number; // OK
+pickedF as string; // ERROR
+pickedG as string | void; // OK
+pickedG as string; // ERROR 2x
+stringKeysProp as number; // OK
+stringKeysProp as string; // ERROR
+requiredF as number; // OK
+requiredF as string; // ERROR
+requiredG as string; // OK
+requiredG as number; // ERROR
+requiredH as string | null; // OK
+requiredH as string; // ERROR

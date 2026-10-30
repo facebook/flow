@@ -2651,6 +2651,7 @@ pub enum ElabOpenMemoTag {
     GetKeys,
     GetKeysDictKey,
     GetValues,
+    FilterOptional,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -2737,6 +2738,7 @@ pub fn elab_open_memo_key(op: &Op<Cx>, id: i32) -> Option<ElabOpenMemoKey> {
         OpInner::AnnotGetKeysT(..) => ElabOpenMemoTag::GetKeys,
         OpInner::AnnotGetKeysDictKeyT(..) => ElabOpenMemoTag::GetKeysDictKey,
         OpInner::AnnotGetValuesT(..) => ElabOpenMemoTag::GetValues,
+        OpInner::AnnotFilterOptionalT(..) => ElabOpenMemoTag::FilterOptional,
     };
     Some(ElabOpenMemoKey { tag, id })
 }

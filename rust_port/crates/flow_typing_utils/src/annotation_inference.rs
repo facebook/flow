@@ -34,6 +34,7 @@ use flow_typing_flow_common::flow_js_utils::CgLookupArgs;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::get_prop_t_kit::IndexerFallbackMode;
 use flow_typing_flow_js::object_kit::slice_of_keys;
+use flow_typing_flow_js::object_kit::split_mapped_type_keys;
 use flow_typing_flow_js::slice_utils;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_;
@@ -114,7 +115,8 @@ fn object_like_op(op: &OpInner<Cx>) -> bool {
         | OpInner::AnnotGetKeysDictKeyT(_)
         | OpInner::AnnotGetEnumT(_)
         | OpInner::AnnotDeepReadOnlyT(_)
-        | OpInner::AnnotToStringT { .. } => false,
+        | OpInner::AnnotToStringT { .. }
+        | OpInner::AnnotFilterOptionalT(_) => false,
 
         OpInner::AnnotGetTypeFromNamespaceT(_)
         | OpInner::AnnotGetPropT(_)
@@ -964,35 +966,37 @@ pub fn elab_t<'cx>(
                             homomorphic.dupe(),
                             inner_t.dupe(),
                         );
-                    let mapped = match homomorphic {
-                        type_::MappedTypeHomomorphicFlag::Homomorphic => object_kit(
-                            cx,
-                            use_op,
-                            reason,
-                            type_::object::ResolveTool::Resolve(type_::object::Resolve::Next),
-                            type_::object::Tool::ObjectMap(Box::new(
-                                type_::object::ObjectToolObjectMapData {
-                                    prop_type: property_type,
-                                    name_type: None,
-                                    mapped_type_flags: *mapped_type_flags,
-                                    selected_keys_opt: None,
-                                },
-                            )),
-                            inner_t.dupe(),
-                        ),
-                        type_::MappedTypeHomomorphicFlag::Unspecialized => mapped_type_of_keys(
-                            cx,
-                            use_op,
-                            reason,
-                            inner_t.dupe(),
-                            &property_type,
-                            mapped_type_flags,
-                            &op,
-                        ),
-                        type_::MappedTypeHomomorphicFlag::SemiHomomorphic(_) => {
-                            return error_unsupported(cx, &t, &op);
+                    let selected_keys_opt = match homomorphic {
+                        type_::MappedTypeHomomorphicFlag::Unspecialized => {
+                            let mapped = mapped_type_of_keys(
+                                cx,
+                                use_op,
+                                reason,
+                                inner_t.dupe(),
+                                &property_type,
+                                mapped_type_flags,
+                                &op,
+                            );
+                            return elab_t(cx, None, mapped, op);
                         }
+                        type_::MappedTypeHomomorphicFlag::Homomorphic => None,
+                        type_::MappedTypeHomomorphicFlag::SemiHomomorphic(keys) => Some(keys),
                     };
+                    let mapped = object_kit(
+                        cx,
+                        use_op,
+                        reason,
+                        type_::object::ResolveTool::Resolve(type_::object::Resolve::Next),
+                        type_::object::Tool::ObjectMap(Box::new(
+                            type_::object::ObjectToolObjectMapData {
+                                prop_type: property_type,
+                                name_type: None,
+                                mapped_type_flags: *mapped_type_flags,
+                                selected_keys_opt,
+                            },
+                        )),
+                        inner_t.dupe(),
+                    );
                     elab_t(cx, None, mapped, op)
                 }
                 _ => error_unsupported(cx, &t, &op),
@@ -1368,6 +1372,13 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
         // **********************************
         // Wildcards (idx, maybe, optional)
         // **********************************
+        (TypeInner::OptionalT { type_, .. }, OpInner::AnnotFilterOptionalT(_)) => {
+            elab_t(cx, Some(seen), type_.dupe(), op)
+        }
+        (TypeInner::MaybeT(r, inner), OpInner::AnnotFilterOptionalT(reason)) => {
+            let inner = elab_t(cx, Some(seen), inner.dupe(), op.dupe());
+            type_util::union_of_ts(reason.dupe(), vec![type_::null::why(r.dupe()), inner], None)
+        }
         (TypeInner::MaybeT(_, _), _) | (TypeInner::OptionalT { .. }, _) => {
             // These are rare in practice. Will consider adding support if we hit this error case.
             error_unsupported(cx, &t, &op)
@@ -1444,6 +1455,22 @@ fn elab_t_concrete<'cx>(cx: &mut Context<'cx>, seen: FlowOrdSet<i32>, t: Type, o
             elab_t(cx, Some(seen), t, op)
         }
         (_, OpInner::AnnotConcretizeForImportsExports(_, f)) => f(cx, t),
+        // *****************
+        //  Filter optional
+        // *****************
+        (TypeInner::DefT(r, def_t), OpInner::AnnotFilterOptionalT(_))
+            if matches!(def_t.deref(), DefTInner::VoidT) =>
+        {
+            type_::empty_t::why(r.dupe())
+        }
+        (TypeInner::UnionT(_, rep), OpInner::AnnotFilterOptionalT(reason)) => {
+            let ts: Vec<Type> = rep
+                .members_iter()
+                .map(|member| elab_t(cx, Some(seen.dupe()), member.dupe(), op.dupe()))
+                .collect();
+            type_util::union_of_ts(reason.dupe(), ts, None)
+        }
+        (_, OpInner::AnnotFilterOptionalT(_)) => t,
         // **************
         //  Opaque types
         // **************
@@ -3922,8 +3949,15 @@ fn object_kit_concrete<'cx>(
                 prop_type,
                 name_type: None,
                 mapped_type_flags,
-                selected_keys_opt: None,
+                selected_keys_opt,
             }) => {
+                let selected_keys = match selected_keys_opt {
+                    None => None,
+                    Some(keys) => match partition_mapped_type_keys(cx, reason, keys.dupe()) {
+                        Some(selected_keys) => Some(selected_keys),
+                        None => return Ok(error_unsupported(cx, keys, &op2)),
+                    },
+                };
                 let ts = x
                     .iter()
                     .map(|slice| {
@@ -3931,9 +3965,9 @@ fn object_kit_concrete<'cx>(
                             cx,
                             &use_op,
                             reason,
-                            &op2,
                             prop_type,
                             mapped_type_flags,
+                            selected_keys.as_ref(),
                             slice,
                         )
                     })
@@ -3961,22 +3995,26 @@ fn object_kit_concrete<'cx>(
     .unwrap()
 }
 
-/// Maps one object slice through a mapped type. `-?` on an optional source
-/// property needs `void` removed from a deferred property type, which
-/// annotation inference cannot do.
+/// Maps one object slice through a mapped type. Under `-?`, `void` is removed
+/// from the deferred property type lazily, as checking does through a tvar.
 fn map_mapped_type_slice<'cx>(
     cx: &mut Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
-    op: &Op<Cx>,
     property_type: &Type,
     mapped_type_flags: &type_::MappedTypeFlags,
+    selected_keys: Option<&(Vec<(Name, Reason)>, Vec<Type>)>,
     slice: &type_::object::Slice,
 ) -> Type {
+    let filter_optional = |cx: &mut Context<'cx>, t: Type| -> Result<Type, FlowJsException> {
+        let op = Op::new(OpInner::AnnotFilterOptionalT(reason.dupe()));
+        let filtered: LazyType = Rc::new(flow_lazy::Lazy::new(move |cx: &mut Context<'_>| {
+            elab_t(cx, None, t.dupe(), op.dupe())
+        }));
+        Ok(mk_sig_tvar(cx, reason.dupe(), filtered))
+    };
     slice_utils::map_object(
-        &|cx: &mut Context<'cx>, t: Type| -> Result<Type, FlowJsException> {
-            Ok(error_unsupported(cx, &t, op))
-        },
+        &filter_optional,
         None,
         property_type,
         mapped_type_flags,
@@ -3984,14 +4022,53 @@ fn map_mapped_type_slice<'cx>(
         &FlowJsEnv::entry(),
         reason,
         use_op,
-        None,
+        selected_keys,
         slice,
     )
     .expect("should not raise: annotation inference's filter_optional never fails")
 }
 
-/// Maps a non-homomorphic mapped type over a union of string literal keys,
-/// as `object_kit::mapped_type_of_keys` does in checking.
+/// Splits mapped type keys into property names and indexer keys, as
+/// `object_kit::partition_keys_and_indexer` does in checking. Checking
+/// validates the keys by subtyping against `string | number | symbol`; here,
+/// keys that are not structurally one of those are unsupported.
+fn partition_mapped_type_keys<'cx>(
+    cx: &mut Context<'cx>,
+    reason: &Reason,
+    keys: Type,
+) -> Option<(Vec<(Name, Reason)>, Vec<Type>)> {
+    use flow_typing_type::type_::DefTInner;
+
+    let collector = TypeCollector::create();
+    elab_t(
+        cx,
+        None,
+        keys,
+        Op::new(OpInner::AnnotConcretizeForInspection {
+            reason: reason.dupe(),
+            collector: collector.clone(),
+        }),
+    );
+    let keys = collector.collect_to_vec();
+    let all_valid = keys.iter().all(|t| match t.deref() {
+        TypeInner::DefT(_, def_t) => matches!(
+            def_t.deref(),
+            DefTInner::SingletonStrT { .. }
+                | DefTInner::UniqueSymbolT(_)
+                | DefTInner::EmptyT
+                | DefTInner::StrGeneralT(_)
+                | DefTInner::NumGeneralT(_)
+                | DefTInner::SingletonNumT { .. }
+                | DefTInner::SymbolT
+        ),
+        TypeInner::AnyT(..) => true,
+        _ => false,
+    });
+    all_valid.then(|| split_mapped_type_keys(keys))
+}
+
+/// Maps a non-homomorphic mapped type over its keys, as
+/// `object_kit::mapped_type_of_keys` does in checking.
 fn mapped_type_of_keys<'cx>(
     cx: &mut Context<'cx>,
     use_op: UseOp,
@@ -4001,38 +4078,18 @@ fn mapped_type_of_keys<'cx>(
     mapped_type_flags: &type_::MappedTypeFlags,
     op: &Op<Cx>,
 ) -> Type {
-    use flow_typing_type::type_::DefTInner;
-
-    let keys = concretize_type(cx, reason.dupe(), keys);
-    let members: Vec<Type> = match keys.deref() {
-        TypeInner::UnionT(_, rep) => rep.members_iter().map(Dupe::dupe).collect(),
-        _ => vec![keys.dupe()],
-    };
-    let keys_with_reasons: Option<Vec<(Name, Reason)>> = members
-        .into_iter()
-        .map(|member| {
-            let member = concretize_type(cx, reason.dupe(), member);
-            match member.deref() {
-                TypeInner::DefT(key_reason, def_t)
-                    if let DefTInner::SingletonStrT { value, .. } = def_t.deref() =>
-                {
-                    Some((Name::new(value.dupe()), key_reason.dupe()))
-                }
-                _ => None,
-            }
-        })
-        .collect();
-    let Some(keys_with_reasons) = keys_with_reasons else {
+    let Some((keys_with_reasons, indexers)) = partition_mapped_type_keys(cx, &reason, keys.dupe())
+    else {
         return error_unsupported(cx, &keys, op);
     };
     map_mapped_type_slice(
         cx,
         &use_op,
         &reason,
-        op,
         property_type,
         mapped_type_flags,
-        &slice_of_keys(&reason, &keys_with_reasons, &[]),
+        None,
+        &slice_of_keys(&reason, &keys_with_reasons, &indexers),
     )
 }
 

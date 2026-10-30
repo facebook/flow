@@ -122,9 +122,16 @@ fn partition_keys_and_indexer<'cx>(
     FlowJs::rec_flow_t_with_env(cx, env, trace, compatibility_use_op, keys, &union)?;
     let possible_types =
         FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason, keys)?;
+    Ok(split_mapped_type_keys(possible_types))
+}
+
+/// Splits concrete mapped type keys into property names and indexer keys.
+pub fn split_mapped_type_keys(
+    keys: impl IntoIterator<Item = Type>,
+) -> (Vec<(Name, Reason)>, Vec<Type>) {
     let mut keys_result: Vec<(Name, Reason)> = Vec::new();
     let mut indexers: Vec<Type> = Vec::new();
-    for t in possible_types {
+    for t in keys {
         match t.deref() {
             TypeInner::DefT(r, def_t)
                 if let DefTInner::SingletonStrT { value: name, .. } = def_t.deref() =>
@@ -147,7 +154,7 @@ fn partition_keys_and_indexer<'cx>(
 
         indexers.push(t.dupe());
     }
-    Ok((keys_result, indexers))
+    (keys_result, indexers)
 }
 
 fn dispatch_substituted_name<'cx>(
