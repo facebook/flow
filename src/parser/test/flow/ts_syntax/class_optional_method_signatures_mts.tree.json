@@ -47,7 +47,7 @@
             "value": {
               "loc": {
                 "end": {
-                  "column": 15,
+                  "column": 24,
                   "line": 1
                 },
                 "source": null,
@@ -58,13 +58,13 @@
               },
               "range": [
                 12,
-                15
+                24
               ],
               "type": "TypeAnnotation",
               "typeAnnotation": {
                 "loc": {
                   "end": {
-                    "column": 15,
+                    "column": 24,
                     "line": 1
                   },
                   "source": null,
@@ -157,7 +157,7 @@
                 ],
                 "range": [
                   12,
-                  15
+                  24
                 ],
                 "rest": null,
                 "returnType": {

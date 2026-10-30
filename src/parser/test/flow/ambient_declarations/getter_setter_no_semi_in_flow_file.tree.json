@@ -34,12 +34,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":12}},
-              "range":[20,22],
+              "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":20}},
+              "range":[20,30],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":12}},
-                "range":[20,22],
+                "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":20}},
+                "range":[20,30],
                 "params":[],
                 "returnType":{
                   "type":"StringTypeAnnotation",
@@ -69,12 +69,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":25}},
-              "range":[41,56],
+              "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":31}},
+              "range":[41,62],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":25}},
-                "range":[41,56],
+                "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":31}},
+                "range":[41,62],
                 "params":[
                   {
                     "type":"FunctionTypeParam",
@@ -124,12 +124,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":4,"column":9},"end":{"line":4,"column":11}},
-              "range":[72,74],
+              "loc":{"source":null,"start":{"line":4,"column":9},"end":{"line":4,"column":19}},
+              "range":[72,82],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":4,"column":9},"end":{"line":4,"column":11}},
-                "range":[72,74],
+                "loc":{"source":null,"start":{"line":4,"column":9},"end":{"line":4,"column":19}},
+                "range":[72,82],
                 "params":[],
                 "returnType":{
                   "type":"NumberTypeAnnotation",
@@ -159,12 +159,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":24}},
-              "range":[92,107],
+              "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":30}},
+              "range":[92,113],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":24}},
-                "range":[92,107],
+                "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":30}},
+                "range":[92,113],
                 "params":[
                   {
                     "type":"FunctionTypeParam",
@@ -214,12 +214,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":6,"column":18},"end":{"line":6,"column":20}},
-              "range":[132,134],
+              "loc":{"source":null,"start":{"line":6,"column":18},"end":{"line":6,"column":28}},
+              "range":[132,142],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":6,"column":18},"end":{"line":6,"column":20}},
-                "range":[132,134],
+                "loc":{"source":null,"start":{"line":6,"column":18},"end":{"line":6,"column":28}},
+                "range":[132,142],
                 "params":[],
                 "returnType":{
                   "type":"NumberTypeAnnotation",
@@ -249,12 +249,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":7,"column":18},"end":{"line":7,"column":33}},
-              "range":[161,176],
+              "loc":{"source":null,"start":{"line":7,"column":18},"end":{"line":7,"column":39}},
+              "range":[161,182],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":7,"column":18},"end":{"line":7,"column":33}},
-                "range":[161,176],
+                "loc":{"source":null,"start":{"line":7,"column":18},"end":{"line":7,"column":39}},
+                "range":[161,182],
                 "params":[
                   {
                     "type":"FunctionTypeParam",

@@ -1117,14 +1117,10 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     comments: None,
                     effect: function::Effect::Arbitrary,
                 };
-                let annot_loc = match tparams {
-                    Some(tp) => tp.loc.dupe(),
-                    None => params.loc.dupe(),
-                };
                 let annot = types::Annotation {
-                    loc: annot_loc.dupe(),
+                    loc: sig_loc.dupe(),
                     annotation: types::Type::new(types::TypeInner::Function {
-                        loc: annot_loc.dupe(),
+                        loc: sig_loc.dupe(),
                         inner: Arc::new(func),
                     }),
                 };
@@ -1193,14 +1189,10 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     comments: None,
                     effect: function::Effect::Arbitrary,
                 };
-                let annot_loc = match tparams {
-                    Some(tp) => tp.loc.dupe(),
-                    None => params.loc.dupe(),
-                };
                 let annot = types::Annotation {
-                    loc: annot_loc.dupe(),
+                    loc: sig_loc.dupe(),
                     annotation: types::Type::new(types::TypeInner::Function {
-                        loc: annot_loc.dupe(),
+                        loc: sig_loc.dupe(),
                         inner: Arc::new(func),
                     }),
                 };

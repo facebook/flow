@@ -40,7 +40,7 @@ References:
               ^^^^^^ [2]
    declare_methods.js.flow:11:6
    11|   foo(x: number): void; // ERROR: duplicate
-            ^^^^^^^^^^^ [3]
+            ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------- declare_methods.js.flow:11:3
@@ -789,7 +789,7 @@ Cannot cast `instance.optionalMethod` to `(x: number) => void` because `void` [1
 References:
    optional_methods.js.flow:2:18
    2|   optionalMethod?(x: number): void;
-                       ^^^^^^^^^^^ [1]
+                       ^^^^^^^^^^^^^^^^^ [1]
    use_optional_methods.js:7:28
    7| instance.optionalMethod as (x: number) => void; // ERROR: could be void
                                  ^^^^^^^^^^^^^^^^^^^ [2]
@@ -807,7 +807,7 @@ Cannot cast `OptionalMethods.optionalStaticMethod` to `() => string` because `vo
 References:
    optional_methods.js.flow:3:31
     3|   static optionalStaticMethod?(): string;
-                                     ^^ [1]
+                                     ^^^^^^^^^^ [1]
    use_optional_methods.js:11:41
    11| OptionalMethods.optionalStaticMethod as () => string; // ERROR: could be void
                                                ^^^^^^^^^^^^ [2]
@@ -825,7 +825,7 @@ Cannot cast `instance.optionalGeneric` to `<T>(x: T) => T` because `void` [1] is
 References:
    optional_methods.js.flow:4:19
     4|   optionalGeneric?<T>(x: T): T;
-                         ^^^ [1]
+                         ^^^^^^^^^^^^ [1]
    use_optional_methods.js:15:29
    15| instance.optionalGeneric as <T>(x: T) => T; // ERROR: could be void
                                    ^^^^^^^^^^^^^^ [2]

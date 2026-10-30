@@ -947,7 +947,7 @@
                     "value": {
                       "loc": {
                         "end": {
-                          "column": 56,
+                          "column": 64,
                           "line": 9
                         },
                         "source": null,
@@ -958,13 +958,13 @@
                       },
                       "range": [
                         330,
-                        341
+                        349
                       ],
                       "type": "TypeAnnotation",
                       "typeAnnotation": {
                         "loc": {
                           "end": {
-                            "column": 56,
+                            "column": 64,
                             "line": 9
                           },
                           "source": null,
@@ -1035,7 +1035,7 @@
                         ],
                         "range": [
                           330,
-                          341
+                          349
                         ],
                         "rest": null,
                         "returnType": {

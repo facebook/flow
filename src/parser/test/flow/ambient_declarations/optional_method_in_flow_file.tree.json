@@ -34,12 +34,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":28}},
-              "range":[33,44],
+              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":34}},
+              "range":[33,50],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":28}},
-                "range":[33,44],
+                "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":34}},
+                "range":[33,50],
                 "params":[
                   {
                     "type":"FunctionTypeParam",
@@ -89,12 +89,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":3,"column":30},"end":{"line":3,"column":32}},
-              "range":[82,84],
+              "loc":{"source":null,"start":{"line":3,"column":30},"end":{"line":3,"column":40}},
+              "range":[82,92],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":3,"column":30},"end":{"line":3,"column":32}},
-                "range":[82,84],
+                "loc":{"source":null,"start":{"line":3,"column":30},"end":{"line":3,"column":40}},
+                "range":[82,92],
                 "params":[],
                 "returnType":{
                   "type":"StringTypeAnnotation",
@@ -124,12 +124,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":4,"column":18},"end":{"line":4,"column":21}},
-              "range":[112,115],
+              "loc":{"source":null,"start":{"line":4,"column":18},"end":{"line":4,"column":30}},
+              "range":[112,124],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":4,"column":18},"end":{"line":4,"column":21}},
-                "range":[112,115],
+                "loc":{"source":null,"start":{"line":4,"column":18},"end":{"line":4,"column":30}},
+                "range":[112,124],
                 "params":[
                   {
                     "type":"FunctionTypeParam",

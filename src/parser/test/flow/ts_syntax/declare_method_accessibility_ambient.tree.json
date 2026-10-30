@@ -133,7 +133,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 22,
+                    "column": 28,
                     "line": 3
                   },
                   "source": null,
@@ -144,13 +144,13 @@
                 },
                 "range": [
                   66,
-                  77
+                  83
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 22,
+                      "column": 28,
                       "line": 3
                     },
                     "source": null,
@@ -221,7 +221,7 @@
                   ],
                   "range": [
                     66,
-                    77
+                    83
                   ],
                   "rest": null,
                   "returnType": {
@@ -293,7 +293,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 24,
+                    "column": 30,
                     "line": 4
                   },
                   "source": null,
@@ -304,13 +304,13 @@
                 },
                 "range": [
                   98,
-                  109
+                  115
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 24,
+                      "column": 30,
                       "line": 4
                     },
                     "source": null,
@@ -381,7 +381,7 @@
                   ],
                   "range": [
                     98,
-                    109
+                    115
                   ],
                   "rest": null,
                   "returnType": {
@@ -453,7 +453,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 12,
+                    "column": 18,
                     "line": 5
                   },
                   "source": null,
@@ -464,13 +464,13 @@
                 },
                 "range": [
                   127,
-                  129
+                  135
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 12,
+                      "column": 18,
                       "line": 5
                     },
                     "source": null,
@@ -482,7 +482,7 @@
                   "params": [],
                   "range": [
                     127,
-                    129
+                    135
                   ],
                   "rest": null,
                   "returnType": {
@@ -555,7 +555,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 33,
+                    "column": 42,
                     "line": 6
                   },
                   "source": null,
@@ -566,13 +566,13 @@
                 },
                 "range": [
                   167,
-                  170
+                  179
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 33,
+                      "column": 42,
                       "line": 6
                     },
                     "source": null,
@@ -665,7 +665,7 @@
                   ],
                   "range": [
                     167,
-                    170
+                    179
                   ],
                   "rest": null,
                   "returnType": {
@@ -842,7 +842,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 35,
+                    "column": 53,
                     "line": 7
                   },
                   "source": null,
@@ -853,13 +853,13 @@
                 },
                 "range": [
                   214,
-                  216
+                  234
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 35,
+                      "column": 53,
                       "line": 7
                     },
                     "source": null,
@@ -871,7 +871,7 @@
                   "params": [],
                   "range": [
                     214,
-                    216
+                    234
                   ],
                   "rest": null,
                   "returnType": {
@@ -1003,7 +1003,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 21,
+                    "column": 29,
                     "line": 8
                   },
                   "source": null,
@@ -1014,13 +1014,13 @@
                 },
                 "range": [
                   255,
-                  257
+                  265
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 21,
+                      "column": 29,
                       "line": 8
                     },
                     "source": null,
@@ -1032,7 +1032,7 @@
                   "params": [],
                   "range": [
                     255,
-                    257
+                    265
                   ],
                   "rest": null,
                   "returnType": {
@@ -1266,7 +1266,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 23,
+                    "column": 31,
                     "line": 10
                   },
                   "source": null,
@@ -1277,13 +1277,13 @@
                 },
                 "range": [
                   320,
-                  322
+                  330
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 23,
+                      "column": 31,
                       "line": 10
                     },
                     "source": null,
@@ -1295,7 +1295,7 @@
                   "params": [],
                   "range": [
                     320,
-                    322
+                    330
                   ],
                   "rest": null,
                   "returnType": {
@@ -1529,7 +1529,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 19,
+                    "column": 27,
                     "line": 12
                   },
                   "source": null,
@@ -1540,13 +1540,13 @@
                 },
                 "range": [
                   383,
-                  385
+                  393
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 19,
+                      "column": 27,
                       "line": 12
                     },
                     "source": null,
@@ -1558,7 +1558,7 @@
                   "params": [],
                   "range": [
                     383,
-                    385
+                    393
                   ],
                   "rest": null,
                   "returnType": {
@@ -1790,7 +1790,7 @@
               "value": {
                 "loc": {
                   "end": {
-                    "column": 14,
+                    "column": 20,
                     "line": 14
                   },
                   "source": null,
@@ -1801,13 +1801,13 @@
                 },
                 "range": [
                   437,
-                  439
+                  445
                 ],
                 "type": "TypeAnnotation",
                 "typeAnnotation": {
                   "loc": {
                     "end": {
-                      "column": 14,
+                      "column": 20,
                       "line": 14
                     },
                     "source": null,
@@ -1819,7 +1819,7 @@
                   "params": [],
                   "range": [
                     437,
-                    439
+                    445
                   ],
                   "rest": null,
                   "returnType": {

@@ -19,13 +19,13 @@
             "static":false,
             "type":"DeclareMethodDefinition",
             "value":{
-              "loc":{"end":{"column":25,"line":2},"source":null,"start":{"column":23,"line":2}},
-              "range":[33,35],
+              "loc":{"end":{"column":31,"line":2},"source":null,"start":{"column":23,"line":2}},
+              "range":[33,41],
               "type":"TypeAnnotation",
               "typeAnnotation":{
-                "loc":{"end":{"column":25,"line":2},"source":null,"start":{"column":23,"line":2}},
+                "loc":{"end":{"column":31,"line":2},"source":null,"start":{"column":23,"line":2}},
                 "params":[],
-                "range":[33,35],
+                "range":[33,41],
                 "rest":null,
                 "returnType":{
                   "loc":{"end":{"column":31,"line":2},"source":null,"start":{"column":27,"line":2}},
