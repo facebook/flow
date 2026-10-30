@@ -587,14 +587,14 @@ Cannot call `Reflect.deleteProperty` with `true` bound to `propertyKey` because:
                                         ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3724:20
-   3724| type PropertyKey = string | number | symbol;
+   <BUILTINS>/lib.es5.js:3756:20
+   3756| type PropertyKey = string | number | symbol;
                             ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:3724:29
-   3724| type PropertyKey = string | number | symbol;
+   <BUILTINS>/lib.es5.js:3756:29
+   3756| type PropertyKey = string | number | symbol;
                                      ^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:3724:38
-   3724| type PropertyKey = string | number | symbol;
+   <BUILTINS>/lib.es5.js:3756:38
+   3756| type PropertyKey = string | number | symbol;
                                               ^^^^^^ [4]
 
 
@@ -646,8 +646,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3729:13
-   3729|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3761:13
+   3761|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -669,8 +669,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3729:13
-   3729|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3761:13
+   3761|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -692,8 +692,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3729:13
-   3729|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3761:13
+   3761|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -715,8 +715,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                 ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3729:13
-   3729|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3761:13
+   3761|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -738,8 +738,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                    ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3729:13
-   3729|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3761:13
+   3761|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -761,8 +761,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                       ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:3729:13
-   3729|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3761:13
+   3761|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
@@ -787,8 +787,8 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:3729:13
-   3729|     object: interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/lib.es5.js:3761:13
+   3761|     object: interface {} | ReadonlyArray<unknown>;
                      ^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2023.collection.js:21:13
      21|     symbol: symbol;
