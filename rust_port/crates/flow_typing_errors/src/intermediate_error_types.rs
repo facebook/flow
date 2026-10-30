@@ -55,6 +55,7 @@ use crate::error_message::MatchExampleReference;
 use crate::error_message::TypeGuardBindingKind;
 use crate::error_message::TypeGuardFuncReference;
 use crate::error_message::TypeGuardParameterData;
+use crate::error_message::UninitializedPropertyKind;
 
 #[derive(
     Debug,
@@ -2791,6 +2792,11 @@ pub enum Message<L: Dupe> {
     MessageUnexpectedUseOfThisType,
 
     MessageUninitializedInstanceProperty(PropertyAssignmentKind),
+
+    MessageUninitializedProperty {
+        name: FlowSmolStr,
+        kind: UninitializedPropertyKind,
+    },
 
     /// A value known only to be some function is called or flows into a function type. The loc is
     /// that value's.

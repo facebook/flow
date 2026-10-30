@@ -1,0 +1,106 @@
+Error -------------------------------------------------------------------------------------- assignment_operators.js:4:3
+
+Property `third` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   4|   third: string; // error
+        ^^^^^
+
+
+Error -------------------------------------------------------------------------------------- assignment_operators.js:5:3
+
+Property `fourth` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   5|   fourth: number; // error
+        ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- assignment_operators.js:6:3
+
+Property `fifth` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   6|   fifth: number; // error
+        ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- basic.js:9:3
+
+Property `value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   9|   value: string; // error
+        ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:13:3
+
+Property `value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   13|   value: string; // error
+         ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:33:3
+
+Property `value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   33|   value: string; // error
+         ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:61:3
+
+Property `#value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   61|   #value: string; // error
+         ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:69:3
+
+Property `extra` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   69|   extra: number; // error
+         ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- calls.js:13:3
+
+Property `value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   13|   value: string; // error
+         ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- control_flow.js:4:3
+
+Property `last` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   4|   last: number; // error
+        ^^^^
+
+
+Error --------------------------------------------------------------------------------------------- control_flow.js:35:3
+
+Property `value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   35|   value: string; // error
+         ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- control_flow.js:60:7
+
+Property `value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   60|       value: string; // error
+             ^^^^^
+
+
+Error ------------------------------------------------------------------------------------ inherited_declarations.js:7:3
+
+Property `x` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   7|   x: number; // error
+        ^
+
+
+
+Found 13 errors

@@ -199,6 +199,7 @@ use crate::error_message::SpeculationData;
 use crate::error_message::TypeGuardBindingKind;
 use crate::error_message::TypeGuardFuncReference;
 use crate::error_message::TypeGuardParameterData;
+use crate::error_message::UninitializedPropertyKind;
 use crate::error_message::UseOpData;
 
 /// Rank scores for signals of different strength on an x^2 scale so that
@@ -9643,6 +9644,13 @@ where
                     }
                 }
             }
+            MessageUninitializedProperty { name, kind } => match kind {
+                UninitializedPropertyKind::NotDefinitelyAssigned => friendly::Message(vec![
+                    text("Property "),
+                    code(name),
+                    text(" has no initializer and is not definitely assigned in the constructor."),
+                ]),
+            },
             MessageUnknownParameterTypes(function_loc) => friendly::Message(vec![
                 text("the parameter types of an "),
                 hardcoded_string_desc_ref("unknown function", function_loc),

@@ -3038,6 +3038,14 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 err_str
             )
         }
+        ErrorMessage::EUninitializedProperty(box (loc, name, kind)) => {
+            format!(
+                "EUninitializedProperty ({}, {}, {:?})",
+                string_of_aloc(None, loc),
+                name,
+                kind
+            )
+        }
         ErrorMessage::EIndeterminateModuleType(loc) => {
             format!("EIndeterminateModuleType ({})", string_of_aloc(None, loc))
         }

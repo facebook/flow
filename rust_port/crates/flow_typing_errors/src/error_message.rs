@@ -3453,6 +3453,25 @@ pub struct EDevOnlyInvalidatedRefinementInfoData<L: Dupe + PartialOrd + Ord + Pa
     pub invalidation_info: Vec<(L, refinement_invalidation::Reason)>,
 }
 
+/// A problem the definite assignment check for class fields reports
+/// (`experimental.strict_property_initialization`).
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum UninitializedPropertyKind {
+    /// Some path through the constructor reaches its end without assigning the field.
+    NotDefinitelyAssigned,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -3696,6 +3715,9 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     ERecursionLimit(L),
 
     EUninitializedInstanceProperty(L, PropertyAssignmentKind),
+
+    /// A class field's name (with `#` if private), from the definite assignment check.
+    EUninitializedProperty(Box<(L, FlowSmolStr, UninitializedPropertyKind)>),
 
     EEnumError(EnumErrorKind<L>),
 
@@ -5584,6 +5606,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ERecursionLimit(loc) => ERecursionLimit(f(loc)),
 
             EUninitializedInstanceProperty(loc, e) => EUninitializedInstanceProperty(f(loc), e),
+
+            EUninitializedProperty(box (loc, name, kind)) => {
+                EUninitializedProperty(Box::new((f(loc), name, kind)))
+            }
 
             EEnumError(enum_error) => {
                 use EnumErrorKind::*;
@@ -9060,6 +9086,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 EnumErrorKind::EnumsNotEnabled(loc) | EnumErrorKind::EnumConstNotSupported(loc),
             )
             | Self::EUninitializedInstanceProperty(loc, _)
+            | Self::EUninitializedProperty(box (loc, _, _))
             | Self::EUseArrayLiteral(loc)
             | Self::EUnsupportedSyntax(box (loc, _))
             | Self::EInternal(box (loc, _))
@@ -11873,6 +11900,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageUninitializedInstanceProperty(err))
             }
 
+            ErrorMessage::EUninitializedProperty(box (_, name, kind)) => {
+                Normal(Message::MessageUninitializedProperty { name, kind })
+            }
+
             ErrorMessage::EBadExportContext(box (name, _)) => Normal(
                 Message::MessageCannotUseExportInNonLegalToplevelContext(name),
             ),
@@ -12724,6 +12755,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box MatchNonExplicitEnumCheckData { .. },
             ))
             | Self::EUninitializedInstanceProperty(_, _)
+            | Self::EUninitializedProperty(_)
             | Self::ETrivialRecursiveDefinition(_)
             | Self::ETrivialRecursiveTypeParameter(_)
             | Self::EAnyValueUsedAsType { .. }
@@ -13405,6 +13437,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 _ => None,
             },
             ErrorMessage::ETSSyntax(box ETSSyntaxData { .. }) => Some(UnsupportedSyntax),
+            ErrorMessage::EUninitializedProperty(_) => Some(UninitializedProperty),
             ErrorMessage::EAbstractClass(box EAbstractClassData { .. }) => Some(InvalidAbstract),
             ErrorMessage::EOverride(box EOverrideData { .. }) => Some(InvalidOverride),
             ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { .. }) => {

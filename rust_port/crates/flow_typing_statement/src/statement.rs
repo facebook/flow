@@ -47,6 +47,9 @@ use flow_env_builder::assertion_call_target::bare_asserted_argument;
 use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
 use flow_env_builder::assertion_call_target::callee_root_has_declared_type;
 use flow_env_builder::env_api::EnvKey;
+use flow_env_builder::env_api::ReadKey;
+use flow_env_builder::env_api::ReadKind;
+use flow_env_builder::env_api::WriteLoc;
 use flow_lazy::ContextFamily;
 use flow_parser::ast;
 use flow_parser::ast::expression;
@@ -90,6 +93,7 @@ use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::error_message::TSSyntaxKind;
+use flow_typing_errors::error_message::UninitializedPropertyKind;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::ContextDependentUnsupportedStatement;
 use flow_typing_errors::intermediate_error_types::DeclareComponentInvalidParamKind;
@@ -15085,6 +15089,9 @@ fn mk_class<'a>(
         class_sig::private_fields_of_signature(false, &class_sig),
     );
     class_sig::check_signature_compatibility(cx, def_reason, &class_sig);
+    if cx.strict_property_initialization() {
+        check_property_initialization(cx, c);
+    }
     class_sig::toplevels(cx, &class_sig)?;
     let class_body = &c.body.body;
     cx.add_voidable_check(flow_typing_context::VoidableCheck {
@@ -15094,6 +15101,46 @@ fn mk_class<'a>(
     });
     let tast_class_type = tast_class_type.unwrap_or_else(|| class_t.dupe());
     Ok((class_t, class_ast_f(cx, tast_class_type)?))
+}
+
+/// Reports the instance fields that some path through the constructor may leave
+/// unassigned. The name resolver records a read at the declaration of each field it
+/// tracks, with the field's state when construction ends (`ReadKind::FieldInitCheck`).
+fn check_property_initialization<'a>(cx: &mut Context<'a>, c: &ast::class::Class<ALoc, ALoc>) {
+    use ast::class::BodyElement;
+    use ast::expression::object::Key;
+
+    let env_values = cx.environment().var_info.env_values.dupe();
+    for element in c.body.body.iter() {
+        let (loc, name) = match element {
+            BodyElement::Property(prop) => match &prop.key {
+                Key::Identifier(id) => (&id.loc, id.name.dupe()),
+                _ => continue,
+            },
+            BodyElement::PrivateField(field) => (
+                &field.key.loc,
+                FlowSmolStr::from(format!("#{}", field.key.name)),
+            ),
+            _ => continue,
+        };
+        let Some(read) = env_values.get(&ReadKey::new(ReadKind::FieldInitCheck, loc.dupe())) else {
+            continue;
+        };
+        if read
+            .write_locs
+            .iter()
+            .any(|write| matches!(write, WriteLoc::Uninitialized(_)))
+        {
+            flow_js::add_output_non_speculating(
+                cx,
+                ErrorMessage::EUninitializedProperty(Box::new((
+                    loc.dupe(),
+                    name,
+                    UninitializedPropertyKind::NotDefinitelyAssigned,
+                ))),
+            );
+        }
+    }
 }
 
 fn check_duplicate_class_member<'a>(
