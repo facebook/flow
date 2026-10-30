@@ -10272,6 +10272,10 @@ fn __flow_impl<'cx>(
             collector.add(l.dupe());
         }
 
+        // A template literal indexer key is already a string, so it joins the key set unchanged.
+        (TemplateLiteralT { .. }, GetKeysDictKeyT { t_out, .. }) => {
+            rec_flow(cx, env, trace, (l, t_out.as_ref()))?;
+        }
         (TemplateLiteralT { reason, quasis, .. }, _) => {
             let reason = reason.dupe().replace_desc(VirtualReasonDesc::RString);
             let literal_kind = if quasis.iter().any(|q| !q.is_empty()) {
