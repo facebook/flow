@@ -2291,7 +2291,7 @@ impl<'a> Serializer<'a> {
                     property.value,
                     ast::class::property::Value::Declared
                 ));
-                self.write_bool(false); // optional
+                self.write_bool(property.optional);
                 self.buf.push(property.decorators.len() as u32);
                 for dec in property.decorators.iter() {
                     self.write_node_header(NodeKind::Decorator, &dec.loc);

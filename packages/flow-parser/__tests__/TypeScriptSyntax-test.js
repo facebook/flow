@@ -433,6 +433,48 @@ describe('TypeScript-compatible syntax', () => {
     expect(isParameterProperty(constructor.value.params[0])).toBe(true);
   });
 
+  // Parameter-property optionality belongs to the property, not its key.
+  test.each(['public', 'private', 'protected', 'readonly', 'public readonly'])(
+    'parameter properties preserve optionality with %s',
+    modifier => {
+      const [declaration] = parse(
+        `class A {
+          constructor(
+            ${modifier} required: string,
+            ${modifier} x?: string,
+            ordinary?: number
+          ) {}
+        }`,
+        {sourceFilename: 'input.ts'},
+      ).body;
+      if (declaration.type !== 'ClassDeclaration') {
+        throw new Error('expected a class declaration');
+      }
+
+      const constructor = declaration.body.body[0];
+      if (constructor.type !== 'MethodDefinition') {
+        throw new Error('expected a method definition');
+      }
+      expect(constructor.value.params).toMatchObject([
+        {
+          type: 'ParameterProperty',
+          key: {type: 'Identifier', name: 'required', optional: false},
+          optional: false,
+        },
+        {
+          type: 'ParameterProperty',
+          key: {type: 'Identifier', name: 'x', optional: false},
+          optional: true,
+          typeAnnotation: {
+            type: 'TypeAnnotation',
+            typeAnnotation: {type: 'StringTypeAnnotation'},
+          },
+        },
+        {type: 'Identifier', name: 'ordinary', optional: true},
+      ]); // OK
+    },
+  );
+
   test('declare method definitions', () => {
     const [declaration] = parse('class C { method(): void; }', {
       sourceFilename: 'definition.d.ts',
