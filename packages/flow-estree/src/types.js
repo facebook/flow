@@ -1661,7 +1661,7 @@ export interface ObjectTypeAnnotation extends BaseNode {
 interface ObjectTypePropertyBase extends BaseNode {
   readonly type: 'ObjectTypeProperty';
   readonly key: Expression;
-  readonly value: TypeAnnotationType;
+  readonly value: TypeAnnotationType | null;
   readonly method: boolean;
   readonly optional: boolean;
   readonly static: boolean; // only applies to the "declare class" case
@@ -1688,7 +1688,7 @@ export interface ObjectTypeMethodSignature extends ObjectTypePropertyBase {
 }
 export interface ObjectTypePropertySignature extends ObjectTypePropertyBase {
   readonly type: 'ObjectTypeProperty';
-  readonly value: TypeAnnotationType;
+  readonly value: TypeAnnotationType | null;
   readonly method: false;
   readonly optional: boolean;
   readonly variance: Variance | null;

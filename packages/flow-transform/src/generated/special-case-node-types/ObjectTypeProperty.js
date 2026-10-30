@@ -51,7 +51,9 @@ export function ObjectTypeMethodSignature(props: {
 
 export type ObjectTypePropertySignatureProps = {
   readonly key: MaybeDetachedNode<ObjectTypePropertySignatureType['key']>,
-  readonly value: MaybeDetachedNode<ObjectTypePropertySignatureType['value']>,
+  readonly value: MaybeDetachedNode<
+    NonNullable<ObjectTypePropertySignatureType['value']>,
+  > | null,
   readonly optional: ObjectTypePropertySignatureType['optional'],
   readonly variance?: ?MaybeDetachedNode<
     ObjectTypePropertySignatureType['variance'],
@@ -73,7 +75,12 @@ export function ObjectTypePropertySignature(props: {
     optional: props.optional,
     proto: props.proto ?? false,
     static: props.static ?? false,
-    value: asDetachedNode(props.value),
+    value:
+      props.value == null
+        ? null
+        : asDetachedNode<NonNullable<ObjectTypePropertySignatureType['value']>>(
+            props.value,
+          ),
     // $FlowFixMe[incompatible-type]
     variance: asDetachedNode(props.variance),
   });

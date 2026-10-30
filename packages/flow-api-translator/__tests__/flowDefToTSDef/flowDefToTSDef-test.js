@@ -53,6 +53,16 @@ describe('flowDefToTSDef optional members include undefined', () => {
 });
 
 describe('flowDefToTSDef TypeScript-compatible syntax', () => {
+  // Initializer-only fields need a diagnostic rather than a null dereference.
+  test('reports object type properties without an annotation', async () => {
+    await expect(
+      translateFlowDefToTSDef(
+        'declare class Fields { initialized = 1; }',
+        prettierConfig,
+      ),
+    ).rejects.toThrow('Object type property is missing its type'); // ERROR
+  });
+
   test('preserves mapped names', async () => {
     await expect(
       translateFlowDefToTSDef(

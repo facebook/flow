@@ -4159,6 +4159,13 @@ const getTransforms = (
     ObjectTypeProperty(
       node: FlowESTree.ObjectTypeProperty,
     ): TSESTree.TSPropertySignature | TSESTree.TSMethodSignature {
+      const value = node.value;
+      if (value == null) {
+        throw translationError(
+          node,
+          'Object type property is missing its type',
+        );
+      }
       const [key, computed] = ((): [TSESTree.PropertyName, boolean] => {
         if (node.key.type === 'Identifier' && node.key.name.startsWith('@@')) {
           const name = node.key.name.slice(2);
@@ -4256,10 +4263,8 @@ const getTransforms = (
           loc: DUMMY_LOC,
           typeAnnotation:
             node.optional === true
-              ? ensureTypeIncludesUndefined(
-                  transformTypeAnnotationType(node.value),
-                )
-              : transformTypeAnnotationType(node.value),
+              ? ensureTypeIncludesUndefined(transformTypeAnnotationType(value))
+              : transformTypeAnnotationType(value),
         },
       };
     },

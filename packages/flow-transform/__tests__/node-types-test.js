@@ -11,6 +11,23 @@
 import * as t from '../src/generated/node-types';
 
 describe('generated node builders', () => {
+  // Nullable field values remain null; annotated values still gain a parent.
+  test('builds object type properties with and without annotations', () => {
+    const unannotated = t.ObjectTypePropertySignature({
+      key: t.Identifier({name: 'value'}),
+      value: null,
+      optional: false,
+    });
+    expect(unannotated).toMatchObject({value: null}); // OK
+
+    const annotated = t.ObjectTypePropertySignature({
+      key: t.Identifier({name: 'value'}),
+      value: t.NumberTypeAnnotation(),
+      optional: false,
+    });
+    expect(annotated).toHaveProperty('value.parent', annotated); // OK
+  });
+
   test('parents abstract property type annotations', () => {
     const property = t.AbstractPropertyDefinition({
       key: t.Identifier({name: 'value'}),

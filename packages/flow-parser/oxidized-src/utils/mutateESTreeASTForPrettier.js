@@ -81,6 +81,7 @@ export default function mutate(
         if (
           node.method === false &&
           node.kind === 'init' &&
+          node.value != null &&
           node.range[0] === 1 &&
           node.value.range[0] === 1
         ) {
