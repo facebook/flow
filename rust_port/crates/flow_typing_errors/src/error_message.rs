@@ -3472,6 +3472,8 @@ pub enum UninitializedPropertyKind {
     NotDefinitelyAssigned,
     /// The constructor may read the field before assigning it.
     UsedBeforeAssigned,
+    /// A field initializer reads the field before the field's own initializer runs.
+    UsedBeforeInitialization,
 }
 
 #[derive(

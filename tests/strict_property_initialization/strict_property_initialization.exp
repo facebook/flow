@@ -158,6 +158,94 @@ Property `x` has no initializer and is not definitely assigned in the constructo
         ^
 
 
+Error --------------------------------------------------------------------------------------------- initializers.js:2:15
+
+Property `b` is used before its initialization. [uninitialized-property]
+
+   2|   a: number = this.b; // error
+                    ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- initializers.js:7:15
+
+Property `b` is used before its initialization. [uninitialized-property]
+
+   7|   a: number = this.b; // error
+                    ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:15:15
+
+Property `b` is used before its initialization. [uninitialized-property]
+
+   15|   a: number = this.b; // error
+                     ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:20:15
+
+Property `a` is used before its initialization. [uninitialized-property]
+
+   20|   a: number = this.a; // error
+                     ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:24:16
+
+Property `#b` is used before its initialization. [uninitialized-property]
+
+   24|   #a: number = this.#b; // error
+                      ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:32:22
+
+Property `b` is used before its initialization. [uninitialized-property]
+
+   32|   static a: number = this.b; // error
+                            ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:37:16
+
+Property `b` is used before its initialization. [uninitialized-property]
+
+   37|   a: ?number = this?.b; // error
+                      ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:42:23
+
+Property `b` is used before its initialization. [uninitialized-property]
+
+   42|   a: Array<number> = [this.b]; // error
+                             ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:69:16
+
+Property `b` is used before its initialization. [uninitialized-property]
+
+   69|   a: number = (this.b = 2); // error
+                      ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:74:15
+
+Property `b` is used before its initialization. [uninitialized-property]
+
+   74|   a: number = this.b(); // error
+                     ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- initializers.js:80:17
+
+Property `y` is used before its initialization. [uninitialized-property]
+
+   80|     x: number = this.y; // error, for the inner class's own `y`
+                       ^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------- member_forms.js:14:5
 
 Property `value` is used before being assigned. [uninitialized-property]
@@ -287,4 +375,4 @@ Property `value` is used before being assigned. [uninitialized-property]
 
 
 
-Found 36 errors
+Found 47 errors

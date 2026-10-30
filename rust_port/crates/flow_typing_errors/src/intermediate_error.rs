@@ -9655,6 +9655,11 @@ where
                     code(name),
                     text(" is used before being assigned."),
                 ]),
+                UninitializedPropertyKind::UsedBeforeInitialization => friendly::Message(vec![
+                    text("Property "),
+                    code(name),
+                    text(" is used before its initialization."),
+                ]),
             },
             MessageUnknownParameterTypes(function_loc) => friendly::Message(vec![
                 text("the parameter types of an "),

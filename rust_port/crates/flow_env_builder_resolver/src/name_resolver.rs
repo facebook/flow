@@ -78,6 +78,7 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidPatternReferenceData;
 use flow_typing_errors::error_message::NullWrite;
+use flow_typing_errors::error_message::UninitializedPropertyKind;
 use flow_typing_errors::intermediate_error_types::AssignedConstLikeBindingType;
 use refinement_key::Lookup;
 use refinement_key::Proj;
@@ -1049,6 +1050,25 @@ impl DeclareNamespaceReadRecorder {
     }
 }
 
+/// The fields whose initializers have not run yet when a field's initializer runs: that field
+/// and the ones declared after it, among the instance fields or among the static ones. Each is a
+/// name and whether the field is private.
+type UninitializedFields = Rc<BTreeSet<(FlowSmolStr, bool)>>;
+
+/// Where the walk is relative to a field initializer, for TypeScript's declaration-order rule
+/// (TS2729): an initializer that reads a field whose own initializer has not run finds
+/// `undefined`.
+#[derive(Debug, Clone, Default)]
+enum FieldInitializer {
+    #[default]
+    None,
+    /// In a field's declaration, before its initializer.
+    Pending(UninitializedFields),
+    /// In a field's initializer, outside the functions and classes in it, which run later or
+    /// have a `this` of their own.
+    Running(UninitializedFields),
+}
+
 /// State for the name resolver analysis
 #[derive(Debug, Clone)]
 struct NameResolverState {
@@ -1146,6 +1166,9 @@ struct NameResolverState {
     /// `this.x` count. Nested functions may run at any time, and a nested class's `this` is
     /// another object, so neither counts.
     in_constructor: bool,
+    /// Where the walk is relative to the field initializers of the class being visited
+    /// (`experimental.strict_property_initialization`).
+    field_initializer: FieldInitializer,
 }
 
 impl NameResolverState {
@@ -1190,7 +1213,26 @@ impl NameResolverState {
             skip_read_recording: false,
             class_field_inits: None,
             in_constructor: false,
+            field_initializer: FieldInitializer::None,
         }
+    }
+}
+
+/// The name of the field that `element` declares and whether it is private, unless `element` is
+/// not a field or its key is computed or a literal.
+fn field_name(
+    element: &flow_parser::ast::class::BodyElement<ALoc, ALoc>,
+) -> Option<(FlowSmolStr, bool)> {
+    use flow_parser::ast::class::BodyElement;
+    use flow_parser::ast::expression::object::Key;
+
+    match element {
+        BodyElement::Property(prop) => match &prop.key {
+            Key::Identifier(id) => Some((id.name.dupe(), false)),
+            _ => None,
+        },
+        BodyElement::PrivateField(field) => Some((field.key.name.dupe(), true)),
+        _ => None,
     }
 }
 
@@ -4227,6 +4269,45 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         );
     }
 
+    /// Reports `this.x`, `this?.x` or `this.#x` in a field initializer when the initializer of
+    /// field `x` has not run yet. TypeScript (TS2729) leaves out `this['x']`.
+    fn check_field_initialized(&mut self, expr: &Expression<ALoc, ALoc>) {
+        use flow_parser::ast::expression::member::Property;
+
+        let FieldInitializer::Running(uninitialized) = &self.env_state.field_initializer else {
+            return;
+        };
+        let (loc, member) = match expr.deref() {
+            ExpressionInner::Member { loc, inner } => (loc, inner.as_ref()),
+            ExpressionInner::OptionalMember { loc, inner } => (loc, &inner.member),
+            _ => return,
+        };
+        if !matches!(member.object.deref(), ExpressionInner::This { .. }) {
+            return;
+        }
+        let (name, private_) = match &member.property {
+            Property::PropertyIdentifier(id) => (&id.name, false),
+            Property::PropertyPrivateName(private_name) => (&private_name.name, true),
+            Property::PropertyExpression(_) => return,
+        };
+        if !uninitialized.contains(&(name.dupe(), private_)) {
+            return;
+        }
+        let name = if private_ {
+            FlowSmolStr::from(format!("#{name}"))
+        } else {
+            name.dupe()
+        };
+        Fl::add_output(
+            self.cx,
+            ErrorMessage::EUninitializedProperty(Box::new((
+                loc.dupe(),
+                name,
+                UninitializedPropertyKind::UsedBeforeInitialization,
+            ))),
+        );
+    }
+
     /// Records each field's state at the end of the constructor body, merged with its state at
     /// each saved `return`.
     fn record_field_init_exits(&mut self, field_inits: &Bindings<ALoc>) {
@@ -6074,6 +6155,37 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         result
     }
 
+    /// Visits the elements of a class body in order. Field initializers run in that order, so
+    /// before each field, notes the fields whose initializers will not have run when its own does.
+    fn class_elements(
+        &mut self,
+        elements: &[&flow_parser::ast::class::BodyElement<ALoc, ALoc>],
+    ) -> Result<(), AbruptCompletion> {
+        let fields: Vec<(FlowSmolStr, bool)> = if self.strict_property_initialization {
+            elements
+                .iter()
+                .filter_map(|element| field_name(element))
+                .collect()
+        } else {
+            Vec::new()
+        };
+        let mut uninitialized = fields.as_slice();
+        for element in elements {
+            if self.strict_property_initialization && field_name(element).is_some() {
+                self.env_state.field_initializer = FieldInitializer::Pending(Rc::new(
+                    uninitialized
+                        .iter()
+                        .map(|(name, private_)| (name.dupe(), *private_))
+                        .collect(),
+                ));
+                uninitialized = &uninitialized[1..];
+            }
+            self.class_element(element)?;
+            self.env_state.field_initializer = FieldInitializer::None;
+        }
+        Ok(())
+    }
+
     /// Visit a static member of the innermost class, which cannot reference the type parameters
     /// of that class.
     fn in_static_member<T>(&mut self, f: impl FnOnce(&mut Self) -> T) -> T {
@@ -6112,6 +6224,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         .map(|(_, field_inits)| field_inits.dupe());
                     let saved_in_constructor =
                         std::mem::replace(&mut r.env_state.in_constructor, field_inits.is_some());
+                    let saved_field_initializer = std::mem::take(&mut r.env_state.field_initializer);
                     let saved_inferred_candidate = r.env_state.inferred_type_guard_candidate.dupe();
                     r.env_state.inferred_type_guard_candidate =
                         flow_parser::ast_utils::get_inferred_type_guard_candidate(params, body, return_)
@@ -6208,6 +6321,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     r.env_state.type_guard_name = saved_type_guard_name;
                     r.env_state.inferred_type_guard_candidate = saved_inferred_candidate;
                     r.env_state.in_constructor = saved_in_constructor;
+                    r.env_state.field_initializer = saved_field_initializer;
                     r.commit_abrupt_completion_matching(
                         |c| matches!(c, AbruptCompletion::Return | AbruptCompletion::Throw),
                         completion_state.as_ref(),
@@ -8156,6 +8270,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             return;
         }
         self.record_field_read(expr);
+        self.check_field_initialized(expr);
         let loc = expr.loc().dupe();
         match expr.deref() {
             ExpressionInner::OptionalMember { .. } | ExpressionInner::Member { .. } => {
@@ -9384,6 +9499,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 Pattern::Expression { inner: e, .. } => {
                     // given `o.x = e`, read o then read e
                     self.assign_expression(assign_loc, e, right)?;
+                    self.check_field_initialized(e);
                     if let ExpressionInner::Member { loc, inner } = &***e {
                         self.mark_field_assigned(inner, loc.dupe());
                     }
@@ -10921,33 +11037,25 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             constructor_loc.map(|loc| (loc, field_inits.dupe())),
         );
         let saved_in_constructor = std::mem::replace(&mut self.env_state.in_constructor, false);
+        let saved_field_initializer = std::mem::take(&mut self.env_state.field_initializer);
         let result = self
             .with_scoped_bindings(
                 ThisSuperBindingEnv::ClassInstanceEnv,
                 &this_super_bindings,
-                |this| {
-                    for element in &instance_body {
-                        this.class_element(element)?;
-                    }
-                    Ok(())
-                },
+                |this| this.class_elements(&instance_body),
             )
             .and_then(|()| {
                 self.in_static_member(|this| {
                     this.with_scoped_bindings(
                         ThisSuperBindingEnv::ClassStaticEnv,
                         &this_super_bindings,
-                        |this| {
-                            for element in &static_body {
-                                this.class_element(element)?;
-                            }
-                            Ok(())
-                        },
+                        |this| this.class_elements(&static_body),
                     )
                 })
             });
         self.env_state.class_field_inits = saved_field_inits;
         self.env_state.in_constructor = saved_in_constructor;
+        self.env_state.field_initializer = saved_field_initializer;
         if !has_constructor {
             // Without a constructor, nothing assigns the fields.
             for (_, (_, entries)) in field_inits.to_map() {
@@ -11002,6 +11110,20 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 )
             })
         }
+    }
+
+    fn class_property_value(
+        &mut self,
+        value: &flow_parser::ast::class::property::Value<ALoc, ALoc>,
+    ) -> Result<(), AbruptCompletion> {
+        if let FieldInitializer::Pending(uninitialized) =
+            std::mem::take(&mut self.env_state.field_initializer)
+        {
+            self.env_state.field_initializer = FieldInitializer::Running(uninitialized);
+        }
+        let result = ast_visitor::class_property_value_default(self, value);
+        self.env_state.field_initializer = FieldInitializer::None;
+        result
     }
 
     fn class_private_field(
