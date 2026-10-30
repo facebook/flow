@@ -382,6 +382,37 @@ impl StdioFd {
     }
 }
 
+// On Windows a child inherits every inheritable handle of ours, not just the
+// stdio we give it, and our standard handles are inheritable: that is how our
+// parent passed them to us. A daemon outlives us, so it would keep the pipe
+// `flow check | cat` reads open until the server stops. `Stdio::inherit` is
+// unaffected: it gives the child a fresh inheritable duplicate.
+#[cfg(windows)]
+fn disinherit_stdio() {
+    use std::os::windows::io::AsRawHandle;
+
+    use windows_sys::Win32::Foundation::HANDLE_FLAG_INHERIT;
+    use windows_sys::Win32::Foundation::SetHandleInformation;
+
+    for handle in [
+        std::io::stdin().as_raw_handle(),
+        std::io::stdout().as_raw_handle(),
+        std::io::stderr().as_raw_handle(),
+    ] {
+        // SAFETY: `SetHandleInformation` dereferences no pointer: it takes the
+        // handle by value and validates it, so a null or invalid one (e.g. when
+        // we have no stdout at all) makes it fail rather than misbehave.
+        if unsafe { SetHandleInformation(handle, HANDLE_FLAG_INHERIT, 0) } == 0 {
+            tracing::debug!(
+                target: "flow_daemon",
+                "Daemon::spawn: failed to make std handle {:?} non-inheritable: {}",
+                handle,
+                std::io::Error::last_os_error()
+            );
+        }
+    }
+}
+
 fn setup_channels() -> std::io::Result<(TcpListener, TcpListener)> {
     let parent_in_listener = TcpListener::bind("127.0.0.1:0")?;
     let parent_out_listener = TcpListener::bind("127.0.0.1:0")?;
@@ -488,6 +519,8 @@ where
     cmd.stdout(stdout_fd.into_stdio());
     cmd.stderr(stderr_fd.into_stdio());
 
+    #[cfg(windows)]
+    disinherit_stdio();
     let child = cmd.spawn()?;
 
     entry::clear_context();

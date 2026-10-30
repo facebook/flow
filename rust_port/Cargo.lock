@@ -844,6 +844,7 @@ dependencies = [
  "serde",
  "tempfile",
  "tracing",
+ "windows-sys",
 ]
 
 [[package]]

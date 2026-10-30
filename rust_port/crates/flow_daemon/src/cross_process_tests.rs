@@ -5,8 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::fs::File;
+use std::io::PipeWriter;
+use std::io::Read;
 use std::sync::OnceLock;
 use std::time::Duration;
+use std::time::Instant;
 
 use crate::ChannelPair;
 use crate::Entry;
@@ -15,6 +19,7 @@ use crate::StdioFd;
 use crate::check_entry_point;
 use crate::from_channel;
 use crate::kill;
+use crate::null_fd;
 use crate::register_entry_point;
 use crate::spawn;
 use crate::to_channel;
@@ -38,10 +43,36 @@ fn sleep_entry(_p: (), _pair: ChannelPair<(), ()>) {
     std::thread::sleep(Duration::from_secs(60));
 }
 
+const LINGER: Duration = Duration::from_secs(20);
+
+// Entry: outlive the process that spawned it, like the monitor outlives
+// `flow start`.
+fn linger_entry(_p: (), _pair: ChannelPair<(), ()>) {
+    std::thread::sleep(LINGER);
+}
+
+// Entry: like `flow start`, spawn a lingering daemon whose stdio is the null
+// device, then exit.
+fn spawn_lingering_daemon_entry(_p: (), _pair: ChannelPair<(), ()>) {
+    spawn(
+        Some("test_lingering_daemon"),
+        (
+            StdioFd::Owned(null_fd()),
+            StdioFd::Owned(null_fd()),
+            StdioFd::Owned(null_fd()),
+        ),
+        &entries().linger,
+        (),
+    )
+    .expect("spawn failed");
+}
+
 struct TestEntries {
     echo: Entry<(), String, String>,
     echo_param: Entry<String, (), String>,
     sleep: Entry<(), (), ()>,
+    linger: Entry<(), (), ()>,
+    spawn_lingering_daemon: Entry<(), (), ()>,
 }
 
 static TEST_ENTRIES: OnceLock<TestEntries> = OnceLock::new();
@@ -52,6 +83,11 @@ fn register_test_entries_and_dispatch() {
         echo: register_entry_point("__test_echo", echo_entry),
         echo_param: register_entry_point("__test_echo_param", echo_param_entry),
         sleep: register_entry_point("__test_sleep", sleep_entry),
+        linger: register_entry_point("__test_linger", linger_entry),
+        spawn_lingering_daemon: register_entry_point(
+            "__test_spawn_lingering_daemon",
+            spawn_lingering_daemon_entry,
+        ),
     };
     if TEST_ENTRIES.set(entries).is_err() {
         panic!("TEST_ENTRIES already initialized -- ctor ran twice?");
@@ -147,4 +183,47 @@ fn kill_child_does_not_kill_parent() {
     // delivered the signal to the parent (the bug we are guarding against),
     // this line would not be reached and the test would not be reported as
     // passing.
+}
+
+fn file_of_pipe_writer(writer: PipeWriter) -> File {
+    #[cfg(unix)]
+    return File::from(std::os::fd::OwnedFd::from(writer));
+    #[cfg(windows)]
+    return File::from(std::os::windows::io::OwnedHandle::from(writer));
+}
+
+// `flow check | cat` must end when `flow check` exits, even though the server
+// it started keeps running: no daemon may hold the stdout of the process that
+// spawned it.
+#[test]
+fn lingering_daemon_does_not_hold_spawner_stdout() {
+    let (mut reader, writer) = std::io::pipe().expect("pipe failed");
+    let mut h: Handle<(), ()> = spawn(
+        Some("test_spawn_lingering_daemon"),
+        (
+            StdioFd::Owned(null_fd()),
+            StdioFd::Owned(file_of_pipe_writer(writer)),
+            StdioFd::Owned(null_fd()),
+        ),
+        &entries().spawn_lingering_daemon,
+        (),
+    )
+    .expect("spawn failed");
+    let status = h.child.wait().expect("wait failed");
+    assert!(status.success(), "the spawning daemon failed: {}", status);
+
+    let read_to_end = std::thread::spawn(move || reader.read_to_end(&mut Vec::new()));
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while !read_to_end.is_finished() {
+        assert!(
+            Instant::now() < deadline,
+            "the pipe stayed open after the process writing to it exited: \
+             the daemon it spawned holds the pipe"
+        );
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    read_to_end
+        .join()
+        .expect("reader thread panicked")
+        .expect("read failed");
 }
