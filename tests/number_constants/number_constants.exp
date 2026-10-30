@@ -8,8 +8,8 @@ Cannot assign `Number.MAX_SAFE_INTEGER` to `b` because `number` [1] is incompati
                         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.core.js:231:32
-   231|     readonly MAX_SAFE_INTEGER: number;
+   <BUILTINS>/lib.es2015.core.js:233:32
+   233|     readonly MAX_SAFE_INTEGER: number;
                                        ^^^^^^ [1]
    number_constants.js:2:8
      2| var b: string = Number.MAX_SAFE_INTEGER;
@@ -26,8 +26,8 @@ Cannot assign `Number.MIN_SAFE_INTEGER` to `d` because `number` [1] is incompati
                         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.core.js:238:32
-   238|     readonly MIN_SAFE_INTEGER: number;
+   <BUILTINS>/lib.es2015.core.js:240:32
+   240|     readonly MIN_SAFE_INTEGER: number;
                                        ^^^^^^ [1]
    number_constants.js:4:8
      4| var d: string = Number.MIN_SAFE_INTEGER;
@@ -94,8 +94,8 @@ Cannot assign `Number.EPSILON` to `l` because `number` [1] is incompatible with 
                         ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.core.js:196:23
-   196|     readonly EPSILON: number;
+   <BUILTINS>/lib.es2015.core.js:198:23
+   198|     readonly EPSILON: number;
                               ^^^^^^ [1]
    number_constants.js:12:8
     12| var l: string = Number.EPSILON;
