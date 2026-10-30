@@ -3470,6 +3470,8 @@ pub struct EDevOnlyInvalidatedRefinementInfoData<L: Dupe + PartialOrd + Ord + Pa
 pub enum UninitializedPropertyKind {
     /// Some path through the constructor reaches its end without assigning the field.
     NotDefinitelyAssigned,
+    /// The constructor may read the field before assigning it.
+    UsedBeforeAssigned,
 }
 
 #[derive(

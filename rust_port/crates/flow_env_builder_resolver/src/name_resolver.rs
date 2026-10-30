@@ -4203,6 +4203,28 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         );
     }
 
+    /// Records a field's state where the constructor reads it (`this.x`). A read can be visited
+    /// more than once, as in a loop guard: the last visit wins, as it does for the ordinary read
+    /// at the same location.
+    fn record_field_read(&mut self, expr: &Expression<ALoc, ALoc>) {
+        let ExpressionInner::Member { loc, inner } = expr.deref() else {
+            return;
+        };
+        let Some(env_val) = self.field_init_of_member(inner) else {
+            return;
+        };
+        let value = env_val.val_ref.borrow().dupe();
+        self.env_state.values.insert(
+            ReadKey::new(ReadKind::FieldInitUse, loc.dupe()),
+            ReadEntry {
+                def_loc: env_val.def_loc.dupe(),
+                value,
+                val_binding_kind: ssa_val::ValBindingKind::InternalBinding,
+                name: None,
+            },
+        );
+    }
+
     /// Records each field's state at the end of the constructor body, merged with its state at
     /// each saved `return`.
     fn record_field_init_exits(&mut self, field_inits: &Bindings<ALoc>) {
@@ -8131,6 +8153,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         if self.env_state.skip_read_recording {
             return;
         }
+        self.record_field_read(expr);
         let loc = expr.loc().dupe();
         match expr.deref() {
             ExpressionInner::OptionalMember { .. } | ExpressionInner::Member { .. } => {

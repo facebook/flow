@@ -466,6 +466,8 @@ pub enum ReadKind {
     Ordinary,
     /// A field's state when construction ends, read at the field's declaration.
     FieldInitCheck,
+    /// A field's state where the constructor reads it (`this.x`).
+    FieldInitUse,
 }
 
 #[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -504,9 +506,14 @@ impl<L: Dupe + Eq + Ord + Hash> Values<L> {
 
     /// The ordinary reads, with their locations.
     pub fn iter_ordinary(&self) -> impl Iterator<Item = (&L, &Read<L>)> {
+        self.iter_kind(ReadKind::Ordinary)
+    }
+
+    /// The reads of one kind, with their locations.
+    pub fn iter_kind(&self, kind: ReadKind) -> impl Iterator<Item = (&L, &Read<L>)> {
         self.inner
             .iter()
-            .filter(|(key, _)| key.kind == ReadKind::Ordinary)
+            .filter(move |(key, _)| key.kind == kind)
             .map(|(key, read)| (&key.loc, read))
     }
 }

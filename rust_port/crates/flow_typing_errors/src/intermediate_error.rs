@@ -9650,6 +9650,11 @@ where
                     code(name),
                     text(" has no initializer and is not definitely assigned in the constructor."),
                 ]),
+                UninitializedPropertyKind::UsedBeforeAssigned => friendly::Message(vec![
+                    text("Property "),
+                    code(name),
+                    text(" is used before being assigned."),
+                ]),
             },
             MessageUnknownParameterTypes(function_loc) => friendly::Message(vec![
                 text("the parameter types of an "),

@@ -47,6 +47,7 @@ use flow_env_builder::assertion_call_target::bare_asserted_argument;
 use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
 use flow_env_builder::assertion_call_target::callee_root_has_declared_type;
 use flow_env_builder::env_api::EnvKey;
+use flow_env_builder::env_api::Read;
 use flow_env_builder::env_api::ReadKey;
 use flow_env_builder::env_api::ReadKind;
 use flow_env_builder::env_api::WriteLoc;
@@ -15104,9 +15105,10 @@ fn mk_class<'a>(
 }
 
 /// Reports the instance fields that some path through the constructor may leave
-/// unassigned, unless the field's type includes `void`. The name resolver records a
-/// read at the declaration of each field it tracks, with the field's state when
-/// construction ends (`ReadKind::FieldInitCheck`).
+/// unassigned, and the reads of a field in the constructor that may happen before it is
+/// assigned, unless the field's type includes `void`. The name resolver records each tracked
+/// field's state at its declaration when construction ends (`ReadKind::FieldInitCheck`), and
+/// at each read of the field in the constructor (`ReadKind::FieldInitUse`).
 fn check_property_initialization<'a>(
     cx: &mut Context<'a>,
     c: &ast::class::Class<ALoc, ALoc>,
@@ -15116,9 +15118,23 @@ fn check_property_initialization<'a>(
     use ast::expression::object::Key;
     use func_class_sig_types::class::Field;
 
+    fn may_be_unassigned(read: &Read<ALoc>) -> bool {
+        read.write_locs
+            .iter()
+            .any(|write| matches!(write, WriteLoc::Uninitialized(_)))
+    }
+
     let env_values = cx.environment().var_info.env_values.dupe();
+    let mut early_reads: BTreeMap<&ALoc, Vec<&ALoc>> = BTreeMap::new();
+    for (loc, read) in env_values.iter_kind(ReadKind::FieldInitUse) {
+        if let Some(decl_loc) = &read.def_loc
+            && may_be_unassigned(read)
+        {
+            early_reads.entry(decl_loc).or_default().push(loc);
+        }
+    }
     for element in c.body.body.iter() {
-        let (loc, name, field) = match element {
+        let (decl_loc, name, field) = match element {
             BodyElement::Property(prop) => match &prop.key {
                 Key::Identifier(id) => (
                     &id.loc,
@@ -15134,14 +15150,11 @@ fn check_property_initialization<'a>(
             ),
             _ => continue,
         };
-        let Some(read) = env_values.get(&ReadKey::new(ReadKind::FieldInitCheck, loc.dupe())) else {
-            continue;
-        };
-        if !read
-            .write_locs
-            .iter()
-            .any(|write| matches!(write, WriteLoc::Uninitialized(_)))
-        {
+        let unassigned_at_end = env_values
+            .get(&ReadKey::new(ReadKind::FieldInitCheck, decl_loc.dupe()))
+            .is_some_and(may_be_unassigned);
+        let reads = early_reads.remove(&decl_loc).unwrap_or_default();
+        if !unassigned_at_end && reads.is_empty() {
             continue;
         }
         if let Some((_, _, Field::Annot(field_t))) = field
@@ -15149,14 +15162,20 @@ fn check_property_initialization<'a>(
         {
             continue;
         }
-        flow_js::add_output_non_speculating(
-            cx,
-            ErrorMessage::EUninitializedProperty(Box::new((
-                loc.dupe(),
-                name,
-                UninitializedPropertyKind::NotDefinitelyAssigned,
-            ))),
-        );
+        let problems = unassigned_at_end
+            .then_some((decl_loc, UninitializedPropertyKind::NotDefinitelyAssigned))
+            .into_iter()
+            .chain(
+                reads
+                    .into_iter()
+                    .map(|loc| (loc, UninitializedPropertyKind::UsedBeforeAssigned)),
+            );
+        for (loc, kind) in problems {
+            flow_js::add_output_non_speculating(
+                cx,
+                ErrorMessage::EUninitializedProperty(Box::new((loc.dupe(), name.dupe(), kind))),
+            );
+        }
     }
     Ok(())
 }

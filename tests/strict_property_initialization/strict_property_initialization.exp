@@ -22,6 +22,46 @@ Property `fifth` has no initializer and is not definitely assigned in the constr
         ^^^^^
 
 
+Error -------------------------------------------------------------------------------------- assignment_operators.js:8:5
+
+Property `first` is used before being assigned. [uninitialized-property]
+
+   8|     this.first ||= value;
+          ^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- assignment_operators.js:9:5
+
+Property `second` is used before being assigned. [uninitialized-property]
+
+   9|     this.second ??= value;
+          ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- assignment_operators.js:10:5
+
+Property `third` is used before being assigned. [uninitialized-property]
+
+   10|     this.third &&= value;
+           ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- assignment_operators.js:11:5
+
+Property `fourth` is used before being assigned. [uninitialized-property]
+
+   11|     this.fourth += 1;
+           ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- assignment_operators.js:12:5
+
+Property `fifth` is used before being assigned. [uninitialized-property]
+
+   12|     this.fifth++;
+           ^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- basic.js:9:3
 
 Property `value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
@@ -118,5 +158,109 @@ Property `x` has no initializer and is not definitely assigned in the constructo
         ^
 
 
+Error ----------------------------------------------------------------------------------------------------- reads.js:4:5
 
-Found 15 errors
+Property `value` is used before being assigned. [uninitialized-property]
+
+   4|     this.value; // error
+          ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:16:5
+
+Property `value` is used before being assigned. [uninitialized-property]
+
+   16|     this.value; // error
+           ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:31:3
+
+Property `value` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   31|   value: string; // error
+         ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:48:3
+
+Property `count` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   48|   count: number; // error: `+=` does not count as assigning the field
+         ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:50:5
+
+Property `count` is used before being assigned. [uninitialized-property]
+
+   50|     this.count += 1; // error
+           ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:55:3
+
+Property `count` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   55|   count: number; // error: `++` does not count as assigning the field
+         ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:57:5
+
+Property `count` is used before being assigned. [uninitialized-property]
+
+   57|     this.count++; // error
+           ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:65:3
+
+Property `c` has no initializer and is not definitely assigned in the constructor. [uninitialized-property]
+
+   65|   c: number; // error: `&&=` leaves an unassigned field unassigned
+         ^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:67:5
+
+Property `a` is used before being assigned. [uninitialized-property]
+
+   67|     this.a ||= 1; // error
+           ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:68:5
+
+Property `b` is used before being assigned. [uninitialized-property]
+
+   68|     this.b ??= 1; // error
+           ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:69:5
+
+Property `c` is used before being assigned. [uninitialized-property]
+
+   69|     this.c &&= 1; // error
+           ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- reads.js:76:5
+
+Property `#value` is used before being assigned. [uninitialized-property]
+
+   76|     this.#value; // error
+           ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- reads.js:92:12
+
+Property `value` is used before being assigned. [uninitialized-property]
+
+   92|     const {value} = this; // error
+                  ^^^^^
+
+
+
+Found 33 errors
