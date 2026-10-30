@@ -72,6 +72,10 @@ impl Context for TestCx {
         false
     }
 
+    fn strict_property_initialization(&self) -> bool {
+        false
+    }
+
     fn stylex_shorthand_prop(&self) -> Option<&str> {
         None
     }

@@ -197,6 +197,7 @@ pub struct Options {
     pub slow_to_check_logging: SlowToCheckLogging,
     pub strict_es6_import_export: bool,
     pub strict_mode: StrictModeSettings,
+    pub strict_property_initialization: bool,
     pub strip_root: bool,
     pub supported_operating_systems: Vec<SupportedOs>,
     pub stylex_shorthand_prop: Option<String>,

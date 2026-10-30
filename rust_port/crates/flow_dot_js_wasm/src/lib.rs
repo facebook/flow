@@ -197,6 +197,11 @@ fn config_options(config: Option<&Value>) -> Result<Options, String> {
         react_runtime,
         recursion_limit: 10000,
         root: Arc::new(PathBuf::new()),
+        strict_property_initialization: bool_config(
+            config,
+            "experimental.strict_property_initialization",
+            false,
+        ),
         strip_root: true,
         ts_syntax: bool_config(config, "experimental.ts_syntax", true),
         tslib_syntax: true,

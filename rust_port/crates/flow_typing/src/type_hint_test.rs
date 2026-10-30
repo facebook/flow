@@ -102,6 +102,10 @@ mod tests {
             self.0.enable_const_params()
         }
 
+        fn strict_property_initialization(&self) -> bool {
+            self.0.strict_property_initialization()
+        }
+
         fn stylex_shorthand_prop(&self) -> Option<&str> {
             self.0.stylex_shorthand_prop()
         }

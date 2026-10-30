@@ -247,6 +247,7 @@ pub mod opts {
         pub saved_state_skip_version_check: bool,
         pub supported_operating_systems: Vec<SupportedOs>,
         pub strict_es6_import_export: bool,
+        pub strict_property_initialization: bool,
         pub export_star_excludes_default: Option<bool>,
         pub ts_syntax: Option<bool>,
         pub ts_utility_syntax: bool,
@@ -398,6 +399,7 @@ pub mod opts {
             saved_state_skip_version_check: false,
             supported_operating_systems: Vec::new(),
             strict_es6_import_export: false,
+            strict_property_initialization: false,
             export_star_excludes_default: None,
             ts_syntax: None,
             ts_utility_syntax: true,
@@ -2201,6 +2203,19 @@ pub mod opts {
             ("experimental.strict_es6_import_export", |values, config| {
                 strict_es6_import_export_parser(values, config)
             }),
+            (
+                "experimental.strict_property_initialization",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.strict_property_initialization = v;
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
             (
                 "experimental.export_star_excludes_default",
                 |values, config| {

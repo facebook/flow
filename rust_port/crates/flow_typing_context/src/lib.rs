@@ -215,6 +215,7 @@ pub struct FrozenMetadata {
     pub relay_integration_module_prefix_includes: Arc<[Regex]>,
     pub root: Arc<PathBuf>,
     pub strict_es6_import_export: bool,
+    pub strict_property_initialization: bool,
     pub strip_root: bool,
     pub stylex_shorthand_prop: Option<String>,
     pub export_star_excludes_default: bool,
@@ -274,6 +275,7 @@ impl Default for FrozenMetadata {
             relay_integration_module_prefix_includes: Arc::from([]),
             root: Arc::new(PathBuf::new()),
             strict_es6_import_export: false,
+            strict_property_initialization: false,
             strip_root: true,
             stylex_shorthand_prop: None,
             export_star_excludes_default: false,
@@ -933,6 +935,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
                 .dupe(),
             root: options.root.dupe(),
             strict_es6_import_export: options.strict_es6_import_export,
+            strict_property_initialization: options.strict_property_initialization,
             strip_root: options.strip_root,
             stylex_shorthand_prop: options.stylex_shorthand_prop.clone(),
             export_star_excludes_default: options.export_star_excludes_default,
@@ -1389,6 +1392,10 @@ impl<'a> Context<'a> {
         self.inner().metadata.frozen.enable_const_params
             || self.inner().metadata.overridable.strict
             || self.inner().metadata.overridable.strict_local
+    }
+
+    pub fn strict_property_initialization(&self) -> bool {
+        self.inner().metadata.frozen.strict_property_initialization
     }
 
     pub fn enable_custom_error(&self) -> bool {
