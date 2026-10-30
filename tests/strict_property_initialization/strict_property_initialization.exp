@@ -278,5 +278,13 @@ Property `value` is used before being assigned. [uninitialized-property]
                   ^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- reads.js:100:5
 
-Found 35 errors
+Property `value` is used before being assigned. [uninitialized-property]
+
+   100|     this?.value; // error
+            ^^^^^^^^^^^
+
+
+
+Found 36 errors

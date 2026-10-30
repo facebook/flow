@@ -4207,10 +4207,12 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// more than once, as in a loop guard: the last visit wins, as it does for the ordinary read
     /// at the same location.
     fn record_field_read(&mut self, expr: &Expression<ALoc, ALoc>) {
-        let ExpressionInner::Member { loc, inner } = expr.deref() else {
-            return;
+        let (loc, member) = match expr.deref() {
+            ExpressionInner::Member { loc, inner } => (loc, inner.as_ref()),
+            ExpressionInner::OptionalMember { loc, inner } => (loc, &inner.member),
+            _ => return,
         };
-        let Some(env_val) = self.field_init_of_member(inner) else {
+        let Some(env_val) = self.field_init_of_member(member) else {
             return;
         };
         let value = env_val.val_ref.borrow().dupe();

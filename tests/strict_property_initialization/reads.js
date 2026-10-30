@@ -93,3 +93,11 @@ class DestructuringFromThis {
     this.value = value;
   }
 }
+
+class OptionalChainRead {
+  value: string;
+  constructor() {
+    this?.value; // error
+    this.value = 'hi';
+  }
+}
