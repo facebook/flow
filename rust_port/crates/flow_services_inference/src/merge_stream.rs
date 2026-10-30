@@ -196,6 +196,9 @@ impl<A> MergeStream<A> {
             return Bucket::Done;
         }
 
+        // Read before draining: `unblock` queues a component before it stops counting it as
+        // blocked, so once nothing is blocked, the drain below sees every queued component.
+        let done = self.is_done();
         let n = self.bucket_size();
         let mut batch = Vec::new();
         let mut size_taken = 0;
@@ -214,11 +217,7 @@ impl<A> MergeStream<A> {
         }
 
         if batch.is_empty() {
-            if self.is_done() {
-                Bucket::Done
-            } else {
-                Bucket::Wait
-            }
+            if done { Bucket::Done } else { Bucket::Wait }
         } else {
             Bucket::Job(batch)
         }
@@ -305,14 +304,16 @@ impl<A> MergeStream<A> {
 
         // no more waiting, yay!
         if blocking == 1 {
-            self.blocked_components.fetch_sub(1, Ordering::SeqCst);
-            self.blocked_files.fetch_sub(node.size, Ordering::SeqCst);
-
+            // Queue the component before it stops counting as blocked. `next` runs concurrently
+            // on other workers and ends the whole merge once nothing is blocked or queued.
             if node.recheck.load(Ordering::Relaxed) {
                 self.add_ready(node);
             } else {
                 self.skip(node);
             }
+
+            self.blocked_components.fetch_sub(1, Ordering::SeqCst);
+            self.blocked_files.fetch_sub(node.size, Ordering::SeqCst);
         }
     }
 
