@@ -312,6 +312,21 @@ jobs:
     - run: chmod +x bin/rust-port-linux/flow
     - name: Run Rust port tests
       run: bin/rust-port-linux/flow dev-tools runtests
+  runtests_linux_arm64:
+    runs-on: 4-core-ubuntu-arm
+    needs:
+    - build_linux_arm64
+    env:
+      FLOW_RUNTESTS_PARALLELISM: 8
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v4.1.7
+      with:
+        name: build_rust_port_linux_arm64_bin
+        path: bin/rust-port-linux-arm64
+    - run: chmod +x bin/rust-port-linux-arm64/flow
+    - name: Run Rust port tests
+      run: bin/rust-port-linux-arm64/flow dev-tools runtests
   runtests_macos_arm:
     runs-on: macos-15
     needs:
