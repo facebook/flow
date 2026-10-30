@@ -464,6 +464,8 @@ pub enum ReadKind {
     /// A read at a location in the source: of an identifier, of a property path that Flow
     /// narrows, or of the value that a `switch` or `match` tests.
     Ordinary,
+    /// A field's state when construction ends, read at the field's declaration.
+    FieldInitCheck,
 }
 
 #[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]

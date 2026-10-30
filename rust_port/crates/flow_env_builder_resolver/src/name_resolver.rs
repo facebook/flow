@@ -25,6 +25,7 @@ use dupe::OptionDupedExt;
 use env_api::AssertionConsistencyInfo;
 use env_api::AssertionConsistencyMaps;
 use env_api::ReadKey;
+use env_api::ReadKind;
 use env_api::Refinement;
 use env_api::TypeGuardConsistencyMaps;
 use flow_aloc::ALoc;
@@ -4184,6 +4185,48 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         *env_val.val_ref.borrow_mut() = assigned;
     }
 
+    /// Records a field's state when construction ends, as a read at the field's declaration.
+    fn record_field_init_check(&mut self, decl_loc: ALoc, value: Val<ALoc>) {
+        // Arguments replayed after an assertion call can revisit a class; the reads of its
+        // first visit stand.
+        if self.env_state.skip_read_recording {
+            return;
+        }
+        self.env_state.values.insert(
+            ReadKey::new(ReadKind::FieldInitCheck, decl_loc.dupe()),
+            ReadEntry {
+                def_loc: Some(decl_loc),
+                value,
+                val_binding_kind: ssa_val::ValBindingKind::InternalBinding,
+                name: None,
+            },
+        );
+    }
+
+    /// Records each field's state at the end of the constructor body, merged with its state at
+    /// each saved `return`.
+    fn record_field_init_exits(&mut self, field_inits: &Bindings<ALoc>) {
+        let mut exits = vec![self.env_snapshot()];
+        exits.extend(
+            self.env_state
+                .abrupt_completion_envs
+                .iter()
+                .filter(|(completion, _)| matches!(completion, AbruptCompletion::Return))
+                .map(|(_, env)| env.dupe()),
+        );
+        for (key, (_, entries)) in field_inits.to_map() {
+            let value = exits
+                .iter()
+                .filter_map(|env| env.get(&key))
+                .map(|entry| entry.env_val.dupe())
+                .reduce(|acc, value| ssa_val::merge(&mut *self.cache.borrow_mut(), acc, value));
+            if let Some(value) = value {
+                let (decl_loc, _) = entries.first();
+                self.record_field_init_check(decl_loc.dupe(), value);
+            }
+        }
+    }
+
     fn visit_match_case<'ast, B, F>(
         &mut self,
         case: &'ast flow_parser::ast::match_::Case<ALoc, ALoc, B>,
@@ -6098,7 +6141,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         }
                         r2.with_scoped_bindings(ThisSuperBindingEnv::FunctionEnv, &bindings, |r3| {
                             r3.cx.add_exhaustive_check(body_loc.dupe(), (vec![], false));
-                            scope_builder::lambda(
+                            let body_completion = scope_builder::lambda(
                                 r3,
                                 r3.enable_enums,
                                 true,
@@ -6109,7 +6152,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                 return_,
                                 predicate,
                                 body,
-                            )?;
+                            );
+                            if let Some(field_inits) = &field_inits {
+                                r3.record_field_init_exits(field_inits);
+                            }
+                            body_completion?;
                             if let Some(env_val) = r3.synthetic_env_read_opt(SyntheticVar::MaybeExhaustivelyChecked) {
                                 let val = env_val.val_ref.borrow();
                                 let mut cache = HashMap::new();
@@ -10843,6 +10890,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             }
             _ => None,
         });
+        let has_constructor = constructor_loc.is_some();
         let saved_field_inits = std::mem::replace(
             &mut self.env_state.class_field_inits,
             constructor_loc.map(|loc| (loc, field_inits.dupe())),
@@ -10875,6 +10923,15 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             });
         self.env_state.class_field_inits = saved_field_inits;
         self.env_state.in_constructor = saved_in_constructor;
+        if !has_constructor {
+            // Without a constructor, nothing assigns the fields.
+            for (_, (_, entries)) in field_inits.to_map() {
+                let (decl_loc, _) = entries.first();
+                let unassigned =
+                    ssa_val::uninitialized(&mut *self.cache.borrow_mut(), decl_loc.dupe());
+                self.record_field_init_check(decl_loc.dupe(), unassigned);
+            }
+        }
         result
     }
 
