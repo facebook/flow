@@ -44,14 +44,14 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1177:24
+   <BUILTINS>/react.js:1185:24
                                 v-------
-   1177|       component: () => Promise<
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
-   1182|       >,
+   1185|       component: () => Promise<
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
+   1190|       >,
                ^ [2]
 
 
@@ -69,14 +69,14 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1177:24
+   <BUILTINS>/react.js:1185:24
                                 v-------
-   1177|       component: () => Promise<
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
-   1182|       >,
+   1185|       component: () => Promise<
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
+   1190|       >,
                ^ [2]
 
 
@@ -94,14 +94,14 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1177:24
+   <BUILTINS>/react.js:1185:24
                                 v-------
-   1177|       component: () => Promise<
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
-   1182|       >,
+   1185|       component: () => Promise<
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
+   1190|       >,
                ^ [2]
 
 
@@ -119,14 +119,14 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1177:24
+   <BUILTINS>/react.js:1185:24
                                 v-------
-   1177|       component: () => Promise<
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
-   1182|       >,
+   1185|       component: () => Promise<
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
+   1190|       >,
                ^ [2]
 
 
@@ -144,14 +144,14 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1177:24
+   <BUILTINS>/react.js:1185:24
                                 v-------
-   1177|       component: () => Promise<
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
-   1182|       >,
+   1185|       component: () => Promise<
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
+   1190|       >,
                ^ [2]
 
 
@@ -173,14 +173,14 @@ References:
    lazy.js:11:18
      11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1177:24
+   <BUILTINS>/react.js:1185:24
                                 v-------
-   1177|       component: () => Promise<
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
-   1182|       >,
+   1185|       component: () => Promise<
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
+   1190|       >,
                ^ [2]
    <BUILTINS>/misc.js:216:19
     216| interface Promise<R> {
@@ -188,12 +188,12 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:1178:18
+   <BUILTINS>/react.js:1186:18
                           v
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
                  ^ [5]
 
 
@@ -213,14 +213,14 @@ References:
    lazy.js:12:18
      12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1177:24
+   <BUILTINS>/react.js:1185:24
                                 v-------
-   1177|       component: () => Promise<
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
-   1182|       >,
+   1185|       component: () => Promise<
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
+   1190|       >,
                ^ [2]
    <BUILTINS>/misc.js:216:19
     216| interface Promise<R> {
@@ -228,12 +228,12 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:1178:18
+   <BUILTINS>/react.js:1186:18
                           v
-   1178|         Readonly<{
-   1179|           default: component(...Config) renders Renders,
-   1180|           ...
-   1181|         }>,
+   1186|         Readonly<{
+   1187|           default: component(...Config) renders Renders,
+   1188|           ...
+   1189|         }>,
                  ^ [5]
 
 

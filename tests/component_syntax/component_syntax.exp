@@ -2836,8 +2836,8 @@ Cannot cast `Baz` to `component(ref: React.RefSetter<string>)` because in proper
         ^^^
 
 References:
-   <BUILTINS>/react.js:587:36
-   587|   declare export type RefSetter<in T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:595:36
+   595|   declare export type RefSetter<in T> = React.RefSetter<T>;
                                            ^ [1]
    refs.js:17:39
     17| Baz as component(ref: React.RefSetter<string>); // err

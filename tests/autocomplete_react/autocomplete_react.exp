@@ -322,7 +322,7 @@ Flags: --pretty
     },
     {
       "name":"Defaultize",
-      "type":"type Defaultize<P, D> = P extends any ? string extends keyof P ? P : {...Pick<P, Exclude<keyof P, keyof D>>, ...InexactPartial<Pick<P, Extract<keyof P, keyof D>>>, ...InexactPartial<Pick<D, Exclude<keyof D, keyof P>>>} : empty"
+      "type":"type Defaultize<P, D> = P extends any ? string extends keyof P ? P : P extends ExactObjectType ? {...Pick<P, Exclude<keyof P, keyof D>>, ...InexactPartial<Pick<P, Extract<keyof P, keyof D>>>, ...InexactPartial<Pick<D, Exclude<keyof D, keyof P>>>} : {...Pick<P, Exclude<keyof P, keyof D>>, ...InexactPartial<Pick<P, Extract<keyof P, keyof D>>>, ...InexactPartial<Pick<D, Exclude<keyof D, keyof P>>>, ...} : empty"
     },
     {
       "name":"DelHTMLAttributes",
