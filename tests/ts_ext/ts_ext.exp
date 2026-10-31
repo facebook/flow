@@ -1,3 +1,138 @@
+Error ----------------------------------------------------------------------------------------- template_imports.ts:6:36
+
+Cannot assign `"not-a-selector"` to `attrBad` because `"not-a-selector"` [1] is incompatible with
+`AttributeSelector` [2]. [incompatible-type]
+
+   template_imports.ts:6:36
+   6| const attrBad: AttributeSelector = "not-a-selector"; // ERROR
+                                         ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   template_imports.ts:6:16
+   6| const attrBad: AttributeSelector = "not-a-selector"; // ERROR
+                     ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- template_imports.ts:8:35
+
+Cannot assign `"not-a-selector"` to `parentBad` because `"not-a-selector"` [1] is incompatible with
+`ParentSelector` [2]. [incompatible-type]
+
+   template_imports.ts:8:35
+   8| const parentBad: ParentSelector = "not-a-selector"; // ERROR
+                                        ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   template_imports.ts:8:18
+   8| const parentBad: ParentSelector = "not-a-selector"; // ERROR
+                       ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- template_imports.ts:10:31
+
+Cannot assign `"not-a-selector"` to `selectorBad` because: [incompatible-type]
+ - Either `"not-a-selector"` [1] is incompatible with `AttributeSelector` [2].
+ - Or `"not-a-selector"` [1] is incompatible with `` `${string} &` `` [3].
+
+   template_imports.ts:10:31
+   10| const selectorBad: Selector = "not-a-selector"; // ERROR
+                                     ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   template_palette.d.ts:6:24
+    6| export type Selector = AttributeSelector | `${string} &`;
+                              ^^^^^^^^^^^^^^^^^ [2]
+   template_palette.d.ts:6:44
+    6| export type Selector = AttributeSelector | `${string} &`;
+                                                  ^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- template_imports.ts:14:33
+
+Cannot assign `"wrong-value"` to `unboundedBad` because `"wrong-value"` [1] is incompatible with `Unbounded` [2].
+[incompatible-type]
+
+   template_imports.ts:14:33
+   14| const unboundedBad: Unbounded = "wrong-value"; // ERROR
+                                       ^^^^^^^^^^^^^ [1]
+
+References:
+   template_imports.ts:14:21
+   14| const unboundedBad: Unbounded = "wrong-value"; // ERROR
+                           ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- template_imports.ts:18:22
+
+Cannot assign `"green1"` to `keyBad` because `"green1"` [1] is incompatible with `Keys` [2]. [incompatible-type]
+
+   template_imports.ts:18:22
+   18| const keyBad: Keys = "green1"; // ERROR
+                            ^^^^^^^^ [1]
+
+References:
+   template_imports.ts:18:15
+   18| const keyBad: Keys = "green1"; // ERROR
+                     ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ template_interfaces.d.ts:5:47
+
+Cannot extend `Palette` [1] with `Bad` [2] because in property `blue1`: `number` [3] is incompatible with `string` [4].
+[incompatible-type]
+
+   template_interfaces.d.ts:5:47
+   5| export interface Bad extends Palette { blue1: number } // ERROR
+                                                    ^^^^^^ [3]
+
+References:
+   template_interfaces.d.ts:5:30
+   5| export interface Bad extends Palette { blue1: number } // ERROR
+                                   ^^^^^^^ [1]
+   template_interfaces.d.ts:5:8
+   5| export interface Bad extends Palette { blue1: number } // ERROR
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   template_palette.d.ts:4:58
+   4| export type Palette = { [K in `${keyof Names}${1 | 2}`]: string };
+                                                               ^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- template_palette.d.ts:10:52
+
+Cannot extend `Palette` [1] with `LocalBad` [2] because in property `blue1`: `number` [3] is incompatible with
+`string` [4]. [incompatible-type]
+
+   template_palette.d.ts:10:52
+   10| export interface LocalBad extends Palette { blue1: number } // ERROR
+                                                          ^^^^^^ [3]
+
+References:
+   template_palette.d.ts:10:35
+   10| export interface LocalBad extends Palette { blue1: number } // ERROR
+                                         ^^^^^^^ [1]
+   template_palette.d.ts:10:8
+   10| export interface LocalBad extends Palette { blue1: number } // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   template_palette.d.ts:4:58
+    4| export type Palette = { [K in `${keyof Names}${1 | 2}`]: string };
+                                                                ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- template_types.ts:7:29
+
+Cannot assign `"wrong-value"` to `localBad` because `"wrong-value"` [1] is incompatible with `Unbounded` [2].
+[incompatible-type]
+
+   template_types.ts:7:29
+   7| const localBad: Unbounded = "wrong-value"; // ERROR
+                                  ^^^^^^^^^^^^^ [1]
+
+References:
+   template_types.ts:7:17
+   7| const localBad: Unbounded = "wrong-value"; // ERROR
+                      ^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- ts_syntax.ts:7:1
 
 Cannot cast `y` to `T` because `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
@@ -16,4 +151,4 @@ References:
 
 
 
-Found 1 error
+Found 9 errors

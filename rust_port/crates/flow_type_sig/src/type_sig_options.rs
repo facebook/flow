@@ -87,7 +87,7 @@ impl TypeSigOptions {
             for_builtins: false,
             is_ts_file: flow_common::files::has_ts_ext(file),
             is_dts_file: has_dts_ext(file.as_str()),
-            tslib_syntax: options.tslib_syntax,
+            tslib_syntax: options.tslib_syntax || flow_common::files::has_ts_ext(file),
             is_lib_file,
         }
     }
