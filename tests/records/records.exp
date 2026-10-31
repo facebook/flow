@@ -279,8 +279,8 @@ Operation mapped type [1] is not allowed on record `R` [2]. To fix, turn the rec
                              ^ [2]
 
 References:
-   <BUILTINS>/lib.es5.js:3854:60
-   3854| type Pick<O extends interface {}, Keys extends keyof O> = {[key in Keys]: O[key]};
+   <BUILTINS>/lib.es5.js:4068:60
+   4068| type Pick<O extends interface {}, Keys extends keyof O> = {[key in Keys]: O[key]};
                                                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -294,8 +294,8 @@ Operation `Omit` [1] is not allowed on record `R` [2]. To fix, turn the record t
                              ^ [2]
 
 References:
-   <BUILTINS>/lib.es5.js:3859:43
-   3859| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/lib.es5.js:4073:43
+   4073| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
                                                    ^^^^^^^^^^^^^^ [1]
 
 
