@@ -1585,9 +1585,9 @@ Cannot cast `pickedG` to `string` because `void` [1] is incompatible with `strin
          ^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:4300:75
-   4300| type Pick<O extends interface {}, Keys extends keyof O> = {[key in Keys]: O[key]};
-                                                                                   ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:4301:15
+   4301|     [P in K]: T[P];
+                       ^^^^ [1]
    import_values.js:40:12
      40| pickedG as string; // ERROR 2x
                     ^^^^^^ [2]

@@ -364,7 +364,7 @@ where
 
 Found exact match 'UserWithoutEmail' defined at complex_types.js:25:6,25:21 with type `type UserWithoutEmail = Omit<User, "email">` 
 where
-'Omit' is defined at [LIB] lib.es5.js:4305:6-9
+'Omit' is defined at [LIB] lib.es5.js:4307:6-9
 'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
 
 Found exact match 'UserKeys' defined at complex_types.js:28:6,28:13 with type `type UserKeys = "age" | "email" | "isAdmin" | "name"` 
@@ -374,7 +374,7 @@ where
 
 Found exact match 'StatusMap' defined at complex_types.js:32:6,32:14 with type `type StatusMap = Record<"active" | "inactive" | "pending", number>` 
 where
-'Record' is defined at [LIB] lib.es5.js:4311:6-11
+'Record' is defined at [LIB] lib.es5.js:4313:6-11
 
 
 === Nullable, NonNullable, Exclude, Extract ===
