@@ -8,12 +8,33 @@
  * @format
  */
 
+import type {ReadonlyTypeOperator} from 'flow-estree';
+
 import {
+  parse,
   printForSnapshotESTree,
   parseForSnapshotESTree,
   printForSnapshotBabel,
   parseForSnapshotBabel,
 } from '../__test_utils__/parse';
+
+// Readonly operators narrow to their public interface and retain their operand.
+test.each([
+  ['type T = readonly string[];', 'ArrayTypeAnnotation'],
+  ['type T = readonly [string, number];', 'TupleTypeAnnotation'],
+])('readonly ESTree type: %s', (code, operandType) => {
+  const declaration = parse(code).body[0];
+  if (
+    declaration.type !== 'TypeAlias' ||
+    declaration.right.type !== 'TypeOperator' ||
+    declaration.right.operator !== 'readonly'
+  ) {
+    throw new Error('Expected a readonly type operator');
+  }
+  const operator: ReadonlyTypeOperator = declaration.right;
+  expect(operator.operator).toBe('readonly'); // OK
+  expect(operator.typeAnnotation.type).toBe(operandType); // OK
+});
 
 describe('TypeOperator', () => {
   describe('renders', () => {

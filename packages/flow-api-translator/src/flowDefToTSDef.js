@@ -4725,11 +4725,12 @@ const getTransforms = (
     },
     TypeOperator(node: FlowESTree.TypeOperator): TSESTree.TypeNode {
       switch (node.operator) {
+        case 'readonly':
         case 'unique':
           return {
             type: 'TSTypeOperator',
             loc: DUMMY_LOC,
-            operator: 'unique',
+            operator: node.operator,
             typeAnnotation: transformTypeAnnotationType(node.typeAnnotation),
           };
         case 'renders':

@@ -53,6 +53,16 @@ describe('flowDefToTSDef optional members include undefined', () => {
 });
 
 describe('flowDefToTSDef TypeScript-compatible syntax', () => {
+  // Readonly arrays and tuples retain their operator rather than losing the type.
+  test.each([
+    'type T = readonly string[];',
+    'type T = readonly [string, number];',
+  ])('preserves readonly types: %s', async source => {
+    await expect(
+      translateFlowDefToTSDef(source, prettierConfig),
+    ).resolves.toContain(source); // OK
+  });
+
   // Initializer-only fields need a diagnostic rather than a null dereference.
   test('reports object type properties without an annotation', async () => {
     await expect(

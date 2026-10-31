@@ -11,6 +11,22 @@
 import * as t from '../src/generated/node-types';
 
 describe('generated node builders', () => {
+  // Type-operator builders preserve readonly operands and their parent pointers.
+  test('builds readonly type operators', () => {
+    const operator = t.TypeOperator({
+      operator: 'readonly',
+      typeAnnotation: t.ArrayTypeAnnotation({
+        elementType: t.StringTypeAnnotation(),
+      }),
+    });
+    expect(operator).toMatchObject({
+      type: 'TypeOperator',
+      operator: 'readonly',
+      typeAnnotation: {type: 'ArrayTypeAnnotation'},
+    }); // OK
+    expect(operator).toHaveProperty('typeAnnotation.parent', operator); // OK
+  });
+
   // Nullable field values remain null; annotated values still gain a parent.
   test('builds object type properties with and without annotations', () => {
     const unannotated = t.ObjectTypePropertySignature({

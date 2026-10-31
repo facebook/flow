@@ -1555,7 +1555,8 @@ export type TypeOperator =
   | RendersTypeOperator
   | RendersStarTypeOperator
   | RendersQuestionTypeOperator
-  | UniqueTypeOperator;
+  | UniqueTypeOperator
+  | ReadonlyTypeOperator;
 
 export type RendersType =
   RendersTypeOperator | RendersStarTypeOperator | RendersQuestionTypeOperator;
@@ -1580,6 +1581,10 @@ export interface UniqueTypeOperator extends TypeOperatorBase {
   readonly type: 'TypeOperator';
   readonly operator: 'unique';
   readonly typeAnnotation: SymbolTypeAnnotation;
+}
+export interface ReadonlyTypeOperator extends TypeOperatorBase {
+  readonly type: 'TypeOperator';
+  readonly operator: 'readonly';
 }
 
 export interface TypePredicate extends BaseNode {
