@@ -1,0 +1,125 @@
+Error ---------------------------------------------------------------------------------------- component_defaults.js:4:3
+
+Cannot cast `assigned` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   component_defaults.js:4:3
+   4|   assigned as number; // error
+        ^^^^^^^^
+
+References:
+   component_defaults.js:1:24
+   1| let assigned: number | string = 'before';
+                             ^^^^^^ [1]
+   component_defaults.js:4:15
+   4|   assigned as number; // error
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- defaults.js:9:3
+
+Cannot cast `x` to `number` because possibly uninitialized variable [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   defaults.js:9:3
+   9|   x as number; // error
+        ^
+
+References:
+   defaults.js:7:7
+   7|   let x: number;
+            ^ [1]
+   defaults.js:9:8
+   9|   x as number; // error
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:15:3
+
+Cannot cast `x` to `number` because possibly uninitialized variable [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   defaults.js:15:3
+   15|   x as number; // error
+         ^
+
+References:
+   defaults.js:13:7
+   13|   let x: number;
+             ^ [1]
+   defaults.js:15:8
+   15|   x as number; // error
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:22:3
+
+Cannot cast `x` to `number` because possibly uninitialized variable [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   defaults.js:22:3
+   22|   x as number; // error
+         ^
+
+References:
+   defaults.js:19:7
+   19|   let x: number;
+             ^ [1]
+   defaults.js:22:8
+   22|   x as number; // error
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:26:3
+
+Cannot cast `first` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   defaults.js:26:3
+   26|   first as number; // error
+         ^^^^^
+
+References:
+   defaults.js:25:43
+   25| function parameterDefault(first: number | string, second: number = (first = 1)) {
+                                                 ^^^^^^ [1]
+   defaults.js:26:12
+   26|   first as number; // error
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:32:3
+
+Cannot cast `x` to `number` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   defaults.js:32:3
+   32|   x as number; // error
+         ^
+
+References:
+   defaults.js:30:19
+   30|   let x: number | string = 'before';
+                         ^^^^^^ [1]
+   defaults.js:32:8
+   32|   x as number; // error
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- defaults.js:38:3
+
+Cannot cast `x` to `number` because possibly uninitialized variable [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   defaults.js:38:3
+   38|   x as number; // error only outside the default
+         ^
+
+References:
+   defaults.js:36:7
+   36|   let x: number;
+             ^ [1]
+   defaults.js:38:8
+   38|   x as number; // error only outside the default
+              ^^^^^^ [2]
+
+
+
+Found 7 errors

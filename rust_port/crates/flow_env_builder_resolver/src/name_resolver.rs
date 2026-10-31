@@ -3404,9 +3404,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                 loc: ALoc,
                                 name: FlowSmolStr,
                             ) -> Result<(), AbruptCompletion> {
-                                if let Some(default_expr) = default {
-                                    this.expression(default_expr)?;
-                                }
+                                this.default_opt(default.as_ref())?;
                                 let acc = flow_parser::ast::expression::Expression::new(flow_parser::ast::expression::ExpressionInner::Member {
                                     loc: loc.dupe(),
                                     inner: Arc::new(flow_parser::ast::expression::Member {
@@ -3880,7 +3878,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         default_expr: &flow_parser::ast::expression::Expression<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
         self.with_current_pattern_bindings(pattern, |this| {
-            this.with_in_param_default(|this| this.expression(default_expr))
+            this.with_in_param_default(|this| this.default_opt(Some(default_expr)))
         })
     }
 
@@ -9406,9 +9404,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         elem: &flow_parser::ast::pattern::array::NormalElement<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
         // Flip order compared to base class
-        if let Some(default) = &elem.default {
-            self.expression(default)?;
-        }
+        self.default_opt(elem.default.as_ref())?;
         self.pattern_array_element_pattern(kind, &elem.argument)?;
         Ok(())
     }
@@ -9428,6 +9424,21 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         if let Some(default_expr) = &prop.default {
             self.visit_default_with_pattern_bindings(&prop.pattern, default_expr)?;
         }
+        Ok(())
+    }
+
+    // A default runs only when the value it replaces is `undefined`, so the code after it
+    // also runs with the state from before it, as after the right side of `??`.
+    fn default_opt(
+        &mut self,
+        default: Option<&'ast Expression<ALoc, ALoc>>,
+    ) -> Result<(), AbruptCompletion> {
+        let Some(default) = default else {
+            return Ok(());
+        };
+        let skipped_env = self.env_snapshot();
+        self.run_to_completion(|this| this.expression(default));
+        self.merge_self_env(&skipped_env);
         Ok(())
     }
 
