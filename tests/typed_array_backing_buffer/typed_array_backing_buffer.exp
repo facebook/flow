@@ -325,8 +325,8 @@ Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because: [in
          ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3822:26
-   3822| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+   <BUILTINS>/lib.es5.js:3826:26
+   3826| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
                                   ^^^^^^^^^^^^ [1]
    test.js:109:46
     109| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
@@ -354,8 +354,8 @@ Cannot cast `arrayOnlyView` to `ArrayBufferView<SharedArrayBuffer>` because: [in
          ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3822:26
-   3822| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+   <BUILTINS>/lib.es5.js:3826:26
+   3826| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
                                   ^^^^^^^^^^^^ [1]
    test.js:109:46
     109| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
@@ -381,8 +381,8 @@ property `grow` is missing in `ArrayBuffer` [2] but exists in `SharedArrayBuffer
          ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3822:26
-   3822| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+   <BUILTINS>/lib.es5.js:3826:26
+   3826| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
                                   ^^^^^^^^^^^^ [1]
    test.js:109:46
     109| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
@@ -402,8 +402,8 @@ property `growable` is missing in `ArrayBuffer` [2] but exists in `SharedArrayBu
          ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3822:26
-   3822| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+   <BUILTINS>/lib.es5.js:3826:26
+   3826| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
                                   ^^^^^^^^^^^^ [1]
    test.js:109:46
     109| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
@@ -423,8 +423,8 @@ property `[toStringTag]`: `"ArrayBuffer"` [2] is incompatible with `"SharedArray
          ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:3822:26
-   3822| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+   <BUILTINS>/lib.es5.js:3826:26
+   3826| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
                                   ^^^^^^^^^^^^ [1]
    <BUILTINS>/lib.es2015.symbol.wellknown.js:273:36
     273|     readonly [Symbol.toStringTag]: "ArrayBuffer";
