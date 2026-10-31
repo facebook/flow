@@ -132,7 +132,7 @@ export interface Program extends BaseNode {
   readonly type: 'Program';
   readonly sourceType: 'script' | 'module';
   readonly body: ReadonlyArray<Statement | ModuleDeclaration>;
-  readonly tokens: ReadonlyArray<Token>;
+  readonly tokens?: ReadonlyArray<Token>;
   readonly comments: ReadonlyArray<Comment>;
   readonly loc: SourceLocation;
   readonly interpreter: null | InterpreterDirective;

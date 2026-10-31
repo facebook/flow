@@ -11,6 +11,11 @@
 import * as t from '../src/generated/node-types';
 
 describe('generated node builders', () => {
+  // Detached programs retain their empty token-array default.
+  test('defaults program tokens to an empty array', () => {
+    expect(t.Program({body: []})).toHaveProperty('tokens', []); // OK
+  });
+
   // Variance builders retain the combined directional kind.
   test('builds in-out variance', () => {
     expect(t.Variance({kind: 'in out'})).toMatchObject({
