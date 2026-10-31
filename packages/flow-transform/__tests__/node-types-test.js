@@ -11,6 +11,14 @@
 import * as t from '../src/generated/node-types';
 
 describe('generated node builders', () => {
+  // Variance builders retain the combined directional kind.
+  test('builds in-out variance', () => {
+    expect(t.Variance({kind: 'in out'})).toMatchObject({
+      type: 'Variance',
+      kind: 'in out',
+    }); // OK
+  });
+
   // Type-operator builders preserve readonly operands and their parent pointers.
   test('builds readonly type operators', () => {
     const operator = t.TypeOperator({

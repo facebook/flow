@@ -1346,7 +1346,8 @@ export type TypeAnnotationType =
 
 export interface Variance extends BaseNode {
   readonly type: 'Variance';
-  readonly kind: 'plus' | 'minus' | 'readonly' | 'writeonly' | 'in' | 'out';
+  readonly kind:
+    'plus' | 'minus' | 'readonly' | 'writeonly' | 'in' | 'out' | 'in out';
 }
 
 interface BaseTypeAlias extends BaseNode {

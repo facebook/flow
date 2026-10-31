@@ -10,12 +10,29 @@
 
 'use strict';
 
+import type {Variance} from 'flow-estree';
+
 import {
   parse,
   parseForSnapshot,
   printForSnapshotESTree,
 } from '../__test_utils__/parse';
 import {SimpleTraverser} from '../oxidized-src/traverse/SimpleTraverser';
+
+// Directional variance preserves each public kind, including the combined form.
+const directionalVariance: ReadonlyArray<Variance['kind']> = [
+  'in',
+  'out',
+  'in out',
+];
+test.each(directionalVariance)('type parameter variance: %s', kind => {
+  const declaration = parse(`type T<${kind} A> = A;`).body[0];
+  if (declaration.type !== 'TypeAlias' || declaration.typeParameters == null) {
+    throw new Error('Expected a parameterized type alias');
+  }
+  const variance = declaration.typeParameters.params[0].variance;
+  expect(variance).toMatchObject({type: 'Variance', kind}); // OK
+});
 
 describe('TypeParameter', () => {
   const boundSyntaxes = [
