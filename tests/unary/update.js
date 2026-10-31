@@ -62,3 +62,30 @@ let tests = [
     --y as bigint;
   },
 ];
+
+function postfixIncrement() {
+  const o: {x: number} = {x: 1};
+  const a = o;
+  if (a.x === 1) {
+    o.x++;
+    a.x as 1; // error: `a` and `o` are the same object
+  }
+}
+
+function computedKeyIncrement(key: 'x' | 'y') {
+  const o: {x: number, y: number} = {x: 1, y: 7};
+  const a = o;
+  if (a.x === 1) {
+    o[key]++;
+    a.x as 1; // error
+  }
+}
+
+function otherPropertyControl() {
+  const o: {x: number, y: number} = {x: 1, y: 7};
+  const a = o;
+  if (a.y === 7) {
+    o.x++;
+    a.y as 7;
+  }
+}

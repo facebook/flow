@@ -234,5 +234,39 @@ Cannot update `xs[0]` because read-only arrays cannot be written to. [cannot-wri
            ^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- update.js:71:5
 
-Found 19 errors
+Cannot cast `a.x` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+
+   update.js:71:5
+   71|     a.x as 1; // error: `a` and `o` are the same object
+           ^^^
+
+References:
+   update.js:67:16
+   67|   const o: {x: number} = {x: 1};
+                      ^^^^^^ [1]
+   update.js:71:12
+   71|     a.x as 1; // error: `a` and `o` are the same object
+                  ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- update.js:80:5
+
+Cannot cast `a.x` to `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
+
+   update.js:80:5
+   80|     a.x as 1; // error
+           ^^^
+
+References:
+   update.js:76:16
+   76|   const o: {x: number, y: number} = {x: 1, y: 7};
+                      ^^^^^^ [1]
+   update.js:80:12
+   80|     a.x as 1; // error
+                  ^ [2]
+
+
+
+Found 21 errors

@@ -9873,7 +9873,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
 
     fn update_expression(
         &mut self,
-        _loc: &ALoc,
+        update_loc: &ALoc,
         expr: &flow_parser::ast::expression::Update<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
         use flow_parser::ast::expression::ExpressionInner;
@@ -9889,6 +9889,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 // given `o.x++`, read o.x then write o.x
                 self.expression(argument)?;
                 self.pattern_expression(argument)?;
+                self.post_assignment_heap_refinement_havoc(update_loc.dupe(), member);
                 let val_reason = flow_common::reason::VirtualReason::new(None, loc.dupe());
                 let assigned_val = ssa_val::number(&mut *self.cache.borrow_mut(), val_reason);
                 match refinement_key::Lookup::of_member(member, false) {
