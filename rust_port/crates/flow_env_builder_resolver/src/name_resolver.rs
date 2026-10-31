@@ -6946,7 +6946,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     return self.raise_abrupt_completion(AbruptCompletion::Throw);
                 }
                 self.push_refinement_scope(empty_refinements());
-                let result = self.expression_refinement(asserted);
+                // The arguments were already visited in order, with their reads recorded.
+                let result =
+                    self.with_skip_read_recording(|this| this.expression_refinement(asserted));
                 self.pop_refinement_scope_without_unrefining();
                 result
             }

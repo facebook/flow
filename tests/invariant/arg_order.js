@@ -16,3 +16,21 @@ function pureLaterArgStillRefines(y: unknown, msg: string): void {
 function laterArgReadUsesRefinedEnv(x: unknown): void {
   invariant(typeof x === 'string', takesString(x)); // error: later args are evaluated before the assertion applies
 }
+
+function callAfterPropertyRead(box: {value: ?string}): void {
+  if (box.value != null) {
+    invariant(box.value.trim() !== ''); // no error: `box.value` is read before the call
+  }
+}
+
+function laterArgWritesValueReadEarlier(value: ?number): void {
+  let x: ?number = value;
+  if (x != null) {
+    invariant(x.toFixed() !== '', (x = null)); // no error: `x` is a number when it is read
+  }
+}
+
+function laterArgAssignsValueReadEarlier(): void {
+  let x: number;
+  invariant((x as number) > 0, (x = 1)); // error: `x` is read before it is assigned
+}

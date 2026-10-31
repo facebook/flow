@@ -50,6 +50,51 @@ References:
                                        ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- arg_order.js:22:25
+
+Cannot call `box.value.trim` because property `trim` is missing in `String` [1]. [prop-missing]
+
+   arg_order.js:22:25
+   22|     invariant(box.value.trim() !== ''); // no error: `box.value` is read before the call
+                               ^^^^
+
+References:
+   arg_order.js:20:46
+   20| function callAfterPropertyRead(box: {value: ?string}): void {
+                                                    ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- arg_order.js:29:17
+
+Cannot call `x.toFixed` because property `toFixed` is missing in `Number` [1]. [prop-missing]
+
+   arg_order.js:29:17
+   29|     invariant(x.toFixed() !== '', (x = null)); // no error: `x` is a number when it is read
+                       ^^^^^^^
+
+References:
+   arg_order.js:27:11
+   27|   let x: ?number = value;
+                 ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- arg_order.js:35:14
+
+Cannot cast `x` to `number` because uninitialized variable [1] is incompatible with `number` [2]. [incompatible-type]
+
+   arg_order.js:35:14
+   35|   invariant((x as number) > 0, (x = 1)); // error: `x` is read before it is assigned
+                    ^
+
+References:
+   arg_order.js:34:7
+   34|   let x: number;
+             ^ [1]
+   arg_order.js:35:19
+   35|   invariant((x as number) > 0, (x = 1)); // error: `x` is read before it is assigned
+                         ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- index.js:4:1
 
 This use of `invariant` is unnecessary because `true` [1] is always truthy. [unnecessary-assertion]
@@ -238,4 +283,4 @@ References:
 
 
 
-Found 15 errors
+Found 18 errors

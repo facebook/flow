@@ -101,3 +101,12 @@ class OptionalChainRead {
     this.value = 'hi';
   }
 }
+
+declare function invariant(condition: unknown, ...args: Array<unknown>): asserts condition;
+
+class ReadInAssertionCall {
+  value: string;
+  constructor() {
+    invariant(this.value, (this.value = 'hi')); // error
+  }
+}
