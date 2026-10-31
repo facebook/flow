@@ -1072,8 +1072,8 @@ Property `m` is missing in `Symbol` [1]. [prop-missing]
                 ^
 
 References:
-   <BUILTINS>/lib.es5.js:3901:11
-   3901| interface Symbol {
+   <BUILTINS>/lib.es5.js:3928:11
+   3928| interface Symbol {
                    ^^^^^^ [1]
 
 
@@ -1097,8 +1097,8 @@ Property `0` is missing in `Symbol` [1]. [prop-missing]
                 ^
 
 References:
-   <BUILTINS>/lib.es5.js:3901:11
-   3901| interface Symbol {
+   <BUILTINS>/lib.es5.js:3928:11
+   3928| interface Symbol {
                    ^^^^^^ [1]
 
 
