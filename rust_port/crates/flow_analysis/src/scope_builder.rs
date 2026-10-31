@@ -1117,9 +1117,7 @@ where
     // In component syntax param types and defaults cannot reference other params, so we visit
     // the types and defaults without including the param bindings.
     for param in params.params.iter() {
-        if let Some(default) = &param.default {
-            visitor.expression(default)?;
-        }
+        visitor.default_opt(param.default.as_ref())?;
     }
     for param in params.params.iter() {
         let annot = pattern_toplevel_annot(&param.local);
