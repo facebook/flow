@@ -1290,6 +1290,91 @@ References:
                                    ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------ optional_class_field.js:13:12
+
+Cannot return `this.#label` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   optional_class_field.js:13:12
+   13|     return this.#label; // ERROR
+                  ^^^^^^^^^^^
+
+References:
+   optional_class_field.js:5:12
+    5|   #label?: string;
+                  ^^^^^^ [1]
+   optional_class_field.js:12:24
+   12|   readLabelAsString(): string {
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- optional_class_field.js:19:3
+
+Cannot cast `box.value` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_class_field.js:19:3
+   19|   box.value as number; // ERROR
+         ^^^^^^^^^
+
+References:
+   optional_class_field.js:4:11
+    4|   value?: number;
+                 ^^^^^^ [1]
+   optional_class_field.js:19:16
+   19|   box.value as number; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- optional_class_field.js:28:3
+
+Cannot cast `Box.count` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_class_field.js:28:3
+   28|   Box.count as number; // ERROR
+         ^^^^^^^^^
+
+References:
+   optional_class_field.js:6:18
+    6|   static count?: number;
+                        ^^^^^^ [1]
+   optional_class_field.js:28:16
+   28|   Box.count as number; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- optional_class_field.js:33:3
+
+Cannot cast `exported.value` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_class_field.js:33:3
+   33|   exported.value as number; // ERROR
+         ^^^^^^^^^^^^^^
+
+References:
+   optional_class_field_exported.js:2:11
+    2|   value?: number;
+                 ^^^^^^ [1]
+   optional_class_field.js:33:21
+   33|   exported.value as number; // ERROR
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- optional_class_field.js:41:3
+
+Cannot cast `box.value` to `number` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   optional_class_field.js:41:3
+   41|   box.value as number; // ERROR
+         ^^^^^^^^^
+
+References:
+   optional_class_field.js:37:11
+   37|   value?: number = 1;
+                 ^^^^^^ [1]
+   optional_class_field.js:41:16
+   41|   box.value as number; // ERROR
+                      ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------- optional_class_property.js:10:1
 
 Cannot cast `foo.a` to `empty` because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1928,4 +2013,4 @@ References:
 
 
 
-Found 125 errors
+Found 130 errors

@@ -2,3 +2,4 @@
 all=true
 builtin_lib=core-only
 experimental.strict_property_initialization=true
+experimental.tslib_syntax=true

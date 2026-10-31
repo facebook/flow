@@ -15203,6 +15203,31 @@ fn declared_type_includes_void(cx: &mut Context<'_>, field_t: &Type) -> Result<b
     }))
 }
 
+/// The field of an optional class property (`x?: T`), which may hold `undefined`: `T | void`, as
+/// for an optional method. For a field with an initializer, the initializer's function returns
+/// the field's type.
+fn optional_field(
+    field: func_class_sig_types::class::Field<func_class_sig_types::StmtConfigTypes>,
+) -> func_class_sig_types::class::Field<func_class_sig_types::StmtConfigTypes> {
+    use flow_typing_type::type_util::optional;
+    use func_class_sig_types::class::Field;
+
+    match field {
+        Field::Annot(t) => Field::Annot(optional(t, None, false)),
+        Field::Infer(mut init, set_asts) => {
+            init.return_t = match init.return_t {
+                AnnotatedOrInferred::Annotated(t) => {
+                    AnnotatedOrInferred::Annotated(optional(t, None, false))
+                }
+                AnnotatedOrInferred::Inferred(t) => {
+                    AnnotatedOrInferred::Inferred(optional(t, None, false))
+                }
+            };
+            Field::Infer(init, set_asts)
+        }
+    }
+}
+
 fn check_duplicate_class_member<'a>(
     cx: &mut Context<'a>,
     seen_names: &mut SeenNames,
@@ -17330,6 +17355,11 @@ pub fn mk_class_sig<'a>(
                                     annot,
                                     value,
                                 )?;
+                                let field = if optional {
+                                    optional_field(field)
+                                } else {
+                                    field
+                                };
                                 let loc_c = loc.dupe();
                                 let annot_t_c = annot_t.dupe();
                                 let id_loc_c = id_loc.dupe();
@@ -17540,6 +17570,11 @@ pub fn mk_class_sig<'a>(
                                     annot,
                                     value,
                                 )?;
+                                let field = if optional {
+                                    optional_field(field)
+                                } else {
+                                    field
+                                };
                                 let loc_c = loc.dupe();
                                 let annot_t_c = annot_t.dupe();
                                 let computed_loc_c = computed_key.loc.dupe();
@@ -17675,6 +17710,11 @@ pub fn mk_class_sig<'a>(
                                 annot,
                                 value,
                             )?;
+                            let field = if optional {
+                                optional_field(field)
+                            } else {
+                                field
+                            };
                             let loc_c = loc.dupe();
                             let annot_t_c = annot_t.dupe();
                             let key_c = pf.key.clone();

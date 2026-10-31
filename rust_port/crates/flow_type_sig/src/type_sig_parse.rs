@@ -7911,6 +7911,19 @@ fn indexer_value<'arena, 'ast>(
     }
 }
 
+/// The type of a class field: `T | void` for an optional field (`x?: T`), which holds
+/// `undefined` until it is assigned.
+fn optional_class_field<'arena, 'ast>(
+    optional: bool,
+    t: Parsed<'arena, 'ast>,
+) -> Parsed<'arena, 'ast> {
+    if optional {
+        Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
+    } else {
+        t
+    }
+}
+
 fn optional_method_as_field<'arena, 'ast>(
     opts: &TypeSigOptions,
     scope: ScopeId,
@@ -11953,6 +11966,7 @@ fn class_def<'arena: 'ast, 'ast>(
                 value,
                 static_: is_static,
                 variance,
+                optional,
                 ts_accessibility,
                 loc: prop_loc,
                 ..
@@ -12008,7 +12022,13 @@ fn class_def<'arena: 'ast, 'ast>(
                                 (id_loc_node, res)
                             }
                         };
-                        acc.add_field(*is_static, name, id_loc_node, polarity_val, parsed_t);
+                        acc.add_field(
+                            *is_static,
+                            name,
+                            id_loc_node,
+                            polarity_val,
+                            optional_class_field(*optional, parsed_t),
+                        );
                     }
                     // Match the typing pipeline (statement.rs): a computed key is a
                     // field only when it resolves to a single literal string or
@@ -12034,7 +12054,13 @@ fn class_def<'arena: 'ast, 'ast>(
                                 id_loc_node.dupe(),
                                 &name,
                             );
-                            acc.add_field(*is_static, name, id_loc_node, polarity_val, parsed_t);
+                            acc.add_field(
+                                *is_static,
+                                name,
+                                id_loc_node,
+                                polarity_val,
+                                optional_class_field(*optional, parsed_t),
+                            );
                         }
                         ExpressionInner::NumberLiteral { loc, inner, .. }
                             if flow_common::js_number::is_float_safe_integer(inner.value) =>
@@ -12054,7 +12080,13 @@ fn class_def<'arena: 'ast, 'ast>(
                                 id_loc_node.dupe(),
                                 &name,
                             );
-                            acc.add_field(*is_static, name, id_loc_node, polarity_val, parsed_t);
+                            acc.add_field(
+                                *is_static,
+                                name,
+                                id_loc_node,
+                                polarity_val,
+                                optional_class_field(*optional, parsed_t),
+                            );
                         }
                         // `[s]` where `s` is a value reference: record the key ref
                         // and resolve it to a name during signature merge.
@@ -12077,7 +12109,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                 key_ref,
                                 ref_loc,
                                 polarity_val,
-                                parsed_t,
+                                optional_class_field(*optional, parsed_t),
                             );
                         }
                         // Any other key (`[o.p]`, `[(s as 'foo')]`, ...) is recorded
@@ -12108,7 +12140,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                 key_ref,
                                 ref_loc,
                                 polarity_val,
-                                parsed_t,
+                                optional_class_field(*optional, parsed_t),
                             );
                         }
                     },
